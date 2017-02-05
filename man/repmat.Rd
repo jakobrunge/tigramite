@@ -2,7 +2,7 @@
 % Please edit documentation in R/repmat.R
 \name{repmat}
 \alias{repmat}
-\title{Repeat copies of array like MATLAB's repmat function}
+\title{Repeat copies of a matrix or a vector just like MATLAB's repmat function}
 \usage{
 repmat(X, m, n)
 }
@@ -17,7 +17,7 @@ repmat(X, m, n)
 A matrix with associated row and column repeats
 }
 \description{
-Repeat copies of array like MATLAB's repmat function
+Repeat copies of a matrix or a vector just like MATLAB's repmat function
 }
 \examples{
 repmat(matrix(rnorm(2*2),ncol=2),m=2,n=3)

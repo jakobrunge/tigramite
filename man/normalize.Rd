@@ -10,7 +10,7 @@ normalize(mat)
 \item{mat}{Matrix}
 }
 \value{
-A matrix where each columns has mean zero and unit variance.
+A matrix where each column has mean zero and unit variance.
 }
 \description{
 Normalizes each column of a matrix to mean zero unit variance.

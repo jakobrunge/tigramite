@@ -1,4 +1,4 @@
-#' Repeat copies of array like MATLAB's repmat function
+#' Repeat copies of a matrix or a vector just like MATLAB's repmat function
 #' @param X a matrix or a vector
 #' @param m Number of row repeats
 #' @param n Number of column repeats
