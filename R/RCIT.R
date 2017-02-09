@@ -63,7 +63,7 @@ RCIT <- function(x,y,z=NULL,approx="lpd4",corr=FALSE,seed=NULL){
 
     Czz = cov(f_z);
 
-    i_Czz = ginv(Czz+diag(25)*1E-6); #requires library(MASS)
+    i_Czz = ginv(Czz+diag(25)*1E-10); #requires library(MASS)
     Cxz=cov(f_x,f_z);
     Czy=cov(f_z,f_y);
 
