@@ -3,7 +3,7 @@ This is an R package implementing the Randomized Conditional Independence Test (
 
 # Update
 
-I have added an additional method for computing p-values called "chi2" which normalizes the partial cross-covariance statistic to follow a Gaussian with diagonal covariance. The resultant statistic therefore asymptotically follows a central chi-squared distribution with d-degrees of freedom rather than a weighted chi-squared distribution. I find that the p-values are slightly less accurate than the default method in general. On the other hand, the new method outputs a normalized statistic, so the statistics are comparable without the same random seed. This method may be useful in algorithms like HITON-PC which initially sort variables according to the test statistic.
+I have added an additional method for computing p-values called "chi2" which normalizes the partial cross-covariance statistic to follow a Gaussian with diagonal covariance. The resultant statistic therefore asymptotically follows a central chi-squared distribution with d-degrees of freedom rather than a weighted sum of chi-squares. I find that the p-values are slightly less accurate than the default method in general. On the other hand, the new method outputs a normalized statistic, so the statistics are comparable without the same random seed. This method may be useful in algorithms like HITON-PC which initially sort variables according to the test statistic.
 
 # Installation
 
