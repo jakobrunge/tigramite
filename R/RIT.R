@@ -1,7 +1,7 @@
 #' Tests whether x and y are unconditionally independent
 #' @param x Random variable x.
 #' @param y Random variable y.
-#' @param approx Method for approximating the null distribution. Default is the "lpd4," the Lindsay-Pilla-Basak method. Other options include "gamma" for the Satterthwaite-Welch method and "hbe" for the Hall-Buckley-Eagleson method.
+#' @param approx Method for approximating the null distribution. Default is the "lpd4," the Lindsay-Pilla-Basak method. Other options include "gamma" for the Satterthwaite-Welch method, "hbe" for the Hall-Buckley-Eagleson method and "chi2" for a normalized statistic..
 #' @param seed The seed for controlling random number generation. Use if you want to replicate results exactly. Default is NULL.
 #' @return A list containing the p-value \code{p} and statistic \code{Sta}
 #' @examples
