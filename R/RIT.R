@@ -11,7 +11,7 @@
 #' y=(x+rnorm(1000))^2;
 #' RIT(x,y);
 
-RIT <- function(x,y,approx="lpd4",seed=NULL){
+RIT <- function(x,y,approx="hbe",seed=NULL){
 
   if (sd(x)==0 | sd(y)==0){
     out=list(p=1,Sta=0,w=w,b=b);
@@ -49,21 +49,32 @@ RIT <- function(x,y,approx="lpd4",seed=NULL){
   d =expand.grid(1:ncol(f_x),1:ncol(f_y));
   res = res_x[,d[,1]]*res_y[,d[,2]];
   Cov = 1/r * (t(res)%*%res);
-  eig_d = eigen(Cov);
-  eig_d$values=eig_d$values[eig_d$values>0];
 
-  if (approx == "gamma"){
-    p=1-sw(eig_d$values,Sta);
 
-  } else if (approx == "hbe") {
 
-    p=1-hbe(eig_d$values,Sta);
+  if (approx == "chi2"){
+    i_Cov = ginv(Cov)
 
-  } else if (approx == "lpd4"){
-    eig_d_values=eig_d$values;
-    p=try(1-lpb4(eig_d_values,Sta), silent=TRUE);
-    if (!is.numeric(p)){
+    Sta = r * (c(Cxy)%*%  i_Cov %*% c(Cxy) );
+    p = 1-pchisq(Sta, length(c(Cxy)));
+  } else{
+
+    eig_d = eigen(Cov);
+    eig_d$values=eig_d$values[eig_d$values>0];
+
+    if (approx == "gamma"){
+      p=1-sw(eig_d$values,Sta);
+
+    } else if (approx == "hbe") {
+
       p=1-hbe(eig_d$values,Sta);
+
+    } else if (approx == "lpd4"){
+      eig_d_values=eig_d$values;
+      p=try(1-lpb4(eig_d_values,Sta), silent=TRUE);
+      if (!is.numeric(p)){
+        p=1-hbe(eig_d$values,Sta);
+      }
     }
   }
 

@@ -6,6 +6,7 @@
 #' @param corr FALSE corresponds to RCIT and TRUE to RCoT. Default is FALSE.
 #' @param seed The seed for controlling random number generation. Use if you want to replicate results exactly. Default is NULL.
 #' @return A list containing the p-value \code{p} and statistic \code{Sta}
+#' @export
 #' @examples
 #' RCIT(rnorm(1000),rnorm(1000),rnorm(1000));
 #'
@@ -15,7 +16,7 @@
 #' RCIT(x,y,z,seed=2);
 
 
-RCIT <- function(x,y,z=NULL,approx="lpd4",corr=FALSE,seed=NULL){
+RCIT <- function(x,y,z=NULL,approx="hbe",corr=FALSE,seed=NULL){
 
   if (length(z)==0){
     out=RIT(x,y,approx="lpd4",seed=seed);
@@ -83,22 +84,32 @@ RCIT <- function(x,y,z=NULL,approx="lpd4",corr=FALSE,seed=NULL){
     d =expand.grid(1:ncol(f_x),1:ncol(f_y));
     res = res_x[,d[,1]]*res_y[,d[,2]];
     Cov = 1/r * (t(res)%*%res);
-    eig_d = eigen(Cov);
-    eig_d$values=eig_d$values[eig_d$values>0];
 
-    if (approx == "gamma"){
-      p=1-sw(eig_d$values,Sta);
+    if (approx == "chi2"){
+      i_Cov = ginv(Cov)
 
-    } else if (approx == "hbe") {
+      Sta = r * (c(Cxy_z)%*%  i_Cov %*% c(Cxy_z) );
+      p = 1-pchisq(Sta, length(c(Cxy_z)));
+    } else{
 
-      p=1-hbe(eig_d$values,Sta);
+      eig_d = eigen(Cov);
+      eig_d$values=eig_d$values[eig_d$values>0];
 
-    } else if (approx == "lpd4"){
-      eig_d_values=eig_d$values;
-      p=try(1-lpb4(eig_d_values,Sta),silent=TRUE);
-      if (!is.numeric(p)){
+      if (approx == "gamma"){
+        p=1-sw(eig_d$values,Sta);
+
+      } else if (approx == "hbe") {
+
         p=1-hbe(eig_d$values,Sta);
+
+      } else if (approx == "lpd4"){
+        eig_d_values=eig_d$values;
+        p=try(1-lpb4(eig_d_values,Sta),silent=TRUE);
+        if (!is.numeric(p)){
+          p=1-hbe(eig_d$values,Sta);
+        }
       }
+
     }
 
     if (p<0) p=0;
