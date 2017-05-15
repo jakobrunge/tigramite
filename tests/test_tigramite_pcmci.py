@@ -91,14 +91,15 @@ class TestPCMCI(unittest.TestCase):
             cond_ind_test=cond_ind_test,
             verbosity=verbosity)
 
-        pcmci.run_pcmci(
+        (val_matrix, p_matrix, conf_matrix, q_matrix) = pcmci.run_pcmci(
             tau_max=tau_max,
             pc_alpha=pc_alpha,
-            alpha_level=alpha_level,
         )
 
-        parents = pcmci.return_significant_parents(
-                                      alpha_level=alpha_level)
+        parents = pcmci._return_significant_parents(pq_matrix=p_matrix,
+                                  val_matrix=val_matrix,
+                                  alpha_level=alpha_level,
+                                  )
         assert_graphs_equal(parents, self.true_parents)
 
     def test_pc_stable(self):
@@ -264,7 +265,7 @@ class TestPCMCI(unittest.TestCase):
             cond_ind_test=cond_ind_test,
             verbosity=verbosity)
 
-        pcmci.run_mci(
+        (val_matrix, p_matrix, conf_matrix) = pcmci.run_mci(
                     selected_links=None,
                     tau_min=1,
                     tau_max=tau_max,
@@ -273,10 +274,10 @@ class TestPCMCI(unittest.TestCase):
                     max_conds_px=None,
                     )
 
-        parents = pcmci.return_significant_parents(
-                              alpha_level=alpha_level,
-                              pq_matrix=None,
-                              )
+        parents = pcmci._return_significant_parents(pq_matrix=p_matrix,
+                                  val_matrix=val_matrix,
+                                  alpha_level=alpha_level,
+                                  )
         # print parents
         # print _get_parent_graph(true_parents)
         assert_graphs_equal(parents, self.true_parents)

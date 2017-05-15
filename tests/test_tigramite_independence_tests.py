@@ -22,7 +22,7 @@ def _par_corr_to_cmi(par_corr):
 #
 #  Start
 #
-class TestCondInd():  #unittest.TestCase):
+class TestCondInd(unittest.TestCase):
     # def __init__(self):
     #     pass
 
@@ -509,12 +509,12 @@ class TestCondInd():  #unittest.TestCase):
 if __name__ == "__main__":
     # unittest.main()
 
-    tci = TestCondInd()  #unittest.TestCase)
+    # tci = TestCondInd()  #unittest.TestCase)
     # tci.setUp()
     # tci.test_trafo2uniform()
-    tci.test_cmi_symb()
+    # tci.test_cmi_symb()
     # tci.test_bootstrap_vs_analytic_confidence()
     # tci.test_shuffle_vs_analytic_significance_gpace()
     # tci.test__gpace_get_single_residuals()
-    # unittest.main()
+    unittest.main()
     # nose.run()
