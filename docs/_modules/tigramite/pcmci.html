@@ -82,23 +82,77 @@
 
 
 <div class="viewcode-block" id="PCMCI"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI">[docs]</a><span class="k">class</span> <span class="nc">PCMCI</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;PCMCI: causal discovery for time series datasets.</span>
-
-<span class="sd">    The implementation is based on Algorithms 1 and 2 in [1]_</span>
+    <span class="sd">r&quot;&quot;&quot;PCMCI causal discovery for time series datasets.</span>
 
 <span class="sd">    PCMCI is a 2-step causal discovery method for large-scale time series</span>
 <span class="sd">    datasets. The first step is a condition-selection followed by the MCI</span>
-<span class="sd">    conditional independence test.</span>
+<span class="sd">    conditional independence test. The implementation is based on Algorithms 1</span>
+<span class="sd">    and 2 in [1]_.</span>
 
 <span class="sd">    PCMCI allows:</span>
 
 <span class="sd">       * different conditional independence test statistics adapted to</span>
 <span class="sd">         continuously-valued or discrete data, and different assumptions about</span>
 <span class="sd">         linear or nonlinear dependencies</span>
+<span class="sd">       * hyperparameter optimization</span>
 <span class="sd">       * easy parallelization</span>
-<span class="sd">       * masked time series data</span>
+<span class="sd">       * handling of masked time series data</span>
 <span class="sd">       * false discovery control and confidence interval estimation</span>
 
+
+<span class="sd">    Notes </span>
+<span class="sd">    ----- </span>
+
+<span class="sd">    .. image:: mci_schematic.*</span>
+<span class="sd">       :width: 200pt</span>
+
+<span class="sd">    In our framework, the dependency structure of a set of time series variables</span>
+<span class="sd">    is represented in a *time series graph* as shown in the Figure. The nodes of</span>
+<span class="sd">    a time series graph are defined as the variables at different times and a</span>
+<span class="sd">    link exists if two lagged variables are *not* conditionally independent</span>
+<span class="sd">    given the past of the whole process. Assuming stationarity, the links are</span>
+<span class="sd">    repeated in time. The parents :math:`\mathcal{P}` of a variable are defined</span>
+<span class="sd">    as the set of all nodes with a link towards it.</span>
+
+<span class="sd">    PCMCI is based on a two-step procedure:</span>
+
+<span class="sd">    1.  Condition-selection: For all :math:`N` variables: Estimate *superset* of </span>
+<span class="sd">        parents :math:`\tilde{\mathcal{P}}(X^j_t)` with iterative PC1 algorithm </span>
+<span class="sd">        here implemented as ``run_pc_stable``.</span>
+
+
+<span class="sd">    2.  *Momentary conditional independence* (MCI)</span>
+
+<span class="sd">        .. math:: X^i_{t-\tau} ~\perp~ X^j_{t} ~|~ \tilde{\mathcal{P}}(X^j_t),</span>
+<span class="sd">                                        \tilde{\mathcal{P}}(X^i_{t-{\tau}})\,,</span>
+<span class="sd">    </span>
+<span class="sd">    here implemented as ``run_mci``. PCMCI can be flexibly combined with any</span>
+<span class="sd">    kind of conditional independence test statistic adapted to the kind of data</span>
+<span class="sd">    (continuous or discrete) and its assumed dependency structure. In Tigramite</span>
+<span class="sd">    implemented are ParCorr as a linear test, GPACE allowing nonlinear additive</span>
+<span class="sd">    dependencies, and CMI with different estimators making no assumptions about</span>
+<span class="sd">    the dependencies.</span>
+
+<span class="sd">    The main free parameters of PCMCI (in addition to free parameters of the</span>
+<span class="sd">    conditional independence test statistic) are the maximum time delay</span>
+<span class="sd">    :math:`\tau_{\max}` and the significance threshold in the condition-</span>
+<span class="sd">    selection step :math:`\alpha`. The maximum time delay depends on the</span>
+<span class="sd">    application and should be chosen according to the maximum causal time lag</span>
+<span class="sd">    expected in the complex system. We recommend a rather large choice that</span>
+<span class="sd">    includes peaks in the lagged cross-correlation function (or a more general</span>
+<span class="sd">    measure). :math:`\alpha` should not be seen as a significance test level in</span>
+<span class="sd">    the condition-selection step since the iterative hypothesis tests do not</span>
+<span class="sd">    allow for a precise confidence level. :math:`\alpha` rather takes the role</span>
+<span class="sd">    of a regularization parameter in model-selection techniques. The</span>
+<span class="sd">    conditioning sets :math:`\tilde{\mathcal{P}}`  should include the true</span>
+<span class="sd">    parents and at the same time be small in size to reduce the estimation</span>
+<span class="sd">    dimension of the MCI test and improve its power. But the first demand is</span>
+<span class="sd">    typically more important. If a list of values is given or ``pc_alpha=None``,</span>
+<span class="sd">    this parameter is optimized using model selection criteria.</span>
+
+<span class="sd">    Further optional parameters are discussed in [1]_.</span>
+
+<span class="sd">    </span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    dataframe : data object</span>
@@ -353,8 +407,11 @@
 <span class="sd">        save_iterations : bool, optional (default: False)</span>
 <span class="sd">            Whether to save iteration step results such as conditions used.</span>
 <span class="sd">        </span>
-<span class="sd">        pc_alpha : float, optional (default: 0.1)</span>
-<span class="sd">            Significance level in algorithm. </span>
+<span class="sd">        pc_alpha : float or None, optional (default: 0.2)</span>
+<span class="sd">            Significance level in algorithm. If a list is given, pc_alpha is</span>
+<span class="sd">            optimized using model selection criteria provided in the</span>
+<span class="sd">            cond_ind_test class as get_model_selection_criterion(). If None,</span>
+<span class="sd">            a default list of values is used.</span>
 <span class="sd">        </span>
 <span class="sd">        max_conds_dim : int, optional (default: None)</span>
 <span class="sd">            Maximum number of conditions to test. If None is passed, this number</span>
@@ -381,6 +438,9 @@
 <span class="sd">        iterations : dict</span>
 <span class="sd">            Dictionary containing further information on algorithm steps.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">pc_alpha</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">pc_alpha</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]</span>
 
         <span class="n">p_max</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">test_statistic_values</span> <span class="o">=</span> <span class="p">{}</span>

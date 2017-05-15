@@ -18,23 +18,77 @@ except:
 
 
 class PCMCI():
-    """PCMCI: causal discovery for time series datasets.
-
-    The implementation is based on Algorithms 1 and 2 in [1]_
+    r"""PCMCI causal discovery for time series datasets.
 
     PCMCI is a 2-step causal discovery method for large-scale time series
     datasets. The first step is a condition-selection followed by the MCI
-    conditional independence test.
+    conditional independence test. The implementation is based on Algorithms 1
+    and 2 in [1]_.
 
     PCMCI allows:
 
        * different conditional independence test statistics adapted to
          continuously-valued or discrete data, and different assumptions about
          linear or nonlinear dependencies
+       * hyperparameter optimization
        * easy parallelization
-       * masked time series data
+       * handling of masked time series data
        * false discovery control and confidence interval estimation
 
+
+    Notes 
+    ----- 
+
+    .. image:: mci_schematic.*
+       :width: 200pt
+
+    In our framework, the dependency structure of a set of time series variables
+    is represented in a *time series graph* as shown in the Figure. The nodes of
+    a time series graph are defined as the variables at different times and a
+    link exists if two lagged variables are *not* conditionally independent
+    given the past of the whole process. Assuming stationarity, the links are
+    repeated in time. The parents :math:`\mathcal{P}` of a variable are defined
+    as the set of all nodes with a link towards it.
+
+    PCMCI is based on a two-step procedure:
+
+    1.  Condition-selection: For all :math:`N` variables: Estimate *superset* of 
+        parents :math:`\tilde{\mathcal{P}}(X^j_t)` with iterative PC1 algorithm 
+        here implemented as ``run_pc_stable``.
+
+
+    2.  *Momentary conditional independence* (MCI)
+
+        .. math:: X^i_{t-\tau} ~\perp~ X^j_{t} ~|~ \tilde{\mathcal{P}}(X^j_t),
+                                        \tilde{\mathcal{P}}(X^i_{t-{\tau}})\,,
+    
+    here implemented as ``run_mci``. PCMCI can be flexibly combined with any
+    kind of conditional independence test statistic adapted to the kind of data
+    (continuous or discrete) and its assumed dependency structure. In Tigramite
+    implemented are ParCorr as a linear test, GPACE allowing nonlinear additive
+    dependencies, and CMI with different estimators making no assumptions about
+    the dependencies.
+
+    The main free parameters of PCMCI (in addition to free parameters of the
+    conditional independence test statistic) are the maximum time delay
+    :math:`\tau_{\max}` and the significance threshold in the condition-
+    selection step :math:`\alpha`. The maximum time delay depends on the
+    application and should be chosen according to the maximum causal time lag
+    expected in the complex system. We recommend a rather large choice that
+    includes peaks in the lagged cross-correlation function (or a more general
+    measure). :math:`\alpha` should not be seen as a significance test level in
+    the condition-selection step since the iterative hypothesis tests do not
+    allow for a precise confidence level. :math:`\alpha` rather takes the role
+    of a regularization parameter in model-selection techniques. The
+    conditioning sets :math:`\tilde{\mathcal{P}}`  should include the true
+    parents and at the same time be small in size to reduce the estimation
+    dimension of the MCI test and improve its power. But the first demand is
+    typically more important. If a list of values is given or ``pc_alpha=None``,
+    this parameter is optimized using model selection criteria.
+
+    Further optional parameters are discussed in [1]_.
+
+    
     Parameters
     ----------
     dataframe : data object
@@ -289,8 +343,11 @@ class PCMCI():
         save_iterations : bool, optional (default: False)
             Whether to save iteration step results such as conditions used.
         
-        pc_alpha : float, optional (default: 0.1)
-            Significance level in algorithm. 
+        pc_alpha : float or None, optional (default: 0.2)
+            Significance level in algorithm. If a list is given, pc_alpha is
+            optimized using model selection criteria provided in the
+            cond_ind_test class as get_model_selection_criterion(). If None,
+            a default list of values is used.
         
         max_conds_dim : int, optional (default: None)
             Maximum number of conditions to test. If None is passed, this number
@@ -317,6 +374,9 @@ class PCMCI():
         iterations : dict
             Dictionary containing further information on algorithm steps.
         """
+
+        if pc_alpha is None:
+            pc_alpha = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
 
         p_max = {}
         test_statistic_values = {}
