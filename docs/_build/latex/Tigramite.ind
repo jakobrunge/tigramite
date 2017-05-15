@@ -1,0 +1,120 @@
+\begin{sphinxtheindex}
+\def\bigletter#1{{\Large\sffamily#1}\nopagebreak\vspace{1mm}}
+
+  \bigletter A
+  \item add\_lagfuncs() (tigramite.plotting.setup\_matrix method), \hyperpage{25}
+  \item all\_parents (PCMCI attribute), \hyperpage{4}
+
+  \indexspace
+  \bigletter C
+  \item CMIknn (class in tigramite.independence\_tests), \hyperpage{15}
+  \item CMIsymb (class in tigramite.independence\_tests), \hyperpage{16}
+  \item CondIndTest (class in tigramite.independence\_tests), \hyperpage{9}
+
+  \indexspace
+  \bigletter D
+  \item data (tigramite.data\_processing.DataFrame.self attribute), \hyperpage{17}
+  \item DataFrame (class in tigramite.data\_processing), \hyperpage{17}
+
+  \indexspace
+  \bigletter E
+  \item estimates (PCMCI attribute), \hyperpage{4}
+
+  \indexspace
+  \bigletter G
+  \item get\_analytic\_confidence() (tigramite.independence\_tests.CMIknn method), \hyperpage{15}
+  \item get\_analytic\_confidence() (tigramite.independence\_tests.CMIsymb method), \hyperpage{16}
+  \item get\_analytic\_confidence() (tigramite.independence\_tests.GPACE method), \hyperpage{14}
+  \item get\_analytic\_confidence() (tigramite.independence\_tests.ParCorr method), \hyperpage{12}
+  \item get\_analytic\_significance() (tigramite.independence\_tests.CMIknn method), \hyperpage{15}
+  \item get\_analytic\_significance() (tigramite.independence\_tests.CMIsymb method), 
+		\hyperpage{16}
+  \item get\_analytic\_significance() (tigramite.independence\_tests.GPACE method), \hyperpage{14}
+  \item get\_analytic\_significance() (tigramite.independence\_tests.ParCorr method), 
+		\hyperpage{12}
+  \item get\_bootstrap\_confidence() (tigramite.independence\_tests.CondIndTest method), 
+		\hyperpage{10}
+  \item get\_confidence() (tigramite.independence\_tests.CondIndTest method), \hyperpage{10}
+  \item get\_corrected\_pvalues() (tigramite.pcmci.PCMCI method), \hyperpage{5}
+  \item get\_dependence\_measure() (tigramite.independence\_tests.CMIknn method), \hyperpage{15}
+  \item get\_dependence\_measure() (tigramite.independence\_tests.CMIsymb method), \hyperpage{16}
+  \item get\_dependence\_measure() (tigramite.independence\_tests.GPACE method), \hyperpage{14}
+  \item get\_dependence\_measure() (tigramite.independence\_tests.ParCorr method), \hyperpage{12}
+  \item get\_fixed\_thres\_significance() (tigramite.independence\_tests.CondIndTest method), 
+		\hyperpage{10}
+  \item get\_lagged\_dependencies() (tigramite.pcmci.PCMCI method), \hyperpage{5}
+  \item get\_measure() (tigramite.independence\_tests.CondIndTest method), \hyperpage{11}
+  \item get\_model\_selection\_criterion() (tigramite.independence\_tests.CMIknn method), 
+		\hyperpage{16}
+  \item get\_model\_selection\_criterion() (tigramite.independence\_tests.CMIsymb method), 
+		\hyperpage{16}
+  \item get\_model\_selection\_criterion() (tigramite.independence\_tests.GPACE method), 
+		\hyperpage{14}
+  \item get\_model\_selection\_criterion() (tigramite.independence\_tests.ParCorr method), 
+		\hyperpage{12}
+  \item get\_shuffle\_significance() (tigramite.independence\_tests.CondIndTest method), 
+		\hyperpage{11}
+  \item GPACE (class in tigramite.independence\_tests), \hyperpage{13}
+
+  \indexspace
+  \bigletter I
+  \item iterations (PCMCI attribute), \hyperpage{4}
+
+  \indexspace
+  \bigletter L
+  \item lowhighpass\_filter() (in module tigramite.data\_processing), \hyperpage{17}
+
+  \indexspace
+  \bigletter M
+  \item mask (tigramite.data\_processing.DataFrame attribute), \hyperpage{17}
+
+  \indexspace
+  \bigletter N
+  \item N (PCMCI attribute), \hyperpage{5}
+
+  \indexspace
+  \bigletter O
+  \item ordinal\_patt\_array() (in module tigramite.data\_processing), \hyperpage{17}
+
+  \indexspace
+  \bigletter P
+  \item ParCorr (class in tigramite.independence\_tests), \hyperpage{12}
+  \item PCMCI (class in tigramite.pcmci), \hyperpage{3}
+  \item plot\_graph() (in module tigramite.plotting), \hyperpage{21}
+  \item plot\_time\_series\_graph() (in module tigramite.plotting), \hyperpage{22}
+  \item plot\_timeseries() (in module tigramite.plotting), \hyperpage{24}
+
+  \indexspace
+  \bigletter Q
+  \item quantile\_bin\_array() (in module tigramite.data\_processing), \hyperpage{18}
+
+  \indexspace
+  \bigletter R
+  \item run\_mci() (tigramite.pcmci.PCMCI method), \hyperpage{5}
+  \item run\_pc\_stable() (tigramite.pcmci.PCMCI method), \hyperpage{6}
+  \item run\_pcmci() (tigramite.pcmci.PCMCI method), \hyperpage{7}
+  \item run\_test() (tigramite.independence\_tests.CondIndTest method), \hyperpage{11}
+
+  \indexspace
+  \bigletter S
+  \item savefig() (tigramite.plotting.setup\_matrix method), \hyperpage{26}
+  \item set\_dataframe() (tigramite.independence\_tests.CondIndTest method), \hyperpage{11}
+  \item setup\_matrix (class in tigramite.plotting), \hyperpage{25}
+  \item smooth() (in module tigramite.data\_processing), \hyperpage{18}
+
+  \indexspace
+  \bigletter T
+  \item T (PCMCI attribute), \hyperpage{5}
+  \item tigramite.data\_processing (module), \hyperpage{17}
+  \item tigramite.plotting (module), \hyperpage{21}
+  \item time\_bin\_with\_mask() (in module tigramite.data\_processing), \hyperpage{18}
+
+  \indexspace
+  \bigletter V
+  \item var\_process() (in module tigramite.data\_processing), \hyperpage{19}
+
+  \indexspace
+  \bigletter W
+  \item weighted\_avg\_and\_std() (in module tigramite.data\_processing), \hyperpage{19}
+
+\end{sphinxtheindex}

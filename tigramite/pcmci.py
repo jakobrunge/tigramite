@@ -39,7 +39,7 @@ class PCMCI():
     Notes 
     ----- 
 
-    .. image:: mci_schematic.*
+    .. image:: docs/mci_schematic.*
        :width: 200pt
 
     In our framework, the dependency structure of a set of time series variables

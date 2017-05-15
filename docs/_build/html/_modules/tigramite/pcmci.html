@@ -1,0 +1,1524 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>tigramite.pcmci &#8212; Tigramite 3.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '3.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for tigramite.pcmci</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Tigramite causal discovery for time series.&quot;&quot;&quot;</span>
+
+<span class="c1"># Author: Jakob Runge &lt;jakobrunge@posteo.de&gt;</span>
+<span class="c1">#</span>
+<span class="c1"># License: GNU General Public License v3.0</span>
+
+
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">deepcopy</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">statsmodels</span>
+    <span class="kn">from</span> <span class="nn">statsmodels.sandbox.stats</span> <span class="k">import</span> <span class="n">multicomp</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Could not import statsmodels, p-value corrections not available.&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="PCMCI"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI">[docs]</a><span class="k">class</span> <span class="nc">PCMCI</span><span class="p">():</span>
+    <span class="sd">r&quot;&quot;&quot;PCMCI causal discovery for time series datasets.</span>
+
+<span class="sd">    PCMCI is a 2-step causal discovery method for large-scale time series</span>
+<span class="sd">    datasets. The first step is a condition-selection followed by the MCI</span>
+<span class="sd">    conditional independence test. The implementation is based on Algorithms 1</span>
+<span class="sd">    and 2 in [1]_.</span>
+
+<span class="sd">    PCMCI allows:</span>
+
+<span class="sd">       * different conditional independence test statistics adapted to</span>
+<span class="sd">         continuously-valued or discrete data, and different assumptions about</span>
+<span class="sd">         linear or nonlinear dependencies</span>
+<span class="sd">       * hyperparameter optimization</span>
+<span class="sd">       * easy parallelization</span>
+<span class="sd">       * handling of masked time series data</span>
+<span class="sd">       * false discovery control and confidence interval estimation</span>
+
+
+<span class="sd">    Notes </span>
+<span class="sd">    ----- </span>
+
+<span class="sd">    .. image:: mci_schematic.*</span>
+<span class="sd">       :width: 200pt</span>
+
+<span class="sd">    In our framework, the dependency structure of a set of time series variables</span>
+<span class="sd">    is represented in a *time series graph* as shown in the Figure. The nodes of</span>
+<span class="sd">    a time series graph are defined as the variables at different times and a</span>
+<span class="sd">    link exists if two lagged variables are *not* conditionally independent</span>
+<span class="sd">    given the past of the whole process. Assuming stationarity, the links are</span>
+<span class="sd">    repeated in time. The parents :math:`\mathcal{P}` of a variable are defined</span>
+<span class="sd">    as the set of all nodes with a link towards it.</span>
+
+<span class="sd">    PCMCI is based on a two-step procedure:</span>
+
+<span class="sd">    1.  Condition-selection: For all :math:`N` variables: Estimate *superset* of </span>
+<span class="sd">        parents :math:`\tilde{\mathcal{P}}(X^j_t)` with iterative PC1 algorithm </span>
+<span class="sd">        here implemented as ``run_pc_stable``.</span>
+
+
+<span class="sd">    2.  *Momentary conditional independence* (MCI)</span>
+
+<span class="sd">        .. math:: X^i_{t-\tau} ~\perp~ X^j_{t} ~|~ \tilde{\mathcal{P}}(X^j_t),</span>
+<span class="sd">                                        \tilde{\mathcal{P}}(X^i_{t-{\tau}})\,,</span>
+<span class="sd">    </span>
+<span class="sd">    here implemented as ``run_mci``. PCMCI can be flexibly combined with any</span>
+<span class="sd">    kind of conditional independence test statistic adapted to the kind of data</span>
+<span class="sd">    (continuous or discrete) and its assumed dependency structure. In Tigramite</span>
+<span class="sd">    implemented are ParCorr as a linear test, GPACE allowing nonlinear additive</span>
+<span class="sd">    dependencies, and CMI with different estimators making no assumptions about</span>
+<span class="sd">    the dependencies.</span>
+
+<span class="sd">    The main free parameters of PCMCI (in addition to free parameters of the</span>
+<span class="sd">    conditional independence test statistic) are the maximum time delay</span>
+<span class="sd">    :math:`\tau_{\max}` and the significance threshold in the condition-</span>
+<span class="sd">    selection step :math:`\alpha`. The maximum time delay depends on the</span>
+<span class="sd">    application and should be chosen according to the maximum causal time lag</span>
+<span class="sd">    expected in the complex system. We recommend a rather large choice that</span>
+<span class="sd">    includes peaks in the lagged cross-correlation function (or a more general</span>
+<span class="sd">    measure). :math:`\alpha` should not be seen as a significance test level in</span>
+<span class="sd">    the condition-selection step since the iterative hypothesis tests do not</span>
+<span class="sd">    allow for a precise confidence level. :math:`\alpha` rather takes the role</span>
+<span class="sd">    of a regularization parameter in model-selection techniques. The</span>
+<span class="sd">    conditioning sets :math:`\tilde{\mathcal{P}}`  should include the true</span>
+<span class="sd">    parents and at the same time be small in size to reduce the estimation</span>
+<span class="sd">    dimension of the MCI test and improve its power. But the first demand is</span>
+<span class="sd">    typically more important. If a list of values is given or ``pc_alpha=None``,</span>
+<span class="sd">    this parameter is optimized using model selection criteria.</span>
+
+<span class="sd">    Further optional parameters are discussed in [1]_.</span>
+
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dataframe : data object</span>
+<span class="sd">        This can either be the tigramite dataframe object or a pandas data</span>
+<span class="sd">        frame. It must have the attributes dataframe.values yielding a numpy</span>
+<span class="sd">        array of shape (observations T, variables N) and optionally a mask of </span>
+<span class="sd">        the same shape.</span>
+
+<span class="sd">    cond_ind_test : conditional independence test object</span>
+<span class="sd">        This can be ParCorr or other classes from the tigramite package or an</span>
+<span class="sd">        external test passed as a callable. This test can be based on the class</span>
+<span class="sd">        tigramite.independence_tests.CondIndTest. If a callable is passed, it</span>
+<span class="sd">        must have the signature::</span>
+
+<span class="sd">            class CondIndTest():</span>
+<span class="sd">                # with attributes</span>
+<span class="sd">                # * measure : str</span>
+<span class="sd">                #   name of the test</span>
+<span class="sd">                # * use_mask : bool</span>
+<span class="sd">                #   whether the mask should be used</span>
+
+<span class="sd">                # and functions</span>
+<span class="sd">                # * run_test(X, Y, Z, tau_max) : where X,Y,Z are of the form </span>
+<span class="sd">                #   X = [(var, -tau)]  for non-negative integers var and tau</span>
+<span class="sd">                #   specifying the variable and time lag</span>
+<span class="sd">                #   return (test statistic value, p-value)</span>
+<span class="sd">                # * set_dataframe(dataframe) : set dataframe object</span>
+
+<span class="sd">                # optionally also</span>
+
+<span class="sd">                # * get_model_selection_criterion(j, parents) : required if</span>
+<span class="sd">                #   pc_alpha parameter is to be optimized. Here j is the </span>
+<span class="sd">                #   variable index and parents a list [(var, -tau), ...]</span>
+<span class="sd">                #   return score for model selection</span>
+<span class="sd">                # * get_confidence(X, Y, Z, tau_max) : required for </span>
+<span class="sd">                #   return_confidence=True</span>
+<span class="sd">                #   estimate confidence interval after run_test was called</span>
+<span class="sd">                #   return (lower bound, upper bound)</span>
+
+<span class="sd">    selected_variables : list of integers, optional (default: range(N))</span>
+<span class="sd">        Specify to estimate parents only for selected variables. If None is</span>
+<span class="sd">        passed, parents are estimated for all variables.</span>
+
+<span class="sd">    var_names : list of strings, optional (default: range(N))</span>
+<span class="sd">        Names of variables, must match the number of variables. If None is</span>
+<span class="sd">        passed, variables are enumerated as [0, 1, ...]</span>
+
+<span class="sd">    verbosity : int, optional (default: 0)</span>
+<span class="sd">        Verbose levels 0, 1, ...</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    all_parents : dictionary    </span>
+<span class="sd">        Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing the</span>
+<span class="sd">        conditioning-parents estimated with PC algorithm.</span>
+<span class="sd">    </span>
+<span class="sd">    estimates : dictionary</span>
+
+<span class="sd">        Dictionary of form estimates[j][(i, -tau)] = {&#39;min_val&#39;: float,</span>
+<span class="sd">        &#39;max_pval&#39;: float,...} containing the  minimum test statistic value and</span>
+<span class="sd">        maximum p-value for each link estimated in the PC algorithm.</span>
+<span class="sd">    </span>
+<span class="sd">    iterations : dictionary</span>
+<span class="sd">        Dictionary containing further information on algorithm steps.</span>
+<span class="sd">    </span>
+<span class="sd">    N : int</span>
+<span class="sd">        Number of variables.</span>
+<span class="sd">    </span>
+<span class="sd">    T : int</span>
+<span class="sd">        Time series sample length.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] J. Runge, D. Sejdinovic, S. Flaxman (2017): Detecting causal</span>
+<span class="sd">           associations in large nonlinear time series datasets, </span>
+<span class="sd">           https://arxiv.org/abs/1702.07007</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">,</span>
+                 <span class="n">cond_ind_test</span><span class="p">,</span>
+                 <span class="n">selected_variables</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">var_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span> <span class="o">=</span> <span class="n">dataframe</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">=</span> <span class="n">verbosity</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span> <span class="o">=</span> <span class="n">cond_ind_test</span>
+
+        <span class="k">if</span> <span class="n">var_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">))])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span> <span class="o">=</span> <span class="n">var_names</span>
+
+        <span class="n">cond_ind_test</span><span class="o">.</span><span class="n">set_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">if</span> <span class="n">selected_variables</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">selected_variables</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">selected_variables</span> <span class="o">=</span> <span class="n">selected_variables</span>
+
+
+        <span class="c1"># Some checks</span>
+        <span class="k">if</span> <span class="n">selected_variables</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">selected_variables</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span>
+                    <span class="n">numpy</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">selected_variables</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;selected_variables must be within 0..N-1&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">cond_ind_test</span><span class="o">.</span><span class="n">use_mask</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;dataframe.mask must be array of same shape&quot;</span>
+                                 <span class="s2">&quot; as fulldata.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">dataframe</span><span class="o">.</span><span class="n">mask</span><span class="p">)</span> <span class="o">!=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;dataframe.mask is of type </span><span class="si">%s</span><span class="s2">, &quot;</span> <span class="o">%</span>
+                                <span class="nb">type</span><span class="p">(</span><span class="n">dataframe</span><span class="o">.</span><span class="n">mask</span><span class="p">)</span> <span class="o">+</span>
+                                <span class="s2">&quot;must be numpy.ndarray&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">dataframe</span><span class="o">.</span><span class="n">mask</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;NaNs in the sample_selector&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;shape mismatch: data.shape = </span><span class="si">%s</span><span class="s2">&quot;</span>
+                                 <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span>
+                                 <span class="s2">&quot; but data_mask.shape = </span><span class="si">%s</span><span class="s2">, must identical&quot;</span>
+                                 <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">dataframe</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+    <span class="k">class</span> <span class="nc">_Conditions</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;Helper class to keep track of conditions.</span>
+
+<span class="sd">        Tracks conditions already used for link (i, -tau) --&gt; j</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        j : int</span>
+<span class="sd">            Index of current variable.</span>
+
+<span class="sd">        parent : tuple</span>
+<span class="sd">            Tuple of form (i, -tau).</span>
+
+<span class="sd">        conds_dim : int</span>
+<span class="sd">            Cardinality in current step.</span>
+
+<span class="sd">        parents_j : list</span>
+<span class="sd">            List of form [(0, -1), (3, -2), ...]</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        parents_j_excl_current : list</span>
+<span class="sd">            List of current parents excluding parent being tested.</span>
+<span class="sd">        checked_conds : list</span>
+<span class="sd">            List of already checked condition sets.</span>
+
+<span class="sd">         &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">conds_dim</span><span class="p">,</span> <span class="n">parents_j</span><span class="p">):</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">j</span> <span class="o">=</span> <span class="n">j</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">parent</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">conds_dim</span> <span class="o">=</span> <span class="n">conds_dim</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parents_j_excl_current</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parents_j</span> <span class="k">if</span> <span class="n">p</span> <span class="o">!=</span> <span class="n">parent</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">checked_conds</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">def</span> <span class="nf">next_cond</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">check_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Yield next condition.</span>
+
+<span class="sd">            Returns next condition from lexicographically ordered conditions.</span>
+<span class="sd">            Returns False if all possible conditions have been tested.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            check_only : bool, default: False</span>
+<span class="sd">                Return only True instead of next condition.</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            cond :  list or bool</span>
+<span class="sd">                List of form [(0, -1), (3, -2), ...] yielding next condition.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parents_j_excl_current</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">conds_dim</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+            <span class="k">for</span> <span class="n">cond</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parents_j_excl_current</span><span class="p">,</span> 
+                                                <span class="bp">self</span><span class="o">.</span><span class="n">conds_dim</span><span class="p">):</span>
+
+                <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">cond</span><span class="p">))</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">checked_conds</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">check_only</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">checked_conds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">cond</span><span class="p">)))</span>
+                        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">cond</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="kc">True</span>
+
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">_sort_parents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_statistic_values</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sort current parents according to test statistic values.</span>
+
+<span class="sd">        Sorting is from strongest to weakest absolute values.</span>
+
+<span class="sd">        Paramters</span>
+<span class="sd">        ---------</span>
+<span class="sd">        test_statistic_values : dict</span>
+<span class="sd">            Dictionary of form {(0, -1):float, ...} containing the minimum test</span>
+<span class="sd">            statistic value of a link</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        parents : list</span>
+<span class="sd">            List of form [(0, -1), (3, -2), ...] containing sorted parents.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">    Sorting parents in decreasing order with &quot;</span>
+                  <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">    weight(i-tau-&gt;j) = min_</span><span class="si">{iterations}</span><span class="s2"> |I_</span><span class="si">{ij}</span><span class="s2">(tau)| &quot;</span><span class="p">)</span>
+
+        <span class="n">abs_values</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">key</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">test_statistic_values</span><span class="p">[</span><span class="n">key</span><span class="p">]))</span>
+                           <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">test_statistic_values</span><span class="o">.</span><span class="n">keys</span><span class="p">()])</span>
+
+        <span class="n">parents</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">abs_values</span><span class="p">,</span>
+                         <span class="n">key</span><span class="o">=</span><span class="n">abs_values</span><span class="o">.</span><span class="n">get</span><span class="p">,</span>
+                         <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">parents</span>
+
+    <span class="c1"># @profile</span>
+    <span class="k">def</span> <span class="nf">_run_pc_stable_single</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span>
+                             <span class="n">selected_links</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                             <span class="n">tau_min</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                             <span class="n">tau_max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                             <span class="n">save_iterations</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                             <span class="n">pc_alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+                             <span class="n">max_conds_dim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                             <span class="n">max_combinations</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                             <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;PC algorithm for estimating parents of single variable.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        j : int</span>
+<span class="sd">            Variable index.</span>
+<span class="sd">        </span>
+<span class="sd">        selected_links : list, optional (default: None)</span>
+<span class="sd">            List of form [(0, -1), (3, -2), ...]</span>
+<span class="sd">            specifying whether only selected links should be tested. If None is</span>
+<span class="sd">            passed, all links are tested</span>
+<span class="sd">        </span>
+<span class="sd">        tau_min : int, optional (default: 1)</span>
+<span class="sd">            Minimum time lag to test. Useful for variable selection in </span>
+<span class="sd">            multi-step ahead predictions.</span>
+<span class="sd">        </span>
+<span class="sd">        tau_max : int, optional (default: 1)</span>
+<span class="sd">            Maximum time lag. Must be larger or equal to tau_min.</span>
+<span class="sd">        </span>
+<span class="sd">        save_iterations : bool, optional (default: False)</span>
+<span class="sd">            Whether to save iteration step results such as conditions used.</span>
+<span class="sd">        </span>
+<span class="sd">        pc_alpha : float or None, optional (default: 0.2)</span>
+<span class="sd">            Significance level in algorithm. If a list is given, pc_alpha is</span>
+<span class="sd">            optimized using model selection criteria provided in the</span>
+<span class="sd">            cond_ind_test class as get_model_selection_criterion(). If None,</span>
+<span class="sd">            a default list of values is used.</span>
+<span class="sd">        </span>
+<span class="sd">        max_conds_dim : int, optional (default: None)</span>
+<span class="sd">            Maximum number of conditions to test. If None is passed, this number</span>
+<span class="sd">            is unrestricted.</span>
+<span class="sd">        </span>
+<span class="sd">        max_combinations : int, optional (default: 1)</span>
+<span class="sd">            Maximum number of combinations of conditions of current cardinality</span>
+<span class="sd">            to test. Defaults to 1 for PC_1 algorithm. For original PC algorithm</span>
+<span class="sd">            a larger number, such as 10, can be used.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        parents : list</span>
+<span class="sd">            List of estimated parents.</span>
+<span class="sd">        </span>
+<span class="sd">        test_statistic_values : dict</span>
+<span class="sd">            Dictionary of form {(0, -1):float, ...} containing the minimum test</span>
+<span class="sd">            statistic value of a link.</span>
+<span class="sd">        </span>
+<span class="sd">        p_max : dict</span>
+<span class="sd">            Dictionary of form {(0, -1):float, ...} containing the maximum </span>
+<span class="sd">            p-value of a link across different conditions.</span>
+<span class="sd">        </span>
+<span class="sd">        iterations : dict</span>
+<span class="sd">            Dictionary containing further information on algorithm steps.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">pc_alpha</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">pc_alpha</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]</span>
+
+        <span class="n">p_max</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">test_statistic_values</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">parents</span> <span class="o">=</span> <span class="n">selected_links</span>
+
+        <span class="n">iterations</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;iterations&#39;</span><span class="p">:</span> <span class="p">{}}</span>
+
+        <span class="c1">#</span>
+        <span class="c1"># Iteration through increasing number of conditions</span>
+        <span class="c1">#</span>
+        <span class="n">converged</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="n">conds_dim</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>   
+        <span class="k">while</span> <span class="p">(</span><span class="n">conds_dim</span> <span class="o">&lt;</span> <span class="n">max_conds_dim</span><span class="p">):</span>
+
+            <span class="n">conds_dim</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="k">if</span> <span class="n">save_iterations</span><span class="p">:</span>
+                <span class="n">iterations</span><span class="p">[</span><span class="s1">&#39;iterations&#39;</span><span class="p">][</span><span class="n">conds_dim</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+            <span class="c1"># Re-initiate list of non-significant links</span>
+            <span class="n">nonsig_parents</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parents</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="n">conds_dim</span><span class="p">:</span>
+                <span class="n">converged</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="c1"># if converged:</span>
+                <span class="k">break</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Testing condition sets of dimension&quot;</span>
+                      <span class="s2">&quot; </span><span class="si">%d</span><span class="s2">:&quot;</span> <span class="o">%</span> <span class="n">conds_dim</span><span class="p">)</span>
+
+            <span class="n">parents_here</span> <span class="o">=</span> <span class="n">parents</span>
+
+            <span class="c1"># Iterate through all possible pairs (that have not converged yet)</span>
+            <span class="k">for</span> <span class="n">ip</span><span class="p">,</span> <span class="n">parent</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">parents_here</span><span class="p">):</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">    Link (</span><span class="si">%s</span><span class="s2"> </span><span class="si">%d</span><span class="s2">) --&gt; </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2">):&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">parent</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">parent</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">],</span>
+                        <span class="n">ip</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">parents_here</span><span class="p">)))</span>
+
+                <span class="k">if</span> <span class="n">save_iterations</span><span class="p">:</span>
+                    <span class="n">iterations</span><span class="p">[</span><span class="s1">&#39;iterations&#39;</span><span class="p">][</span><span class="n">conds_dim</span><span class="p">][</span><span class="n">parent</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+                <span class="c1"># Initiate conditions class</span>
+                <span class="n">conditions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Conditions</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">conds_dim</span><span class="p">,</span> <span class="n">parents</span><span class="p">)</span>
+
+                <span class="n">comb_index</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">while</span> <span class="n">comb_index</span> <span class="o">&lt;</span> <span class="n">max_combinations</span> <span class="ow">and</span> <span class="n">conditions</span><span class="o">.</span><span class="n">next_cond</span><span class="p">(</span>
+                                                        <span class="n">check_only</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+                    <span class="n">comb_index</span> <span class="o">+=</span> <span class="mi">1</span>
+
+                    <span class="c1"># Choose next condition</span>
+                    <span class="n">Z</span> <span class="o">=</span> <span class="n">conditions</span><span class="o">.</span><span class="n">next_cond</span><span class="p">()</span>
+
+                    <span class="c1"># Perform independence test</span>
+                    <span class="n">i</span><span class="p">,</span> <span class="n">tau</span> <span class="o">=</span> <span class="n">parent</span>
+
+                    <span class="n">val</span><span class="p">,</span> <span class="n">pval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span><span class="o">.</span><span class="n">run_test</span><span class="p">(</span>
+                        <span class="n">X</span><span class="o">=</span><span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">)],</span>
+                        <span class="n">Y</span><span class="o">=</span><span class="p">[(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">)],</span>
+                        <span class="n">Z</span><span class="o">=</span><span class="n">Z</span><span class="p">,</span>
+                        <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">var_name_Z</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+                        <span class="k">for</span> <span class="n">Zi</span> <span class="ow">in</span> <span class="n">Z</span><span class="p">:</span>
+                            <span class="n">var_name_Z</span> <span class="o">+=</span> <span class="s2">&quot;(</span><span class="si">%s</span><span class="s2"> </span><span class="si">%d</span><span class="s2">) &quot;</span> <span class="o">%</span> <span class="p">(</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">Zi</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">Zi</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    Combination </span><span class="si">%d</span><span class="s2">: </span><span class="si">%s</span><span class="s2"> --&gt; pval = </span><span class="si">%.5f</span><span class="s2"> /&quot;</span>
+                              <span class="s2">&quot; val = </span><span class="si">%.3f</span><span class="s2">&quot;</span> <span class="o">%</span>
+                              <span class="p">(</span><span class="n">comb_index</span><span class="p">,</span> <span class="n">var_name_Z</span><span class="p">,</span> <span class="n">pval</span><span class="p">,</span> <span class="n">val</span><span class="p">))</span>
+
+                    <span class="c1"># Keep track of maximum p-value and minimum estimated value</span>
+                    <span class="c1"># for each pair (across any condition)</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">)</span> <span class="ow">in</span> <span class="n">test_statistic_values</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                        <span class="n">test_statistic_values</span><span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">)]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">val</span><span class="p">),</span>
+                                                <span class="n">test_statistic_values</span><span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">)])</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">test_statistic_values</span><span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">)]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">)</span> <span class="ow">in</span> <span class="n">p_max</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                        <span class="n">p_max</span><span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">)]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">pval</span><span class="p">),</span>
+                                              <span class="n">p_max</span><span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">)])</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">p_max</span><span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">)]</span> <span class="o">=</span> <span class="n">pval</span>
+
+                    <span class="k">if</span> <span class="n">save_iterations</span><span class="p">:</span>
+                        <span class="n">iterations</span><span class="p">[</span><span class="s1">&#39;iterations&#39;</span><span class="p">][</span><span class="n">conds_dim</span><span class="p">][</span><span class="n">parent</span><span class="p">][</span>
+                                <span class="n">comb_index</span><span class="p">]</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;conds&#39;</span><span class="p">:</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">Z</span><span class="p">),</span>
+                                             <span class="s1">&#39;val&#39;</span><span class="p">:</span> <span class="n">val</span><span class="p">,</span> <span class="s1">&#39;pval&#39;</span><span class="p">:</span> <span class="n">pval</span><span class="p">}</span>
+
+                    <span class="c1"># Delete link later and break while-loop if non-significant</span>
+                    <span class="k">if</span> <span class="n">pval</span> <span class="o">&gt;</span> <span class="n">pc_alpha</span><span class="p">:</span>
+                        <span class="n">nonsig_parents</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">j</span><span class="p">,</span> <span class="n">parent</span><span class="p">))</span>
+                        <span class="k">break</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">pval</span> <span class="o">&gt;</span> <span class="n">pc_alpha</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    Non-significance detected.&quot;</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="n">conditions</span><span class="o">.</span><span class="n">next_cond</span><span class="p">(</span><span class="n">check_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    No conditions of dimension </span><span class="si">%d</span><span class="s2"> left.&quot;</span> <span class="o">%</span>
+                              <span class="n">conds_dim</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    Still conditions of dimension </span><span class="si">%d</span><span class="s2"> left,&quot;</span>
+                              <span class="s2">&quot; but q_max = </span><span class="si">%d</span><span class="s2"> reached.&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                            <span class="n">conds_dim</span><span class="p">,</span> <span class="n">max_combinations</span><span class="p">))</span>
+
+            <span class="c1"># Remove non-significant links</span>
+            <span class="k">for</span> <span class="n">j_parent</span> <span class="ow">in</span> <span class="n">nonsig_parents</span><span class="p">:</span>
+                <span class="n">j</span><span class="p">,</span> <span class="n">parent</span> <span class="o">=</span> <span class="n">j_parent</span>
+
+                <span class="k">del</span> <span class="n">parents</span><span class="p">[</span><span class="n">parents</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">parent</span><span class="p">)]</span>
+                <span class="k">del</span> <span class="n">test_statistic_values</span><span class="p">[</span><span class="n">parent</span><span class="p">]</span>
+
+            <span class="n">parents</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sort_parents</span><span class="p">(</span><span class="n">test_statistic_values</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Updating parents:&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_print_parents_single</span><span class="p">(</span>
+                    <span class="n">j</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">test_statistic_values</span><span class="p">,</span> <span class="n">p_max</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">save_iterations</span><span class="p">:</span>
+            <span class="n">iterations</span><span class="p">[</span><span class="s1">&#39;p_max&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">p_max</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">converged</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Algorithm converged for variable </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span>
+                      <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Algorithm not yet converged, but max_conds_dim = </span><span class="si">%d</span><span class="s2">&quot;</span>
+                    <span class="s2">&quot; reached.&quot;</span> <span class="o">%</span> <span class="n">max_conds_dim</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">parents</span><span class="p">,</span> <span class="n">test_statistic_values</span><span class="p">,</span> <span class="n">p_max</span><span class="p">,</span> <span class="n">iterations</span>
+
+<div class="viewcode-block" id="PCMCI.run_pc_stable"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.run_pc_stable">[docs]</a>    <span class="k">def</span> <span class="nf">run_pc_stable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                      <span class="n">selected_links</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">tau_min</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                      <span class="n">tau_max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                      <span class="n">save_iterations</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                      <span class="n">pc_alpha</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+                      <span class="n">max_conds_dim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">max_combinations</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                      <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;PC algorithm for estimating parents of all variables.</span>
+
+<span class="sd">        Parents are made available as self.all_parents</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        selected_links : dict or None</span>
+<span class="sd">            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} </span>
+<span class="sd">            specifying whether only selected links should be tested. If None is</span>
+<span class="sd">            passed, all links are tested</span>
+
+<span class="sd">        tau_min : int, default: 1</span>
+<span class="sd">            Minimum time lag to test. Useful for multi-step ahead predictions.</span>
+<span class="sd">        </span>
+<span class="sd">        tau_max : int, default: 1</span>
+<span class="sd">            Maximum time lag. Must be larger or equal to tau_min.</span>
+<span class="sd">        </span>
+<span class="sd">        save_iterations : bool, default: False</span>
+<span class="sd">            Whether to save iteration step results such as conditions used.</span>
+<span class="sd">        </span>
+<span class="sd">        pc_alpha : float or list of floats, default: 0.1</span>
+<span class="sd">            Significance level in algorithm. If a list is passed, then the</span>
+<span class="sd">            pc_alpha level is optimized for every variable across the given </span>
+<span class="sd">            pc_alpha values using the score computed in </span>
+<span class="sd">            cond_ind_test.get_model_selection_criterion()</span>
+<span class="sd">        </span>
+<span class="sd">        max_conds_dim : int or None</span>
+<span class="sd">            Maximum number of conditions to test. If None is passed, this number</span>
+<span class="sd">            is unrestricted.</span>
+<span class="sd">        </span>
+<span class="sd">        max_combinations : int, default: 1</span>
+<span class="sd">            Maximum number of combinations of conditions of current cardinality</span>
+<span class="sd">            to test. Defaults to 1 for PC_1 algorithm. For original PC algorithm</span>
+<span class="sd">            a larger number, such as 10, can be used.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        all_parents : dict</span>
+<span class="sd">            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} </span>
+<span class="sd">            containing estimated parents.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">pc_alpha</span><span class="p">)</span> <span class="o">==</span> <span class="nb">float</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">alpha_selection</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">alpha_selection</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="n">tau_min</span> <span class="o">&gt;</span> <span class="n">tau_max</span> <span class="ow">or</span> <span class="nb">min</span><span class="p">(</span><span class="n">tau_min</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;tau_max = </span><span class="si">%d</span><span class="s2">, tau_min = </span><span class="si">%d</span><span class="s2">, &quot;</span> <span class="o">%</span> <span class="p">(</span>
+                             <span class="n">tau_max</span><span class="p">,</span> <span class="n">tau_min</span><span class="p">)</span>
+                             <span class="o">+</span> <span class="s2">&quot;but 0 &lt;= tau_min &lt;= tau_max&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">selected_links</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">selected_links</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_variables</span><span class="p">:</span>
+                    <span class="n">selected_links</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="p">[(</span><span class="n">var</span><span class="p">,</span> <span class="o">-</span><span class="n">lag</span><span class="p">)</span>
+                                         <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+                                         <span class="k">for</span> <span class="n">lag</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">tau_min</span><span class="p">,</span> <span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                                         <span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">selected_links</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="n">max_combinations</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_combinations must be &gt; 0&quot;</span><span class="p">)</span>
+
+        <span class="n">p_max</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">j</span><span class="p">,</span> <span class="p">{})</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)])</span>
+        <span class="n">test_statistic_values</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">j</span><span class="p">,</span> <span class="p">{})</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)])</span>
+        <span class="n">all_parents</span> <span class="o">=</span> <span class="n">selected_links</span>
+
+        <span class="n">iterations</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">j</span><span class="p">,</span> <span class="p">{})</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)])</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">##</span><span class="se">\n</span><span class="s2">## Running Tigramite PC algorithm</span><span class="se">\n</span><span class="s2">##&quot;</span>
+                  <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">Parameters:&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">independence test = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span><span class="o">.</span><span class="n">measure</span>
+                  <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">tau_min = </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">tau_min</span>
+                  <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">tau_max = </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">tau_max</span>
+                  <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">pc_alpha = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">pc_alpha</span>
+                  <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">max_conds_dim = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">max_conds_dim</span>
+                  <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">max_combinations = </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">max_combinations</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">max_conds_dim</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">max_conds_dim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">*</span> <span class="n">tau_max</span>
+
+        <span class="k">if</span> <span class="n">max_conds_dim</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_conds_dim must be &gt;= 0&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_variables</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">## Variable </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha_selection</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="p">(</span><span class="n">all_parents</span><span class="p">[</span><span class="n">j</span><span class="p">],</span>
+                 <span class="n">test_statistic_values</span><span class="p">[</span><span class="n">j</span><span class="p">],</span>
+                 <span class="n">p_max</span><span class="p">[</span><span class="n">j</span><span class="p">],</span>
+                 <span class="n">iterations</span><span class="p">[</span><span class="n">j</span><span class="p">])</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_pc_stable_single</span><span class="p">(</span><span class="n">j</span><span class="p">,</span>
+                                            <span class="n">selected_links</span><span class="o">=</span><span class="n">selected_links</span><span class="p">[</span><span class="n">j</span><span class="p">],</span>
+                                            <span class="n">tau_min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span>
+                                            <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
+                                            <span class="n">save_iterations</span><span class="o">=</span><span class="n">save_iterations</span><span class="p">,</span>
+                                            <span class="n">pc_alpha</span><span class="o">=</span><span class="n">pc_alpha</span><span class="p">,</span>
+                                            <span class="n">max_conds_dim</span><span class="o">=</span><span class="n">max_conds_dim</span><span class="p">,</span>
+                                            <span class="n">max_combinations</span><span class="o">=</span><span class="n">max_combinations</span><span class="p">,</span>
+                                            <span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Iterating through pc_alpha = </span><span class="si">%s</span><span class="s2">:&quot;</span> <span class="o">%</span> <span class="n">pc_alpha</span><span class="p">)</span>
+
+                <span class="n">score</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pc_alpha</span><span class="p">))</span>
+                <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">for</span> <span class="n">iscore</span><span class="p">,</span> <span class="n">pc_alpha_here</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pc_alpha</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"># pc_alpha = </span><span class="si">%.3f</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2">):&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">pc_alpha_here</span><span class="p">,</span>
+                                            <span class="n">iscore</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">pc_alpha</span><span class="p">)))</span>
+
+                    <span class="n">results</span><span class="p">[</span><span class="n">pc_alpha_here</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_pc_stable_single</span><span class="p">(</span><span class="n">j</span><span class="p">,</span>
+                                       <span class="n">selected_links</span><span class="o">=</span><span class="n">selected_links</span><span class="p">[</span><span class="n">j</span><span class="p">],</span>
+                                       <span class="n">tau_min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span>
+                                       <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
+                                       <span class="n">save_iterations</span><span class="o">=</span><span class="n">save_iterations</span><span class="p">,</span>
+                                       <span class="n">pc_alpha</span><span class="o">=</span><span class="n">pc_alpha_here</span><span class="p">,</span>
+                                       <span class="n">max_conds_dim</span><span class="o">=</span><span class="n">max_conds_dim</span><span class="p">,</span>
+                                       <span class="n">max_combinations</span><span class="o">=</span><span class="n">max_combinations</span><span class="p">,</span>
+                                       <span class="p">)</span>
+
+                    <span class="c1"># Score</span>
+                    <span class="n">parents_here</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="n">pc_alpha_here</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+                    <span class="n">mscore</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span><span class="o">.</span><span class="n">get_model_selection_criterion</span><span class="p">(</span><span class="n">j</span><span class="p">,</span>
+                                                     <span class="n">parents_here</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">)</span>
+                    <span class="n">score</span><span class="p">[</span><span class="n">iscore</span><span class="p">]</span> <span class="o">=</span> <span class="n">mscore</span>
+
+                <span class="n">optimal_alpha</span> <span class="o">=</span> <span class="n">pc_alpha</span><span class="p">[</span><span class="n">score</span><span class="o">.</span><span class="n">argmin</span><span class="p">()]</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"># Condition selection results:&quot;</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">iscore</span><span class="p">,</span> <span class="n">pc_alpha_here</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pc_alpha</span><span class="p">):</span>
+                        <span class="n">names_parents</span> <span class="o">=</span> <span class="s2">&quot;[ &quot;</span>
+                        <span class="k">for</span> <span class="n">pari</span> <span class="ow">in</span> <span class="n">results</span><span class="p">[</span><span class="n">pc_alpha_here</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span>
+                            <span class="n">names_parents</span> <span class="o">+=</span> <span class="s2">&quot;(</span><span class="si">%s</span><span class="s2"> </span><span class="si">%d</span><span class="s2">) &quot;</span> <span class="o">%</span> <span class="p">(</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">pari</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">pari</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                        <span class="n">names_parents</span> <span class="o">+=</span> <span class="s2">&quot;]&quot;</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    pc_alpha=</span><span class="si">%s</span><span class="s2"> got score </span><span class="si">%.4f</span><span class="s2"> with parents </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span>
+                              <span class="p">(</span><span class="n">pc_alpha_here</span><span class="p">,</span> <span class="n">score</span><span class="p">[</span><span class="n">iscore</span><span class="p">],</span> <span class="n">names_parents</span><span class="p">))</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">--&gt; optimal pc_alpha for variable </span><span class="si">%s</span><span class="s2"> is </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span>
+                          <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">optimal_alpha</span><span class="p">))</span>
+
+                <span class="p">(</span><span class="n">all_parents</span><span class="p">[</span><span class="n">j</span><span class="p">],</span>
+                 <span class="n">test_statistic_values</span><span class="p">[</span><span class="n">j</span><span class="p">],</span>
+                 <span class="n">p_max</span><span class="p">[</span><span class="n">j</span><span class="p">],</span>
+                 <span class="n">iterations</span><span class="p">[</span><span class="n">j</span><span class="p">])</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="n">optimal_alpha</span><span class="p">]</span>
+
+                <span class="n">iterations</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="s1">&#39;optimal_pc_alpha&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">optimal_alpha</span>
+
+        <span class="c1"># Return results</span>
+        <span class="n">estimates</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_variables</span><span class="p">:</span>
+            <span class="n">estimates</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">parent</span> <span class="ow">in</span> <span class="n">all_parents</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
+                <span class="n">estimates</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">parent</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                                    <span class="s1">&#39;min_val&#39;</span><span class="p">:</span> <span class="n">test_statistic_values</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">parent</span><span class="p">],</span>
+                                    <span class="s1">&#39;max_pval&#39;</span><span class="p">:</span> <span class="n">p_max</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">parent</span><span class="p">],</span>
+                                     <span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">all_parents</span> <span class="o">=</span> <span class="n">all_parents</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">estimates</span> <span class="o">=</span> <span class="n">estimates</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iterations</span> <span class="o">=</span> <span class="n">iterations</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">## Resulting condition sets:&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_print_parents</span><span class="p">(</span><span class="n">all_parents</span><span class="p">,</span> <span class="n">test_statistic_values</span><span class="p">,</span> <span class="n">p_max</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">all_parents</span></div>
+
+    <span class="k">def</span> <span class="nf">_print_parents_single</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">test_statistic_values</span><span class="p">,</span> <span class="n">p_max</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Print current parents for variable j.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        j : int</span>
+<span class="sd">            Index of current variable.</span>
+<span class="sd">        </span>
+<span class="sd">        parents : list</span>
+<span class="sd">            List of form [(0, -1), (3, -2), ...]</span>
+<span class="sd">        </span>
+<span class="sd">        test_statistic_values : dict</span>
+<span class="sd">            Dictionary of form {(0, -1):float, ...} containing the minimum test</span>
+<span class="sd">            statistic value of a link</span>
+
+<span class="sd">        p_max : dict</span>
+<span class="sd">            Dictionary of form {(0, -1):float, ...} containing the maximum </span>
+<span class="sd">            p-value of a link across different conditions.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self : returns an instance of self.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+    
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parents</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">20</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">    Variable </span><span class="si">%s</span><span class="s2"> has </span><span class="si">%d</span><span class="s2"> parent(s):&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="n">parents</span><span class="p">)))</span>
+            <span class="c1"># if hasattr(self, &#39;iterations&#39;):</span>
+            <span class="c1">#     print self.iterations</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;iterations&#39;</span><span class="p">)</span> 
+                <span class="ow">and</span> <span class="s1">&#39;optimal_pc_alpha&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterations</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    [pc_alpha = </span><span class="si">%s</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">iterations</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="s1">&#39;optimal_pc_alpha&#39;</span><span class="p">]))</span>    
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parents</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;        (</span><span class="si">%s</span><span class="s2"> </span><span class="si">%d</span><span class="s2">): max_pval = </span><span class="si">%.5f</span><span class="s2">, min_val = </span><span class="si">%.3f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">p_max</span><span class="p">[</span><span class="n">p</span><span class="p">],</span> 
+                    <span class="n">test_statistic_values</span><span class="p">[</span><span class="n">p</span><span class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">    Variable </span><span class="si">%s</span><span class="s2"> has </span><span class="si">%d</span><span class="s2"> parent(s):&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="n">parents</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">_print_parents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">all_parents</span><span class="p">,</span> <span class="n">test_statistic_values</span><span class="p">,</span> <span class="n">p_max</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Print current parents.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        all_parents : dictionary    </span>
+<span class="sd">            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing </span>
+<span class="sd">            the conditioning-parents estimated with PC algorithm.</span>
+
+<span class="sd">        test_statistic_values : dict</span>
+<span class="sd">            Dictionary of form {0:{(0, -1):float, ...}} containing the minimum </span>
+<span class="sd">            test statistic value of a link</span>
+
+<span class="sd">        p_max : dict</span>
+<span class="sd">            Dictionary of form {0:{(0, -1):float, ...}} containing the maximum </span>
+<span class="sd">            p-value of a link across different conditions.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self : returns an instance of self.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="p">[</span><span class="n">var</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">all_parents</span><span class="o">.</span><span class="n">keys</span><span class="p">()]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_print_parents_single</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">all_parents</span><span class="p">[</span><span class="n">j</span><span class="p">],</span>
+                                       <span class="n">test_statistic_values</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">p_max</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span>
+ 
+<div class="viewcode-block" id="PCMCI.get_lagged_dependencies"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.get_lagged_dependencies">[docs]</a>    <span class="k">def</span> <span class="nf">get_lagged_dependencies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+            <span class="n">selected_links</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">tau_min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">tau_max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">parents</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">max_conds_py</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">max_conds_px</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;Returns matrix of lagged dependence measure values.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        selected_links : dict or None</span>
+<span class="sd">            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} </span>
+<span class="sd">            specifying whether only selected links should be tested. If None is</span>
+<span class="sd">            passed, all links are tested</span>
+
+<span class="sd">        tau_min : int, default: 1</span>
+<span class="sd">            Minimum time lag to test. Useful for multi-step ahead predictions.</span>
+
+<span class="sd">        tau_max : int, default: 1</span>
+<span class="sd">            Maximum time lag. Must be larger or equal to tau_min.</span>
+
+<span class="sd">        parents : dict or None</span>
+<span class="sd">            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} </span>
+<span class="sd">            specifying the conditions for each variable. If None is</span>
+<span class="sd">            passed, no conditions are used.</span>
+
+<span class="sd">        max_conds_py : int or None</span>
+<span class="sd">            Maximum number of conditions of Y to use. If None is passed, this </span>
+<span class="sd">            number is unrestricted.</span>
+
+<span class="sd">        max_conds_px : int or None</span>
+<span class="sd">            Maximum number of conditions of Z to use. If None is passed, this </span>
+<span class="sd">            number is unrestricted.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        val_matrix : array</span>
+<span class="sd">            The matrix of shape (N, N, tau_max+1) containing the lagged </span>
+<span class="sd">            dependencies.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">tau_min</span> <span class="o">&gt;</span> <span class="n">tau_max</span> <span class="ow">or</span> <span class="nb">min</span><span class="p">(</span><span class="n">tau_min</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;tau_max = </span><span class="si">%d</span><span class="s2">, tau_min = </span><span class="si">%d</span><span class="s2">, &quot;</span> <span class="o">%</span> <span class="p">(</span>
+                          <span class="n">tau_max</span><span class="p">,</span> <span class="n">tau_min</span><span class="p">)</span>
+                          <span class="o">+</span> <span class="s2">&quot;but 0 &lt;= tau_min &lt;= tau_max&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">selected_links</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">selected_links</span> <span class="o">=</span> <span class="p">{}</span>
+        
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_variables</span><span class="p">:</span>
+                    <span class="n">selected_links</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="p">[(</span><span class="n">var</span><span class="p">,</span> <span class="o">-</span><span class="n">lag</span><span class="p">)</span>
+                                      <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+                                      <span class="k">for</span> <span class="n">lag</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">tau_min</span><span class="p">,</span> <span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                                      <span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">selected_links</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">## Estimating lagged dependencies&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">max_conds_py</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">max_conds_py</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">*</span> <span class="n">tau_max</span>
+
+        <span class="k">if</span> <span class="n">max_conds_px</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">max_conds_px</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">*</span> <span class="n">tau_max</span>
+
+        <span class="k">if</span> <span class="n">parents</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">parents</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+                <span class="n">parents</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">val_matrix</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_variables</span><span class="p">:</span>
+
+            <span class="n">conds_y</span> <span class="o">=</span> <span class="n">parents</span><span class="p">[</span><span class="n">j</span><span class="p">][:</span><span class="n">max_conds_py</span><span class="p">]</span>
+
+            <span class="n">parent_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">parent</span> <span class="k">for</span> <span class="n">parent</span> <span class="ow">in</span> <span class="n">selected_links</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                             <span class="k">if</span> <span class="p">(</span><span class="n">parent</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">parent</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">j</span><span class="p">)]</span>
+
+            <span class="c1"># Iterate through parents (except those in conditions)</span>
+            <span class="k">for</span> <span class="n">cnt</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">parent_list</span><span class="p">):</span>
+
+                <span class="n">conds_x</span> <span class="o">=</span> <span class="n">parents</span><span class="p">[</span><span class="n">i</span><span class="p">][:</span><span class="n">max_conds_px</span><span class="p">]</span>
+                <span class="c1"># lag = [-tau]</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">var_names_condy</span> <span class="o">=</span> <span class="s2">&quot;[ &quot;</span>
+                    <span class="k">for</span> <span class="n">conds_yi</span> <span class="ow">in</span> <span class="n">conds_y</span><span class="p">:</span>
+                        <span class="n">var_names_condy</span> <span class="o">+=</span> <span class="s2">&quot;(</span><span class="si">%s</span><span class="s2"> </span><span class="si">%d</span><span class="s2">) &quot;</span> <span class="o">%</span> <span class="p">(</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">conds_yi</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">conds_yi</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="n">var_names_condy</span> <span class="o">+=</span> <span class="s2">&quot;]&quot;</span>
+                    <span class="n">var_names_condx</span> <span class="o">=</span> <span class="s2">&quot;[ &quot;</span>
+                    <span class="k">for</span> <span class="n">conds_xi</span> <span class="ow">in</span> <span class="n">conds_x</span><span class="p">:</span>
+                        <span class="n">var_names_condx</span> <span class="o">+=</span> <span class="s2">&quot;(</span><span class="si">%s</span><span class="s2"> </span><span class="si">%d</span><span class="s2">) &quot;</span> <span class="o">%</span> <span class="p">(</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">conds_xi</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">conds_xi</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">tau</span><span class="p">)</span>
+                    <span class="n">var_names_condx</span> <span class="o">+=</span> <span class="s2">&quot;]&quot;</span>
+
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">        link (</span><span class="si">%s</span><span class="s2"> </span><span class="si">%d</span><span class="s2">) --&gt; </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2">):&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">tau</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">],</span>
+                        <span class="n">cnt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">parent_list</span><span class="p">))</span> <span class="o">+</span>
+                        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">        with conds_y = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">var_names_condy</span><span class="p">)</span> <span class="o">+</span>
+                        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">        with conds_x = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">var_names_condx</span><span class="p">))</span>
+
+                <span class="c1"># Construct lists of tuples for estimating</span>
+                <span class="c1"># I(X_t-tau; Y_t | Z^Y_t, Z^X_t-tau)</span>
+                <span class="c1"># with conditions for X shifted by tau</span>
+                <span class="n">X</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">)]</span>
+                <span class="n">Y</span> <span class="o">=</span> <span class="p">[(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
+                <span class="n">Z</span> <span class="o">=</span> <span class="n">conds_y</span> <span class="o">+</span> <span class="p">[(</span><span class="n">node</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tau</span> <span class="o">+</span> <span class="n">node</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">conds_x</span><span class="p">]</span>
+
+                <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span><span class="o">.</span><span class="n">get_measure</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="n">Z</span><span class="p">,</span>
+                                                     <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">)</span>
+
+                <span class="n">val_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">tau</span><span class="p">)]</span> <span class="o">=</span> <span class="n">val</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span><span class="o">.</span><span class="n">_print_cond_ind_results</span><span class="p">(</span><span class="n">val</span><span class="o">=</span><span class="n">val</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">val_matrix</span></div>
+
+
+<div class="viewcode-block" id="PCMCI.run_mci"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.run_mci">[docs]</a>    <span class="k">def</span> <span class="nf">run_mci</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                <span class="n">selected_links</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">tau_min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">tau_max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">parents</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">max_conds_py</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">max_conds_px</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;MCI conditional independence tests.</span>
+
+<span class="sd">        Implements the MCI test (Algorithm 2 in [1]_). Returns the matrices of</span>
+<span class="sd">        test statistic values,  p-values, and confidence intervals.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        selected_links : dict or None</span>
+<span class="sd">            Dictionary of form {0:all_parents (3, -2), ...], 1:[], ...} </span>
+<span class="sd">            specifying whether only selected links should be tested. If None is</span>
+<span class="sd">            passed, all links are tested</span>
+
+<span class="sd">        tau_min : int, default: 1</span>
+<span class="sd">            Minimum time lag to test. Useful for multi-step ahead predictions.</span>
+<span class="sd">        </span>
+<span class="sd">        tau_max : int, default: 1</span>
+<span class="sd">            Maximum time lag. Must be larger or equal to tau_min.</span>
+<span class="sd">        </span>
+<span class="sd">        parents : dict or None</span>
+<span class="sd">            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} </span>
+<span class="sd">            specifying the conditions for each variable. If None is</span>
+<span class="sd">            passed, no conditions are used.</span>
+
+<span class="sd">        max_conds_py : int or None</span>
+<span class="sd">            Maximum number of conditions of Y to use. If None is passed, this </span>
+<span class="sd">            number is unrestricted.</span>
+<span class="sd">        </span>
+<span class="sd">        max_conds_px : int or None</span>
+<span class="sd">            Maximum number of conditions of Z to use. If None is passed, this </span>
+<span class="sd">            number is unrestricted.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        (val_matrix, p_matrix, conf_matrix) : tuple of arrays</span>
+<span class="sd">            The matrices val_matrix and p_matrix are of shape (N, N, tau_max+1)</span>
+<span class="sd">            and the matrix conf_matrix is of shape (N, N, tau_max+1, 2)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">tau_min</span> <span class="o">&gt;</span> <span class="n">tau_max</span> <span class="ow">or</span> <span class="nb">min</span><span class="p">(</span><span class="n">tau_min</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;tau_max = </span><span class="si">%d</span><span class="s2">, tau_min = </span><span class="si">%d</span><span class="s2">, &quot;</span> <span class="o">%</span> <span class="p">(</span>
+                             <span class="n">tau_max</span><span class="p">,</span> <span class="n">tau_min</span><span class="p">)</span>
+                             <span class="o">+</span> <span class="s2">&quot;but 0 &lt;= tau_min &lt;= tau_max&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">selected_links</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">selected_links</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_variables</span><span class="p">:</span>
+                    <span class="n">selected_links</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="p">[(</span><span class="n">var</span><span class="p">,</span> <span class="o">-</span><span class="n">lag</span><span class="p">)</span>
+                                         <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+                                         <span class="k">for</span> <span class="n">lag</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">tau_min</span><span class="p">,</span> <span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                                         <span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">selected_links</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">##</span><span class="se">\n</span><span class="s2">## Running Tigramite MCI algorithm</span><span class="se">\n</span><span class="s2">##&quot;</span>
+                  <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">Parameters:&quot;</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">independence test = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span><span class="o">.</span><span class="n">measure</span>
+                  <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">tau_min = </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">tau_min</span>
+                  <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">tau_max = </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">tau_max</span>
+                  <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">max_conds_py = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">max_conds_py</span>
+                  <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">max_conds_px = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">max_conds_px</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">max_conds_py</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">max_conds_py</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">*</span> <span class="n">tau_max</span>
+
+        <span class="k">if</span> <span class="n">max_conds_px</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">max_conds_px</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">*</span> <span class="n">tau_max</span>
+
+        <span class="k">if</span> <span class="n">parents</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">parents</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+                <span class="n">parents</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">val_matrix</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">p_matrix</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">conf_matrix</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_variables</span><span class="p">:</span>
+
+            <span class="n">conds_y</span> <span class="o">=</span> <span class="n">parents</span><span class="p">[</span><span class="n">j</span><span class="p">][:</span><span class="n">max_conds_py</span><span class="p">]</span>
+
+            <span class="n">parent_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">parent</span> <span class="k">for</span> <span class="n">parent</span> <span class="ow">in</span> <span class="n">selected_links</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                         <span class="k">if</span> <span class="p">(</span><span class="n">parent</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">parent</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">j</span><span class="p">)]</span>
+
+            <span class="c1"># Iterate through parents (except those in conditions)</span>
+            <span class="k">for</span> <span class="n">cnt</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">parent_list</span><span class="p">):</span>
+
+                <span class="n">conds_x</span> <span class="o">=</span> <span class="n">parents</span><span class="p">[</span><span class="n">i</span><span class="p">][:</span><span class="n">max_conds_px</span><span class="p">]</span>
+                <span class="c1"># lag = [-tau]</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">var_names_condy</span> <span class="o">=</span> <span class="s2">&quot;[ &quot;</span>
+                    <span class="k">for</span> <span class="n">conds_yi</span> <span class="ow">in</span> <span class="n">conds_y</span><span class="p">:</span>
+                        <span class="n">var_names_condy</span> <span class="o">+=</span> <span class="s2">&quot;(</span><span class="si">%s</span><span class="s2"> </span><span class="si">%d</span><span class="s2">) &quot;</span> <span class="o">%</span> <span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">conds_yi</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">conds_yi</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="n">var_names_condy</span> <span class="o">+=</span> <span class="s2">&quot;]&quot;</span>
+                    <span class="n">var_names_condx</span> <span class="o">=</span> <span class="s2">&quot;[ &quot;</span>
+                    <span class="k">for</span> <span class="n">conds_xi</span> <span class="ow">in</span> <span class="n">conds_x</span><span class="p">:</span>
+                        <span class="n">var_names_condx</span> <span class="o">+=</span> <span class="s2">&quot;(</span><span class="si">%s</span><span class="s2"> </span><span class="si">%d</span><span class="s2">) &quot;</span> <span class="o">%</span> <span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">conds_xi</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">conds_xi</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">tau</span><span class="p">)</span>
+                    <span class="n">var_names_condx</span> <span class="o">+=</span> <span class="s2">&quot;]&quot;</span>
+
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">        link (</span><span class="si">%s</span><span class="s2"> </span><span class="si">%d</span><span class="s2">) --&gt; </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2">):&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">tau</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">],</span>
+                        <span class="n">cnt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">parent_list</span><span class="p">))</span> <span class="o">+</span>
+                          <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">        with conds_y = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">var_names_condy</span><span class="p">)</span> <span class="o">+</span>
+                          <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">        with conds_x = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">var_names_condx</span><span class="p">))</span>
+
+                <span class="c1"># Construct lists of tuples for estimating</span>
+                <span class="c1"># I(X_t-tau; Y_t | Z^Y_t, Z^X_t-tau)</span>
+                <span class="c1"># with conditions for X shifted by tau</span>
+                <span class="n">X</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">)]</span>
+                <span class="n">Y</span> <span class="o">=</span> <span class="p">[(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
+                <span class="n">Z</span> <span class="o">=</span> <span class="n">conds_y</span> <span class="o">+</span> <span class="p">[(</span><span class="n">node</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tau</span> <span class="o">+</span> <span class="n">node</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">conds_x</span><span class="p">]</span>
+
+                <span class="n">val</span><span class="p">,</span> <span class="n">pval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span><span class="o">.</span><span class="n">run_test</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="n">Z</span><span class="p">,</span>
+                                                        <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">)</span>
+
+                <span class="n">val_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">tau</span><span class="p">)]</span> <span class="o">=</span> <span class="n">val</span>
+                <span class="n">p_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">tau</span><span class="p">)]</span> <span class="o">=</span> <span class="n">pval</span>
+
+                <span class="n">conf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span><span class="o">.</span><span class="n">get_confidence</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="n">Z</span><span class="p">,</span>
+                                                        <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">)</span>
+                <span class="n">conf_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">tau</span><span class="p">)]</span> <span class="o">=</span> <span class="n">conf</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span><span class="o">.</span><span class="n">_print_cond_ind_results</span><span class="p">(</span><span class="n">val</span><span class="o">=</span><span class="n">val</span><span class="p">,</span> 
+                            <span class="n">pval</span><span class="o">=</span><span class="n">pval</span><span class="p">,</span> <span class="n">conf</span><span class="o">=</span><span class="n">conf</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">val_matrix</span><span class="p">,</span> <span class="n">p_matrix</span><span class="p">,</span> <span class="n">conf_matrix</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PCMCI.get_corrected_pvalues"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.get_corrected_pvalues">[docs]</a>    <span class="k">def</span> <span class="nf">get_corrected_pvalues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span>
+                              <span class="n">p_matrix</span><span class="p">,</span>
+                              <span class="n">fdr_method</span><span class="o">=</span><span class="s1">&#39;fdr_bh&#39;</span><span class="p">,</span>
+                              <span class="n">exclude_contemporaneous</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                              <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns p-values corrected for multiple testing.</span>
+<span class="sd">        </span>
+<span class="sd">        Wrapper around statsmodels.sandbox.stats.multicomp.multipletests.</span>
+<span class="sd">        Corrections is performed either among all links if</span>
+<span class="sd">        exclude_contemporaneous==False, or only among lagged links.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        tau_max : int</span>
+<span class="sd">            Maximum time lag.</span>
+
+<span class="sd">        p_matrix : array-like</span>
+<span class="sd">            Matrix of p-values. Must be of shape (N, N, tau_max + 1).</span>
+
+<span class="sd">        fdr_method : str, optional (default: &#39;fdr_bh&#39;)</span>
+<span class="sd">            Correction method, default is Benjamini-Hochberg False Discovery</span>
+<span class="sd">            Rate method.</span>
+
+<span class="sd">        exclude_contemporaneous : bool, optional (default: True)</span>
+<span class="sd">            Whether to include contemporaneous links in correction.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        q_matrix : array-like</span>
+<span class="sd">            Matrix of shape (N, N, tau_max + 1) containing corrected p-values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">exclude_contemporaneous</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;bool&#39;</span><span class="p">)</span>
+            <span class="n">mask</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;bool&#39;</span><span class="p">)</span>
+            <span class="n">mask</span><span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">),</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="n">q_matrix</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">p_matrix</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">fdr_method</span> <span class="o">!=</span> <span class="s1">&#39;none&#39;</span><span class="p">:</span>
+            <span class="n">pvals</span> <span class="o">=</span> <span class="n">p_matrix</span><span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">mask</span><span class="p">)]</span>
+            <span class="n">q_matrix</span><span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">mask</span><span class="p">)]</span> <span class="o">=</span> <span class="n">multicomp</span><span class="o">.</span><span class="n">multipletests</span><span class="p">(</span>
+                <span class="n">pvals</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">fdr_method</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># .reshape(N,N,tau_max)</span>
+
+        <span class="k">return</span> <span class="n">q_matrix</span></div>
+
+    <span class="k">def</span> <span class="nf">_return_significant_parents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                  <span class="n">pq_matrix</span><span class="p">,</span>
+                                  <span class="n">val_matrix</span><span class="p">,</span>
+                                  <span class="n">alpha_level</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+                                  <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns list of significant parents.</span>
+
+<span class="sd">        Significance based on p-matrix, or q-value matrix with corrected</span>
+<span class="sd">        p-values.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        alpha_level : float, optional (default: 0.05)</span>
+<span class="sd">            Significance level.</span>
+
+<span class="sd">        pq_matrix : array-like</span>
+<span class="sd">            p-matrix, or q-value matrix with corrected p-values. Must be of</span>
+<span class="sd">            shape (N, N, tau_max + 1).</span>
+
+<span class="sd">        val_matrix : array-like</span>
+<span class="sd">            Matrix of test statistic values. Must be of shape (N, N, tau_max +</span>
+<span class="sd">            1).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        all_parents : dict</span>
+<span class="sd">            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} </span>
+<span class="sd">            containing estimated parents.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">sig_links</span> <span class="o">=</span> <span class="p">(</span><span class="n">pq_matrix</span> <span class="o">&lt;=</span> <span class="n">alpha_level</span><span class="p">)</span>
+        <span class="n">all_parents</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_variables</span><span class="p">:</span>
+
+            <span class="n">links</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([((</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">val_matrix</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> 
+                            <span class="n">j</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]))</span>
+                          <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">sig_links</span><span class="p">[:,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">1</span><span class="p">:]))])</span>
+
+            <span class="c1"># Sort by value</span>
+            <span class="n">all_parents</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">links</span><span class="o">.</span><span class="n">get</span><span class="p">,</span> 
+                                                    <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">all_parents</span>
+
+    <span class="k">def</span> <span class="nf">_print_significant_parents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                  <span class="n">p_matrix</span><span class="p">,</span>
+                                  <span class="n">val_matrix</span><span class="p">,</span>
+                                  <span class="n">conf_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                  <span class="n">q_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                  <span class="n">alpha_level</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+                                  <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Prints significant parents.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        alpha_level : float, optional (default: 0.05)</span>
+<span class="sd">            Significance level.</span>
+
+<span class="sd">        p_matrix : array-like</span>
+<span class="sd">            Must be of shape (N, N, tau_max + 1).</span>
+
+<span class="sd">        val_matrix : array-like</span>
+<span class="sd">            Must be of shape (N, N, tau_max + 1). </span>
+
+<span class="sd">        q_matrix : array-like, optional (default: None)</span>
+<span class="sd">            Adjusted p-values. Must be of shape (N, N, tau_max + 1).</span>
+
+<span class="sd">        conf_matrix : array-like, optional (default: None)</span>
+<span class="sd">            Matrix of confidence intervals of shape (N, N, tau_max+1, 2)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">q_matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sig_links</span> <span class="o">=</span> <span class="p">(</span><span class="n">q_matrix</span> <span class="o">&lt;=</span> <span class="n">alpha_level</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sig_links</span> <span class="o">=</span> <span class="p">(</span><span class="n">p_matrix</span> <span class="o">&lt;=</span> <span class="n">alpha_level</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">## Significant parents at alpha = </span><span class="si">%.2f</span><span class="s2">:&quot;</span> <span class="o">%</span> <span class="n">alpha_level</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_variables</span><span class="p">:</span>
+
+            <span class="n">links</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([((</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">val_matrix</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> 
+                            <span class="n">j</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]))</span>
+                          <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">sig_links</span><span class="p">[:,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">1</span><span class="p">:]))])</span>
+
+            <span class="c1"># Sort by value</span>
+            <span class="n">sorted_links</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">links</span><span class="o">.</span><span class="n">get</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="n">n_links</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">links</span><span class="p">)</span>
+
+            <span class="n">string</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">if</span> <span class="n">n_links</span> <span class="o">&lt;</span> <span class="mi">20</span><span class="p">:</span>
+                <span class="n">string</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">    Variable </span><span class="si">%s</span><span class="s2"> has </span><span class="si">%d</span><span class="s2"> &quot;</span>
+                          <span class="s2">&quot;parent(s):&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">n_links</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">sorted_links</span><span class="p">:</span>
+                    <span class="n">string</span> <span class="o">+=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">        (</span><span class="si">%s</span><span class="s2"> </span><span class="si">%d</span><span class="s2">): pval = </span><span class="si">%.5f</span><span class="s2">&quot;</span> <span class="o">%</span>
+                               <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> 
+                                <span class="n">p_matrix</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">j</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])]))</span>
+
+                    <span class="k">if</span> <span class="n">q_matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">string</span> <span class="o">+=</span> <span class="s2">&quot; | qval = </span><span class="si">%.5f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                            <span class="n">q_matrix</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">j</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])])</span>
+
+                    <span class="n">string</span> <span class="o">+=</span> <span class="s2">&quot; | val = </span><span class="si">%.3f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">val_matrix</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">j</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])])</span>
+
+                    <span class="k">if</span> <span class="n">conf_matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">string</span> <span class="o">+=</span> <span class="s2">&quot; | conf = (</span><span class="si">%.3f</span><span class="s2">, </span><span class="si">%.3f</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                            <span class="n">conf_matrix</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">j</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])][</span><span class="mi">0</span><span class="p">],</span> 
+                            <span class="n">conf_matrix</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">j</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])][</span><span class="mi">1</span><span class="p">])</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">string</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">    Variable </span><span class="si">%s</span><span class="s2"> has </span><span class="si">%d</span><span class="s2"> parent(s)&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">n_links</span><span class="p">))</span>
+            <span class="nb">print</span> <span class="n">string</span>
+
+    <span class="c1"># @profile</span>
+<div class="viewcode-block" id="PCMCI.run_pcmci"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.run_pcmci">[docs]</a>    <span class="k">def</span> <span class="nf">run_pcmci</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                  <span class="n">selected_links</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="n">tau_min</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                  <span class="n">tau_max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                  <span class="n">save_iterations</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                  <span class="n">pc_alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+                  <span class="n">max_conds_dim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="n">max_combinations</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                  <span class="n">max_conds_py</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="n">max_conds_px</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="n">fdr_method</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span>
+                  <span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;Run full PCMCI causal discovery for time series datasets.</span>
+
+<span class="sd">        Wrapper around PC-algorithm function and MCI function.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        selected_links : list or None</span>
+<span class="sd">          List of form [(0, -1), (3, -2), ...]</span>
+<span class="sd">          specifying whether only selected links should be tested. If None is</span>
+<span class="sd">          passed, all links are tested</span>
+
+<span class="sd">        tau_min : int, default: 1</span>
+<span class="sd">          Minimum time lag to test. Useful for multi-step ahead predictions.</span>
+
+<span class="sd">        tau_max : int, default: 1</span>
+<span class="sd">          Maximum time lag. Must be larger or equal to tau_min.</span>
+
+<span class="sd">        save_iterations : bool, default: False</span>
+<span class="sd">          Whether to save iteration step results such as conditions used.</span>
+
+<span class="sd">        pc_alpha : float, default: 0.1</span>
+<span class="sd">          Significance level in algorithm. </span>
+
+<span class="sd">        max_conds_dim : int or None</span>
+<span class="sd">          Maximum number of conditions to test. If None is passed, this number</span>
+<span class="sd">          is unrestricted.</span>
+
+<span class="sd">        max_combinations : int, default: 1</span>
+<span class="sd">          Maximum number of combinations of conditions of current cardinality</span>
+<span class="sd">          to test. Defaults to 1 for PC_1 algorithm. For original PC algorithm</span>
+<span class="sd">          a larger number, such as 10, can be used.</span>
+<span class="sd">      </span>
+<span class="sd">        max_conds_py : int or None</span>
+<span class="sd">            Maximum number of conditions of Y to use. If None is passed, this </span>
+<span class="sd">            number is unrestricted.</span>
+
+<span class="sd">        max_conds_px : int or None</span>
+<span class="sd">            Maximum number of conditions of Z to use. If None is passed, this </span>
+<span class="sd">            number is unrestricted.</span>
+
+<span class="sd">        fdr_method : str, optional (default: &#39;fdr_bh&#39;)</span>
+<span class="sd">            Correction method, default is Benjamini-Hochberg False Discovery</span>
+<span class="sd">            Rate method.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        (val_matrix, p_matrix, conf_matrix) : tuple of arrays</span>
+<span class="sd">            The matrices val_matrix and p_matrix are of shape (N, N, tau_max+1)</span>
+<span class="sd">            and the matrix conf_matrix is of shape (N, N, tau_max+1, 2)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">all_parents</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_pc_stable</span><span class="p">(</span>
+            <span class="n">selected_links</span><span class="o">=</span><span class="n">selected_links</span><span class="p">,</span>
+            <span class="n">tau_min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span>
+            <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
+            <span class="n">save_iterations</span><span class="o">=</span><span class="n">save_iterations</span><span class="p">,</span>
+            <span class="n">pc_alpha</span><span class="o">=</span><span class="n">pc_alpha</span><span class="p">,</span>
+            <span class="n">max_conds_dim</span><span class="o">=</span><span class="n">max_conds_dim</span><span class="p">,</span>
+            <span class="n">max_combinations</span><span class="o">=</span><span class="n">max_combinations</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># all_parents = self.all_parents</span>
+
+        <span class="p">(</span><span class="n">val_matrix</span><span class="p">,</span> <span class="n">p_matrix</span><span class="p">,</span> <span class="n">conf_matrix</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_mci</span><span class="p">(</span>
+                                                <span class="n">selected_links</span><span class="o">=</span><span class="n">selected_links</span><span class="p">,</span>
+                                                <span class="n">tau_min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span>
+                                                <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
+                                                <span class="n">parents</span><span class="o">=</span><span class="n">all_parents</span><span class="p">,</span>
+                                                <span class="n">max_conds_py</span><span class="o">=</span><span class="n">max_conds_py</span><span class="p">,</span>
+                                                <span class="n">max_conds_px</span><span class="o">=</span><span class="n">max_conds_px</span><span class="p">,</span>
+                                                <span class="p">)</span>
+
+
+        <span class="k">if</span> <span class="n">fdr_method</span> <span class="o">!=</span> <span class="s1">&#39;none&#39;</span><span class="p">:</span>
+            <span class="n">q_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_corrected_pvalues</span><span class="p">(</span><span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
+                                                  <span class="n">p_matrix</span><span class="o">=</span><span class="n">p_matrix</span><span class="p">,</span>
+                                                  <span class="n">method</span><span class="o">=</span><span class="n">fdr_method</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">q_matrix</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">val_matrix</span><span class="p">,</span> <span class="n">p_matrix</span><span class="p">,</span> <span class="n">conf_matrix</span><span class="p">,</span> <span class="n">q_matrix</span><span class="p">)</span></div></div>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+
+    <span class="kn">import</span> <span class="nn">data_processing</span> <span class="k">as</span> <span class="nn">pp</span>
+    <span class="kn">from</span> <span class="nn">independence_tests</span> <span class="k">import</span> <span class="n">ParCorr</span><span class="p">,</span> <span class="n">GPACE</span>
+
+    <span class="c1"># numpy.random.seed(40)</span>
+    <span class="c1"># Example process to play around with</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="mf">0.8</span>
+    <span class="n">c1</span> <span class="o">=</span> <span class="o">.</span><span class="mi">8</span>
+    <span class="n">c2</span> <span class="o">=</span> <span class="o">-.</span><span class="mi">8</span>
+    <span class="n">c3</span> <span class="o">=</span> <span class="o">.</span><span class="mi">8</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="mi">2500</span>
+
+    <span class="c1"># Each key refers to a variable and the incoming links are supplied as a</span>
+    <span class="c1"># list of format [((driver, lag), coeff), ...]</span>
+    <span class="n">links_coeffs</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">[((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">a</span><span class="p">),</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">c1</span><span class="p">)],</span>
+                    <span class="mi">1</span><span class="p">:</span> <span class="p">[((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">a</span><span class="p">),</span> <span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">c1</span><span class="p">)],</span>
+                    <span class="mi">2</span><span class="p">:</span> <span class="p">[((</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">a</span><span class="p">),</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">),</span> <span class="n">c2</span><span class="p">),</span> <span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">),</span> <span class="n">c3</span><span class="p">)],</span>
+                    <span class="mi">3</span><span class="p">:</span> <span class="p">[((</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">a</span><span class="p">)],</span>
+                    <span class="p">}</span>
+
+    <span class="n">data</span><span class="p">,</span> <span class="n">true_parents_neighbors</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">var_process</span><span class="p">(</span><span class="n">links_coeffs</span><span class="p">,</span>
+                                                  <span class="n">use</span><span class="o">=</span><span class="s1">&#39;inv_inno_cov&#39;</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">)</span>
+
+    <span class="n">data_mask</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="n">T</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="n">var_names</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>  <span class="c1"># [&#39;X&#39;, &#39;Y&#39;, &#39;Z&#39;, &#39;W&#39;]</span>
+
+    <span class="n">pc_alpha</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]</span>
+    <span class="n">selected_variables</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="c1"># [2]  # [2]</span>
+
+    <span class="n">tau_max</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">alpha_level</span> <span class="o">=</span> <span class="mf">0.01</span>
+
+    <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">,</span>
+        <span class="n">mask</span><span class="o">=</span><span class="n">data_mask</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="n">verbosity</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="c1"># import pandas as pd</span>
+    <span class="c1"># dataframe = pd.DataFrame(data)</span>
+    <span class="c1"># dataframe.mask = data_mask</span>
+
+    <span class="n">cond_ind_test</span> <span class="o">=</span> <span class="n">ParCorr</span><span class="p">(</span>
+        <span class="n">significance</span><span class="o">=</span><span class="s1">&#39;analytic&#39;</span><span class="p">,</span>
+        <span class="n">fixed_thres</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+        <span class="n">sig_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+
+        <span class="n">use_mask</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">mask_type</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">],</span>  <span class="c1">#  [&#39;x&#39;,&#39;y&#39;,&#39;z&#39;],</span>
+
+        <span class="n">confidence</span><span class="o">=</span><span class="s1">&#39;analytic&#39;</span><span class="p">,</span>
+        <span class="n">conf_lev</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
+        <span class="n">conf_samples</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+        <span class="n">conf_blocklength</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+
+        <span class="n">recycle_residuals</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">verbosity</span><span class="o">=</span><span class="n">verbosity</span><span class="p">)</span>
+
+    <span class="c1"># cond_ind_test = GPACE(</span>
+    <span class="c1">#     significance=&#39;analytic&#39;,</span>
+    <span class="c1">#     fixed_thres=0.05,</span>
+    <span class="c1">#     sig_samples=100,</span>
+
+    <span class="c1">#     use_mask=False,</span>
+    <span class="c1">#     mask_type=[&#39;y&#39;],</span>
+
+    <span class="c1">#     confidence=False,</span>
+    <span class="c1">#     conf_lev=0.9,</span>
+    <span class="c1">#     conf_samples=200,</span>
+    <span class="c1">#     conf_blocklength=None,</span>
+
+    <span class="c1">#     gp_version=&#39;new&#39;,</span>
+    <span class="c1">#     ace_version=&#39;acepack&#39;,</span>
+    <span class="c1">#     recycle_residuals=False,</span>
+    <span class="c1">#     verbosity=verbosity)</span>
+
+    <span class="n">pcmci</span> <span class="o">=</span> <span class="n">PCMCI</span><span class="p">(</span>
+        <span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span>
+        <span class="n">cond_ind_test</span><span class="o">=</span><span class="n">cond_ind_test</span><span class="p">,</span>
+        <span class="n">selected_variables</span><span class="o">=</span><span class="n">selected_variables</span><span class="p">,</span>
+        <span class="n">var_names</span><span class="o">=</span><span class="n">var_names</span><span class="p">,</span>
+        <span class="n">verbosity</span><span class="o">=</span><span class="n">verbosity</span><span class="p">)</span>
+
+    <span class="n">pcmci</span><span class="o">.</span><span class="n">get_lagged_dependencies</span><span class="p">(</span>
+        <span class="n">selected_links</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">tau_min</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
+        <span class="n">parents</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_conds_py</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_conds_px</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="p">(</span><span class="n">val_matrix</span><span class="p">,</span> <span class="n">p_matrix</span><span class="p">,</span> <span class="n">conf_matrix</span><span class="p">,</span> <span class="n">q_matrix</span><span class="p">)</span> <span class="o">=</span> <span class="n">pcmci</span><span class="o">.</span><span class="n">run_pcmci</span><span class="p">(</span>
+        <span class="n">selected_links</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">tau_min</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
+        <span class="n">save_iterations</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+
+        <span class="n">pc_alpha</span><span class="o">=</span><span class="n">pc_alpha</span><span class="p">,</span>
+        <span class="n">max_conds_dim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_combinations</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+
+        <span class="n">max_conds_py</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_conds_px</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+
+        <span class="n">fdr_method</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">pcmci</span><span class="o">.</span><span class="n">_print_significant_parents</span><span class="p">(</span>
+                   <span class="n">p_matrix</span><span class="o">=</span><span class="n">p_matrix</span><span class="p">,</span>
+                   <span class="n">q_matrix</span><span class="o">=</span><span class="n">q_matrix</span><span class="p">,</span> 
+                   <span class="n">val_matrix</span><span class="o">=</span><span class="n">val_matrix</span><span class="p">,</span>
+                   <span class="n">alpha_level</span><span class="o">=</span><span class="n">alpha_level</span><span class="p">,</span>
+                   <span class="n">conf_matrix</span><span class="o">=</span><span class="n">conf_matrix</span><span class="p">)</span>
+
+    <span class="c1"># pcmci.run_mci(</span>
+    <span class="c1">#     selected_links=None,</span>
+    <span class="c1">#     tau_min=1,</span>
+    <span class="c1">#     tau_max=tau_max,</span>
+    <span class="c1">#     parents = None,</span>
+
+    <span class="c1">#     max_conds_py=None,</span>
+    <span class="c1">#     max_conds_px=None,</span>
+    <span class="c1"># )</span>
+    
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Jakob Runge.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.4.
+    </div>
+  </body>
+</html>
