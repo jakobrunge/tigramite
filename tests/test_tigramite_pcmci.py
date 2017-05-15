@@ -294,11 +294,3 @@ if __name__ == "__main__":
     # test_pcmci.test_pcmci()
 
     unittest.main()
-
-# TODO: 
-# documentation
-# hybrid raus
-# plotting bei asymetric contemp values (due to masking/conditions)
-# Tigramite Icon fuer github page von Cosimo zeichnen lassen? Gegen Bezahlung...
-# weave --> cython ?
-# path analysis einbauen?
