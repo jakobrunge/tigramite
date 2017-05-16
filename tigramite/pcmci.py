@@ -39,56 +39,104 @@ class PCMCI():
     Notes 
     ----- 
 
-    .. image:: docs/mci_schematic.*
+    .. image:: mci_schematic.*
        :width: 200pt
 
-    In our framework, the dependency structure of a set of time series variables
-    is represented in a *time series graph* as shown in the Figure. The nodes of
-    a time series graph are defined as the variables at different times and a
-    link exists if two lagged variables are *not* conditionally independent
-    given the past of the whole process. Assuming stationarity, the links are
-    repeated in time. The parents :math:`\mathcal{P}` of a variable are defined
-    as the set of all nodes with a link towards it.
+    The PCMCI causal discovery method is comprehensively described in [1]_,
+    where also analytical and numerical results are presented. Here we briefly
+    summarize the method. 
 
-    PCMCI is based on a two-step procedure:
+    In the PCMCI framework, the dependency structure of a set of
+    time series variables is represented in a *time series graph* as shown in
+    the Figure. The nodes of a time series graph are defined as the variables at
+    different times and a link exists if two lagged variables are *not*
+    conditionally independent given the past of the whole process. Assuming
+    stationarity, the links are repeated in time. The parents
+    :math:`\mathcal{P}` of a variable are defined as the set of all nodes with a
+    link towards it (blue and red boxes in Figure). Estimating these parents
+    directly by testing for conditional independence on the whole past is
+    problematic due to high-dimensionality and because conditioning on
+    irrelevant variables leads to biases [1]_.
 
-    1.  Condition-selection: For all :math:`N` variables: Estimate *superset* of 
-        parents :math:`\tilde{\mathcal{P}}(X^j_t)` with iterative PC1 algorithm 
-        here implemented as ``run_pc_stable``.
+    PCMCI estimates the links through a two-step procedure:
 
+    1.  Condition-selection: For each variable :math:`j`, estimate a
+        *superset*  of parents :math:`\tilde{\mathcal{P}}(X^j_t)` with the 
+        iterative PC1 algorithm , implemented as ``run_pc_stable``.
 
     2.  *Momentary conditional independence* (MCI)
 
         .. math:: X^i_{t-\tau} ~\perp~ X^j_{t} ~|~ \tilde{\mathcal{P}}(X^j_t),
                                         \tilde{\mathcal{P}}(X^i_{t-{\tau}})\,,
     
-    here implemented as ``run_mci``. PCMCI can be flexibly combined with any
-    kind of conditional independence test statistic adapted to the kind of data
-    (continuous or discrete) and its assumed dependency structure. In Tigramite
-    implemented are ParCorr as a linear test, GPACE allowing nonlinear additive
-    dependencies, and CMI with different estimators making no assumptions about
-    the dependencies.
+    here implemented as ``run_mci``. The condition-selection step reduces the 
+    dimensionality and avoids conditioning on irrelevant variables.
+
+    PCMCI can be flexibly combined with any kind of conditional independence
+    test statistic adapted to the kind of data (continuous or discrete) and its
+    assumed dependency structure. Currently, implemented in Tigramite are
+    ParCorr as a linear test, GPACE allowing nonlinear additive dependencies,
+    and CMI with different estimators making no assumptions about the
+    dependencies. The classes in ``tigramite.independence_tests`` also handle
+    masked data.
 
     The main free parameters of PCMCI (in addition to free parameters of the
     conditional independence test statistic) are the maximum time delay
-    :math:`\tau_{\max}` and the significance threshold in the condition-
-    selection step :math:`\alpha`. The maximum time delay depends on the
-    application and should be chosen according to the maximum causal time lag
-    expected in the complex system. We recommend a rather large choice that
-    includes peaks in the lagged cross-correlation function (or a more general
-    measure). :math:`\alpha` should not be seen as a significance test level in
-    the condition-selection step since the iterative hypothesis tests do not
-    allow for a precise confidence level. :math:`\alpha` rather takes the role
-    of a regularization parameter in model-selection techniques. The
-    conditioning sets :math:`\tilde{\mathcal{P}}`  should include the true
-    parents and at the same time be small in size to reduce the estimation
-    dimension of the MCI test and improve its power. But the first demand is
-    typically more important. If a list of values is given or ``pc_alpha=None``,
-    this parameter is optimized using model selection criteria.
+    :math:`\tau_{\max}` (``tau_max``) and the significance threshold in the
+    condition- selection step :math:`\alpha` (``pc_alpha``). The maximum time
+    delay depends on the application and should be chosen according to the
+    maximum causal time lag expected in the complex system. We recommend a
+    rather large choice that includes peaks in the lagged cross-correlation
+    function (or a more general measure). :math:`\alpha` should not be seen as a
+    significance test level in the condition-selection step since the iterative
+    hypothesis tests do not allow for a precise confidence level. :math:`\alpha`
+    rather takes the role of a regularization parameter in model-selection
+    techniques. The conditioning sets :math:`\tilde{\mathcal{P}}`  should
+    include the true parents and at the same time be small in size to reduce the
+    estimation dimension of the MCI test and improve its power. But including
+    the true  parents is typically more important. If a list of values is given
+    or ``pc_alpha=None``, :math:`\alpha` is optimized using model selection
+    criteria.
 
-    Further optional parameters are discussed in [1]_.
+    Further optional parameters are discussed in [1]_. 
 
-    
+    References
+    ----------
+    .. [1] J. Runge, D. Sejdinovic, S. Flaxman (2017): Detecting causal
+           associations in large nonlinear time series datasets, 
+           https://arxiv.org/abs/1702.07007
+           
+    Examples
+    --------
+    >>> import numpy
+    >>> from tigramite.pcmci import PCMCI
+    >>> from tigramite.independence_tests import ParCorr
+    >>> import tigramite.data_processing as pp
+    >>> numpy.random.seed(42)
+    >>> # Example process to play around with
+    >>> # Each key refers to a variable and the incoming links are supplied as a
+    >>> # list of format [((driver, lag), coeff), ...]
+    >>> links_coeffs = {0: [((0, -1), 0.8)],
+                        1: [((1, -1), 0.8), ((0, -1), 0.5)],
+                        2: [((2, -1), 0.8), ((1, -2), -0.6)]}
+    >>> data, _ = pp.var_process(links_coeffs, T=1000)
+    >>> dataframe = pp.DataFrame(data)
+    >>> cond_ind_test = ParCorr()
+    >>> pcmci = PCMCI(dataframe=dataframe, cond_ind_test=cond_ind_test)
+    >>> results = pcmci.run_pcmci(tau_max=2, pc_alpha=None)
+    >>> pcmci._print_significant_parents(p_matrix=results['p_matrix'],
+                                         val_matrix=results['val_matrix'],
+                                         alpha_level=0.05)
+    ## Significant parents at alpha = 0.05:
+        Variable 0 has 1 parent(s):
+            (0 -1): pval = 0.00000 | val = 0.623
+        Variable 1 has 2 parent(s):
+            (1 -1): pval = 0.00000 | val = 0.601
+            (0 -1): pval = 0.00000 | val = 0.487
+        Variable 2 has 2 parent(s):
+            (2 -1): pval = 0.00000 | val = 0.597
+            (1 -2): pval = 0.00000 | val = -0.511
+
     Parameters
     ----------
     dataframe : data object
@@ -160,11 +208,6 @@ class PCMCI():
     T : int
         Time series sample length.
 
-    References
-    ----------
-    .. [1] J. Runge, D. Sejdinovic, S. Flaxman (2017): Detecting causal
-           associations in large nonlinear time series datasets, 
-           https://arxiv.org/abs/1702.07007
     """
 
     def __init__(self, dataframe,
@@ -515,14 +558,17 @@ class PCMCI():
                     "\nAlgorithm not yet converged, but max_conds_dim = %d"
                     " reached." % max_conds_dim)
 
-        return parents, test_statistic_values, p_max, iterations
+        return {'parents':parents, 
+                'test_statistic_values':test_statistic_values,
+                'p_max':p_max, 
+                'iterations':iterations}
 
     def run_pc_stable(self,
                       selected_links=None,
                       tau_min=1,
                       tau_max=1,
                       save_iterations=False,
-                      pc_alpha=0.1,
+                      pc_alpha=0.2,
                       max_conds_dim=None,
                       max_combinations=1,
                       ):
@@ -546,8 +592,8 @@ class PCMCI():
         save_iterations : bool, default: False
             Whether to save iteration step results such as conditions used.
         
-        pc_alpha : float or list of floats, default: 0.1
-            Significance level in algorithm. If a list is passed, then the
+        pc_alpha : float or list of floats, default: 0.3
+            Significance level in algorithm. If a list or None is passed, the
             pc_alpha level is optimized for every variable across the given 
             pc_alpha values using the score computed in 
             cond_ind_test.get_model_selection_criterion()
@@ -568,10 +614,13 @@ class PCMCI():
             containing estimated parents.
         """
 
-        if type(pc_alpha) == float:
-            self.alpha_selection = False
-        else:
+        if pc_alpha is None:
+            pc_alpha = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
             self.alpha_selection = True
+        elif type(pc_alpha) == list:
+            self.alpha_selection = True
+        else:
+            self.alpha_selection = False
 
         if tau_min > tau_max or min(tau_min, tau_max) < 0:
             raise ValueError("tau_max = %d, tau_min = %d, " % (
@@ -621,10 +670,7 @@ class PCMCI():
                 print("\n## Variable %s" % self.var_names[j])
 
             if self.alpha_selection == False:
-                (all_parents[j],
-                 test_statistic_values[j],
-                 p_max[j],
-                 iterations[j]) = self._run_pc_stable_single(j,
+                result = self._run_pc_stable_single(j, 
                                             selected_links=selected_links[j],
                                             tau_min=tau_min,
                                             tau_max=tau_max,
@@ -633,6 +679,10 @@ class PCMCI():
                                             max_conds_dim=max_conds_dim,
                                             max_combinations=max_combinations,
                                             )
+                all_parents[j] = result['parents']
+                test_statistic_values[j] = result['test_statistic_values']
+                p_max[j] = result['p_max']
+                iterations[j] = result['iterations']
 
             else:
                 if self.verbosity > 1:
@@ -656,7 +706,7 @@ class PCMCI():
                                        )
 
                     # Score
-                    parents_here = results[pc_alpha_here][0]
+                    parents_here = results[pc_alpha_here]['parents']
 
                     mscore = self.cond_ind_test.get_model_selection_criterion(j,
                                                      parents_here, tau_max)
@@ -668,7 +718,7 @@ class PCMCI():
                     print("\n# Condition selection results:")
                     for iscore, pc_alpha_here in enumerate(pc_alpha):
                         names_parents = "[ "
-                        for pari in results[pc_alpha_here][0]:
+                        for pari in results[pc_alpha_here]['parents']:
                             names_parents += "(%s %d) " % (
                                 self.var_names[pari[0]], pari[1])
                         names_parents += "]"
@@ -677,10 +727,10 @@ class PCMCI():
                     print("\n--> optimal pc_alpha for variable %s is %s" %
                           (self.var_names[j], optimal_alpha))
 
-                (all_parents[j],
-                 test_statistic_values[j],
-                 p_max[j],
-                 iterations[j]) = results[optimal_alpha]
+                all_parents[j] = results[optimal_alpha]['parents']
+                test_statistic_values[j] = results[optimal_alpha]['test_statistic_values']
+                p_max[j] = results[optimal_alpha]['p_max']
+                iterations[j] = results[optimal_alpha]['iterations']
 
                 iterations[j]['optimal_pc_alpha'] = optimal_alpha
 
@@ -942,9 +992,9 @@ class PCMCI():
 
         Returns
         -------
-        (val_matrix, p_matrix, conf_matrix) : tuple of arrays
-            The matrices val_matrix and p_matrix are of shape (N, N, tau_max+1)
-            and the matrix conf_matrix is of shape (N, N, tau_max+1, 2)
+        results : dictionary of arrays of shape [N, N, tau_max+1]
+            {'val_matrix':val_matrix, 'p_matrix':p_matrix} are always returned
+            and optionally conf_matrix which is of shape [N, N, tau_max+1,2]
         """
 
         if tau_min > tau_max or min(tau_min, tau_max) < 0:
@@ -986,7 +1036,10 @@ class PCMCI():
 
         val_matrix = numpy.zeros((self.N, self.N, tau_max + 1))
         p_matrix = numpy.ones((self.N, self.N, tau_max + 1))
-        conf_matrix = numpy.zeros((self.N, self.N, tau_max + 1, 2))
+        if self.cond_ind_test.confidence is not False:
+            conf_matrix = numpy.zeros((self.N, self.N, tau_max + 1, 2))
+        else:
+            conf_matrix = None
 
         for j in self.selected_variables:
 
@@ -1034,13 +1087,16 @@ class PCMCI():
 
                 conf = self.cond_ind_test.get_confidence(X=X, Y=Y, Z=Z,
                                                         tau_max=tau_max)
-                conf_matrix[i, j, abs(tau)] = conf
+                if self.cond_ind_test.confidence is not False:
+                    conf_matrix[i, j, abs(tau)] = conf
 
                 if self.verbosity > 1:
                     self.cond_ind_test._print_cond_ind_results(val=val, 
                             pval=pval, conf=conf)
 
-        return (val_matrix, p_matrix, conf_matrix)
+        return {'val_matrix':val_matrix, 
+                'p_matrix':p_matrix, 
+                'conf_matrix':conf_matrix}
 
 
     def get_corrected_pvalues(self, tau_max,
@@ -1259,15 +1315,16 @@ class PCMCI():
             Maximum number of conditions of Z to use. If None is passed, this 
             number is unrestricted.
 
-        fdr_method : str, optional (default: 'fdr_bh')
+        fdr_method : str, optional (default: 'none')
             Correction method, default is Benjamini-Hochberg False Discovery
             Rate method.
 
         Returns
         -------
-        (val_matrix, p_matrix, conf_matrix) : tuple of arrays
-            The matrices val_matrix and p_matrix are of shape (N, N, tau_max+1)
-            and the matrix conf_matrix is of shape (N, N, tau_max+1, 2)
+        results : dictionary of arrays of shape [N, N, tau_max+1]
+            {'val_matrix':val_matrix, 'p_matrix':p_matrix} are always returned
+            and optionally q_matrix and conf_matrix which is of shape 
+            [N, N, tau_max+1,2]
         """
 
         all_parents = self.run_pc_stable(
@@ -1282,25 +1339,34 @@ class PCMCI():
 
         # all_parents = self.all_parents
 
-        (val_matrix, p_matrix, conf_matrix) = self.run_mci(
-                                                selected_links=selected_links,
-                                                tau_min=tau_min,
-                                                tau_max=tau_max,
-                                                parents=all_parents,
-                                                max_conds_py=max_conds_py,
-                                                max_conds_px=max_conds_px,
-                                                )
+        results = self.run_mci(
+                                selected_links=selected_links,
+                                tau_min=tau_min,
+                                tau_max=tau_max,
+                                parents=all_parents,
+                                max_conds_py=max_conds_py,
+                                max_conds_px=max_conds_px,
+                                )
 
+        val_matrix = results['val_matrix']
+        p_matrix = results['p_matrix']
+        if self.cond_ind_test.confidence is not False:
+            conf_matrix = results['conf_matrix']
+        else:
+            conf_matrix = None
 
         if fdr_method != 'none':
             q_matrix = self.get_corrected_pvalues(tau_max=tau_max,
                                                   p_matrix=p_matrix,
-                                                  method=fdr_method)
+                                                  fdr_method=fdr_method)
         else:
             q_matrix = None
 
 
-        return (val_matrix, p_matrix, conf_matrix, q_matrix)
+        return {'val_matrix':val_matrix, 
+                'p_matrix':p_matrix, 
+                'q_matrix':q_matrix,
+                'conf_matrix':conf_matrix}
 
 
 if __name__ == '__main__':
@@ -1398,7 +1464,7 @@ if __name__ == '__main__':
         max_conds_px=None,
         )
 
-    (val_matrix, p_matrix, conf_matrix, q_matrix) = pcmci.run_pcmci(
+    results = pcmci.run_pcmci(
         selected_links=None,
         tau_min=1,
         tau_max=tau_max,
@@ -1411,15 +1477,15 @@ if __name__ == '__main__':
         max_conds_py=None,
         max_conds_px=None,
 
-        fdr_method='none',
+        fdr_method='fdr_bh',
     )
 
     pcmci._print_significant_parents(
-                   p_matrix=p_matrix,
-                   q_matrix=q_matrix, 
-                   val_matrix=val_matrix,
+                   p_matrix=results['p_matrix'],
+                   q_matrix=results['q_matrix'], 
+                   val_matrix=results['val_matrix'],
                    alpha_level=alpha_level,
-                   conf_matrix=conf_matrix)
+                   conf_matrix=results['conf_matrix'])
 
     # pcmci.run_mci(
     #     selected_links=None,

@@ -124,7 +124,7 @@
 <p>PCMCI is a 2-step causal discovery method for large-scale time series
 datasets. The first step is a condition-selection followed by the MCI
 conditional independence test. The implementation is based on Algorithms 1
-and 2 in <a class="footnote-reference" href="#id3" id="id1">[1]</a>.</p>
+and 2 in <a class="footnote-reference" href="#id5" id="id1">[1]</a>.</p>
 <p>PCMCI allows:</p>
 <blockquote>
 <div><ul class="simple">
@@ -139,18 +139,25 @@ linear or nonlinear dependencies</li>
 </div></blockquote>
 <p class="rubric">Notes</p>
 <a class="reference internal image-reference" href="_images/mci_schematic.png"><img alt="_images/mci_schematic.png" src="_images/mci_schematic.png" style="width: 200pt;" /></a>
-<p>In our framework, the dependency structure of a set of time series variables
-is represented in a <em>time series graph</em> as shown in the Figure. The nodes of
-a time series graph are defined as the variables at different times and a
-link exists if two lagged variables are <em>not</em> conditionally independent
-given the past of the whole process. Assuming stationarity, the links are
-repeated in time. The parents <img class="math" src="_images/math/44ad79f4db8277d12b1a6f5def2d30122c89b9b0.png" alt="\mathcal{P}"/> of a variable are defined
-as the set of all nodes with a link towards it.</p>
-<p>PCMCI is based on a two-step procedure:</p>
+<p>The PCMCI causal discovery method is comprehensively described in <a class="footnote-reference" href="#id5" id="id2">[1]</a>,
+where also analytical and numerical results are presented. Here we briefly
+summarize the method.</p>
+<p>In the PCMCI framework, the dependency structure of a set of
+time series variables is represented in a <em>time series graph</em> as shown in
+the Figure. The nodes of a time series graph are defined as the variables at
+different times and a link exists if two lagged variables are <em>not</em>
+conditionally independent given the past of the whole process. Assuming
+stationarity, the links are repeated in time. The parents
+<img class="math" src="_images/math/44ad79f4db8277d12b1a6f5def2d30122c89b9b0.png" alt="\mathcal{P}"/> of a variable are defined as the set of all nodes with a
+link towards it (blue and red boxes in Figure). Estimating these parents
+directly by testing for conditional independence on the whole past is
+problematic due to high-dimensionality and because conditioning on
+irrelevant variables leads to biases <a class="footnote-reference" href="#id5" id="id3">[1]</a>.</p>
+<p>PCMCI estimates the links through a two-step procedure:</p>
 <ol class="arabic">
-<li><p class="first">Condition-selection: For all <img class="math" src="_images/math/f4170ed8938b79490d8923857962695514a8e4cb.png" alt="N"/> variables: Estimate <em>superset</em> of
-parents <img class="math" src="_images/math/f75f28dbcbec776fbe031f8ac923f83f9260bd8a.png" alt="\tilde{\mathcal{P}}(X^j_t)"/> with iterative PC1 algorithm
-here implemented as <code class="docutils literal"><span class="pre">run_pc_stable</span></code>.</p>
+<li><p class="first">Condition-selection: For each variable <img class="math" src="_images/math/6b21e0b0899a0d2879d3b8019087fa630bab4ea2.png" alt="j"/>, estimate a
+<em>superset</em>  of parents <img class="math" src="_images/math/f75f28dbcbec776fbe031f8ac923f83f9260bd8a.png" alt="\tilde{\mathcal{P}}(X^j_t)"/> with the
+iterative PC1 algorithm , implemented as <code class="docutils literal"><span class="pre">run_pc_stable</span></code>.</p>
 </li>
 <li><p class="first"><em>Momentary conditional independence</em> (MCI)</p>
 <div class="math">
@@ -158,29 +165,73 @@ here implemented as <code class="docutils literal"><span class="pre">run_pc_stab
 \tilde{\mathcal{P}}(X^i_{t-{\tau}})\,,"/></p>
 </div></li>
 </ol>
-<p>here implemented as <code class="docutils literal"><span class="pre">run_mci</span></code>. PCMCI can be flexibly combined with any
-kind of conditional independence test statistic adapted to the kind of data
-(continuous or discrete) and its assumed dependency structure. In Tigramite
-implemented are ParCorr as a linear test, GPACE allowing nonlinear additive
-dependencies, and CMI with different estimators making no assumptions about
-the dependencies.</p>
+<p>here implemented as <code class="docutils literal"><span class="pre">run_mci</span></code>. The condition-selection step reduces the
+dimensionality and avoids conditioning on irrelevant variables.</p>
+<p>PCMCI can be flexibly combined with any kind of conditional independence
+test statistic adapted to the kind of data (continuous or discrete) and its
+assumed dependency structure. Currently, implemented in Tigramite are
+ParCorr as a linear test, GPACE allowing nonlinear additive dependencies,
+and CMI with different estimators making no assumptions about the
+dependencies. The classes in <code class="docutils literal"><span class="pre">tigramite.independence_tests</span></code> also handle
+masked data.</p>
 <p>The main free parameters of PCMCI (in addition to free parameters of the
 conditional independence test statistic) are the maximum time delay
-<img class="math" src="_images/math/12535500db0213985b2cce27db85468b60985da0.png" alt="\tau_{\max}"/> and the significance threshold in the condition-
-selection step <img class="math" src="_images/math/877d234f4cec6974ce218fc2e975a486a7972dfd.png" alt="\alpha"/>. The maximum time delay depends on the
-application and should be chosen according to the maximum causal time lag
-expected in the complex system. We recommend a rather large choice that
-includes peaks in the lagged cross-correlation function (or a more general
-measure). <img class="math" src="_images/math/877d234f4cec6974ce218fc2e975a486a7972dfd.png" alt="\alpha"/> should not be seen as a significance test level in
-the condition-selection step since the iterative hypothesis tests do not
-allow for a precise confidence level. <img class="math" src="_images/math/877d234f4cec6974ce218fc2e975a486a7972dfd.png" alt="\alpha"/> rather takes the role
-of a regularization parameter in model-selection techniques. The
-conditioning sets <img class="math" src="_images/math/2fc62c02be8e341b7c32727e07b633086e70ba8a.png" alt="\tilde{\mathcal{P}}"/>  should include the true
-parents and at the same time be small in size to reduce the estimation
-dimension of the MCI test and improve its power. But the first demand is
-typically more important. If a list of values is given or <code class="docutils literal"><span class="pre">pc_alpha=None</span></code>,
-this parameter is optimized using model selection criteria.</p>
-<p>Further optional parameters are discussed in <a class="footnote-reference" href="#id3" id="id2">[1]</a>.</p>
+<img class="math" src="_images/math/12535500db0213985b2cce27db85468b60985da0.png" alt="\tau_{\max}"/> (<code class="docutils literal"><span class="pre">tau_max</span></code>) and the significance threshold in the
+condition- selection step <img class="math" src="_images/math/877d234f4cec6974ce218fc2e975a486a7972dfd.png" alt="\alpha"/> (<code class="docutils literal"><span class="pre">pc_alpha</span></code>). The maximum time
+delay depends on the application and should be chosen according to the
+maximum causal time lag expected in the complex system. We recommend a
+rather large choice that includes peaks in the lagged cross-correlation
+function (or a more general measure). <img class="math" src="_images/math/877d234f4cec6974ce218fc2e975a486a7972dfd.png" alt="\alpha"/> should not be seen as a
+significance test level in the condition-selection step since the iterative
+hypothesis tests do not allow for a precise confidence level. <img class="math" src="_images/math/877d234f4cec6974ce218fc2e975a486a7972dfd.png" alt="\alpha"/>
+rather takes the role of a regularization parameter in model-selection
+techniques. The conditioning sets <img class="math" src="_images/math/2fc62c02be8e341b7c32727e07b633086e70ba8a.png" alt="\tilde{\mathcal{P}}"/>  should
+include the true parents and at the same time be small in size to reduce the
+estimation dimension of the MCI test and improve its power. But including
+the true  parents is typically more important. If a list of values is given
+or <code class="docutils literal"><span class="pre">pc_alpha=None</span></code>, <img class="math" src="_images/math/877d234f4cec6974ce218fc2e975a486a7972dfd.png" alt="\alpha"/> is optimized using model selection
+criteria.</p>
+<p>Further optional parameters are discussed in <a class="footnote-reference" href="#id5" id="id4">[1]</a>.</p>
+<p class="rubric">References</p>
+<table class="docutils footnote" frame="void" id="id5" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>, <a class="fn-backref" href="#id3">3</a>, <a class="fn-backref" href="#id4">4</a>, <a class="fn-backref" href="#id6">5</a>, <a class="fn-backref" href="#id7">6</a>, <a class="fn-backref" href="#id8">7</a>, <a class="fn-backref" href="#id9">8</a>, <a class="fn-backref" href="#id10">9</a>, <a class="fn-backref" href="#id11">10</a>, <a class="fn-backref" href="#id12">11</a>, <a class="fn-backref" href="#id13">12</a>, <a class="fn-backref" href="#id14">13</a>)</em> J. Runge, D. Sejdinovic, S. Flaxman (2017): Detecting causal
+associations in large nonlinear time series datasets,
+<a class="reference external" href="https://arxiv.org/abs/1702.07007">https://arxiv.org/abs/1702.07007</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">tigramite.pcmci</span> <span class="k">import</span> <span class="n">PCMCI</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">tigramite.independence_tests</span> <span class="k">import</span> <span class="n">ParCorr</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">tigramite.data_processing</span> <span class="k">as</span> <span class="nn">pp</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Example process to play around with</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Each key refers to a variable and the incoming links are supplied as a</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># list of format [((driver, lag), coeff), ...]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">links_coeffs</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">[((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.8</span><span class="p">)],</span>
+<span class="go">                    1: [((1, -1), 0.8), ((0, -1), 0.5)],</span>
+<span class="go">                    2: [((2, -1), 0.8), ((1, -2), -0.6)]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">var_process</span><span class="p">(</span><span class="n">links_coeffs</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dataframe</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cond_ind_test</span> <span class="o">=</span> <span class="n">ParCorr</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pcmci</span> <span class="o">=</span> <span class="n">PCMCI</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span> <span class="n">cond_ind_test</span><span class="o">=</span><span class="n">cond_ind_test</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">pcmci</span><span class="o">.</span><span class="n">run_pcmci</span><span class="p">(</span><span class="n">tau_max</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">pc_alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pcmci</span><span class="o">.</span><span class="n">_print_significant_parents</span><span class="p">(</span><span class="n">p_matrix</span><span class="o">=</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;p_matrix&#39;</span><span class="p">],</span>
+<span class="go">                                     val_matrix=results[&#39;val_matrix&#39;],</span>
+<span class="go">                                     alpha_level=0.05)</span>
+<span class="go">## Significant parents at alpha = 0.05:</span>
+<span class="go">    Variable 0 has 1 parent(s):</span>
+<span class="go">        (0 -1): pval = 0.00000 | val = 0.623</span>
+<span class="go">    Variable 1 has 2 parent(s):</span>
+<span class="go">        (1 -1): pval = 0.00000 | val = 0.601</span>
+<span class="go">        (0 -1): pval = 0.00000 | val = 0.487</span>
+<span class="go">    Variable 2 has 2 parent(s):</span>
+<span class="go">        (2 -1): pval = 0.00000 | val = 0.597</span>
+<span class="go">        (1 -2): pval = 0.00000 | val = -0.511</span>
+</pre></div>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -264,15 +315,6 @@ maximum p-value for each link estimated in the PC algorithm.</p>
 <dd><p><em>int</em> &#8211; Time series sample length.</p>
 </dd></dl>
 
-<p class="rubric">References</p>
-<table class="docutils footnote" frame="void" id="id3" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label">[1]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>, <a class="fn-backref" href="#id4">3</a>, <a class="fn-backref" href="#id5">4</a>, <a class="fn-backref" href="#id6">5</a>, <a class="fn-backref" href="#id7">6</a>, <a class="fn-backref" href="#id8">7</a>, <a class="fn-backref" href="#id9">8</a>, <a class="fn-backref" href="#id10">9</a>, <a class="fn-backref" href="#id11">10</a>, <a class="fn-backref" href="#id12">11</a>)</em> J. Runge, D. Sejdinovic, S. Flaxman (2017): Detecting causal
-associations in large nonlinear time series datasets,
-<a class="reference external" href="https://arxiv.org/abs/1702.07007">https://arxiv.org/abs/1702.07007</a></td></tr>
-</tbody>
-</table>
 <dl class="method">
 <dt id="tigramite.pcmci.PCMCI.get_corrected_pvalues">
 <code class="descname">get_corrected_pvalues</code><span class="sig-paren">(</span><em>tau_max</em>, <em>p_matrix</em>, <em>fdr_method='fdr_bh'</em>, <em>exclude_contemporaneous=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/pcmci.html#PCMCI.get_corrected_pvalues"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.pcmci.PCMCI.get_corrected_pvalues" title="Permalink to this definition">¶</a></dt>
@@ -342,7 +384,7 @@ dependencies.</p>
 <dt id="tigramite.pcmci.PCMCI.run_mci">
 <code class="descname">run_mci</code><span class="sig-paren">(</span><em>selected_links=None</em>, <em>tau_min=0</em>, <em>tau_max=1</em>, <em>parents=None</em>, <em>max_conds_py=None</em>, <em>max_conds_px=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/pcmci.html#PCMCI.run_mci"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.pcmci.PCMCI.run_mci" title="Permalink to this definition">¶</a></dt>
 <dd><p>MCI conditional independence tests.</p>
-<p>Implements the MCI test (Algorithm 2 in <a class="footnote-reference" href="#id3" id="id4">[1]</a>). Returns the matrices of
+<p>Implements the MCI test (Algorithm 2 in <a class="footnote-reference" href="#id5" id="id6">[1]</a>). Returns the matrices of
 test statistic values,  p-values, and confidence intervals.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -364,11 +406,11 @@ number is unrestricted.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>(val_matrix, p_matrix, conf_matrix)</strong> &#8211; The matrices val_matrix and p_matrix are of shape (N, N, tau_max+1)
-and the matrix conf_matrix is of shape (N, N, tau_max+1, 2)</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>results</strong> &#8211; {&#8216;val_matrix&#8217;:val_matrix, &#8216;p_matrix&#8217;:p_matrix} are always returned
+and optionally conf_matrix which is of shape [N, N, tau_max+1,2]</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">tuple of arrays</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dictionary of arrays of shape [<a class="reference internal" href="#PCMCI.N" title="PCMCI.N">N</a>, <a class="reference internal" href="#PCMCI.N" title="PCMCI.N">N</a>, tau_max+1]</p>
 </td>
 </tr>
 </tbody>
@@ -377,7 +419,7 @@ and the matrix conf_matrix is of shape (N, N, tau_max+1, 2)</p>
 
 <dl class="method">
 <dt id="tigramite.pcmci.PCMCI.run_pc_stable">
-<code class="descname">run_pc_stable</code><span class="sig-paren">(</span><em>selected_links=None</em>, <em>tau_min=1</em>, <em>tau_max=1</em>, <em>save_iterations=False</em>, <em>pc_alpha=0.1</em>, <em>max_conds_dim=None</em>, <em>max_combinations=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/pcmci.html#PCMCI.run_pc_stable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.pcmci.PCMCI.run_pc_stable" title="Permalink to this definition">¶</a></dt>
+<code class="descname">run_pc_stable</code><span class="sig-paren">(</span><em>selected_links=None</em>, <em>tau_min=1</em>, <em>tau_max=1</em>, <em>save_iterations=False</em>, <em>pc_alpha=0.2</em>, <em>max_conds_dim=None</em>, <em>max_combinations=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/pcmci.html#PCMCI.run_pc_stable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.pcmci.PCMCI.run_pc_stable" title="Permalink to this definition">¶</a></dt>
 <dd><p>PC algorithm for estimating parents of all variables.</p>
 <p>Parents are made available as self.all_parents</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -391,7 +433,7 @@ passed, all links are tested</li>
 <li><strong>tau_min</strong> (<em>int</em><em>, </em><em>default: 1</em>) &#8211; Minimum time lag to test. Useful for multi-step ahead predictions.</li>
 <li><strong>tau_max</strong> (<em>int</em><em>, </em><em>default: 1</em>) &#8211; Maximum time lag. Must be larger or equal to tau_min.</li>
 <li><strong>save_iterations</strong> (<em>bool</em><em>, </em><em>default: False</em>) &#8211; Whether to save iteration step results such as conditions used.</li>
-<li><strong>pc_alpha</strong> (<em>float</em><em> or </em><em>list of floats</em><em>, </em><em>default: 0.1</em>) &#8211; Significance level in algorithm. If a list is passed, then the
+<li><strong>pc_alpha</strong> (<em>float</em><em> or </em><em>list of floats</em><em>, </em><em>default: 0.3</em>) &#8211; Significance level in algorithm. If a list or None is passed, the
 pc_alpha level is optimized for every variable across the given
 pc_alpha values using the score computed in
 cond_ind_test.get_model_selection_criterion()</li>
@@ -440,16 +482,17 @@ a larger number, such as 10, can be used.</li>
 number is unrestricted.</li>
 <li><strong>max_conds_px</strong> (<em>int</em><em> or </em><em>None</em>) &#8211; Maximum number of conditions of Z to use. If None is passed, this
 number is unrestricted.</li>
-<li><strong>fdr_method</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'fdr_bh'</em><em>)</em><em></em>) &#8211; Correction method, default is Benjamini-Hochberg False Discovery
+<li><strong>fdr_method</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'none'</em><em>)</em><em></em>) &#8211; Correction method, default is Benjamini-Hochberg False Discovery
 Rate method.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>(val_matrix, p_matrix, conf_matrix)</strong> &#8211; The matrices val_matrix and p_matrix are of shape (N, N, tau_max+1)
-and the matrix conf_matrix is of shape (N, N, tau_max+1, 2)</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>results</strong> &#8211; {&#8216;val_matrix&#8217;:val_matrix, &#8216;p_matrix&#8217;:p_matrix} are always returned
+and optionally q_matrix and conf_matrix which is of shape
+[N, N, tau_max+1,2]</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">tuple of arrays</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dictionary of arrays of shape [<a class="reference internal" href="#PCMCI.N" title="PCMCI.N">N</a>, <a class="reference internal" href="#PCMCI.N" title="PCMCI.N">N</a>, tau_max+1]</p>
 </td>
 </tr>
 </tbody>
@@ -479,7 +522,7 @@ handles masked samples. Other test classes can inherit from this class.</p>
 Marks for which variables in the dependence measure I(X; Y | Z) the
 samples should be masked. If None, [&#8216;x&#8217;, &#8216;y&#8217;, &#8216;z&#8217;] is used, which
 excludes masked samples in X, Y, and Z and can be used for missing
-values. Explained in <a class="footnote-reference" href="#id3" id="id5">[1]</a>.</li>
+values. Explained in <a class="footnote-reference" href="#id5" id="id7">[1]</a>.</li>
 <li><strong>significance</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'analytic'</em><em>)</em><em></em>) &#8211; Type of significance test to use. In this package &#8216;analytic&#8217;,
 &#8216;fixed_thres&#8217; and &#8216;shuffle_test&#8217; are available.</li>
 <li><strong>fixed_thres</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.1</em><em>)</em><em></em>) &#8211; If significance is &#8216;fixed_thres&#8217;, this specifies the threshold for the
@@ -487,14 +530,14 @@ absolute value of the dependence measure.</li>
 <li><strong>sig_samples</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 100</em><em>)</em><em></em>) &#8211; Number of samples for shuffle significance test.</li>
 <li><strong>sig_blocklength</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Block length for block-shuffle significance test. If None, the
 block length is determined from the decay of the autocovariance as
-explained in <a class="footnote-reference" href="#id3" id="id6">[1]</a>.</li>
+explained in <a class="footnote-reference" href="#id5" id="id8">[1]</a>.</li>
 <li><strong>confidence</strong> (<em>False</em><em> or </em><em>str</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em><em></em>) &#8211; Specify type of confidence estimation. If False, numpy.nan is returned.
 &#8216;bootstrap&#8217; can be used with any test, for ParCorr also &#8216;analytic&#8217; is
 implemented.</li>
 <li><strong>conf_lev</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.9</em><em>)</em><em></em>) &#8211; Two-sided confidence interval.</li>
 <li><strong>conf_samples</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 100</em><em>)</em><em></em>) &#8211; Number of samples for bootstrap.</li>
 <li><strong>conf_blocklength</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Block length for block-bootstrap. If None, the block length is
-determined from the decay of the autocovariance as explained in <a class="footnote-reference" href="#id3" id="id7">[1]</a>.</li>
+determined from the decay of the autocovariance as explained in <a class="footnote-reference" href="#id5" id="id9">[1]</a>.</li>
 <li><strong>recycle_residuals</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em><em></em>) &#8211; Specifies whether residuals should be stored. This may be faster, but
 can cost considerable memory.</li>
 <li><strong>verbosity</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em><em></em>) &#8211; Level of verbosity.</li>
@@ -521,7 +564,7 @@ dependence_measure(array, xyz) and return a numeric value</li>
 <li><strong>conf_samples</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 100</em><em>)</em><em></em>) &#8211; Number of samples for bootstrap.</li>
 <li><strong>conf_blocklength</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Block length for block-bootstrap. If None, the block length is
 determined from the decay of the autocovariance as explained in
-<a class="footnote-reference" href="#id3" id="id8">[1]</a>.</li>
+<a class="footnote-reference" href="#id5" id="id10">[1]</a>.</li>
 <li><strong>verbosity</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em><em></em>) &#8211; Level of verbosity.</li>
 </ul>
 </td>
@@ -702,7 +745,7 @@ of the same shape.</td>
 <dt id="tigramite.independence_tests.ParCorr">
 <em class="property">class </em><code class="descclassname">tigramite.independence_tests.</code><code class="descname">ParCorr</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#ParCorr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.ParCorr" title="Permalink to this definition">¶</a></dt>
 <dd><p>Partial correlation test.</p>
-<p>Partial correlation is estimated as described in <a class="footnote-reference" href="#id3" id="id9">[1]</a>.</p>
+<p>Partial correlation is estimated as described in <a class="footnote-reference" href="#id5" id="id11">[1]</a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -831,7 +874,7 @@ not analytically available, but can be precomputed with the script
 &#8216;generate_gpace_nulldist.py&#8217; which generates a *.npz file containing the
 null distribution for different sample sizes.</p>
 <p class="rubric">Notes</p>
-<p>As described in <a class="footnote-reference" href="#id3" id="id10">[1]</a>, GPACE is based on a Gaussian
+<p>As described in <a class="footnote-reference" href="#id5" id="id12">[1]</a>, GPACE is based on a Gaussian
 process (GP) regression and a maximal correlation test on the residuals. To
 test <img class="math" src="_images/math/d843100cd0a02e1e5184694228a7ac41e19e8af2.png" alt="X \perp Y | Z"/>, first  <img class="math" src="_images/math/bcb2457ac9d8995a4f34d57cadac7ecbbe58f3bd.png" alt="Z"/> is regressed out from <img class="math" src="_images/math/7a7bb470119808e2db2879fc2b2526f467b7a40b.png" alt="X"/>
 and <img class="math" src="_images/math/0062c26909b3e07ee8f5a6285b2563d69bc979ff.png" alt="Y"/> assuming the  model</p>
@@ -856,7 +899,7 @@ of the maximal correlation can be pre-computed.</p>
 default filename generated by the script &#8220;generate_gpace_nulldist.py&#8221;
 is used.</li>
 <li><strong>gp_version</strong> (<em>{'new'</em><em>, </em><em>'old'}</em><em>, </em><em>optional</em><em> (</em><em>default: 'new'</em><em>)</em><em></em>) &#8211; The older GP version from scikit-learn 0.17 was used for the numerical
-simulations in <a class="footnote-reference" href="#id3" id="id11">[1]</a>. The newer version from scikit-learn 0.19 is faster
+simulations in <a class="footnote-reference" href="#id5" id="id13">[1]</a>. The newer version from scikit-learn 0.19 is faster
 and allows more flexibility regarding kernels etc.</li>
 <li><strong>gp_kernel</strong> (<em>kernel object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Only available for gp_version=&#8217;new&#8217;. Can be any scikit-learn kernel
 object available in gaussian_process.kernels. The kernel specifies the
@@ -883,7 +926,7 @@ loads the very slow pure python version available from
 version from the R-package acepack. This requires the R-interface
 rpy2 to be installed and acepack needs to be installed in R beforehand.
 Note that both versions &#8216;python&#8217; and &#8216;acepack&#8217; may result in different
-results. In <a class="footnote-reference" href="#id3" id="id12">[1]</a> the acepack version was used.</li>
+results. In <a class="footnote-reference" href="#id5" id="id14">[1]</a> the acepack version was used.</li>
 <li><strong>**kwargs</strong> &#8211; Arguments passed on to parent class CondIndTest.</li>
 </ul>
 </td>
