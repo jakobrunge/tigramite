@@ -1110,7 +1110,7 @@ class PCMCI():
         """Returns p-values corrected for multiple testing.
         
         Wrapper around statsmodels.sandbox.stats.multicomp.multipletests.
-        Corrections is performed either among all links if
+        Correction is performed either among all links if
         exclude_contemporaneous==False, or only among lagged links.
 
         Parameters
