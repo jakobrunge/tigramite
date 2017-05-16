@@ -12,7 +12,6 @@ from matplotlib.ticker import FormatStrFormatter
 from copy import deepcopy
 import os
 
-
 # TODO: Add proper docstrings to internal functions...
 
 

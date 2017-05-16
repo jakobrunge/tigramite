@@ -3,13 +3,40 @@ Version 3.0 described in http://arxiv.org/abs/1702.07007
 
 (Python Package)
 
-[Github download](https://github.com/jakobrunge/tigramite_v3)
+[Github](https://github.com/jakobrunge/tigramite_v3.git)
 
 [Documentation](https://jakobrunge.github.io/tigramite_v3/)
+
 
 ## General Notes
 
 TIGRAMITE is a time series analysis python module. With flexibly adaptable scripts it allows to reconstruct graphical models (conditional independence graphs) from discrete or continuously-valued time series based on a causal discovery algorithm and create high-quality plots of the results.
+
+
+## Features
+
+- different conditional independence test statistics adapted to
+  continuously-valued or discrete data, and different assumptions about
+  linear or nonlinear dependencies
+- hyperparameter optimization
+- easy parallelization
+- handling of masked time series data
+- false discovery control and confidence interval estimation
+
+
+## Required python packages
+
+- numpy, tested with Version 1.10
+- scipy, tested with Version 0.17
+- sklearn, tested with Version 0.18 (optional, necessary for GPACE test)
+- ace python package (https://pypi.python.org/pypi/ace/0.3) OR rpy2 and R-package 'acepack' (optional, necessary for GPACE test)
+- matplotlib, tested with Version 1.5
+- networkx, tested with Version 1.10
+- basemap (only if plotting on a map is needed)
+- mpi4py (optional, necessary for using the parallelized implementation)
+- cython (optional, necessary for CMIknn test)
+- statsmodels, tested with Version 0.6 (optional, necessary for p-value corrections)
+
 
 ## User Agreement
 
