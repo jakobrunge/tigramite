@@ -874,7 +874,7 @@ def _draw_network_with_curved_edges(
                         vmax, node_rings[ring]['ticks'], 'up') +
                         node_rings[ring]['ticks'], node_rings[ring]['ticks']))
                 except:
-                    print 'no ticks given'
+                    print ('no ticks given')
                 cb_n.outline.remove()
                 # cb_n.set_ticks()
                 cax_n.set_xlabel(
@@ -978,7 +978,7 @@ def _draw_network_with_curved_edges(
                                      _myround(links_vmax, links_ticks, 'up') +
                                      links_ticks, links_ticks))
         except:
-            print 'no ticks given'
+            print ('no ticks given')
 
         cb_e.outline.remove()
         # cb_n.set_ticks()
@@ -1014,7 +1014,7 @@ def _draw_network_with_curved_edges(
                                         links_edges_ticks,
                                         links_edges_ticks))
         except:
-            print 'no ticks given'
+            print ('no ticks given')
         cb_e.outline.remove()
         # cb_n.set_ticks()
         cax_e.set_xlabel(
@@ -1614,7 +1614,7 @@ if __name__ == '__main__':
     numpy.random.seed(42)
     val_matrix = numpy.random.rand(3,3,4)
     link_matrix = numpy.abs(val_matrix) > .7
-    print link_matrix
+    # print link_matrix
 
 
     data = numpy.random.randn(100, 3)

@@ -77,7 +77,7 @@ def lowhighpass_filter(data, cutperiod, pass_periods='low'):
     try:
         from scipy.signal import butter, filtfilt
     except:
-        print 'Could not import scipy.signal for butterworth filtering!'
+        print('Could not import scipy.signal for butterworth filtering!')
 
     fs = 1.
     order = 3

@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='tigramite',
-    version='3.0dev',
+    version='3.0',
     packages=['tigramite',],
     license='GNU General Public License v3.0',
     description='Tigramite causal discovery for time series',
