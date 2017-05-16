@@ -214,6 +214,9 @@ associations in large nonlinear time series datasets,
 <span class="go">                    1: [((1, -1), 0.8), ((0, -1), 0.5)],</span>
 <span class="go">                    2: [((2, -1), 0.8), ((1, -2), -0.6)]}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">var_process</span><span class="p">(</span><span class="n">links_coeffs</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Data must be array of shape (time, variables)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(1000, 3)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dataframe</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cond_ind_test</span> <span class="o">=</span> <span class="n">ParCorr</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pcmci</span> <span class="o">=</span> <span class="n">PCMCI</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span> <span class="n">cond_ind_test</span><span class="o">=</span><span class="n">cond_ind_test</span><span class="p">)</span>

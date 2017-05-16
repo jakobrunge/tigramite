@@ -105,7 +105,7 @@ class PCMCI():
     .. [1] J. Runge, D. Sejdinovic, S. Flaxman (2017): Detecting causal
            associations in large nonlinear time series datasets, 
            https://arxiv.org/abs/1702.07007
-           
+
     Examples
     --------
     >>> import numpy
@@ -120,6 +120,9 @@ class PCMCI():
                         1: [((1, -1), 0.8), ((0, -1), 0.5)],
                         2: [((2, -1), 0.8), ((1, -2), -0.6)]}
     >>> data, _ = pp.var_process(links_coeffs, T=1000)
+    >>> # Data must be array of shape (time, variables)
+    >>> print data.shape
+    (1000, 3)
     >>> dataframe = pp.DataFrame(data)
     >>> cond_ind_test = ParCorr()
     >>> pcmci = PCMCI(dataframe=dataframe, cond_ind_test=cond_ind_test)

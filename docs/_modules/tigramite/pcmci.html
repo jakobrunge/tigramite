@@ -169,7 +169,7 @@
 <span class="sd">    .. [1] J. Runge, D. Sejdinovic, S. Flaxman (2017): Detecting causal</span>
 <span class="sd">           associations in large nonlinear time series datasets, </span>
 <span class="sd">           https://arxiv.org/abs/1702.07007</span>
-<span class="sd">           </span>
+
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; import numpy</span>
@@ -184,6 +184,9 @@
 <span class="sd">                        1: [((1, -1), 0.8), ((0, -1), 0.5)],</span>
 <span class="sd">                        2: [((2, -1), 0.8), ((1, -2), -0.6)]}</span>
 <span class="sd">    &gt;&gt;&gt; data, _ = pp.var_process(links_coeffs, T=1000)</span>
+<span class="sd">    &gt;&gt;&gt; # Data must be array of shape (time, variables)</span>
+<span class="sd">    &gt;&gt;&gt; print data.shape</span>
+<span class="sd">    (1000, 3)</span>
 <span class="sd">    &gt;&gt;&gt; dataframe = pp.DataFrame(data)</span>
 <span class="sd">    &gt;&gt;&gt; cond_ind_test = ParCorr()</span>
 <span class="sd">    &gt;&gt;&gt; pcmci = PCMCI(dataframe=dataframe, cond_ind_test=cond_ind_test)</span>
