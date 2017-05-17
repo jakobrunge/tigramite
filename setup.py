@@ -1,8 +1,54 @@
-from distutils.core import setup
+# from distutils.core import setup, Extension
+from setuptools import setup, Extension
+
+import numpy
+
+# If cython is available, the included cython *.pyx file
+# is compiled, otherwise the *.c file is used
+try:
+    from Cython.Distutils import build_ext
+except ImportError:
+    use_cython = False
+else:
+    use_cython = True
+
+
+install_requires = [
+    'numpy',
+    'scipy'
+]
+
+extras_require = {
+    'GPACE first step: Gaussian Process (GP) Regression':  ['sklearn>=0.18'],
+    'GPACE second step: R-based ACE, also requires acepack installed in R':  ['rpy2'],
+    'GPACE second step:pure-python ACE':  ['ace>=0.3'],
+    'plotting': ['matplotlib>=1.5', 'networkx>=1.10'],
+    'p-value corrections': ['statsmodels']
+}
+
+tests_require = ['nose']
+
+
+cmdclass = { }
+ext_modules = [ ]
+
+if use_cython:
+    ext_modules += [
+        Extension("tigramite.tigramite_cython_code", 
+                  [ "tigramite/tigramite_cython_code.pyx" ],
+                  include_dirs=[numpy.get_include()]),
+    ]
+    cmdclass.update({ 'build_ext': build_ext })
+else:
+    ext_modules += [
+        Extension("tigramite.tigramite_cython_code", 
+                  ["tigramite/tigramite_cython_code.c"],
+                  include_dirs=[numpy.get_include()]),
+    ],
 
 setup(
     name='tigramite',
-    version='3.0',
+    version='3.0beta',
     packages=['tigramite',],
     license='GNU General Public License v3.0',
     description='Tigramite causal discovery for time series',
@@ -10,6 +56,18 @@ setup(
     author_email='jakobrunge@posteo.de',
     url='https://github.com/jakobrunge/tigramite_v3/',
     long_description=open('README.md').read(),
-    keywords = ['causality', 'time series'],
-
+    keywords = 'causality time-series',
+    cmdclass = cmdclass,
+    ext_modules=ext_modules,
+    install_requires=install_requires,
+    test_suite = 'nose.collector',
+    tests_require = tests_require,
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Intended Audience :: Science/Research',
+        'Topic :: Scientific/Engineering :: Artificial Intelligence',
+        'Topic :: Scientific/Engineering :: Mathematics',
+        'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
+        'Programming Language :: Python :: 2.7',
+    ],
 )

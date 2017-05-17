@@ -1,15 +1,15 @@
 import numpy
 
 # Make Python see modules in parent package
-import sys, os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# import sys, os
+# sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from tigramite.independence_tests import ParCorr, GPACE, CMIknn, CMIsymb
 import tigramite.data_processing as pp
 
-# import nose
-# import nose.tools as nt
-import unittest
+import nose
+import nose.tools as nt
+# import unittest
 
 
 verbosity = 0
@@ -22,7 +22,7 @@ def _par_corr_to_cmi(par_corr):
 #
 #  Start
 #
-class TestCondInd(unittest.TestCase):
+class TestCondInd():  #unittest.TestCase):
     # def __init__(self):
     #     pass
 
@@ -516,5 +516,5 @@ if __name__ == "__main__":
     # tci.test_bootstrap_vs_analytic_confidence()
     # tci.test_shuffle_vs_analytic_significance_gpace()
     # tci.test__gpace_get_single_residuals()
-    unittest.main()
-    # nose.run()
+    # unittest.main()
+    nose.run()

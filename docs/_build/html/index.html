@@ -323,7 +323,7 @@ maximum p-value for each link estimated in the PC algorithm.</p>
 <code class="descname">get_corrected_pvalues</code><span class="sig-paren">(</span><em>tau_max</em>, <em>p_matrix</em>, <em>fdr_method='fdr_bh'</em>, <em>exclude_contemporaneous=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/pcmci.html#PCMCI.get_corrected_pvalues"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.pcmci.PCMCI.get_corrected_pvalues" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns p-values corrected for multiple testing.</p>
 <p>Wrapper around statsmodels.sandbox.stats.multicomp.multipletests.
-Corrections is performed either among all links if
+Correction is performed either among all links if
 exclude_contemporaneous==False, or only among lagged links.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />

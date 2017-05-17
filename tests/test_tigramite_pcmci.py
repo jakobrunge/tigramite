@@ -1,8 +1,8 @@
 import numpy
 
 # Make Python see modules in parent package
-import sys, os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# import sys, os
+# sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from tigramite.pcmci import PCMCI
 from tigramite.independence_tests import ParCorr, GPACE
@@ -11,7 +11,7 @@ import tigramite.data_processing as pp
 
 import nose
 import nose.tools as nt
-import unittest
+# import unittest
 
 
 def assert_graphs_equal(actual, expected):
@@ -54,7 +54,7 @@ verbosity = 0
 #
 #  Start
 #
-class TestPCMCI(unittest.TestCase):
+class TestPCMCI():  #unittest.TestCase):
     # def __init__(self):
     #     pass
 
@@ -91,15 +91,18 @@ class TestPCMCI(unittest.TestCase):
             cond_ind_test=cond_ind_test,
             verbosity=verbosity)
 
-        (val_matrix, p_matrix, conf_matrix, q_matrix) = pcmci.run_pcmci(
+        results = pcmci.run_pcmci(
             tau_max=tau_max,
             pc_alpha=pc_alpha,
         )
 
-        parents = pcmci._return_significant_parents(pq_matrix=p_matrix,
-                                  val_matrix=val_matrix,
-                                  alpha_level=alpha_level,
-                                  )
+        parents = pcmci._return_significant_parents(
+            pq_matrix=results['p_matrix'],
+            val_matrix=results['val_matrix'],
+            alpha_level=alpha_level)
+
+        # print parents
+        # print self.true_parents
         assert_graphs_equal(parents, self.true_parents)
 
     def test_pc_stable(self):
@@ -265,7 +268,7 @@ class TestPCMCI(unittest.TestCase):
             cond_ind_test=cond_ind_test,
             verbosity=verbosity)
 
-        (val_matrix, p_matrix, conf_matrix) = pcmci.run_mci(
+        results = pcmci.run_mci(
                     selected_links=None,
                     tau_min=1,
                     tau_max=tau_max,
@@ -274,8 +277,9 @@ class TestPCMCI(unittest.TestCase):
                     max_conds_px=None,
                     )
 
-        parents = pcmci._return_significant_parents(pq_matrix=p_matrix,
-                                  val_matrix=val_matrix,
+        parents = pcmci._return_significant_parents(
+                                    pq_matrix=results['p_matrix'],
+                                  val_matrix=results['val_matrix'],
                                   alpha_level=alpha_level,
                                   )
         # print parents
@@ -292,5 +296,6 @@ if __name__ == "__main__":
     # test_pcmci.setup_testdata()
     # test_pcmci.test_pc_stable()
     # test_pcmci.test_pcmci()
+    nose.run()
 
-    unittest.main()
+    # unittest.main()
