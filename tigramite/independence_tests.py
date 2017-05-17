@@ -6,7 +6,7 @@
 
 import warnings
 import numpy
-import sys
+import sys, os
 import math
 
 from scipy import linalg, special, stats
@@ -537,7 +537,7 @@ class CondIndTest(object):
                              conf_blocklength=self.conf_blocklength,
                              conf_lev=self.conf_lev, verbosity=self.verbosity)
         elif self.confidence == False:
-            return (numpy.nan, numpy.nan)
+            return None
 
         else:
             raise ValueError("%s confidence estimation not implemented" 
@@ -1252,9 +1252,11 @@ class GPACE(CondIndTest):
         # Load null-dist file, adapt if necessary
         if null_dist_filename is None:
             if self.ace_version == 'python':
-                null_dist_filename = '../gpace_nulldists_purepython.npz'
+                null_dist_filename = os.path.join(os.path.dirname(__file__),
+                                      '../gpace_nulldists_purepython.npz')
             elif self.ace_version == 'acepack':
-                null_dist_filename = '../gpace_nulldists_acepack.npz'
+                null_dist_filename = os.path.join(os.path.dirname(__file__),
+                                      '../gpace_nulldists_acepack.npz')
         null_dist_file = numpy.load(null_dist_filename)
         self.sample_sizes = null_dist_file['T']
         self.null_dist = null_dist_file['exact_dist']
@@ -1640,15 +1642,20 @@ class CMIknn(CondIndTest):
     knn : int, optional (default: 100)
         Number of nearest-neighbors which determines the size of hyper-cubes
         around each (high-dimensional) sample point.
+    
+    significance : str, optional (default: 'shuffle_test')
+        Type of significance test to use. For CMIknn only 'fixed_thres' and 
+        'shuffle_test' are available.
 
     **kwargs : 
-        Arguments passed on to parent class CondIndTest.
+        Arguments passed on to parent class CondIndTest. 
     """
     def __init__(self,
                 knn=100,
+                significance='shuffle_test',
                 **kwargs):
 
-        CondIndTest.__init__(self, **kwargs)
+        CondIndTest.__init__(self, significance=significance, **kwargs)
 
         self.knn = knn
 
@@ -1779,7 +1786,7 @@ class CMIknn(CondIndTest):
 
     def get_analytic_significance(self, value, df):
         """Placeholder function, not available."""
-        raise ValueError("Analytic confidence not implemented for %s"
+        raise ValueError("Analytic significance not implemented for %s"
                          "" % self.measure)
 
     def get_analytic_confidence(self, value, df, conf_lev):
@@ -1817,18 +1824,41 @@ class CMIsymb(CondIndTest):
 
     Parameters
     ----------
+    n_symbs : int, optional (default: None)
+        Number of symbols in input data. If None, n_symbs=data.max()+1
+
+    significance : str, optional (default: 'shuffle_test')
+        Type of significance test to use. For CMIsymb only 'fixed_thres' and 
+        'shuffle_test' are available.
+
+    sig_blocklength : int, optional (default: 1)
+        Block length for block-shuffle significance test.
+
+    conf_blocklength : int, optional (default: 1)
+        Block length for block-bootstrap.
+
     **kwargs : 
         Arguments passed on to parent class CondIndTest.
     """
     def __init__(self,
+                n_symbs=None,
+                significance='shuffle_test',
+                sig_blocklength=1,
+                conf_blocklength=1,
                 **kwargs):
 
-        CondIndTest.__init__(self, **kwargs)
+        CondIndTest.__init__(self, 
+                             significance=significance, 
+                             sig_blocklength=sig_blocklength,
+                             conf_blocklength=conf_blocklength,
+                             **kwargs)
 
         self.measure = 'cmi_symb'
         self.two_sided = False
         self.residual_based = False
         self.recycle_residuals = False
+
+        self.n_symbs = n_symbs
 
         if self.conf_blocklength is None or self.sig_blocklength is None:
             warnings.warn("Automatic block-length estimations from decay of "
@@ -1856,31 +1886,36 @@ class CMIsymb(CondIndTest):
             dimensions with Z-dimensions coming first.
         """
 
-        bins = int(symb_array.max() + 1)
+        if self.n_symbs is None:
+            self.n_symbs = int(symb_array.max() + 1)
+
+        if 'int' not in str(symb_array.dtype):
+            raise ValueError("Input data must of integer type, where each "
+                             "number indexes a symbol.")
 
         dim, T = symb_array.shape
 
         # Needed because numpy.bincount cannot process longs
-        if type(bins ** dim) != int:
-            raise ValueError("Too many bins and/or dimensions, "
+        if type(self.n_symbs ** dim) != int:
+            raise ValueError("Too many n_symbs and/or dimensions, "
                              "numpy.bincount cannot process longs")
-        if bins ** dim * 16. / 8. / 1024. ** 3 > 3.:
+        if self.n_symbs ** dim * 16. / 8. / 1024. ** 3 > 3.:
             raise ValueError("Dimension exceeds 3 GB of necessary "
                              "memory (change this code line if more...)")
-        if dim * bins ** dim > 2 ** 65:
+        if dim * self.n_symbs ** dim > 2 ** 65:
             raise ValueError("base = %d, D = %d: Histogram failed: "
                              "dimension D*base**D exceeds int64 data type"
-                             % (bins, dim))
+                             % (self.n_symbs, dim))
 
-        flathist = numpy.zeros((bins ** dim), dtype='int16')
+        flathist = numpy.zeros((self.n_symbs ** dim), dtype='int16')
         multisymb = numpy.zeros(T, dtype='int64')
         if weights is not None:
-            flathist = numpy.zeros((bins ** dim), dtype='float32')
+            flathist = numpy.zeros((self.n_symbs ** dim), dtype='float32')
             multiweights = numpy.ones(T, dtype='float32')
 
         # print numpy.prod(weights, axis=0)
         for i in range(dim):
-            multisymb += symb_array[i, :] * bins ** i
+            multisymb += symb_array[i, :] * self.n_symbs ** i
             if weights is not None:
                 multiweights *= weights[i, :]
                 # print i, multiweights
@@ -1894,8 +1929,8 @@ class CMIsymb(CondIndTest):
 
         flathist[:len(result)] += result
 
-        hist = flathist.reshape(tuple([bins, bins] +
-                                      [bins for i in range(dim - 2)])).T
+        hist = flathist.reshape(tuple([self.n_symbs, self.n_symbs] +
+                                      [self.n_symbs for i in range(dim - 2)])).T
 
         return hist
 
@@ -2029,10 +2064,24 @@ if __name__ == '__main__':
     #     verbosity=4)
 
 
-    # cond_ind_test = CMIknn(
+    # cond_ind_test = CMIknn()
+        # significance='shuffle_test',
+        # sig_samples=1000,
+        # knn=100,
+        # confidence='bootstrap', #'bootstrap',
+        # conf_lev=0.9,
+        # conf_samples=100,
+        # conf_blocklength=None,
+
+        # use_mask=False,
+        # mask_type=['y'],
+        # recycle_residuals=False,
+        # verbosity=3)
+
+    cond_ind_test = CMIsymb()
     #     significance='shuffle_test',
     #     sig_samples=1000,
-    #     knn=100,
+
     #     confidence='bootstrap', #'bootstrap',
     #     conf_lev=0.9,
     #     conf_samples=100,
@@ -2042,20 +2091,6 @@ if __name__ == '__main__':
     #     mask_type=['y'],
     #     recycle_residuals=False,
     #     verbosity=3)
-
-    cond_ind_test = CMIsymb(
-        significance='shuffle_test',
-        sig_samples=1000,
-
-        confidence='bootstrap', #'bootstrap',
-        conf_lev=0.9,
-        conf_samples=100,
-        conf_blocklength=None,
-
-        use_mask=False,
-        mask_type=['y'],
-        recycle_residuals=False,
-        verbosity=3)
 
     if cond_ind_test.measure == 'cmi_symb':
         data = pp.quantile_bin_array(data, bins=6)

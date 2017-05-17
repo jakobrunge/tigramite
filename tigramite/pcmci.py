@@ -1155,7 +1155,7 @@ class PCMCI():
                                   val_matrix,
                                   alpha_level=0.05,
                                   ):
-        """Returns list of significant parents.
+        """Returns list of significant parents as well as a boolean matrix.
 
         Significance based on p-matrix, or q-value matrix with corrected
         p-values.
@@ -1178,21 +1178,25 @@ class PCMCI():
         all_parents : dict
             Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} 
             containing estimated parents.
+
+        link_matrix : array, shape [N, N, tau_max+1]
+            Boolean array with True entries for significant links at alpha_level
         """
 
-        sig_links = (pq_matrix <= alpha_level)
+        link_matrix = (pq_matrix <= alpha_level)
         all_parents = {}
         for j in self.selected_variables:
 
             links = dict([((p[0], -p[1] - 1), numpy.abs(val_matrix[p[0], 
                             j, abs(p[1]) + 1]))
-                          for p in zip(*numpy.where(sig_links[:, j, 1:]))])
+                          for p in zip(*numpy.where(link_matrix[:, j, 1:]))])
 
             # Sort by value
             all_parents[j] = sorted(links, key=links.get, 
                                                     reverse=True)
 
-        return all_parents
+        return {'parents':all_parents, 
+                'link_matrix':link_matrix}
 
     def _print_significant_parents(self,
                                   p_matrix,
@@ -1375,7 +1379,7 @@ class PCMCI():
 if __name__ == '__main__':
 
     import data_processing as pp
-    from independence_tests import ParCorr, GPACE
+    from independence_tests import ParCorr, GPACE, CMIknn, CMIsymb
 
     # numpy.random.seed(40)
     # Example process to play around with
@@ -1402,8 +1406,8 @@ if __name__ == '__main__':
 
     var_names = range(N)  # ['X', 'Y', 'Z', 'W']
 
-    pc_alpha = [0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
-    selected_variables = [2] # [2]  # [2]
+    pc_alpha = 0.1  # [0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
+    selected_variables = None  #[2] # [2]  # [2]
 
     tau_max = 3
     alpha_level = 0.01
@@ -1450,6 +1454,23 @@ if __name__ == '__main__':
     #     ace_version='acepack',
     #     recycle_residuals=False,
     #     verbosity=verbosity)
+    cond_ind_test = CMIsymb(
+        significance='shuffle_test',
+        sig_samples=1000,
+        sig_blocklength=10,
+
+        confidence='bootstrap', #'bootstrap',
+        conf_lev=0.9,
+        conf_samples=100,
+        conf_blocklength=10,
+
+        use_mask=False,
+        mask_type=['y'],
+        recycle_residuals=False,
+        verbosity=3)
+
+    if cond_ind_test.measure == 'cmi_symb':
+        dataframe.values = pp.quantile_bin_array(dataframe.values, bins=3)
 
     pcmci = PCMCI(
         dataframe=dataframe,
@@ -1457,15 +1478,6 @@ if __name__ == '__main__':
         selected_variables=selected_variables,
         var_names=var_names,
         verbosity=verbosity)
-
-    pcmci.get_lagged_dependencies(
-        selected_links=None,
-        tau_min=1,
-        tau_max=tau_max,
-        parents=None,
-        max_conds_py=None,
-        max_conds_px=None,
-        )
 
     results = pcmci.run_pcmci(
         selected_links=None,

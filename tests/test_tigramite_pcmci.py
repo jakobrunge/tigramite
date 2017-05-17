@@ -4,8 +4,9 @@ import numpy
 # import sys, os
 # sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import tigramite
 from tigramite.pcmci import PCMCI
-from tigramite.independence_tests import ParCorr, GPACE
+from tigramite.independence_tests import ParCorr #, GPACE
 import tigramite.data_processing as pp
 # import tigramite_plotting 
 
@@ -99,7 +100,7 @@ class TestPCMCI():  #unittest.TestCase):
         parents = pcmci._return_significant_parents(
             pq_matrix=results['p_matrix'],
             val_matrix=results['val_matrix'],
-            alpha_level=alpha_level)
+            alpha_level=alpha_level)['parents']
 
         # print parents
         # print self.true_parents
@@ -281,7 +282,7 @@ class TestPCMCI():  #unittest.TestCase):
                                     pq_matrix=results['p_matrix'],
                                   val_matrix=results['val_matrix'],
                                   alpha_level=alpha_level,
-                                  )
+                                  )['parents']
         # print parents
         # print _get_parent_graph(true_parents)
         assert_graphs_equal(parents, self.true_parents)
@@ -292,10 +293,13 @@ if __name__ == "__main__":
     # unittest.main()
 
     ## Individual tests
-    # test_pcmci = Test_PCMCI()
-    # test_pcmci.setup_testdata()
+    # test_pcmci = TestPCMCI()
+    # test_pcmci.setUp()
     # test_pcmci.test_pc_stable()
     # test_pcmci.test_pcmci()
-    nose.run()
+    nose.main(module=TestPCMCI())
+    # nose.run()  #argv=[sys.argv[0],
+    #                         test_tigramite_pcmci,
+    #                         '-v'])
 
     # unittest.main()

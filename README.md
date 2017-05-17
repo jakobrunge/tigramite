@@ -38,6 +38,17 @@ TIGRAMITE is a time series analysis python module. With flexibly adaptable scrip
 - statsmodels, tested with Version 0.6 (optional, necessary for p-value corrections)
 
 
+## Installation
+
+python setup.py install
+
+This will install tigramite in your path.
+
+To use just the ParCorr, CMIknn and CMIsymb independence tests, only numpy and scipy are required. For CMIknn cython can optionally be used for compilation, otherwise the provided *.c file is used. 
+
+GPACE requires more work: Firstly, sklearn is required for Gaussian Process regression. Secondly, either the python package 'ace' or the R-package 'acepack' are required for the ACE estimator. The R-package version is much faster. 'ace' can be installed via pip install ace. 'acepack' has to be installed in R first, and can then be accessed by tigramite using the rpy2-interface. Note that GPACE relies on a pre-computed null-distribution stored in a *.npz file. A null distribution has to be computed for each sample size (like a critical value table). To generate the *.npz file, the script generate_gpace_nulldist.py can be used.
+
+
 ## User Agreement
 
 By downloading TIGRAMITE you agree with the following points: The toolbox is provided without any warranty or conditions of any kind. We assume no responsibility for errors or omissions in the results and interpretations following from application the toolbox.
