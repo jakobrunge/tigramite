@@ -30,7 +30,6 @@ class DataFrame():
     mask : array-like, optional (default: None)
         Optional mask array, must be of same shape as data
     """
-
     def __init__(self, data,
                  mask = None):
 

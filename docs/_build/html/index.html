@@ -100,10 +100,10 @@
 <tr class="row-even"><td><a class="reference internal" href="#tigramite.independence_tests.GPACE" title="tigramite.independence_tests.GPACE"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.independence_tests.GPACE</span></code></a>([...])</td>
 <td>GPACE conditional independence test.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="#tigramite.independence_tests.CMIknn" title="tigramite.independence_tests.CMIknn"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.independence_tests.CMIknn</span></code></a>([knn])</td>
+<tr class="row-odd"><td><a class="reference internal" href="#tigramite.independence_tests.CMIknn" title="tigramite.independence_tests.CMIknn"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.independence_tests.CMIknn</span></code></a>([knn,&nbsp;...])</td>
 <td>Conditional mutual information test based on nearest-neighbor estimator.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="#tigramite.independence_tests.CMIsymb" title="tigramite.independence_tests.CMIsymb"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.independence_tests.CMIsymb</span></code></a>(**kwargs)</td>
+<tr class="row-even"><td><a class="reference internal" href="#tigramite.independence_tests.CMIsymb" title="tigramite.independence_tests.CMIsymb"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.independence_tests.CMIsymb</span></code></a>([...])</td>
 <td>Conditional mutual information test based on discrete estimator.</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#module-tigramite.data_processing" title="tigramite.data_processing"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.data_processing</span></code></a></td>
@@ -1027,7 +1027,7 @@ different lags in X, Z, all have the same sample size.</li>
 
 <dl class="class">
 <dt id="tigramite.independence_tests.CMIknn">
-<em class="property">class </em><code class="descclassname">tigramite.independence_tests.</code><code class="descname">CMIknn</code><span class="sig-paren">(</span><em>knn=100</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#CMIknn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.CMIknn" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">tigramite.independence_tests.</code><code class="descname">CMIknn</code><span class="sig-paren">(</span><em>knn=100</em>, <em>significance='shuffle_test'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#CMIknn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.CMIknn" title="Permalink to this definition">¶</a></dt>
 <dd><p>Conditional mutual information test based on nearest-neighbor estimator.</p>
 <p>Conditional mutual information is the most general dependency measure
 coming from an information-theoretic framework. It makes no assumptions
@@ -1066,6 +1066,8 @@ cython module.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>knn</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 100</em><em>)</em><em></em>) &#8211; Number of nearest-neighbors which determines the size of hyper-cubes
 around each (high-dimensional) sample point.</li>
+<li><strong>significance</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'shuffle_test'</em><em>)</em><em></em>) &#8211; Type of significance test to use. For CMIknn only &#8216;fixed_thres&#8217; and
+&#8216;shuffle_test&#8217; are available.</li>
 <li><strong>**kwargs</strong> &#8211; Arguments passed on to parent class CondIndTest.</li>
 </ul>
 </td>
@@ -1118,7 +1120,7 @@ around each (high-dimensional) sample point.</li>
 
 <dl class="class">
 <dt id="tigramite.independence_tests.CMIsymb">
-<em class="property">class </em><code class="descclassname">tigramite.independence_tests.</code><code class="descname">CMIsymb</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#CMIsymb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.CMIsymb" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">tigramite.independence_tests.</code><code class="descname">CMIsymb</code><span class="sig-paren">(</span><em>n_symbs=None</em>, <em>significance='shuffle_test'</em>, <em>sig_blocklength=1</em>, <em>conf_blocklength=1</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#CMIsymb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.CMIsymb" title="Permalink to this definition">¶</a></dt>
 <dd><p>Conditional mutual information test based on discrete estimator.</p>
 <p>Conditional mutual information is the most general dependency measure
 coming from an information-theoretic framework. It makes no assumptions
@@ -1138,7 +1140,15 @@ in data_processing or use the CMIknn class.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>**kwargs</strong> &#8211; Arguments passed on to parent class CondIndTest.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>n_symbs</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Number of symbols in input data. If None, n_symbs=data.max()+1</li>
+<li><strong>significance</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'shuffle_test'</em><em>)</em><em></em>) &#8211; Type of significance test to use. For CMIsymb only &#8216;fixed_thres&#8217; and
+&#8216;shuffle_test&#8217; are available.</li>
+<li><strong>sig_blocklength</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em><em></em>) &#8211; Block length for block-shuffle significance test.</li>
+<li><strong>conf_blocklength</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em><em></em>) &#8211; Block length for block-bootstrap.</li>
+<li><strong>**kwargs</strong> &#8211; Arguments passed on to parent class CondIndTest.</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
