@@ -1023,7 +1023,8 @@ class CondIndTest(object):
             return null_dist
 
     def generate_and_save_nulldists(self, sample_sizes, null_dist_filename):
-        """Generates null distribution for pairwise independence tests.
+        """Generates and saves null distribution for pairwise independence 
+        tests.
 
         Generates the null distribution for different sample sizes. Calls 
         generate_nulldist. Null dists are saved to disk as
@@ -1038,6 +1039,7 @@ class CondIndTest(object):
         null_dist_filename : str
             Name to save file containing null distributions.
         """
+        
         self.null_dist_filename = null_dist_filename
 
         null_dists = numpy.zeros((len(sample_sizes), self.sig_samples))
