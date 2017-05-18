@@ -44,9 +44,11 @@ python setup.py install
 
 This will install tigramite in your path.
 
-To use just the ParCorr and  CMIsymb independence tests, only numpy and scipy are required. For CMIknn, cython can optionally be used for compilation, otherwise the provided *.c file is used. GPDC also is based on cython, and additionally, sklearn is required for Gaussian Process regression.
+To use just the ParCorr and CMIsymb independence tests, only numpy and scipy are required. For CMIknn, cython can optionally be used for compilation, otherwise the provided *.c file is used. GPDC also is based on cython, and additionally, sklearn is required for Gaussian Process regression.
 
-GPACE requires more work: Firstly, sklearn is required for Gaussian Process regression. Secondly, either the python package 'ace' or the R-package 'acepack' are required for the ACE estimator. The R-package version is much faster. 'ace' can be installed via pip install ace. 'acepack' has to be installed in R first, and can then be accessed by tigramite using the rpy2-interface. Note that GPACE relies on a pre-computed null-distribution stored in a *.npz file. A null distribution has to be computed for each sample size (like a critical value table). To generate the *.npz file, the script generate_gpace_nulldist.py can be used.
+GPACE requires more work: Firstly, sklearn is required for Gaussian Process regression. Secondly, either the python package 'ace' or the R-package 'acepack' are required for the ACE estimator. The R-package version is much faster. 'ace' can be installed via pip install ace. 'acepack' has to be installed in R first, and can then be accessed by tigramite using the rpy2-interface. 
+
+For GPDC and GPACE we recommend to pre-compute and store the null-distribution for a wide range of expected sample sizes with the script ``generate_*_nulldist.py``. The file containing the null distributions can then be supplied to the class with the keyword null_dist_filename.
 
 
 ## User Agreement
