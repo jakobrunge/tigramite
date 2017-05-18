@@ -15,13 +15,15 @@ TIGRAMITE is a time series analysis python module. With flexibly adaptable scrip
 
 ## Features
 
-- different conditional independence test statistics adapted to
+- high detection power even for large-scale time series datasets
+- flexible conditional independence test statistics adapted to
   continuously-valued or discrete data, and different assumptions about
   linear or nonlinear dependencies
-- hyperparameter optimization
+- automatic hyperparameter optimization
 - easy parallelization
-- handling of masked time series data
-- false discovery control and confidence interval estimation
+- handling of missing values and masks
+- p-value correction and confidence interval estimation
+- can be used for feature selection and prediction
 
 
 ## Required python packages

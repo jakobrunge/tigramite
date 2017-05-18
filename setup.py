@@ -19,9 +19,9 @@ install_requires = [
 ]
 
 extras_require = {
-    'GPACE first step: Gaussian Process (GP) Regression':  ['sklearn>=0.18'],
-    'GPACE second step: R-based ACE, also requires acepack installed in R':  ['rpy2'],
-    'GPACE second step:pure-python ACE':  ['ace>=0.3'],
+    'Gaussian Process (GP) Regression':  ['sklearn>=0.18'],
+    'R-based ACE, also requires acepack installed in R':  ['rpy2'],
+    'pure-python ACE':  ['ace>=0.3'],
     'plotting': ['matplotlib>=1.5', 'networkx>=1.10'],
     'p-value corrections': ['statsmodels']
 }
@@ -48,7 +48,7 @@ else:
 
 setup(
     name='tigramite',
-    version='3.0beta',
+    version='3.0b0',
     packages=['tigramite',],
     license='GNU General Public License v3.0',
     description='Tigramite causal discovery for time series',

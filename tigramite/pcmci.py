@@ -1381,7 +1381,7 @@ if __name__ == '__main__':
     import data_processing as pp
     from independence_tests import ParCorr, GPACE, GPDC, CMIknn, CMIsymb
 
-    # numpy.random.seed(40)
+    numpy.random.seed(42)
     # Example process to play around with
     a = 0.8
     c1 = .8
@@ -1406,7 +1406,7 @@ if __name__ == '__main__':
 
     var_names = range(N)  # ['X', 'Y', 'Z', 'W']
 
-    pc_alpha = 0.1  # [0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
+    pc_alpha = 0.2  # [0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
     selected_variables = None  #[2] # [2]  # [2]
 
     tau_max = 3
@@ -1440,7 +1440,7 @@ if __name__ == '__main__':
     # cond_ind_test = GPACE(
     #     significance='analytic',
     #     fixed_thres=0.05,
-    #     sig_samples=100,
+    #     sig_samples=2000,
 
     #     use_mask=False,
     #     mask_type=['y'],
@@ -1451,6 +1451,7 @@ if __name__ == '__main__':
     #     conf_blocklength=None,
 
     #     gp_version='new',
+    #     gp_alpha=None,
     #     ace_version='acepack',
     #     recycle_residuals=False,
     #     verbosity=verbosity)
@@ -1458,7 +1459,7 @@ if __name__ == '__main__':
     cond_ind_test = GPDC(
         significance='analytic',
         fixed_thres=0.05,
-        sig_samples=1000,
+        sig_samples=2000,
 
         use_mask=False,
         mask_type=['y'],
@@ -1469,6 +1470,7 @@ if __name__ == '__main__':
         conf_blocklength=None,
 
         gp_version='new',
+        gp_alpha=1.,
         recycle_residuals=False,
         verbosity=verbosity)
 

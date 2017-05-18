@@ -122,12 +122,11 @@
 <span class="sd">    use_mask : bool, optional (default: False)</span>
 <span class="sd">        Whether a supplied mask should be used.</span>
 
-<span class="sd">    mask_type : list including all or some of the strings &#39;x&#39;, &#39;y&#39;, &#39;z&#39;,</span>
-<span class="sd">        optional (default: None) </span>
-<span class="sd">        Marks for which variables in the dependence measure I(X; Y | Z) the</span>
-<span class="sd">        samples should be masked. If None, [&#39;x&#39;, &#39;y&#39;, &#39;z&#39;] is used, which</span>
-<span class="sd">        excludes masked samples in X, Y, and Z and can be used for missing</span>
-<span class="sd">        values. Explained in [1]_.</span>
+<span class="sd">    mask_type : {&#39;missing&#39;,&#39;y&#39;,&#39;x&#39;,&#39;z&#39;,&#39;xy&#39;,&#39;xz&#39;,&#39;yz&#39;,&#39;xyz&#39;}</span>
+<span class="sd">        Masking mode: Either &#39;missing&#39; or indicators for which variables in the</span>
+<span class="sd">        dependence measure I(X; Y | Z) the samples should be masked. If None,</span>
+<span class="sd">        &#39;missing&#39; is used, which excludes masked samples for all X, Y, and Z up</span>
+<span class="sd">        to tau_max if a value is missing in any of them. Explained in [1]_.</span>
 
 <span class="sd">    significance : str, optional (default: &#39;analytic&#39;)</span>
 <span class="sd">        Type of significance test to use. In this package &#39;analytic&#39;, </span>
@@ -207,16 +206,16 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_mask</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">recycle_residuals</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span> <span class="o">=</span> <span class="s1">&#39;missing&#39;</span>
 
-        <span class="k">if</span> <span class="n">use_mask</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">mask_type</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">mask_type</span><span class="p">)</span> <span class="o">-</span>
-                                        <span class="nb">set</span><span class="p">([</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">]))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;mask_type = </span><span class="si">%s</span><span class="s2">, but must be list containing&quot;</span>
-                                 <span class="o">%</span> <span class="n">mask_type</span> <span class="o">+</span> <span class="s2">&quot; &#39;x&#39;,&#39;y&#39;,&#39;z&#39;, or any &quot;</span>
-                                 <span class="s2">&quot;combination&quot;</span><span class="p">)</span>
+        <span class="c1"># if use_mask:</span>
+        <span class="c1">#     if mask_type is None or len(set(mask_type) -</span>
+        <span class="c1">#                                 set([&#39;x&#39;, &#39;y&#39;, &#39;z&#39;])) &gt; 0:</span>
+        <span class="c1">#         raise ValueError(&quot;mask_type = %s, but must be list containing&quot;</span>
+        <span class="c1">#                          % mask_type + &quot; &#39;x&#39;,&#39;y&#39;,&#39;z&#39;, or any &quot;</span>
+        <span class="c1">#                          &quot;combination&quot;)</span>
 
-<div class="viewcode-block" id="CondIndTest.set_dataframe"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.CondIndTest.set_dataframe">[docs]</a>    <span class="k">def</span> <span class="nf">set_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">):</span>
+<div class="viewcode-block" id="CondIndTest.set_dataframe"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.CondIndTest.set_dataframe">[docs]</a>    <span class="k">def</span> <span class="nf">set_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">,</span> <span class="n">missing_flag</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialize dataframe.</span>
 
 <span class="sd">        Parameters</span>
@@ -225,11 +224,18 @@
 <span class="sd">            This can either be the tigramite dataframe object or a pandas data</span>
 <span class="sd">            frame. It must have the attributes dataframe.values yielding a numpy</span>
 <span class="sd">            array of shape (observations T, variables N) and optionally a mask</span>
-<span class="sd">            of the same shape.</span>
+<span class="sd">            of the same shape. </span>
+
+<span class="sd">        missing_flag : number, optional (default: None)</span>
+<span class="sd">            Flag for missing values in dataframe. Dismisses all time slices of</span>
+<span class="sd">            samples where missing values occur in any variable and also flags</span>
+<span class="sd">            samples for all lags up to 2*tau_max. This avoids biases, see</span>
+<span class="sd">            section on masking in Supplement of [1]_.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">values</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">mask</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">mask</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span> <span class="o">=</span> <span class="n">missing_flag</span></div>
 
     <span class="k">def</span> <span class="nf">_keyfy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Helper function to make lists unique.&quot;&quot;&quot;</span>
@@ -248,6 +254,7 @@
             <span class="n">use_mask</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">use_mask</span><span class="p">,</span>
             <span class="n">mask</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span>
             <span class="n">mask_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span><span class="p">,</span>
+            <span class="n">missing_flag</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span><span class="p">,</span>
             <span class="n">return_cleaned_xyz</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">do_checks</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">verbosity</span><span class="o">=</span><span class="n">verbosity</span><span class="p">)</span>
@@ -256,6 +263,7 @@
     <span class="k">def</span> <span class="nf">_construct_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span>
                          <span class="n">use_mask</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                          <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mask_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                         <span class="n">missing_flag</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                          <span class="n">return_cleaned_xyz</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                          <span class="n">do_checks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                          <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
@@ -286,12 +294,17 @@
 <span class="sd">            Mask of data array, marking masked values as 1. Must be of same</span>
 <span class="sd">            shape as data.</span>
 
-<span class="sd">        mask_type : list, optional (default: False)</span>
-<span class="sd">            Can including all or some of the strings {&#39;x&#39;, &#39;y&#39;, &#39;z&#39;}. Marks for</span>
-<span class="sd">            which variables in the dependence measure I(X; Y | Z) the samples</span>
-<span class="sd">            should be masked. If None, [&#39;x&#39;, &#39;y&#39;, &#39;z&#39;] is used, which excludes</span>
-<span class="sd">            masked samples in X, Y, and Z and can be used for missing values.</span>
-<span class="sd">            See [1]_ for further discussion.</span>
+<span class="sd">        missing_flag : number, optional (default: None)</span>
+<span class="sd">            Flag for missing values. Dismisses all time slices of samples where</span>
+<span class="sd">            missing values occur in any variable and also flags samples for all</span>
+<span class="sd">            lags up to 2*tau_max. This avoids biases, see section on masking in</span>
+<span class="sd">            Supplement of [1]_.</span>
+
+<span class="sd">        mask_type : {&#39;y&#39;,&#39;x&#39;,&#39;z&#39;,&#39;xy&#39;,&#39;xz&#39;,&#39;yz&#39;,&#39;xyz&#39;}</span>
+<span class="sd">            Masking mode: Indicators for which variables in the dependence</span>
+<span class="sd">            measure I(X; Y | Z) the samples should be masked. If None, &#39;y&#39; is</span>
+<span class="sd">            used, which excludes all time slices containing masked samples in Y.</span>
+<span class="sd">            Explained in [1]_.</span>
 
 <span class="sd">        return_cleaned_xyz : bool, optional (default: False)</span>
 <span class="sd">            Whether to return cleaned X,Y,Z, where possible duplicates are </span>
@@ -359,7 +372,8 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Y-nodes are </span><span class="si">%s</span><span class="s2">, &quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span> <span class="o">+</span>
                                  <span class="s2">&quot;but one of the Y-nodes must have zero lag&quot;</span><span class="p">)</span>
 
-        <span class="n">max_lag</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">XYZ</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()),</span> <span class="n">tau_max</span><span class="p">)</span>
+        <span class="n">max_lag</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">tau_max</span>
+        <span class="c1"># max_lag = max(abs(numpy.array(XYZ)[:, 1].min()), tau_max)</span>
 
         <span class="c1"># Setup XYZ identifier</span>
         <span class="n">xyz</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">))]</span> <span class="o">+</span>
@@ -372,6 +386,16 @@
             <span class="n">var</span><span class="p">,</span> <span class="n">lag</span> <span class="o">=</span> <span class="n">node</span>
             <span class="n">array</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">max_lag</span> <span class="o">+</span> <span class="n">lag</span><span class="p">:</span> <span class="n">T</span> <span class="o">+</span> <span class="n">lag</span><span class="p">,</span> <span class="n">var</span><span class="p">]</span>
 
+        <span class="k">if</span> <span class="n">missing_flag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">use_mask</span><span class="p">:</span>
+            <span class="n">use_indices</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">T</span> <span class="o">-</span> <span class="n">max_lag</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">missing_flag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Dismiss all samples where missing values occur in any variable</span>
+            <span class="c1"># and for any lag up to max_lag</span>
+            <span class="n">missing_anywhere</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">data</span><span class="o">==</span><span class="n">missing_flag</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">tau</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_lag</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">use_indices</span><span class="p">[</span><span class="n">missing_anywhere</span><span class="p">[</span><span class="n">tau</span><span class="p">:</span><span class="n">T</span><span class="o">-</span><span class="n">max_lag</span><span class="o">+</span><span class="n">tau</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">0</span>
+       
         <span class="k">if</span> <span class="n">use_mask</span><span class="p">:</span>
             <span class="c1"># Remove samples with mask == 1</span>
             <span class="c1"># conditional on which mask_type is used</span>
@@ -381,17 +405,20 @@
                 <span class="n">array_selector</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">(</span>
                     <span class="n">mask</span><span class="p">[</span><span class="n">max_lag</span> <span class="o">+</span> <span class="n">lag</span><span class="p">:</span> <span class="n">T</span> <span class="o">+</span> <span class="n">lag</span><span class="p">,</span> <span class="n">var</span><span class="p">]</span> <span class="o">==</span> <span class="kc">False</span><span class="p">)</span>
 
-            <span class="n">use_indices</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">T</span> <span class="o">-</span> <span class="n">max_lag</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+            <span class="c1"># use_indices = numpy.ones(T - max_lag, dtype=&#39;int&#39;)</span>
             <span class="k">if</span> <span class="s1">&#39;x&#39;</span> <span class="ow">in</span> <span class="n">mask_type</span><span class="p">:</span>
-                <span class="n">use_indices</span> <span class="o">*=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">array_selector</span><span class="p">[</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">use_indices</span> <span class="o">*=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">array_selector</span><span class="p">[</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:],</span>
+                                          <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
             <span class="k">if</span> <span class="s1">&#39;y&#39;</span> <span class="ow">in</span> <span class="n">mask_type</span><span class="p">:</span>
-                <span class="n">use_indices</span> <span class="o">*=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">array_selector</span><span class="p">[</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">use_indices</span> <span class="o">*=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">array_selector</span><span class="p">[</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:],</span>
+                                          <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
             <span class="k">if</span> <span class="s1">&#39;z&#39;</span> <span class="ow">in</span> <span class="n">mask_type</span><span class="p">:</span>
-                <span class="n">use_indices</span> <span class="o">*=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">array_selector</span><span class="p">[</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-
+                <span class="n">use_indices</span> <span class="o">*=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">array_selector</span><span class="p">[</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="p">:],</span>
+                                          <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">missing_flag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">use_mask</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">use_indices</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No unmasked samples&quot;</span><span class="p">)</span>
-
             <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="p">[:,</span> <span class="n">use_indices</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
@@ -402,7 +429,10 @@
                   <span class="s2">&quot;            Z = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">Z</span><span class="p">))</span>
             <span class="k">if</span> <span class="n">use_mask</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;            with masked samples in &quot;</span>
-                      <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> removed&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">mask_type</span><span class="p">))</span>
+                      <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> removed&quot;</span> <span class="o">%</span> <span class="n">mask_type</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">missing_flag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;            with missing values labeled &quot;</span>
+                      <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> removed&quot;</span> <span class="o">%</span> <span class="n">missing_flag</span><span class="p">)</span>    
 
         <span class="k">if</span> <span class="n">return_cleaned_xyz</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">)</span>
@@ -441,7 +471,7 @@
         <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">XYZ</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_array</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">)</span>
         <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span> <span class="o">=</span> <span class="n">XYZ</span>
 
-        <span class="n">D</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
 
         <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;nans in the array!&quot;</span><span class="p">)</span>
@@ -470,7 +500,7 @@
             <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">significance</span> <span class="o">==</span> <span class="s1">&#39;analytic&#39;</span><span class="p">:</span>
-            <span class="n">pval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_analytic_significance</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">val</span><span class="p">,</span> <span class="n">df</span><span class="o">=</span><span class="n">T</span><span class="o">-</span><span class="n">D</span><span class="p">)</span>
+            <span class="n">pval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_analytic_significance</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">val</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">)</span>
 
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">significance</span> <span class="o">==</span> <span class="s1">&#39;shuffle_test&#39;</span><span class="p">:</span>
             <span class="n">pval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_shuffle_significance</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">array</span><span class="p">,</span>
@@ -982,7 +1012,36 @@
 
         <span class="k">return</span> <span class="n">pval</span></div>
 
-<div class="viewcode-block" id="CondIndTest.generate_nulldist"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.CondIndTest.generate_nulldist">[docs]</a>    <span class="k">def</span> <span class="nf">generate_nulldist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_trafo2uniform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Transforms input array to uniform marginals. </span>
+
+<span class="sd">        Assumes x.shape = (dim, T)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : array-like</span>
+<span class="sd">            Input array.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        u : array-like</span>
+<span class="sd">            array with uniform marginals.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">trafo</span><span class="p">(</span><span class="n">xi</span><span class="p">):</span>
+            <span class="n">xisorted</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span>
+            <span class="n">yi</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">xi</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">xi</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">xi</span><span class="p">,</span> <span class="n">xisorted</span><span class="p">,</span> <span class="n">yi</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="n">trafo</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">u</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">trafo</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">u</span>
+
+<div class="viewcode-block" id="CondIndTest.generate_nulldist"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.CondIndTest.generate_nulldist">[docs]</a>    <span class="k">def</span> <span class="nf">generate_nulldist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">add_to_null_dists</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Generates null distribution for pairwise independence tests.</span>
 
 <span class="sd">        Generates the null distribution for sample size df. Assumes pairwise</span>
@@ -995,13 +1054,24 @@
 <span class="sd">        df : int</span>
 <span class="sd">            Degrees of freedom / sample size to generate null distribution for.</span>
 
+<span class="sd">        add_to_null_dists : bool, optional (default: True)</span>
+<span class="sd">            Whether to add the null dist to the dictionary of null dists or</span>
+<span class="sd">            just return it.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        null_dist : array of shape [df,]</span>
+<span class="sd">            Only returned,if add_to_null_dists is False.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Generating null distribution for df = </span><span class="si">%d</span><span class="s2">. &quot;</span>
-                  <span class="s2">&quot;For faster computations, use generate_*_nulldist.py to &quot;</span>
-                  <span class="s2">&quot;precompute null distribution and load *.npz file with &quot;</span>
-                  <span class="s2">&quot;argument null_dist_filename=... .&quot;</span> <span class="o">%</span> <span class="n">df</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Generating null distribution for df = </span><span class="si">%d</span><span class="s2">. &quot;</span> <span class="o">%</span> <span class="n">df</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">add_to_null_dists</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;For faster computations, run function &quot;</span>
+                      <span class="s2">&quot;generate_and_save_nulldists(...) to &quot;</span>
+                      <span class="s2">&quot;precompute null distribution and load *.npz file with &quot;</span>
+                      <span class="s2">&quot;argument null_dist_filename&quot;</span><span class="p">)</span>
 
         <span class="n">xyz</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
         <span class="n">null_dist</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">null_samples</span><span class="p">)</span>
@@ -1011,13 +1081,61 @@
             <span class="n">null_dist</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">)</span>
 
         <span class="n">null_dist</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>    
-        <span class="bp">self</span><span class="o">.</span><span class="n">null_dists</span><span class="p">[</span><span class="n">df</span><span class="p">]</span> <span class="o">=</span> <span class="n">null_dist</span></div></div>
+        <span class="k">if</span> <span class="n">add_to_null_dists</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">null_dists</span><span class="p">[</span><span class="n">df</span><span class="p">]</span> <span class="o">=</span> <span class="n">null_dist</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">null_dist</span></div>
+
+<div class="viewcode-block" id="CondIndTest.generate_and_save_nulldists"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.CondIndTest.generate_and_save_nulldists">[docs]</a>    <span class="k">def</span> <span class="nf">generate_and_save_nulldists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample_sizes</span><span class="p">,</span> <span class="n">null_dist_filename</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generates null distribution for pairwise independence tests.</span>
+
+<span class="sd">        Generates the null distribution for different sample sizes. Calls </span>
+<span class="sd">        generate_nulldist. Null dists are saved to disk as</span>
+<span class="sd">        self.null_dist_filename.npz. Also adds the null distributions to</span>
+<span class="sd">        self.null_dists.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sample_sizes : list</span>
+<span class="sd">            List of sample sizes.    </span>
+
+<span class="sd">        null_dist_filename : str</span>
+<span class="sd">            Name to save file containing null distributions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">null_dist_filename</span> <span class="o">=</span> <span class="n">null_dist_filename</span>
+
+        <span class="n">null_dists</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">sample_sizes</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">sig_samples</span><span class="p">))</span>
+        
+        <span class="k">for</span> <span class="n">iT</span><span class="p">,</span> <span class="n">T</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sample_sizes</span><span class="p">):</span>
+            <span class="n">null_dists</span><span class="p">[</span><span class="n">iT</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_nulldist</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">add_to_null_dists</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">null_dists</span><span class="p">[</span><span class="n">T</span><span class="p">]</span> <span class="o">=</span> <span class="n">null_dists</span><span class="p">[</span><span class="n">iT</span><span class="p">]</span>
+        
+        <span class="n">numpy</span><span class="o">.</span><span class="n">savez</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">null_dist_filename</span><span class="p">,</span> <span class="n">exact_dist</span><span class="o">=</span><span class="n">null_dists</span><span class="p">,</span> 
+                            <span class="n">T</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sample_sizes</span><span class="p">))</span></div></div>
 
 
 <div class="viewcode-block" id="ParCorr"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.ParCorr">[docs]</a><span class="k">class</span> <span class="nc">ParCorr</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Partial correlation test.</span>
+    <span class="sd">r&quot;&quot;&quot;Partial correlation test.</span>
 
-<span class="sd">    Partial correlation is estimated as described in [1]_. </span>
+<span class="sd">    Partial correlation is estimated through linear ordinary least squares (OLS)</span>
+<span class="sd">    regression and a test for non-zero linear Pearson correlation on the</span>
+<span class="sd">    residuals.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    To test :math:`X \perp Y | Z`, first :math:`Z` is regressed out from</span>
+<span class="sd">    :math:`X` and :math:`Y` assuming the  model</span>
+
+<span class="sd">    .. math::  X &amp; =  Z \beta_X + \epsilon_{X} \\</span>
+<span class="sd">        Y &amp; =  Z \beta_Y + \epsilon_{Y}  </span>
+
+<span class="sd">    using OLS regression. Then the dependency of the residuals is tested with</span>
+<span class="sd">    the Pearson correlation test.</span>
+
+<span class="sd">    .. math::  \rho\left(r_X, r_Y\right)</span>
+
+<span class="sd">    For the ``significance=&#39;analytic&#39;`` Student&#39;s-*t* distribution with</span>
+<span class="sd">    :math:`T-D_Z-2` degrees of freedom is implemented.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -1122,7 +1240,7 @@
 
         <span class="k">return</span> <span class="n">val</span></div>
 
-<div class="viewcode-block" id="ParCorr.get_analytic_significance"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.ParCorr.get_analytic_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">df</span><span class="p">):</span> 
+<div class="viewcode-block" id="ParCorr.get_analytic_significance"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.ParCorr.get_analytic_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span> 
         <span class="sd">&quot;&quot;&quot;Returns analytic p-value from Student&#39;s t-test for the Pearson</span>
 <span class="sd">        correlation coefficient.</span>
 <span class="sd">        </span>
@@ -1134,14 +1252,19 @@
 <span class="sd">        value : float</span>
 <span class="sd">            Test statistic value.</span>
 
-<span class="sd">        df : int</span>
-<span class="sd">            degrees of freedom of the test</span>
+<span class="sd">        T : int</span>
+<span class="sd">            Sample length</span>
+
+<span class="sd">        dim : int</span>
+<span class="sd">            Dimensionality, ie, number of features.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        pval : float or numpy.nan</span>
 <span class="sd">            P-value.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">T</span> <span class="o">-</span> <span class="n">dim</span>
 
         <span class="k">if</span> <span class="n">df</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">pval</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">nan</span>
@@ -1238,48 +1361,14 @@
 
         <span class="k">return</span> <span class="n">score</span></div></div>
 
+<span class="k">class</span> <span class="nc">GP</span><span class="p">():</span>
+    <span class="sd">r&quot;&quot;&quot;Gaussian processes base class.</span>
 
-<div class="viewcode-block" id="GPACE"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GPACE">[docs]</a><span class="k">class</span> <span class="nc">GPACE</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
-    <span class="sd">r&quot;&quot;&quot;GPACE conditional independence test.</span>
-
-<span class="sd">    GPACE is based on a Gaussian process (GP) regression and a maximal</span>
-<span class="sd">    correlation test on the residuals. GP is estimated with scikit-learn and</span>
-<span class="sd">    allows to flexibly specify kernels and hyperparameters or let them be</span>
-<span class="sd">    optimized automatically. The maximal correlation test is implemented with</span>
-<span class="sd">    the ACE estimator either from a pure python implementation (slow) or, if rpy</span>
-<span class="sd">    is available, using the R-package &#39;acepack&#39;. Here the null distribution is</span>
-<span class="sd">    not analytically available, but can be precomputed with the script</span>
-<span class="sd">    &#39;generate_gpace_nulldist.py&#39; which generates a \*.npz file containing the</span>
-<span class="sd">    null distribution for different sample sizes.</span>
-
-<span class="sd">    Notes</span>
-<span class="sd">    -----</span>
-<span class="sd">    As described in [1]_, GPACE is based on a Gaussian</span>
-<span class="sd">    process (GP) regression and a maximal correlation test on the residuals. To</span>
-<span class="sd">    test :math:`X \perp Y | Z`, first  :math:`Z` is regressed out from :math:`X`</span>
-<span class="sd">    and :math:`Y` assuming the  model</span>
-
-<span class="sd">    .. math::  X &amp; =  f_X(Z) + \epsilon_{X} \\</span>
-<span class="sd">        Y &amp; =  f_Y(Z) + \epsilon_{Y}  \\</span>
-<span class="sd">        \epsilon_{X,Y} &amp;\sim \mathcal{N}(0, \sigma^2)</span>
-
-<span class="sd">    using GP regression. Here :math:`\sigma^2` corresponds to the gp_alpha</span>
-<span class="sd">    parameter. Then the residuals  are transformed to uniform</span>
-<span class="sd">    marginals yielding :math:`r_X,r_Y` and their dependency is tested with</span>
-
-<span class="sd">    .. math::  \max_{g,h}\rho\left(g(r_X),h(r_Y)\right)</span>
-
-<span class="sd">    where :math:`g,h` yielding maximal correlation are obtained using the</span>
-<span class="sd">    Alternating Conditional Expectation (ACE) algorithm. The null distribution</span>
-<span class="sd">    of the maximal correlation can be pre-computed.</span>
+<span class="sd">    GP is estimated with scikit-learn and allows to flexibly specify kernels and</span>
+<span class="sd">    hyperparameters or let them be optimized automatically.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    null_dist_filename : str, otional (default: None)</span>
-<span class="sd">        Path to file containing null distribution. If None is passed, the</span>
-<span class="sd">        default filename generated by the script &quot;generate_gpace_nulldist.py&quot;</span>
-<span class="sd">        is used.</span>
-
 <span class="sd">    gp_version : {&#39;new&#39;, &#39;old&#39;}, optional (default: &#39;new&#39;)</span>
 <span class="sd">        The older GP version from scikit-learn 0.17 was used for the numerical</span>
 <span class="sd">        simulations in [1]_. The newer version from scikit-learn 0.19 is faster</span>
@@ -1310,70 +1399,20 @@
 <span class="sd">        greater than 0, all bounds must be finite. If None is passed,</span>
 <span class="sd">        n_restarts_optimizer=0 is used, implying that one run is performed.</span>
 
-<span class="sd">    ace_version : {&#39;python&#39;, &#39;acepack&#39;}</span>
-<span class="sd">        Estimator for ACE estimator of maximal correlation to use. &#39;python&#39;</span>
-<span class="sd">        loads the very slow pure python version available from</span>
-<span class="sd">        https://pypi.python.org/pypi/ace/0.3. &#39;acepack&#39; loads the much faster</span>
-<span class="sd">        version from the R-package acepack. This requires the R-interface</span>
-<span class="sd">        rpy2 to be installed and acepack needs to be installed in R beforehand.</span>
-<span class="sd">        Note that both versions &#39;python&#39; and &#39;acepack&#39; may result in different</span>
-<span class="sd">        results. In [1]_ the acepack version was used.</span>
-
-<span class="sd">    **kwargs : </span>
-<span class="sd">        Arguments passed on to parent class CondIndTest.</span>
-
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                <span class="n">null_dist_filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">gp_version</span><span class="o">=</span><span class="s1">&#39;new&#39;</span><span class="p">,</span>
                 <span class="n">gp_kernel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">gp_alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                <span class="n">gp_restarts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                <span class="n">ace_version</span><span class="o">=</span><span class="s1">&#39;acepack&#39;</span><span class="p">,</span>
-                <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                <span class="n">gp_restarts</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 
-        <span class="n">CondIndTest</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c1"># CondIndTest.__inits__(self,)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">gp_version</span> <span class="o">=</span> <span class="n">gp_version</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ace_version</span> <span class="o">=</span> <span class="n">ace_version</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">gp_kernel</span> <span class="o">=</span> <span class="n">gp_kernel</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">gp_alpha</span> <span class="o">=</span> <span class="n">gp_alpha</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">gp_restarts</span> <span class="o">=</span> <span class="n">gp_restarts</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">measure</span> <span class="o">=</span> <span class="s1">&#39;gp_ace&#39;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">two_sided</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">residual_based</span> <span class="o">=</span> <span class="kc">True</span>
-
-        <span class="c1"># Load null-dist file, adapt if necessary</span>
-        <span class="k">if</span> <span class="n">null_dist_filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">null_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sig_samples</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">null_dists</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">null_dist_file</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">null_dist_filename</span><span class="p">)</span>
-            <span class="c1"># self.sample_sizes = null_dist_file[&#39;T&#39;]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">null_dists</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">null_dist_file</span><span class="p">[</span><span class="s1">&#39;T&#39;</span><span class="p">],</span> 
-                                      <span class="n">null_dist_file</span><span class="p">[</span><span class="s1">&#39;exact_dist&#39;</span><span class="p">]))</span>
-            <span class="c1"># print self.null_dist</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">null_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">null_dist_file</span><span class="p">[</span><span class="s1">&#39;exact_dist&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
-
-
-    <span class="k">def</span> <span class="nf">_remove_ties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Removes ties from array by adding noise.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        array : array-like</span>
-<span class="sd">            data array with X, Y, Z in rows and observations in columns.</span>
-<span class="sd">        </span>
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        array : array-like</span>
-<span class="sd">            Array with noise added.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">array</span> <span class="o">=</span> <span class="n">array</span> <span class="o">+</span> <span class="mi">1</span><span class="n">E</span><span class="o">-</span><span class="mi">10</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="o">*</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-        <span class="c1"># assert len(numpy.unique(array)) == numpy.size(array)</span>
-        <span class="k">return</span> <span class="n">array</span>
     
     <span class="c1"># @profile</span>
     <span class="k">def</span> <span class="nf">_get_single_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="p">,</span>
@@ -1410,449 +1449,6 @@
 <span class="sd">            The residual of the regression and optionally the estimated mean</span>
 <span class="sd">            and/or the likelihood.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
-
-        <span class="k">if</span> <span class="n">dim</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">return_likelihood</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">array</span><span class="p">[</span><span class="n">target_var</span><span class="p">,</span> <span class="p">:],</span> <span class="o">-</span><span class="n">numpy</span><span class="o">.</span><span class="n">inf</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">array</span><span class="p">[</span><span class="n">target_var</span><span class="p">,</span> <span class="p">:]</span>
-
-        <span class="c1"># Standardize</span>
-        <span class="k">if</span> <span class="n">standardize</span><span class="p">:</span>
-            <span class="n">array</span> <span class="o">-=</span> <span class="n">array</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-            <span class="n">array</span> <span class="o">/=</span> <span class="n">array</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;nans after standardizing, &quot;</span>
-                                 <span class="s2">&quot;possibly constant array!&quot;</span><span class="p">)</span>
-
-        <span class="n">var</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">target_var</span><span class="p">,</span> <span class="p">:]</span>
-        <span class="n">z</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">fastCopyAndTranspose</span><span class="p">(</span><span class="n">array</span><span class="p">[</span><span class="mi">2</span><span class="p">:])</span>
-        <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">z</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gp_version</span> <span class="o">==</span> <span class="s1">&#39;old&#39;</span><span class="p">:</span>
-            <span class="c1"># Old GP failed for ties in the data</span>
-            <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_remove_ties</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
-
-            <span class="n">gp</span> <span class="o">=</span> <span class="n">gaussian_process</span><span class="o">.</span><span class="n">GaussianProcess</span><span class="p">(</span>
-                <span class="n">nugget</span><span class="o">=</span><span class="mi">1</span><span class="n">E</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span>
-                <span class="n">thetaL</span><span class="o">=</span><span class="mi">1</span><span class="n">E</span><span class="o">-</span><span class="mi">16</span><span class="p">,</span>
-                <span class="n">thetaU</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
-                <span class="n">corr</span><span class="o">=</span><span class="s1">&#39;squared_exponential&#39;</span><span class="p">,</span>
-                <span class="n">optimizer</span><span class="o">=</span><span class="s1">&#39;fmin_cobyla&#39;</span><span class="p">,</span>
-                <span class="n">regr</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">,</span>
-                <span class="n">normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                <span class="n">storage_mode</span><span class="o">=</span><span class="s1">&#39;light&#39;</span><span class="p">)</span>
-
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">gp_version</span> <span class="o">==</span> <span class="s1">&#39;new&#39;</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gp_kernel</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">gp_kernel</span> <span class="o">=</span> <span class="n">gaussian_process</span><span class="o">.</span><span class="n">kernels</span><span class="o">.</span><span class="n">RBF</span><span class="p">(</span>
-                    <span class="n">length_scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-                    <span class="c1"># length_scale_bounds=(1E-16, numpy.inf)  #(1e-05, 100000.0)</span>
-                    <span class="p">)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gp_alpha</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">gp_alpha</span> <span class="o">=</span> <span class="mf">0.1</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gp_restarts</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">gp_restarts</span> <span class="o">=</span> <span class="mi">0</span>
-
-            <span class="n">gp</span> <span class="o">=</span> <span class="n">gaussian_process</span><span class="o">.</span><span class="n">GaussianProcessRegressor</span><span class="p">(</span>
-                <span class="n">kernel</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gp_kernel</span><span class="p">,</span>
-                <span class="n">alpha</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gp_alpha</span><span class="p">,</span>
-                <span class="n">optimizer</span><span class="o">=</span><span class="s1">&#39;fmin_l_bfgs_b&#39;</span><span class="p">,</span>  
-                <span class="n">n_restarts_optimizer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gp_restarts</span><span class="p">,</span>
-                <span class="n">normalize_y</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                <span class="n">copy_X_train</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-
-        <span class="n">gp</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">var</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-
-        <span class="k">if</span> <span class="n">return_likelihood</span><span class="p">:</span>
-            <span class="n">likelihood</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">log_marginal_likelihood</span><span class="p">()</span>
-
-        <span class="n">mean</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
-
-        <span class="n">resid</span> <span class="o">=</span> <span class="n">var</span> <span class="o">-</span> <span class="n">mean</span>
-
-        <span class="k">if</span> <span class="n">return_means</span> <span class="ow">and</span> <span class="n">return_likelihood</span><span class="o">==</span><span class="kc">False</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">(</span><span class="n">resid</span><span class="p">,</span> <span class="n">mean</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">return_means</span><span class="o">==</span><span class="kc">False</span> <span class="ow">and</span> <span class="n">return_likelihood</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">(</span><span class="n">resid</span><span class="p">,</span> <span class="n">likelihood</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">return_means</span> <span class="ow">and</span> <span class="n">return_likelihood</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">resid</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">likelihood</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">resid</span>
-
-<div class="viewcode-block" id="GPACE.get_dependence_measure"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GPACE.get_dependence_measure">[docs]</a>    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return GPACE measure.</span>
-
-<span class="sd">        Estimated as the maximal correlation of the residuals of a GP</span>
-<span class="sd">        regression.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        array : array-like</span>
-<span class="sd">            data array with X, Y, Z in rows and observations in columns</span>
-
-<span class="sd">        xyz : array of ints</span>
-<span class="sd">            XYZ identifier array of shape (dim,).</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        val : float</span>
-<span class="sd">            GPACE test statistic.    </span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">D</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
-
-        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_residuals</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_residuals</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-
-        <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_maxcorr</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]))</span>
-
-        <span class="k">return</span> <span class="n">val</span></div>
-
-    <span class="k">def</span> <span class="nf">_trafo2uniform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Transforms input array to uniform marginals. </span>
-
-<span class="sd">        Assumes x.shape = (dim, T)</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        x : array-like</span>
-<span class="sd">            Input array.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        u : array-like</span>
-<span class="sd">            array with uniform marginals.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">def</span> <span class="nf">trafo</span><span class="p">(</span><span class="n">xi</span><span class="p">):</span>
-            <span class="n">xisorted</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span>
-            <span class="n">yi</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">xi</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">xi</span><span class="p">))</span>
-            <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">xi</span><span class="p">,</span> <span class="n">xisorted</span><span class="p">,</span> <span class="n">yi</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">u</span> <span class="o">=</span> <span class="n">trafo</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">u</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-                <span class="n">u</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">trafo</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-        <span class="k">return</span> <span class="n">u</span>
-
-    <span class="c1"># @profile</span>
-    <span class="k">def</span> <span class="nf">_get_maxcorr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_resid</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return maximal correlation coefficient estimated by ACE.</span>
-
-<span class="sd">        Method is described in [1]_. The maximal correlation test is implemented</span>
-<span class="sd">        with the ACE estimator either from a pure python implementation</span>
-<span class="sd">        (slow) or, if rpy is available, using the R-package &#39;acepack&#39;. The</span>
-<span class="sd">        variables are transformed to uniform marginals using the empirical</span>
-<span class="sd">        cumulative distribution function beforehand. Here the null</span>
-<span class="sd">        distribution is not analytically available, but can be precomputed</span>
-<span class="sd">        with the script &#39;generate_gpace_nulldist.py&#39; which generates a \*.npz</span>
-<span class="sd">        file containing the null distribution. </span>
-
-<span class="sd">        Parameters </span>
-<span class="sd">        ---------- </span>
-<span class="sd">        array_resid : array-like     </span>
-<span class="sd">            data array must be of shape (2, T)</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        val : float</span>
-<span class="sd">            Maximal correlation coefficient.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="c1"># Remove ties before applying transformation to uniform marginals</span>
-        <span class="c1"># array_resid = self._remove_ties(array_resid, verbosity=4)</span>
-
-        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trafo2uniform</span><span class="p">(</span><span class="n">array_resid</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ace_version</span> <span class="o">==</span> <span class="s1">&#39;python&#39;</span><span class="p">:</span>
-            <span class="k">class</span> <span class="nc">Suppressor</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-                <span class="sd">&quot;&quot;&quot;Wrapper class to prevent output from ACESolver.&quot;&quot;&quot;</span>
-                <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span>
-                    <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="bp">self</span>
-                <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
-                    <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span>
-                <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span> 
-                    <span class="k">pass</span>
-            <span class="n">myace</span> <span class="o">=</span> <span class="n">ace</span><span class="o">.</span><span class="n">ace</span><span class="o">.</span><span class="n">ACESolver</span><span class="p">()</span>
-            <span class="n">myace</span><span class="o">.</span><span class="n">specify_data_set</span><span class="p">([</span><span class="n">x</span><span class="p">],</span> <span class="n">y</span><span class="p">)</span>
-            <span class="k">with</span> <span class="n">Suppressor</span><span class="p">():</span>
-                <span class="n">myace</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
-            <span class="n">val</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">corrcoef</span><span class="p">(</span><span class="n">myace</span><span class="o">.</span><span class="n">x_transforms</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">myace</span><span class="o">.</span><span class="n">y_transform</span><span class="p">)[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
-        
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">ace_version</span> <span class="o">==</span> <span class="s1">&#39;acepack&#39;</span><span class="p">:</span>
-            <span class="n">ace_rpy</span> <span class="o">=</span> <span class="n">rpy2</span><span class="o">.</span><span class="n">robjects</span><span class="o">.</span><span class="n">r</span><span class="p">[</span><span class="s1">&#39;ace&#39;</span><span class="p">](</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-            <span class="n">val</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">corrcoef</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ace_rpy</span><span class="p">[</span><span class="mi">8</span><span class="p">])</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> 
-                                 <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ace_rpy</span><span class="p">[</span><span class="mi">9</span><span class="p">]))[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;ace_version must be &#39;python&#39; or &#39;acepack&#39;&quot;</span><span class="p">)</span>
-        
-        <span class="k">return</span> <span class="n">val</span>
-
-
-<div class="viewcode-block" id="GPACE.get_analytic_significance"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GPACE.get_analytic_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">df</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns p-value for the maximal correlation coefficient.</span>
-<span class="sd">        </span>
-<span class="sd">        The null distribution for necessary degrees of freedom (df) is loaded.</span>
-<span class="sd">        If not available, the null distribution is generated with the function</span>
-<span class="sd">        generate_nulldist(). It is recommended to generate the nulldists for a</span>
-<span class="sd">        wide range of sample sizes beforehand with the script</span>
-<span class="sd">        &quot;generate_gpace_nulldist.py&quot;. The maximal correlation coefficient is</span>
-<span class="sd">        one-sided. If the degrees of freedom are less than 1, numpy.nan is</span>
-<span class="sd">        returned.</span>
-<span class="sd">        </span>
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        value : float</span>
-<span class="sd">            Test statistic value.</span>
-
-<span class="sd">        df : int</span>
-<span class="sd">            degrees of freedom of the test</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        pval : float or numpy.nan</span>
-<span class="sd">            P-value.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">if</span> <span class="n">df</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">pval</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">nan</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># idx_near = (numpy.abs(self.sample_sizes - df)).argmin()</span>
-
-            <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">df</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">null_dists</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="c1"># numpy.abs(self.sample_sizes[idx_near] - df) / float(df) &gt; 0.01:</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Null distribution for GPACE not available &quot;</span>
-                             <span class="s2">&quot;for deg. of freed. = </span><span class="si">%d</span><span class="s2">.&quot;</span>
-                             <span class="s2">&quot;&quot;</span> <span class="o">%</span> <span class="n">df</span><span class="p">)</span> 
-                <span class="bp">self</span><span class="o">.</span><span class="n">generate_nulldist</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
-
-                <span class="c1"># raise ValueError(&quot;Null distribution for GPACE not available &quot;</span>
-                <span class="c1">#              &quot;for deg. of freed. = %d, nearest values &quot;</span>
-                <span class="c1">#              &quot;= %s.&quot; % (int(df), </span>
-                <span class="c1">#              self.sample_sizes[max(0,idx_near-1):idx_near+2])+</span>
-                <span class="c1">#              &quot; Use script to generate nulldist.&quot;</span>
-                <span class="c1">#              &quot;&quot; )</span>
-            <span class="n">null_dist_here</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">null_dists</span><span class="p">[</span><span class="n">df</span><span class="p">]</span>
-            <span class="n">pval</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">null_dist_here</span> <span class="o">&gt;</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
-
-        <span class="k">return</span> <span class="n">pval</span></div>
-
-<div class="viewcode-block" id="GPACE.get_analytic_confidence"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GPACE.get_analytic_confidence">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">conf_lev</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Placeholder function, not available.&quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Analytic confidence not implemented for </span><span class="si">%s</span><span class="s2">&quot;</span>
-                         <span class="s2">&quot;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="GPACE.get_model_selection_criterion"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GPACE.get_model_selection_criterion">[docs]</a>    <span class="k">def</span> <span class="nf">get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span>
-                                      <span class="n">parents</span><span class="p">,</span>
-                                      <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns log marginal likelihood for GP regression.</span>
-<span class="sd">        </span>
-<span class="sd">        Fits a GP model of the parents to variable j and returns the negative</span>
-<span class="sd">        log marginal likelihood as a model selection score. Is used to determine</span>
-<span class="sd">        optimal hyperparameters in PCMCI, in particular the pc_alpha value.</span>
-<span class="sd">        </span>
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        j : int</span>
-<span class="sd">            Index of target variable in data array.</span>
-
-<span class="sd">        parents : list</span>
-<span class="sd">            List of form [(0, -1), (3, -2), ...] containing parents.</span>
-
-<span class="sd">        tau_max : int, optional (default: 0)</span>
-<span class="sd">            Maximum time lag. This may be used to make sure that estimates for</span>
-<span class="sd">            different lags in X, Z, all have the same sample size.</span>
-<span class="sd">        </span>
-<span class="sd">        Returns:</span>
-<span class="sd">        score : float</span>
-<span class="sd">            Model score.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">Y</span> <span class="o">=</span> <span class="p">[(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
-        <span class="n">X</span> <span class="o">=</span> <span class="p">[(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>   <span class="c1"># dummy variable here</span>
-        <span class="n">Z</span> <span class="o">=</span> <span class="n">parents</span>
-        <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_construct_array</span><span class="p">(</span>
-            <span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="n">Z</span><span class="p">,</span>
-            <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
-            <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
-            <span class="n">use_mask</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">use_mask</span><span class="p">,</span>
-            <span class="n">mask</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span>
-            <span class="n">mask_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span><span class="p">,</span>
-            <span class="n">return_cleaned_xyz</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="n">do_checks</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="n">verbosity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
-
-        <span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
-
-        <span class="n">y</span><span class="p">,</span> <span class="n">logli</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_residuals</span><span class="p">(</span><span class="n">array</span><span class="p">,</span>
-                            <span class="n">target_var</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">return_likelihood</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-        <span class="n">score</span> <span class="o">=</span> <span class="o">-</span><span class="n">logli</span>
-
-        <span class="k">return</span> <span class="n">score</span></div></div>
-
-
-<div class="viewcode-block" id="GPDC"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GPDC">[docs]</a><span class="k">class</span> <span class="nc">GPDC</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
-    <span class="sd">r&quot;&quot;&quot;GPDC conditional independence test.</span>
-
-<span class="sd">    GPDC is based on a Gaussian process (GP) regression and a distance</span>
-<span class="sd">    correlation test on the residuals [2]_. GP is estimated with scikit-learn</span>
-<span class="sd">    and allows to flexibly specify kernels and hyperparameters or let them be</span>
-<span class="sd">    optimized automatically. The distance correlation test is implemented with</span>
-<span class="sd">    cython. Here the null distribution is not analytically available, but can be</span>
-<span class="sd">    precomputed with the script &#39;generate_dcorr_nulldist.py&#39; which generates a</span>
-<span class="sd">    \*.npz file containing the null distribution for different sample sizes.</span>
-
-<span class="sd">    Notes</span>
-<span class="sd">    -----</span>
-<span class="sd">    </span>
-<span class="sd">    GPDC is based on a Gaussian process (GP) regression and a distance</span>
-<span class="sd">    correlation test on the residuals. Distance correlation is described in</span>
-<span class="sd">    [2]_. To test :math:`X \perp Y | Z`, first :math:`Z` is regressed out from</span>
-<span class="sd">    :math:`X` and :math:`Y` assuming the  model</span>
-
-<span class="sd">    .. math::  X &amp; =  f_X(Z) + \epsilon_{X} \\</span>
-<span class="sd">        Y &amp; =  f_Y(Z) + \epsilon_{Y}  \\</span>
-<span class="sd">        \epsilon_{X,Y} &amp;\sim \mathcal{N}(0, \sigma^2)</span>
-
-<span class="sd">    using GP regression. Here :math:`\sigma^2` corresponds to the gp_alpha</span>
-<span class="sd">    parameter. Then the residuals  are transformed to uniform</span>
-<span class="sd">    marginals yielding :math:`r_X,r_Y` and their dependency is tested with</span>
-
-<span class="sd">    .. math::  \mathcal{R}\left(r_X, r_Y\right)</span>
-
-<span class="sd">    The null distribution of the distance correlation should be pre-computed.</span>
-<span class="sd">    Otherwise it is computed during runtime.</span>
-
-<span class="sd">    The cython-code for distance correlation is Copyright (c) 2012, Florian</span>
-<span class="sd">    Finkernagel (https://gist.github.com/ffinkernagel/2960386).</span>
-
-<span class="sd">    References</span>
-<span class="sd">    ----------</span>
-<span class="sd">    .. [2] Gabor J. Szekely, Maria L. Rizzo, and Nail K. Bakirov: Measuring and </span>
-<span class="sd">           testing dependence by correlation of distances,</span>
-<span class="sd">           https://arxiv.org/abs/0803.4101</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    null_dist_filename : str, otional (default: None)</span>
-<span class="sd">        Path to file containing null distribution. If None is passed, the</span>
-<span class="sd">        default filename generated by the script &quot;generate_dcorr_nulldist.py&quot;</span>
-<span class="sd">        is used.</span>
-
-<span class="sd">    gp_version : {&#39;new&#39;, &#39;old&#39;}, optional (default: &#39;new&#39;)</span>
-<span class="sd">        The older GP version from scikit-learn 0.17 was used for the numerical</span>
-<span class="sd">        simulations in [1]_. The newer version from scikit-learn 0.19 is faster</span>
-<span class="sd">        and allows more flexibility regarding kernels etc.</span>
-
-<span class="sd">    gp_kernel : kernel object, optional (default: None)</span>
-<span class="sd">        Only available for gp_version=&#39;new&#39;. Can be any scikit-learn kernel</span>
-<span class="sd">        object available in gaussian_process.kernels. The kernel specifies the</span>
-<span class="sd">        covariance function of the GP. If None is passed, the kernel &#39;1.0 *</span>
-<span class="sd">        RBF(1.0)&#39; is used as default. Note that the kernel&#39;s hyperparameters are</span>
-<span class="sd">        optimized during fitting.</span>
-
-<span class="sd">    gp_alpha :  float or array-like, optional (default: None)</span>
-<span class="sd">        Only available for gp_version=&#39;new&#39;. Value added to the diagonal of the</span>
-<span class="sd">        kernel matrix during fitting. Larger values correspond to increased</span>
-<span class="sd">        noise level in the observations and reduce potential numerical issues</span>
-<span class="sd">        during fitting. If an array is passed, it must have the same number of</span>
-<span class="sd">        entries as the data used for fitting and is used as datapoint-dependent</span>
-<span class="sd">        noise level. Note that this is equivalent to adding a WhiteKernel with</span>
-<span class="sd">        c=alpha. If None is passed, gp_alpha=1 is used.</span>
-<span class="sd">    </span>
-<span class="sd">    gp_restarts : int, optional (default: None)</span>
-<span class="sd">        Only available for gp_version=&#39;new&#39;. The number of restarts of the</span>
-<span class="sd">        optimizer for finding the kernel&#39;s parameters which maximize the log-</span>
-<span class="sd">        marginal likelihood. The first run of the optimizer is performed from</span>
-<span class="sd">        the kernel&#39;s initial parameters, the remaining ones (if any) from thetas</span>
-<span class="sd">        sampled log-uniform randomly from the space of allowed theta-values. If</span>
-<span class="sd">        greater than 0, all bounds must be finite. If None is passed,</span>
-<span class="sd">        n_restarts_optimizer=0 is used, implying that one run is performed.</span>
-
-<span class="sd">    **kwargs : </span>
-<span class="sd">        Arguments passed on to parent class CondIndTest.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                <span class="n">null_dist_filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                <span class="n">gp_version</span><span class="o">=</span><span class="s1">&#39;new&#39;</span><span class="p">,</span>
-                <span class="n">gp_kernel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                <span class="n">gp_alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                <span class="n">gp_restarts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-
-                <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-
-        <span class="n">CondIndTest</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">gp_version</span> <span class="o">=</span> <span class="n">gp_version</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">gp_kernel</span> <span class="o">=</span> <span class="n">gp_kernel</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">gp_alpha</span> <span class="o">=</span> <span class="n">gp_alpha</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">gp_restarts</span> <span class="o">=</span> <span class="n">gp_restarts</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">measure</span> <span class="o">=</span> <span class="s1">&#39;gp_dc&#39;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">two_sided</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">residual_based</span> <span class="o">=</span> <span class="kc">True</span>
-
-        <span class="c1"># Load null-dist file, adapt if necessary</span>
-        <span class="k">if</span> <span class="n">null_dist_filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">null_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sig_samples</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">null_dists</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">null_dist_file</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">null_dist_filename</span><span class="p">)</span>
-            <span class="c1"># self.sample_sizes = null_dist_file[&#39;T&#39;]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">null_dists</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">null_dist_file</span><span class="p">[</span><span class="s1">&#39;T&#39;</span><span class="p">],</span> 
-                                      <span class="n">null_dist_file</span><span class="p">[</span><span class="s1">&#39;exact_dist&#39;</span><span class="p">]))</span>
-            <span class="c1"># print self.null_dist</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">null_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">null_dist_file</span><span class="p">[</span><span class="s1">&#39;exact_dist&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
-
-    
-    <span class="c1"># @profile</span>
-    <span class="k">def</span> <span class="nf">_get_single_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="p">,</span>
-                              <span class="n">return_means</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
-                              <span class="n">standardize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                              <span class="n">return_likelihood</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns residuals of Gaussian process regression.</span>
-
-<span class="sd">        Performs a GP regression of the variable indexed by target_var on the</span>
-<span class="sd">        conditions Z. Here array is assumed to contain X and Y as the first two</span>
-<span class="sd">        rows with the remaining rows (if present) containing the conditions Z.</span>
-<span class="sd">        Optionally returns the estimated mean and the likelihood.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        array : array-like</span>
-<span class="sd">            data array with X, Y, Z in rows and observations in columns</span>
-
-<span class="sd">        target_var : {0, 1}</span>
-<span class="sd">            Variable to regress out conditions from.</span>
-
-<span class="sd">        standardize : bool, optional (default: True)</span>
-<span class="sd">            Whether to standardize the array beforehand.</span>
-
-<span class="sd">        return_means : bool, optional (default: False)</span>
-<span class="sd">            Whether to return the estimated regression line.</span>
-
-<span class="sd">        return_likelihood : bool, optional (default: False)</span>
-<span class="sd">            Whether to return the log_marginal_likelihood of the fitted GP</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        resid [, mean, likelihood] : array-like</span>
-<span class="sd">            The residual of the regression and optionally the estimated mean</span>
-<span class="sd">            and/or the likelihood.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
 
         <span class="k">if</span> <span class="n">dim</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">:</span>
@@ -1926,150 +1522,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">resid</span>
 
-<div class="viewcode-block" id="GPDC.get_dependence_measure"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GPDC.get_dependence_measure">[docs]</a>    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return GPDC measure.</span>
-
-<span class="sd">        Estimated as the distance correlation of the residuals of a GP</span>
-<span class="sd">        regression.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        array : array-like</span>
-<span class="sd">            data array with X, Y, Z in rows and observations in columns</span>
-
-<span class="sd">        xyz : array of ints</span>
-<span class="sd">            XYZ identifier array of shape (dim,).</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        val : float</span>
-<span class="sd">            GPDC test statistic.    </span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">D</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
-
-        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_residuals</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_residuals</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-
-        <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dcorr</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]))</span>
-
-        <span class="k">return</span> <span class="n">val</span></div>
-
-    <span class="k">def</span> <span class="nf">_trafo2uniform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Transforms input array to uniform marginals. </span>
-
-<span class="sd">        Assumes x.shape = (dim, T)</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        x : array-like</span>
-<span class="sd">            Input array.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        u : array-like</span>
-<span class="sd">            array with uniform marginals.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">def</span> <span class="nf">trafo</span><span class="p">(</span><span class="n">xi</span><span class="p">):</span>
-            <span class="n">xisorted</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span>
-            <span class="n">yi</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">xi</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">xi</span><span class="p">))</span>
-            <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">xi</span><span class="p">,</span> <span class="n">xisorted</span><span class="p">,</span> <span class="n">yi</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">u</span> <span class="o">=</span> <span class="n">trafo</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">u</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-                <span class="n">u</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">trafo</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-        <span class="k">return</span> <span class="n">u</span>
-
-    <span class="c1"># @profile</span>
-    <span class="k">def</span> <span class="nf">_get_dcorr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_resid</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return distance correlation coefficient.</span>
-<span class="sd">        </span>
-<span class="sd">        The variables are transformed to uniform marginals using the empirical</span>
-<span class="sd">        cumulative distribution function beforehand. Here the null distribution</span>
-<span class="sd">        is not analytically available, but can be precomputed with the script</span>
-<span class="sd">        &#39;generate_dcorr_nulldist.py&#39; which generates a \*.npz file containing</span>
-<span class="sd">        the null distribution.</span>
-
-<span class="sd">        Parameters </span>
-<span class="sd">        ---------- </span>
-<span class="sd">        array_resid : array-like     </span>
-<span class="sd">            data array must be of shape (2, T)</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        val : float</span>
-<span class="sd">            Distance correlation coefficient.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="c1"># Remove ties before applying transformation to uniform marginals</span>
-        <span class="c1"># array_resid = self._remove_ties(array_resid, verbosity=4)</span>
-
-        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trafo2uniform</span><span class="p">(</span><span class="n">array_resid</span><span class="p">)</span>
-
-        <span class="n">dc</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">dvx</span><span class="p">,</span> <span class="n">dvy</span> <span class="o">=</span> <span class="n">tigramite_cython_code</span><span class="o">.</span><span class="n">dcov_all</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-        
-        <span class="k">return</span> <span class="n">val</span>
-
-
-<div class="viewcode-block" id="GPDC.get_analytic_significance"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GPDC.get_analytic_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">df</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns p-value for the distance correlation coefficient.</span>
-<span class="sd">        </span>
-<span class="sd">        The null distribution for necessary degrees of freedom (df) is loaded.</span>
-<span class="sd">        If not available, the null distribution is generated with the function</span>
-<span class="sd">        generate_nulldist(). It is recommended to generate the nulldists for a</span>
-<span class="sd">        wide range of sample sizes beforehand with the script</span>
-<span class="sd">        &quot;generate_gpace_nulldist.py&quot;.  The distance correlation coefficient is</span>
-<span class="sd">        one-sided. If the degrees of freedom are less than 1, numpy.nan is</span>
-<span class="sd">        returned.</span>
-<span class="sd">        </span>
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        value : float</span>
-<span class="sd">            Test statistic value.</span>
-
-<span class="sd">        df : int</span>
-<span class="sd">            degrees of freedom of the test</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        pval : float or numpy.nan</span>
-<span class="sd">            P-value.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">if</span> <span class="n">df</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">pval</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">nan</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># idx_near = (numpy.abs(self.sample_sizes - df)).argmin()</span>
-            <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">df</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">null_dists</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="c1"># if numpy.abs(self.sample_sizes[idx_near] - df) / float(df) &gt; 0.01:</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Null distribution for GPDC not available &quot;</span>
-                             <span class="s2">&quot;for deg. of freed. = </span><span class="si">%d</span><span class="s2">.&quot;</span>
-                             <span class="s2">&quot;&quot;</span> <span class="o">%</span> <span class="n">df</span><span class="p">)</span> 
-                    
-                <span class="bp">self</span><span class="o">.</span><span class="n">generate_nulldist</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
-
-                <span class="c1"># raise ValueError(&quot;Null distribution for GPDC not available &quot;</span>
-                <span class="c1">#              &quot;for deg. of freed. = %d, nearest values &quot;</span>
-                <span class="c1">#              &quot;= %s.&quot; % (int(df), </span>
-                <span class="c1">#              self.sample_sizes[max(0,idx_near-1):idx_near+2])+</span>
-                <span class="c1">#              &quot; Use script to generate nulldist.&quot;</span>
-                <span class="c1">#              &quot;&quot; )</span>
-            <span class="n">null_dist_here</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">null_dists</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">df</span><span class="p">)]</span>
-            <span class="n">pval</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">null_dist_here</span> <span class="o">&gt;</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
-
-        <span class="k">return</span> <span class="n">pval</span></div>
-
-<div class="viewcode-block" id="GPDC.get_analytic_confidence"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GPDC.get_analytic_confidence">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">conf_lev</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Placeholder function, not available.&quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Analytic confidence not implemented for </span><span class="si">%s</span><span class="s2">&quot;</span>
-                         <span class="s2">&quot;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="GPDC.get_model_selection_criterion"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GPDC.get_model_selection_criterion">[docs]</a>    <span class="k">def</span> <span class="nf">get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span>
                                       <span class="n">parents</span><span class="p">,</span>
                                       <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns log marginal likelihood for GP regression.</span>
@@ -2116,7 +1569,513 @@
 
         <span class="n">score</span> <span class="o">=</span> <span class="o">-</span><span class="n">logli</span>
 
-        <span class="k">return</span> <span class="n">score</span></div></div>
+        <span class="k">return</span> <span class="n">score</span>
+
+<div class="viewcode-block" id="GPACE"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GPACE">[docs]</a><span class="k">class</span> <span class="nc">GPACE</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">,</span><span class="n">GP</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;GPACE conditional independence test based on Gaussian processes and</span>
+<span class="sd">        maximal correlation.</span>
+
+<span class="sd">    GPACE is based on a Gaussian process (GP) regression and a maximal</span>
+<span class="sd">    correlation test on the residuals. GP is estimated with scikit-learn and</span>
+<span class="sd">    allows to flexibly specify kernels and hyperparameters or let them be</span>
+<span class="sd">    optimized automatically. The maximal correlation test is implemented with</span>
+<span class="sd">    the ACE estimator either from a pure python implementation (slow) or, if rpy</span>
+<span class="sd">    is available, using the R-package &#39;acepack&#39;. Here the null distribution is</span>
+<span class="sd">    not analytically available, but can be precomputed with the function</span>
+<span class="sd">    generate_and_save_nulldists(...) which saves a \*.npz file containing the</span>
+<span class="sd">    null distribution for different sample sizes. This file can then be supplied</span>
+<span class="sd">    as null_dist_filename.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    As described in [1]_, GPACE is based on a Gaussian</span>
+<span class="sd">    process (GP) regression and a maximal correlation test on the residuals. To</span>
+<span class="sd">    test :math:`X \perp Y | Z`, first  :math:`Z` is regressed out from :math:`X`</span>
+<span class="sd">    and :math:`Y` assuming the  model</span>
+
+<span class="sd">    .. math::  X &amp; =  f_X(Z) + \epsilon_{X} \\</span>
+<span class="sd">        Y &amp; =  f_Y(Z) + \epsilon_{Y}  \\</span>
+<span class="sd">        \epsilon_{X,Y} &amp;\sim \mathcal{N}(0, \sigma^2)</span>
+
+<span class="sd">    using GP regression. Here :math:`\sigma^2` corresponds to the gp_alpha</span>
+<span class="sd">    parameter. Then the residuals  are transformed to uniform</span>
+<span class="sd">    marginals yielding :math:`r_X,r_Y` and their dependency is tested with</span>
+
+<span class="sd">    .. math::  \max_{g,h}\rho\left(g(r_X),h(r_Y)\right)</span>
+
+<span class="sd">    where :math:`g,h` yielding maximal correlation are obtained using the</span>
+<span class="sd">    Alternating Conditional Expectation (ACE) algorithm. The null distribution</span>
+<span class="sd">    of the maximal correlation can be pre-computed.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    null_dist_filename : str, otional (default: None)</span>
+<span class="sd">        Path to file containing null distribution.</span>
+
+<span class="sd">    gp_version : {&#39;new&#39;, &#39;old&#39;}, optional (default: &#39;new&#39;)</span>
+<span class="sd">        The older GP version from scikit-learn 0.17 was used for the numerical</span>
+<span class="sd">        simulations in [1]_. The newer version from scikit-learn 0.19 is faster</span>
+<span class="sd">        and allows more flexibility regarding kernels etc.</span>
+
+<span class="sd">    gp_kernel : kernel object, optional (default: None)</span>
+<span class="sd">        Only available for gp_version=&#39;new&#39;. Can be any scikit-learn kernel</span>
+<span class="sd">        object available in gaussian_process.kernels. The kernel specifies the</span>
+<span class="sd">        covariance function of the GP. If None is passed, the kernel &#39;1.0 *</span>
+<span class="sd">        RBF(1.0)&#39; is used as default. Note that the kernel&#39;s hyperparameters are</span>
+<span class="sd">        optimized during fitting.</span>
+
+<span class="sd">    gp_alpha :  float or array-like, optional (default: None)</span>
+<span class="sd">        Only available for gp_version=&#39;new&#39;. Value added to the diagonal of the</span>
+<span class="sd">        kernel matrix during fitting. Larger values correspond to increased</span>
+<span class="sd">        noise level in the observations and reduce potential numerical issues</span>
+<span class="sd">        during fitting. If an array is passed, it must have the same number of</span>
+<span class="sd">        entries as the data used for fitting and is used as datapoint-dependent</span>
+<span class="sd">        noise level. Note that this is equivalent to adding a WhiteKernel with</span>
+<span class="sd">        c=alpha. If None is passed, gp_alpha=1 is used.</span>
+<span class="sd">    </span>
+<span class="sd">    gp_restarts : int, optional (default: None)</span>
+<span class="sd">        Only available for gp_version=&#39;new&#39;. The number of restarts of the</span>
+<span class="sd">        optimizer for finding the kernel&#39;s parameters which maximize the log-</span>
+<span class="sd">        marginal likelihood. The first run of the optimizer is performed from</span>
+<span class="sd">        the kernel&#39;s initial parameters, the remaining ones (if any) from thetas</span>
+<span class="sd">        sampled log-uniform randomly from the space of allowed theta-values. If</span>
+<span class="sd">        greater than 0, all bounds must be finite. If None is passed,</span>
+<span class="sd">        n_restarts_optimizer=0 is used, implying that one run is performed.</span>
+
+<span class="sd">    ace_version : {&#39;python&#39;, &#39;acepack&#39;}</span>
+<span class="sd">        Estimator for ACE estimator of maximal correlation to use. &#39;python&#39;</span>
+<span class="sd">        loads the very slow pure python version available from</span>
+<span class="sd">        https://pypi.python.org/pypi/ace/0.3. &#39;acepack&#39; loads the much faster</span>
+<span class="sd">        version from the R-package acepack. This requires the R-interface</span>
+<span class="sd">        rpy2 to be installed and acepack needs to be installed in R beforehand.</span>
+<span class="sd">        Note that both versions &#39;python&#39; and &#39;acepack&#39; may result in different</span>
+<span class="sd">        results. In [1]_ the acepack version was used.</span>
+
+<span class="sd">    **kwargs : </span>
+<span class="sd">        Arguments passed on to parent class CondIndTest.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                <span class="n">null_dist_filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">gp_version</span><span class="o">=</span><span class="s1">&#39;new&#39;</span><span class="p">,</span>
+                <span class="n">gp_kernel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">gp_alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">gp_restarts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">ace_version</span><span class="o">=</span><span class="s1">&#39;acepack&#39;</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="n">CondIndTest</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="n">GP</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+                    <span class="n">gp_version</span><span class="o">=</span><span class="n">gp_version</span><span class="p">,</span>
+                    <span class="n">gp_kernel</span><span class="o">=</span><span class="n">gp_kernel</span><span class="p">,</span>
+                    <span class="n">gp_alpha</span><span class="o">=</span><span class="n">gp_alpha</span><span class="p">,</span>
+                    <span class="n">gp_restarts</span><span class="o">=</span><span class="n">gp_restarts</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+        <span class="c1"># self.gp_version = gp_version</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ace_version</span> <span class="o">=</span> <span class="n">ace_version</span>
+
+        <span class="c1"># self.gp_kernel = gp_kernel</span>
+        <span class="c1"># self.gp_alpha = gp_alpha</span>
+        <span class="c1"># self.gp_restarts = gp_restarts</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">measure</span> <span class="o">=</span> <span class="s1">&#39;gp_ace&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">two_sided</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">residual_based</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1"># Load null-dist file, adapt if necessary</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">null_dist_filename</span> <span class="o">=</span> <span class="n">null_dist_filename</span>
+        <span class="k">if</span> <span class="n">null_dist_filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">null_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sig_samples</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">null_dists</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">null_dist_file</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">null_dist_filename</span><span class="p">)</span>
+            <span class="c1"># self.sample_sizes = null_dist_file[&#39;T&#39;]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">null_dists</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">null_dist_file</span><span class="p">[</span><span class="s1">&#39;T&#39;</span><span class="p">],</span> 
+                                      <span class="n">null_dist_file</span><span class="p">[</span><span class="s1">&#39;exact_dist&#39;</span><span class="p">]))</span>
+            <span class="c1"># print self.null_dist</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">null_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">null_dist_file</span><span class="p">[</span><span class="s1">&#39;exact_dist&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+
+<div class="viewcode-block" id="GPACE.get_dependence_measure"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GPACE.get_dependence_measure">[docs]</a>    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return GPACE measure.</span>
+
+<span class="sd">        Estimated as the maximal correlation of the residuals of a GP</span>
+<span class="sd">        regression.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        array : array-like</span>
+<span class="sd">            data array with X, Y, Z in rows and observations in columns</span>
+
+<span class="sd">        xyz : array of ints</span>
+<span class="sd">            XYZ identifier array of shape (dim,).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        val : float</span>
+<span class="sd">            GPACE test statistic.    </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">D</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_residuals</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_residuals</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_maxcorr</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]))</span>
+
+        <span class="k">return</span> <span class="n">val</span></div>
+
+    <span class="c1"># @profile</span>
+    <span class="k">def</span> <span class="nf">_get_maxcorr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_resid</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return maximal correlation coefficient estimated by ACE.</span>
+
+<span class="sd">        Method is described in [1]_. The maximal correlation test is implemented</span>
+<span class="sd">        with the ACE estimator either from a pure python implementation (slow)</span>
+<span class="sd">        or, if rpy is available, using the R-package &#39;acepack&#39;. The variables</span>
+<span class="sd">        are transformed to uniform marginals using the empirical cumulative</span>
+<span class="sd">        distribution function beforehand. Here the null distribution is not</span>
+<span class="sd">        analytically available, but can be precomputed with the function</span>
+<span class="sd">        generate_and_save_nulldists(...) which saves a \*.npz file containing the</span>
+<span class="sd">        null distribution for different sample sizes. This file can then be</span>
+<span class="sd">        supplied as null_dist_filename.</span>
+
+<span class="sd">        Parameters </span>
+<span class="sd">        ---------- </span>
+<span class="sd">        array_resid : array-like     </span>
+<span class="sd">            data array must be of shape (2, T)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        val : float</span>
+<span class="sd">            Maximal correlation coefficient.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Remove ties before applying transformation to uniform marginals</span>
+        <span class="c1"># array_resid = self._remove_ties(array_resid, verbosity=4)</span>
+
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trafo2uniform</span><span class="p">(</span><span class="n">array_resid</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ace_version</span> <span class="o">==</span> <span class="s1">&#39;python&#39;</span><span class="p">:</span>
+            <span class="k">class</span> <span class="nc">Suppressor</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+                <span class="sd">&quot;&quot;&quot;Wrapper class to prevent output from ACESolver.&quot;&quot;&quot;</span>
+                <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span>
+                    <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="bp">self</span>
+                <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+                    <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span>
+                <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span> 
+                    <span class="k">pass</span>
+            <span class="n">myace</span> <span class="o">=</span> <span class="n">ace</span><span class="o">.</span><span class="n">ace</span><span class="o">.</span><span class="n">ACESolver</span><span class="p">()</span>
+            <span class="n">myace</span><span class="o">.</span><span class="n">specify_data_set</span><span class="p">([</span><span class="n">x</span><span class="p">],</span> <span class="n">y</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">Suppressor</span><span class="p">():</span>
+                <span class="n">myace</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">corrcoef</span><span class="p">(</span><span class="n">myace</span><span class="o">.</span><span class="n">x_transforms</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">myace</span><span class="o">.</span><span class="n">y_transform</span><span class="p">)[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+        
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">ace_version</span> <span class="o">==</span> <span class="s1">&#39;acepack&#39;</span><span class="p">:</span>
+            <span class="n">ace_rpy</span> <span class="o">=</span> <span class="n">rpy2</span><span class="o">.</span><span class="n">robjects</span><span class="o">.</span><span class="n">r</span><span class="p">[</span><span class="s1">&#39;ace&#39;</span><span class="p">](</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">corrcoef</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ace_rpy</span><span class="p">[</span><span class="mi">8</span><span class="p">])</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> 
+                                 <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ace_rpy</span><span class="p">[</span><span class="mi">9</span><span class="p">]))[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;ace_version must be &#39;python&#39; or &#39;acepack&#39;&quot;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">val</span>
+
+
+<div class="viewcode-block" id="GPACE.get_analytic_significance"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GPACE.get_analytic_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns p-value for the maximal correlation coefficient.</span>
+<span class="sd">        </span>
+<span class="sd">        The null distribution for necessary degrees of freedom (df) is loaded.</span>
+<span class="sd">        If not available, the null distribution is generated with the function</span>
+<span class="sd">        generate_nulldist(). It can be precomputed with the function</span>
+<span class="sd">        generate_and_save_nulldists(...) which saves a \*.npz file containing the</span>
+<span class="sd">        null distribution for different sample sizes. This file can then be</span>
+<span class="sd">        supplied as null_dist_filename. The maximal correlation coefficient is</span>
+<span class="sd">        one-sided. If the degrees of freedom are less than 1, numpy.nan is</span>
+<span class="sd">        returned.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        value : float</span>
+<span class="sd">            Test statistic value.</span>
+
+<span class="sd">        T : int</span>
+<span class="sd">            Sample length</span>
+
+<span class="sd">        dim : int</span>
+<span class="sd">            Dimensionality, ie, number of features.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pval : float or numpy.nan</span>
+<span class="sd">            P-value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># GP regression approximately doesn&#39;t cost degrees of freedom</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">T</span>
+
+        <span class="k">if</span> <span class="n">df</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">pval</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">nan</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># idx_near = (numpy.abs(self.sample_sizes - df)).argmin()</span>
+
+            <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">df</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">null_dists</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="c1"># numpy.abs(self.sample_sizes[idx_near] - df) / float(df) &gt; 0.01:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Null distribution for GPACE not available &quot;</span>
+                             <span class="s2">&quot;for deg. of freed. = </span><span class="si">%d</span><span class="s2">.&quot;</span>
+                             <span class="s2">&quot;&quot;</span> <span class="o">%</span> <span class="n">df</span><span class="p">)</span> 
+                <span class="bp">self</span><span class="o">.</span><span class="n">generate_nulldist</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+
+            <span class="n">null_dist_here</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">null_dists</span><span class="p">[</span><span class="n">df</span><span class="p">]</span>
+            <span class="n">pval</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">null_dist_here</span> <span class="o">&gt;</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">pval</span></div>
+
+<div class="viewcode-block" id="GPACE.get_analytic_confidence"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GPACE.get_analytic_confidence">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">conf_lev</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Placeholder function, not available.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Analytic confidence not implemented for </span><span class="si">%s</span><span class="s2">&quot;</span>
+                         <span class="s2">&quot;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="GPDC"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GPDC">[docs]</a><span class="k">class</span> <span class="nc">GPDC</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">,</span><span class="n">GP</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;GPDC conditional independence test based on Gaussian processes and</span>
+<span class="sd">        distance correlation.</span>
+
+<span class="sd">    GPDC is based on a Gaussian process (GP) regression and a distance</span>
+<span class="sd">    correlation test on the residuals [2]_. GP is estimated with scikit-learn</span>
+<span class="sd">    and allows to flexibly specify kernels and hyperparameters or let them be</span>
+<span class="sd">    optimized automatically. The distance correlation test is implemented with</span>
+<span class="sd">    cython. Here the null distribution is not analytically available, but can be</span>
+<span class="sd">    precomputed with the function generate_and_save_nulldists(...) which saves a</span>
+<span class="sd">    \*.npz file containing the null distribution for different sample sizes. This</span>
+<span class="sd">    file can then be supplied as null_dist_filename.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    </span>
+<span class="sd">    GPDC is based on a Gaussian process (GP) regression and a distance</span>
+<span class="sd">    correlation test on the residuals. Distance correlation is described in</span>
+<span class="sd">    [2]_. To test :math:`X \perp Y | Z`, first :math:`Z` is regressed out from</span>
+<span class="sd">    :math:`X` and :math:`Y` assuming the  model</span>
+
+<span class="sd">    .. math::  X &amp; =  f_X(Z) + \epsilon_{X} \\</span>
+<span class="sd">        Y &amp; =  f_Y(Z) + \epsilon_{Y}  \\</span>
+<span class="sd">        \epsilon_{X,Y} &amp;\sim \mathcal{N}(0, \sigma^2)</span>
+
+<span class="sd">    using GP regression. Here :math:`\sigma^2` corresponds to the gp_alpha</span>
+<span class="sd">    parameter. Then the residuals  are transformed to uniform</span>
+<span class="sd">    marginals yielding :math:`r_X,r_Y` and their dependency is tested with</span>
+
+<span class="sd">    .. math::  \mathcal{R}\left(r_X, r_Y\right)</span>
+
+<span class="sd">    The null distribution of the distance correlation should be pre-computed.</span>
+<span class="sd">    Otherwise it is computed during runtime.</span>
+
+<span class="sd">    The cython-code for distance correlation is Copyright (c) 2012, Florian</span>
+<span class="sd">    Finkernagel (https://gist.github.com/ffinkernagel/2960386).</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [2] Gabor J. Szekely, Maria L. Rizzo, and Nail K. Bakirov: Measuring and </span>
+<span class="sd">           testing dependence by correlation of distances,</span>
+<span class="sd">           https://arxiv.org/abs/0803.4101</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    null_dist_filename : str, otional (default: None)</span>
+<span class="sd">        Path to file containing null distribution.</span>
+
+<span class="sd">    gp_version : {&#39;new&#39;, &#39;old&#39;}, optional (default: &#39;new&#39;)</span>
+<span class="sd">        The older GP version from scikit-learn 0.17 was used for the numerical</span>
+<span class="sd">        simulations in [1]_. The newer version from scikit-learn 0.19 is faster</span>
+<span class="sd">        and allows more flexibility regarding kernels etc.</span>
+
+<span class="sd">    gp_kernel : kernel object, optional (default: None)</span>
+<span class="sd">        Only available for gp_version=&#39;new&#39;. Can be any scikit-learn kernel</span>
+<span class="sd">        object available in gaussian_process.kernels. The kernel specifies the</span>
+<span class="sd">        covariance function of the GP. If None is passed, the kernel &#39;1.0 *</span>
+<span class="sd">        RBF(1.0)&#39; is used as default. Note that the kernel&#39;s hyperparameters are</span>
+<span class="sd">        optimized during fitting.</span>
+
+<span class="sd">    gp_alpha :  float or array-like, optional (default: None)</span>
+<span class="sd">        Only available for gp_version=&#39;new&#39;. Value added to the diagonal of the</span>
+<span class="sd">        kernel matrix during fitting. Larger values correspond to increased</span>
+<span class="sd">        noise level in the observations and reduce potential numerical issues</span>
+<span class="sd">        during fitting. If an array is passed, it must have the same number of</span>
+<span class="sd">        entries as the data used for fitting and is used as datapoint-dependent</span>
+<span class="sd">        noise level. Note that this is equivalent to adding a WhiteKernel with</span>
+<span class="sd">        c=alpha. If None is passed, gp_alpha=0.1 is used.</span>
+<span class="sd">    </span>
+<span class="sd">    gp_restarts : int, optional (default: None)</span>
+<span class="sd">        Only available for gp_version=&#39;new&#39;. The number of restarts of the</span>
+<span class="sd">        optimizer for finding the kernel&#39;s parameters which maximize the log-</span>
+<span class="sd">        marginal likelihood. The first run of the optimizer is performed from</span>
+<span class="sd">        the kernel&#39;s initial parameters, the remaining ones (if any) from thetas</span>
+<span class="sd">        sampled log-uniform randomly from the space of allowed theta-values. If</span>
+<span class="sd">        greater than 0, all bounds must be finite. If None is passed,</span>
+<span class="sd">        n_restarts_optimizer=0 is used, implying that one run is performed.</span>
+
+<span class="sd">    **kwargs : </span>
+<span class="sd">        Arguments passed on to parent class CondIndTest.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                <span class="n">null_dist_filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">gp_version</span><span class="o">=</span><span class="s1">&#39;new&#39;</span><span class="p">,</span>
+                <span class="n">gp_kernel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">gp_alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">gp_restarts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+
+                <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="n">CondIndTest</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="n">GP</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+                    <span class="n">gp_version</span><span class="o">=</span><span class="n">gp_version</span><span class="p">,</span>
+                    <span class="n">gp_kernel</span><span class="o">=</span><span class="n">gp_kernel</span><span class="p">,</span>
+                    <span class="n">gp_alpha</span><span class="o">=</span><span class="n">gp_alpha</span><span class="p">,</span>
+                    <span class="n">gp_restarts</span><span class="o">=</span><span class="n">gp_restarts</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+        <span class="c1"># self.gp_version = gp_version</span>
+
+        <span class="c1"># self.gp_kernel = gp_kernel</span>
+        <span class="c1"># self.gp_alpha = gp_alpha</span>
+        <span class="c1"># self.gp_restarts = gp_restarts</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">measure</span> <span class="o">=</span> <span class="s1">&#39;gp_dc&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">two_sided</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">residual_based</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1"># Load null-dist file, adapt if necessary</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">null_dist_filename</span> <span class="o">=</span> <span class="n">null_dist_filename</span>
+        <span class="k">if</span> <span class="n">null_dist_filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">null_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sig_samples</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">null_dists</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">null_dist_file</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">null_dist_filename</span><span class="p">)</span>
+            <span class="c1"># self.sample_sizes = null_dist_file[&#39;T&#39;]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">null_dists</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">null_dist_file</span><span class="p">[</span><span class="s1">&#39;T&#39;</span><span class="p">],</span> 
+                                      <span class="n">null_dist_file</span><span class="p">[</span><span class="s1">&#39;exact_dist&#39;</span><span class="p">]))</span>
+            <span class="c1"># print self.null_dist</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">null_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">null_dist_file</span><span class="p">[</span><span class="s1">&#39;exact_dist&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+
+    
+<div class="viewcode-block" id="GPDC.get_dependence_measure"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GPDC.get_dependence_measure">[docs]</a>    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return GPDC measure.</span>
+
+<span class="sd">        Estimated as the distance correlation of the residuals of a GP</span>
+<span class="sd">        regression.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        array : array-like</span>
+<span class="sd">            data array with X, Y, Z in rows and observations in columns</span>
+
+<span class="sd">        xyz : array of ints</span>
+<span class="sd">            XYZ identifier array of shape (dim,).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        val : float</span>
+<span class="sd">            GPDC test statistic.    </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">D</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_residuals</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_residuals</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dcorr</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]))</span>
+
+        <span class="k">return</span> <span class="n">val</span></div>
+
+
+    <span class="c1"># @profile</span>
+    <span class="k">def</span> <span class="nf">_get_dcorr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_resid</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return distance correlation coefficient.</span>
+<span class="sd">        </span>
+<span class="sd">        The variables are transformed to uniform marginals using the empirical</span>
+<span class="sd">        cumulative distribution function beforehand. Here the null distribution</span>
+<span class="sd">        is not analytically available, but can be precomputed with the function</span>
+<span class="sd">        generate_and_save_nulldists(...) which saves a \*.npz file containing the</span>
+<span class="sd">        null distribution for different sample sizes. This file can then be</span>
+<span class="sd">        supplied as null_dist_filename.</span>
+
+<span class="sd">        Parameters </span>
+<span class="sd">        ---------- </span>
+<span class="sd">        array_resid : array-like     </span>
+<span class="sd">            data array must be of shape (2, T)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        val : float</span>
+<span class="sd">            Distance correlation coefficient.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Remove ties before applying transformation to uniform marginals</span>
+        <span class="c1"># array_resid = self._remove_ties(array_resid, verbosity=4)</span>
+
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trafo2uniform</span><span class="p">(</span><span class="n">array_resid</span><span class="p">)</span>
+
+        <span class="n">dc</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">dvx</span><span class="p">,</span> <span class="n">dvy</span> <span class="o">=</span> <span class="n">tigramite_cython_code</span><span class="o">.</span><span class="n">dcov_all</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">val</span>
+
+
+<div class="viewcode-block" id="GPDC.get_analytic_significance"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GPDC.get_analytic_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns p-value for the distance correlation coefficient.</span>
+<span class="sd">        </span>
+<span class="sd">        The null distribution for necessary degrees of freedom (df) is loaded.</span>
+<span class="sd">        If not available, the null distribution is generated with the function</span>
+<span class="sd">        generate_nulldist(). It is recommended to generate the nulldists for a</span>
+<span class="sd">        wide range of sample sizes beforehand with the function</span>
+<span class="sd">        generate_and_save_nulldists(...). The distance correlation coefficient</span>
+<span class="sd">        is one-sided. If the degrees of freedom are less than 1, numpy.nan is</span>
+<span class="sd">        returned.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        value : float</span>
+<span class="sd">            Test statistic value.</span>
+
+<span class="sd">        T : int</span>
+<span class="sd">            Sample length</span>
+
+<span class="sd">        dim : int</span>
+<span class="sd">            Dimensionality, ie, number of features.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pval : float or numpy.nan</span>
+<span class="sd">            P-value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># GP regression approximately doesn&#39;t cost degrees of freedom</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">T</span>
+
+        <span class="k">if</span> <span class="n">df</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">pval</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">nan</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># idx_near = (numpy.abs(self.sample_sizes - df)).argmin()</span>
+            <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">df</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">null_dists</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="c1"># if numpy.abs(self.sample_sizes[idx_near] - df) / float(df) &gt; 0.01:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Null distribution for GPDC not available &quot;</span>
+                             <span class="s2">&quot;for deg. of freed. = </span><span class="si">%d</span><span class="s2">.&quot;</span>
+                             <span class="s2">&quot;&quot;</span> <span class="o">%</span> <span class="n">df</span><span class="p">)</span> 
+                    
+                <span class="bp">self</span><span class="o">.</span><span class="n">generate_nulldist</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+
+            <span class="n">null_dist_here</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">null_dists</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">df</span><span class="p">)]</span>
+            <span class="n">pval</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">null_dist_here</span> <span class="o">&gt;</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">pval</span></div>
+
+<div class="viewcode-block" id="GPDC.get_analytic_confidence"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GPDC.get_analytic_confidence">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">conf_lev</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Placeholder function, not available.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Analytic confidence not implemented for </span><span class="si">%s</span><span class="s2">&quot;</span>
+                         <span class="s2">&quot;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="CMIknn"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.CMIknn">[docs]</a><span class="k">class</span> <span class="nc">CMIknn</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
@@ -2185,35 +2144,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">two_sided</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">residual_based</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">recycle_residuals</span> <span class="o">=</span> <span class="kc">False</span>
-
-    <span class="k">def</span> <span class="nf">_trafo2uniform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Transforms input array to uniform marginals. </span>
-
-<span class="sd">        Assumes x.shape = (dim, T)</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        x : array-like</span>
-<span class="sd">            Input array.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        u : array-like</span>
-<span class="sd">            array with uniform marginals.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">def</span> <span class="nf">trafo</span><span class="p">(</span><span class="n">xi</span><span class="p">):</span>
-            <span class="n">xisorted</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span>
-            <span class="n">yi</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">xi</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">xi</span><span class="p">))</span>
-            <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">xi</span><span class="p">,</span> <span class="n">xisorted</span><span class="p">,</span> <span class="n">yi</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">u</span> <span class="o">=</span> <span class="n">trafo</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">u</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-                <span class="n">u</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">trafo</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-        <span class="k">return</span> <span class="n">u</span>
 
     <span class="k">def</span> <span class="nf">_get_nearest_neighbors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">knn</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="s1">&#39;standardize&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns nearest neighbors according to Frenzel and Pompe (2007).</span>
@@ -2306,7 +2236,7 @@
 
         <span class="k">return</span> <span class="n">val</span></div>
 
-<div class="viewcode-block" id="CMIknn.get_analytic_significance"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.CMIknn.get_analytic_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">df</span><span class="p">):</span>
+<div class="viewcode-block" id="CMIknn.get_analytic_significance"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.CMIknn.get_analytic_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Placeholder function, not available.&quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Analytic significance not implemented for </span><span class="si">%s</span><span class="s2">&quot;</span>
                          <span class="s2">&quot;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span><span class="p">)</span></div>
@@ -2513,7 +2443,7 @@
 
         <span class="k">return</span> <span class="n">val</span></div>
 
-<div class="viewcode-block" id="CMIsymb.get_analytic_significance"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.CMIsymb.get_analytic_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">df</span><span class="p">):</span>
+<div class="viewcode-block" id="CMIsymb.get_analytic_significance"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.CMIsymb.get_analytic_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Placeholder function, not available.&quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Analytic confidence not implemented for </span><span class="si">%s</span><span class="s2">&quot;</span>
                          <span class="s2">&quot;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span><span class="p">)</span></div>
@@ -2537,7 +2467,7 @@
     <span class="c1"># numpy.random.seed(44)</span>
     <span class="n">a</span> <span class="o">=</span> <span class="mf">0.</span>
     <span class="n">c</span> <span class="o">=</span> <span class="mf">0.6</span>
-    <span class="n">T</span> <span class="o">=</span> <span class="mi">258</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="mi">260</span>
     <span class="c1"># Each key refers to a variable and the incoming links are supplied as a</span>
     <span class="c1"># list of format [((driver, lag), coeff), ...]</span>
     <span class="n">links_coeffs</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">[((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">a</span><span class="p">)],</span>
@@ -2564,36 +2494,14 @@
     <span class="c1">#     verbosity=3)</span>
 
 
-    <span class="n">cond_ind_test</span> <span class="o">=</span> <span class="n">GPACE</span><span class="p">(</span>
-        <span class="n">significance</span><span class="o">=</span><span class="s1">&#39;analytic&#39;</span><span class="p">,</span>
-        <span class="n">sig_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-
-        <span class="n">confidence</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="c1"># False  &#39;bootstrap&#39;,</span>
-        <span class="n">conf_lev</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
-        <span class="n">conf_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-        <span class="n">conf_blocklength</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-
-        <span class="n">use_mask</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">mask_type</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span>
-
-        <span class="n">null_dist_filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">gp_version</span><span class="o">=</span><span class="s1">&#39;new&#39;</span><span class="p">,</span>
-        <span class="n">gp_kernel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">gp_alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">gp_restarts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">ace_version</span><span class="o">=</span><span class="s1">&#39;acepack&#39;</span><span class="p">,</span>
-        <span class="n">recycle_residuals</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">verbosity</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
-
-    <span class="c1"># cond_ind_test = GPDC(</span>
+    <span class="c1"># cond_ind_test = GPACE(</span>
     <span class="c1">#     significance=&#39;analytic&#39;,</span>
-    <span class="c1">#     sig_samples=1000,</span>
-    <span class="c1">#     sig_blocklength=1,</span>
+    <span class="c1">#     sig_samples=100,</span>
 
     <span class="c1">#     confidence=False, # False  &#39;bootstrap&#39;,</span>
     <span class="c1">#     conf_lev=0.9,</span>
     <span class="c1">#     conf_samples=100,</span>
-    <span class="c1">#     conf_blocklength=1,</span>
+    <span class="c1">#     conf_blocklength=None,</span>
 
     <span class="c1">#     use_mask=False,</span>
     <span class="c1">#     mask_type=[&#39;y&#39;],</span>
@@ -2603,10 +2511,35 @@
     <span class="c1">#     gp_kernel=None,</span>
     <span class="c1">#     gp_alpha=None,</span>
     <span class="c1">#     gp_restarts=None,</span>
-
+    <span class="c1">#     ace_version=&#39;acepack&#39;,</span>
     <span class="c1">#     recycle_residuals=False,</span>
     <span class="c1">#     verbosity=4)</span>
 
+    <span class="n">cond_ind_test</span> <span class="o">=</span> <span class="n">GPDC</span><span class="p">(</span>
+        <span class="n">significance</span><span class="o">=</span><span class="s1">&#39;analytic&#39;</span><span class="p">,</span>
+        <span class="n">sig_samples</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+        <span class="n">sig_blocklength</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+
+        <span class="n">confidence</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="c1"># False  &#39;bootstrap&#39;,</span>
+        <span class="n">conf_lev</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
+        <span class="n">conf_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+        <span class="n">conf_blocklength</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+
+        <span class="n">use_mask</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">mask_type</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span>
+
+        <span class="n">null_dist_filename</span><span class="o">=</span><span class="s1">&#39;/home/jakobrunge/test/test.npz&#39;</span><span class="p">,</span> <span class="c1">#&#39;/home/tests/test.npz&#39;,</span>
+        <span class="n">gp_version</span><span class="o">=</span><span class="s1">&#39;new&#39;</span><span class="p">,</span>
+        <span class="n">gp_kernel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">gp_alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">gp_restarts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+
+        <span class="n">recycle_residuals</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">verbosity</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+    <span class="c1"># cond_ind_test.generate_and_save_nulldists( sample_sizes=[100, 250],</span>
+    <span class="c1">#     null_dist_filename=&#39;/home/jakobrunge/test/test.npz&#39;)</span>
+    <span class="c1"># cond_ind_test.null_dist_filename = &#39;/home/jakobrunge/test/test.npz&#39;</span>
 
     <span class="c1"># cond_ind_test = CMIknn()</span>
         <span class="c1"># significance=&#39;shuffle_test&#39;,</span>
@@ -2642,11 +2575,16 @@
     <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
     <span class="n">cond_ind_test</span><span class="o">.</span><span class="n">set_dataframe</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)</span>
 
+    <span class="n">tau_max</span> <span class="o">=</span> <span class="mi">5</span>
     <span class="n">X</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)]</span>
     <span class="n">Y</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
     <span class="n">Z</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)]</span>  <span class="c1">#(2, -1), (1, -1), (0, -3)]  #[(1, -1)]  #[(2, -1), (1, -1), (0, -3)] # [(2, -1), (1, -1), (2, -3)]   [(1, -1)]</span>
-    <span class="n">val</span><span class="p">,</span> <span class="n">pval</span> <span class="o">=</span> <span class="n">cond_ind_test</span><span class="o">.</span><span class="n">run_test</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-    <span class="n">conf_interval</span> <span class="o">=</span> <span class="n">cond_ind_test</span><span class="o">.</span><span class="n">get_confidence</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">val</span><span class="p">,</span> <span class="n">pval</span> <span class="o">=</span> <span class="n">cond_ind_test</span><span class="o">.</span><span class="n">run_test</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">)</span>
+    <span class="n">conf_interval</span> <span class="o">=</span> <span class="n">cond_ind_test</span><span class="o">.</span><span class="n">get_confidence</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">)</span>
+
+    <span class="c1"># print cond_ind_test.get_model_selection_criterion(2,</span>
+    <span class="c1">#                                   [(0, -2)],</span>
+    <span class="c1">#                                   tau_max=tau_max)</span>
 
     <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;I(X,Y|Z) = </span><span class="si">%.2f</span><span class="s2"> | p-value = </span><span class="si">%.3f</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">pval</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">conf_interval</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>

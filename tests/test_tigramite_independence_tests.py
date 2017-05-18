@@ -58,7 +58,7 @@ class TestCondInd():  #unittest.TestCase):
 
        self.ci_gpace = GPACE(
                             significance='analytic',
-                            sig_samples=100,
+                            sig_samples=1000,
                             sig_blocklength=1,
 
                             confidence='bootstrap', 
@@ -77,7 +77,7 @@ class TestCondInd():  #unittest.TestCase):
 
        self.ci_gpdc = GPDC(
                             significance='analytic',
-                            sig_samples=100,
+                            sig_samples=1000,
                             sig_blocklength=1,
 
                             confidence='bootstrap', 
@@ -100,11 +100,15 @@ class TestCondInd():  #unittest.TestCase):
                             [1, 11, 21, 31],
                             [2, 12, 22, 32],
                             [3, 13, 23, 33],
-                            [4, 14, 24, 34]])
+                            [4, 14, 24, 34],
+                            [5, 15, 25, 35],
+                            [6, 16, 26, 36]])
         data_mask = numpy.array([[0, 1, 1, 0],
                                  [0, 0, 0, 0],
                                  [1, 0, 0, 0],
                                  [0, 0, 1, 1],
+                                 [0, 0, 0, 0],
+                                 [0, 0, 0, 0],
                                  [0, 0, 0, 0]], dtype='bool')
 
         X = [(1, -1)]
@@ -120,13 +124,15 @@ class TestCondInd():  #unittest.TestCase):
             use_mask=False,
             data=data,
             mask=data_mask,
+            missing_flag=None,
             mask_type=None, verbosity=verbosity)
+        print res[0]
         numpy.testing.assert_almost_equal(res[0],
-                                          numpy.array([[11.,  12.,  13.],
-                                                       [2.,   3.,   4.],
-                                                       [1.,   2.,   3.],
-                                                       [10.,  11.,  12.],
-                                                       [22.,  23.,  24.]]))
+                                          numpy.array([[13, 14, 15],
+                                                     [ 4,  5,  6],
+                                                     [ 3,  4,  5],
+                                                     [12, 13, 14],
+                                                     [24, 25, 26]]))
         numpy.testing.assert_almost_equal(res[1], numpy.array([0, 1, 2, 2, 2]))
 
         # masking y
@@ -137,13 +143,14 @@ class TestCondInd():  #unittest.TestCase):
             data=data,
             mask=data_mask,
             mask_type=['y'], verbosity=verbosity)
+        print res[0]
 
         numpy.testing.assert_almost_equal(res[0],
-                                          numpy.array([[12.,  13.],
-                                                       [3.,   4.],
-                                                       [2.,   3.],
-                                                       [11.,  12.],
-                                                       [23.,  24.]]))
+                                          numpy.array([[13, 14, 15],
+                                                     [ 4,  5,  6],
+                                                     [ 3,  4,  5],
+                                                     [12, 13, 14],
+                                                     [24, 25, 26]]))
 
         numpy.testing.assert_almost_equal(res[1], numpy.array([0, 1, 2, 2, 2]))
 
@@ -155,15 +162,57 @@ class TestCondInd():  #unittest.TestCase):
             data=data,
             mask=data_mask,
             mask_type=['x', 'y', 'z'], verbosity=verbosity)
+        print res[0]
 
         numpy.testing.assert_almost_equal(res[0],
-                                          numpy.array([[13.],
-                                                       [4.],
-                                                       [3.],
-                                                       [12.],
-                                                       [24.]]))
+                                          numpy.array([[13, 14, 15],
+                                                     [ 4,  5,  6],
+                                                     [ 3,  4,  5],
+                                                     [12, 13, 14],
+                                                     [24, 25, 26]]))
 
         numpy.testing.assert_almost_equal(res[1], numpy.array([0, 1, 2, 2, 2]))
+
+    def test_missing_values(self):
+
+        data = numpy.array([[0, 10, 20, 30],
+                            [1, 11, 21, 31],
+                            [2, 12, 22, 32],
+                            [3, 13, 999, 33],
+                            [4, 14, 24, 34],
+                            [5, 15, 25, 35],
+                            [6, 16, 26, 36],
+                            ])
+        data_mask = numpy.array([[0, 0, 0, 0],
+                                 [0, 0, 0, 0],
+                                 [0, 0, 0, 0],
+                                 [0, 0, 0, 0],
+                                 [0, 0, 0, 0],
+                                 [0, 0, 0, 0],
+                                 [0, 0, 0, 0]], dtype='bool')
+
+        X = [(1, -2)]
+        Y = [(0, 0)]
+        Z = [(2, -1)]
+
+        tau_max = 1
+
+        # Missing values
+        res = self.ci_par_corr._construct_array(
+            X=X, Y=Y, Z=Z,
+            tau_max=tau_max,
+            use_mask=False,
+            data=data,
+            mask=data_mask,
+            missing_flag=999,
+            mask_type=['y'], verbosity=verbosity)
+
+        # print res[0]
+        numpy.testing.assert_almost_equal(res[0],
+                                          numpy.array([[10, 14],
+                                                     [ 2,  6],
+                                                     [21, 25]]))
+
 
     def test_bootstrap_vs_analytic_confidence_parcorr(self):
 
@@ -208,7 +257,7 @@ class TestCondInd():  #unittest.TestCase):
         xyz = numpy.array([0,1])
 
         pval_ana = self.ci_par_corr.get_analytic_significance(value=val,
-                                                             df=T-dim)
+                                                             T=T, dim=dim)
 
         pval_shuffle = self.ci_par_corr.get_shuffle_significance(array, xyz,
                                val)
@@ -391,7 +440,7 @@ class TestCondInd():  #unittest.TestCase):
         val = self.ci_gpace.get_dependence_measure(array, xyz)
 
         pval_ana = self.ci_gpace.get_analytic_significance(value=val,
-                                                             df=T)
+                                                             T=T, dim=dim)
 
         pval_shuffle = self.ci_gpace.get_shuffle_significance(array, xyz,
                                val)
@@ -406,9 +455,9 @@ class TestCondInd():  #unittest.TestCase):
 
     def test_shuffle_vs_analytic_significance_gpdc(self):
 
-        cov = numpy.array([[1., 0.2], [0.2, 1.]])
+        cov = numpy.array([[1., 0.01], [0.01, 1.]])
         array = numpy.random.multivariate_normal(mean=numpy.zeros(2),
-                        cov=cov, size=245).T
+                        cov=cov, size=300).T
 
         dim, T = array.shape
         xyz = numpy.array([0,1])
@@ -416,11 +465,11 @@ class TestCondInd():  #unittest.TestCase):
         val = self.ci_gpdc.get_dependence_measure(array, xyz)
 
         pval_ana = self.ci_gpdc.get_analytic_significance(value=val,
-                                                             df=T)
+                                                             T=T, dim=dim)
 
         pval_shuffle = self.ci_gpdc.get_shuffle_significance(array, xyz,
                                val)
-
+        # print self.ci_gpdc.null_dists.keys()
         print pval_ana
         print pval_shuffle
 
@@ -553,7 +602,11 @@ if __name__ == "__main__":
     # unittest.main()
 
     # tci = TestCondInd()  #unittest.TestCase)
+
     # tci.setUp()
+    # tci.test_construct_array()
+    # tci.test_missing_values()
+    # tci.test_shuffle_vs_analytic_significance_gpdc()
     # tci.test_trafo2uniform()
     # tci.test_cmi_symb()
     # tci.test_bootstrap_vs_analytic_confidence()

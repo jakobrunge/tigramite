@@ -98,10 +98,10 @@
 <td>Partial correlation test.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#tigramite.independence_tests.GPACE" title="tigramite.independence_tests.GPACE"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.independence_tests.GPACE</span></code></a>([...])</td>
-<td>GPACE conditional independence test.</td>
+<td>GPACE conditional independence test based on Gaussian processes and     maximal correlation.</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#tigramite.independence_tests.GPDC" title="tigramite.independence_tests.GPDC"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.independence_tests.GPDC</span></code></a>([...])</td>
-<td>GPDC conditional independence test.</td>
+<td>GPDC conditional independence test based on Gaussian processes and     distance correlation.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#tigramite.independence_tests.CMIknn" title="tigramite.independence_tests.CMIknn"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.independence_tests.CMIknn</span></code></a>([knn,&nbsp;...])</td>
 <td>Conditional mutual information test based on nearest-neighbor estimator.</td>
@@ -524,11 +524,10 @@ handles masked samples. Other test classes can inherit from this class.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>use_mask</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em><em></em>) &#8211; Whether a supplied mask should be used.</li>
-<li><strong>mask_type</strong> (<em>list including all</em><em> or </em><em>some of the strings 'x'</em><em>, </em><em>'y'</em><em>, </em><em>'z'</em><em>,</em><em></em>) &#8211; optional (default: None)
-Marks for which variables in the dependence measure I(X; Y | Z) the
-samples should be masked. If None, [&#8216;x&#8217;, &#8216;y&#8217;, &#8216;z&#8217;] is used, which
-excludes masked samples in X, Y, and Z and can be used for missing
-values. Explained in <a class="footnote-reference" href="#id5" id="id7">[1]</a>.</li>
+<li><strong>mask_type</strong> (<em>{'missing'</em><em>,</em><em>'y'</em><em>,</em><em>'x'</em><em>,</em><em>'z'</em><em>,</em><em>'xy'</em><em>,</em><em>'xz'</em><em>,</em><em>'yz'</em><em>,</em><em>'xyz'}</em>) &#8211; Masking mode: Either &#8216;missing&#8217; or indicators for which variables in the
+dependence measure I(X; Y | Z) the samples should be masked. If None,
+&#8216;missing&#8217; is used, which excludes masked samples for all X, Y, and Z up
+to tau_max if a value is missing in any of them. Explained in <a class="footnote-reference" href="#id5" id="id7">[1]</a>.</li>
 <li><strong>significance</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'analytic'</em><em>)</em><em></em>) &#8211; Type of significance test to use. In this package &#8216;analytic&#8217;,
 &#8216;fixed_thres&#8217; and &#8216;shuffle_test&#8217; are available.</li>
 <li><strong>fixed_thres</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.1</em><em>)</em><em></em>) &#8211; If significance is &#8216;fixed_thres&#8217;, this specifies the threshold for the
@@ -553,8 +552,30 @@ can cost considerable memory.</li>
 </tbody>
 </table>
 <dl class="method">
+<dt id="tigramite.independence_tests.CondIndTest.generate_and_save_nulldists">
+<code class="descname">generate_and_save_nulldists</code><span class="sig-paren">(</span><em>sample_sizes</em>, <em>null_dist_filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#CondIndTest.generate_and_save_nulldists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.CondIndTest.generate_and_save_nulldists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates null distribution for pairwise independence tests.</p>
+<p>Generates the null distribution for different sample sizes. Calls
+generate_nulldist. Null dists are saved to disk as
+self.null_dist_filename.npz. Also adds the null distributions to
+self.null_dists.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>sample_sizes</strong> (<em>list</em>) &#8211; List of sample sizes.</li>
+<li><strong>null_dist_filename</strong> (<em>str</em>) &#8211; Name to save file containing null distributions.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="tigramite.independence_tests.CondIndTest.generate_nulldist">
-<code class="descname">generate_nulldist</code><span class="sig-paren">(</span><em>df</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#CondIndTest.generate_nulldist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.CondIndTest.generate_nulldist" title="Permalink to this definition">¶</a></dt>
+<code class="descname">generate_nulldist</code><span class="sig-paren">(</span><em>df</em>, <em>add_to_null_dists=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#CondIndTest.generate_nulldist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.CondIndTest.generate_nulldist" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates null distribution for pairwise independence tests.</p>
 <p>Generates the null distribution for sample size df. Assumes pairwise
 samples transformed to uniform marginals. Uses get_dependence_measure
@@ -564,7 +585,18 @@ the null distributions to self.null_dists.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>df</strong> (<em>int</em>) &#8211; Degrees of freedom / sample size to generate null distribution for.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>df</strong> (<em>int</em>) &#8211; Degrees of freedom / sample size to generate null distribution for.</li>
+<li><strong>add_to_null_dists</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em><em></em>) &#8211; Whether to add the null dist to the dictionary of null dists or
+just return it.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>null_dist</strong> &#8211; Only returned,if add_to_null_dists is False.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">array of shape [df,]</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -747,16 +779,23 @@ class as self.val and self.pval.</p>
 
 <dl class="method">
 <dt id="tigramite.independence_tests.CondIndTest.set_dataframe">
-<code class="descname">set_dataframe</code><span class="sig-paren">(</span><em>dataframe</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#CondIndTest.set_dataframe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.CondIndTest.set_dataframe" title="Permalink to this definition">¶</a></dt>
+<code class="descname">set_dataframe</code><span class="sig-paren">(</span><em>dataframe</em>, <em>missing_flag=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#CondIndTest.set_dataframe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.CondIndTest.set_dataframe" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize dataframe.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dataframe</strong> (<em>data object</em>) &#8211; This can either be the tigramite dataframe object or a pandas data
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>dataframe</strong> (<em>data object</em>) &#8211; This can either be the tigramite dataframe object or a pandas data
 frame. It must have the attributes dataframe.values yielding a numpy
 array of shape (observations T, variables N) and optionally a mask
-of the same shape.</td>
+of the same shape.</li>
+<li><strong>missing_flag</strong> (<em>number</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Flag for missing values in dataframe. Dismisses all time slices of
+samples where missing values occur in any variable and also flags
+samples for all lags up to 2*tau_max. This avoids biases, see
+section on masking in Supplement of <a class="footnote-reference" href="#id5" id="id11">[1]</a>.</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
@@ -769,7 +808,21 @@ of the same shape.</td>
 <dt id="tigramite.independence_tests.ParCorr">
 <em class="property">class </em><code class="descclassname">tigramite.independence_tests.</code><code class="descname">ParCorr</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#ParCorr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.ParCorr" title="Permalink to this definition">¶</a></dt>
 <dd><p>Partial correlation test.</p>
-<p>Partial correlation is estimated as described in <a class="footnote-reference" href="#id5" id="id11">[1]</a>.</p>
+<p>Partial correlation is estimated through linear ordinary least squares (OLS)
+regression and a test for non-zero linear Pearson correlation on the
+residuals.</p>
+<p class="rubric">Notes</p>
+<p>To test <img class="math" src="_images/math/d843100cd0a02e1e5184694228a7ac41e19e8af2.png" alt="X \perp Y | Z"/>, first <img class="math" src="_images/math/bcb2457ac9d8995a4f34d57cadac7ecbbe58f3bd.png" alt="Z"/> is regressed out from
+<img class="math" src="_images/math/7a7bb470119808e2db2879fc2b2526f467b7a40b.png" alt="X"/> and <img class="math" src="_images/math/0062c26909b3e07ee8f5a6285b2563d69bc979ff.png" alt="Y"/> assuming the  model</p>
+<div class="math">
+<p><img src="_images/math/3d927294dd9fee97ab16ad5032baf0c08cdda4c2.png" alt="X &amp; =  Z \beta_X + \epsilon_{X} \\
+Y &amp; =  Z \beta_Y + \epsilon_{Y}"/></p>
+</div><p>using OLS regression. Then the dependency of the residuals is tested with
+the Pearson correlation test.</p>
+<div class="math">
+<p><img src="_images/math/9c7f8f771e36601a75e3520845155d09080f6281.png" alt="\rho\left(r_X, r_Y\right)"/></p>
+</div><p>For the <code class="docutils literal"><span class="pre">significance='analytic'</span></code> Student&#8217;s-<em>t</em> distribution with
+<img class="math" src="_images/math/e03ea88dda29ab6daa19c839ff37b8115e0a10e1.png" alt="T-D_Z-2"/> degrees of freedom is implemented.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -806,7 +859,7 @@ of the same shape.</td>
 
 <dl class="method">
 <dt id="tigramite.independence_tests.ParCorr.get_analytic_significance">
-<code class="descname">get_analytic_significance</code><span class="sig-paren">(</span><em>value</em>, <em>df</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#ParCorr.get_analytic_significance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.ParCorr.get_analytic_significance" title="Permalink to this definition">¶</a></dt>
+<code class="descname">get_analytic_significance</code><span class="sig-paren">(</span><em>value</em>, <em>T</em>, <em>dim</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#ParCorr.get_analytic_significance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.ParCorr.get_analytic_significance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns analytic p-value from Student&#8217;s t-test for the Pearson
 correlation coefficient.</p>
 <p>Assumes two-sided correlation. If the degrees of freedom are less than
@@ -817,7 +870,8 @@ correlation coefficient.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>value</strong> (<em>float</em>) &#8211; Test statistic value.</li>
-<li><strong>df</strong> (<em>int</em>) &#8211; degrees of freedom of the test</li>
+<li><strong>T</strong> (<em>int</em>) &#8211; Sample length</li>
+<li><strong>dim</strong> (<em>int</em>) &#8211; Dimensionality, ie, number of features.</li>
 </ul>
 </td>
 </tr>
@@ -887,16 +941,20 @@ different lags in X, Z, all have the same sample size.</li>
 <dl class="class">
 <dt id="tigramite.independence_tests.GPACE">
 <em class="property">class </em><code class="descclassname">tigramite.independence_tests.</code><code class="descname">GPACE</code><span class="sig-paren">(</span><em>null_dist_filename=None</em>, <em>gp_version='new'</em>, <em>gp_kernel=None</em>, <em>gp_alpha=None</em>, <em>gp_restarts=None</em>, <em>ace_version='acepack'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#GPACE"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.GPACE" title="Permalink to this definition">¶</a></dt>
-<dd><p>GPACE conditional independence test.</p>
+<dd><dl class="docutils">
+<dt>GPACE conditional independence test based on Gaussian processes and</dt>
+<dd>maximal correlation.</dd>
+</dl>
 <p>GPACE is based on a Gaussian process (GP) regression and a maximal
 correlation test on the residuals. GP is estimated with scikit-learn and
 allows to flexibly specify kernels and hyperparameters or let them be
 optimized automatically. The maximal correlation test is implemented with
 the ACE estimator either from a pure python implementation (slow) or, if rpy
 is available, using the R-package &#8216;acepack&#8217;. Here the null distribution is
-not analytically available, but can be precomputed with the script
-&#8216;generate_gpace_nulldist.py&#8217; which generates a *.npz file containing the
-null distribution for different sample sizes.</p>
+not analytically available, but can be precomputed with the function
+generate_and_save_nulldists(...) which saves a *.npz file containing the
+null distribution for different sample sizes. This file can then be supplied
+as null_dist_filename.</p>
 <p class="rubric">Notes</p>
 <p>As described in <a class="footnote-reference" href="#id5" id="id12">[1]</a>, GPACE is based on a Gaussian
 process (GP) regression and a maximal correlation test on the residuals. To
@@ -919,9 +977,7 @@ of the maximal correlation can be pre-computed.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>null_dist_filename</strong> (<em>str</em><em>, </em><em>otional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Path to file containing null distribution. If None is passed, the
-default filename generated by the script &#8220;generate_gpace_nulldist.py&#8221;
-is used.</li>
+<li><strong>null_dist_filename</strong> (<em>str</em><em>, </em><em>otional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Path to file containing null distribution.</li>
 <li><strong>gp_version</strong> (<em>{'new'</em><em>, </em><em>'old'}</em><em>, </em><em>optional</em><em> (</em><em>default: 'new'</em><em>)</em><em></em>) &#8211; The older GP version from scikit-learn 0.17 was used for the numerical
 simulations in <a class="footnote-reference" href="#id5" id="id13">[1]</a>. The newer version from scikit-learn 0.19 is faster
 and allows more flexibility regarding kernels etc.</li>
@@ -965,13 +1021,14 @@ results. In <a class="footnote-reference" href="#id5" id="id14">[1]</a> the acep
 
 <dl class="method">
 <dt id="tigramite.independence_tests.GPACE.get_analytic_significance">
-<code class="descname">get_analytic_significance</code><span class="sig-paren">(</span><em>value</em>, <em>df</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#GPACE.get_analytic_significance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.GPACE.get_analytic_significance" title="Permalink to this definition">¶</a></dt>
+<code class="descname">get_analytic_significance</code><span class="sig-paren">(</span><em>value</em>, <em>T</em>, <em>dim</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#GPACE.get_analytic_significance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.GPACE.get_analytic_significance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns p-value for the maximal correlation coefficient.</p>
 <p>The null distribution for necessary degrees of freedom (df) is loaded.
 If not available, the null distribution is generated with the function
-generate_nulldist(). It is recommended to generate the nulldists for a
-wide range of sample sizes beforehand with the script
-&#8220;generate_gpace_nulldist.py&#8221;. The maximal correlation coefficient is
+generate_nulldist(). It can be precomputed with the function
+generate_and_save_nulldists(...) which saves a *.npz file containing the
+null distribution for different sample sizes. This file can then be
+supplied as null_dist_filename. The maximal correlation coefficient is
 one-sided. If the degrees of freedom are less than 1, numpy.nan is
 returned.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -980,7 +1037,8 @@ returned.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>value</strong> (<em>float</em>) &#8211; Test statistic value.</li>
-<li><strong>df</strong> (<em>int</em>) &#8211; degrees of freedom of the test</li>
+<li><strong>T</strong> (<em>int</em>) &#8211; Sample length</li>
+<li><strong>dim</strong> (<em>int</em>) &#8211; Dimensionality, ie, number of features.</li>
 </ul>
 </td>
 </tr>
@@ -1020,44 +1078,23 @@ regression.</p>
 </table>
 </dd></dl>
 
-<dl class="method">
-<dt id="tigramite.independence_tests.GPACE.get_model_selection_criterion">
-<code class="descname">get_model_selection_criterion</code><span class="sig-paren">(</span><em>j</em>, <em>parents</em>, <em>tau_max=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#GPACE.get_model_selection_criterion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.GPACE.get_model_selection_criterion" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns log marginal likelihood for GP regression.</p>
-<p>Fits a GP model of the parents to variable j and returns the negative
-log marginal likelihood as a model selection score. Is used to determine
-optimal hyperparameters in PCMCI, in particular the pc_alpha value.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>j</strong> (<em>int</em>) &#8211; Index of target variable in data array.</li>
-<li><strong>parents</strong> (<em>list</em>) &#8211; List of form [(0, -1), (3, -2), ...] containing parents.</li>
-<li><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em><em></em>) &#8211; Maximum time lag. This may be used to make sure that estimates for
-different lags in X, Z, all have the same sample size.</li>
-<li><strong>Returns</strong> &#8211; </li>
-<li><strong>score</strong> (<em>float</em>) &#8211; Model score.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="class">
 <dt id="tigramite.independence_tests.GPDC">
 <em class="property">class </em><code class="descclassname">tigramite.independence_tests.</code><code class="descname">GPDC</code><span class="sig-paren">(</span><em>null_dist_filename=None</em>, <em>gp_version='new'</em>, <em>gp_kernel=None</em>, <em>gp_alpha=None</em>, <em>gp_restarts=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#GPDC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.GPDC" title="Permalink to this definition">¶</a></dt>
-<dd><p>GPDC conditional independence test.</p>
+<dd><dl class="docutils">
+<dt>GPDC conditional independence test based on Gaussian processes and</dt>
+<dd>distance correlation.</dd>
+</dl>
 <p>GPDC is based on a Gaussian process (GP) regression and a distance
 correlation test on the residuals <a class="footnote-reference" href="#id17" id="id15">[2]</a>. GP is estimated with scikit-learn
 and allows to flexibly specify kernels and hyperparameters or let them be
 optimized automatically. The distance correlation test is implemented with
 cython. Here the null distribution is not analytically available, but can be
-precomputed with the script &#8216;generate_dcorr_nulldist.py&#8217; which generates a
-*.npz file containing the null distribution for different sample sizes.</p>
+precomputed with the function generate_and_save_nulldists(...) which saves a
+*.npz file containing the null distribution for different sample sizes. This
+file can then be supplied as null_dist_filename.</p>
 <p class="rubric">Notes</p>
 <p>GPDC is based on a Gaussian process (GP) regression and a distance
 correlation test on the residuals. Distance correlation is described in
@@ -1090,9 +1127,7 @@ testing dependence by correlation of distances,
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>null_dist_filename</strong> (<em>str</em><em>, </em><em>otional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Path to file containing null distribution. If None is passed, the
-default filename generated by the script &#8220;generate_dcorr_nulldist.py&#8221;
-is used.</li>
+<li><strong>null_dist_filename</strong> (<em>str</em><em>, </em><em>otional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Path to file containing null distribution.</li>
 <li><strong>gp_version</strong> (<em>{'new'</em><em>, </em><em>'old'}</em><em>, </em><em>optional</em><em> (</em><em>default: 'new'</em><em>)</em><em></em>) &#8211; The older GP version from scikit-learn 0.17 was used for the numerical
 simulations in <a class="footnote-reference" href="#id5" id="id18">[1]</a>. The newer version from scikit-learn 0.19 is faster
 and allows more flexibility regarding kernels etc.</li>
@@ -1107,7 +1142,7 @@ noise level in the observations and reduce potential numerical issues
 during fitting. If an array is passed, it must have the same number of
 entries as the data used for fitting and is used as datapoint-dependent
 noise level. Note that this is equivalent to adding a WhiteKernel with
-c=alpha. If None is passed, gp_alpha=1 is used.</li>
+c=alpha. If None is passed, gp_alpha=0.1 is used.</li>
 <li><strong>gp_restarts</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Only available for gp_version=&#8217;new&#8217;. The number of restarts of the
 optimizer for finding the kernel&#8217;s parameters which maximize the log-
 marginal likelihood. The first run of the optimizer is performed from
@@ -1129,14 +1164,14 @@ n_restarts_optimizer=0 is used, implying that one run is performed.</li>
 
 <dl class="method">
 <dt id="tigramite.independence_tests.GPDC.get_analytic_significance">
-<code class="descname">get_analytic_significance</code><span class="sig-paren">(</span><em>value</em>, <em>df</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#GPDC.get_analytic_significance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.GPDC.get_analytic_significance" title="Permalink to this definition">¶</a></dt>
+<code class="descname">get_analytic_significance</code><span class="sig-paren">(</span><em>value</em>, <em>T</em>, <em>dim</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#GPDC.get_analytic_significance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.GPDC.get_analytic_significance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns p-value for the distance correlation coefficient.</p>
 <p>The null distribution for necessary degrees of freedom (df) is loaded.
 If not available, the null distribution is generated with the function
 generate_nulldist(). It is recommended to generate the nulldists for a
-wide range of sample sizes beforehand with the script
-&#8220;generate_gpace_nulldist.py&#8221;.  The distance correlation coefficient is
-one-sided. If the degrees of freedom are less than 1, numpy.nan is
+wide range of sample sizes beforehand with the function
+generate_and_save_nulldists(...). The distance correlation coefficient
+is one-sided. If the degrees of freedom are less than 1, numpy.nan is
 returned.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1144,7 +1179,8 @@ returned.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>value</strong> (<em>float</em>) &#8211; Test statistic value.</li>
-<li><strong>df</strong> (<em>int</em>) &#8211; degrees of freedom of the test</li>
+<li><strong>T</strong> (<em>int</em>) &#8211; Sample length</li>
+<li><strong>dim</strong> (<em>int</em>) &#8211; Dimensionality, ie, number of features.</li>
 </ul>
 </td>
 </tr>
@@ -1178,31 +1214,6 @@ regression.</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="tigramite.independence_tests.GPDC.get_model_selection_criterion">
-<code class="descname">get_model_selection_criterion</code><span class="sig-paren">(</span><em>j</em>, <em>parents</em>, <em>tau_max=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#GPDC.get_model_selection_criterion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.GPDC.get_model_selection_criterion" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns log marginal likelihood for GP regression.</p>
-<p>Fits a GP model of the parents to variable j and returns the negative
-log marginal likelihood as a model selection score. Is used to determine
-optimal hyperparameters in PCMCI, in particular the pc_alpha value.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>j</strong> (<em>int</em>) &#8211; Index of target variable in data array.</li>
-<li><strong>parents</strong> (<em>list</em>) &#8211; List of form [(0, -1), (3, -2), ...] containing parents.</li>
-<li><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em><em></em>) &#8211; Maximum time lag. This may be used to make sure that estimates for
-different lags in X, Z, all have the same sample size.</li>
-<li><strong>Returns</strong> &#8211; </li>
-<li><strong>score</strong> (<em>float</em>) &#8211; Model score.</li>
-</ul>
 </td>
 </tr>
 </tbody>
@@ -1268,7 +1279,7 @@ around each (high-dimensional) sample point.</li>
 
 <dl class="method">
 <dt id="tigramite.independence_tests.CMIknn.get_analytic_significance">
-<code class="descname">get_analytic_significance</code><span class="sig-paren">(</span><em>value</em>, <em>df</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#CMIknn.get_analytic_significance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.CMIknn.get_analytic_significance" title="Permalink to this definition">¶</a></dt>
+<code class="descname">get_analytic_significance</code><span class="sig-paren">(</span><em>value</em>, <em>T</em>, <em>dim</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#CMIknn.get_analytic_significance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.CMIknn.get_analytic_significance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Placeholder function, not available.</p>
 </dd></dl>
 
@@ -1346,7 +1357,7 @@ in data_processing or use the CMIknn class.</p>
 
 <dl class="method">
 <dt id="tigramite.independence_tests.CMIsymb.get_analytic_significance">
-<code class="descname">get_analytic_significance</code><span class="sig-paren">(</span><em>value</em>, <em>df</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#CMIsymb.get_analytic_significance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.CMIsymb.get_analytic_significance" title="Permalink to this definition">¶</a></dt>
+<code class="descname">get_analytic_significance</code><span class="sig-paren">(</span><em>value</em>, <em>T</em>, <em>dim</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#CMIsymb.get_analytic_significance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.CMIsymb.get_analytic_significance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Placeholder function, not available.</p>
 </dd></dl>
 
