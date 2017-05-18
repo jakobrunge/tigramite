@@ -73,7 +73,7 @@ class CondIndTest(object):
         If significance is 'fixed_thres', this specifies the threshold for the 
         absolute value of the dependence measure.
 
-    sig_samples : int, optional (default: 100)
+    sig_samples : int, optional (default: 1000)
         Number of samples for shuffle significance test. 
 
     sig_blocklength : int, optional (default: None)
@@ -110,7 +110,7 @@ class CondIndTest(object):
 
         significance='analytic',
         fixed_thres=0.1,
-        sig_samples=100,
+        sig_samples=1000,
         sig_blocklength=None,
 
         confidence=False,
@@ -918,6 +918,38 @@ class CondIndTest(object):
 
         return pval
 
+    def generate_nulldist(self, df):
+        """Generates null distribution for pairwise independence tests.
+
+        Generates the null distribution for sample size df. Assumes pairwise
+        samples transformed to uniform marginals. Uses get_dependence_measure
+        available in class and generates self.sig_samples random samples. Adds
+        the null distributions to self.null_dists.
+
+        Parameters
+        ----------
+        df : int
+            Degrees of freedom / sample size to generate null distribution for.
+
+        """
+        
+        if self.verbosity > 0:
+            print("Generating null distribution for df = %d. "
+                  "For faster computations, use generate_*_nulldist.py to "
+                  "precompute null distribution and load *.npz file with "
+                  "argument null_dist_filename=... ." % df)
+
+        xyz = numpy.array([0,1])
+        null_dist = numpy.zeros(self.null_samples)
+        for i in range(self.null_samples):
+            array = numpy.random.rand(2, df)
+
+            null_dist[i] = self.get_dependence_measure(array, xyz)
+
+        null_dist.sort()    
+        self.null_dists[df] = null_dist
+
+
 class ParCorr(CondIndTest):
     """Partial correlation test.
 
@@ -1251,16 +1283,16 @@ class GPACE(CondIndTest):
 
         # Load null-dist file, adapt if necessary
         if null_dist_filename is None:
-            if self.ace_version == 'python':
-                null_dist_filename = os.path.join(os.path.dirname(__file__),
-                                      '../gpace_nulldists_purepython.npz')
-            elif self.ace_version == 'acepack':
-                null_dist_filename = os.path.join(os.path.dirname(__file__),
-                                      '../gpace_nulldists_acepack.npz')
-        null_dist_file = numpy.load(null_dist_filename)
-        self.sample_sizes = null_dist_file['T']
-        self.null_dist = null_dist_file['exact_dist']
-        self.null_samples = len(self.null_dist[0])
+            self.null_samples = self.sig_samples
+            self.null_dists = {}
+        else:
+            null_dist_file = numpy.load(null_dist_filename)
+            # self.sample_sizes = null_dist_file['T']
+            self.null_dists = dict(zip(null_dist_file['T'], 
+                                      null_dist_file['exact_dist']))
+            # print self.null_dist
+            self.null_samples = len(self.null_dist_file['exact_dist'][0])
+
 
     def _remove_ties(self, array, verbosity=0):
         """Removes ties from array by adding noise.
@@ -1528,16 +1560,440 @@ class GPACE(CondIndTest):
         if df < 1:
             pval = numpy.nan
         else:
-            idx_near = (numpy.abs(self.sample_sizes - df)).argmin()
+            # idx_near = (numpy.abs(self.sample_sizes - df)).argmin()
 
-            if numpy.abs(self.sample_sizes[idx_near] - df) / float(df) > 0.01:
-                raise ValueError("Null distribution for GPACE not available "
-                             "for deg. of freed. = %d, nearest values "
-                             "= %s." % (int(df), 
-                             self.sample_sizes[max(0,idx_near-1):idx_near+2])+
-                             " Use script to generate nulldist."
-                             "" )
-            null_dist_here = self.null_dist[idx_near]
+            if int(df) not in self.null_dists.keys():
+            # numpy.abs(self.sample_sizes[idx_near] - df) / float(df) > 0.01:
+                if self.verbosity > 0:
+                    print("Null distribution for GPACE not available "
+                             "for deg. of freed. = %d."
+                             "" % df) 
+                self.generate_nulldist(df)
+
+                # raise ValueError("Null distribution for GPACE not available "
+                #              "for deg. of freed. = %d, nearest values "
+                #              "= %s." % (int(df), 
+                #              self.sample_sizes[max(0,idx_near-1):idx_near+2])+
+                #              " Use script to generate nulldist."
+                #              "" )
+            null_dist_here = self.null_dists[df]
+            pval = numpy.mean(null_dist_here > numpy.abs(value))
+
+        return pval
+
+    def get_analytic_confidence(self, value, df, conf_lev):
+        """Placeholder function, not available."""
+        raise ValueError("Analytic confidence not implemented for %s"
+                         "" % self.measure)
+
+    def get_model_selection_criterion(self, j,
+                                      parents,
+                                      tau_max=0):
+        """Returns log marginal likelihood for GP regression.
+        
+        Fits a GP model of the parents to variable j and returns the negative
+        log marginal likelihood as a model selection score. Is used to determine
+        optimal hyperparameters in PCMCI, in particular the pc_alpha value.
+        
+        Parameters
+        ----------
+        j : int
+            Index of target variable in data array.
+
+        parents : list
+            List of form [(0, -1), (3, -2), ...] containing parents.
+
+        tau_max : int, optional (default: 0)
+            Maximum time lag. This may be used to make sure that estimates for
+            different lags in X, Z, all have the same sample size.
+        
+        Returns:
+        score : float
+            Model score.
+        """
+
+        Y = [(j, 0)]
+        X = [(j, 0)]   # dummy variable here
+        Z = parents
+        array, xyz = self._construct_array(
+            X=X, Y=Y, Z=Z,
+            tau_max=tau_max,
+            data=self.data,
+            use_mask=self.use_mask,
+            mask=self.mask,
+            mask_type=self.mask_type,
+            return_cleaned_xyz=False,
+            do_checks=False,
+            verbosity=self.verbosity)
+
+        dim, T = array.shape
+
+        y, logli = self._get_single_residuals(array,
+                            target_var=1, return_likelihood=True)
+
+        score = -logli
+
+        return score
+
+
+class GPDC(CondIndTest):
+    r"""GPDC conditional independence test.
+
+    GPDC is based on a Gaussian process (GP) regression and a distance
+    correlation test on the residuals [2]_. GP is estimated with scikit-learn
+    and allows to flexibly specify kernels and hyperparameters or let them be
+    optimized automatically. The distance correlation test is implemented with
+    cython. Here the null distribution is not analytically available, but can be
+    precomputed with the script 'generate_dcorr_nulldist.py' which generates a
+    \*.npz file containing the null distribution for different sample sizes.
+
+    Notes
+    -----
+    
+    GPDC is based on a Gaussian process (GP) regression and a distance
+    correlation test on the residuals. Distance correlation is described in
+    [2]_. To test :math:`X \perp Y | Z`, first :math:`Z` is regressed out from
+    :math:`X` and :math:`Y` assuming the  model
+
+    .. math::  X & =  f_X(Z) + \epsilon_{X} \\
+        Y & =  f_Y(Z) + \epsilon_{Y}  \\
+        \epsilon_{X,Y} &\sim \mathcal{N}(0, \sigma^2)
+
+    using GP regression. Here :math:`\sigma^2` corresponds to the gp_alpha
+    parameter. Then the residuals  are transformed to uniform
+    marginals yielding :math:`r_X,r_Y` and their dependency is tested with
+
+    .. math::  \mathcal{R}\left(r_X, r_Y\right)
+
+    The null distribution of the distance correlation should be pre-computed.
+    Otherwise it is computed during runtime.
+
+    The cython-code for distance correlation is Copyright (c) 2012, Florian
+    Finkernagel (https://gist.github.com/ffinkernagel/2960386).
+
+    References
+    ----------
+    .. [2] Gabor J. Szekely, Maria L. Rizzo, and Nail K. Bakirov: Measuring and 
+           testing dependence by correlation of distances,
+           https://arxiv.org/abs/0803.4101
+
+    Parameters
+    ----------
+    null_dist_filename : str, otional (default: None)
+        Path to file containing null distribution. If None is passed, the
+        default filename generated by the script "generate_dcorr_nulldist.py"
+        is used.
+
+    gp_version : {'new', 'old'}, optional (default: 'new')
+        The older GP version from scikit-learn 0.17 was used for the numerical
+        simulations in [1]_. The newer version from scikit-learn 0.19 is faster
+        and allows more flexibility regarding kernels etc.
+
+    gp_kernel : kernel object, optional (default: None)
+        Only available for gp_version='new'. Can be any scikit-learn kernel
+        object available in gaussian_process.kernels. The kernel specifies the
+        covariance function of the GP. If None is passed, the kernel '1.0 *
+        RBF(1.0)' is used as default. Note that the kernel's hyperparameters are
+        optimized during fitting.
+
+    gp_alpha :  float or array-like, optional (default: None)
+        Only available for gp_version='new'. Value added to the diagonal of the
+        kernel matrix during fitting. Larger values correspond to increased
+        noise level in the observations and reduce potential numerical issues
+        during fitting. If an array is passed, it must have the same number of
+        entries as the data used for fitting and is used as datapoint-dependent
+        noise level. Note that this is equivalent to adding a WhiteKernel with
+        c=alpha. If None is passed, gp_alpha=1 is used.
+    
+    gp_restarts : int, optional (default: None)
+        Only available for gp_version='new'. The number of restarts of the
+        optimizer for finding the kernel's parameters which maximize the log-
+        marginal likelihood. The first run of the optimizer is performed from
+        the kernel's initial parameters, the remaining ones (if any) from thetas
+        sampled log-uniform randomly from the space of allowed theta-values. If
+        greater than 0, all bounds must be finite. If None is passed,
+        n_restarts_optimizer=0 is used, implying that one run is performed.
+
+    **kwargs : 
+        Arguments passed on to parent class CondIndTest.
+
+    """
+    def __init__(self,
+                null_dist_filename=None,
+                gp_version='new',
+                gp_kernel=None,
+                gp_alpha=None,
+                gp_restarts=None,
+
+                **kwargs):
+
+        CondIndTest.__init__(self, **kwargs)
+
+        self.gp_version = gp_version
+
+        self.gp_kernel = gp_kernel
+        self.gp_alpha = gp_alpha
+        self.gp_restarts = gp_restarts
+
+        self.measure = 'gp_dc'
+        self.two_sided = False
+        self.residual_based = True
+
+        # Load null-dist file, adapt if necessary
+        if null_dist_filename is None:
+            self.null_samples = self.sig_samples
+            self.null_dists = {}
+        else:
+            null_dist_file = numpy.load(null_dist_filename)
+            # self.sample_sizes = null_dist_file['T']
+            self.null_dists = dict(zip(null_dist_file['T'], 
+                                      null_dist_file['exact_dist']))
+            # print self.null_dist
+            self.null_samples = len(self.null_dist_file['exact_dist'][0])
+
+    
+    # @profile
+    def _get_single_residuals(self, array, target_var,
+                              return_means=False, 
+                              standardize=True,
+                              return_likelihood=False):
+        """Returns residuals of Gaussian process regression.
+
+        Performs a GP regression of the variable indexed by target_var on the
+        conditions Z. Here array is assumed to contain X and Y as the first two
+        rows with the remaining rows (if present) containing the conditions Z.
+        Optionally returns the estimated mean and the likelihood.
+
+        Parameters
+        ----------
+        array : array-like
+            data array with X, Y, Z in rows and observations in columns
+
+        target_var : {0, 1}
+            Variable to regress out conditions from.
+
+        standardize : bool, optional (default: True)
+            Whether to standardize the array beforehand.
+
+        return_means : bool, optional (default: False)
+            Whether to return the estimated regression line.
+
+        return_likelihood : bool, optional (default: False)
+            Whether to return the log_marginal_likelihood of the fitted GP
+
+        Returns
+        -------
+        resid [, mean, likelihood] : array-like
+            The residual of the regression and optionally the estimated mean
+            and/or the likelihood.
+        """
+
+        dim, T = array.shape
+
+        if dim <= 2:
+            if return_likelihood:
+                return array[target_var, :], -numpy.inf
+            else:
+                return array[target_var, :]
+
+        # Standardize
+        if standardize:
+            array -= array.mean(axis=1).reshape(dim, 1)
+            array /= array.std(axis=1).reshape(dim, 1)
+            if numpy.isnan(array).sum() != 0:
+                raise ValueError("nans after standardizing, "
+                                 "possibly constant array!")
+
+        var = array[target_var, :]
+        z = numpy.fastCopyAndTranspose(array[2:])
+        if numpy.ndim(z) == 1:
+            z = z.reshape(-1, 1)
+
+        if self.gp_version == 'old':
+            # Old GP failed for ties in the data
+            z += 1E-10 * numpy.random.rand(*z.shape)
+
+            gp = gaussian_process.GaussianProcess(
+                nugget=1E-1,
+                thetaL=1E-16,
+                thetaU=numpy.inf,
+                corr='squared_exponential',
+                optimizer='fmin_cobyla',
+                regr='constant',
+                normalize=False,
+                storage_mode='light')
+
+        elif self.gp_version == 'new':
+            if self.gp_kernel is None:
+                self.gp_kernel = gaussian_process.kernels.RBF(
+                    length_scale=1.0,
+                    # length_scale_bounds=(1E-16, numpy.inf)  #(1e-05, 100000.0)
+                    )
+            if self.gp_alpha is None:
+                self.gp_alpha = 0.1
+            if self.gp_restarts is None:
+                self.gp_restarts = 0
+
+            gp = gaussian_process.GaussianProcessRegressor(
+                kernel=self.gp_kernel,
+                alpha=self.gp_alpha,
+                optimizer='fmin_l_bfgs_b',  
+                n_restarts_optimizer=self.gp_restarts,
+                normalize_y=False,
+                copy_X_train=True,
+                random_state=None)
+
+        gp.fit(z, var.reshape(-1, 1))
+
+        if return_likelihood:
+            likelihood = gp.log_marginal_likelihood()
+
+        mean = gp.predict(z).squeeze()
+
+        resid = var - mean
+
+        if return_means and return_likelihood==False:
+            return (resid, mean)
+        elif return_means==False and return_likelihood:
+            return (resid, likelihood)
+        elif return_means and return_likelihood:
+            return resid, mean, likelihood
+        else:
+            return resid
+
+    def get_dependence_measure(self, array, xyz):
+        """Return GPDC measure.
+
+        Estimated as the distance correlation of the residuals of a GP
+        regression.
+
+        Parameters
+        ----------
+        array : array-like
+            data array with X, Y, Z in rows and observations in columns
+
+        xyz : array of ints
+            XYZ identifier array of shape (dim,).
+
+        Returns
+        -------
+        val : float
+            GPDC test statistic.    
+        """
+
+        D, T = array.shape
+
+        x = self._get_single_residuals(array, target_var=0)
+        y = self._get_single_residuals(array, target_var=1)
+
+        val = self._get_dcorr(numpy.array([x, y]))
+
+        return val
+
+    def _trafo2uniform(self, x):
+        """Transforms input array to uniform marginals. 
+
+        Assumes x.shape = (dim, T)
+
+        Parameters
+        ----------
+        x : array-like
+            Input array.
+
+        Returns
+        -------
+        u : array-like
+            array with uniform marginals.
+        """
+
+        def trafo(xi):
+            xisorted = numpy.sort(xi)
+            yi = numpy.linspace(1. / len(xi), 1, len(xi))
+            return numpy.interp(xi, xisorted, yi)
+
+        if numpy.ndim(x) == 1:
+            u = trafo(x)
+        else:
+            u = numpy.empty(x.shape)
+            for i in range(x.shape[0]):
+                u[i] = trafo(x[i])
+        return u
+
+    # @profile
+    def _get_dcorr(self, array_resid):
+        """Return distance correlation coefficient.
+        
+        The variables are transformed to uniform marginals using the empirical
+        cumulative distribution function beforehand. Here the null distribution
+        is not analytically available, but can be precomputed with the script
+        'generate_dcorr_nulldist.py' which generates a \*.npz file containing
+        the null distribution.
+
+        Parameters 
+        ---------- 
+        array_resid : array-like     
+            data array must be of shape (2, T)
+
+        Returns
+        -------
+        val : float
+            Distance correlation coefficient.
+        """
+
+        # Remove ties before applying transformation to uniform marginals
+        # array_resid = self._remove_ties(array_resid, verbosity=4)
+
+        x, y = self._trafo2uniform(array_resid)
+
+        dc, val, dvx, dvy = tigramite_cython_code.dcov_all(x, y)
+        
+        return val
+
+
+    def get_analytic_significance(self, value, df):
+        """Returns p-value for the distance correlation coefficient.
+        
+        The null distribution is loaded and the entry for the nearest available
+        degrees of freedom (df) is used. If it is different by more than 1% from
+        the actual sample size, an error is raised. Then the null distribution
+        has to be generated with the script "generate_dcorr_nulldist.py". The
+        distance correlation coefficient is one-sided. If the degrees of freedom
+        are less than 1, numpy.nan is returned.
+        
+        Parameters
+        ----------
+        value : float
+            Test statistic value.
+
+        df : int
+            degrees of freedom of the test, given by T - dim
+
+        Returns
+        -------
+        pval : float or numpy.nan
+            P-value.
+        """
+
+        if df < 1:
+            pval = numpy.nan
+        else:
+            # idx_near = (numpy.abs(self.sample_sizes - df)).argmin()
+            if int(df) not in self.null_dists.keys():
+            # if numpy.abs(self.sample_sizes[idx_near] - df) / float(df) > 0.01:
+                if self.verbosity > 0:
+                    print("Null distribution for GPDC not available "
+                             "for deg. of freed. = %d."
+                             "" % df) 
+                    
+                self.generate_nulldist(df)
+
+                # raise ValueError("Null distribution for GPDC not available "
+                #              "for deg. of freed. = %d, nearest values "
+                #              "= %s." % (int(df), 
+                #              self.sample_sizes[max(0,idx_near-1):idx_near+2])+
+                #              " Use script to generate nulldist."
+                #              "" )
+            null_dist_here = self.null_dists[int(df)]
             pval = numpy.mean(null_dist_here > numpy.abs(value))
 
         return pval
@@ -2015,16 +2471,15 @@ if __name__ == '__main__':
     # numpy.random.seed(44)
     a = 0.
     c = 0.6
-    T = 1000
+    T = 258
     # Each key refers to a variable and the incoming links are supplied as a
     # list of format [((driver, lag), coeff), ...]
     links_coeffs = {0: [((0, -1), a)],
                     1: [((1, -1), a), ((0, -1), c)],
-                    2: [((2, -1), a), ((1, -1), c)]   #, ((0, -2), c)],
+                    2: [((2, -1), a), ((1, -1), c)],
                     }
 
-    data, true_parents_neighbors = pp.var_process(links_coeffs,
-                                                  use='inv_inno_cov', T=T)
+    data, true_parents_neighbors = pp.var_process(links_coeffs, T=T)
 
     data_mask = numpy.zeros(data.shape)
 
@@ -2042,14 +2497,37 @@ if __name__ == '__main__':
     #     recycle_residuals=False,
     #     verbosity=3)
 
-    # cond_ind_test = GPACE(
-    #     significance='shuffle_test',
-    #     sig_samples=100,
+
+    cond_ind_test = GPACE(
+        significance='analytic',
+        sig_samples=100,
+
+        confidence=False, # False  'bootstrap',
+        conf_lev=0.9,
+        conf_samples=100,
+        conf_blocklength=None,
+
+        use_mask=False,
+        mask_type=['y'],
+
+        null_dist_filename=None,
+        gp_version='new',
+        gp_kernel=None,
+        gp_alpha=None,
+        gp_restarts=None,
+        ace_version='acepack',
+        recycle_residuals=False,
+        verbosity=4)
+
+    # cond_ind_test = GPDC(
+    #     significance='analytic',
+    #     sig_samples=1000,
+    #     sig_blocklength=1,
 
     #     confidence=False, # False  'bootstrap',
     #     conf_lev=0.9,
     #     conf_samples=100,
-    #     conf_blocklength=None,
+    #     conf_blocklength=1,
 
     #     use_mask=False,
     #     mask_type=['y'],
@@ -2059,7 +2537,7 @@ if __name__ == '__main__':
     #     gp_kernel=None,
     #     gp_alpha=None,
     #     gp_restarts=None,
-    #     ace_version='acepack',
+
     #     recycle_residuals=False,
     #     verbosity=4)
 
@@ -2078,7 +2556,7 @@ if __name__ == '__main__':
         # recycle_residuals=False,
         # verbosity=3)
 
-    cond_ind_test = CMIsymb()
+    # cond_ind_test = CMIsymb()
     #     significance='shuffle_test',
     #     sig_samples=1000,
 
@@ -2104,5 +2582,6 @@ if __name__ == '__main__':
     val, pval = cond_ind_test.run_test(X, Y, Z, tau_max=5)
     conf_interval = cond_ind_test.get_confidence(X, Y, Z, tau_max=5)
 
-    print ("I(X,Y|Z) = %.2f [%.2f, %.2f] | p-value = %.3f " % 
-                      (val, conf_interval[0], conf_interval[1], pval))
+    print ("I(X,Y|Z) = %.2f | p-value = %.3f " % (val, pval))
+    if conf_interval is not None:
+        print "[%.2f, %.2f]" % conf_interval

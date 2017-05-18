@@ -1379,7 +1379,7 @@ class PCMCI():
 if __name__ == '__main__':
 
     import data_processing as pp
-    from independence_tests import ParCorr, GPACE, CMIknn, CMIsymb
+    from independence_tests import ParCorr, GPACE, GPDC, CMIknn, CMIsymb
 
     # numpy.random.seed(40)
     # Example process to play around with
@@ -1387,7 +1387,7 @@ if __name__ == '__main__':
     c1 = .8
     c2 = -.8
     c3 = .8
-    T = 2500
+    T = 500
 
     # Each key refers to a variable and the incoming links are supplied as a
     # list of format [((driver, lag), coeff), ...]
@@ -1421,21 +1421,21 @@ if __name__ == '__main__':
     # dataframe = pd.DataFrame(data)
     # dataframe.mask = data_mask
 
-    cond_ind_test = ParCorr(
-        significance='analytic',
-        fixed_thres=0.05,
-        sig_samples=100,
+    # cond_ind_test = ParCorr(
+    #     significance='analytic',
+    #     fixed_thres=0.05,
+    #     sig_samples=100,
 
-        use_mask=False,
-        mask_type=['x','y', 'z'],  #  ['x','y','z'],
+    #     use_mask=False,
+    #     mask_type=['x','y', 'z'],  #  ['x','y','z'],
 
-        confidence='analytic',
-        conf_lev=0.9,
-        conf_samples=200,
-        conf_blocklength=10,
+    #     confidence='analytic',
+    #     conf_lev=0.9,
+    #     conf_samples=200,
+    #     conf_blocklength=10,
 
-        recycle_residuals=False,
-        verbosity=verbosity)
+    #     recycle_residuals=False,
+    #     verbosity=verbosity)
 
     # cond_ind_test = GPACE(
     #     significance='analytic',
@@ -1454,20 +1454,38 @@ if __name__ == '__main__':
     #     ace_version='acepack',
     #     recycle_residuals=False,
     #     verbosity=verbosity)
-    cond_ind_test = CMIsymb(
-        significance='shuffle_test',
-        sig_samples=1000,
-        sig_blocklength=10,
 
-        confidence='bootstrap', #'bootstrap',
-        conf_lev=0.9,
-        conf_samples=100,
-        conf_blocklength=10,
+    cond_ind_test = GPDC(
+        significance='analytic',
+        fixed_thres=0.05,
+        sig_samples=1000,
 
         use_mask=False,
         mask_type=['y'],
+
+        confidence=False,
+        conf_lev=0.9,
+        conf_samples=200,
+        conf_blocklength=None,
+
+        gp_version='new',
         recycle_residuals=False,
-        verbosity=3)
+        verbosity=verbosity)
+
+    # cond_ind_test = CMIsymb(
+    #     significance='shuffle_test',
+    #     sig_samples=1000,
+    #     sig_blocklength=10,
+
+    #     confidence='bootstrap', #'bootstrap',
+    #     conf_lev=0.9,
+    #     conf_samples=100,
+    #     conf_blocklength=10,
+
+    #     use_mask=False,
+    #     mask_type=['y'],
+    #     recycle_residuals=False,
+    #     verbosity=3)
 
     if cond_ind_test.measure == 'cmi_symb':
         dataframe.values = pp.quantile_bin_array(dataframe.values, bins=3)

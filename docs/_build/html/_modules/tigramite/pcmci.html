@@ -1443,7 +1443,7 @@
 <span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
 
     <span class="kn">import</span> <span class="nn">data_processing</span> <span class="k">as</span> <span class="nn">pp</span>
-    <span class="kn">from</span> <span class="nn">independence_tests</span> <span class="k">import</span> <span class="n">ParCorr</span><span class="p">,</span> <span class="n">GPACE</span><span class="p">,</span> <span class="n">CMIknn</span><span class="p">,</span> <span class="n">CMIsymb</span>
+    <span class="kn">from</span> <span class="nn">independence_tests</span> <span class="k">import</span> <span class="n">ParCorr</span><span class="p">,</span> <span class="n">GPACE</span><span class="p">,</span> <span class="n">GPDC</span><span class="p">,</span> <span class="n">CMIknn</span><span class="p">,</span> <span class="n">CMIsymb</span>
 
     <span class="c1"># numpy.random.seed(40)</span>
     <span class="c1"># Example process to play around with</span>
@@ -1451,7 +1451,7 @@
     <span class="n">c1</span> <span class="o">=</span> <span class="o">.</span><span class="mi">8</span>
     <span class="n">c2</span> <span class="o">=</span> <span class="o">-.</span><span class="mi">8</span>
     <span class="n">c3</span> <span class="o">=</span> <span class="o">.</span><span class="mi">8</span>
-    <span class="n">T</span> <span class="o">=</span> <span class="mi">2500</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="mi">500</span>
 
     <span class="c1"># Each key refers to a variable and the incoming links are supplied as a</span>
     <span class="c1"># list of format [((driver, lag), coeff), ...]</span>
@@ -1485,21 +1485,21 @@
     <span class="c1"># dataframe = pd.DataFrame(data)</span>
     <span class="c1"># dataframe.mask = data_mask</span>
 
-    <span class="n">cond_ind_test</span> <span class="o">=</span> <span class="n">ParCorr</span><span class="p">(</span>
-        <span class="n">significance</span><span class="o">=</span><span class="s1">&#39;analytic&#39;</span><span class="p">,</span>
-        <span class="n">fixed_thres</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
-        <span class="n">sig_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="c1"># cond_ind_test = ParCorr(</span>
+    <span class="c1">#     significance=&#39;analytic&#39;,</span>
+    <span class="c1">#     fixed_thres=0.05,</span>
+    <span class="c1">#     sig_samples=100,</span>
 
-        <span class="n">use_mask</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">mask_type</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">],</span>  <span class="c1">#  [&#39;x&#39;,&#39;y&#39;,&#39;z&#39;],</span>
+    <span class="c1">#     use_mask=False,</span>
+    <span class="c1">#     mask_type=[&#39;x&#39;,&#39;y&#39;, &#39;z&#39;],  #  [&#39;x&#39;,&#39;y&#39;,&#39;z&#39;],</span>
 
-        <span class="n">confidence</span><span class="o">=</span><span class="s1">&#39;analytic&#39;</span><span class="p">,</span>
-        <span class="n">conf_lev</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
-        <span class="n">conf_samples</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
-        <span class="n">conf_blocklength</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="c1">#     confidence=&#39;analytic&#39;,</span>
+    <span class="c1">#     conf_lev=0.9,</span>
+    <span class="c1">#     conf_samples=200,</span>
+    <span class="c1">#     conf_blocklength=10,</span>
 
-        <span class="n">recycle_residuals</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">verbosity</span><span class="o">=</span><span class="n">verbosity</span><span class="p">)</span>
+    <span class="c1">#     recycle_residuals=False,</span>
+    <span class="c1">#     verbosity=verbosity)</span>
 
     <span class="c1"># cond_ind_test = GPACE(</span>
     <span class="c1">#     significance=&#39;analytic&#39;,</span>
@@ -1518,20 +1518,38 @@
     <span class="c1">#     ace_version=&#39;acepack&#39;,</span>
     <span class="c1">#     recycle_residuals=False,</span>
     <span class="c1">#     verbosity=verbosity)</span>
-    <span class="n">cond_ind_test</span> <span class="o">=</span> <span class="n">CMIsymb</span><span class="p">(</span>
-        <span class="n">significance</span><span class="o">=</span><span class="s1">&#39;shuffle_test&#39;</span><span class="p">,</span>
-        <span class="n">sig_samples</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
-        <span class="n">sig_blocklength</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
 
-        <span class="n">confidence</span><span class="o">=</span><span class="s1">&#39;bootstrap&#39;</span><span class="p">,</span> <span class="c1">#&#39;bootstrap&#39;,</span>
-        <span class="n">conf_lev</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
-        <span class="n">conf_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-        <span class="n">conf_blocklength</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">cond_ind_test</span> <span class="o">=</span> <span class="n">GPDC</span><span class="p">(</span>
+        <span class="n">significance</span><span class="o">=</span><span class="s1">&#39;analytic&#39;</span><span class="p">,</span>
+        <span class="n">fixed_thres</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+        <span class="n">sig_samples</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
 
         <span class="n">use_mask</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">mask_type</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span>
+
+        <span class="n">confidence</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">conf_lev</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
+        <span class="n">conf_samples</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+        <span class="n">conf_blocklength</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+
+        <span class="n">gp_version</span><span class="o">=</span><span class="s1">&#39;new&#39;</span><span class="p">,</span>
         <span class="n">recycle_residuals</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">verbosity</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">verbosity</span><span class="o">=</span><span class="n">verbosity</span><span class="p">)</span>
+
+    <span class="c1"># cond_ind_test = CMIsymb(</span>
+    <span class="c1">#     significance=&#39;shuffle_test&#39;,</span>
+    <span class="c1">#     sig_samples=1000,</span>
+    <span class="c1">#     sig_blocklength=10,</span>
+
+    <span class="c1">#     confidence=&#39;bootstrap&#39;, #&#39;bootstrap&#39;,</span>
+    <span class="c1">#     conf_lev=0.9,</span>
+    <span class="c1">#     conf_samples=100,</span>
+    <span class="c1">#     conf_blocklength=10,</span>
+
+    <span class="c1">#     use_mask=False,</span>
+    <span class="c1">#     mask_type=[&#39;y&#39;],</span>
+    <span class="c1">#     recycle_residuals=False,</span>
+    <span class="c1">#     verbosity=3)</span>
 
     <span class="k">if</span> <span class="n">cond_ind_test</span><span class="o">.</span><span class="n">measure</span> <span class="o">==</span> <span class="s1">&#39;cmi_symb&#39;</span><span class="p">:</span>
         <span class="n">dataframe</span><span class="o">.</span><span class="n">values</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">quantile_bin_array</span><span class="p">(</span><span class="n">dataframe</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>

@@ -4,7 +4,7 @@ import numpy
 # import sys, os
 # sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from tigramite.independence_tests import ParCorr, GPACE, CMIknn, CMIsymb
+from tigramite.independence_tests import ParCorr, GPACE, GPDC, CMIknn, CMIsymb
 import tigramite.data_processing as pp
 
 import nose
@@ -57,6 +57,25 @@ class TestCondInd():  #unittest.TestCase):
                            verbosity=0)
 
        self.ci_gpace = GPACE(
+                            significance='analytic',
+                            sig_samples=100,
+                            sig_blocklength=1,
+
+                            confidence='bootstrap', 
+                            conf_lev=0.9,
+                            conf_samples=100,
+                            conf_blocklength=None,
+
+                            use_mask=False,
+                            mask_type=['y'],
+                            gp_version='new',
+                            gp_kernel=None,
+                            gp_alpha=None,
+                            gp_restarts=None,
+                            recycle_residuals=False,
+                            verbosity=0)
+
+       self.ci_gpdc = GPDC(
                             significance='analytic',
                             sig_samples=100,
                             sig_blocklength=1,
@@ -384,6 +403,30 @@ class TestCondInd():  #unittest.TestCase):
                                    numpy.array(pval_shuffle),
                                    atol=0.05)
 
+
+    def test_shuffle_vs_analytic_significance_gpdc(self):
+
+        cov = numpy.array([[1., 0.2], [0.2, 1.]])
+        array = numpy.random.multivariate_normal(mean=numpy.zeros(2),
+                        cov=cov, size=245).T
+
+        dim, T = array.shape
+        xyz = numpy.array([0,1])
+
+        val = self.ci_gpdc.get_dependence_measure(array, xyz)
+
+        pval_ana = self.ci_gpdc.get_analytic_significance(value=val,
+                                                             df=T)
+
+        pval_shuffle = self.ci_gpdc.get_shuffle_significance(array, xyz,
+                               val)
+
+        print pval_ana
+        print pval_shuffle
+
+        numpy.testing.assert_allclose(numpy.array(pval_ana), 
+                                   numpy.array(pval_shuffle),
+                                   atol=0.05)
 
     def test_cmi_knn(self):
 

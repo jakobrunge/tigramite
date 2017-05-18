@@ -510,7 +510,7 @@ and optionally q_matrix and conf_matrix which is of shape
 <p>Base class:</p>
 <dl class="class">
 <dt id="tigramite.independence_tests.CondIndTest">
-<em class="property">class </em><code class="descclassname">tigramite.independence_tests.</code><code class="descname">CondIndTest</code><span class="sig-paren">(</span><em>use_mask=False</em>, <em>mask_type=None</em>, <em>significance='analytic'</em>, <em>fixed_thres=0.1</em>, <em>sig_samples=100</em>, <em>sig_blocklength=None</em>, <em>confidence=False</em>, <em>conf_lev=0.9</em>, <em>conf_samples=100</em>, <em>conf_blocklength=None</em>, <em>recycle_residuals=False</em>, <em>verbosity=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#CondIndTest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.CondIndTest" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">tigramite.independence_tests.</code><code class="descname">CondIndTest</code><span class="sig-paren">(</span><em>use_mask=False</em>, <em>mask_type=None</em>, <em>significance='analytic'</em>, <em>fixed_thres=0.1</em>, <em>sig_samples=1000</em>, <em>sig_blocklength=None</em>, <em>confidence=False</em>, <em>conf_lev=0.9</em>, <em>conf_samples=100</em>, <em>conf_blocklength=None</em>, <em>recycle_residuals=False</em>, <em>verbosity=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#CondIndTest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.CondIndTest" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class of conditional independence tests.</p>
 <p>Provides useful general functions for different independence tests such as
 shuffle significance testing and bootstrap confidence estimation. Also
@@ -530,7 +530,7 @@ values. Explained in <a class="footnote-reference" href="#id5" id="id7">[1]</a>.
 &#8216;fixed_thres&#8217; and &#8216;shuffle_test&#8217; are available.</li>
 <li><strong>fixed_thres</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.1</em><em>)</em><em></em>) &#8211; If significance is &#8216;fixed_thres&#8217;, this specifies the threshold for the
 absolute value of the dependence measure.</li>
-<li><strong>sig_samples</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 100</em><em>)</em><em></em>) &#8211; Number of samples for shuffle significance test.</li>
+<li><strong>sig_samples</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1000</em><em>)</em><em></em>) &#8211; Number of samples for shuffle significance test.</li>
 <li><strong>sig_blocklength</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Block length for block-shuffle significance test. If None, the
 block length is determined from the decay of the autocovariance as
 explained in <a class="footnote-reference" href="#id5" id="id8">[1]</a>.</li>
@@ -549,6 +549,24 @@ can cost considerable memory.</li>
 </tr>
 </tbody>
 </table>
+<dl class="method">
+<dt id="tigramite.independence_tests.CondIndTest.generate_nulldist">
+<code class="descname">generate_nulldist</code><span class="sig-paren">(</span><em>df</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#CondIndTest.generate_nulldist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.CondIndTest.generate_nulldist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates null distribution for pairwise independence tests.</p>
+<p>Generates the null distribution for sample size df. Assumes pairwise
+samples transformed to uniform marginals. Uses get_dependence_measure
+available in class and generates self.sig_samples random samples. Adds
+the null distributions to self.null_dists.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>df</strong> (<em>int</em>) &#8211; Degrees of freedom / sample size to generate null distribution for.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="method">
 <dt id="tigramite.independence_tests.CondIndTest.get_bootstrap_confidence">
 <code class="descname">get_bootstrap_confidence</code><span class="sig-paren">(</span><em>array</em>, <em>xyz</em>, <em>dependence_measure</em>, <em>conf_samples=100</em>, <em>conf_blocklength=None</em>, <em>conf_lev=0.95</em>, <em>verbosity=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#CondIndTest.get_bootstrap_confidence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.CondIndTest.get_bootstrap_confidence" title="Permalink to this definition">¶</a></dt>
