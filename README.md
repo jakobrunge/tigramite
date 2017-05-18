@@ -28,13 +28,13 @@ TIGRAMITE is a time series analysis python module. With flexibly adaptable scrip
 
 - numpy, tested with Version 1.10
 - scipy, tested with Version 0.17
-- sklearn, tested with Version 0.18 (optional, necessary for GPACE test)
+- sklearn, tested with Version 0.18 (optional, necessary for GPDC and GPACE tests)
 - ace python package (https://pypi.python.org/pypi/ace/0.3) OR rpy2 and R-package 'acepack' (optional, necessary for GPACE test)
 - matplotlib, tested with Version 1.5
 - networkx, tested with Version 1.10
 - basemap (only if plotting on a map is needed)
 - mpi4py (optional, necessary for using the parallelized implementation)
-- cython (optional, necessary for CMIknn test)
+- cython (optional, necessary for CMIknn and GPDC tests)
 - statsmodels, tested with Version 0.6 (optional, necessary for p-value corrections)
 
 
@@ -44,7 +44,7 @@ python setup.py install
 
 This will install tigramite in your path.
 
-To use just the ParCorr, CMIknn and CMIsymb independence tests, only numpy and scipy are required. For CMIknn cython can optionally be used for compilation, otherwise the provided *.c file is used. 
+To use just the ParCorr and  CMIsymb independence tests, only numpy and scipy are required. For CMIknn, cython can optionally be used for compilation, otherwise the provided *.c file is used. GPDC also is based on cython, and additionally, sklearn is required for Gaussian Process regression.
 
 GPACE requires more work: Firstly, sklearn is required for Gaussian Process regression. Secondly, either the python package 'ace' or the R-package 'acepack' are required for the ACE estimator. The R-package version is much faster. 'ace' can be installed via pip install ace. 'acepack' has to be installed in R first, and can then be accessed by tigramite using the rpy2-interface. Note that GPACE relies on a pre-computed null-distribution stored in a *.npz file. A null distribution has to be computed for each sample size (like a critical value table). To generate the *.npz file, the script generate_gpace_nulldist.py can be used.
 

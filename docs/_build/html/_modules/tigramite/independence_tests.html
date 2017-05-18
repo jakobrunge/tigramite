@@ -1135,7 +1135,7 @@
 <span class="sd">            Test statistic value.</span>
 
 <span class="sd">        df : int</span>
-<span class="sd">            degrees of freedom of the test, given by T - dim</span>
+<span class="sd">            degrees of freedom of the test</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1163,7 +1163,7 @@
 <span class="sd">            Test statistic value.</span>
 
 <span class="sd">        df : int</span>
-<span class="sd">            degrees of freedom of the test, given by T - dim</span>
+<span class="sd">            degrees of freedom of the test</span>
 
 <span class="sd">        conf_lev : float</span>
 <span class="sd">            Confidence interval, eg, 0.9</span>
@@ -1600,12 +1600,13 @@
 <div class="viewcode-block" id="GPACE.get_analytic_significance"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GPACE.get_analytic_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">df</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns p-value for the maximal correlation coefficient.</span>
 <span class="sd">        </span>
-<span class="sd">        The null distribution is loaded and the entry for the nearest available</span>
-<span class="sd">        degrees of freedom (df) is used. If it is different by more than 1% from</span>
-<span class="sd">        the actual sample size, an error is raised. Then the null distribution</span>
-<span class="sd">        has to be generated with the script &quot;generate_gpace_nulldist.py&quot;. The</span>
-<span class="sd">        maximal correlation coefficient is one-sided. If the degrees of freedom</span>
-<span class="sd">        are less than 1, numpy.nan is returned.</span>
+<span class="sd">        The null distribution for necessary degrees of freedom (df) is loaded.</span>
+<span class="sd">        If not available, the null distribution is generated with the function</span>
+<span class="sd">        generate_nulldist(). It is recommended to generate the nulldists for a</span>
+<span class="sd">        wide range of sample sizes beforehand with the script</span>
+<span class="sd">        &quot;generate_gpace_nulldist.py&quot;. The maximal correlation coefficient is</span>
+<span class="sd">        one-sided. If the degrees of freedom are less than 1, numpy.nan is</span>
+<span class="sd">        returned.</span>
 <span class="sd">        </span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1613,7 +1614,7 @@
 <span class="sd">            Test statistic value.</span>
 
 <span class="sd">        df : int</span>
-<span class="sd">            degrees of freedom of the test, given by T - dim</span>
+<span class="sd">            degrees of freedom of the test</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1700,7 +1701,7 @@
         <span class="k">return</span> <span class="n">score</span></div></div>
 
 
-<span class="k">class</span> <span class="nc">GPDC</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
+<div class="viewcode-block" id="GPDC"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GPDC">[docs]</a><span class="k">class</span> <span class="nc">GPDC</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
     <span class="sd">r&quot;&quot;&quot;GPDC conditional independence test.</span>
 
 <span class="sd">    GPDC is based on a Gaussian process (GP) regression and a distance</span>
@@ -1925,7 +1926,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">resid</span>
 
-    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">):</span>
+<div class="viewcode-block" id="GPDC.get_dependence_measure"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GPDC.get_dependence_measure">[docs]</a>    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return GPDC measure.</span>
 
 <span class="sd">        Estimated as the distance correlation of the residuals of a GP</span>
@@ -1952,7 +1953,7 @@
 
         <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dcorr</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]))</span>
 
-        <span class="k">return</span> <span class="n">val</span>
+        <span class="k">return</span> <span class="n">val</span></div>
 
     <span class="k">def</span> <span class="nf">_trafo2uniform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Transforms input array to uniform marginals. </span>
@@ -2014,15 +2015,16 @@
         <span class="k">return</span> <span class="n">val</span>
 
 
-    <span class="k">def</span> <span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">df</span><span class="p">):</span>
+<div class="viewcode-block" id="GPDC.get_analytic_significance"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GPDC.get_analytic_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">df</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns p-value for the distance correlation coefficient.</span>
 <span class="sd">        </span>
-<span class="sd">        The null distribution is loaded and the entry for the nearest available</span>
-<span class="sd">        degrees of freedom (df) is used. If it is different by more than 1% from</span>
-<span class="sd">        the actual sample size, an error is raised. Then the null distribution</span>
-<span class="sd">        has to be generated with the script &quot;generate_dcorr_nulldist.py&quot;. The</span>
-<span class="sd">        distance correlation coefficient is one-sided. If the degrees of freedom</span>
-<span class="sd">        are less than 1, numpy.nan is returned.</span>
+<span class="sd">        The null distribution for necessary degrees of freedom (df) is loaded.</span>
+<span class="sd">        If not available, the null distribution is generated with the function</span>
+<span class="sd">        generate_nulldist(). It is recommended to generate the nulldists for a</span>
+<span class="sd">        wide range of sample sizes beforehand with the script</span>
+<span class="sd">        &quot;generate_gpace_nulldist.py&quot;.  The distance correlation coefficient is</span>
+<span class="sd">        one-sided. If the degrees of freedom are less than 1, numpy.nan is</span>
+<span class="sd">        returned.</span>
 <span class="sd">        </span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -2030,7 +2032,7 @@
 <span class="sd">            Test statistic value.</span>
 
 <span class="sd">        df : int</span>
-<span class="sd">            degrees of freedom of the test, given by T - dim</span>
+<span class="sd">            degrees of freedom of the test</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -2060,14 +2062,14 @@
             <span class="n">null_dist_here</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">null_dists</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">df</span><span class="p">)]</span>
             <span class="n">pval</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">null_dist_here</span> <span class="o">&gt;</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
 
-        <span class="k">return</span> <span class="n">pval</span>
+        <span class="k">return</span> <span class="n">pval</span></div>
 
-    <span class="k">def</span> <span class="nf">get_analytic_confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">conf_lev</span><span class="p">):</span>
+<div class="viewcode-block" id="GPDC.get_analytic_confidence"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GPDC.get_analytic_confidence">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">conf_lev</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Placeholder function, not available.&quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Analytic confidence not implemented for </span><span class="si">%s</span><span class="s2">&quot;</span>
-                         <span class="s2">&quot;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span><span class="p">)</span>
+                         <span class="s2">&quot;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span>
+<div class="viewcode-block" id="GPDC.get_model_selection_criterion"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GPDC.get_model_selection_criterion">[docs]</a>    <span class="k">def</span> <span class="nf">get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span>
                                       <span class="n">parents</span><span class="p">,</span>
                                       <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns log marginal likelihood for GP regression.</span>
@@ -2114,7 +2116,7 @@
 
         <span class="n">score</span> <span class="o">=</span> <span class="o">-</span><span class="n">logli</span>
 
-        <span class="k">return</span> <span class="n">score</span>
+        <span class="k">return</span> <span class="n">score</span></div></div>
 
 
 <div class="viewcode-block" id="CMIknn"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.CMIknn">[docs]</a><span class="k">class</span> <span class="nc">CMIknn</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>

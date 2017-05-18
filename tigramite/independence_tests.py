@@ -1071,7 +1071,7 @@ class ParCorr(CondIndTest):
             Test statistic value.
 
         df : int
-            degrees of freedom of the test, given by T - dim
+            degrees of freedom of the test
 
         Returns
         -------
@@ -1099,7 +1099,7 @@ class ParCorr(CondIndTest):
             Test statistic value.
 
         df : int
-            degrees of freedom of the test, given by T - dim
+            degrees of freedom of the test
 
         conf_lev : float
             Confidence interval, eg, 0.9
@@ -1536,12 +1536,13 @@ class GPACE(CondIndTest):
     def get_analytic_significance(self, value, df):
         """Returns p-value for the maximal correlation coefficient.
         
-        The null distribution is loaded and the entry for the nearest available
-        degrees of freedom (df) is used. If it is different by more than 1% from
-        the actual sample size, an error is raised. Then the null distribution
-        has to be generated with the script "generate_gpace_nulldist.py". The
-        maximal correlation coefficient is one-sided. If the degrees of freedom
-        are less than 1, numpy.nan is returned.
+        The null distribution for necessary degrees of freedom (df) is loaded.
+        If not available, the null distribution is generated with the function
+        generate_nulldist(). It is recommended to generate the nulldists for a
+        wide range of sample sizes beforehand with the script
+        "generate_gpace_nulldist.py". The maximal correlation coefficient is
+        one-sided. If the degrees of freedom are less than 1, numpy.nan is
+        returned.
         
         Parameters
         ----------
@@ -1549,7 +1550,7 @@ class GPACE(CondIndTest):
             Test statistic value.
 
         df : int
-            degrees of freedom of the test, given by T - dim
+            degrees of freedom of the test
 
         Returns
         -------
@@ -1953,12 +1954,13 @@ class GPDC(CondIndTest):
     def get_analytic_significance(self, value, df):
         """Returns p-value for the distance correlation coefficient.
         
-        The null distribution is loaded and the entry for the nearest available
-        degrees of freedom (df) is used. If it is different by more than 1% from
-        the actual sample size, an error is raised. Then the null distribution
-        has to be generated with the script "generate_dcorr_nulldist.py". The
-        distance correlation coefficient is one-sided. If the degrees of freedom
-        are less than 1, numpy.nan is returned.
+        The null distribution for necessary degrees of freedom (df) is loaded.
+        If not available, the null distribution is generated with the function
+        generate_nulldist(). It is recommended to generate the nulldists for a
+        wide range of sample sizes beforehand with the script
+        "generate_gpace_nulldist.py".  The distance correlation coefficient is
+        one-sided. If the degrees of freedom are less than 1, numpy.nan is
+        returned.
         
         Parameters
         ----------
@@ -1966,7 +1968,7 @@ class GPDC(CondIndTest):
             Test statistic value.
 
         df : int
-            degrees of freedom of the test, given by T - dim
+            degrees of freedom of the test
 
         Returns
         -------
