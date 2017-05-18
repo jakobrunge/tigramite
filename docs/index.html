@@ -97,22 +97,25 @@
 <tr class="row-odd"><td><a class="reference internal" href="#tigramite.independence_tests.ParCorr" title="tigramite.independence_tests.ParCorr"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.independence_tests.ParCorr</span></code></a>(**kwargs)</td>
 <td>Partial correlation test.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="#tigramite.independence_tests.GPACE" title="tigramite.independence_tests.GPACE"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.independence_tests.GPACE</span></code></a>([...])</td>
+<tr class="row-even"><td><a class="reference internal" href="#tigramite.independence_tests.GP" title="tigramite.independence_tests.GP"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.independence_tests.GP</span></code></a>([...])</td>
+<td>Gaussian processes base class.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#tigramite.independence_tests.GPACE" title="tigramite.independence_tests.GPACE"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.independence_tests.GPACE</span></code></a>([...])</td>
 <td>GPACE conditional independence test based on Gaussian processes and     maximal correlation.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="#tigramite.independence_tests.GPDC" title="tigramite.independence_tests.GPDC"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.independence_tests.GPDC</span></code></a>([...])</td>
+<tr class="row-even"><td><a class="reference internal" href="#tigramite.independence_tests.GPDC" title="tigramite.independence_tests.GPDC"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.independence_tests.GPDC</span></code></a>([...])</td>
 <td>GPDC conditional independence test based on Gaussian processes and     distance correlation.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="#tigramite.independence_tests.CMIknn" title="tigramite.independence_tests.CMIknn"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.independence_tests.CMIknn</span></code></a>([knn,&nbsp;...])</td>
+<tr class="row-odd"><td><a class="reference internal" href="#tigramite.independence_tests.CMIknn" title="tigramite.independence_tests.CMIknn"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.independence_tests.CMIknn</span></code></a>([knn,&nbsp;...])</td>
 <td>Conditional mutual information test based on nearest-neighbor estimator.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="#tigramite.independence_tests.CMIsymb" title="tigramite.independence_tests.CMIsymb"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.independence_tests.CMIsymb</span></code></a>([...])</td>
+<tr class="row-even"><td><a class="reference internal" href="#tigramite.independence_tests.CMIsymb" title="tigramite.independence_tests.CMIsymb"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.independence_tests.CMIsymb</span></code></a>([...])</td>
 <td>Conditional mutual information test based on discrete estimator.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="#module-tigramite.data_processing" title="tigramite.data_processing"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.data_processing</span></code></a></td>
+<tr class="row-odd"><td><a class="reference internal" href="#module-tigramite.data_processing" title="tigramite.data_processing"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.data_processing</span></code></a></td>
 <td>Tigramite data processing functions.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="#module-tigramite.plotting" title="tigramite.plotting"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.plotting</span></code></a></td>
+<tr class="row-even"><td><a class="reference internal" href="#module-tigramite.plotting" title="tigramite.plotting"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.plotting</span></code></a></td>
 <td>Tigramite plotting package.</td>
 </tr>
 </tbody>
@@ -199,7 +202,7 @@ criteria.</p>
 <table class="docutils footnote" frame="void" id="id5" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[1]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>, <a class="fn-backref" href="#id3">3</a>, <a class="fn-backref" href="#id4">4</a>, <a class="fn-backref" href="#id6">5</a>, <a class="fn-backref" href="#id7">6</a>, <a class="fn-backref" href="#id8">7</a>, <a class="fn-backref" href="#id9">8</a>, <a class="fn-backref" href="#id10">9</a>, <a class="fn-backref" href="#id11">10</a>, <a class="fn-backref" href="#id12">11</a>, <a class="fn-backref" href="#id13">12</a>, <a class="fn-backref" href="#id14">13</a>, <a class="fn-backref" href="#id18">14</a>)</em> J. Runge, D. Sejdinovic, S. Flaxman (2017): Detecting causal
+<tr><td class="label">[1]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>, <a class="fn-backref" href="#id3">3</a>, <a class="fn-backref" href="#id4">4</a>, <a class="fn-backref" href="#id6">5</a>, <a class="fn-backref" href="#id7">6</a>, <a class="fn-backref" href="#id8">7</a>, <a class="fn-backref" href="#id9">8</a>, <a class="fn-backref" href="#id10">9</a>, <a class="fn-backref" href="#id11">10</a>, <a class="fn-backref" href="#id12">11</a>, <a class="fn-backref" href="#id13">12</a>, <a class="fn-backref" href="#id14">13</a>, <a class="fn-backref" href="#id15">14</a>, <a class="fn-backref" href="#id19">15</a>)</em> J. Runge, D. Sejdinovic, S. Flaxman (2017): Detecting causal
 associations in large nonlinear time series datasets,
 <a class="reference external" href="https://arxiv.org/abs/1702.07007">https://arxiv.org/abs/1702.07007</a></td></tr>
 </tbody>
@@ -554,7 +557,8 @@ can cost considerable memory.</li>
 <dl class="method">
 <dt id="tigramite.independence_tests.CondIndTest.generate_and_save_nulldists">
 <code class="descname">generate_and_save_nulldists</code><span class="sig-paren">(</span><em>sample_sizes</em>, <em>null_dist_filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#CondIndTest.generate_and_save_nulldists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.CondIndTest.generate_and_save_nulldists" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates null distribution for pairwise independence tests.</p>
+<dd><p>Generates and saves null distribution for pairwise independence
+tests.</p>
 <p>Generates the null distribution for different sample sizes. Calls
 generate_nulldist. Null dists are saved to disk as
 self.null_dist_filename.npz. Also adds the null distributions to
@@ -939,6 +943,71 @@ different lags in X, Z, all have the same sample size.</li>
 </dd></dl>
 
 <dl class="class">
+<dt id="tigramite.independence_tests.GP">
+<em class="property">class </em><code class="descclassname">tigramite.independence_tests.</code><code class="descname">GP</code><span class="sig-paren">(</span><em>gp_version='new'</em>, <em>gp_kernel=None</em>, <em>gp_alpha=None</em>, <em>gp_restarts=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#GP"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.GP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gaussian processes base class.</p>
+<p>GP is estimated with scikit-learn and allows to flexibly specify kernels and
+hyperparameters or let them be optimized automatically.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>gp_version</strong> (<em>{'new'</em><em>, </em><em>'old'}</em><em>, </em><em>optional</em><em> (</em><em>default: 'new'</em><em>)</em><em></em>) &#8211; The older GP version from scikit-learn 0.17 was used for the numerical
+simulations in <a class="footnote-reference" href="#id5" id="id12">[1]</a>. The newer version from scikit-learn 0.19 is faster
+and allows more flexibility regarding kernels etc.</li>
+<li><strong>gp_kernel</strong> (<em>kernel object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Only available for gp_version=&#8217;new&#8217;. Can be any scikit-learn kernel
+object available in gaussian_process.kernels. The kernel specifies the
+covariance function of the GP. If None is passed, the kernel &#8216;1.0 *
+RBF(1.0)&#8217; is used as default. Note that the kernel&#8217;s hyperparameters are
+optimized during fitting.</li>
+<li><strong>gp_alpha</strong> (<em>float</em><em> or </em><em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Only available for gp_version=&#8217;new&#8217;. Value added to the diagonal of the
+kernel matrix during fitting. Larger values correspond to increased
+noise level in the observations and reduce potential numerical issues
+during fitting. If an array is passed, it must have the same number of
+entries as the data used for fitting and is used as datapoint-dependent
+noise level. Note that this is equivalent to adding a WhiteKernel with
+c=alpha. If None is passed, gp_alpha=1 is used.</li>
+<li><strong>gp_restarts</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Only available for gp_version=&#8217;new&#8217;. The number of restarts of the
+optimizer for finding the kernel&#8217;s parameters which maximize the log-
+marginal likelihood. The first run of the optimizer is performed from
+the kernel&#8217;s initial parameters, the remaining ones (if any) from thetas
+sampled log-uniform randomly from the space of allowed theta-values. If
+greater than 0, all bounds must be finite. If None is passed,
+n_restarts_optimizer=0 is used, implying that one run is performed.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="tigramite.independence_tests.GP.get_model_selection_criterion">
+<code class="descname">get_model_selection_criterion</code><span class="sig-paren">(</span><em>j</em>, <em>parents</em>, <em>tau_max=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#GP.get_model_selection_criterion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.GP.get_model_selection_criterion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns log marginal likelihood for GP regression.</p>
+<p>Fits a GP model of the parents to variable j and returns the negative
+log marginal likelihood as a model selection score. Is used to determine
+optimal hyperparameters in PCMCI, in particular the pc_alpha value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>j</strong> (<em>int</em>) &#8211; Index of target variable in data array.</li>
+<li><strong>parents</strong> (<em>list</em>) &#8211; List of form [(0, -1), (3, -2), ...] containing parents.</li>
+<li><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em><em></em>) &#8211; Maximum time lag. This may be used to make sure that estimates for
+different lags in X, Z, all have the same sample size.</li>
+<li><strong>Returns</strong> &#8211; </li>
+<li><strong>score</strong> (<em>float</em>) &#8211; Model score.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="tigramite.independence_tests.GPACE">
 <em class="property">class </em><code class="descclassname">tigramite.independence_tests.</code><code class="descname">GPACE</code><span class="sig-paren">(</span><em>null_dist_filename=None</em>, <em>gp_version='new'</em>, <em>gp_kernel=None</em>, <em>gp_alpha=None</em>, <em>gp_restarts=None</em>, <em>ace_version='acepack'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#GPACE"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.GPACE" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
@@ -956,7 +1025,7 @@ generate_and_save_nulldists(...) which saves a *.npz file containing the
 null distribution for different sample sizes. This file can then be supplied
 as null_dist_filename.</p>
 <p class="rubric">Notes</p>
-<p>As described in <a class="footnote-reference" href="#id5" id="id12">[1]</a>, GPACE is based on a Gaussian
+<p>As described in <a class="footnote-reference" href="#id5" id="id13">[1]</a>, GPACE is based on a Gaussian
 process (GP) regression and a maximal correlation test on the residuals. To
 test <img class="math" src="_images/math/d843100cd0a02e1e5184694228a7ac41e19e8af2.png" alt="X \perp Y | Z"/>, first  <img class="math" src="_images/math/bcb2457ac9d8995a4f34d57cadac7ecbbe58f3bd.png" alt="Z"/> is regressed out from <img class="math" src="_images/math/7a7bb470119808e2db2879fc2b2526f467b7a40b.png" alt="X"/>
 and <img class="math" src="_images/math/0062c26909b3e07ee8f5a6285b2563d69bc979ff.png" alt="Y"/> assuming the  model</p>
@@ -979,7 +1048,7 @@ of the maximal correlation can be pre-computed.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>null_dist_filename</strong> (<em>str</em><em>, </em><em>otional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Path to file containing null distribution.</li>
 <li><strong>gp_version</strong> (<em>{'new'</em><em>, </em><em>'old'}</em><em>, </em><em>optional</em><em> (</em><em>default: 'new'</em><em>)</em><em></em>) &#8211; The older GP version from scikit-learn 0.17 was used for the numerical
-simulations in <a class="footnote-reference" href="#id5" id="id13">[1]</a>. The newer version from scikit-learn 0.19 is faster
+simulations in <a class="footnote-reference" href="#id5" id="id14">[1]</a>. The newer version from scikit-learn 0.19 is faster
 and allows more flexibility regarding kernels etc.</li>
 <li><strong>gp_kernel</strong> (<em>kernel object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Only available for gp_version=&#8217;new&#8217;. Can be any scikit-learn kernel
 object available in gaussian_process.kernels. The kernel specifies the
@@ -1006,7 +1075,7 @@ loads the very slow pure python version available from
 version from the R-package acepack. This requires the R-interface
 rpy2 to be installed and acepack needs to be installed in R beforehand.
 Note that both versions &#8216;python&#8217; and &#8216;acepack&#8217; may result in different
-results. In <a class="footnote-reference" href="#id5" id="id14">[1]</a> the acepack version was used.</li>
+results. In <a class="footnote-reference" href="#id5" id="id15">[1]</a> the acepack version was used.</li>
 <li><strong>**kwargs</strong> &#8211; Arguments passed on to parent class CondIndTest.</li>
 </ul>
 </td>
@@ -1088,7 +1157,7 @@ regression.</p>
 <dd>distance correlation.</dd>
 </dl>
 <p>GPDC is based on a Gaussian process (GP) regression and a distance
-correlation test on the residuals <a class="footnote-reference" href="#id17" id="id15">[2]</a>. GP is estimated with scikit-learn
+correlation test on the residuals <a class="footnote-reference" href="#id18" id="id16">[2]</a>. GP is estimated with scikit-learn
 and allows to flexibly specify kernels and hyperparameters or let them be
 optimized automatically. The distance correlation test is implemented with
 cython. Here the null distribution is not analytically available, but can be
@@ -1098,7 +1167,7 @@ file can then be supplied as null_dist_filename.</p>
 <p class="rubric">Notes</p>
 <p>GPDC is based on a Gaussian process (GP) regression and a distance
 correlation test on the residuals. Distance correlation is described in
-<a class="footnote-reference" href="#id17" id="id16">[2]</a>. To test <img class="math" src="_images/math/d843100cd0a02e1e5184694228a7ac41e19e8af2.png" alt="X \perp Y | Z"/>, first <img class="math" src="_images/math/bcb2457ac9d8995a4f34d57cadac7ecbbe58f3bd.png" alt="Z"/> is regressed out from
+<a class="footnote-reference" href="#id18" id="id17">[2]</a>. To test <img class="math" src="_images/math/d843100cd0a02e1e5184694228a7ac41e19e8af2.png" alt="X \perp Y | Z"/>, first <img class="math" src="_images/math/bcb2457ac9d8995a4f34d57cadac7ecbbe58f3bd.png" alt="Z"/> is regressed out from
 <img class="math" src="_images/math/7a7bb470119808e2db2879fc2b2526f467b7a40b.png" alt="X"/> and <img class="math" src="_images/math/0062c26909b3e07ee8f5a6285b2563d69bc979ff.png" alt="Y"/> assuming the  model</p>
 <div class="math">
 <p><img src="_images/math/70852cea72eb5c4d0a45c0db08b49476f4404426.png" alt="X &amp; =  f_X(Z) + \epsilon_{X} \\
@@ -1114,10 +1183,10 @@ Otherwise it is computed during runtime.</p>
 <p>The cython-code for distance correlation is Copyright (c) 2012, Florian
 Finkernagel (<a class="reference external" href="https://gist.github.com/ffinkernagel/2960386">https://gist.github.com/ffinkernagel/2960386</a>).</p>
 <p class="rubric">References</p>
-<table class="docutils footnote" frame="void" id="id17" rules="none">
+<table class="docutils footnote" frame="void" id="id18" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[2]</td><td><em>(<a class="fn-backref" href="#id15">1</a>, <a class="fn-backref" href="#id16">2</a>)</em> Gabor J. Szekely, Maria L. Rizzo, and Nail K. Bakirov: Measuring and
+<tr><td class="label">[2]</td><td><em>(<a class="fn-backref" href="#id16">1</a>, <a class="fn-backref" href="#id17">2</a>)</em> Gabor J. Szekely, Maria L. Rizzo, and Nail K. Bakirov: Measuring and
 testing dependence by correlation of distances,
 <a class="reference external" href="https://arxiv.org/abs/0803.4101">https://arxiv.org/abs/0803.4101</a></td></tr>
 </tbody>
@@ -1129,7 +1198,7 @@ testing dependence by correlation of distances,
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>null_dist_filename</strong> (<em>str</em><em>, </em><em>otional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Path to file containing null distribution.</li>
 <li><strong>gp_version</strong> (<em>{'new'</em><em>, </em><em>'old'}</em><em>, </em><em>optional</em><em> (</em><em>default: 'new'</em><em>)</em><em></em>) &#8211; The older GP version from scikit-learn 0.17 was used for the numerical
-simulations in <a class="footnote-reference" href="#id5" id="id18">[1]</a>. The newer version from scikit-learn 0.19 is faster
+simulations in <a class="footnote-reference" href="#id5" id="id19">[1]</a>. The newer version from scikit-learn 0.19 is faster
 and allows more flexibility regarding kernels etc.</li>
 <li><strong>gp_kernel</strong> (<em>kernel object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Only available for gp_version=&#8217;new&#8217;. Can be any scikit-learn kernel
 object available in gaussian_process.kernels. The kernel specifies the

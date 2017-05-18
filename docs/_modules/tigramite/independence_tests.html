@@ -1087,7 +1087,8 @@
             <span class="k">return</span> <span class="n">null_dist</span></div>
 
 <div class="viewcode-block" id="CondIndTest.generate_and_save_nulldists"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.CondIndTest.generate_and_save_nulldists">[docs]</a>    <span class="k">def</span> <span class="nf">generate_and_save_nulldists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample_sizes</span><span class="p">,</span> <span class="n">null_dist_filename</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Generates null distribution for pairwise independence tests.</span>
+        <span class="sd">&quot;&quot;&quot;Generates and saves null distribution for pairwise independence </span>
+<span class="sd">        tests.</span>
 
 <span class="sd">        Generates the null distribution for different sample sizes. Calls </span>
 <span class="sd">        generate_nulldist. Null dists are saved to disk as</span>
@@ -1102,6 +1103,7 @@
 <span class="sd">        null_dist_filename : str</span>
 <span class="sd">            Name to save file containing null distributions.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        
         <span class="bp">self</span><span class="o">.</span><span class="n">null_dist_filename</span> <span class="o">=</span> <span class="n">null_dist_filename</span>
 
         <span class="n">null_dists</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">sample_sizes</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">sig_samples</span><span class="p">))</span>
@@ -1361,7 +1363,7 @@
 
         <span class="k">return</span> <span class="n">score</span></div></div>
 
-<span class="k">class</span> <span class="nc">GP</span><span class="p">():</span>
+<div class="viewcode-block" id="GP"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GP">[docs]</a><span class="k">class</span> <span class="nc">GP</span><span class="p">():</span>
     <span class="sd">r&quot;&quot;&quot;Gaussian processes base class.</span>
 
 <span class="sd">    GP is estimated with scikit-learn and allows to flexibly specify kernels and</span>
@@ -1522,7 +1524,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">resid</span>
 
-    <span class="k">def</span> <span class="nf">get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span>
+<div class="viewcode-block" id="GP.get_model_selection_criterion"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GP.get_model_selection_criterion">[docs]</a>    <span class="k">def</span> <span class="nf">get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span>
                                       <span class="n">parents</span><span class="p">,</span>
                                       <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns log marginal likelihood for GP regression.</span>
@@ -1569,7 +1571,7 @@
 
         <span class="n">score</span> <span class="o">=</span> <span class="o">-</span><span class="n">logli</span>
 
-        <span class="k">return</span> <span class="n">score</span>
+        <span class="k">return</span> <span class="n">score</span></div></div>
 
 <div class="viewcode-block" id="GPACE"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GPACE">[docs]</a><span class="k">class</span> <span class="nc">GPACE</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">,</span><span class="n">GP</span><span class="p">):</span>
     <span class="sd">r&quot;&quot;&quot;GPACE conditional independence test based on Gaussian processes and</span>
