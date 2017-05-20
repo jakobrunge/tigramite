@@ -59,20 +59,13 @@ By downloading TIGRAMITE you agree with the following points: The toolbox is pro
 
 You commit to cite TIGRAMITE in your reports or publications if used:
 
-1. J. Runge, D. Sejdinovic, S. Flaxman (2017): Detecting causal associations in large nonlinear time series datasets, 
-   https://arxiv.org/abs/1702.07007
+1. J. Runge, D. Sejdinovic, S. Flaxman (2017): Detecting causal associations in large nonlinear time series datasets. https://arxiv.org/abs/1702.07007
 
-2. J. Runge et al. (2015): Identifying causal gateways and mediators in complex spatio-temporal systems. 
-   Nature Communications, 6, 8502. 
-   http://doi.org/10.1038/ncomms9502
+2. J. Runge et al. (2015): Identifying causal gateways and mediators in complex spatio-temporal systems. Nature Communications, 6, 8502. http://doi.org/10.1038/ncomms9502
 
-3. J. Runge (2015): Quantifying information transfer and mediation along causal pathways in complex systems. 
-   Phys. Rev. E, 92(6), 62829. 
-   http://doi.org/10.1103/PhysRevE.92.062829
+3. J. Runge (2015): Quantifying information transfer and mediation along causal pathways in complex systems. Phys. Rev. E, 92(6), 62829. http://doi.org/10.1103/PhysRevE.92.062829
 
-4. J. Runge, J. Heitzig, V. Petoukhov, and J. Kurths (2012): Escaping the Curse of Dimensionality in Estimating Multivariate Transfer Entropy. 
-   Physical Review Letters, 108(25), 258701. 
-   http://doi.org/10.1103/PhysRevLett.108.258701
+4. J. Runge, J. Heitzig, V. Petoukhov, and J. Kurths (2012): Escaping the Curse of Dimensionality in Estimating Multivariate Transfer Entropy. Physical Review Letters, 108(25), 258701. http://doi.org/10.1103/PhysRevLett.108.258701
 
 
 ## License
