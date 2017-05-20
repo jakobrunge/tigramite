@@ -79,7 +79,20 @@
             
   <div class="section" id="tigramite">
 <h1>TIGRAMITE<a class="headerlink" href="#tigramite" title="Permalink to this headline">¶</a></h1>
-<p>Tigramite is a causal time series analysis python package. With flexibly adaptable scripts it allows to reconstruct graphical models (conditional independence graphs) from discrete or continuously-valued time series based on a causal discovery algorithm and create high-quality plots of the results.</p>
+<p>Tigramite is a causal time series analysis python package. With flexibly adaptable scripts it allows to reconstruct graphical models (conditional independence graphs) from discrete or continuously-valued time series based on a causal discovery algorithm and create high-quality plots of the results. Please cite the following papers depending on which method you use:</p>
+<ol class="arabic simple">
+<li>J. Runge, D. Sejdinovic, S. Flaxman (2017): Detecting causal associations in large nonlinear time series datasets,
+<a class="reference external" href="https://arxiv.org/abs/1702.07007">https://arxiv.org/abs/1702.07007</a></li>
+<li>J. Runge et al. (2015): Identifying causal gateways and mediators in complex spatio-temporal systems.
+Nature Communications, 6, 8502.
+<a class="reference external" href="http://doi.org/10.1038/ncomms9502">http://doi.org/10.1038/ncomms9502</a></li>
+<li>J. Runge (2015): Quantifying information transfer and mediation along causal pathways in complex systems.
+Phys. Rev. E, 92(6), 62829.
+<a class="reference external" href="http://doi.org/10.1103/PhysRevE.92.062829">http://doi.org/10.1103/PhysRevE.92.062829</a></li>
+<li>J. Runge, J. Heitzig, V. Petoukhov, and J. Kurths (2012): Escaping the Curse of Dimensionality in Estimating Multivariate Transfer Entropy.
+Physical Review Letters, 108(25), 258701.
+<a class="reference external" href="http://doi.org/10.1103/PhysRevLett.108.258701">http://doi.org/10.1103/PhysRevLett.108.258701</a></li>
+</ol>
 <div class="toctree-wrapper compound">
 </div>
 <table border="1" class="longtable docutils">
@@ -299,11 +312,18 @@ conditioning-parents estimated with PC algorithm.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="PCMCI.estimates">
-<code class="descname">estimates</code><a class="headerlink" href="#PCMCI.estimates" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>dictionary</em> &#8211; Dictionary of form estimates[j][(i, -tau)] = {&#8216;min_val&#8217;: float,
-&#8216;max_pval&#8217;: float,...} containing the  minimum test statistic value and
-maximum p-value for each link estimated in the PC algorithm.</p>
+<dt id="PCMCI.test_statistic_values">
+<code class="descname">test_statistic_values</code><a class="headerlink" href="#PCMCI.test_statistic_values" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>dictionary</em> &#8211; Dictionary of form test_statistic_values[j][(i, -tau)] = float
+containing the minimum test statistic value for each link estimated in
+the PC algorithm.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="PCMCI.p_max">
+<code class="descname">p_max</code><a class="headerlink" href="#PCMCI.p_max" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>dictionary</em> &#8211; Dictionary of form p_max[j][(i, -tau)] = float containing the maximum
+p-value for each link estimated in the PC algorithm.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -326,7 +346,7 @@ maximum p-value for each link estimated in the PC algorithm.</p>
 
 <dl class="method">
 <dt id="tigramite.pcmci.PCMCI.get_corrected_pvalues">
-<code class="descname">get_corrected_pvalues</code><span class="sig-paren">(</span><em>tau_max</em>, <em>p_matrix</em>, <em>fdr_method='fdr_bh'</em>, <em>exclude_contemporaneous=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/pcmci.html#PCMCI.get_corrected_pvalues"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.pcmci.PCMCI.get_corrected_pvalues" title="Permalink to this definition">¶</a></dt>
+<code class="descname">get_corrected_pvalues</code><span class="sig-paren">(</span><em>p_matrix</em>, <em>fdr_method='fdr_bh'</em>, <em>exclude_contemporaneous=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/pcmci.html#PCMCI.get_corrected_pvalues"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.pcmci.PCMCI.get_corrected_pvalues" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns p-values corrected for multiple testing.</p>
 <p>Wrapper around statsmodels.sandbox.stats.multicomp.multipletests.
 Correction is performed either among all links if
@@ -336,7 +356,6 @@ exclude_contemporaneous==False, or only among lagged links.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>tau_max</strong> (<em>int</em>) &#8211; Maximum time lag.</li>
 <li><strong>p_matrix</strong> (<em>array-like</em>) &#8211; Matrix of p-values. Must be of shape (N, N, tau_max + 1).</li>
 <li><strong>fdr_method</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'fdr_bh'</em><em>)</em><em></em>) &#8211; Correction method, default is Benjamini-Hochberg False Discovery
 Rate method.</li>
@@ -1211,7 +1230,7 @@ noise level in the observations and reduce potential numerical issues
 during fitting. If an array is passed, it must have the same number of
 entries as the data used for fitting and is used as datapoint-dependent
 noise level. Note that this is equivalent to adding a WhiteKernel with
-c=alpha. If None is passed, gp_alpha=0.1 is used.</li>
+c=alpha. If None is passed, gp_alpha=1 is used.</li>
 <li><strong>gp_restarts</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Only available for gp_version=&#8217;new&#8217;. The number of restarts of the
 optimizer for finding the kernel&#8217;s parameters which maximize the log-
 marginal likelihood. The first run of the optimizer is performed from
@@ -1325,6 +1344,16 @@ that the estimated CMI values can be slightly negative while CMI is a non-
 negative quantity.</p>
 <p>This class requires the scipy.spatial.cKDTree package and the tigramite
 cython module.</p>
+<p class="rubric">References</p>
+<table class="docutils footnote" frame="void" id="id20" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[3]</td><td>J. Runge, J. Heitzig, V. Petoukhov, and J. Kurths:
+Escaping the Curse of Dimensionality in Estimating Multivariate
+Transfer Entropy. Physical Review Letters, 108(25), 258701.
+<a class="reference external" href="http://doi.org/10.1103/PhysRevLett.108.258701">http://doi.org/10.1103/PhysRevLett.108.258701</a></td></tr>
+</tbody>
+</table>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1526,7 +1555,7 @@ backwards. The combined filter has linear phase.</p>
 
 <dl class="function">
 <dt id="tigramite.data_processing.ordinal_patt_array">
-<code class="descclassname">tigramite.data_processing.</code><code class="descname">ordinal_patt_array</code><span class="sig-paren">(</span><em>array</em>, <em>array_mask</em>, <em>dim=2</em>, <em>step=1</em>, <em>weights=False</em>, <em>verbosity=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/data_processing.html#ordinal_patt_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.data_processing.ordinal_patt_array" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">tigramite.data_processing.</code><code class="descname">ordinal_patt_array</code><span class="sig-paren">(</span><em>array</em>, <em>array_mask=None</em>, <em>dim=2</em>, <em>step=1</em>, <em>weights=False</em>, <em>verbosity=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/data_processing.html#ordinal_patt_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.data_processing.ordinal_patt_array" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns symbolified array of ordinal patterns.</p>
 <p>Each data vector (X_t, ..., X_t+(dim-1)*step) is converted to its rank
 vector. E.g., (0.2, -.6, 1.2) &#8211;&gt; (1,0,2) which is then assigned to a
@@ -1702,7 +1731,7 @@ its inverse) is implied. These should be the same for (i, j) and (j, i).</li>
 <p>Tigramite plotting package.</p>
 <dl class="function">
 <dt id="tigramite.plotting.plot_graph">
-<code class="descclassname">tigramite.plotting.</code><code class="descname">plot_graph</code><span class="sig-paren">(</span><em>val_matrix</em>, <em>var_names=None</em>, <em>fig_ax=None</em>, <em>sig_thres=None</em>, <em>link_matrix=None</em>, <em>save_name=None</em>, <em>link_colorbar_label='MCI'</em>, <em>node_colorbar_label='auto-MCI'</em>, <em>link_width=None</em>, <em>node_pos=None</em>, <em>arrow_linewidth=30.0</em>, <em>vmin_edges=-1</em>, <em>vmax_edges=1.0</em>, <em>edge_ticks=0.4</em>, <em>cmap_edges='RdBu_r'</em>, <em>vmin_nodes=0</em>, <em>vmax_nodes=1.0</em>, <em>node_ticks=0.4</em>, <em>cmap_nodes='OrRd'</em>, <em>node_size=20</em>, <em>arrowhead_size=20</em>, <em>curved_radius=0.2</em>, <em>label_fontsize=10</em>, <em>alpha=1.0</em>, <em>node_label_size=10</em>, <em>link_label_fontsize=6</em>, <em>network_lower_bound=0.2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.plot_graph" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">tigramite.plotting.</code><code class="descname">plot_graph</code><span class="sig-paren">(</span><em>val_matrix</em>, <em>var_names=None</em>, <em>fig_ax=None</em>, <em>figsize=None</em>, <em>sig_thres=None</em>, <em>link_matrix=None</em>, <em>save_name=None</em>, <em>link_colorbar_label='MCI'</em>, <em>node_colorbar_label='auto-MCI'</em>, <em>link_width=None</em>, <em>node_pos=None</em>, <em>arrow_linewidth=30.0</em>, <em>vmin_edges=-1</em>, <em>vmax_edges=1.0</em>, <em>edge_ticks=0.4</em>, <em>cmap_edges='RdBu_r'</em>, <em>vmin_nodes=0</em>, <em>vmax_nodes=1.0</em>, <em>node_ticks=0.4</em>, <em>cmap_nodes='OrRd'</em>, <em>node_size=20</em>, <em>arrowhead_size=20</em>, <em>curved_radius=0.2</em>, <em>label_fontsize=10</em>, <em>alpha=1.0</em>, <em>node_label_size=10</em>, <em>link_label_fontsize=6</em>, <em>network_lower_bound=0.2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.plot_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a network plot.</p>
 <p>This is still in beta. The network is defined either from True values in
 link_matrix, or from thresholding the val_matrix with sig_thres.  Nodes
@@ -1721,6 +1750,7 @@ supplied in appropriate axis coordinates via node_pos.</p>
 <li><strong>val_matrix</strong> (<em>array_like</em>) &#8211; Matrix of shape (N, N, tau_max+1) containing test statistic values.</li>
 <li><strong>var_names</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; List of variable names. If None, range(N) is used.</li>
 <li><strong>fig_ax</strong> (<em>tuple of figure and axis object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Figure and axes instance. If None they are created.</li>
+<li><strong>figsize</strong> (<em>tuple</em>) &#8211; Size of figure.</li>
 <li><strong>sig_thres</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Matrix of significance thresholds. Must be of same shape as  val_matrix.
 Either sig_thres or link_matrix has to be provided.</li>
 <li><strong>link_matrix</strong> (<em>bool array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Matrix of significant links. Must be of same shape as val_matrix. Either
@@ -1758,8 +1788,29 @@ coordinates could have been transformed before for basemap plots.</li>
 </dd></dl>
 
 <dl class="function">
+<dt id="tigramite.plotting.plot_lagfuncs">
+<code class="descclassname">tigramite.plotting.</code><code class="descname">plot_lagfuncs</code><span class="sig-paren">(</span><em>val_matrix</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_lagfuncs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.plot_lagfuncs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper helper function to plot lag functions.</p>
+<p>Sets up the matrix object and plots the lagfunction, see parameters in setup_matrix
+and add_lagfuncs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>val_matrix</strong> (<em>array_like</em>) &#8211; Matrix of shape (N, N, tau_max+1) containing test statistic values.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>matrix</strong> &#8211; Further lag functions can be overlaid using the matrix.add_lagfuncs(val_matrix)
+function.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">object</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="tigramite.plotting.plot_time_series_graph">
-<code class="descclassname">tigramite.plotting.</code><code class="descname">plot_time_series_graph</code><span class="sig-paren">(</span><em>val_matrix</em>, <em>var_names=None</em>, <em>fig_ax=None</em>, <em>sig_thres=None</em>, <em>link_matrix=None</em>, <em>link_colorbar_label='MCI'</em>, <em>save_name=None</em>, <em>link_width=None</em>, <em>arrow_linewidth=20.0</em>, <em>vmin_edges=-1</em>, <em>vmax_edges=1.0</em>, <em>edge_ticks=0.4</em>, <em>cmap_edges='RdBu_r'</em>, <em>order=None</em>, <em>node_size=10</em>, <em>arrowhead_size=20</em>, <em>curved_radius=0.2</em>, <em>label_fontsize=10</em>, <em>alpha=1.0</em>, <em>node_label_size=10</em>, <em>label_space_left=0.1</em>, <em>label_space_top=0.0</em>, <em>network_lower_bound=0.2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_time_series_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.plot_time_series_graph" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">tigramite.plotting.</code><code class="descname">plot_time_series_graph</code><span class="sig-paren">(</span><em>val_matrix</em>, <em>var_names=None</em>, <em>fig_ax=None</em>, <em>figsize=None</em>, <em>sig_thres=None</em>, <em>link_matrix=None</em>, <em>link_colorbar_label='MCI'</em>, <em>save_name=None</em>, <em>link_width=None</em>, <em>arrow_linewidth=20.0</em>, <em>vmin_edges=-1</em>, <em>vmax_edges=1.0</em>, <em>edge_ticks=0.4</em>, <em>cmap_edges='RdBu_r'</em>, <em>order=None</em>, <em>node_size=10</em>, <em>arrowhead_size=20</em>, <em>curved_radius=0.2</em>, <em>label_fontsize=10</em>, <em>alpha=1.0</em>, <em>node_label_size=10</em>, <em>label_space_left=0.1</em>, <em>label_space_top=0.0</em>, <em>network_lower_bound=0.2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_time_series_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.plot_time_series_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a time series graph.</p>
 <p>This is still in beta. The time series graph&#8217;s links are colored by
 val_matrix.</p>
@@ -1771,6 +1822,7 @@ val_matrix.</p>
 <li><strong>val_matrix</strong> (<em>array_like</em>) &#8211; Matrix of shape (N, N, tau_max+1) containing test statistic values.</li>
 <li><strong>var_names</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; List of variable names. If None, range(N) is used.</li>
 <li><strong>fig_ax</strong> (<em>tuple of figure and axis object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Figure and axes instance. If None they are created.</li>
+<li><strong>figsize</strong> (<em>tuple</em>) &#8211; Size of figure.</li>
 <li><strong>sig_thres</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Matrix of significance thresholds. Must be of same shape as  val_matrix.
 Either sig_thres or link_matrix has to be provided.</li>
 <li><strong>link_matrix</strong> (<em>bool array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Matrix of significant links. Must be of same shape as val_matrix. Either
@@ -1838,7 +1890,7 @@ is used.</li>
 
 <dl class="class">
 <dt id="tigramite.plotting.setup_matrix">
-<em class="property">class </em><code class="descclassname">tigramite.plotting.</code><code class="descname">setup_matrix</code><span class="sig-paren">(</span><em>N</em>, <em>tau_max</em>, <em>var_names=None</em>, <em>figsize=None</em>, <em>minimum=-1</em>, <em>maximum=1</em>, <em>label_space_left=0.1</em>, <em>label_space_top=0.05</em>, <em>legend_width=0.15</em>, <em>legend_fontsize=10</em>, <em>x_base=1.0</em>, <em>y_base=0.4</em>, <em>plot_gridlines=False</em>, <em>lag_units=''</em>, <em>label_fontsize=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#setup_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.setup_matrix" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">tigramite.plotting.</code><code class="descname">setup_matrix</code><span class="sig-paren">(</span><em>N</em>, <em>tau_max</em>, <em>var_names=None</em>, <em>figsize=None</em>, <em>minimum=-1</em>, <em>maximum=1</em>, <em>label_space_left=0.1</em>, <em>label_space_top=0.05</em>, <em>legend_width=0.15</em>, <em>legend_fontsize=10</em>, <em>x_base=1.0</em>, <em>y_base=0.5</em>, <em>plot_gridlines=False</em>, <em>lag_units=''</em>, <em>label_fontsize=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#setup_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.setup_matrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create matrix of lag function panels.</p>
 <p>Class to setup figure object. The function add_lagfuncs(...) allows to plot
 the val_matrix of shape (N, N, tau_max+1). Multiple lagfunctions can be

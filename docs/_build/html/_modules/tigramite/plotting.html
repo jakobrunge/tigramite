@@ -430,6 +430,35 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">pyplot</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
 
+<div class="viewcode-block" id="plot_lagfuncs"><a class="viewcode-back" href="../../index.html#tigramite.plotting.plot_lagfuncs">[docs]</a><span class="k">def</span> <span class="nf">plot_lagfuncs</span><span class="p">(</span><span class="n">val_matrix</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Wrapper helper function to plot lag functions.</span>
+
+<span class="sd">    Sets up the matrix object and plots the lagfunction, see parameters in setup_matrix</span>
+<span class="sd">    and add_lagfuncs.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    val_matrix : array_like</span>
+<span class="sd">        Matrix of shape (N, N, tau_max+1) containing test statistic values.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    matrix : object</span>
+<span class="sd">        Further lag functions can be overlaid using the matrix.add_lagfuncs(val_matrix)</span>
+<span class="sd">        function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">tau_max_plusone</span> <span class="o">=</span> <span class="n">val_matrix</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">tau_max</span> <span class="o">=</span> <span class="n">tau_max_plusone</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="n">matrix</span> <span class="o">=</span> <span class="n">setup_matrix</span><span class="p">(</span><span class="n">N</span><span class="o">=</span><span class="n">N</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> 
+                                                   <span class="n">kwargs</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> 
+                              <span class="ow">in</span> <span class="n">setup_matrix</span><span class="o">.</span><span class="n">__init__</span><span class="o">.</span><span class="n">func_code</span><span class="o">.</span><span class="n">co_varnames</span><span class="p">})</span>
+    <span class="n">matrix</span><span class="o">.</span><span class="n">add_lagfuncs</span><span class="p">(</span><span class="n">val_matrix</span><span class="o">=</span><span class="n">val_matrix</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> 
+                                                    <span class="n">kwargs</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> 
+                            <span class="ow">in</span> <span class="n">setup_matrix</span><span class="o">.</span><span class="n">add_lagfuncs</span><span class="o">.</span><span class="n">func_code</span><span class="o">.</span><span class="n">co_varnames</span><span class="p">})</span>
+
+    <span class="k">return</span> <span class="n">matrix</span></div>
 
 <div class="viewcode-block" id="setup_matrix"><a class="viewcode-back" href="../../index.html#tigramite.plotting.setup_matrix">[docs]</a><span class="k">class</span> <span class="nc">setup_matrix</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;Create matrix of lag function panels.</span>
@@ -493,7 +522,7 @@
                  <span class="n">label_space_top</span><span class="o">=.</span><span class="mi">05</span><span class="p">,</span>
                  <span class="n">legend_width</span><span class="o">=.</span><span class="mi">15</span><span class="p">,</span>
                  <span class="n">legend_fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-                 <span class="n">x_base</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">y_base</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span>
+                 <span class="n">x_base</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">y_base</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
                  <span class="n">plot_gridlines</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">lag_units</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
                  <span class="n">label_fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
@@ -1098,6 +1127,7 @@
 <div class="viewcode-block" id="plot_graph"><a class="viewcode-back" href="../../index.html#tigramite.plotting.plot_graph">[docs]</a><span class="k">def</span> <span class="nf">plot_graph</span><span class="p">(</span><span class="n">val_matrix</span><span class="p">,</span> 
                <span class="n">var_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
                <span class="n">fig_ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">figsize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                <span class="n">sig_thres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                <span class="n">link_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                <span class="n">save_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1145,6 +1175,9 @@
 <span class="sd">  </span>
 <span class="sd">    fig_ax : tuple of figure and axis object, optional (default: None)</span>
 <span class="sd">        Figure and axes instance. If None they are created.</span>
+
+<span class="sd">    figsize : tuple</span>
+<span class="sd">        Size of figure.</span>
 
 <span class="sd">    sig_thres : array-like, optional (default: None)</span>
 <span class="sd">        Matrix of significance thresholds. Must be of same shape as  val_matrix.</span>
@@ -1229,7 +1262,7 @@
         <span class="n">var_names</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">fig_ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">fig</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">,</span> <span class="n">frame_on</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">fig_ax</span>
@@ -1387,6 +1420,7 @@
 <div class="viewcode-block" id="plot_time_series_graph"><a class="viewcode-back" href="../../index.html#tigramite.plotting.plot_time_series_graph">[docs]</a><span class="k">def</span> <span class="nf">plot_time_series_graph</span><span class="p">(</span><span class="n">val_matrix</span><span class="p">,</span> 
         <span class="n">var_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
         <span class="n">fig_ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">figsize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">sig_thres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">link_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">link_colorbar_label</span><span class="o">=</span><span class="s1">&#39;MCI&#39;</span><span class="p">,</span>
@@ -1423,6 +1457,9 @@
 <span class="sd">  </span>
 <span class="sd">    fig_ax : tuple of figure and axis object, optional (default: None)</span>
 <span class="sd">        Figure and axes instance. If None they are created.</span>
+
+<span class="sd">    figsize : tuple</span>
+<span class="sd">        Size of figure.</span>
 
 <span class="sd">    sig_thres : array-like, optional (default: None)</span>
 <span class="sd">        Matrix of significance thresholds. Must be of same shape as  val_matrix.</span>
@@ -1496,7 +1533,7 @@
         <span class="n">var_names</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">fig_ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">fig</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">,</span> <span class="n">frame_on</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">fig_ax</span>
@@ -1685,6 +1722,7 @@
     <span class="n">mask</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
     <span class="n">mask</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="kc">True</span>
 
+    <span class="n">plot_lagfuncs</span><span class="p">(</span><span class="n">val_matrix</span><span class="p">,</span> <span class="n">var_names</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 
     <span class="n">plot_timeseries</span><span class="p">(</span><span class="n">data</span><span class="p">,</span>  
                     <span class="n">datatime</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>

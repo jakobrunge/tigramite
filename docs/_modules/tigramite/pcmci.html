@@ -260,12 +260,15 @@
 <span class="sd">        Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing the</span>
 <span class="sd">        conditioning-parents estimated with PC algorithm.</span>
 <span class="sd">    </span>
-<span class="sd">    estimates : dictionary</span>
-
-<span class="sd">        Dictionary of form estimates[j][(i, -tau)] = {&#39;min_val&#39;: float,</span>
-<span class="sd">        &#39;max_pval&#39;: float,...} containing the  minimum test statistic value and</span>
-<span class="sd">        maximum p-value for each link estimated in the PC algorithm.</span>
+<span class="sd">    test_statistic_values : dictionary</span>
+<span class="sd">        Dictionary of form test_statistic_values[j][(i, -tau)] = float</span>
+<span class="sd">        containing the minimum test statistic value for each link estimated in</span>
+<span class="sd">        the PC algorithm.</span>
 <span class="sd">    </span>
+<span class="sd">    p_max : dictionary</span>
+<span class="sd">        Dictionary of form p_max[j][(i, -tau)] = float containing the maximum</span>
+<span class="sd">        p-value for each link estimated in the PC algorithm.</span>
+
 <span class="sd">    iterations : dictionary</span>
 <span class="sd">        Dictionary containing further information on algorithm steps.</span>
 <span class="sd">    </span>
@@ -759,7 +762,7 @@
                 <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
                 <span class="k">for</span> <span class="n">iscore</span><span class="p">,</span> <span class="n">pc_alpha_here</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pc_alpha</span><span class="p">):</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"># pc_alpha = </span><span class="si">%.3f</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2">):&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">pc_alpha_here</span><span class="p">,</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"># pc_alpha = </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2">):&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">pc_alpha_here</span><span class="p">,</span>
                                             <span class="n">iscore</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">pc_alpha</span><span class="p">)))</span>
 
                     <span class="n">results</span><span class="p">[</span><span class="n">pc_alpha_here</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_pc_stable_single</span><span class="p">(</span><span class="n">j</span><span class="p">,</span>
@@ -801,18 +804,9 @@
 
                 <span class="n">iterations</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="s1">&#39;optimal_pc_alpha&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">optimal_alpha</span>
 
-        <span class="c1"># Return results</span>
-        <span class="n">estimates</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_variables</span><span class="p">:</span>
-            <span class="n">estimates</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="k">for</span> <span class="n">parent</span> <span class="ow">in</span> <span class="n">all_parents</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
-                <span class="n">estimates</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">parent</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-                                    <span class="s1">&#39;min_val&#39;</span><span class="p">:</span> <span class="n">test_statistic_values</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">parent</span><span class="p">],</span>
-                                    <span class="s1">&#39;max_pval&#39;</span><span class="p">:</span> <span class="n">p_max</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">parent</span><span class="p">],</span>
-                                     <span class="p">}</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">all_parents</span> <span class="o">=</span> <span class="n">all_parents</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">estimates</span> <span class="o">=</span> <span class="n">estimates</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_statistic_values</span> <span class="o">=</span> <span class="n">test_statistic_values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p_max</span> <span class="o">=</span> <span class="n">p_max</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">iterations</span> <span class="o">=</span> <span class="n">iterations</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -983,7 +977,8 @@
 
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
                     <span class="n">var_names_condy</span> <span class="o">=</span> <span class="s2">&quot;[ &quot;</span>
-                    <span class="k">for</span> <span class="n">conds_yi</span> <span class="ow">in</span> <span class="n">conds_y</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">conds_yi</span> <span class="ow">in</span> <span class="p">[</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">conds_y</span> 
+                                     <span class="k">if</span> <span class="n">node</span> <span class="o">!=</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">)]:</span>
                         <span class="n">var_names_condy</span> <span class="o">+=</span> <span class="s2">&quot;(</span><span class="si">%s</span><span class="s2"> </span><span class="si">%d</span><span class="s2">) &quot;</span> <span class="o">%</span> <span class="p">(</span>
                          <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">conds_yi</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">conds_yi</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
                     <span class="n">var_names_condy</span> <span class="o">+=</span> <span class="s2">&quot;]&quot;</span>
@@ -1004,7 +999,8 @@
                 <span class="c1"># with conditions for X shifted by tau</span>
                 <span class="n">X</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">)]</span>
                 <span class="n">Y</span> <span class="o">=</span> <span class="p">[(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
-                <span class="n">Z</span> <span class="o">=</span> <span class="n">conds_y</span> <span class="o">+</span> <span class="p">[(</span><span class="n">node</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tau</span> <span class="o">+</span> <span class="n">node</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">conds_x</span><span class="p">]</span>
+                <span class="n">Z</span> <span class="o">=</span> <span class="p">[</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">conds_y</span> <span class="k">if</span> <span class="n">node</span> <span class="o">!=</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">)]</span> <span class="o">+</span> <span class="p">[</span>
+                     <span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tau</span> <span class="o">+</span> <span class="n">node</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">conds_x</span><span class="p">]</span>
 
                 <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span><span class="o">.</span><span class="n">get_measure</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="n">Z</span><span class="p">,</span>
                                                      <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">)</span>
@@ -1123,7 +1119,8 @@
 
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
                     <span class="n">var_names_condy</span> <span class="o">=</span> <span class="s2">&quot;[ &quot;</span>
-                    <span class="k">for</span> <span class="n">conds_yi</span> <span class="ow">in</span> <span class="n">conds_y</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">conds_yi</span> <span class="ow">in</span> <span class="p">[</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">conds_y</span> 
+                                     <span class="k">if</span> <span class="n">node</span> <span class="o">!=</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">)]:</span>
                         <span class="n">var_names_condy</span> <span class="o">+=</span> <span class="s2">&quot;(</span><span class="si">%s</span><span class="s2"> </span><span class="si">%d</span><span class="s2">) &quot;</span> <span class="o">%</span> <span class="p">(</span>
                             <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">conds_yi</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">conds_yi</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
                     <span class="n">var_names_condy</span> <span class="o">+=</span> <span class="s2">&quot;]&quot;</span>
@@ -1144,7 +1141,8 @@
                 <span class="c1"># with conditions for X shifted by tau</span>
                 <span class="n">X</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">)]</span>
                 <span class="n">Y</span> <span class="o">=</span> <span class="p">[(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
-                <span class="n">Z</span> <span class="o">=</span> <span class="n">conds_y</span> <span class="o">+</span> <span class="p">[(</span><span class="n">node</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tau</span> <span class="o">+</span> <span class="n">node</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">conds_x</span><span class="p">]</span>
+                <span class="n">Z</span> <span class="o">=</span> <span class="p">[</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">conds_y</span> <span class="k">if</span> <span class="n">node</span> <span class="o">!=</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">)]</span> <span class="o">+</span> <span class="p">[</span>
+                     <span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tau</span> <span class="o">+</span> <span class="n">node</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">conds_x</span><span class="p">]</span>
 
                 <span class="n">val</span><span class="p">,</span> <span class="n">pval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span><span class="o">.</span><span class="n">run_test</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="n">Z</span><span class="p">,</span>
                                                         <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">)</span>
@@ -1166,8 +1164,7 @@
                 <span class="s1">&#39;conf_matrix&#39;</span><span class="p">:</span><span class="n">conf_matrix</span><span class="p">}</span></div>
 
 
-<div class="viewcode-block" id="PCMCI.get_corrected_pvalues"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.get_corrected_pvalues">[docs]</a>    <span class="k">def</span> <span class="nf">get_corrected_pvalues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span>
-                              <span class="n">p_matrix</span><span class="p">,</span>
+<div class="viewcode-block" id="PCMCI.get_corrected_pvalues"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.get_corrected_pvalues">[docs]</a>    <span class="k">def</span> <span class="nf">get_corrected_pvalues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_matrix</span><span class="p">,</span>
                               <span class="n">fdr_method</span><span class="o">=</span><span class="s1">&#39;fdr_bh&#39;</span><span class="p">,</span>
                               <span class="n">exclude_contemporaneous</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                               <span class="p">):</span>
@@ -1179,9 +1176,6 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        tau_max : int</span>
-<span class="sd">            Maximum time lag.</span>
-
 <span class="sd">        p_matrix : array-like</span>
 <span class="sd">            Matrix of p-values. Must be of shape (N, N, tau_max + 1).</span>
 
@@ -1197,6 +1191,9 @@
 <span class="sd">        q_matrix : array-like</span>
 <span class="sd">            Matrix of shape (N, N, tau_max + 1) containing corrected p-values.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">tau_max_plusone</span> <span class="o">=</span> <span class="n">p_matrix</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">tau_max</span> <span class="o">=</span> <span class="n">tau_max_plusone</span> <span class="o">-</span> <span class="mi">1</span>
 
         <span class="k">if</span> <span class="n">exclude_contemporaneous</span><span class="p">:</span>
             <span class="n">mask</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;bool&#39;</span><span class="p">)</span>
@@ -1294,7 +1291,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">sig_links</span> <span class="o">=</span> <span class="p">(</span><span class="n">p_matrix</span> <span class="o">&lt;=</span> <span class="n">alpha_level</span><span class="p">)</span>
 
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">## Significant parents at alpha = </span><span class="si">%.2f</span><span class="s2">:&quot;</span> <span class="o">%</span> <span class="n">alpha_level</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">## Significant parents at alpha = </span><span class="si">%s</span><span class="s2">:&quot;</span> <span class="o">%</span> <span class="n">alpha_level</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_variables</span><span class="p">:</span>
 
             <span class="n">links</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([((</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">val_matrix</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> 

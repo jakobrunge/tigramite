@@ -304,7 +304,7 @@
     <span class="k">return</span> <span class="p">(</span><span class="n">bindata</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(),</span> <span class="n">T</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="ordinal_patt_array"><a class="viewcode-back" href="../../index.html#tigramite.data_processing.ordinal_patt_array">[docs]</a><span class="k">def</span> <span class="nf">ordinal_patt_array</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">array_mask</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
+<div class="viewcode-block" id="ordinal_patt_array"><a class="viewcode-back" href="../../index.html#tigramite.data_processing.ordinal_patt_array">[docs]</a><span class="k">def</span> <span class="nf">ordinal_patt_array</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">array_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
                         <span class="n">weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns symbolified array of ordinal patterns.</span>
 
@@ -355,7 +355,11 @@
 
     <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float64&#39;</span><span class="p">)</span>
 
-    <span class="k">assert</span> <span class="n">array_mask</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="s1">&#39;int32&#39;</span>
+    <span class="k">if</span> <span class="n">array_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">array_mask</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="s1">&#39;int32&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">array_mask</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
+
 
     <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">array</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">T</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
@@ -383,6 +387,8 @@
     <span class="c1"># larger than 10 are not supported</span>
     <span class="n">fac</span> <span class="o">=</span> <span class="n">factorial</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
 
+    <span class="c1"># _get_patterns_cython assumes mask=0 to be a masked value</span>
+    <span class="n">array_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">array_mask</span> <span class="o">==</span> <span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
 
     <span class="p">(</span><span class="n">patt</span><span class="p">,</span> <span class="n">patt_mask</span><span class="p">,</span> <span class="n">weights_array</span><span class="p">)</span> <span class="o">=</span> <span class="n">tigramite_cython_code</span><span class="o">.</span><span class="n">_get_patterns_cython</span><span class="p">(</span>
         <span class="n">array</span><span class="p">,</span> <span class="n">array_mask</span><span class="p">,</span> <span class="n">patt</span><span class="p">,</span> <span class="n">patt_mask</span><span class="p">,</span> <span class="n">weights_array</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">fac</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> 
@@ -390,7 +396,8 @@
 
     <span class="n">weights_array</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">weights_array</span><span class="p">)</span>
     <span class="n">patt</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">patt</span><span class="p">)</span>
-    <span class="n">patt_mask</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">patt_mask</span><span class="p">)</span>
+    <span class="c1"># Transform back to mask=1 implying a masked value</span>
+    <span class="n">patt_mask</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">patt_mask</span><span class="p">)</span> <span class="o">==</span> <span class="kc">False</span>
 
     <span class="k">if</span> <span class="n">weights</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">patt</span><span class="p">,</span> <span class="n">patt_mask</span><span class="p">,</span> <span class="n">patt_time</span><span class="p">,</span> <span class="n">weights_array</span><span class="p">)</span>

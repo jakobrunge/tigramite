@@ -1429,7 +1429,7 @@ class GP():
                     # length_scale_bounds=(1E-16, numpy.inf)  #(1e-05, 100000.0)
                     )
             if self.gp_alpha is None:
-                self.gp_alpha = 0.1
+                self.gp_alpha = 1.
             if self.gp_restarts is None:
                 self.gp_restarts = 0
 
@@ -1842,7 +1842,7 @@ class GPDC(CondIndTest,GP):
         during fitting. If an array is passed, it must have the same number of
         entries as the data used for fitting and is used as datapoint-dependent
         noise level. Note that this is equivalent to adding a WhiteKernel with
-        c=alpha. If None is passed, gp_alpha=0.1 is used.
+        c=alpha. If None is passed, gp_alpha=1 is used.
     
     gp_restarts : int, optional (default: None)
         Only available for gp_version='new'. The number of restarts of the
@@ -1863,7 +1863,6 @@ class GPDC(CondIndTest,GP):
                 gp_kernel=None,
                 gp_alpha=None,
                 gp_restarts=None,
-
                 **kwargs):
 
         CondIndTest.__init__(self, **kwargs)
@@ -2055,6 +2054,13 @@ class CMIknn(CondIndTest):
 
     This class requires the scipy.spatial.cKDTree package and the tigramite
     cython module.
+
+    References
+    ----------
+    .. [3] J. Runge, J. Heitzig, V. Petoukhov, and J. Kurths: 
+           Escaping the Curse of Dimensionality in Estimating Multivariate 
+           Transfer Entropy. Physical Review Letters, 108(25), 258701. 
+           http://doi.org/10.1103/PhysRevLett.108.258701
 
     Parameters
     ----------

@@ -366,6 +366,35 @@ def plot_timeseries(data,
     else:
         pyplot.show()
 
+def plot_lagfuncs(val_matrix, **kwargs):
+    """Wrapper helper function to plot lag functions.
+
+    Sets up the matrix object and plots the lagfunction, see parameters in setup_matrix
+    and add_lagfuncs.
+
+    Parameters
+    ----------
+    val_matrix : array_like
+        Matrix of shape (N, N, tau_max+1) containing test statistic values.
+    
+    Returns
+    -------
+    matrix : object
+        Further lag functions can be overlaid using the matrix.add_lagfuncs(val_matrix)
+        function.
+    """
+
+    N, N, tau_max_plusone = val_matrix.shape
+    tau_max = tau_max_plusone - 1
+
+    matrix = setup_matrix(N=N, tau_max=tau_max, **{key: value for key, value in 
+                                                   kwargs.iteritems() if key 
+                              in setup_matrix.__init__.func_code.co_varnames})
+    matrix.add_lagfuncs(val_matrix=val_matrix, **{key: value for key, value in 
+                                                    kwargs.iteritems() if key 
+                            in setup_matrix.add_lagfuncs.func_code.co_varnames})
+
+    return matrix
 
 class setup_matrix():
     """Create matrix of lag function panels.
@@ -429,7 +458,7 @@ class setup_matrix():
                  label_space_top=.05,
                  legend_width=.15,
                  legend_fontsize=10,
-                 x_base=1., y_base=0.4,
+                 x_base=1., y_base=0.5,
                  plot_gridlines=False,
                  lag_units='',
                  label_fontsize=10):
@@ -1034,6 +1063,7 @@ def _draw_network_with_curved_edges(
 def plot_graph(val_matrix, 
                var_names=None, 
                fig_ax=None,
+               figsize=None,
                sig_thres=None,
                link_matrix=None,
                save_name=None,
@@ -1081,6 +1111,9 @@ def plot_graph(val_matrix,
   
     fig_ax : tuple of figure and axis object, optional (default: None)
         Figure and axes instance. If None they are created.
+
+    figsize : tuple
+        Size of figure.
 
     sig_thres : array-like, optional (default: None)
         Matrix of significance thresholds. Must be of same shape as  val_matrix.
@@ -1165,7 +1198,7 @@ def plot_graph(val_matrix,
         var_names = range(N)
 
     if fig_ax is None:
-        fig = pyplot.figure(figsize=None, frameon=False)
+        fig = pyplot.figure(figsize=figsize, frameon=False)
         ax = fig.add_subplot(111, frame_on=False)
     else:
         fig, ax = fig_ax
@@ -1323,6 +1356,7 @@ def plot_graph(val_matrix,
 def plot_time_series_graph(val_matrix, 
         var_names=None, 
         fig_ax=None,
+        figsize=None,
         sig_thres=None,
         link_matrix=None,
         link_colorbar_label='MCI',
@@ -1359,6 +1393,9 @@ def plot_time_series_graph(val_matrix,
   
     fig_ax : tuple of figure and axis object, optional (default: None)
         Figure and axes instance. If None they are created.
+
+    figsize : tuple
+        Size of figure.
 
     sig_thres : array-like, optional (default: None)
         Matrix of significance thresholds. Must be of same shape as  val_matrix.
@@ -1432,7 +1469,7 @@ def plot_time_series_graph(val_matrix,
         var_names = range(N)
 
     if fig_ax is None:
-        fig = pyplot.figure(figsize=(4,3), frameon=False)
+        fig = pyplot.figure(figsize=figsize, frameon=False)
         ax = fig.add_subplot(111, frame_on=False)
     else:
         fig, ax = fig_ax
@@ -1621,6 +1658,7 @@ if __name__ == '__main__':
     mask = numpy.zeros(data.shape)
     mask[:len(data)/2]=True
 
+    plot_lagfuncs(val_matrix, var_names=range(3), markersize=5)
 
     plot_timeseries(data,  
                     datatime=None,

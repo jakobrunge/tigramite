@@ -196,12 +196,15 @@ class PCMCI():
         Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing the
         conditioning-parents estimated with PC algorithm.
     
-    estimates : dictionary
-
-        Dictionary of form estimates[j][(i, -tau)] = {'min_val': float,
-        'max_pval': float,...} containing the  minimum test statistic value and
-        maximum p-value for each link estimated in the PC algorithm.
+    test_statistic_values : dictionary
+        Dictionary of form test_statistic_values[j][(i, -tau)] = float
+        containing the minimum test statistic value for each link estimated in
+        the PC algorithm.
     
+    p_max : dictionary
+        Dictionary of form p_max[j][(i, -tau)] = float containing the maximum
+        p-value for each link estimated in the PC algorithm.
+
     iterations : dictionary
         Dictionary containing further information on algorithm steps.
     
@@ -695,7 +698,7 @@ class PCMCI():
                 results = {}
                 for iscore, pc_alpha_here in enumerate(pc_alpha):
                     if self.verbosity > 1:
-                        print("\n# pc_alpha = %.3f (%d/%d):" % (pc_alpha_here,
+                        print("\n# pc_alpha = %s (%d/%d):" % (pc_alpha_here,
                                             iscore+1, len(pc_alpha)))
 
                     results[pc_alpha_here] = self._run_pc_stable_single(j,
@@ -737,18 +740,9 @@ class PCMCI():
 
                 iterations[j]['optimal_pc_alpha'] = optimal_alpha
 
-        # Return results
-        estimates = {}
-        for j in self.selected_variables:
-            estimates[j] = {}
-            for parent in all_parents[j]:
-                estimates[j][parent] = {
-                                    'min_val': test_statistic_values[j][parent],
-                                    'max_pval': p_max[j][parent],
-                                     }
-
         self.all_parents = all_parents
-        self.estimates = estimates
+        self.test_statistic_values = test_statistic_values
+        self.p_max = p_max
         self.iterations = iterations
 
         if self.verbosity > 0:
@@ -919,7 +913,8 @@ class PCMCI():
 
                 if self.verbosity > 1:
                     var_names_condy = "[ "
-                    for conds_yi in conds_y:
+                    for conds_yi in [node for node in conds_y 
+                                     if node != (i, tau)]:
                         var_names_condy += "(%s %d) " % (
                          self.var_names[conds_yi[0]], conds_yi[1])
                     var_names_condy += "]"
@@ -940,7 +935,8 @@ class PCMCI():
                 # with conditions for X shifted by tau
                 X = [(i, tau)]
                 Y = [(j, 0)]
-                Z = conds_y + [(node[0], tau + node[1]) for node in conds_x]
+                Z = [node for node in conds_y if node != (i, tau)] + [
+                     (node[0], tau + node[1]) for node in conds_x]
 
                 val = self.cond_ind_test.get_measure(X=X, Y=Y, Z=Z,
                                                      tau_max=tau_max)
@@ -1059,7 +1055,8 @@ class PCMCI():
 
                 if self.verbosity > 1:
                     var_names_condy = "[ "
-                    for conds_yi in conds_y:
+                    for conds_yi in [node for node in conds_y 
+                                     if node != (i, tau)]:
                         var_names_condy += "(%s %d) " % (
                             self.var_names[conds_yi[0]], conds_yi[1])
                     var_names_condy += "]"
@@ -1080,7 +1077,8 @@ class PCMCI():
                 # with conditions for X shifted by tau
                 X = [(i, tau)]
                 Y = [(j, 0)]
-                Z = conds_y + [(node[0], tau + node[1]) for node in conds_x]
+                Z = [node for node in conds_y if node != (i, tau)] + [
+                     (node[0], tau + node[1]) for node in conds_x]
 
                 val, pval = self.cond_ind_test.run_test(X=X, Y=Y, Z=Z,
                                                         tau_max=tau_max)
@@ -1102,8 +1100,7 @@ class PCMCI():
                 'conf_matrix':conf_matrix}
 
 
-    def get_corrected_pvalues(self, tau_max,
-                              p_matrix,
+    def get_corrected_pvalues(self, p_matrix,
                               fdr_method='fdr_bh',
                               exclude_contemporaneous=True,
                               ):
@@ -1115,9 +1112,6 @@ class PCMCI():
 
         Parameters
         ----------
-        tau_max : int
-            Maximum time lag.
-
         p_matrix : array-like
             Matrix of p-values. Must be of shape (N, N, tau_max + 1).
 
@@ -1133,6 +1127,9 @@ class PCMCI():
         q_matrix : array-like
             Matrix of shape (N, N, tau_max + 1) containing corrected p-values.
         """
+
+        N, N, tau_max_plusone = p_matrix.shape
+        tau_max = tau_max_plusone - 1
 
         if exclude_contemporaneous:
             mask = numpy.ones((self.N, self.N, tau_max + 1), dtype='bool')
@@ -1230,7 +1227,7 @@ class PCMCI():
         else:
             sig_links = (p_matrix <= alpha_level)
 
-        print("\n## Significant parents at alpha = %.2f:" % alpha_level)
+        print("\n## Significant parents at alpha = %s:" % alpha_level)
         for j in self.selected_variables:
 
             links = dict([((p[0], -p[1] - 1), numpy.abs(val_matrix[p[0], 

@@ -1493,7 +1493,7 @@
                     <span class="c1"># length_scale_bounds=(1E-16, numpy.inf)  #(1e-05, 100000.0)</span>
                     <span class="p">)</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gp_alpha</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">gp_alpha</span> <span class="o">=</span> <span class="mf">0.1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gp_alpha</span> <span class="o">=</span> <span class="mf">1.</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gp_restarts</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">gp_restarts</span> <span class="o">=</span> <span class="mi">0</span>
 
@@ -1906,7 +1906,7 @@
 <span class="sd">        during fitting. If an array is passed, it must have the same number of</span>
 <span class="sd">        entries as the data used for fitting and is used as datapoint-dependent</span>
 <span class="sd">        noise level. Note that this is equivalent to adding a WhiteKernel with</span>
-<span class="sd">        c=alpha. If None is passed, gp_alpha=0.1 is used.</span>
+<span class="sd">        c=alpha. If None is passed, gp_alpha=1 is used.</span>
 <span class="sd">    </span>
 <span class="sd">    gp_restarts : int, optional (default: None)</span>
 <span class="sd">        Only available for gp_version=&#39;new&#39;. The number of restarts of the</span>
@@ -1927,7 +1927,6 @@
                 <span class="n">gp_kernel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">gp_alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">gp_restarts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-
                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
         <span class="n">CondIndTest</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -2119,6 +2118,13 @@
 
 <span class="sd">    This class requires the scipy.spatial.cKDTree package and the tigramite</span>
 <span class="sd">    cython module.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [3] J. Runge, J. Heitzig, V. Petoukhov, and J. Kurths: </span>
+<span class="sd">           Escaping the Curse of Dimensionality in Estimating Multivariate </span>
+<span class="sd">           Transfer Entropy. Physical Review Letters, 108(25), 258701. </span>
+<span class="sd">           http://doi.org/10.1103/PhysRevLett.108.258701</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>

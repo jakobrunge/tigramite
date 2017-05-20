@@ -240,7 +240,7 @@ def time_bin_with_mask(data, time_bin_length, sample_selector=None):
     return (bindata.squeeze(), T)
 
 
-def ordinal_patt_array(array, array_mask, dim=2, step=1, 
+def ordinal_patt_array(array, array_mask=None, dim=2, step=1, 
                         weights=False, verbosity=0):
     """Returns symbolified array of ordinal patterns.
 
@@ -291,7 +291,11 @@ def ordinal_patt_array(array, array_mask, dim=2, step=1,
 
     array = array.astype('float64')
 
-    assert array_mask.dtype == 'int32'
+    if array_mask is not None:
+        assert array_mask.dtype == 'int32'
+    else:
+        array_mask = numpy.zeros(array.shape, dtype='int32')
+
 
     if numpy.ndim(array) == 1:
         T = len(array)
@@ -319,6 +323,8 @@ def ordinal_patt_array(array, array_mask, dim=2, step=1,
     # larger than 10 are not supported
     fac = factorial(numpy.arange(10)).astype('int32')
 
+    # _get_patterns_cython assumes mask=0 to be a masked value
+    array_mask = (array_mask == False).astype('int32')
 
     (patt, patt_mask, weights_array) = tigramite_cython_code._get_patterns_cython(
         array, array_mask, patt, patt_mask, weights_array, dim, step, fac, N, 
@@ -326,7 +332,8 @@ def ordinal_patt_array(array, array_mask, dim=2, step=1,
 
     weights_array = numpy.asarray(weights_array)
     patt = numpy.asarray(patt)
-    patt_mask = numpy.asarray(patt_mask)
+    # Transform back to mask=1 implying a masked value
+    patt_mask = numpy.asarray(patt_mask) == False
 
     if weights:
         return (patt, patt_mask, patt_time, weights_array)
