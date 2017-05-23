@@ -143,10 +143,9 @@ class PCMCI():
     Parameters
     ----------
     dataframe : data object
-        This can either be the tigramite dataframe object or a pandas data
-        frame. It must have the attributes dataframe.values yielding a numpy
-        array of shape (observations T, variables N) and optionally a mask of 
-        the same shape.
+        This is the Tigramite dataframe object. It has the attributes
+        dataframe.values yielding a numpy array of shape (observations T,
+        variables N) and optionally a mask of  the same shape.
 
     cond_ind_test : conditional independence test object
         This can be ParCorr or other classes from the tigramite package or an
@@ -1415,10 +1414,6 @@ if __name__ == '__main__':
         mask=data_mask,
         )
     verbosity = 2
-
-    # import pandas as pd
-    # dataframe = pd.DataFrame(data)
-    # dataframe.mask = data_mask
 
     cond_ind_test = ParCorr(
         significance='analytic',
