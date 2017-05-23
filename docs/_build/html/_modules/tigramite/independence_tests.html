@@ -122,11 +122,11 @@
 <span class="sd">    use_mask : bool, optional (default: False)</span>
 <span class="sd">        Whether a supplied mask should be used.</span>
 
-<span class="sd">    mask_type : {&#39;missing&#39;,&#39;y&#39;,&#39;x&#39;,&#39;z&#39;,&#39;xy&#39;,&#39;xz&#39;,&#39;yz&#39;,&#39;xyz&#39;}</span>
-<span class="sd">        Masking mode: Either &#39;missing&#39; or indicators for which variables in the</span>
-<span class="sd">        dependence measure I(X; Y | Z) the samples should be masked. If None,</span>
-<span class="sd">        &#39;missing&#39; is used, which excludes masked samples for all X, Y, and Z up</span>
-<span class="sd">        to tau_max if a value is missing in any of them. Explained in [1]_.</span>
+<span class="sd">    mask_type : {&#39;y&#39;,&#39;x&#39;,&#39;z&#39;,&#39;xy&#39;,&#39;xz&#39;,&#39;yz&#39;,&#39;xyz&#39;}</span>
+<span class="sd">        Masking mode: Indicators for which variables in the dependence measure</span>
+<span class="sd">        I(X; Y | Z) the samples should be masked. If None, &#39;y&#39; is used, which</span>
+<span class="sd">        excludes all time slices containing masked samples in Y. Explained in</span>
+<span class="sd">        [1]_.</span>
 
 <span class="sd">    significance : str, optional (default: &#39;analytic&#39;)</span>
 <span class="sd">        Type of significance test to use. In this package &#39;analytic&#39;, </span>
@@ -206,7 +206,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_mask</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">recycle_residuals</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span> <span class="o">=</span> <span class="s1">&#39;missing&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span> <span class="o">=</span> <span class="s1">&#39;y&#39;</span>
 
         <span class="c1"># if use_mask:</span>
         <span class="c1">#     if mask_type is None or len(set(mask_type) -</span>
@@ -215,27 +215,21 @@
         <span class="c1">#                          % mask_type + &quot; &#39;x&#39;,&#39;y&#39;,&#39;z&#39;, or any &quot;</span>
         <span class="c1">#                          &quot;combination&quot;)</span>
 
-<div class="viewcode-block" id="CondIndTest.set_dataframe"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.CondIndTest.set_dataframe">[docs]</a>    <span class="k">def</span> <span class="nf">set_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">,</span> <span class="n">missing_flag</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="CondIndTest.set_dataframe"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.CondIndTest.set_dataframe">[docs]</a>    <span class="k">def</span> <span class="nf">set_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialize dataframe.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        dataframe : data object</span>
-<span class="sd">            This can either be the tigramite dataframe object or a pandas data</span>
-<span class="sd">            frame. It must have the attributes dataframe.values yielding a numpy</span>
-<span class="sd">            array of shape (observations T, variables N) and optionally a mask</span>
-<span class="sd">            of the same shape. </span>
-
-<span class="sd">        missing_flag : number, optional (default: None)</span>
-<span class="sd">            Flag for missing values in dataframe. Dismisses all time slices of</span>
-<span class="sd">            samples where missing values occur in any variable and also flags</span>
-<span class="sd">            samples for all lags up to 2*tau_max. This avoids biases, see</span>
-<span class="sd">            section on masking in Supplement of [1]_.</span>
+<span class="sd">            Set tigramite dataframe object. It must have the attributes</span>
+<span class="sd">            dataframe.values yielding a numpy array of shape (observations T,</span>
+<span class="sd">            variables N) and optionally a mask of the same shape and a missing</span>
+<span class="sd">            values flag.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">values</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">mask</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span> <span class="o">=</span> <span class="n">missing_flag</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">missing_flag</span></div>
 
     <span class="k">def</span> <span class="nf">_keyfy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Helper function to make lists unique.&quot;&quot;&quot;</span>
@@ -2082,13 +2076,13 @@
 <div class="viewcode-block" id="CMIknn"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.CMIknn">[docs]</a><span class="k">class</span> <span class="nc">CMIknn</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
     <span class="sd">r&quot;&quot;&quot;Conditional mutual information test based on nearest-neighbor estimator.</span>
 
-<span class="sd">    Conditional mutual information is the most general dependency measure</span>
-<span class="sd">    coming from an information-theoretic framework. It makes no assumptions</span>
-<span class="sd">    about the parametric form of the dependencies by directly estimating the</span>
-<span class="sd">    underlying joint density. The test here is based on the estimator in  S.</span>
-<span class="sd">    Frenzel and B. Pompe, Phys. Rev. Lett. 99, 204101 (2007), combined with a</span>
-<span class="sd">    shuffle test to generate  the distribution under the null hypothesis of</span>
-<span class="sd">    independence. The knn-estimator is suitable only for variables taking a </span>
+<span class="sd">    Conditional mutual information is the most general dependency measure coming</span>
+<span class="sd">    from an information-theoretic framework. It makes no assumptions about the</span>
+<span class="sd">    parametric form of the dependencies by directly estimating the underlying</span>
+<span class="sd">    joint density. The test here is based on the estimator in  S. Frenzel and B.</span>
+<span class="sd">    Pompe, Phys. Rev. Lett. 99, 204101 (2007), combined with a shuffle test to</span>
+<span class="sd">    generate  the distribution under the null hypothesis of independence first</span>
+<span class="sd">    used in [3]_. The knn-estimator is suitable only for variables taking a</span>
 <span class="sd">    continuous range of values. For discrete variables use the CMIsymb class.</span>
 
 <span class="sd">    Notes</span>

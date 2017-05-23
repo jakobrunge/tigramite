@@ -191,7 +191,7 @@
 <span class="sd">    &gt;&gt;&gt; cond_ind_test = ParCorr()</span>
 <span class="sd">    &gt;&gt;&gt; pcmci = PCMCI(dataframe=dataframe, cond_ind_test=cond_ind_test)</span>
 <span class="sd">    &gt;&gt;&gt; results = pcmci.run_pcmci(tau_max=2, pc_alpha=None)</span>
-<span class="sd">    &gt;&gt;&gt; pcmci._print_significant_parents(p_matrix=results[&#39;p_matrix&#39;],</span>
+<span class="sd">    &gt;&gt;&gt; pcmci._print_significant_links(p_matrix=results[&#39;p_matrix&#39;],</span>
 <span class="sd">                                         val_matrix=results[&#39;val_matrix&#39;],</span>
 <span class="sd">                                         alpha_level=0.05)</span>
 <span class="sd">    ## Significant parents at alpha = 0.05:</span>
@@ -497,6 +497,7 @@
 
         <span class="n">iterations</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;iterations&#39;</span><span class="p">:</span> <span class="p">{}}</span>
 
+        <span class="n">tau_min</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">tau_min</span><span class="p">)</span>
         <span class="c1">#</span>
         <span class="c1"># Iteration through increasing number of conditions</span>
         <span class="c1">#</span>
@@ -696,6 +697,8 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;tau_max = </span><span class="si">%d</span><span class="s2">, tau_min = </span><span class="si">%d</span><span class="s2">, &quot;</span> <span class="o">%</span> <span class="p">(</span>
                              <span class="n">tau_max</span><span class="p">,</span> <span class="n">tau_min</span><span class="p">)</span>
                              <span class="o">+</span> <span class="s2">&quot;but 0 &lt;= tau_min &lt;= tau_max&quot;</span><span class="p">)</span>
+
+        <span class="n">tau_min</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">tau_min</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">selected_links</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">selected_links</span> <span class="o">=</span> <span class="p">{}</span>
@@ -1015,7 +1018,7 @@
 
 <div class="viewcode-block" id="PCMCI.run_mci"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.run_mci">[docs]</a>    <span class="k">def</span> <span class="nf">run_mci</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                 <span class="n">selected_links</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                <span class="n">tau_min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">tau_min</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                 <span class="n">tau_max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                 <span class="n">parents</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">max_conds_py</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1259,7 +1262,7 @@
         <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;parents&#39;</span><span class="p">:</span><span class="n">all_parents</span><span class="p">,</span> 
                 <span class="s1">&#39;link_matrix&#39;</span><span class="p">:</span><span class="n">link_matrix</span><span class="p">}</span>
 
-    <span class="k">def</span> <span class="nf">_print_significant_parents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">_print_significant_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                                   <span class="n">p_matrix</span><span class="p">,</span>
                                   <span class="n">val_matrix</span><span class="p">,</span>
                                   <span class="n">conf_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1291,12 +1294,12 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">sig_links</span> <span class="o">=</span> <span class="p">(</span><span class="n">p_matrix</span> <span class="o">&lt;=</span> <span class="n">alpha_level</span><span class="p">)</span>
 
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">## Significant parents at alpha = </span><span class="si">%s</span><span class="s2">:&quot;</span> <span class="o">%</span> <span class="n">alpha_level</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">## Significant links at alpha = </span><span class="si">%s</span><span class="s2">:&quot;</span> <span class="o">%</span> <span class="n">alpha_level</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_variables</span><span class="p">:</span>
 
-            <span class="n">links</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([((</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">val_matrix</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> 
-                            <span class="n">j</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]))</span>
-                          <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">sig_links</span><span class="p">[:,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">1</span><span class="p">:]))])</span>
+            <span class="n">links</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([((</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="p">),</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">val_matrix</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> 
+                            <span class="n">j</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])]))</span>
+                          <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">sig_links</span><span class="p">[:,</span> <span class="n">j</span><span class="p">,</span> <span class="p">:]))])</span>
 
             <span class="c1"># Sort by value</span>
             <span class="n">sorted_links</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">links</span><span class="o">.</span><span class="n">get</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -1306,7 +1309,7 @@
             <span class="n">string</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
             <span class="k">if</span> <span class="n">n_links</span> <span class="o">&lt;</span> <span class="mi">20</span><span class="p">:</span>
                 <span class="n">string</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">    Variable </span><span class="si">%s</span><span class="s2"> has </span><span class="si">%d</span><span class="s2"> &quot;</span>
-                          <span class="s2">&quot;parent(s):&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">n_links</span><span class="p">))</span>
+                          <span class="s2">&quot;link(s):&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">n_links</span><span class="p">))</span>
                 <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">sorted_links</span><span class="p">:</span>
                     <span class="n">string</span> <span class="o">+=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">        (</span><span class="si">%s</span><span class="s2"> </span><span class="si">%d</span><span class="s2">): pval = </span><span class="si">%.5f</span><span class="s2">&quot;</span> <span class="o">%</span>
                                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> 
@@ -1325,7 +1328,7 @@
                             <span class="n">conf_matrix</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">j</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])][</span><span class="mi">1</span><span class="p">])</span>
 
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">string</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">    Variable </span><span class="si">%s</span><span class="s2"> has </span><span class="si">%d</span><span class="s2"> parent(s)&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="n">string</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">    Variable </span><span class="si">%s</span><span class="s2"> has </span><span class="si">%d</span><span class="s2"> link(s)&quot;</span> <span class="o">%</span> <span class="p">(</span>
                                 <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">n_links</span><span class="p">))</span>
             <span class="nb">print</span> <span class="n">string</span>
 
@@ -1424,8 +1427,7 @@
             <span class="n">conf_matrix</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="k">if</span> <span class="n">fdr_method</span> <span class="o">!=</span> <span class="s1">&#39;none&#39;</span><span class="p">:</span>
-            <span class="n">q_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_corrected_pvalues</span><span class="p">(</span><span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
-                                                  <span class="n">p_matrix</span><span class="o">=</span><span class="n">p_matrix</span><span class="p">,</span>
+            <span class="n">q_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_corrected_pvalues</span><span class="p">(</span><span class="n">p_matrix</span><span class="o">=</span><span class="n">p_matrix</span><span class="p">,</span>
                                                   <span class="n">fdr_method</span><span class="o">=</span><span class="n">fdr_method</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">q_matrix</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1482,21 +1484,21 @@
     <span class="c1"># dataframe = pd.DataFrame(data)</span>
     <span class="c1"># dataframe.mask = data_mask</span>
 
-    <span class="c1"># cond_ind_test = ParCorr(</span>
-    <span class="c1">#     significance=&#39;analytic&#39;,</span>
-    <span class="c1">#     fixed_thres=0.05,</span>
-    <span class="c1">#     sig_samples=100,</span>
+    <span class="n">cond_ind_test</span> <span class="o">=</span> <span class="n">ParCorr</span><span class="p">(</span>
+        <span class="n">significance</span><span class="o">=</span><span class="s1">&#39;analytic&#39;</span><span class="p">,</span>
+        <span class="n">fixed_thres</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+        <span class="n">sig_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
 
-    <span class="c1">#     use_mask=False,</span>
-    <span class="c1">#     mask_type=[&#39;x&#39;,&#39;y&#39;, &#39;z&#39;],  #  [&#39;x&#39;,&#39;y&#39;,&#39;z&#39;],</span>
+        <span class="n">use_mask</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">mask_type</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">],</span>  <span class="c1">#  [&#39;x&#39;,&#39;y&#39;,&#39;z&#39;],</span>
 
-    <span class="c1">#     confidence=&#39;analytic&#39;,</span>
-    <span class="c1">#     conf_lev=0.9,</span>
-    <span class="c1">#     conf_samples=200,</span>
-    <span class="c1">#     conf_blocklength=10,</span>
+        <span class="n">confidence</span><span class="o">=</span><span class="s1">&#39;analytic&#39;</span><span class="p">,</span>
+        <span class="n">conf_lev</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
+        <span class="n">conf_samples</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+        <span class="n">conf_blocklength</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
 
-    <span class="c1">#     recycle_residuals=False,</span>
-    <span class="c1">#     verbosity=verbosity)</span>
+        <span class="n">recycle_residuals</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">verbosity</span><span class="o">=</span><span class="n">verbosity</span><span class="p">)</span>
 
     <span class="c1"># cond_ind_test = GPACE(</span>
     <span class="c1">#     significance=&#39;analytic&#39;,</span>
@@ -1517,23 +1519,23 @@
     <span class="c1">#     recycle_residuals=False,</span>
     <span class="c1">#     verbosity=verbosity)</span>
 
-    <span class="n">cond_ind_test</span> <span class="o">=</span> <span class="n">GPDC</span><span class="p">(</span>
-        <span class="n">significance</span><span class="o">=</span><span class="s1">&#39;analytic&#39;</span><span class="p">,</span>
-        <span class="n">fixed_thres</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
-        <span class="n">sig_samples</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span>
+    <span class="c1"># cond_ind_test = GPDC(</span>
+    <span class="c1">#     significance=&#39;analytic&#39;,</span>
+    <span class="c1">#     fixed_thres=0.05,</span>
+    <span class="c1">#     sig_samples=2000,</span>
 
-        <span class="n">use_mask</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">mask_type</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span>
+    <span class="c1">#     use_mask=False,</span>
+    <span class="c1">#     mask_type=[&#39;y&#39;],</span>
 
-        <span class="n">confidence</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">conf_lev</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
-        <span class="n">conf_samples</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
-        <span class="n">conf_blocklength</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="c1">#     confidence=False,</span>
+    <span class="c1">#     conf_lev=0.9,</span>
+    <span class="c1">#     conf_samples=200,</span>
+    <span class="c1">#     conf_blocklength=None,</span>
 
-        <span class="n">gp_version</span><span class="o">=</span><span class="s1">&#39;new&#39;</span><span class="p">,</span>
-        <span class="n">gp_alpha</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
-        <span class="n">recycle_residuals</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">verbosity</span><span class="o">=</span><span class="n">verbosity</span><span class="p">)</span>
+    <span class="c1">#     gp_version=&#39;new&#39;,</span>
+    <span class="c1">#     gp_alpha=1.,</span>
+    <span class="c1">#     recycle_residuals=False,</span>
+    <span class="c1">#     verbosity=verbosity)</span>
 
     <span class="c1"># cond_ind_test = CMIsymb(</span>
     <span class="c1">#     significance=&#39;shuffle_test&#39;,</span>
@@ -1576,7 +1578,7 @@
         <span class="n">fdr_method</span><span class="o">=</span><span class="s1">&#39;fdr_bh&#39;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">pcmci</span><span class="o">.</span><span class="n">_print_significant_parents</span><span class="p">(</span>
+    <span class="n">pcmci</span><span class="o">.</span><span class="n">_print_significant_links</span><span class="p">(</span>
                    <span class="n">p_matrix</span><span class="o">=</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;p_matrix&#39;</span><span class="p">],</span>
                    <span class="n">q_matrix</span><span class="o">=</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;q_matrix&#39;</span><span class="p">],</span> 
                    <span class="n">val_matrix</span><span class="o">=</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;val_matrix&#39;</span><span class="p">],</span>

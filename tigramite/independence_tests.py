@@ -58,11 +58,11 @@ class CondIndTest(object):
     use_mask : bool, optional (default: False)
         Whether a supplied mask should be used.
 
-    mask_type : {'missing','y','x','z','xy','xz','yz','xyz'}
-        Masking mode: Either 'missing' or indicators for which variables in the
-        dependence measure I(X; Y | Z) the samples should be masked. If None,
-        'missing' is used, which excludes masked samples for all X, Y, and Z up
-        to tau_max if a value is missing in any of them. Explained in [1]_.
+    mask_type : {'y','x','z','xy','xz','yz','xyz'}
+        Masking mode: Indicators for which variables in the dependence measure
+        I(X; Y | Z) the samples should be masked. If None, 'y' is used, which
+        excludes all time slices containing masked samples in Y. Explained in
+        [1]_.
 
     significance : str, optional (default: 'analytic')
         Type of significance test to use. In this package 'analytic', 
@@ -142,7 +142,7 @@ class CondIndTest(object):
         if self.use_mask:
             self.recycle_residuals = False
         if self.mask_type is None:
-            self.mask_type = 'missing'
+            self.mask_type = 'y'
 
         # if use_mask:
         #     if mask_type is None or len(set(mask_type) -
@@ -151,27 +151,21 @@ class CondIndTest(object):
         #                          % mask_type + " 'x','y','z', or any "
         #                          "combination")
 
-    def set_dataframe(self, dataframe, missing_flag=None):
+    def set_dataframe(self, dataframe):
         """Initialize dataframe.
 
         Parameters
         ----------
         dataframe : data object
-            This can either be the tigramite dataframe object or a pandas data
-            frame. It must have the attributes dataframe.values yielding a numpy
-            array of shape (observations T, variables N) and optionally a mask
-            of the same shape. 
-
-        missing_flag : number, optional (default: None)
-            Flag for missing values in dataframe. Dismisses all time slices of
-            samples where missing values occur in any variable and also flags
-            samples for all lags up to 2*tau_max. This avoids biases, see
-            section on masking in Supplement of [1]_.
+            Set tigramite dataframe object. It must have the attributes
+            dataframe.values yielding a numpy array of shape (observations T,
+            variables N) and optionally a mask of the same shape and a missing
+            values flag.
 
         """
         self.data = dataframe.values
         self.mask = dataframe.mask
-        self.missing_flag = missing_flag
+        self.missing_flag = dataframe.missing_flag
 
     def _keyfy(self, x, z):
         """Helper function to make lists unique."""
@@ -2018,13 +2012,13 @@ class GPDC(CondIndTest,GP):
 class CMIknn(CondIndTest):
     r"""Conditional mutual information test based on nearest-neighbor estimator.
 
-    Conditional mutual information is the most general dependency measure
-    coming from an information-theoretic framework. It makes no assumptions
-    about the parametric form of the dependencies by directly estimating the
-    underlying joint density. The test here is based on the estimator in  S.
-    Frenzel and B. Pompe, Phys. Rev. Lett. 99, 204101 (2007), combined with a
-    shuffle test to generate  the distribution under the null hypothesis of
-    independence. The knn-estimator is suitable only for variables taking a 
+    Conditional mutual information is the most general dependency measure coming
+    from an information-theoretic framework. It makes no assumptions about the
+    parametric form of the dependencies by directly estimating the underlying
+    joint density. The test here is based on the estimator in  S. Frenzel and B.
+    Pompe, Phys. Rev. Lett. 99, 204101 (2007), combined with a shuffle test to
+    generate  the distribution under the null hypothesis of independence first
+    used in [3]_. The knn-estimator is suitable only for variables taking a
     continuous range of values. For discrete variables use the CMIsymb class.
 
     Notes

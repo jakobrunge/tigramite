@@ -10,8 +10,8 @@ Version 3.0 described in http://arxiv.org/abs/1702.07007
 
 ## General Notes
 
-TIGRAMITE is a time series analysis python module. It allows to reconstruct graphical models (conditional independence graphs) from discrete or continuously-valued time series based on a causal discovery algorithm and create high-quality plots of the results.
-
+TIGRAMITE is a time series analysis python module. It implements the PCMCI causal discobery method that allows to reconstruct graphical models (conditional independence graphs) from discrete or continuously-valued time series and includes modules for high-quality plots of the results.
+TODO: also mediation, prediction
 
 ## Features
 
@@ -24,6 +24,7 @@ TIGRAMITE is a time series analysis python module. It allows to reconstruct grap
 - handling of missing values and masks
 - p-value correction and confidence interval estimation
 - can be used for feature selection and prediction
+TODO: also mediation, prediction
 
 
 ## Required python packages
@@ -70,9 +71,7 @@ You commit to cite TIGRAMITE in your reports or publications if used:
 
 ## License
 
-Copyright (C) 2012-2017 Jakob Runge
-
-mpi4py wrapper module "mpi.py" Copyright (C) 2012 Jobst Heitzig
+Copyright (C) Jakob Runge
 
 See license.txt for full text.
 

@@ -120,6 +120,7 @@ def _get_absmax(val_matrix):
 def _add_timeseries(fig, axes, i, time, dataseries, label,
                    use_mask=False,
                    mask=None,
+                   missing_flag=None,
                    grey_masked_samples=False,
                    data_linewidth=1.,
                    skip_ticks_data_x=1,
@@ -152,6 +153,12 @@ def _add_timeseries(fig, axes, i, time, dataseries, label,
 
     dataseries : array-like
         One-dimensional data series array of variable.
+
+    missing_flag : number, optional (default: None)
+        Flag for missing values in dataframe. Dismisses all time slices of
+        samples where missing values occur in any variable and also flags
+        samples for all lags up to 2*tau_max. This avoids biases, see section on
+        masking in Supplement of [1]_.
 
     label : str
         Variable label.
@@ -200,8 +207,11 @@ def _add_timeseries(fig, axes, i, time, dataseries, label,
     except:
         ax = axes
 
+    dataseries_nomissing = numpy.ma.masked_where(dataseries==missing_flag, 
+                                                 dataseries)
     if use_mask:
-        maskdata = numpy.ma.masked_where(mask, dataseries)
+
+        maskdata = numpy.ma.masked_where(mask, dataseries_nomissing)
 
         if grey_masked_samples == 'fill':
             ax.fill_between(time, maskdata.min(), maskdata.max(),
@@ -209,7 +219,7 @@ def _add_timeseries(fig, axes, i, time, dataseries, label,
                             interpolate=True,
                             linewidth=0., alpha=grey_alpha)
         elif grey_masked_samples == 'data':
-            ax.plot(time, dataseries,
+            ax.plot(time, dataseries_nomissing,
                     color='grey', marker='.', markersize=data_linewidth,
                     linewidth=data_linewidth, clip_on=False,
                     alpha=grey_alpha)
@@ -218,7 +228,7 @@ def _add_timeseries(fig, axes, i, time, dataseries, label,
                 color=color, linewidth=data_linewidth, marker='.',
                 markersize=data_linewidth, clip_on=False)
     else:
-        ax.plot(time, dataseries,
+        ax.plot(time, dataseries_nomissing,
                 color=color, linewidth=data_linewidth, clip_on=False)
 
     if last:
@@ -262,6 +272,7 @@ def plot_timeseries(data,
                     time_label='time',
                     use_mask=False,
                     mask=None,
+                    missing_flag=None,
                     grey_masked_samples=False,
                     data_linewidth=1.,
                     skip_ticks_data_x=1,
@@ -303,6 +314,12 @@ def plot_timeseries(data,
 
     mask : array-like, optional (default: None)
         Data mask where True labels masked samples.
+
+    missing_flag : number, optional (default: None)
+        Flag for missing values in dataframe. Dismisses all time slices of
+        samples where missing values occur in any variable and also flags
+        samples for all lags up to 2*tau_max. This avoids biases, see section on
+        masking in Supplement of [1]_.
 
     grey_masked_samples : bool, optional (default: False)
         Whether to mark masked samples by grey fills ('fill') or grey data ('data').
@@ -348,6 +365,7 @@ def plot_timeseries(data,
                        label=var_names[i],
                        use_mask=use_mask,
                        mask=mask_i,
+                       missing_flag=missing_flag,
                        grey_masked_samples=grey_masked_samples,
                        data_linewidth=data_linewidth,
                        skip_ticks_data_x=skip_ticks_data_x,
@@ -1658,7 +1676,8 @@ if __name__ == '__main__':
     mask = numpy.zeros(data.shape)
     mask[:len(data)/2]=True
 
-    plot_lagfuncs(val_matrix, var_names=range(3), markersize=5)
+    data[:20] = 99.
+    # plot_lagfuncs(val_matrix, var_names=range(3), markersize=5)
 
     plot_timeseries(data,  
                     datatime=None,
@@ -1667,8 +1686,9 @@ if __name__ == '__main__':
                     var_units=None,
                     time_label='years',
                     use_mask=True,
+                    missing_flag=99.,
                     mask=mask,
-                    grey_masked_samples='data',
+                    grey_masked_samples='fill',
                     data_linewidth=1.,
                     skip_ticks_data_x=1,
                     skip_ticks_data_y=1,

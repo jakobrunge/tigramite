@@ -127,7 +127,7 @@ class PCMCI():
     >>> cond_ind_test = ParCorr()
     >>> pcmci = PCMCI(dataframe=dataframe, cond_ind_test=cond_ind_test)
     >>> results = pcmci.run_pcmci(tau_max=2, pc_alpha=None)
-    >>> pcmci._print_significant_parents(p_matrix=results['p_matrix'],
+    >>> pcmci._print_significant_links(p_matrix=results['p_matrix'],
                                          val_matrix=results['val_matrix'],
                                          alpha_level=0.05)
     ## Significant parents at alpha = 0.05:
@@ -433,6 +433,7 @@ class PCMCI():
 
         iterations = {'iterations': {}}
 
+        tau_min = max(1, tau_min)
         #
         # Iteration through increasing number of conditions
         #
@@ -632,6 +633,8 @@ class PCMCI():
             raise ValueError("tau_max = %d, tau_min = %d, " % (
                              tau_max, tau_min)
                              + "but 0 <= tau_min <= tau_max")
+
+        tau_min = max(1, tau_min)
 
         if selected_links is None:
             selected_links = {}
@@ -951,7 +954,7 @@ class PCMCI():
 
     def run_mci(self,
                 selected_links=None,
-                tau_min=0,
+                tau_min=1,
                 tau_max=1,
                 parents=None,
                 max_conds_py=None,
@@ -1195,7 +1198,7 @@ class PCMCI():
         return {'parents':all_parents, 
                 'link_matrix':link_matrix}
 
-    def _print_significant_parents(self,
+    def _print_significant_links(self,
                                   p_matrix,
                                   val_matrix,
                                   conf_matrix=None,
@@ -1227,12 +1230,12 @@ class PCMCI():
         else:
             sig_links = (p_matrix <= alpha_level)
 
-        print("\n## Significant parents at alpha = %s:" % alpha_level)
+        print("\n## Significant links at alpha = %s:" % alpha_level)
         for j in self.selected_variables:
 
-            links = dict([((p[0], -p[1] - 1), numpy.abs(val_matrix[p[0], 
-                            j, abs(p[1]) + 1]))
-                          for p in zip(*numpy.where(sig_links[:, j, 1:]))])
+            links = dict([((p[0], -p[1] ), numpy.abs(val_matrix[p[0], 
+                            j, abs(p[1])]))
+                          for p in zip(*numpy.where(sig_links[:, j, :]))])
 
             # Sort by value
             sorted_links = sorted(links, key=links.get, reverse=True)
@@ -1242,7 +1245,7 @@ class PCMCI():
             string = ""
             if n_links < 20:
                 string = ("\n    Variable %s has %d "
-                          "parent(s):" % (self.var_names[j], n_links))
+                          "link(s):" % (self.var_names[j], n_links))
                 for p in sorted_links:
                     string += ("\n        (%s %d): pval = %.5f" %
                                (self.var_names[p[0]], p[1], 
@@ -1261,7 +1264,7 @@ class PCMCI():
                             conf_matrix[p[0], j, abs(p[1])][1])
 
             else:
-                string = ("\n    Variable %s has %d parent(s)" % (
+                string = ("\n    Variable %s has %d link(s)" % (
                                 self.var_names[j], n_links))
             print string
 
@@ -1360,8 +1363,7 @@ class PCMCI():
             conf_matrix = None
 
         if fdr_method != 'none':
-            q_matrix = self.get_corrected_pvalues(tau_max=tau_max,
-                                                  p_matrix=p_matrix,
+            q_matrix = self.get_corrected_pvalues(p_matrix=p_matrix,
                                                   fdr_method=fdr_method)
         else:
             q_matrix = None
@@ -1418,21 +1420,21 @@ if __name__ == '__main__':
     # dataframe = pd.DataFrame(data)
     # dataframe.mask = data_mask
 
-    # cond_ind_test = ParCorr(
-    #     significance='analytic',
-    #     fixed_thres=0.05,
-    #     sig_samples=100,
+    cond_ind_test = ParCorr(
+        significance='analytic',
+        fixed_thres=0.05,
+        sig_samples=100,
 
-    #     use_mask=False,
-    #     mask_type=['x','y', 'z'],  #  ['x','y','z'],
+        use_mask=False,
+        mask_type=['x','y', 'z'],  #  ['x','y','z'],
 
-    #     confidence='analytic',
-    #     conf_lev=0.9,
-    #     conf_samples=200,
-    #     conf_blocklength=10,
+        confidence='analytic',
+        conf_lev=0.9,
+        conf_samples=200,
+        conf_blocklength=10,
 
-    #     recycle_residuals=False,
-    #     verbosity=verbosity)
+        recycle_residuals=False,
+        verbosity=verbosity)
 
     # cond_ind_test = GPACE(
     #     significance='analytic',
@@ -1453,23 +1455,23 @@ if __name__ == '__main__':
     #     recycle_residuals=False,
     #     verbosity=verbosity)
 
-    cond_ind_test = GPDC(
-        significance='analytic',
-        fixed_thres=0.05,
-        sig_samples=2000,
+    # cond_ind_test = GPDC(
+    #     significance='analytic',
+    #     fixed_thres=0.05,
+    #     sig_samples=2000,
 
-        use_mask=False,
-        mask_type=['y'],
+    #     use_mask=False,
+    #     mask_type=['y'],
 
-        confidence=False,
-        conf_lev=0.9,
-        conf_samples=200,
-        conf_blocklength=None,
+    #     confidence=False,
+    #     conf_lev=0.9,
+    #     conf_samples=200,
+    #     conf_blocklength=None,
 
-        gp_version='new',
-        gp_alpha=1.,
-        recycle_residuals=False,
-        verbosity=verbosity)
+    #     gp_version='new',
+    #     gp_alpha=1.,
+    #     recycle_residuals=False,
+    #     verbosity=verbosity)
 
     # cond_ind_test = CMIsymb(
     #     significance='shuffle_test',
@@ -1512,7 +1514,7 @@ if __name__ == '__main__':
         fdr_method='fdr_bh',
     )
 
-    pcmci._print_significant_parents(
+    pcmci._print_significant_links(
                    p_matrix=results['p_matrix'],
                    q_matrix=results['q_matrix'], 
                    val_matrix=results['val_matrix'],

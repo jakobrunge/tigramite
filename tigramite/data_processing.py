@@ -29,12 +29,20 @@ class DataFrame():
     
     mask : array-like, optional (default: None)
         Optional mask array, must be of same shape as data
+
+    missing_flag : number, optional (default: None)
+        Flag for missing values in dataframe. Dismisses all time slices of
+        samples where missing values occur in any variable and also flags
+        samples for all lags up to 2*tau_max. This avoids biases, see
+        section on masking in Supplement of [1]_.
+
     """
     def __init__(self, data,
-                 mask = None):
+                 mask = None, missing_flag=None):
 
         self.values = data
         self.mask = mask
+        self.missing_flag = missing_flag
         T, N = data.shape
 
         if type(self.values) != numpy.ndarray:
@@ -49,6 +57,7 @@ class DataFrame():
         if self.mask is not None:
             if self.mask.shape != self.values.shape:
                 raise ValueError("Mask array must of same shape as data array")
+
 
 
 def lowhighpass_filter(data, cutperiod, pass_periods='low'):

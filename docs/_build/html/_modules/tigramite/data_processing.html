@@ -93,12 +93,20 @@
 <span class="sd">    </span>
 <span class="sd">    mask : array-like, optional (default: None)</span>
 <span class="sd">        Optional mask array, must be of same shape as data</span>
+
+<span class="sd">    missing_flag : number, optional (default: None)</span>
+<span class="sd">        Flag for missing values in dataframe. Dismisses all time slices of</span>
+<span class="sd">        samples where missing values occur in any variable and also flags</span>
+<span class="sd">        samples for all lags up to 2*tau_max. This avoids biases, see</span>
+<span class="sd">        section on masking in Supplement of [1]_.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span>
-                 <span class="n">mask</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+                 <span class="n">mask</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">missing_flag</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">values</span> <span class="o">=</span> <span class="n">data</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span> <span class="o">=</span> <span class="n">missing_flag</span>
         <span class="n">T</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
 
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="o">!=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -113,6 +121,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Mask array must of same shape as data array&quot;</span><span class="p">)</span></div>
+
 
 
 <div class="viewcode-block" id="lowhighpass_filter"><a class="viewcode-back" href="../../index.html#tigramite.data_processing.lowhighpass_filter">[docs]</a><span class="k">def</span> <span class="nf">lowhighpass_filter</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">cutperiod</span><span class="p">,</span> <span class="n">pass_periods</span><span class="o">=</span><span class="s1">&#39;low&#39;</span><span class="p">):</span>
