@@ -24,7 +24,7 @@ class DataFrame():
 
     Attributes
     ----------
-    self.data : array-like
+    data : array-like
         Numpy array of shape (observations T, variables N)
     
     mask : array-like, optional (default: None)
