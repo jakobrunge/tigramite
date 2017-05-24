@@ -207,10 +207,9 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    dataframe : data object</span>
-<span class="sd">        This can either be the tigramite dataframe object or a pandas data</span>
-<span class="sd">        frame. It must have the attributes dataframe.values yielding a numpy</span>
-<span class="sd">        array of shape (observations T, variables N) and optionally a mask of </span>
-<span class="sd">        the same shape.</span>
+<span class="sd">        This is the Tigramite dataframe object. It has the attributes</span>
+<span class="sd">        dataframe.values yielding a numpy array of shape (observations T,</span>
+<span class="sd">        variables N) and optionally a mask of  the same shape.</span>
 
 <span class="sd">    cond_ind_test : conditional independence test object</span>
 <span class="sd">        This can be ParCorr or other classes from the tigramite package or an</span>
@@ -1479,10 +1478,6 @@
         <span class="n">mask</span><span class="o">=</span><span class="n">data_mask</span><span class="p">,</span>
         <span class="p">)</span>
     <span class="n">verbosity</span> <span class="o">=</span> <span class="mi">2</span>
-
-    <span class="c1"># import pandas as pd</span>
-    <span class="c1"># dataframe = pd.DataFrame(data)</span>
-    <span class="c1"># dataframe.mask = data_mask</span>
 
     <span class="n">cond_ind_test</span> <span class="o">=</span> <span class="n">ParCorr</span><span class="p">(</span>
         <span class="n">significance</span><span class="o">=</span><span class="s1">&#39;analytic&#39;</span><span class="p">,</span>

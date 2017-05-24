@@ -259,10 +259,9 @@ associations in large nonlinear time series datasets,
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>dataframe</strong> (<em>data object</em>) &#8211; This can either be the tigramite dataframe object or a pandas data
-frame. It must have the attributes dataframe.values yielding a numpy
-array of shape (observations T, variables N) and optionally a mask of
-the same shape.</li>
+<li><strong>dataframe</strong> (<em>data object</em>) &#8211; This is the Tigramite dataframe object. It has the attributes
+dataframe.values yielding a numpy array of shape (observations T,
+variables N) and optionally a mask of  the same shape.</li>
 <li><strong>cond_ind_test</strong> (<em>conditional independence test object</em>) &#8211; <p>This can be ParCorr or other classes from the tigramite package or an
 external test passed as a callable. This test can be based on the class
 tigramite.independence_tests.CondIndTest. If a callable is passed, it
