@@ -67,7 +67,7 @@ class PCMCI():
     2.  *Momentary conditional independence* (MCI)
 
         .. math:: X^i_{t-\tau} ~\perp~ X^j_{t} ~|~ \tilde{\mathcal{P}}(X^j_t),
-                                        \tilde{\mathcal{P}}(X^i_{t-{\tau}})\,,
+                                        \tilde{\mathcal{P}}(X^i_{t-{\tau}})
     
     here implemented as ``run_mci``. The condition-selection step reduces the 
     dimensionality and avoids conditioning on irrelevant variables.

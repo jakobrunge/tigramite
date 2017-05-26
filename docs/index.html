@@ -180,8 +180,8 @@ iterative PC1 algorithm , implemented as <code class="docutils literal"><span cl
 </li>
 <li><p class="first"><em>Momentary conditional independence</em> (MCI)</p>
 <div class="math">
-<p><img src="_images/math/800dfaa0c90ca286828ff03079c404939154959a.png" alt="X^i_{t-\tau} ~\perp~ X^j_{t} ~|~ \tilde{\mathcal{P}}(X^j_t),
-\tilde{\mathcal{P}}(X^i_{t-{\tau}})\,,"/></p>
+<p><img src="_images/math/e655092ec45224f09927d0ed9e6fcdfbddb67754.png" alt="X^i_{t-\tau} ~\perp~ X^j_{t} ~|~ \tilde{\mathcal{P}}(X^j_t),
+\tilde{\mathcal{P}}(X^i_{t-{\tau}})"/></p>
 </div></li>
 </ol>
 <p>here implemented as <code class="docutils literal"><span class="pre">run_mci</span></code>. The condition-selection step reduces the
@@ -955,10 +955,15 @@ different lags in X, Z, all have the same sample size.</li>
 
 <dl class="class">
 <dt id="tigramite.independence_tests.GP">
-<em class="property">class </em><code class="descclassname">tigramite.independence_tests.</code><code class="descname">GP</code><span class="sig-paren">(</span><em>gp_version='new'</em>, <em>gp_kernel=None</em>, <em>gp_alpha=None</em>, <em>gp_restarts=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#GP"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.GP" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">tigramite.independence_tests.</code><code class="descname">GP</code><span class="sig-paren">(</span><em>gp_version='new'</em>, <em>gp_params=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#GP"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.GP" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gaussian processes base class.</p>
 <p>GP is estimated with scikit-learn and allows to flexibly specify kernels and
-hyperparameters or let them be optimized automatically.</p>
+hyperparameters or let them be optimized automatically. The kernel specifies
+the covariance function of the GP. Parameters can be passed on to
+<code class="docutils literal"><span class="pre">GaussianProcessRegressor</span></code> using the gp_params dictionary. If None is
+passed, the kernel &#8216;1.0 * RBF(1.0) + WhiteKernel()&#8217; is used with alpha=0 as
+default. Note that the kernel&#8217;s hyperparameters are optimized during
+fitting.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -967,25 +972,7 @@ hyperparameters or let them be optimized automatically.</p>
 <li><strong>gp_version</strong> (<em>{'new'</em><em>, </em><em>'old'}</em><em>, </em><em>optional</em><em> (</em><em>default: 'new'</em><em>)</em><em></em>) &#8211; The older GP version from scikit-learn 0.17 was used for the numerical
 simulations in <a class="footnote-reference" href="#id5" id="id11">[1]</a>. The newer version from scikit-learn 0.19 is faster
 and allows more flexibility regarding kernels etc.</li>
-<li><strong>gp_kernel</strong> (<em>kernel object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Only available for gp_version=&#8217;new&#8217;. Can be any scikit-learn kernel
-object available in gaussian_process.kernels. The kernel specifies the
-covariance function of the GP. If None is passed, the kernel &#8216;1.0 *
-RBF(1.0)&#8217; is used as default. Note that the kernel&#8217;s hyperparameters are
-optimized during fitting.</li>
-<li><strong>gp_alpha</strong> (<em>float</em><em> or </em><em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Only available for gp_version=&#8217;new&#8217;. Value added to the diagonal of the
-kernel matrix during fitting. Larger values correspond to increased
-noise level in the observations and reduce potential numerical issues
-during fitting. If an array is passed, it must have the same number of
-entries as the data used for fitting and is used as datapoint-dependent
-noise level. Note that this is equivalent to adding a WhiteKernel with
-c=alpha. If None is passed, gp_alpha=1 is used.</li>
-<li><strong>gp_restarts</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Only available for gp_version=&#8217;new&#8217;. The number of restarts of the
-optimizer for finding the kernel&#8217;s parameters which maximize the log-
-marginal likelihood. The first run of the optimizer is performed from
-the kernel&#8217;s initial parameters, the remaining ones (if any) from thetas
-sampled log-uniform randomly from the space of allowed theta-values. If
-greater than 0, all bounds must be finite. If None is passed,
-n_restarts_optimizer=0 is used, implying that one run is performed.</li>
+<li><strong>gp_params</strong> (<em>dictionary</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Dictionary with parameters for <code class="docutils literal"><span class="pre">GaussianProcessRegressor</span></code>.</li>
 </ul>
 </td>
 </tr>
@@ -1020,7 +1007,7 @@ different lags in X, Z, all have the same sample size.</li>
 
 <dl class="class">
 <dt id="tigramite.independence_tests.GPACE">
-<em class="property">class </em><code class="descclassname">tigramite.independence_tests.</code><code class="descname">GPACE</code><span class="sig-paren">(</span><em>null_dist_filename=None</em>, <em>gp_version='new'</em>, <em>gp_kernel=None</em>, <em>gp_alpha=None</em>, <em>gp_restarts=None</em>, <em>ace_version='acepack'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#GPACE"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.GPACE" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">tigramite.independence_tests.</code><code class="descname">GPACE</code><span class="sig-paren">(</span><em>null_dist_filename=None</em>, <em>gp_version='new'</em>, <em>gp_params=None</em>, <em>ace_version='acepack'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#GPACE"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.GPACE" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
 <dt>GPACE conditional independence test based on Gaussian processes and</dt>
 <dd>maximal correlation.</dd>
@@ -1044,8 +1031,8 @@ and <img class="math" src="_images/math/0062c26909b3e07ee8f5a6285b2563d69bc979ff
 <p><img src="_images/math/70852cea72eb5c4d0a45c0db08b49476f4404426.png" alt="X &amp; =  f_X(Z) + \epsilon_{X} \\
 Y &amp; =  f_Y(Z) + \epsilon_{Y}  \\
 \epsilon_{X,Y} &amp;\sim \mathcal{N}(0, \sigma^2)"/></p>
-</div><p>using GP regression. Here <img class="math" src="_images/math/7a3d0c9264473a58cc3a769f99a662631131377c.png" alt="\sigma^2"/> corresponds to the gp_alpha
-parameter. Then the residuals  are transformed to uniform
+</div><p>using GP regression. Here <img class="math" src="_images/math/7a3d0c9264473a58cc3a769f99a662631131377c.png" alt="\sigma^2"/> and the kernel bandwidth are
+optimzed using <code class="docutils literal"><span class="pre">sklearn</span></code>. Then the residuals  are transformed to uniform
 marginals yielding <img class="math" src="_images/math/21fc11b715eef698662fe1cc017d7ae2d53320d8.png" alt="r_X,r_Y"/> and their dependency is tested with</p>
 <div class="math">
 <p><img src="_images/math/cfa926670304a8b47058e444fdb150096333a0aa.png" alt="\max_{g,h}\rho\left(g(r_X),h(r_Y)\right)"/></p>
@@ -1061,25 +1048,7 @@ of the maximal correlation can be pre-computed.</p>
 <li><strong>gp_version</strong> (<em>{'new'</em><em>, </em><em>'old'}</em><em>, </em><em>optional</em><em> (</em><em>default: 'new'</em><em>)</em><em></em>) &#8211; The older GP version from scikit-learn 0.17 was used for the numerical
 simulations in <a class="footnote-reference" href="#id5" id="id13">[1]</a>. The newer version from scikit-learn 0.19 is faster
 and allows more flexibility regarding kernels etc.</li>
-<li><strong>gp_kernel</strong> (<em>kernel object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Only available for gp_version=&#8217;new&#8217;. Can be any scikit-learn kernel
-object available in gaussian_process.kernels. The kernel specifies the
-covariance function of the GP. If None is passed, the kernel &#8216;1.0 *
-RBF(1.0)&#8217; is used as default. Note that the kernel&#8217;s hyperparameters are
-optimized during fitting.</li>
-<li><strong>gp_alpha</strong> (<em>float</em><em> or </em><em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Only available for gp_version=&#8217;new&#8217;. Value added to the diagonal of the
-kernel matrix during fitting. Larger values correspond to increased
-noise level in the observations and reduce potential numerical issues
-during fitting. If an array is passed, it must have the same number of
-entries as the data used for fitting and is used as datapoint-dependent
-noise level. Note that this is equivalent to adding a WhiteKernel with
-c=alpha. If None is passed, gp_alpha=1 is used.</li>
-<li><strong>gp_restarts</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Only available for gp_version=&#8217;new&#8217;. The number of restarts of the
-optimizer for finding the kernel&#8217;s parameters which maximize the log-
-marginal likelihood. The first run of the optimizer is performed from
-the kernel&#8217;s initial parameters, the remaining ones (if any) from thetas
-sampled log-uniform randomly from the space of allowed theta-values. If
-greater than 0, all bounds must be finite. If None is passed,
-n_restarts_optimizer=0 is used, implying that one run is performed.</li>
+<li><strong>gp_params</strong> (<em>dictionary</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Dictionary with parameters for <code class="docutils literal"><span class="pre">GaussianProcessRegressor</span></code>.</li>
 <li><strong>ace_version</strong> (<em>{'python'</em><em>, </em><em>'acepack'}</em>) &#8211; Estimator for ACE estimator of maximal correlation to use. &#8216;python&#8217;
 loads the very slow pure python version available from
 <a class="reference external" href="https://pypi.python.org/pypi/ace/0.3">https://pypi.python.org/pypi/ace/0.3</a>. &#8216;acepack&#8217; loads the much faster
@@ -1162,7 +1131,7 @@ regression.</p>
 
 <dl class="class">
 <dt id="tigramite.independence_tests.GPDC">
-<em class="property">class </em><code class="descclassname">tigramite.independence_tests.</code><code class="descname">GPDC</code><span class="sig-paren">(</span><em>null_dist_filename=None</em>, <em>gp_version='new'</em>, <em>gp_kernel=None</em>, <em>gp_alpha=None</em>, <em>gp_restarts=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#GPDC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.GPDC" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">tigramite.independence_tests.</code><code class="descname">GPDC</code><span class="sig-paren">(</span><em>null_dist_filename=None</em>, <em>gp_version='new'</em>, <em>gp_params=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#GPDC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.GPDC" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
 <dt>GPDC conditional independence test based on Gaussian processes and</dt>
 <dd>distance correlation.</dd>
@@ -1184,8 +1153,8 @@ correlation test on the residuals. Distance correlation is described in
 <p><img src="_images/math/70852cea72eb5c4d0a45c0db08b49476f4404426.png" alt="X &amp; =  f_X(Z) + \epsilon_{X} \\
 Y &amp; =  f_Y(Z) + \epsilon_{Y}  \\
 \epsilon_{X,Y} &amp;\sim \mathcal{N}(0, \sigma^2)"/></p>
-</div><p>using GP regression. Here <img class="math" src="_images/math/7a3d0c9264473a58cc3a769f99a662631131377c.png" alt="\sigma^2"/> corresponds to the gp_alpha
-parameter. Then the residuals  are transformed to uniform
+</div><p>using GP regression. Here <img class="math" src="_images/math/7a3d0c9264473a58cc3a769f99a662631131377c.png" alt="\sigma^2"/> and the kernel bandwidth are
+optimzed using <code class="docutils literal"><span class="pre">sklearn</span></code>. Then the residuals  are transformed to uniform
 marginals yielding <img class="math" src="_images/math/21fc11b715eef698662fe1cc017d7ae2d53320d8.png" alt="r_X,r_Y"/> and their dependency is tested with</p>
 <div class="math">
 <p><img src="_images/math/7bce831f5eba0d0e0fcb0cced170b2926804500a.png" alt="\mathcal{R}\left(r_X, r_Y\right)"/></p>
@@ -1211,25 +1180,7 @@ testing dependence by correlation of distances,
 <li><strong>gp_version</strong> (<em>{'new'</em><em>, </em><em>'old'}</em><em>, </em><em>optional</em><em> (</em><em>default: 'new'</em><em>)</em><em></em>) &#8211; The older GP version from scikit-learn 0.17 was used for the numerical
 simulations in <a class="footnote-reference" href="#id5" id="id18">[1]</a>. The newer version from scikit-learn 0.19 is faster
 and allows more flexibility regarding kernels etc.</li>
-<li><strong>gp_kernel</strong> (<em>kernel object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Only available for gp_version=&#8217;new&#8217;. Can be any scikit-learn kernel
-object available in gaussian_process.kernels. The kernel specifies the
-covariance function of the GP. If None is passed, the kernel &#8216;1.0 *
-RBF(1.0)&#8217; is used as default. Note that the kernel&#8217;s hyperparameters are
-optimized during fitting.</li>
-<li><strong>gp_alpha</strong> (<em>float</em><em> or </em><em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Only available for gp_version=&#8217;new&#8217;. Value added to the diagonal of the
-kernel matrix during fitting. Larger values correspond to increased
-noise level in the observations and reduce potential numerical issues
-during fitting. If an array is passed, it must have the same number of
-entries as the data used for fitting and is used as datapoint-dependent
-noise level. Note that this is equivalent to adding a WhiteKernel with
-c=alpha. If None is passed, gp_alpha=1 is used.</li>
-<li><strong>gp_restarts</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Only available for gp_version=&#8217;new&#8217;. The number of restarts of the
-optimizer for finding the kernel&#8217;s parameters which maximize the log-
-marginal likelihood. The first run of the optimizer is performed from
-the kernel&#8217;s initial parameters, the remaining ones (if any) from thetas
-sampled log-uniform randomly from the space of allowed theta-values. If
-greater than 0, all bounds must be finite. If None is passed,
-n_restarts_optimizer=0 is used, implying that one run is performed.</li>
+<li><strong>gp_params</strong> (<em>dictionary</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Dictionary with parameters for <code class="docutils literal"><span class="pre">GaussianProcessRegressor</span></code>.</li>
 <li><strong>**kwargs</strong> &#8211; Arguments passed on to parent class CondIndTest.</li>
 </ul>
 </td>

@@ -1212,8 +1212,6 @@ def plot_graph(val_matrix,
     """
     import networkx
 
-    if var_names is None:
-        var_names = range(N)
 
     if fig_ax is None:
         fig = pyplot.figure(figsize=figsize, frameon=False)
@@ -1233,6 +1231,9 @@ def plot_graph(val_matrix,
 
     N, N, dummy = val_matrix.shape
     tau_max = dummy - 1
+
+    if var_names is None:
+        var_names = range(N)
 
     # Define graph links by absolute maximum (positive or negative like for
     # partial correlation)

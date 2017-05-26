@@ -90,10 +90,6 @@
     <span class="kn">import</span> <span class="nn">rpy2.robjects.numpy2ri</span>
     <span class="n">rpy2</span><span class="o">.</span><span class="n">robjects</span><span class="o">.</span><span class="n">numpy2ri</span><span class="o">.</span><span class="n">activate</span><span class="p">()</span>
 
-<span class="c1">#     def warn(*args, **kwargs):</span>
-<span class="c1">#         pass</span>
-<span class="c1">#     import warnings</span>
-<span class="c1">#     warnings.warn = warn</span>
 <span class="k">except</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Could not import rpy acepack package for GPACE,&quot;</span>
           <span class="s2">&quot; use python ACE package&quot;</span><span class="p">)</span>
@@ -109,6 +105,186 @@
 <span class="k">except</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Could not import packages for knn-CMI estimation&quot;</span><span class="p">)</span>
 
+
+<span class="c1"># @staticmethod</span>
+<span class="k">def</span> <span class="nf">_construct_array</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span>
+                     <span class="n">use_mask</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                     <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mask_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                     <span class="n">missing_flag</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                     <span class="n">return_cleaned_xyz</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                     <span class="n">do_checks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                     <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Constructs array from variables X, Y, Z from data.</span>
+
+<span class="sd">    Data is of shape (T, N), where T is the time series length and N the</span>
+<span class="sd">    number of variables.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    X, Y, Z : list of tuples</span>
+<span class="sd">        For a dependence measure I(X;Y|Z), Y is of the form [(varY, 0)],</span>
+<span class="sd">        where var specifies the variable index. X typically is of the form</span>
+<span class="sd">        [(varX, -tau)] with tau denoting the time lag and Z can be</span>
+<span class="sd">        multivariate [(var1, -lag), (var2, -lag), ...] .</span>
+
+<span class="sd">    tau_max : int</span>
+<span class="sd">        Maximum time lag. This may be used to make sure that estimates for</span>
+<span class="sd">        different lags in X and Z all have the same sample size.</span>
+
+<span class="sd">    data : array-like, </span>
+<span class="sd">        This is the data input array of shape = (T, N)</span>
+
+<span class="sd">    use_mask : bool, optional (default: False)</span>
+<span class="sd">        Whether a supplied mask should be used.</span>
+
+<span class="sd">    mask : boolean array, optional (default: False)</span>
+<span class="sd">        Mask of data array, marking masked values as 1. Must be of same</span>
+<span class="sd">        shape as data.</span>
+
+<span class="sd">    missing_flag : number, optional (default: None)</span>
+<span class="sd">        Flag for missing values. Dismisses all time slices of samples where</span>
+<span class="sd">        missing values occur in any variable and also flags samples for all</span>
+<span class="sd">        lags up to 2*tau_max. This avoids biases, see section on masking in</span>
+<span class="sd">        Supplement of [1]_.</span>
+
+<span class="sd">    mask_type : {&#39;y&#39;,&#39;x&#39;,&#39;z&#39;,&#39;xy&#39;,&#39;xz&#39;,&#39;yz&#39;,&#39;xyz&#39;}</span>
+<span class="sd">        Masking mode: Indicators for which variables in the dependence</span>
+<span class="sd">        measure I(X; Y | Z) the samples should be masked. If None, &#39;y&#39; is</span>
+<span class="sd">        used, which excludes all time slices containing masked samples in Y.</span>
+<span class="sd">        Explained in [1]_.</span>
+
+<span class="sd">    return_cleaned_xyz : bool, optional (default: False)</span>
+<span class="sd">        Whether to return cleaned X,Y,Z, where possible duplicates are </span>
+<span class="sd">        removed.</span>
+
+<span class="sd">    do_checks : bool, optional (default: True)</span>
+<span class="sd">        Whether to perform sanity checks on input X,Y,Z</span>
+
+<span class="sd">    verbosity : int, optional (default: 0)</span>
+<span class="sd">        Level of verbosity.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    array, xyz [,XYZ] : Tuple of data array of shape (dim, T) and xyz </span>
+<span class="sd">        identifier array of shape (dim,) identifying which row in array</span>
+<span class="sd">        corresponds to X, Y, and Z. For example::</span>
+<span class="sd">            X = [(0, -1)], Y = [(1, 0)], Z = [(1, -1), (0, -2)]</span>
+<span class="sd">            yields an array of shape (5, T) and xyz is  </span>
+<span class="sd">            xyz = numpy.array([0,1,2,2])          </span>
+<span class="sd">        If return_cleaned_xyz is True, also outputs the cleaned XYZ lists.</span>
+<span class="sd">     </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">uniq</span><span class="p">(</span><span class="nb">input</span><span class="p">):</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">input</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
+                <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">output</span>
+
+    <span class="n">data_type</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">dtype</span>
+
+    <span class="n">T</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="c1"># Remove duplicates in X, Y, Z</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">uniq</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+    <span class="n">Y</span> <span class="o">=</span> <span class="n">uniq</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
+    <span class="n">Z</span> <span class="o">=</span> <span class="n">uniq</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">do_checks</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;X must be non-zero&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Y must be non-zero&quot;</span><span class="p">)</span>
+
+    <span class="c1"># If a node in Z occurs already in X or Y, remove it from Z</span>
+    <span class="n">Z</span> <span class="o">=</span> <span class="p">[</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">Z</span> <span class="k">if</span> <span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">X</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">Y</span><span class="p">)]</span>
+
+    <span class="c1"># Check that all lags are non-positive and indices are in [0,N-1]</span>
+    <span class="n">XYZ</span> <span class="o">=</span> <span class="n">X</span> <span class="o">+</span> <span class="n">Y</span> <span class="o">+</span> <span class="n">Z</span>
+    <span class="n">dim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">XYZ</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">do_checks</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">XYZ</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;X, Y, Z must be lists of tuples in format&quot;</span>
+                             <span class="s2">&quot; [(var, -lag),...], eg., [(2, -2), (1, 0), ...]&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">XYZ</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;nodes are </span><span class="si">%s</span><span class="s2">, &quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">XYZ</span><span class="p">)</span> <span class="o">+</span>
+                             <span class="s2">&quot;but all lags must be non-positive&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">XYZ</span><span class="p">)[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">N</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="n">numpy</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">XYZ</span><span class="p">)[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;var indices </span><span class="si">%s</span><span class="s2">,&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">XYZ</span><span class="p">)[:,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">+</span>
+                             <span class="s2">&quot; but must be in [0, </span><span class="si">%d</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Y</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Y-nodes are </span><span class="si">%s</span><span class="s2">, &quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span> <span class="o">+</span>
+                             <span class="s2">&quot;but one of the Y-nodes must have zero lag&quot;</span><span class="p">)</span>
+
+    <span class="n">max_lag</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">tau_max</span>
+    <span class="c1"># max_lag = max(abs(numpy.array(XYZ)[:, 1].min()), tau_max)</span>
+
+    <span class="c1"># Setup XYZ identifier</span>
+    <span class="n">xyz</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">))]</span> <span class="o">+</span>
+                      <span class="p">[</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">Y</span><span class="p">))]</span> <span class="o">+</span>
+                      <span class="p">[</span><span class="mi">2</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">Z</span><span class="p">))])</span>
+
+    <span class="c1"># Setup and fill array with lagged time series</span>
+    <span class="n">array</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">-</span> <span class="n">max_lag</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">data_type</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">XYZ</span><span class="p">):</span>
+        <span class="n">var</span><span class="p">,</span> <span class="n">lag</span> <span class="o">=</span> <span class="n">node</span>
+        <span class="n">array</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">max_lag</span> <span class="o">+</span> <span class="n">lag</span><span class="p">:</span> <span class="n">T</span> <span class="o">+</span> <span class="n">lag</span><span class="p">,</span> <span class="n">var</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">missing_flag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">use_mask</span><span class="p">:</span>
+        <span class="n">use_indices</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">T</span> <span class="o">-</span> <span class="n">max_lag</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">missing_flag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Dismiss all samples where missing values occur in any variable</span>
+        <span class="c1"># and for any lag up to max_lag</span>
+        <span class="n">missing_anywhere</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">data</span><span class="o">==</span><span class="n">missing_flag</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">tau</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_lag</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">use_indices</span><span class="p">[</span><span class="n">missing_anywhere</span><span class="p">[</span><span class="n">tau</span><span class="p">:</span><span class="n">T</span><span class="o">-</span><span class="n">max_lag</span><span class="o">+</span><span class="n">tau</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">0</span>
+   
+    <span class="k">if</span> <span class="n">use_mask</span><span class="p">:</span>
+        <span class="c1"># Remove samples with mask == 1</span>
+        <span class="c1"># conditional on which mask_type is used</span>
+        <span class="n">array_selector</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">-</span> <span class="n">max_lag</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">XYZ</span><span class="p">):</span>
+            <span class="n">var</span><span class="p">,</span> <span class="n">lag</span> <span class="o">=</span> <span class="n">node</span>
+            <span class="n">array_selector</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">mask</span><span class="p">[</span><span class="n">max_lag</span> <span class="o">+</span> <span class="n">lag</span><span class="p">:</span> <span class="n">T</span> <span class="o">+</span> <span class="n">lag</span><span class="p">,</span> <span class="n">var</span><span class="p">]</span> <span class="o">==</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># use_indices = numpy.ones(T - max_lag, dtype=&#39;int&#39;)</span>
+        <span class="k">if</span> <span class="s1">&#39;x&#39;</span> <span class="ow">in</span> <span class="n">mask_type</span><span class="p">:</span>
+            <span class="n">use_indices</span> <span class="o">*=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">array_selector</span><span class="p">[</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:],</span>
+                                      <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;y&#39;</span> <span class="ow">in</span> <span class="n">mask_type</span><span class="p">:</span>
+            <span class="n">use_indices</span> <span class="o">*=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">array_selector</span><span class="p">[</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:],</span>
+                                      <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;z&#39;</span> <span class="ow">in</span> <span class="n">mask_type</span><span class="p">:</span>
+            <span class="n">use_indices</span> <span class="o">*=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">array_selector</span><span class="p">[</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="p">:],</span>
+                                      <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">missing_flag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">use_mask</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">use_indices</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No unmasked samples&quot;</span><span class="p">)</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="p">[:,</span> <span class="n">use_indices</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;            Constructed array of shape &quot;</span> <span class="o">+</span>
+              <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> from</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span>
+              <span class="s2">&quot;            X = </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="o">+</span>
+              <span class="s2">&quot;            Y = </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span> <span class="o">+</span>
+              <span class="s2">&quot;            Z = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">Z</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">use_mask</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;            with masked samples in &quot;</span>
+                  <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> removed&quot;</span> <span class="o">%</span> <span class="n">mask_type</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">missing_flag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;            with missing values labeled &quot;</span>
+                  <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> removed&quot;</span> <span class="o">%</span> <span class="n">missing_flag</span><span class="p">)</span>    
+
+    <span class="k">if</span> <span class="n">return_cleaned_xyz</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span>
 
 <div class="viewcode-block" id="CondIndTest"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.CondIndTest">[docs]</a><span class="k">class</span> <span class="nc">CondIndTest</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Base class of conditional independence tests.</span>
@@ -241,7 +417,7 @@
         <span class="k">if</span> <span class="n">verbosity</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">verbosity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_construct_array</span><span class="p">(</span>
+        <span class="k">return</span> <span class="n">_construct_array</span><span class="p">(</span>
             <span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="n">Z</span><span class="p">,</span>
             <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
             <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
@@ -252,186 +428,6 @@
             <span class="n">return_cleaned_xyz</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">do_checks</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">verbosity</span><span class="o">=</span><span class="n">verbosity</span><span class="p">)</span>
-
-    <span class="c1"># @profile</span>
-    <span class="k">def</span> <span class="nf">_construct_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span>
-                         <span class="n">use_mask</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                         <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mask_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                         <span class="n">missing_flag</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                         <span class="n">return_cleaned_xyz</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                         <span class="n">do_checks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                         <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Constructs array from variables X, Y, Z from data.</span>
-
-<span class="sd">        Data is of shape (T, N), where T is the time series length and N the</span>
-<span class="sd">        number of variables.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        X, Y, Z : list of tuples</span>
-<span class="sd">            For a dependence measure I(X;Y|Z), Y is of the form [(varY, 0)],</span>
-<span class="sd">            where var specifies the variable index. X typically is of the form</span>
-<span class="sd">            [(varX, -tau)] with tau denoting the time lag and Z can be</span>
-<span class="sd">            multivariate [(var1, -lag), (var2, -lag), ...] .</span>
-
-<span class="sd">        tau_max : int</span>
-<span class="sd">            Maximum time lag. This may be used to make sure that estimates for</span>
-<span class="sd">            different lags in X and Z all have the same sample size.</span>
-
-<span class="sd">        data : array-like, </span>
-<span class="sd">            This is the data input array of shape = (T, N)</span>
-
-<span class="sd">        use_mask : bool, optional (default: False)</span>
-<span class="sd">            Whether a supplied mask should be used.</span>
-
-<span class="sd">        mask : boolean array, optional (default: False)</span>
-<span class="sd">            Mask of data array, marking masked values as 1. Must be of same</span>
-<span class="sd">            shape as data.</span>
-
-<span class="sd">        missing_flag : number, optional (default: None)</span>
-<span class="sd">            Flag for missing values. Dismisses all time slices of samples where</span>
-<span class="sd">            missing values occur in any variable and also flags samples for all</span>
-<span class="sd">            lags up to 2*tau_max. This avoids biases, see section on masking in</span>
-<span class="sd">            Supplement of [1]_.</span>
-
-<span class="sd">        mask_type : {&#39;y&#39;,&#39;x&#39;,&#39;z&#39;,&#39;xy&#39;,&#39;xz&#39;,&#39;yz&#39;,&#39;xyz&#39;}</span>
-<span class="sd">            Masking mode: Indicators for which variables in the dependence</span>
-<span class="sd">            measure I(X; Y | Z) the samples should be masked. If None, &#39;y&#39; is</span>
-<span class="sd">            used, which excludes all time slices containing masked samples in Y.</span>
-<span class="sd">            Explained in [1]_.</span>
-
-<span class="sd">        return_cleaned_xyz : bool, optional (default: False)</span>
-<span class="sd">            Whether to return cleaned X,Y,Z, where possible duplicates are </span>
-<span class="sd">            removed.</span>
-
-<span class="sd">        do_checks : bool, optional (default: True)</span>
-<span class="sd">            Whether to perform sanity checks on input X,Y,Z</span>
-
-<span class="sd">        verbosity : int, optional (default: 0)</span>
-<span class="sd">            Level of verbosity.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        array, xyz [,XYZ] : Tuple of data array of shape (dim, T) and xyz </span>
-<span class="sd">            identifier array of shape (dim,) identifying which row in array</span>
-<span class="sd">            corresponds to X, Y, and Z. For example::</span>
-<span class="sd">                X = [(0, -1)], Y = [(1, 0)], Z = [(1, -1), (0, -2)]</span>
-<span class="sd">                yields an array of shape (5, T) and xyz is  </span>
-<span class="sd">                xyz = numpy.array([0,1,2,2])          </span>
-<span class="sd">            If return_cleaned_xyz is True, also outputs the cleaned XYZ lists.</span>
-<span class="sd">         </span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">def</span> <span class="nf">uniq</span><span class="p">(</span><span class="nb">input</span><span class="p">):</span>
-            <span class="n">output</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">input</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
-                    <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">output</span>
-
-        <span class="n">data_type</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">dtype</span>
-
-        <span class="n">T</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
-
-        <span class="c1"># Remove duplicates in X, Y, Z</span>
-        <span class="n">X</span> <span class="o">=</span> <span class="n">uniq</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="n">Y</span> <span class="o">=</span> <span class="n">uniq</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
-        <span class="n">Z</span> <span class="o">=</span> <span class="n">uniq</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">do_checks</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;X must be non-zero&quot;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Y must be non-zero&quot;</span><span class="p">)</span>
-
-        <span class="c1"># If a node in Z occurs already in X or Y, remove it from Z</span>
-        <span class="n">Z</span> <span class="o">=</span> <span class="p">[</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">Z</span> <span class="k">if</span> <span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">X</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">Y</span><span class="p">)]</span>
-
-        <span class="c1"># Check that all lags are non-positive and indices are in [0,N-1]</span>
-        <span class="n">XYZ</span> <span class="o">=</span> <span class="n">X</span> <span class="o">+</span> <span class="n">Y</span> <span class="o">+</span> <span class="n">Z</span>
-        <span class="n">dim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">XYZ</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">do_checks</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">XYZ</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;X, Y, Z must be lists of tuples in format&quot;</span>
-                                 <span class="s2">&quot; [(var, -lag),...], eg., [(2, -2), (1, 0), ...]&quot;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">XYZ</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;nodes are </span><span class="si">%s</span><span class="s2">, &quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">XYZ</span><span class="p">)</span> <span class="o">+</span>
-                                 <span class="s2">&quot;but all lags must be non-positive&quot;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">XYZ</span><span class="p">)[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">N</span><span class="p">)</span>
-                    <span class="ow">or</span> <span class="n">numpy</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">XYZ</span><span class="p">)[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;var indices </span><span class="si">%s</span><span class="s2">,&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">XYZ</span><span class="p">)[:,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">+</span>
-                                 <span class="s2">&quot; but must be in [0, </span><span class="si">%d</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
-            <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Y</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Y-nodes are </span><span class="si">%s</span><span class="s2">, &quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span> <span class="o">+</span>
-                                 <span class="s2">&quot;but one of the Y-nodes must have zero lag&quot;</span><span class="p">)</span>
-
-        <span class="n">max_lag</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">tau_max</span>
-        <span class="c1"># max_lag = max(abs(numpy.array(XYZ)[:, 1].min()), tau_max)</span>
-
-        <span class="c1"># Setup XYZ identifier</span>
-        <span class="n">xyz</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">))]</span> <span class="o">+</span>
-                          <span class="p">[</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">Y</span><span class="p">))]</span> <span class="o">+</span>
-                          <span class="p">[</span><span class="mi">2</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">Z</span><span class="p">))])</span>
-
-        <span class="c1"># Setup and fill array with lagged time series</span>
-        <span class="n">array</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">-</span> <span class="n">max_lag</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">data_type</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">XYZ</span><span class="p">):</span>
-            <span class="n">var</span><span class="p">,</span> <span class="n">lag</span> <span class="o">=</span> <span class="n">node</span>
-            <span class="n">array</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">max_lag</span> <span class="o">+</span> <span class="n">lag</span><span class="p">:</span> <span class="n">T</span> <span class="o">+</span> <span class="n">lag</span><span class="p">,</span> <span class="n">var</span><span class="p">]</span>
-
-        <span class="k">if</span> <span class="n">missing_flag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">use_mask</span><span class="p">:</span>
-            <span class="n">use_indices</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">T</span> <span class="o">-</span> <span class="n">max_lag</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
-        
-        <span class="k">if</span> <span class="n">missing_flag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># Dismiss all samples where missing values occur in any variable</span>
-            <span class="c1"># and for any lag up to max_lag</span>
-            <span class="n">missing_anywhere</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">data</span><span class="o">==</span><span class="n">missing_flag</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">tau</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_lag</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
-                <span class="n">use_indices</span><span class="p">[</span><span class="n">missing_anywhere</span><span class="p">[</span><span class="n">tau</span><span class="p">:</span><span class="n">T</span><span class="o">-</span><span class="n">max_lag</span><span class="o">+</span><span class="n">tau</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">0</span>
-       
-        <span class="k">if</span> <span class="n">use_mask</span><span class="p">:</span>
-            <span class="c1"># Remove samples with mask == 1</span>
-            <span class="c1"># conditional on which mask_type is used</span>
-            <span class="n">array_selector</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">-</span> <span class="n">max_lag</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">XYZ</span><span class="p">):</span>
-                <span class="n">var</span><span class="p">,</span> <span class="n">lag</span> <span class="o">=</span> <span class="n">node</span>
-                <span class="n">array_selector</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">mask</span><span class="p">[</span><span class="n">max_lag</span> <span class="o">+</span> <span class="n">lag</span><span class="p">:</span> <span class="n">T</span> <span class="o">+</span> <span class="n">lag</span><span class="p">,</span> <span class="n">var</span><span class="p">]</span> <span class="o">==</span> <span class="kc">False</span><span class="p">)</span>
-
-            <span class="c1"># use_indices = numpy.ones(T - max_lag, dtype=&#39;int&#39;)</span>
-            <span class="k">if</span> <span class="s1">&#39;x&#39;</span> <span class="ow">in</span> <span class="n">mask_type</span><span class="p">:</span>
-                <span class="n">use_indices</span> <span class="o">*=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">array_selector</span><span class="p">[</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:],</span>
-                                          <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-            <span class="k">if</span> <span class="s1">&#39;y&#39;</span> <span class="ow">in</span> <span class="n">mask_type</span><span class="p">:</span>
-                <span class="n">use_indices</span> <span class="o">*=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">array_selector</span><span class="p">[</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:],</span>
-                                          <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-            <span class="k">if</span> <span class="s1">&#39;z&#39;</span> <span class="ow">in</span> <span class="n">mask_type</span><span class="p">:</span>
-                <span class="n">use_indices</span> <span class="o">*=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">array_selector</span><span class="p">[</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="p">:],</span>
-                                          <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        
-        <span class="k">if</span> <span class="n">missing_flag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">use_mask</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">use_indices</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No unmasked samples&quot;</span><span class="p">)</span>
-            <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="p">[:,</span> <span class="n">use_indices</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
-
-        <span class="k">if</span> <span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;            Constructed array of shape &quot;</span> <span class="o">+</span>
-                  <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> from</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span>
-                  <span class="s2">&quot;            X = </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="o">+</span>
-                  <span class="s2">&quot;            Y = </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span> <span class="o">+</span>
-                  <span class="s2">&quot;            Z = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">Z</span><span class="p">))</span>
-            <span class="k">if</span> <span class="n">use_mask</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;            with masked samples in &quot;</span>
-                      <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> removed&quot;</span> <span class="o">%</span> <span class="n">mask_type</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">missing_flag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;            with missing values labeled &quot;</span>
-                      <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> removed&quot;</span> <span class="o">%</span> <span class="n">missing_flag</span><span class="p">)</span>    
-
-        <span class="k">if</span> <span class="n">return_cleaned_xyz</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span>
 
     <span class="c1"># @profile</span>
 <div class="viewcode-block" id="CondIndTest.run_test"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.CondIndTest.run_test">[docs]</a>    <span class="k">def</span> <span class="nf">run_test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
@@ -481,7 +477,7 @@
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_keyfy</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">residuals</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                 <span class="n">y_resid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">residuals</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_keyfy</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">)]</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">y_resid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_residuals</span><span class="p">(</span><span class="n">array</span><span class="p">,</span><span class="n">target_var</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">y_resid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_residuals</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">target_var</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">residuals</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_keyfy</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">)]</span> <span class="o">=</span> <span class="n">y_resid</span>
 
@@ -1137,7 +1133,6 @@
 <span class="sd">    ----------</span>
 <span class="sd">    **kwargs : </span>
 <span class="sd">        Arguments passed on to Parent class CondIndTest.</span>
-
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -1333,7 +1328,7 @@
         <span class="n">Y</span> <span class="o">=</span> <span class="p">[(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
         <span class="n">X</span> <span class="o">=</span> <span class="p">[(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>   <span class="c1"># dummy variable here</span>
         <span class="n">Z</span> <span class="o">=</span> <span class="n">parents</span>
-        <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_construct_array</span><span class="p">(</span>
+        <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span> <span class="o">=</span> <span class="n">_construct_array</span><span class="p">(</span>
             <span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="n">Z</span><span class="p">,</span>
             <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
             <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
@@ -1361,7 +1356,12 @@
     <span class="sd">r&quot;&quot;&quot;Gaussian processes base class.</span>
 
 <span class="sd">    GP is estimated with scikit-learn and allows to flexibly specify kernels and</span>
-<span class="sd">    hyperparameters or let them be optimized automatically.</span>
+<span class="sd">    hyperparameters or let them be optimized automatically. The kernel specifies</span>
+<span class="sd">    the covariance function of the GP. Parameters can be passed on to</span>
+<span class="sd">    ``GaussianProcessRegressor`` using the gp_params dictionary. If None is</span>
+<span class="sd">    passed, the kernel &#39;1.0 * RBF(1.0) + WhiteKernel()&#39; is used with alpha=0 as</span>
+<span class="sd">    default. Note that the kernel&#39;s hyperparameters are optimized during</span>
+<span class="sd">    fitting.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -1370,45 +1370,18 @@
 <span class="sd">        simulations in [1]_. The newer version from scikit-learn 0.19 is faster</span>
 <span class="sd">        and allows more flexibility regarding kernels etc.</span>
 
-<span class="sd">    gp_kernel : kernel object, optional (default: None)</span>
-<span class="sd">        Only available for gp_version=&#39;new&#39;. Can be any scikit-learn kernel</span>
-<span class="sd">        object available in gaussian_process.kernels. The kernel specifies the</span>
-<span class="sd">        covariance function of the GP. If None is passed, the kernel &#39;1.0 *</span>
-<span class="sd">        RBF(1.0)&#39; is used as default. Note that the kernel&#39;s hyperparameters are</span>
-<span class="sd">        optimized during fitting.</span>
-
-<span class="sd">    gp_alpha :  float or array-like, optional (default: None)</span>
-<span class="sd">        Only available for gp_version=&#39;new&#39;. Value added to the diagonal of the</span>
-<span class="sd">        kernel matrix during fitting. Larger values correspond to increased</span>
-<span class="sd">        noise level in the observations and reduce potential numerical issues</span>
-<span class="sd">        during fitting. If an array is passed, it must have the same number of</span>
-<span class="sd">        entries as the data used for fitting and is used as datapoint-dependent</span>
-<span class="sd">        noise level. Note that this is equivalent to adding a WhiteKernel with</span>
-<span class="sd">        c=alpha. If None is passed, gp_alpha=1 is used.</span>
+<span class="sd">    gp_params : dictionary, optional (default: None)</span>
+<span class="sd">        Dictionary with parameters for ``GaussianProcessRegressor``.</span>
 <span class="sd">    </span>
-<span class="sd">    gp_restarts : int, optional (default: None)</span>
-<span class="sd">        Only available for gp_version=&#39;new&#39;. The number of restarts of the</span>
-<span class="sd">        optimizer for finding the kernel&#39;s parameters which maximize the log-</span>
-<span class="sd">        marginal likelihood. The first run of the optimizer is performed from</span>
-<span class="sd">        the kernel&#39;s initial parameters, the remaining ones (if any) from thetas</span>
-<span class="sd">        sampled log-uniform randomly from the space of allowed theta-values. If</span>
-<span class="sd">        greater than 0, all bounds must be finite. If None is passed,</span>
-<span class="sd">        n_restarts_optimizer=0 is used, implying that one run is performed.</span>
-
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                 <span class="n">gp_version</span><span class="o">=</span><span class="s1">&#39;new&#39;</span><span class="p">,</span>
-                <span class="n">gp_kernel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                <span class="n">gp_alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                <span class="n">gp_restarts</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                <span class="n">gp_params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 
         <span class="c1"># CondIndTest.__inits__(self,)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">gp_version</span> <span class="o">=</span> <span class="n">gp_version</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">gp_kernel</span> <span class="o">=</span> <span class="n">gp_kernel</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">gp_alpha</span> <span class="o">=</span> <span class="n">gp_alpha</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">gp_restarts</span> <span class="o">=</span> <span class="n">gp_restarts</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gp_params</span> <span class="o">=</span> <span class="n">gp_params</span>
     
     <span class="c1"># @profile</span>
     <span class="k">def</span> <span class="nf">_get_single_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="p">,</span>
@@ -1447,6 +1420,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gp_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gp_params</span> <span class="o">=</span> <span class="p">{}</span>
+
         <span class="k">if</span> <span class="n">dim</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">return_likelihood</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">array</span><span class="p">[</span><span class="n">target_var</span><span class="p">,</span> <span class="p">:],</span> <span class="o">-</span><span class="n">numpy</span><span class="o">.</span><span class="n">inf</span>
@@ -1481,24 +1457,25 @@
                 <span class="n">storage_mode</span><span class="o">=</span><span class="s1">&#39;light&#39;</span><span class="p">)</span>
 
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">gp_version</span> <span class="o">==</span> <span class="s1">&#39;new&#39;</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gp_kernel</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">gp_kernel</span> <span class="o">=</span> <span class="n">gaussian_process</span><span class="o">.</span><span class="n">kernels</span><span class="o">.</span><span class="n">RBF</span><span class="p">(</span>
-                    <span class="n">length_scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-                    <span class="c1"># length_scale_bounds=(1E-16, numpy.inf)  #(1e-05, 100000.0)</span>
-                    <span class="p">)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gp_alpha</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">gp_alpha</span> <span class="o">=</span> <span class="mf">1.</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gp_restarts</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">gp_restarts</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="c1"># Overwrite default kernel and alpha values </span>
+            <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gp_params</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="k">if</span> <span class="s1">&#39;kernel&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gp_params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">kernel</span> <span class="o">=</span> <span class="n">gaussian_process</span><span class="o">.</span><span class="n">kernels</span><span class="o">.</span><span class="n">RBF</span><span class="p">()</span> <span class="o">+</span>\
+                         <span class="n">gaussian_process</span><span class="o">.</span><span class="n">kernels</span><span class="o">.</span><span class="n">WhiteKernel</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">kernel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gp_params</span><span class="p">[</span><span class="s1">&#39;kernel&#39;</span><span class="p">]</span>
+                <span class="k">del</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;kernel&#39;</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="s1">&#39;alpha&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gp_params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gp_params</span><span class="p">[</span><span class="s1">&#39;alpha&#39;</span><span class="p">]</span>
+                <span class="k">del</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;alpha&#39;</span><span class="p">]</span>
 
             <span class="n">gp</span> <span class="o">=</span> <span class="n">gaussian_process</span><span class="o">.</span><span class="n">GaussianProcessRegressor</span><span class="p">(</span>
-                <span class="n">kernel</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gp_kernel</span><span class="p">,</span>
-                <span class="n">alpha</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gp_alpha</span><span class="p">,</span>
-                <span class="n">optimizer</span><span class="o">=</span><span class="s1">&#39;fmin_l_bfgs_b&#39;</span><span class="p">,</span>  
-                <span class="n">n_restarts_optimizer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gp_restarts</span><span class="p">,</span>
-                <span class="n">normalize_y</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                <span class="n">copy_X_train</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+                <span class="n">kernel</span><span class="o">=</span><span class="n">kernel</span><span class="p">,</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">params</span><span class="p">)</span>
 
         <span class="n">gp</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">var</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
 
@@ -1547,7 +1524,7 @@
         <span class="n">Y</span> <span class="o">=</span> <span class="p">[(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
         <span class="n">X</span> <span class="o">=</span> <span class="p">[(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>   <span class="c1"># dummy variable here</span>
         <span class="n">Z</span> <span class="o">=</span> <span class="n">parents</span>
-        <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_construct_array</span><span class="p">(</span>
+        <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span> <span class="o">=</span> <span class="n">_construct_array</span><span class="p">(</span>
             <span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="n">Z</span><span class="p">,</span>
             <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
             <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
@@ -1593,8 +1570,8 @@
 <span class="sd">        Y &amp; =  f_Y(Z) + \epsilon_{Y}  \\</span>
 <span class="sd">        \epsilon_{X,Y} &amp;\sim \mathcal{N}(0, \sigma^2)</span>
 
-<span class="sd">    using GP regression. Here :math:`\sigma^2` corresponds to the gp_alpha</span>
-<span class="sd">    parameter. Then the residuals  are transformed to uniform</span>
+<span class="sd">    using GP regression. Here :math:`\sigma^2` and the kernel bandwidth are</span>
+<span class="sd">    optimzed using ``sklearn``. Then the residuals  are transformed to uniform</span>
 <span class="sd">    marginals yielding :math:`r_X,r_Y` and their dependency is tested with</span>
 
 <span class="sd">    .. math::  \max_{g,h}\rho\left(g(r_X),h(r_Y)\right)</span>
@@ -1613,31 +1590,9 @@
 <span class="sd">        simulations in [1]_. The newer version from scikit-learn 0.19 is faster</span>
 <span class="sd">        and allows more flexibility regarding kernels etc.</span>
 
-<span class="sd">    gp_kernel : kernel object, optional (default: None)</span>
-<span class="sd">        Only available for gp_version=&#39;new&#39;. Can be any scikit-learn kernel</span>
-<span class="sd">        object available in gaussian_process.kernels. The kernel specifies the</span>
-<span class="sd">        covariance function of the GP. If None is passed, the kernel &#39;1.0 *</span>
-<span class="sd">        RBF(1.0)&#39; is used as default. Note that the kernel&#39;s hyperparameters are</span>
-<span class="sd">        optimized during fitting.</span>
-
-<span class="sd">    gp_alpha :  float or array-like, optional (default: None)</span>
-<span class="sd">        Only available for gp_version=&#39;new&#39;. Value added to the diagonal of the</span>
-<span class="sd">        kernel matrix during fitting. Larger values correspond to increased</span>
-<span class="sd">        noise level in the observations and reduce potential numerical issues</span>
-<span class="sd">        during fitting. If an array is passed, it must have the same number of</span>
-<span class="sd">        entries as the data used for fitting and is used as datapoint-dependent</span>
-<span class="sd">        noise level. Note that this is equivalent to adding a WhiteKernel with</span>
-<span class="sd">        c=alpha. If None is passed, gp_alpha=1 is used.</span>
+<span class="sd">    gp_params : dictionary, optional (default: None)</span>
+<span class="sd">        Dictionary with parameters for ``GaussianProcessRegressor``.</span>
 <span class="sd">    </span>
-<span class="sd">    gp_restarts : int, optional (default: None)</span>
-<span class="sd">        Only available for gp_version=&#39;new&#39;. The number of restarts of the</span>
-<span class="sd">        optimizer for finding the kernel&#39;s parameters which maximize the log-</span>
-<span class="sd">        marginal likelihood. The first run of the optimizer is performed from</span>
-<span class="sd">        the kernel&#39;s initial parameters, the remaining ones (if any) from thetas</span>
-<span class="sd">        sampled log-uniform randomly from the space of allowed theta-values. If</span>
-<span class="sd">        greater than 0, all bounds must be finite. If None is passed,</span>
-<span class="sd">        n_restarts_optimizer=0 is used, implying that one run is performed.</span>
-
 <span class="sd">    ace_version : {&#39;python&#39;, &#39;acepack&#39;}</span>
 <span class="sd">        Estimator for ACE estimator of maximal correlation to use. &#39;python&#39;</span>
 <span class="sd">        loads the very slow pure python version available from</span>
@@ -1654,9 +1609,7 @@
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                 <span class="n">null_dist_filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">gp_version</span><span class="o">=</span><span class="s1">&#39;new&#39;</span><span class="p">,</span>
-                <span class="n">gp_kernel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                <span class="n">gp_alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                <span class="n">gp_restarts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">gp_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">ace_version</span><span class="o">=</span><span class="s1">&#39;acepack&#39;</span><span class="p">,</span>
                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
@@ -1664,17 +1617,10 @@
 
         <span class="n">GP</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
                     <span class="n">gp_version</span><span class="o">=</span><span class="n">gp_version</span><span class="p">,</span>
-                    <span class="n">gp_kernel</span><span class="o">=</span><span class="n">gp_kernel</span><span class="p">,</span>
-                    <span class="n">gp_alpha</span><span class="o">=</span><span class="n">gp_alpha</span><span class="p">,</span>
-                    <span class="n">gp_restarts</span><span class="o">=</span><span class="n">gp_restarts</span><span class="p">,</span>
+                    <span class="n">gp_params</span><span class="o">=</span><span class="n">gp_params</span><span class="p">,</span>
                     <span class="p">)</span>
 
-        <span class="c1"># self.gp_version = gp_version</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ace_version</span> <span class="o">=</span> <span class="n">ace_version</span>
-
-        <span class="c1"># self.gp_kernel = gp_kernel</span>
-        <span class="c1"># self.gp_alpha = gp_alpha</span>
-        <span class="c1"># self.gp_restarts = gp_restarts</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">measure</span> <span class="o">=</span> <span class="s1">&#39;gp_ace&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">two_sided</span> <span class="o">=</span> <span class="kc">False</span>
@@ -1858,8 +1804,8 @@
 <span class="sd">        Y &amp; =  f_Y(Z) + \epsilon_{Y}  \\</span>
 <span class="sd">        \epsilon_{X,Y} &amp;\sim \mathcal{N}(0, \sigma^2)</span>
 
-<span class="sd">    using GP regression. Here :math:`\sigma^2` corresponds to the gp_alpha</span>
-<span class="sd">    parameter. Then the residuals  are transformed to uniform</span>
+<span class="sd">    using GP regression. Here :math:`\sigma^2` and the kernel bandwidth are</span>
+<span class="sd">    optimzed using ``sklearn``. Then the residuals  are transformed to uniform</span>
 <span class="sd">    marginals yielding :math:`r_X,r_Y` and their dependency is tested with</span>
 
 <span class="sd">    .. math::  \mathcal{R}\left(r_X, r_Y\right)</span>
@@ -1886,30 +1832,8 @@
 <span class="sd">        simulations in [1]_. The newer version from scikit-learn 0.19 is faster</span>
 <span class="sd">        and allows more flexibility regarding kernels etc.</span>
 
-<span class="sd">    gp_kernel : kernel object, optional (default: None)</span>
-<span class="sd">        Only available for gp_version=&#39;new&#39;. Can be any scikit-learn kernel</span>
-<span class="sd">        object available in gaussian_process.kernels. The kernel specifies the</span>
-<span class="sd">        covariance function of the GP. If None is passed, the kernel &#39;1.0 *</span>
-<span class="sd">        RBF(1.0)&#39; is used as default. Note that the kernel&#39;s hyperparameters are</span>
-<span class="sd">        optimized during fitting.</span>
-
-<span class="sd">    gp_alpha :  float or array-like, optional (default: None)</span>
-<span class="sd">        Only available for gp_version=&#39;new&#39;. Value added to the diagonal of the</span>
-<span class="sd">        kernel matrix during fitting. Larger values correspond to increased</span>
-<span class="sd">        noise level in the observations and reduce potential numerical issues</span>
-<span class="sd">        during fitting. If an array is passed, it must have the same number of</span>
-<span class="sd">        entries as the data used for fitting and is used as datapoint-dependent</span>
-<span class="sd">        noise level. Note that this is equivalent to adding a WhiteKernel with</span>
-<span class="sd">        c=alpha. If None is passed, gp_alpha=1 is used.</span>
-<span class="sd">    </span>
-<span class="sd">    gp_restarts : int, optional (default: None)</span>
-<span class="sd">        Only available for gp_version=&#39;new&#39;. The number of restarts of the</span>
-<span class="sd">        optimizer for finding the kernel&#39;s parameters which maximize the log-</span>
-<span class="sd">        marginal likelihood. The first run of the optimizer is performed from</span>
-<span class="sd">        the kernel&#39;s initial parameters, the remaining ones (if any) from thetas</span>
-<span class="sd">        sampled log-uniform randomly from the space of allowed theta-values. If</span>
-<span class="sd">        greater than 0, all bounds must be finite. If None is passed,</span>
-<span class="sd">        n_restarts_optimizer=0 is used, implying that one run is performed.</span>
+<span class="sd">    gp_params : dictionary, optional (default: None)</span>
+<span class="sd">        Dictionary with parameters for ``GaussianProcessRegressor``.</span>
 
 <span class="sd">    **kwargs : </span>
 <span class="sd">        Arguments passed on to parent class CondIndTest.</span>
@@ -1918,25 +1842,15 @@
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                 <span class="n">null_dist_filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">gp_version</span><span class="o">=</span><span class="s1">&#39;new&#39;</span><span class="p">,</span>
-                <span class="n">gp_kernel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                <span class="n">gp_alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                <span class="n">gp_restarts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">gp_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
         <span class="n">CondIndTest</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="n">GP</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
                     <span class="n">gp_version</span><span class="o">=</span><span class="n">gp_version</span><span class="p">,</span>
-                    <span class="n">gp_kernel</span><span class="o">=</span><span class="n">gp_kernel</span><span class="p">,</span>
-                    <span class="n">gp_alpha</span><span class="o">=</span><span class="n">gp_alpha</span><span class="p">,</span>
-                    <span class="n">gp_restarts</span><span class="o">=</span><span class="n">gp_restarts</span><span class="p">,</span>
+                    <span class="n">gp_params</span><span class="o">=</span><span class="n">gp_params</span><span class="p">,</span>
                     <span class="p">)</span>
-
-        <span class="c1"># self.gp_version = gp_version</span>
-
-        <span class="c1"># self.gp_kernel = gp_kernel</span>
-        <span class="c1"># self.gp_alpha = gp_alpha</span>
-        <span class="c1"># self.gp_restarts = gp_restarts</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">measure</span> <span class="o">=</span> <span class="s1">&#39;gp_dc&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">two_sided</span> <span class="o">=</span> <span class="kc">False</span>
@@ -2466,7 +2380,7 @@
 
     <span class="c1"># Quick test</span>
     <span class="kn">import</span> <span class="nn">data_processing</span> <span class="k">as</span> <span class="nn">pp</span>
-    <span class="c1"># numpy.random.seed(44)</span>
+    <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">44</span><span class="p">)</span>
     <span class="n">a</span> <span class="o">=</span> <span class="mf">0.</span>
     <span class="n">c</span> <span class="o">=</span> <span class="mf">0.6</span>
     <span class="n">T</span> <span class="o">=</span> <span class="mi">260</span>
@@ -2510,9 +2424,6 @@
 
     <span class="c1">#     null_dist_filename=None,</span>
     <span class="c1">#     gp_version=&#39;new&#39;,</span>
-    <span class="c1">#     gp_kernel=None,</span>
-    <span class="c1">#     gp_alpha=None,</span>
-    <span class="c1">#     gp_restarts=None,</span>
     <span class="c1">#     ace_version=&#39;acepack&#39;,</span>
     <span class="c1">#     recycle_residuals=False,</span>
     <span class="c1">#     verbosity=4)</span>
@@ -2532,9 +2443,6 @@
 
         <span class="n">null_dist_filename</span><span class="o">=</span><span class="s1">&#39;/home/jakobrunge/test/test.npz&#39;</span><span class="p">,</span> <span class="c1">#&#39;/home/tests/test.npz&#39;,</span>
         <span class="n">gp_version</span><span class="o">=</span><span class="s1">&#39;new&#39;</span><span class="p">,</span>
-        <span class="n">gp_kernel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">gp_alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">gp_restarts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 
         <span class="n">recycle_residuals</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">verbosity</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>

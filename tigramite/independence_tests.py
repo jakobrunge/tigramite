@@ -26,10 +26,6 @@ try:
     import rpy2.robjects.numpy2ri
     rpy2.robjects.numpy2ri.activate()
 
-#     def warn(*args, **kwargs):
-#         pass
-#     import warnings
-#     warnings.warn = warn
 except:
     print("Could not import rpy acepack package for GPACE,"
           " use python ACE package")
@@ -45,6 +41,186 @@ try:
 except:
     print("Could not import packages for knn-CMI estimation")
 
+
+# @staticmethod
+def _construct_array(X, Y, Z, tau_max, data,
+                     use_mask=False,
+                     mask=None, mask_type=None,
+                     missing_flag=None,
+                     return_cleaned_xyz=False,
+                     do_checks=True,
+                     verbosity=0):
+    """Constructs array from variables X, Y, Z from data.
+
+    Data is of shape (T, N), where T is the time series length and N the
+    number of variables.
+
+    Parameters
+    ----------
+    X, Y, Z : list of tuples
+        For a dependence measure I(X;Y|Z), Y is of the form [(varY, 0)],
+        where var specifies the variable index. X typically is of the form
+        [(varX, -tau)] with tau denoting the time lag and Z can be
+        multivariate [(var1, -lag), (var2, -lag), ...] .
+
+    tau_max : int
+        Maximum time lag. This may be used to make sure that estimates for
+        different lags in X and Z all have the same sample size.
+
+    data : array-like, 
+        This is the data input array of shape = (T, N)
+
+    use_mask : bool, optional (default: False)
+        Whether a supplied mask should be used.
+
+    mask : boolean array, optional (default: False)
+        Mask of data array, marking masked values as 1. Must be of same
+        shape as data.
+
+    missing_flag : number, optional (default: None)
+        Flag for missing values. Dismisses all time slices of samples where
+        missing values occur in any variable and also flags samples for all
+        lags up to 2*tau_max. This avoids biases, see section on masking in
+        Supplement of [1]_.
+
+    mask_type : {'y','x','z','xy','xz','yz','xyz'}
+        Masking mode: Indicators for which variables in the dependence
+        measure I(X; Y | Z) the samples should be masked. If None, 'y' is
+        used, which excludes all time slices containing masked samples in Y.
+        Explained in [1]_.
+
+    return_cleaned_xyz : bool, optional (default: False)
+        Whether to return cleaned X,Y,Z, where possible duplicates are 
+        removed.
+
+    do_checks : bool, optional (default: True)
+        Whether to perform sanity checks on input X,Y,Z
+
+    verbosity : int, optional (default: 0)
+        Level of verbosity.
+
+    Returns
+    -------
+    array, xyz [,XYZ] : Tuple of data array of shape (dim, T) and xyz 
+        identifier array of shape (dim,) identifying which row in array
+        corresponds to X, Y, and Z. For example::
+            X = [(0, -1)], Y = [(1, 0)], Z = [(1, -1), (0, -2)]
+            yields an array of shape (5, T) and xyz is  
+            xyz = numpy.array([0,1,2,2])          
+        If return_cleaned_xyz is True, also outputs the cleaned XYZ lists.
+     
+    """
+
+    def uniq(input):
+        output = []
+        for x in input:
+            if x not in output:
+                output.append(x)
+        return output
+
+    data_type = data.dtype
+
+    T, N = data.shape
+
+    # Remove duplicates in X, Y, Z
+    X = uniq(X)
+    Y = uniq(Y)
+    Z = uniq(Z)
+
+    if do_checks:
+        if len(X) == 0:
+            raise ValueError("X must be non-zero")
+        if len(Y) == 0:
+            raise ValueError("Y must be non-zero")
+
+    # If a node in Z occurs already in X or Y, remove it from Z
+    Z = [node for node in Z if (node not in X) and (node not in Y)]
+
+    # Check that all lags are non-positive and indices are in [0,N-1]
+    XYZ = X + Y + Z
+    dim = len(XYZ)
+
+    if do_checks:
+        if numpy.array(XYZ).shape != (dim, 2):
+            raise ValueError("X, Y, Z must be lists of tuples in format"
+                             " [(var, -lag),...], eg., [(2, -2), (1, 0), ...]")
+        if numpy.any(numpy.array(XYZ)[:, 1] > 0):
+            raise ValueError("nodes are %s, " % str(XYZ) +
+                             "but all lags must be non-positive")
+        if (numpy.any(numpy.array(XYZ)[:, 0] >= N)
+                or numpy.any(numpy.array(XYZ)[:, 0] < 0)):
+            raise ValueError("var indices %s," % str(numpy.array(XYZ)[:, 0]) +
+                             " but must be in [0, %d]" % (N - 1))
+        if numpy.all(numpy.array(Y)[:, 1] < 0):
+            raise ValueError("Y-nodes are %s, " % str(Y) +
+                             "but one of the Y-nodes must have zero lag")
+
+    max_lag = 2*tau_max
+    # max_lag = max(abs(numpy.array(XYZ)[:, 1].min()), tau_max)
+
+    # Setup XYZ identifier
+    xyz = numpy.array([0 for i in range(len(X))] +
+                      [1 for i in range(len(Y))] +
+                      [2 for i in range(len(Z))])
+
+    # Setup and fill array with lagged time series
+    array = numpy.zeros((dim, T - max_lag), dtype=data_type)
+    for i, node in enumerate(XYZ):
+        var, lag = node
+        array[i, :] = data[max_lag + lag: T + lag, var]
+
+    if missing_flag is not None or use_mask:
+        use_indices = numpy.ones(T - max_lag, dtype='int')
+    
+    if missing_flag is not None:
+        # Dismiss all samples where missing values occur in any variable
+        # and for any lag up to max_lag
+        missing_anywhere = numpy.any(data==missing_flag, axis=1)
+        for tau in range(max_lag+1):
+            use_indices[missing_anywhere[tau:T-max_lag+tau]] = 0
+   
+    if use_mask:
+        # Remove samples with mask == 1
+        # conditional on which mask_type is used
+        array_selector = numpy.zeros((dim, T - max_lag), dtype='int32')
+        for i, node in enumerate(XYZ):
+            var, lag = node
+            array_selector[i, :] = (
+                mask[max_lag + lag: T + lag, var] == False)
+
+        # use_indices = numpy.ones(T - max_lag, dtype='int')
+        if 'x' in mask_type:
+            use_indices *= numpy.prod(array_selector[xyz == 0, :],
+                                      axis=0)
+        if 'y' in mask_type:
+            use_indices *= numpy.prod(array_selector[xyz == 1, :],
+                                      axis=0)
+        if 'z' in mask_type:
+            use_indices *= numpy.prod(array_selector[xyz == 2, :],
+                                      axis=0)
+    
+    if missing_flag is not None or use_mask:
+        if use_indices.sum() == 0:
+            raise ValueError("No unmasked samples")
+        array = array[:, use_indices == 1]
+
+    if verbosity > 2:
+        print("            Constructed array of shape " +
+              "%s from\n" % str(array.shape) +
+              "            X = %s\n" % str(X) +
+              "            Y = %s\n" % str(Y) +
+              "            Z = %s" % str(Z))
+        if use_mask:
+            print("            with masked samples in "
+                  "%s removed" % mask_type)
+        if missing_flag is not None:
+            print("            with missing values labeled "
+                  "%s removed" % missing_flag)    
+
+    if return_cleaned_xyz:
+        return array, xyz, (X, Y, Z)
+    else:
+        return array, xyz
 
 class CondIndTest(object):
     """Base class of conditional independence tests.
@@ -177,7 +353,7 @@ class CondIndTest(object):
         if verbosity is None:
             verbosity=self.verbosity
 
-        return self._construct_array(
+        return _construct_array(
             X=X, Y=Y, Z=Z,
             tau_max=tau_max,
             data=self.data,
@@ -188,186 +364,6 @@ class CondIndTest(object):
             return_cleaned_xyz=True,
             do_checks=False,
             verbosity=verbosity)
-
-    # @profile
-    def _construct_array(self, X, Y, Z, tau_max, data,
-                         use_mask=False,
-                         mask=None, mask_type=None,
-                         missing_flag=None,
-                         return_cleaned_xyz=False,
-                         do_checks=True,
-                         verbosity=0):
-        """Constructs array from variables X, Y, Z from data.
-
-        Data is of shape (T, N), where T is the time series length and N the
-        number of variables.
-
-        Parameters
-        ----------
-        X, Y, Z : list of tuples
-            For a dependence measure I(X;Y|Z), Y is of the form [(varY, 0)],
-            where var specifies the variable index. X typically is of the form
-            [(varX, -tau)] with tau denoting the time lag and Z can be
-            multivariate [(var1, -lag), (var2, -lag), ...] .
-
-        tau_max : int
-            Maximum time lag. This may be used to make sure that estimates for
-            different lags in X and Z all have the same sample size.
-
-        data : array-like, 
-            This is the data input array of shape = (T, N)
-
-        use_mask : bool, optional (default: False)
-            Whether a supplied mask should be used.
-
-        mask : boolean array, optional (default: False)
-            Mask of data array, marking masked values as 1. Must be of same
-            shape as data.
-
-        missing_flag : number, optional (default: None)
-            Flag for missing values. Dismisses all time slices of samples where
-            missing values occur in any variable and also flags samples for all
-            lags up to 2*tau_max. This avoids biases, see section on masking in
-            Supplement of [1]_.
-
-        mask_type : {'y','x','z','xy','xz','yz','xyz'}
-            Masking mode: Indicators for which variables in the dependence
-            measure I(X; Y | Z) the samples should be masked. If None, 'y' is
-            used, which excludes all time slices containing masked samples in Y.
-            Explained in [1]_.
-
-        return_cleaned_xyz : bool, optional (default: False)
-            Whether to return cleaned X,Y,Z, where possible duplicates are 
-            removed.
-
-        do_checks : bool, optional (default: True)
-            Whether to perform sanity checks on input X,Y,Z
-
-        verbosity : int, optional (default: 0)
-            Level of verbosity.
-
-        Returns
-        -------
-        array, xyz [,XYZ] : Tuple of data array of shape (dim, T) and xyz 
-            identifier array of shape (dim,) identifying which row in array
-            corresponds to X, Y, and Z. For example::
-                X = [(0, -1)], Y = [(1, 0)], Z = [(1, -1), (0, -2)]
-                yields an array of shape (5, T) and xyz is  
-                xyz = numpy.array([0,1,2,2])          
-            If return_cleaned_xyz is True, also outputs the cleaned XYZ lists.
-         
-        """
-
-        def uniq(input):
-            output = []
-            for x in input:
-                if x not in output:
-                    output.append(x)
-            return output
-
-        data_type = data.dtype
-
-        T, N = data.shape
-
-        # Remove duplicates in X, Y, Z
-        X = uniq(X)
-        Y = uniq(Y)
-        Z = uniq(Z)
-
-        if do_checks:
-            if len(X) == 0:
-                raise ValueError("X must be non-zero")
-            if len(Y) == 0:
-                raise ValueError("Y must be non-zero")
-
-        # If a node in Z occurs already in X or Y, remove it from Z
-        Z = [node for node in Z if (node not in X) and (node not in Y)]
-
-        # Check that all lags are non-positive and indices are in [0,N-1]
-        XYZ = X + Y + Z
-        dim = len(XYZ)
-
-        if do_checks:
-            if numpy.array(XYZ).shape != (dim, 2):
-                raise ValueError("X, Y, Z must be lists of tuples in format"
-                                 " [(var, -lag),...], eg., [(2, -2), (1, 0), ...]")
-            if numpy.any(numpy.array(XYZ)[:, 1] > 0):
-                raise ValueError("nodes are %s, " % str(XYZ) +
-                                 "but all lags must be non-positive")
-            if (numpy.any(numpy.array(XYZ)[:, 0] >= N)
-                    or numpy.any(numpy.array(XYZ)[:, 0] < 0)):
-                raise ValueError("var indices %s," % str(numpy.array(XYZ)[:, 0]) +
-                                 " but must be in [0, %d]" % (N - 1))
-            if numpy.all(numpy.array(Y)[:, 1] < 0):
-                raise ValueError("Y-nodes are %s, " % str(Y) +
-                                 "but one of the Y-nodes must have zero lag")
-
-        max_lag = 2*tau_max
-        # max_lag = max(abs(numpy.array(XYZ)[:, 1].min()), tau_max)
-
-        # Setup XYZ identifier
-        xyz = numpy.array([0 for i in range(len(X))] +
-                          [1 for i in range(len(Y))] +
-                          [2 for i in range(len(Z))])
-
-        # Setup and fill array with lagged time series
-        array = numpy.zeros((dim, T - max_lag), dtype=data_type)
-        for i, node in enumerate(XYZ):
-            var, lag = node
-            array[i, :] = data[max_lag + lag: T + lag, var]
-
-        if missing_flag is not None or use_mask:
-            use_indices = numpy.ones(T - max_lag, dtype='int')
-        
-        if missing_flag is not None:
-            # Dismiss all samples where missing values occur in any variable
-            # and for any lag up to max_lag
-            missing_anywhere = numpy.any(data==missing_flag, axis=1)
-            for tau in range(max_lag+1):
-                use_indices[missing_anywhere[tau:T-max_lag+tau]] = 0
-       
-        if use_mask:
-            # Remove samples with mask == 1
-            # conditional on which mask_type is used
-            array_selector = numpy.zeros((dim, T - max_lag), dtype='int32')
-            for i, node in enumerate(XYZ):
-                var, lag = node
-                array_selector[i, :] = (
-                    mask[max_lag + lag: T + lag, var] == False)
-
-            # use_indices = numpy.ones(T - max_lag, dtype='int')
-            if 'x' in mask_type:
-                use_indices *= numpy.prod(array_selector[xyz == 0, :],
-                                          axis=0)
-            if 'y' in mask_type:
-                use_indices *= numpy.prod(array_selector[xyz == 1, :],
-                                          axis=0)
-            if 'z' in mask_type:
-                use_indices *= numpy.prod(array_selector[xyz == 2, :],
-                                          axis=0)
-        
-        if missing_flag is not None or use_mask:
-            if use_indices.sum() == 0:
-                raise ValueError("No unmasked samples")
-            array = array[:, use_indices == 1]
-
-        if verbosity > 2:
-            print("            Constructed array of shape " +
-                  "%s from\n" % str(array.shape) +
-                  "            X = %s\n" % str(X) +
-                  "            Y = %s\n" % str(Y) +
-                  "            Z = %s" % str(Z))
-            if use_mask:
-                print("            with masked samples in "
-                      "%s removed" % mask_type)
-            if missing_flag is not None:
-                print("            with missing values labeled "
-                      "%s removed" % missing_flag)    
-
-        if return_cleaned_xyz:
-            return array, xyz, (X, Y, Z)
-        else:
-            return array, xyz
 
     # @profile
     def run_test(self, X, Y, Z=None, tau_max=0):
@@ -417,7 +413,7 @@ class CondIndTest(object):
             if self._keyfy(Y, Z) in self.residuals.keys():
                 y_resid = self.residuals[self._keyfy(Y, Z)]
             else:
-                y_resid = self._get_single_residuals(array,target_var = 1)
+                y_resid = self._get_single_residuals(array, target_var = 1)
                 if len(Z) > 0:
                     self.residuals[self._keyfy(Y, Z)] = y_resid
 
@@ -1073,7 +1069,6 @@ class ParCorr(CondIndTest):
     ----------
     **kwargs : 
         Arguments passed on to Parent class CondIndTest.
-
     """
 
     def __init__(self, **kwargs):
@@ -1269,7 +1264,7 @@ class ParCorr(CondIndTest):
         Y = [(j, 0)]
         X = [(j, 0)]   # dummy variable here
         Z = parents
-        array, xyz = self._construct_array(
+        array, xyz = _construct_array(
             X=X, Y=Y, Z=Z,
             tau_max=tau_max,
             data=self.data,
@@ -1297,7 +1292,12 @@ class GP():
     r"""Gaussian processes base class.
 
     GP is estimated with scikit-learn and allows to flexibly specify kernels and
-    hyperparameters or let them be optimized automatically.
+    hyperparameters or let them be optimized automatically. The kernel specifies
+    the covariance function of the GP. Parameters can be passed on to
+    ``GaussianProcessRegressor`` using the gp_params dictionary. If None is
+    passed, the kernel '1.0 * RBF(1.0) + WhiteKernel()' is used with alpha=0 as
+    default. Note that the kernel's hyperparameters are optimized during
+    fitting.
 
     Parameters
     ----------
@@ -1306,45 +1306,18 @@ class GP():
         simulations in [1]_. The newer version from scikit-learn 0.19 is faster
         and allows more flexibility regarding kernels etc.
 
-    gp_kernel : kernel object, optional (default: None)
-        Only available for gp_version='new'. Can be any scikit-learn kernel
-        object available in gaussian_process.kernels. The kernel specifies the
-        covariance function of the GP. If None is passed, the kernel '1.0 *
-        RBF(1.0)' is used as default. Note that the kernel's hyperparameters are
-        optimized during fitting.
-
-    gp_alpha :  float or array-like, optional (default: None)
-        Only available for gp_version='new'. Value added to the diagonal of the
-        kernel matrix during fitting. Larger values correspond to increased
-        noise level in the observations and reduce potential numerical issues
-        during fitting. If an array is passed, it must have the same number of
-        entries as the data used for fitting and is used as datapoint-dependent
-        noise level. Note that this is equivalent to adding a WhiteKernel with
-        c=alpha. If None is passed, gp_alpha=1 is used.
+    gp_params : dictionary, optional (default: None)
+        Dictionary with parameters for ``GaussianProcessRegressor``.
     
-    gp_restarts : int, optional (default: None)
-        Only available for gp_version='new'. The number of restarts of the
-        optimizer for finding the kernel's parameters which maximize the log-
-        marginal likelihood. The first run of the optimizer is performed from
-        the kernel's initial parameters, the remaining ones (if any) from thetas
-        sampled log-uniform randomly from the space of allowed theta-values. If
-        greater than 0, all bounds must be finite. If None is passed,
-        n_restarts_optimizer=0 is used, implying that one run is performed.
-
     """
     def __init__(self,
                 gp_version='new',
-                gp_kernel=None,
-                gp_alpha=None,
-                gp_restarts=None):
+                gp_params=None):
 
         # CondIndTest.__inits__(self,)
 
         self.gp_version = gp_version
-
-        self.gp_kernel = gp_kernel
-        self.gp_alpha = gp_alpha
-        self.gp_restarts = gp_restarts
+        self.gp_params = gp_params
     
     # @profile
     def _get_single_residuals(self, array, target_var,
@@ -1383,6 +1356,9 @@ class GP():
         """
         dim, T = array.shape
 
+        if self.gp_params is None:
+            self.gp_params = {}
+
         if dim <= 2:
             if return_likelihood:
                 return array[target_var, :], -numpy.inf
@@ -1417,24 +1393,25 @@ class GP():
                 storage_mode='light')
 
         elif self.gp_version == 'new':
-            if self.gp_kernel is None:
-                self.gp_kernel = gaussian_process.kernels.RBF(
-                    length_scale=1.0,
-                    # length_scale_bounds=(1E-16, numpy.inf)  #(1e-05, 100000.0)
-                    )
-            if self.gp_alpha is None:
-                self.gp_alpha = 1.
-            if self.gp_restarts is None:
-                self.gp_restarts = 0
+            # Overwrite default kernel and alpha values 
+            params = self.gp_params.copy()
+            if 'kernel' not in self.gp_params.keys():
+                kernel = gaussian_process.kernels.RBF() +\
+                         gaussian_process.kernels.WhiteKernel()
+            else:
+                kernel = self.gp_params['kernel']
+                del params['kernel']
+
+            if 'alpha' not in self.gp_params.keys():
+                alpha = 0.
+            else:
+                alpha = self.gp_params['alpha']
+                del params['alpha']
 
             gp = gaussian_process.GaussianProcessRegressor(
-                kernel=self.gp_kernel,
-                alpha=self.gp_alpha,
-                optimizer='fmin_l_bfgs_b',  
-                n_restarts_optimizer=self.gp_restarts,
-                normalize_y=False,
-                copy_X_train=True,
-                random_state=None)
+                kernel=kernel,
+                alpha=alpha,
+                 **params)
 
         gp.fit(z, var.reshape(-1, 1))
 
@@ -1483,7 +1460,7 @@ class GP():
         Y = [(j, 0)]
         X = [(j, 0)]   # dummy variable here
         Z = parents
-        array, xyz = self._construct_array(
+        array, xyz = _construct_array(
             X=X, Y=Y, Z=Z,
             tau_max=tau_max,
             data=self.data,
@@ -1529,8 +1506,8 @@ class GPACE(CondIndTest,GP):
         Y & =  f_Y(Z) + \epsilon_{Y}  \\
         \epsilon_{X,Y} &\sim \mathcal{N}(0, \sigma^2)
 
-    using GP regression. Here :math:`\sigma^2` corresponds to the gp_alpha
-    parameter. Then the residuals  are transformed to uniform
+    using GP regression. Here :math:`\sigma^2` and the kernel bandwidth are
+    optimzed using ``sklearn``. Then the residuals  are transformed to uniform
     marginals yielding :math:`r_X,r_Y` and their dependency is tested with
 
     .. math::  \max_{g,h}\rho\left(g(r_X),h(r_Y)\right)
@@ -1549,31 +1526,9 @@ class GPACE(CondIndTest,GP):
         simulations in [1]_. The newer version from scikit-learn 0.19 is faster
         and allows more flexibility regarding kernels etc.
 
-    gp_kernel : kernel object, optional (default: None)
-        Only available for gp_version='new'. Can be any scikit-learn kernel
-        object available in gaussian_process.kernels. The kernel specifies the
-        covariance function of the GP. If None is passed, the kernel '1.0 *
-        RBF(1.0)' is used as default. Note that the kernel's hyperparameters are
-        optimized during fitting.
-
-    gp_alpha :  float or array-like, optional (default: None)
-        Only available for gp_version='new'. Value added to the diagonal of the
-        kernel matrix during fitting. Larger values correspond to increased
-        noise level in the observations and reduce potential numerical issues
-        during fitting. If an array is passed, it must have the same number of
-        entries as the data used for fitting and is used as datapoint-dependent
-        noise level. Note that this is equivalent to adding a WhiteKernel with
-        c=alpha. If None is passed, gp_alpha=1 is used.
+    gp_params : dictionary, optional (default: None)
+        Dictionary with parameters for ``GaussianProcessRegressor``.
     
-    gp_restarts : int, optional (default: None)
-        Only available for gp_version='new'. The number of restarts of the
-        optimizer for finding the kernel's parameters which maximize the log-
-        marginal likelihood. The first run of the optimizer is performed from
-        the kernel's initial parameters, the remaining ones (if any) from thetas
-        sampled log-uniform randomly from the space of allowed theta-values. If
-        greater than 0, all bounds must be finite. If None is passed,
-        n_restarts_optimizer=0 is used, implying that one run is performed.
-
     ace_version : {'python', 'acepack'}
         Estimator for ACE estimator of maximal correlation to use. 'python'
         loads the very slow pure python version available from
@@ -1590,9 +1545,7 @@ class GPACE(CondIndTest,GP):
     def __init__(self,
                 null_dist_filename=None,
                 gp_version='new',
-                gp_kernel=None,
-                gp_alpha=None,
-                gp_restarts=None,
+                gp_params=None,
                 ace_version='acepack',
                 **kwargs):
 
@@ -1600,17 +1553,10 @@ class GPACE(CondIndTest,GP):
 
         GP.__init__(self, 
                     gp_version=gp_version,
-                    gp_kernel=gp_kernel,
-                    gp_alpha=gp_alpha,
-                    gp_restarts=gp_restarts,
+                    gp_params=gp_params,
                     )
 
-        # self.gp_version = gp_version
         self.ace_version = ace_version
-
-        # self.gp_kernel = gp_kernel
-        # self.gp_alpha = gp_alpha
-        # self.gp_restarts = gp_restarts
 
         self.measure = 'gp_ace'
         self.two_sided = False
@@ -1794,8 +1740,8 @@ class GPDC(CondIndTest,GP):
         Y & =  f_Y(Z) + \epsilon_{Y}  \\
         \epsilon_{X,Y} &\sim \mathcal{N}(0, \sigma^2)
 
-    using GP regression. Here :math:`\sigma^2` corresponds to the gp_alpha
-    parameter. Then the residuals  are transformed to uniform
+    using GP regression. Here :math:`\sigma^2` and the kernel bandwidth are
+    optimzed using ``sklearn``. Then the residuals  are transformed to uniform
     marginals yielding :math:`r_X,r_Y` and their dependency is tested with
 
     .. math::  \mathcal{R}\left(r_X, r_Y\right)
@@ -1822,30 +1768,8 @@ class GPDC(CondIndTest,GP):
         simulations in [1]_. The newer version from scikit-learn 0.19 is faster
         and allows more flexibility regarding kernels etc.
 
-    gp_kernel : kernel object, optional (default: None)
-        Only available for gp_version='new'. Can be any scikit-learn kernel
-        object available in gaussian_process.kernels. The kernel specifies the
-        covariance function of the GP. If None is passed, the kernel '1.0 *
-        RBF(1.0)' is used as default. Note that the kernel's hyperparameters are
-        optimized during fitting.
-
-    gp_alpha :  float or array-like, optional (default: None)
-        Only available for gp_version='new'. Value added to the diagonal of the
-        kernel matrix during fitting. Larger values correspond to increased
-        noise level in the observations and reduce potential numerical issues
-        during fitting. If an array is passed, it must have the same number of
-        entries as the data used for fitting and is used as datapoint-dependent
-        noise level. Note that this is equivalent to adding a WhiteKernel with
-        c=alpha. If None is passed, gp_alpha=1 is used.
-    
-    gp_restarts : int, optional (default: None)
-        Only available for gp_version='new'. The number of restarts of the
-        optimizer for finding the kernel's parameters which maximize the log-
-        marginal likelihood. The first run of the optimizer is performed from
-        the kernel's initial parameters, the remaining ones (if any) from thetas
-        sampled log-uniform randomly from the space of allowed theta-values. If
-        greater than 0, all bounds must be finite. If None is passed,
-        n_restarts_optimizer=0 is used, implying that one run is performed.
+    gp_params : dictionary, optional (default: None)
+        Dictionary with parameters for ``GaussianProcessRegressor``.
 
     **kwargs : 
         Arguments passed on to parent class CondIndTest.
@@ -1854,25 +1778,15 @@ class GPDC(CondIndTest,GP):
     def __init__(self,
                 null_dist_filename=None,
                 gp_version='new',
-                gp_kernel=None,
-                gp_alpha=None,
-                gp_restarts=None,
+                gp_params=None,
                 **kwargs):
 
         CondIndTest.__init__(self, **kwargs)
 
         GP.__init__(self, 
                     gp_version=gp_version,
-                    gp_kernel=gp_kernel,
-                    gp_alpha=gp_alpha,
-                    gp_restarts=gp_restarts,
+                    gp_params=gp_params,
                     )
-
-        # self.gp_version = gp_version
-
-        # self.gp_kernel = gp_kernel
-        # self.gp_alpha = gp_alpha
-        # self.gp_restarts = gp_restarts
 
         self.measure = 'gp_dc'
         self.two_sided = False
@@ -2402,7 +2316,7 @@ if __name__ == '__main__':
 
     # Quick test
     import data_processing as pp
-    # numpy.random.seed(44)
+    numpy.random.seed(44)
     a = 0.
     c = 0.6
     T = 260
@@ -2446,9 +2360,6 @@ if __name__ == '__main__':
 
     #     null_dist_filename=None,
     #     gp_version='new',
-    #     gp_kernel=None,
-    #     gp_alpha=None,
-    #     gp_restarts=None,
     #     ace_version='acepack',
     #     recycle_residuals=False,
     #     verbosity=4)
@@ -2468,9 +2379,6 @@ if __name__ == '__main__':
 
         null_dist_filename='/home/jakobrunge/test/test.npz', #'/home/tests/test.npz',
         gp_version='new',
-        gp_kernel=None,
-        gp_alpha=None,
-        gp_restarts=None,
 
         recycle_residuals=False,
         verbosity=4)
