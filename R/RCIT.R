@@ -4,6 +4,7 @@
 #' @param z Random variable z.
 #' @param approx Method for approximating the null distribution. Default is the "lpd4," the Lindsay-Pilla-Basak method. Other options include "gamma" for the Satterthwaite-Welch method, "hbe" for the Hall-Buckley-Eagleson method, and "chi2" for a normalized statistic.
 #' @param corr FALSE corresponds to RCIT and TRUE to RCoT. Default is FALSE.
+#' @param num_f Number of features for conditioning set. Default is 25.
 #' @param seed The seed for controlling random number generation. Use if you want to replicate results exactly. Default is NULL.
 #' @return A list containing the p-value \code{p} and statistic \code{Sta}
 #' @export
@@ -16,7 +17,7 @@
 #' RCIT(x,y,z,seed=2);
 
 
-RCIT <- function(x,y,z=NULL,approx="hbe",corr=FALSE,seed=NULL){
+RCIT <- function(x,y,z=NULL,approx="hbe",corr=FALSE,num_f=25,seed=NULL){
 
   if (length(z)==0){
     out=RIT(x,y,approx="lpd4",seed=seed);
@@ -52,7 +53,7 @@ RCIT <- function(x,y,z=NULL,approx="hbe",corr=FALSE,seed=NULL){
     z=normalize(z);
 
 
-    four_z = random_fourier_features(z[,1:d],num_f=25,sigma=median(c(t(dist(z[1:r1,])))), seed = seed );
+    four_z = random_fourier_features(z[,1:d],num_f=num_f,sigma=median(c(t(dist(z[1:r1,])))), seed = seed );
     four_x = random_fourier_features(x,num_f=5,sigma=median(c(t(dist(x[1:r1,])))), seed = seed );
     four_y = random_fourier_features(y,num_f=5,sigma=median(c(t(dist(y[1:r1,])))), seed = seed );
 
@@ -64,7 +65,7 @@ RCIT <- function(x,y,z=NULL,approx="hbe",corr=FALSE,seed=NULL){
 
     Czz = cov(f_z);
 
-    i_Czz = ginv(Czz+diag(25)*1E-10); #requires library(MASS)
+    i_Czz = ginv(Czz+diag(num_f)*1E-10); #requires library(MASS)
     Cxz=cov(f_x,f_z);
     Czy=cov(f_z,f_y);
 

@@ -4,14 +4,14 @@
 \alias{RIT}
 \title{Tests whether x and y are unconditionally independent}
 \usage{
-RIT(x, y, approx = "lpd4", seed = NULL)
+RIT(x, y, approx = "hbe", seed = NULL)
 }
 \arguments{
 \item{x}{Random variable x.}
 
 \item{y}{Random variable y.}
 
-\item{approx}{Method for approximating the null distribution. Default is the "lpd4," the Lindsay-Pilla-Basak method. Other options include "gamma" for the Satterthwaite-Welch method and "hbe" for the Hall-Buckley-Eagleson method.}
+\item{approx}{Method for approximating the null distribution. Default is the "lpd4," the Lindsay-Pilla-Basak method. Other options include "gamma" for the Satterthwaite-Welch method, "hbe" for the Hall-Buckley-Eagleson method and "chi2" for a normalized statistic..}
 
 \item{seed}{The seed for controlling random number generation. Use if you want to replicate results exactly. Default is NULL.}
 }
