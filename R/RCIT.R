@@ -3,7 +3,7 @@
 #' @param y Random variable y.
 #' @param z Random variable z.
 #' @param approx Method for approximating the null distribution. Default is the "lpd4," the Lindsay-Pilla-Basak method. Other options include "gamma" for the Satterthwaite-Welch method, "hbe" for the Hall-Buckley-Eagleson method, and "chi2" for a normalized statistic.
-#' @param corr TRUE corresponds to RCoT and FALSE to RCIT. Default is FALSE.
+#' @param corr TRUE corresponds to RCoT and FALSE to RCIT. Default is TRUE.
 #' @param num_f Number of features for conditioning set. Default is 25.
 #' @param seed The seed for controlling random number generation. Use if you want to replicate results exactly. Default is NULL.
 #' @return A list containing the p-value \code{p} and statistic \code{Sta}
