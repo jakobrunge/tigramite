@@ -17,7 +17,7 @@
 #' RCIT(x,y,z,seed=2);
 
 
-RCIT <- function(x,y,z=NULL,approx="hbe",corr=TRUE,num_f=25,seed=NULL){
+RCIT <- function(x,y,z=NULL,approx="lpd4",corr=TRUE,num_f=25,seed=NULL){
 
   if (length(z)==0){
     out=RIT(x,y,approx="lpd4",seed=seed);

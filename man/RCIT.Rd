@@ -4,7 +4,7 @@
 \alias{RCIT}
 \title{RCIT and RCoT - tests whether x and y are conditionally independent given z. Calls RIT if z is empty.}
 \usage{
-RCIT(x, y, z = NULL, approx = "hbe", corr = TRUE, num_f = 25,
+RCIT(x, y, z = NULL, approx = "lpd4", corr = TRUE, num_f = 25,
   seed = NULL)
 }
 \arguments{

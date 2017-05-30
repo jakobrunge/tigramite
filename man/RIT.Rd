@@ -4,7 +4,7 @@
 \alias{RIT}
 \title{Tests whether x and y are unconditionally independent}
 \usage{
-RIT(x, y, approx = "hbe", seed = NULL)
+RIT(x, y, approx = "lpd4", seed = NULL)
 }
 \arguments{
 \item{x}{Random variable x.}

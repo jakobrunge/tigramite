@@ -11,7 +11,7 @@
 #' y=(x+rnorm(1000))^2;
 #' RIT(x,y);
 
-RIT <- function(x,y,approx="hbe",seed=NULL){
+RIT <- function(x,y,approx="lpd4",seed=NULL){
 
   if (sd(x)==0 | sd(y)==0){
     out=list(p=1,Sta=0,w=w,b=b);
