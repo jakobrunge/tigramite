@@ -16,7 +16,7 @@ RCIT(x, y, z = NULL, approx = "hbe", corr = TRUE, num_f = 25,
 
 \item{approx}{Method for approximating the null distribution. Default is the "lpd4," the Lindsay-Pilla-Basak method. Other options include "gamma" for the Satterthwaite-Welch method, "hbe" for the Hall-Buckley-Eagleson method, and "chi2" for a normalized statistic.}
 
-\item{corr}{TRUE corresponds to RCoT and FALSE to RCIT. Default is FALSE.}
+\item{corr}{TRUE corresponds to RCoT and FALSE to RCIT. Default is TRUE.}
 
 \item{num_f}{Number of features for conditioning set. Default is 25.}
 
