@@ -4,7 +4,7 @@
 \alias{RCIT}
 \title{RCIT and RCoT - tests whether x and y are conditionally independent given z. Calls RIT if z is empty.}
 \usage{
-RCIT(x, y, z = NULL, approx = "hbe", corr = FALSE, num_f = 25,
+RCIT(x, y, z = NULL, approx = "hbe", corr = TRUE, num_f = 25,
   seed = NULL)
 }
 \arguments{
@@ -16,7 +16,7 @@ RCIT(x, y, z = NULL, approx = "hbe", corr = FALSE, num_f = 25,
 
 \item{approx}{Method for approximating the null distribution. Default is the "lpd4," the Lindsay-Pilla-Basak method. Other options include "gamma" for the Satterthwaite-Welch method, "hbe" for the Hall-Buckley-Eagleson method, and "chi2" for a normalized statistic.}
 
-\item{corr}{FALSE corresponds to RCoT and TRUE to RCIT. Default is FALSE.}
+\item{corr}{TRUE corresponds to RCoT and FALSE to RCIT. Default is FALSE.}
 
 \item{num_f}{Number of features for conditioning set. Default is 25.}
 
