@@ -1,4 +1,4 @@
-#' RCIT and RCoT - tests whether x and y are unconditionally independent..
+#' KCIT - tests whether x and y are unconditionally independent..
 #' @param x Random variable x.
 #' @param y Random variable y.
 #' @return The p-value \code{p}
