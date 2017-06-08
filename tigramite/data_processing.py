@@ -45,9 +45,9 @@ class DataFrame():
         self.missing_flag = missing_flag
         T, N = data.shape
 
-        if type(self.values) != numpy.ndarray:
-            raise TypeError("data is of type %s, " % type(self.values) +
-                            "must be numpy.ndarray")
+        # if type(self.values) != numpy.ndarray:
+        #     raise TypeError("data is of type %s, " % type(self.values) +
+        #                     "must be numpy.ndarray")
         if N > T:
             warnings.warn("data.shape = %s," % str(self.values.shape) +
                           " is it of shape (observations, variables) ?")

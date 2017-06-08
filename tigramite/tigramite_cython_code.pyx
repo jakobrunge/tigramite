@@ -120,6 +120,52 @@ def _get_patterns_cython(
     return (patt, patt_mask, weights)
 
 
+cdef inline bint isvalueinarray(
+    int val,
+    int[:] arr,
+    int size):
+
+    cdef int i
+
+    for i in range(size):
+        if (arr[i] == val):
+            return True
+
+    return False
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def _get_restricted_permutation_cython(
+    int T,
+    int shuffle_neighbors,
+    int[:, :] neighbors,
+    int[:] order
+    ):
+
+    cdef int[:] restricted_permutation = numpy.zeros(T, dtype='int32')
+    cdef int[:] used = numpy.zeros(T, dtype='int32')
+    #cdef int[:] perm = numpy.zeros(shuffle_neighbors, dtype='int32')
+
+    cdef int i, index, count, use
+
+    for i in range(T):
+
+        index = order[i];
+        count = 0
+
+        use = neighbors[index, count]
+        while(isvalueinarray(use, used, i) and (count < shuffle_neighbors - 1)):
+            count += 1
+            use = neighbors[index, count]
+
+        restricted_permutation[index] = use
+        
+        used[i] = use
+
+    return numpy.asarray(restricted_permutation)
+
+
 # Copyright (c) 2012, Florian Finkernagel. All right reserved.
 ## Redistribution and use in source and binary forms, with or without
 ## modification, are permitted provided that the following conditions are

@@ -1677,24 +1677,25 @@ if __name__ == '__main__':
     mask = numpy.zeros(data.shape)
     mask[:len(data)/2]=True
 
-    data[:20] = 99.
+    data[:,0] = -99.
     # plot_lagfuncs(val_matrix, var_names=range(3), markersize=5)
 
+
     plot_timeseries(data,  
-                    datatime=None,
-                    save_name=None,
-                    fig_axes=None,
-                    var_units=None,
-                    time_label='years',
-                    use_mask=True,
-                    missing_flag=99.,
-                    mask=mask,
-                    grey_masked_samples='fill',
-                    data_linewidth=1.,
-                    skip_ticks_data_x=1,
-                    skip_ticks_data_y=1,
-                    label_fontsize=8,
-                    figsize=(3.375, 3.),
+                    # datatime=None,
+                    # save_name=None,
+                    # fig_axes=None,
+                    # var_units=None,
+                    # time_label='years',
+                    # use_mask=False,
+                    # missing_flag=-99.,
+                    # mask=mask,
+                    # grey_masked_samples='fill',
+                    # data_linewidth=1.,
+                    # skip_ticks_data_x=1,
+                    # skip_ticks_data_y=1,
+                    # label_fontsize=8,
+                    # figsize=(3.375, 3.),
                     )
 
     # lagmat = setup_matrix(3, 3, range(3), lag_units = 'months')

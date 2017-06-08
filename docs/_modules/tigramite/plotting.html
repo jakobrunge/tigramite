@@ -86,9 +86,9 @@
     <span class="c1"># (zero would be interpreted as non-significant in some functions)</span>
     <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">cmi</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">cmi</span> <span class="o">&lt;</span> <span class="mf">0.</span><span class="p">:</span>
-            <span class="n">cmi</span> <span class="o">=</span> <span class="mi">1</span><span class="n">E</span><span class="o">-</span><span class="mi">8</span>
+            <span class="n">cmi</span> <span class="o">=</span> <span class="mf">1E-8</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">cmi</span><span class="p">[</span><span class="n">cmi</span> <span class="o">&lt;</span> <span class="mf">0.</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="n">E</span><span class="o">-</span><span class="mi">8</span>
+        <span class="n">cmi</span><span class="p">[</span><span class="n">cmi</span> <span class="o">&lt;</span> <span class="mf">0.</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1E-8</span>
 
     <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">numpy</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">2.</span> <span class="o">*</span> <span class="n">cmi</span><span class="p">))</span>
 
@@ -298,7 +298,7 @@
     <span class="k">if</span> <span class="n">last</span><span class="p">:</span>
         <span class="n">_make_nice_axes</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;left&#39;</span><span class="p">,</span> <span class="s1">&#39;bottom&#39;</span><span class="p">],</span> <span class="n">skip</span><span class="o">=</span><span class="p">(</span>
             <span class="n">skip_ticks_data_x</span><span class="p">,</span> <span class="n">skip_ticks_data_y</span><span class="p">))</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">r&#39;</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">time_label</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">time_label</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">_make_nice_axes</span><span class="p">(</span>
             <span class="n">ax</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;left&#39;</span><span class="p">],</span> <span class="n">skip</span><span class="o">=</span><span class="p">(</span><span class="n">skip_ticks_data_x</span><span class="p">,</span> <span class="n">skip_ticks_data_y</span><span class="p">))</span>
@@ -312,9 +312,9 @@
     <span class="n">trans</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">blended_transform_factory</span><span class="p">(</span>
         <span class="n">fig</span><span class="o">.</span><span class="n">transFigure</span><span class="p">,</span> <span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">unit</span><span class="p">:</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">r&#39;</span><span class="si">%s</span><span class="s1"> [</span><span class="si">%s</span><span class="s1">]&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">unit</span><span class="p">),</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> [</span><span class="si">%s</span><span class="s1">]&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">unit</span><span class="p">),</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">r&#39;</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">label</span><span class="p">),</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">label</span><span class="p">),</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">)</span>
 
         <span class="c1"># ax.text(.02, .5, r&#39;%s [%s]&#39; % (label, unit), fontsize=label_fontsize,</span>
         <span class="c1">#         horizontalalignment=&#39;left&#39;, verticalalignment=&#39;center&#39;,</span>
@@ -471,7 +471,7 @@
 
     <span class="n">matrix</span> <span class="o">=</span> <span class="n">setup_matrix</span><span class="p">(</span><span class="n">N</span><span class="o">=</span><span class="n">N</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> 
                                                    <span class="n">kwargs</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> 
-                              <span class="ow">in</span> <span class="n">setup_matrix</span><span class="o">.</span><span class="n">__init__</span><span class="o">.</span><span class="n">func_code</span><span class="o">.</span><span class="n">co_varnames</span><span class="p">})</span>
+                              <span class="ow">in</span> <span class="n">setup_matrix</span><span class="o">.</span><span class="fm">__init__</span><span class="o">.</span><span class="n">func_code</span><span class="o">.</span><span class="n">co_varnames</span><span class="p">})</span>
     <span class="n">matrix</span><span class="o">.</span><span class="n">add_lagfuncs</span><span class="p">(</span><span class="n">val_matrix</span><span class="o">=</span><span class="n">val_matrix</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> 
                                                     <span class="n">kwargs</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> 
                             <span class="ow">in</span> <span class="n">setup_matrix</span><span class="o">.</span><span class="n">add_lagfuncs</span><span class="o">.</span><span class="n">func_code</span><span class="o">.</span><span class="n">co_varnames</span><span class="p">})</span>
@@ -580,7 +580,7 @@
                 <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="n">trans</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">blended_transform_factory</span><span class="p">(</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">axes_dict</span><span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)]</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">transFigure</span><span class="p">)</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">axes_dict</span><span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)]</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="o">.</span><span class="mi">5</span><span class="p">,</span> <span class="o">.</span><span class="mi">99</span><span class="p">,</span> <span class="s1">r&#39;${\to}$ &#39;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">axes_dict</span><span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)]</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="o">.</span><span class="mi">5</span><span class="p">,</span> <span class="o">.</span><span class="mi">99</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;${\to}$ &#39;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span>
                                                 <span class="nb">str</span><span class="p">(</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">]),</span>
                                                 <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">,</span>
                                                 <span class="n">horizontalalignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span>
@@ -763,7 +763,7 @@
                                      <span class="n">top</span><span class="o">=</span><span class="mf">1.</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_space_top</span><span class="p">,</span>
                                      <span class="n">hspace</span><span class="o">=</span><span class="mf">0.35</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="mf">0.35</span><span class="p">)</span>
             <span class="n">pyplot</span><span class="o">.</span><span class="n">figtext</span><span class="p">(</span>
-                <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="s1">r&#39;lag $\tau$ [</span><span class="si">%s</span><span class="s1">]&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">lag_units</span><span class="p">,</span>
+                <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;lag $\tau$ [</span><span class="si">%s</span><span class="s1">]&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">lag_units</span><span class="p">,</span>
                 <span class="n">horizontalalignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label_fontsize</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span>
@@ -771,7 +771,7 @@
                 <span class="n">top</span><span class="o">=</span><span class="mf">1.</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_space_top</span><span class="p">,</span>
                 <span class="n">hspace</span><span class="o">=</span><span class="mf">0.35</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="mf">0.35</span><span class="p">)</span>
             <span class="n">pyplot</span><span class="o">.</span><span class="n">figtext</span><span class="p">(</span>
-                <span class="mf">0.55</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="s1">r&#39;lag $\tau$ [</span><span class="si">%s</span><span class="s1">]&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">lag_units</span><span class="p">,</span>
+                <span class="mf">0.55</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;lag $\tau$ [</span><span class="si">%s</span><span class="s1">]&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">lag_units</span><span class="p">,</span>
                 <span class="n">horizontalalignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label_fontsize</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1709,13 +1709,13 @@
         <span class="n">trans</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">blended_transform_factory</span><span class="p">(</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="p">,</span> <span class="n">fig</span><span class="o">.</span><span class="n">transFigure</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">tau</span> <span class="o">==</span> <span class="n">max_lag</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">pos</span><span class="p">[</span><span class="n">tau</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="mf">1.</span><span class="o">-</span><span class="n">label_space_top</span><span class="p">,</span> <span class="s1">r&#39;$t$&#39;</span><span class="p">,</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">pos</span><span class="p">[</span><span class="n">tau</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="mf">1.</span><span class="o">-</span><span class="n">label_space_top</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$t$&#39;</span><span class="p">,</span>
                     <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">,</span>
                     <span class="n">horizontalalignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span>
                     <span class="n">verticalalignment</span><span class="o">=</span><span class="s1">&#39;top&#39;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">trans</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">pos</span><span class="p">[</span><span class="n">tau</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="mf">1.</span><span class="o">-</span><span class="n">label_space_top</span><span class="p">,</span>
-                    <span class="s1">r&#39;$t-</span><span class="si">%s</span><span class="s1">$&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">max_lag</span> <span class="o">-</span> <span class="n">tau</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span>
+                    <span class="sa">r</span><span class="s1">&#39;$t-</span><span class="si">%s</span><span class="s1">$&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">max_lag</span> <span class="o">-</span> <span class="n">tau</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span>
                     <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">,</span>
                     <span class="n">horizontalalignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="n">verticalalignment</span><span class="o">=</span><span class="s1">&#39;top&#39;</span><span class="p">,</span>
                     <span class="n">transform</span><span class="o">=</span><span class="n">trans</span><span class="p">)</span>
@@ -1727,7 +1727,7 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">pyplot</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
 
-<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
 
 
     <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
@@ -1741,24 +1741,25 @@
     <span class="n">mask</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
     <span class="n">mask</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="kc">True</span>
 
-    <span class="n">data</span><span class="p">[:</span><span class="mi">20</span><span class="p">]</span> <span class="o">=</span> <span class="mf">99.</span>
+    <span class="n">data</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">99.</span>
     <span class="c1"># plot_lagfuncs(val_matrix, var_names=range(3), markersize=5)</span>
 
+
     <span class="n">plot_timeseries</span><span class="p">(</span><span class="n">data</span><span class="p">,</span>  
-                    <span class="n">datatime</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                    <span class="n">save_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                    <span class="n">fig_axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                    <span class="n">var_units</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                    <span class="n">time_label</span><span class="o">=</span><span class="s1">&#39;years&#39;</span><span class="p">,</span>
-                    <span class="n">use_mask</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                    <span class="n">missing_flag</span><span class="o">=</span><span class="mf">99.</span><span class="p">,</span>
-                    <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span>
-                    <span class="n">grey_masked_samples</span><span class="o">=</span><span class="s1">&#39;fill&#39;</span><span class="p">,</span>
-                    <span class="n">data_linewidth</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
-                    <span class="n">skip_ticks_data_x</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                    <span class="n">skip_ticks_data_y</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                    <span class="n">label_fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
-                    <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mf">3.375</span><span class="p">,</span> <span class="mf">3.</span><span class="p">),</span>
+                    <span class="c1"># datatime=None,</span>
+                    <span class="c1"># save_name=None,</span>
+                    <span class="c1"># fig_axes=None,</span>
+                    <span class="c1"># var_units=None,</span>
+                    <span class="c1"># time_label=&#39;years&#39;,</span>
+                    <span class="c1"># use_mask=False,</span>
+                    <span class="c1"># missing_flag=-99.,</span>
+                    <span class="c1"># mask=mask,</span>
+                    <span class="c1"># grey_masked_samples=&#39;fill&#39;,</span>
+                    <span class="c1"># data_linewidth=1.,</span>
+                    <span class="c1"># skip_ticks_data_x=1,</span>
+                    <span class="c1"># skip_ticks_data_y=1,</span>
+                    <span class="c1"># label_fontsize=8,</span>
+                    <span class="c1"># figsize=(3.375, 3.),</span>
                     <span class="p">)</span>
 
     <span class="c1"># lagmat = setup_matrix(3, 3, range(3), lag_units = &#39;months&#39;)</span>
@@ -1811,7 +1812,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2017, Jakob Runge.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.4.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.6.
     </div>
   </body>
 </html>

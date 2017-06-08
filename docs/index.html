@@ -293,11 +293,11 @@ must have the signature:</p>
 </pre></div>
 </div>
 </li>
-<li><strong>selected_variables</strong> (<em>list of integers</em><em>, </em><em>optional</em><em> (</em><em>default: range</em><em>(</em><a class="reference internal" href="#PCMCI.N" title="PCMCI.N"><em>N</em></a><em>)</em><em></em><em>)</em><em></em>) &#8211; Specify to estimate parents only for selected variables. If None is
+<li><strong>selected_variables</strong> (<em>list of integers</em><em>, </em><em>optional</em><em> (</em><em>default: range</em><em>(</em><a class="reference internal" href="#PCMCI.N" title="PCMCI.N"><em>N</em></a><em>)</em><em>)</em>) &#8211; Specify to estimate parents only for selected variables. If None is
 passed, parents are estimated for all variables.</li>
-<li><strong>var_names</strong> (<em>list of strings</em><em>, </em><em>optional</em><em> (</em><em>default: range</em><em>(</em><a class="reference internal" href="#PCMCI.N" title="PCMCI.N"><em>N</em></a><em>)</em><em></em><em>)</em><em></em>) &#8211; Names of variables, must match the number of variables. If None is
+<li><strong>var_names</strong> (<em>list of strings</em><em>, </em><em>optional</em><em> (</em><em>default: range</em><em>(</em><a class="reference internal" href="#PCMCI.N" title="PCMCI.N"><em>N</em></a><em>)</em><em>)</em>) &#8211; Names of variables, must match the number of variables. If None is
 passed, variables are enumerated as [0, 1, ...]</li>
-<li><strong>verbosity</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em><em></em>) &#8211; Verbose levels 0, 1, ...</li>
+<li><strong>verbosity</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) &#8211; Verbose levels 0, 1, ...</li>
 </ul>
 </td>
 </tr>
@@ -356,9 +356,9 @@ exclude_contemporaneous==False, or only among lagged links.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>p_matrix</strong> (<em>array-like</em>) &#8211; Matrix of p-values. Must be of shape (N, N, tau_max + 1).</li>
-<li><strong>fdr_method</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'fdr_bh'</em><em>)</em><em></em>) &#8211; Correction method, default is Benjamini-Hochberg False Discovery
+<li><strong>fdr_method</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'fdr_bh'</em><em>)</em>) &#8211; Correction method, default is Benjamini-Hochberg False Discovery
 Rate method.</li>
-<li><strong>exclude_contemporaneous</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em><em></em>) &#8211; Whether to include contemporaneous links in correction.</li>
+<li><strong>exclude_contemporaneous</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) &#8211; Whether to include contemporaneous links in correction.</li>
 </ul>
 </td>
 </tr>
@@ -509,7 +509,7 @@ a larger number, such as 10, can be used.</li>
 number is unrestricted.</li>
 <li><strong>max_conds_px</strong> (<em>int</em><em> or </em><em>None</em>) &#8211; Maximum number of conditions of Z to use. If None is passed, this
 number is unrestricted.</li>
-<li><strong>fdr_method</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'none'</em><em>)</em><em></em>) &#8211; Correction method, default is Benjamini-Hochberg False Discovery
+<li><strong>fdr_method</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'none'</em><em>)</em>) &#8211; Correction method, default is Benjamini-Hochberg False Discovery
 Rate method.</li>
 </ul>
 </td>
@@ -544,29 +544,29 @@ handles masked samples. Other test classes can inherit from this class.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>use_mask</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em><em></em>) &#8211; Whether a supplied mask should be used.</li>
+<li><strong>use_mask</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) &#8211; Whether a supplied mask should be used.</li>
 <li><strong>mask_type</strong> (<em>{'y'</em><em>,</em><em>'x'</em><em>,</em><em>'z'</em><em>,</em><em>'xy'</em><em>,</em><em>'xz'</em><em>,</em><em>'yz'</em><em>,</em><em>'xyz'}</em>) &#8211; Masking mode: Indicators for which variables in the dependence measure
 I(X; Y | Z) the samples should be masked. If None, &#8216;y&#8217; is used, which
 excludes all time slices containing masked samples in Y. Explained in
 <a class="footnote-reference" href="#id5" id="id7">[1]</a>.</li>
-<li><strong>significance</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'analytic'</em><em>)</em><em></em>) &#8211; Type of significance test to use. In this package &#8216;analytic&#8217;,
+<li><strong>significance</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'analytic'</em><em>)</em>) &#8211; Type of significance test to use. In this package &#8216;analytic&#8217;,
 &#8216;fixed_thres&#8217; and &#8216;shuffle_test&#8217; are available.</li>
-<li><strong>fixed_thres</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.1</em><em>)</em><em></em>) &#8211; If significance is &#8216;fixed_thres&#8217;, this specifies the threshold for the
+<li><strong>fixed_thres</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.1</em><em>)</em>) &#8211; If significance is &#8216;fixed_thres&#8217;, this specifies the threshold for the
 absolute value of the dependence measure.</li>
-<li><strong>sig_samples</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1000</em><em>)</em><em></em>) &#8211; Number of samples for shuffle significance test.</li>
-<li><strong>sig_blocklength</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Block length for block-shuffle significance test. If None, the
+<li><strong>sig_samples</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1000</em><em>)</em>) &#8211; Number of samples for shuffle significance test.</li>
+<li><strong>sig_blocklength</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Block length for block-shuffle significance test. If None, the
 block length is determined from the decay of the autocovariance as
 explained in <a class="footnote-reference" href="#id5" id="id8">[1]</a>.</li>
-<li><strong>confidence</strong> (<em>False</em><em> or </em><em>str</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em><em></em>) &#8211; Specify type of confidence estimation. If False, numpy.nan is returned.
+<li><strong>confidence</strong> (<em>False</em><em> or </em><em>str</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) &#8211; Specify type of confidence estimation. If False, numpy.nan is returned.
 &#8216;bootstrap&#8217; can be used with any test, for ParCorr also &#8216;analytic&#8217; is
 implemented.</li>
-<li><strong>conf_lev</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.9</em><em>)</em><em></em>) &#8211; Two-sided confidence interval.</li>
-<li><strong>conf_samples</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 100</em><em>)</em><em></em>) &#8211; Number of samples for bootstrap.</li>
-<li><strong>conf_blocklength</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Block length for block-bootstrap. If None, the block length is
+<li><strong>conf_lev</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.9</em><em>)</em>) &#8211; Two-sided confidence interval.</li>
+<li><strong>conf_samples</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 100</em><em>)</em>) &#8211; Number of samples for bootstrap.</li>
+<li><strong>conf_blocklength</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Block length for block-bootstrap. If None, the block length is
 determined from the decay of the autocovariance as explained in <a class="footnote-reference" href="#id5" id="id9">[1]</a>.</li>
-<li><strong>recycle_residuals</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em><em></em>) &#8211; Specifies whether residuals should be stored. This may be faster, but
+<li><strong>recycle_residuals</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) &#8211; Specifies whether residuals should be stored. This may be faster, but
 can cost considerable memory.</li>
-<li><strong>verbosity</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em><em></em>) &#8211; Level of verbosity.</li>
+<li><strong>verbosity</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) &#8211; Level of verbosity.</li>
 </ul>
 </td>
 </tr>
@@ -609,7 +609,7 @@ the null distributions to self.null_dists.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>df</strong> (<em>int</em>) &#8211; Degrees of freedom / sample size to generate null distribution for.</li>
-<li><strong>add_to_null_dists</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em><em></em>) &#8211; Whether to add the null dist to the dictionary of null dists or
+<li><strong>add_to_null_dists</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) &#8211; Whether to add the null dist to the dictionary of null dists or
 just return it.</li>
 </ul>
 </td>
@@ -638,12 +638,12 @@ just return it.</li>
 <li><strong>xyz</strong> (<em>array of ints</em>) &#8211; XYZ identifier array of shape (dim,).</li>
 <li><strong>dependence_measure</strong> (<em>object</em>) &#8211; Dependence measure function must be of form
 dependence_measure(array, xyz) and return a numeric value</li>
-<li><strong>conf_lev</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.9</em><em>)</em><em></em>) &#8211; Two-sided confidence interval.</li>
-<li><strong>conf_samples</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 100</em><em>)</em><em></em>) &#8211; Number of samples for bootstrap.</li>
-<li><strong>conf_blocklength</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Block length for block-bootstrap. If None, the block length is
+<li><strong>conf_lev</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.9</em><em>)</em>) &#8211; Two-sided confidence interval.</li>
+<li><strong>conf_samples</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 100</em><em>)</em>) &#8211; Number of samples for bootstrap.</li>
+<li><strong>conf_blocklength</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Block length for block-bootstrap. If None, the block length is
 determined from the decay of the autocovariance as explained in
 <a class="footnote-reference" href="#id5" id="id10">[1]</a>.</li>
-<li><strong>verbosity</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em><em></em>) &#8211; Level of verbosity.</li>
+<li><strong>verbosity</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) &#8211; Level of verbosity.</li>
 </ul>
 </td>
 </tr>
@@ -670,9 +670,9 @@ False, (numpy.nan, numpy.nan) is returned.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>Y</strong><strong>, </strong><strong>Z</strong> (<em>X</em><em>,</em><em></em>) &#8211; X,Y,Z are of the form [(var, -tau)], where var specifies the
+<li><strong>Y</strong><strong>, </strong><strong>Z</strong> (<em>X</em><em>,</em>) &#8211; X,Y,Z are of the form [(var, -tau)], where var specifies the
 variable index and tau the time lag.</li>
-<li><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em><em></em>) &#8211; Maximum time lag. This may be used to make sure that estimates for
+<li><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) &#8211; Maximum time lag. This may be used to make sure that estimates for
 different lags in X, Z, all have the same sample size.</li>
 </ul>
 </td>
@@ -724,40 +724,14 @@ a function get_dependence_measure.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>Y</strong><strong> [</strong><strong></strong><strong>, </strong><strong>Z</strong><strong>]</strong><strong></strong> (<em>X</em><em>,</em><em></em>) &#8211; X,Y,Z are of the form [(var, -tau)], where var specifies the
+<li><strong>Y</strong><strong> [</strong><strong>, </strong><strong>Z</strong><strong>]</strong> (<em>X</em><em>,</em>) &#8211; X,Y,Z are of the form [(var, -tau)], where var specifies the
 variable index and tau the time lag.</li>
-<li><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em><em></em>) &#8211; Maximum time lag. This may be used to make sure that estimates for
+<li><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) &#8211; Maximum time lag. This may be used to make sure that estimates for
 different lags in X, Z, all have the same sample size.</li>
 </ul>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>val</strong> &#8211; The test statistic value.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="tigramite.independence_tests.CondIndTest.get_shuffle_significance">
-<code class="descname">get_shuffle_significance</code><span class="sig-paren">(</span><em>array</em>, <em>xyz</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#CondIndTest.get_shuffle_significance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.CondIndTest.get_shuffle_significance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns p-value for shuffle significance test.</p>
-<p>For residual-based test statistics only the residuals are shuffled.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>array</strong> (<em>array-like</em>) &#8211; data array with X, Y, Z in rows and observations in columns</li>
-<li><strong>xyz</strong> (<em>array of ints</em>) &#8211; XYZ identifier array of shape (dim,).</li>
-<li><strong>value</strong> (<em>number</em>) &#8211; Value of test statistic for unshuffled estimate.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>pval</strong> &#8211; p-value</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float</p>
@@ -781,9 +755,9 @@ available.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>Y</strong><strong>, </strong><strong>Z</strong> (<em>X</em><em>,</em><em></em>) &#8211; X,Y,Z are of the form [(var, -tau)], where var specifies the
+<li><strong>Y</strong><strong>, </strong><strong>Z</strong> (<em>X</em><em>,</em>) &#8211; X,Y,Z are of the form [(var, -tau)], where var specifies the
 variable index and tau the time lag.</li>
-<li><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em><em></em>) &#8211; Maximum time lag. This may be used to make sure that estimates for
+<li><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) &#8211; Maximum time lag. This may be used to make sure that estimates for
 different lags in X, Z, all have the same sample size.</li>
 </ul>
 </td>
@@ -940,11 +914,37 @@ the pc_alpha value.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>j</strong> (<em>int</em>) &#8211; Index of target variable in data array.</li>
 <li><strong>parents</strong> (<em>list</em>) &#8211; List of form [(0, -1), (3, -2), ...] containing parents.</li>
-<li><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em><em></em>) &#8211; Maximum time lag. This may be used to make sure that estimates for
+<li><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) &#8211; Maximum time lag. This may be used to make sure that estimates for
 different lags in X, Z, all have the same sample size.</li>
 <li><strong>Returns</strong> &#8211; </li>
 <li><strong>score</strong> (<em>float</em>) &#8211; Model score.</li>
 </ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tigramite.independence_tests.ParCorr.get_shuffle_significance">
+<code class="descname">get_shuffle_significance</code><span class="sig-paren">(</span><em>array</em>, <em>xyz</em>, <em>value</em>, <em>return_null_dist=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#ParCorr.get_shuffle_significance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.ParCorr.get_shuffle_significance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns p-value for shuffle significance test.</p>
+<p>For residual-based test statistics only the residuals are shuffled.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>array</strong> (<em>array-like</em>) &#8211; data array with X, Y, Z in rows and observations in columns</li>
+<li><strong>xyz</strong> (<em>array of ints</em>) &#8211; XYZ identifier array of shape (dim,).</li>
+<li><strong>value</strong> (<em>number</em>) &#8211; Value of test statistic for unshuffled estimate.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>pval</strong> &#8211; p-value</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float</p>
 </td>
 </tr>
 </tbody>
@@ -969,10 +969,10 @@ fitting.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>gp_version</strong> (<em>{'new'</em><em>, </em><em>'old'}</em><em>, </em><em>optional</em><em> (</em><em>default: 'new'</em><em>)</em><em></em>) &#8211; The older GP version from scikit-learn 0.17 was used for the numerical
+<li><strong>gp_version</strong> (<em>{'new'</em><em>, </em><em>'old'}</em><em>, </em><em>optional</em><em> (</em><em>default: 'new'</em><em>)</em>) &#8211; The older GP version from scikit-learn 0.17 was used for the numerical
 simulations in <a class="footnote-reference" href="#id5" id="id11">[1]</a>. The newer version from scikit-learn 0.19 is faster
 and allows more flexibility regarding kernels etc.</li>
-<li><strong>gp_params</strong> (<em>dictionary</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Dictionary with parameters for <code class="docutils literal"><span class="pre">GaussianProcessRegressor</span></code>.</li>
+<li><strong>gp_params</strong> (<em>dictionary</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Dictionary with parameters for <code class="docutils literal"><span class="pre">GaussianProcessRegressor</span></code>.</li>
 </ul>
 </td>
 </tr>
@@ -992,7 +992,7 @@ optimal hyperparameters in PCMCI, in particular the pc_alpha value.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>j</strong> (<em>int</em>) &#8211; Index of target variable in data array.</li>
 <li><strong>parents</strong> (<em>list</em>) &#8211; List of form [(0, -1), (3, -2), ...] containing parents.</li>
-<li><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em><em></em>) &#8211; Maximum time lag. This may be used to make sure that estimates for
+<li><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) &#8211; Maximum time lag. This may be used to make sure that estimates for
 different lags in X, Z, all have the same sample size.</li>
 <li><strong>Returns</strong> &#8211; </li>
 <li><strong>score</strong> (<em>float</em>) &#8211; Model score.</li>
@@ -1044,11 +1044,11 @@ of the maximal correlation can be pre-computed.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>null_dist_filename</strong> (<em>str</em><em>, </em><em>otional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Path to file containing null distribution.</li>
-<li><strong>gp_version</strong> (<em>{'new'</em><em>, </em><em>'old'}</em><em>, </em><em>optional</em><em> (</em><em>default: 'new'</em><em>)</em><em></em>) &#8211; The older GP version from scikit-learn 0.17 was used for the numerical
+<li><strong>null_dist_filename</strong> (<em>str</em><em>, </em><em>otional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Path to file containing null distribution.</li>
+<li><strong>gp_version</strong> (<em>{'new'</em><em>, </em><em>'old'}</em><em>, </em><em>optional</em><em> (</em><em>default: 'new'</em><em>)</em>) &#8211; The older GP version from scikit-learn 0.17 was used for the numerical
 simulations in <a class="footnote-reference" href="#id5" id="id13">[1]</a>. The newer version from scikit-learn 0.19 is faster
 and allows more flexibility regarding kernels etc.</li>
-<li><strong>gp_params</strong> (<em>dictionary</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Dictionary with parameters for <code class="docutils literal"><span class="pre">GaussianProcessRegressor</span></code>.</li>
+<li><strong>gp_params</strong> (<em>dictionary</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Dictionary with parameters for <code class="docutils literal"><span class="pre">GaussianProcessRegressor</span></code>.</li>
 <li><strong>ace_version</strong> (<em>{'python'</em><em>, </em><em>'acepack'}</em>) &#8211; Estimator for ACE estimator of maximal correlation to use. &#8216;python&#8217;
 loads the very slow pure python version available from
 <a class="reference external" href="https://pypi.python.org/pypi/ace/0.3">https://pypi.python.org/pypi/ace/0.3</a>. &#8216;acepack&#8217; loads the much faster
@@ -1127,6 +1127,32 @@ regression.</p>
 </table>
 </dd></dl>
 
+<dl class="method">
+<dt id="tigramite.independence_tests.GPACE.get_shuffle_significance">
+<code class="descname">get_shuffle_significance</code><span class="sig-paren">(</span><em>array</em>, <em>xyz</em>, <em>value</em>, <em>return_null_dist=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#GPACE.get_shuffle_significance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.GPACE.get_shuffle_significance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns p-value for shuffle significance test.</p>
+<p>For residual-based test statistics only the residuals are shuffled.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>array</strong> (<em>array-like</em>) &#8211; data array with X, Y, Z in rows and observations in columns</li>
+<li><strong>xyz</strong> (<em>array of ints</em>) &#8211; XYZ identifier array of shape (dim,).</li>
+<li><strong>value</strong> (<em>number</em>) &#8211; Value of test statistic for unshuffled estimate.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>pval</strong> &#8211; p-value</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -1176,11 +1202,11 @@ testing dependence by correlation of distances,
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>null_dist_filename</strong> (<em>str</em><em>, </em><em>otional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Path to file containing null distribution.</li>
-<li><strong>gp_version</strong> (<em>{'new'</em><em>, </em><em>'old'}</em><em>, </em><em>optional</em><em> (</em><em>default: 'new'</em><em>)</em><em></em>) &#8211; The older GP version from scikit-learn 0.17 was used for the numerical
+<li><strong>null_dist_filename</strong> (<em>str</em><em>, </em><em>otional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Path to file containing null distribution.</li>
+<li><strong>gp_version</strong> (<em>{'new'</em><em>, </em><em>'old'}</em><em>, </em><em>optional</em><em> (</em><em>default: 'new'</em><em>)</em>) &#8211; The older GP version from scikit-learn 0.17 was used for the numerical
 simulations in <a class="footnote-reference" href="#id5" id="id18">[1]</a>. The newer version from scikit-learn 0.19 is faster
 and allows more flexibility regarding kernels etc.</li>
-<li><strong>gp_params</strong> (<em>dictionary</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Dictionary with parameters for <code class="docutils literal"><span class="pre">GaussianProcessRegressor</span></code>.</li>
+<li><strong>gp_params</strong> (<em>dictionary</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Dictionary with parameters for <code class="docutils literal"><span class="pre">GaussianProcessRegressor</span></code>.</li>
 <li><strong>**kwargs</strong> &#8211; Arguments passed on to parent class CondIndTest.</li>
 </ul>
 </td>
@@ -1251,11 +1277,37 @@ regression.</p>
 </table>
 </dd></dl>
 
+<dl class="method">
+<dt id="tigramite.independence_tests.GPDC.get_shuffle_significance">
+<code class="descname">get_shuffle_significance</code><span class="sig-paren">(</span><em>array</em>, <em>xyz</em>, <em>value</em>, <em>return_null_dist=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#GPDC.get_shuffle_significance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.GPDC.get_shuffle_significance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns p-value for shuffle significance test.</p>
+<p>For residual-based test statistics only the residuals are shuffled.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>array</strong> (<em>array-like</em>) &#8211; data array with X, Y, Z in rows and observations in columns</li>
+<li><strong>xyz</strong> (<em>array of ints</em>) &#8211; XYZ identifier array of shape (dim,).</li>
+<li><strong>value</strong> (<em>number</em>) &#8211; Value of test statistic for unshuffled estimate.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>pval</strong> &#8211; p-value</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="tigramite.independence_tests.CMIknn">
-<em class="property">class </em><code class="descclassname">tigramite.independence_tests.</code><code class="descname">CMIknn</code><span class="sig-paren">(</span><em>knn=100</em>, <em>significance='shuffle_test'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#CMIknn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.CMIknn" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">tigramite.independence_tests.</code><code class="descname">CMIknn</code><span class="sig-paren">(</span><em>knn=100</em>, <em>shuffle_neighbors=10</em>, <em>significance='shuffle_test'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#CMIknn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.CMIknn" title="Permalink to this definition">¶</a></dt>
 <dd><p>Conditional mutual information test based on nearest-neighbor estimator.</p>
 <p>Conditional mutual information is the most general dependency measure coming
 from an information-theoretic framework. It makes no assumptions about the
@@ -1302,9 +1354,12 @@ Transfer Entropy. Physical Review Letters, 108(25), 258701.
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>knn</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 100</em><em>)</em><em></em>) &#8211; Number of nearest-neighbors which determines the size of hyper-cubes
+<li><strong>knn</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 100</em><em>)</em>) &#8211; Number of nearest-neighbors which determines the size of hyper-cubes
 around each (high-dimensional) sample point.</li>
-<li><strong>significance</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'shuffle_test'</em><em>)</em><em></em>) &#8211; Type of significance test to use. For CMIknn only &#8216;fixed_thres&#8217; and
+<li><strong>shuffle_neighbors</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em>) &#8211; Number of nearest-neighbors within Z for the shuffle surrogates which
+determines the size of hyper-cubes around each (high-dimensional) sample
+point.</li>
+<li><strong>significance</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'shuffle_test'</em><em>)</em>) &#8211; Type of significance test to use. For CMIknn only &#8216;fixed_thres&#8217; and
 &#8216;shuffle_test&#8217; are available.</li>
 <li><strong>**kwargs</strong> &#8211; Arguments passed on to parent class CondIndTest.</li>
 </ul>
@@ -1354,6 +1409,37 @@ around each (high-dimensional) sample point.</li>
 <dd><p>Placeholder function, not available.</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="tigramite.independence_tests.CMIknn.get_shuffle_significance">
+<code class="descname">get_shuffle_significance</code><span class="sig-paren">(</span><em>array</em>, <em>xyz</em>, <em>value</em>, <em>return_null_dist=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#CMIknn.get_shuffle_significance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.CMIknn.get_shuffle_significance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns p-value for nearest-neighbor shuffle significance test.</p>
+<p>For non-empty Z, overwrites get_shuffle_significance from the parent
+class  which is a block shuffle test, which does not preserve
+dependencies of X and Y with Z. Here the parameter shuffle_neighbors is
+used to permute only those values <img class="math" src="_images/math/7720e563212e11bf72de255ab82c2a3b97c1a7f5.png" alt="x_i"/> and <img class="math" src="_images/math/bdb2d04d69b82c2288f5ef46664d548355e130af.png" alt="x_j"/> for which
+<img class="math" src="_images/math/ab1718d730cd7b17532f760861e9659b68a65156.png" alt="z_j"/> is among the nearest niehgbors of <img class="math" src="_images/math/6de62736d8aa90101801d7a1416e97e921d1620f.png" alt="z_i"/>. If Z is
+empty, the block-shuffle test is used.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>array</strong> (<em>array-like</em>) &#8211; data array with X, Y, Z in rows and observations in columns</li>
+<li><strong>xyz</strong> (<em>array of ints</em>) &#8211; XYZ identifier array of shape (dim,).</li>
+<li><strong>value</strong> (<em>number</em>) &#8211; Value of test statistic for unshuffled estimate.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>pval</strong> &#8211; p-value</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -1379,11 +1465,11 @@ in data_processing or use the CMIknn class.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>n_symbs</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Number of symbols in input data. If None, n_symbs=data.max()+1</li>
-<li><strong>significance</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'shuffle_test'</em><em>)</em><em></em>) &#8211; Type of significance test to use. For CMIsymb only &#8216;fixed_thres&#8217; and
+<li><strong>n_symbs</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Number of symbols in input data. If None, n_symbs=data.max()+1</li>
+<li><strong>significance</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'shuffle_test'</em><em>)</em>) &#8211; Type of significance test to use. For CMIsymb only &#8216;fixed_thres&#8217; and
 &#8216;shuffle_test&#8217; are available.</li>
-<li><strong>sig_blocklength</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em><em></em>) &#8211; Block length for block-shuffle significance test.</li>
-<li><strong>conf_blocklength</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em><em></em>) &#8211; Block length for block-bootstrap.</li>
+<li><strong>sig_blocklength</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) &#8211; Block length for block-shuffle significance test.</li>
+<li><strong>conf_blocklength</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) &#8211; Block length for block-bootstrap.</li>
 <li><strong>**kwargs</strong> &#8211; Arguments passed on to parent class CondIndTest.</li>
 </ul>
 </td>
@@ -1432,6 +1518,32 @@ in data_processing or use the CMIknn class.</p>
 <dd><p>Placeholder function, not available.</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="tigramite.independence_tests.CMIsymb.get_shuffle_significance">
+<code class="descname">get_shuffle_significance</code><span class="sig-paren">(</span><em>array</em>, <em>xyz</em>, <em>value</em>, <em>return_null_dist=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#CMIsymb.get_shuffle_significance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.CMIsymb.get_shuffle_significance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns p-value for shuffle significance test.</p>
+<p>For residual-based test statistics only the residuals are shuffled.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>array</strong> (<em>array-like</em>) &#8211; data array with X, Y, Z in rows and observations in columns</li>
+<li><strong>xyz</strong> (<em>array of ints</em>) &#8211; XYZ identifier array of shape (dim,).</li>
+<li><strong>value</strong> (<em>number</em>) &#8211; Value of test statistic for unshuffled estimate.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>pval</strong> &#8211; p-value</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -1449,7 +1561,7 @@ in data_processing or use the CMIknn class.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>data</strong> (<em>array-like</em>) &#8211; Numpy array of shape (observations T, variables N)</li>
-<li><strong>mask</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Optional mask array, must be of same shape as data</li>
+<li><strong>mask</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Optional mask array, must be of same shape as data</li>
 </ul>
 </td>
 </tr>
@@ -1491,7 +1603,7 @@ backwards. The combined filter has linear phase.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>data</strong> (<em>array</em>) &#8211; Data array of shape (time, variables).</li>
 <li><strong>cutperiod</strong> (<em>int</em>) &#8211; Period of cutoff.</li>
-<li><strong>pass_periods</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'low'</em><em>)</em><em></em>) &#8211; Either &#8216;low&#8217; or &#8216;high&#8217; to act as a low- or high-pass filter</li>
+<li><strong>pass_periods</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'low'</em><em>)</em>) &#8211; Either &#8216;low&#8217; or &#8216;high&#8217; to act as a low- or high-pass filter</li>
 </ul>
 </td>
 </tr>
@@ -1523,10 +1635,10 @@ doi:10.1103/PhysRevE.83.051122</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>array</strong> (<em>array-like</em>) &#8211; Data array of shape (time, variables).</li>
 <li><strong>array_mask</strong> (<em>bool array</em>) &#8211; Data mask where True labels masked samples.</li>
-<li><strong>dim</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 2</em><em>)</em><em></em>) &#8211; Pattern dimension</li>
-<li><strong>step</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em><em></em>) &#8211; Delay of pattern embedding vector.</li>
-<li><strong>weights</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em><em></em>) &#8211; Whether to return array of variances of embedding vectors as weights.</li>
-<li><strong>verbosity</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em><em></em>) &#8211; Level of verbosity.</li>
+<li><strong>dim</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 2</em><em>)</em>) &#8211; Pattern dimension</li>
+<li><strong>step</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) &#8211; Delay of pattern embedding vector.</li>
+<li><strong>weights</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) &#8211; Whether to return array of variances of embedding vectors as weights.</li>
+<li><strong>verbosity</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) &#8211; Level of verbosity.</li>
 </ul>
 </td>
 </tr>
@@ -1550,7 +1662,7 @@ doi:10.1103/PhysRevE.83.051122</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>data</strong> (<em>array</em>) &#8211; Data array of shape (time, variables).</li>
-<li><strong>bins</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 6</em><em>)</em><em></em>) &#8211; Number of bins.</li>
+<li><strong>bins</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 6</em><em>)</em>) &#8211; Number of bins.</li>
 </ul>
 </td>
 </tr>
@@ -1581,9 +1693,9 @@ twice the sigma!) or heaviside window, equivalent to a running mean.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>data</strong> (<em>array</em>) &#8211; Data array of shape (time, variables).</li>
 <li><strong>smooth_width</strong> (<em>float</em>) &#8211; Window width of smoothing, 2*sigma for a gaussian.</li>
-<li><strong>kernel</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'gaussian'</em><em>)</em><em></em>) &#8211; Smoothing kernel, &#8216;gaussian&#8217; or &#8216;heaviside&#8217; for a running mean.</li>
-<li><strong>mask</strong> (<em>bool array</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Data mask where True labels masked samples.</li>
-<li><strong>residuals</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em><em></em>) &#8211; True if residuals should be returned instead of smoothed data.</li>
+<li><strong>kernel</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'gaussian'</em><em>)</em>) &#8211; Smoothing kernel, &#8216;gaussian&#8217; or &#8216;heaviside&#8217; for a running mean.</li>
+<li><strong>mask</strong> (<em>bool array</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Data mask where True labels masked samples.</li>
+<li><strong>residuals</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) &#8211; True if residuals should be returned instead of smoothed data.</li>
 </ul>
 </td>
 </tr>
@@ -1608,7 +1720,7 @@ twice the sigma!) or heaviside window, equivalent to a running mean.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>data</strong> (<em>array</em>) &#8211; Data array of shape (time, variables).</li>
 <li><strong>time_bin_length</strong> (<em>int</em>) &#8211; Length of time bin.</li>
-<li><strong>mask</strong> (<em>bool array</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Data mask where True labels masked samples.</li>
+<li><strong>mask</strong> (<em>bool array</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Data mask where True labels masked samples.</li>
 </ul>
 </td>
 </tr>
@@ -1636,9 +1748,9 @@ twice the sigma!) or heaviside window, equivalent to a running mean.</p>
 all variables where vars must be in [0..N-1] and lags &lt;= 0 with number
 of variables N. If lag=0, a nonzero value in the covariance matrix (or
 its inverse) is implied. These should be the same for (i, j) and (j, i).</li>
-<li><strong>use</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'inv_inno_cov'</em><em>)</em><em></em>) &#8211; Specifier, either &#8216;inno_cov&#8217; or &#8216;inv_inno_cov&#8217;.</li>
-<li><strong>T</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1000</em><em>)</em><em></em>) &#8211; Sample size.</li>
-<li><strong>verbosity</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em><em></em>) &#8211; Level of verbosity.</li>
+<li><strong>use</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'inv_inno_cov'</em><em>)</em>) &#8211; Specifier, either &#8216;inno_cov&#8217; or &#8216;inv_inno_cov&#8217;.</li>
+<li><strong>T</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1000</em><em>)</em>) &#8211; Sample size.</li>
+<li><strong>verbosity</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) &#8211; Level of verbosity.</li>
 </ul>
 </td>
 </tr>
@@ -1700,38 +1812,38 @@ supplied in appropriate axis coordinates via node_pos.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>val_matrix</strong> (<em>array_like</em>) &#8211; Matrix of shape (N, N, tau_max+1) containing test statistic values.</li>
-<li><strong>var_names</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; List of variable names. If None, range(N) is used.</li>
-<li><strong>fig_ax</strong> (<em>tuple of figure and axis object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Figure and axes instance. If None they are created.</li>
+<li><strong>var_names</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; List of variable names. If None, range(N) is used.</li>
+<li><strong>fig_ax</strong> (<em>tuple of figure and axis object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Figure and axes instance. If None they are created.</li>
 <li><strong>figsize</strong> (<em>tuple</em>) &#8211; Size of figure.</li>
-<li><strong>sig_thres</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Matrix of significance thresholds. Must be of same shape as  val_matrix.
+<li><strong>sig_thres</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Matrix of significance thresholds. Must be of same shape as  val_matrix.
 Either sig_thres or link_matrix has to be provided.</li>
-<li><strong>link_matrix</strong> (<em>bool array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Matrix of significant links. Must be of same shape as val_matrix. Either
+<li><strong>link_matrix</strong> (<em>bool array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Matrix of significant links. Must be of same shape as val_matrix. Either
 sig_thres or link_matrix has to be provided.</li>
-<li><strong>save_name</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Name of figure file to save figure. If None, figure is shown in window.</li>
-<li><strong>link_colorbar_label</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'MCI'</em><em>)</em><em></em>) &#8211; Test statistic label.</li>
-<li><strong>node_colorbar_label</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'auto-MCI'</em><em>)</em><em></em>) &#8211; Test statistic label for auto-dependencies.</li>
-<li><strong>link_width</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Array of val_matrix.shape specifying relative link width with maximum
+<li><strong>save_name</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Name of figure file to save figure. If None, figure is shown in window.</li>
+<li><strong>link_colorbar_label</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'MCI'</em><em>)</em>) &#8211; Test statistic label.</li>
+<li><strong>node_colorbar_label</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'auto-MCI'</em><em>)</em>) &#8211; Test statistic label for auto-dependencies.</li>
+<li><strong>link_width</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Array of val_matrix.shape specifying relative link width with maximum
 given by arrow_linewidth. If None, all links have same width.</li>
-<li><strong>node_pos</strong> (<em>dictionary</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Dictionary of node positions in axis coordinates of form
+<li><strong>node_pos</strong> (<em>dictionary</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Dictionary of node positions in axis coordinates of form
 node_pos = {&#8216;x&#8217;:array of shape (N,), &#8216;y&#8217;:array of shape(N)}. These
 coordinates could have been transformed before for basemap plots.</li>
-<li><strong>arrow_linewidth</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 30</em><em>)</em><em></em>) &#8211; Linewidth.</li>
-<li><strong>vmin_edges</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: -1</em><em>)</em><em></em>) &#8211; Link colorbar scale lower bound.</li>
-<li><strong>vmax_edges</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em><em></em>) &#8211; Link colorbar scale upper bound.</li>
-<li><strong>edge_ticks</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.4</em><em>)</em><em></em>) &#8211; Link tick mark interval.</li>
-<li><strong>cmap_edges</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'RdBu_r'</em><em>)</em><em></em>) &#8211; Colormap for links.</li>
-<li><strong>vmin_nodes</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em><em></em>) &#8211; Node colorbar scale lower bound.</li>
-<li><strong>vmax_nodes</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em><em></em>) &#8211; Node colorbar scale upper bound.</li>
-<li><strong>node_ticks</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.4</em><em>)</em><em></em>) &#8211; Node tick mark interval.</li>
-<li><strong>cmap_nodes</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'OrRd'</em><em>)</em><em></em>) &#8211; Colormap for links.</li>
-<li><strong>node_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 20</em><em>)</em><em></em>) &#8211; Node size.</li>
-<li><strong>arrowhead_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 20</em><em>)</em><em></em>) &#8211; Size of link arrow head. Passed on to FancyArrowPatch object.</li>
-<li><strong>float</strong><strong>, </strong><strong>optional</strong><strong> (</strong><strong>default</strong> (<em>curved_radius</em><em>,</em><em></em>) &#8211; Curvature of links. Passed on to FancyArrowPatch object.</li>
-<li><strong>label_fontsize</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em><em></em>) &#8211; Fontsize of colorbar labels.</li>
-<li><strong>alpha</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1.</em><em>)</em><em></em>) &#8211; Opacity.</li>
-<li><strong>node_label_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em><em></em>) &#8211; Fontsize of node labels.</li>
-<li><strong>link_label_fontsize</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 6</em><em>)</em><em></em>) &#8211; Fontsize of link labels.</li>
-<li><strong>network_lower_bound</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.2</em><em>)</em><em></em>) &#8211; Fraction of vertical space below graph plot.</li>
+<li><strong>arrow_linewidth</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 30</em><em>)</em>) &#8211; Linewidth.</li>
+<li><strong>vmin_edges</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: -1</em><em>)</em>) &#8211; Link colorbar scale lower bound.</li>
+<li><strong>vmax_edges</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) &#8211; Link colorbar scale upper bound.</li>
+<li><strong>edge_ticks</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.4</em><em>)</em>) &#8211; Link tick mark interval.</li>
+<li><strong>cmap_edges</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'RdBu_r'</em><em>)</em>) &#8211; Colormap for links.</li>
+<li><strong>vmin_nodes</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) &#8211; Node colorbar scale lower bound.</li>
+<li><strong>vmax_nodes</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) &#8211; Node colorbar scale upper bound.</li>
+<li><strong>node_ticks</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.4</em><em>)</em>) &#8211; Node tick mark interval.</li>
+<li><strong>cmap_nodes</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'OrRd'</em><em>)</em>) &#8211; Colormap for links.</li>
+<li><strong>node_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 20</em><em>)</em>) &#8211; Node size.</li>
+<li><strong>arrowhead_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 20</em><em>)</em>) &#8211; Size of link arrow head. Passed on to FancyArrowPatch object.</li>
+<li><strong>float</strong><strong>, </strong><strong>optional</strong><strong> (</strong><strong>default</strong> (<em>curved_radius</em><em>,</em>) &#8211; Curvature of links. Passed on to FancyArrowPatch object.</li>
+<li><strong>label_fontsize</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em>) &#8211; Fontsize of colorbar labels.</li>
+<li><strong>alpha</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1.</em><em>)</em>) &#8211; Opacity.</li>
+<li><strong>node_label_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em>) &#8211; Fontsize of node labels.</li>
+<li><strong>link_label_fontsize</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 6</em><em>)</em>) &#8211; Fontsize of link labels.</li>
+<li><strong>network_lower_bound</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.2</em><em>)</em>) &#8211; Fraction of vertical space below graph plot.</li>
 </ul>
 </td>
 </tr>
@@ -1772,34 +1884,34 @@ val_matrix.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>val_matrix</strong> (<em>array_like</em>) &#8211; Matrix of shape (N, N, tau_max+1) containing test statistic values.</li>
-<li><strong>var_names</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; List of variable names. If None, range(N) is used.</li>
-<li><strong>fig_ax</strong> (<em>tuple of figure and axis object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Figure and axes instance. If None they are created.</li>
+<li><strong>var_names</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; List of variable names. If None, range(N) is used.</li>
+<li><strong>fig_ax</strong> (<em>tuple of figure and axis object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Figure and axes instance. If None they are created.</li>
 <li><strong>figsize</strong> (<em>tuple</em>) &#8211; Size of figure.</li>
-<li><strong>sig_thres</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Matrix of significance thresholds. Must be of same shape as  val_matrix.
+<li><strong>sig_thres</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Matrix of significance thresholds. Must be of same shape as  val_matrix.
 Either sig_thres or link_matrix has to be provided.</li>
-<li><strong>link_matrix</strong> (<em>bool array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Matrix of significant links. Must be of same shape as val_matrix. Either
+<li><strong>link_matrix</strong> (<em>bool array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Matrix of significant links. Must be of same shape as val_matrix. Either
 sig_thres or link_matrix has to be provided.</li>
-<li><strong>save_name</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Name of figure file to save figure. If None, figure is shown in window.</li>
-<li><strong>link_colorbar_label</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'MCI'</em><em>)</em><em></em>) &#8211; Test statistic label.</li>
-<li><strong>link_width</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Array of val_matrix.shape specifying relative link width with maximum
+<li><strong>save_name</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Name of figure file to save figure. If None, figure is shown in window.</li>
+<li><strong>link_colorbar_label</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'MCI'</em><em>)</em>) &#8211; Test statistic label.</li>
+<li><strong>link_width</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Array of val_matrix.shape specifying relative link width with maximum
 given by arrow_linewidth. If None, all links have same width.</li>
-<li><strong>order</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; </li>
+<li><strong>order</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; </li>
 <li><strong>of variables from top to bottom.</strong> (<em>order</em>) &#8211; </li>
-<li><strong>arrow_linewidth</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 30</em><em>)</em><em></em>) &#8211; Linewidth.</li>
-<li><strong>vmin_edges</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: -1</em><em>)</em><em></em>) &#8211; Link colorbar scale lower bound.</li>
-<li><strong>vmax_edges</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em><em></em>) &#8211; Link colorbar scale upper bound.</li>
-<li><strong>edge_ticks</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.4</em><em>)</em><em></em>) &#8211; Link tick mark interval.</li>
-<li><strong>cmap_edges</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'RdBu_r'</em><em>)</em><em></em>) &#8211; Colormap for links.</li>
-<li><strong>node_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 20</em><em>)</em><em></em>) &#8211; Node size.</li>
-<li><strong>arrowhead_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 20</em><em>)</em><em></em>) &#8211; Size of link arrow head. Passed on to FancyArrowPatch object.</li>
-<li><strong>float</strong><strong>, </strong><strong>optional</strong><strong> (</strong><strong>default</strong> (<em>curved_radius</em><em>,</em><em></em>) &#8211; Curvature of links. Passed on to FancyArrowPatch object.</li>
-<li><strong>label_fontsize</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em><em></em>) &#8211; Fontsize of colorbar labels.</li>
-<li><strong>alpha</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1.</em><em>)</em><em></em>) &#8211; Opacity.</li>
-<li><strong>node_label_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em><em></em>) &#8211; Fontsize of node labels.</li>
-<li><strong>link_label_fontsize</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 6</em><em>)</em><em></em>) &#8211; Fontsize of link labels.</li>
-<li><strong>label_space_left</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.1</em><em>)</em><em></em>) &#8211; Fraction of horizontal figure space to allocate left of plot for labels.</li>
-<li><strong>label_space_top</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.</em><em>)</em><em></em>) &#8211; Fraction of vertical figure space to allocate top of plot for labels.</li>
-<li><strong>network_lower_bound</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.2</em><em>)</em><em></em>) &#8211; Fraction of vertical space below graph plot.</li>
+<li><strong>arrow_linewidth</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 30</em><em>)</em>) &#8211; Linewidth.</li>
+<li><strong>vmin_edges</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: -1</em><em>)</em>) &#8211; Link colorbar scale lower bound.</li>
+<li><strong>vmax_edges</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) &#8211; Link colorbar scale upper bound.</li>
+<li><strong>edge_ticks</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.4</em><em>)</em>) &#8211; Link tick mark interval.</li>
+<li><strong>cmap_edges</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'RdBu_r'</em><em>)</em>) &#8211; Colormap for links.</li>
+<li><strong>node_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 20</em><em>)</em>) &#8211; Node size.</li>
+<li><strong>arrowhead_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 20</em><em>)</em>) &#8211; Size of link arrow head. Passed on to FancyArrowPatch object.</li>
+<li><strong>float</strong><strong>, </strong><strong>optional</strong><strong> (</strong><strong>default</strong> (<em>curved_radius</em><em>,</em>) &#8211; Curvature of links. Passed on to FancyArrowPatch object.</li>
+<li><strong>label_fontsize</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em>) &#8211; Fontsize of colorbar labels.</li>
+<li><strong>alpha</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1.</em><em>)</em>) &#8211; Opacity.</li>
+<li><strong>node_label_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em>) &#8211; Fontsize of node labels.</li>
+<li><strong>link_label_fontsize</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 6</em><em>)</em>) &#8211; Fontsize of link labels.</li>
+<li><strong>label_space_left</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.1</em><em>)</em>) &#8211; Fraction of horizontal figure space to allocate left of plot for labels.</li>
+<li><strong>label_space_top</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.</em><em>)</em>) &#8211; Fraction of vertical figure space to allocate top of plot for labels.</li>
+<li><strong>network_lower_bound</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.2</em><em>)</em>) &#8211; Fraction of vertical space below graph plot.</li>
 </ul>
 </td>
 </tr>
@@ -1817,26 +1929,26 @@ given by arrow_linewidth. If None, all links have same width.</li>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>data</strong> (<em>array-like</em>) &#8211; Data series array of shape (T, N).</li>
-<li><strong>datatime</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Timelabel array. If None, range(T) is used.</li>
-<li><strong>var_names</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; List of variable names. If None, range(N) is used.</li>
-<li><strong>save_name</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Name of figure file to save figure. If None, figure is shown in window.</li>
-<li><strong>fig_axes</strong> (<em>subplots instance</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Figure and axes instance. If None they are created as
+<li><strong>datatime</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Timelabel array. If None, range(T) is used.</li>
+<li><strong>var_names</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; List of variable names. If None, range(N) is used.</li>
+<li><strong>save_name</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Name of figure file to save figure. If None, figure is shown in window.</li>
+<li><strong>fig_axes</strong> (<em>subplots instance</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Figure and axes instance. If None they are created as
 fig, axes = pyplot.subplots(N,...)</li>
-<li><strong>figsize</strong> (<em>tuple of floats</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Figure size if new figure is created. If None, default pyplot figsize
+<li><strong>figsize</strong> (<em>tuple of floats</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Figure size if new figure is created. If None, default pyplot figsize
 is used.</li>
-<li><strong>var_units</strong> (<em>list of str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Units of variables.</li>
-<li><strong>time_label</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: ''</em><em>)</em><em></em>) &#8211; Label of time axis.</li>
-<li><strong>use_mask</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em><em></em>) &#8211; Whether to use masked data.</li>
-<li><strong>mask</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Data mask where True labels masked samples.</li>
-<li><strong>missing_flag</strong> (<em>number</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Flag for missing values in dataframe. Dismisses all time slices of
+<li><strong>var_units</strong> (<em>list of str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Units of variables.</li>
+<li><strong>time_label</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: ''</em><em>)</em>) &#8211; Label of time axis.</li>
+<li><strong>use_mask</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) &#8211; Whether to use masked data.</li>
+<li><strong>mask</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Data mask where True labels masked samples.</li>
+<li><strong>missing_flag</strong> (<em>number</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Flag for missing values in dataframe. Dismisses all time slices of
 samples where missing values occur in any variable and also flags
 samples for all lags up to 2*tau_max. This avoids biases, see section on
 masking in Supplement of <a class="footnote-reference" href="#id5" id="id22">[1]</a>.</li>
-<li><strong>grey_masked_samples</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em><em></em>) &#8211; Whether to mark masked samples by grey fills (&#8216;fill&#8217;) or grey data (&#8216;data&#8217;).</li>
-<li><strong>data_linewidth</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1.</em><em>)</em><em></em>) &#8211; Linewidth.</li>
-<li><strong>skip_ticks_data_x</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em><em></em>) &#8211; Skip every other tickmark.</li>
-<li><strong>skip_ticks_data_y</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 2</em><em>)</em><em></em>) &#8211; Skip every other tickmark.</li>
-<li><strong>label_fontsize</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em><em></em>) &#8211; Fontsize of variable labels.</li>
+<li><strong>grey_masked_samples</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) &#8211; Whether to mark masked samples by grey fills (&#8216;fill&#8217;) or grey data (&#8216;data&#8217;).</li>
+<li><strong>data_linewidth</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1.</em><em>)</em>) &#8211; Linewidth.</li>
+<li><strong>skip_ticks_data_x</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) &#8211; Skip every other tickmark.</li>
+<li><strong>skip_ticks_data_y</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 2</em><em>)</em>) &#8211; Skip every other tickmark.</li>
+<li><strong>label_fontsize</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em>) &#8211; Fontsize of variable labels.</li>
 </ul>
 </td>
 </tr>
@@ -1858,20 +1970,20 @@ overlaid for comparison.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>N</strong> (<em>int</em>) &#8211; Number of variables</li>
 <li><strong>tau_max</strong> (<em>int</em>) &#8211; Maximum time lag.</li>
-<li><strong>var_names</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; List of variable names. If None, range(N) is used.</li>
-<li><strong>figsize</strong> (<em>tuple of floats</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Figure size if new figure is created. If None, default pyplot figsize
+<li><strong>var_names</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; List of variable names. If None, range(N) is used.</li>
+<li><strong>figsize</strong> (<em>tuple of floats</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Figure size if new figure is created. If None, default pyplot figsize
 is used.</li>
-<li><strong>minimum</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: -1</em><em>)</em><em></em>) &#8211; Lower y-axis limit.</li>
-<li><strong>maximum</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em><em></em>) &#8211; Upper y-axis limit.</li>
-<li><strong>label_space_left</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.1</em><em>)</em><em></em>) &#8211; Fraction of horizontal figure space to allocate left of plot for labels.</li>
-<li><strong>label_space_top</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.05</em><em>)</em><em></em>) &#8211; Fraction of vertical figure space to allocate top of plot for labels.</li>
-<li><strong>legend_width</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.15</em><em>)</em><em></em>) &#8211; Fraction of horizontal figure space to allocate right of plot for
+<li><strong>minimum</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: -1</em><em>)</em>) &#8211; Lower y-axis limit.</li>
+<li><strong>maximum</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) &#8211; Upper y-axis limit.</li>
+<li><strong>label_space_left</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.1</em><em>)</em>) &#8211; Fraction of horizontal figure space to allocate left of plot for labels.</li>
+<li><strong>label_space_top</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.05</em><em>)</em>) &#8211; Fraction of vertical figure space to allocate top of plot for labels.</li>
+<li><strong>legend_width</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.15</em><em>)</em>) &#8211; Fraction of horizontal figure space to allocate right of plot for
 legend.</li>
-<li><strong>x_base</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1.</em><em>)</em><em></em>) &#8211; x-tick intervals to show.</li>
-<li><strong>y_base</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: .4</em><em>)</em><em></em>) &#8211; y-tick intervals to show.</li>
-<li><strong>plot_gridlines</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em><em></em>) &#8211; Whether to show a grid.</li>
-<li><strong>lag_units</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: ''</em><em>)</em><em></em>) &#8211; </li>
-<li><strong>label_fontsize</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em><em></em>) &#8211; Fontsize of variable labels.</li>
+<li><strong>x_base</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1.</em><em>)</em>) &#8211; x-tick intervals to show.</li>
+<li><strong>y_base</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: .4</em><em>)</em>) &#8211; y-tick intervals to show.</li>
+<li><strong>plot_gridlines</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) &#8211; Whether to show a grid.</li>
+<li><strong>lag_units</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: ''</em><em>)</em>) &#8211; </li>
+<li><strong>label_fontsize</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em>) &#8211; Fontsize of variable labels.</li>
 </ul>
 </td>
 </tr>
@@ -1887,15 +1999,15 @@ legend.</li>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>val_matrix</strong> (<em>array_like</em>) &#8211; Matrix of shape (N, N, tau_max+1) containing test statistic values.</li>
-<li><strong>sig_thres</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Matrix of significance thresholds. Must be of same shape as
+<li><strong>sig_thres</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Matrix of significance thresholds. Must be of same shape as
 val_matrix.</li>
-<li><strong>conf_matrix</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; Matrix of shape (, N, tau_max+1, 2) containing confidence bounds.</li>
-<li><strong>color</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'black'</em><em>)</em><em></em>) &#8211; Line color.</li>
+<li><strong>conf_matrix</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Matrix of shape (, N, tau_max+1, 2) containing confidence bounds.</li>
+<li><strong>color</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'black'</em><em>)</em>) &#8211; Line color.</li>
 <li><strong>label</strong> (<em>str</em>) &#8211; Test statistic label.</li>
-<li><strong>two_sided_thres</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em><em></em>) &#8211; Whether to draw sig_thres for pos. and neg. values.</li>
-<li><strong>marker</strong> (<em>matplotlib marker symbol</em><em>, </em><em>optional</em><em> (</em><em>default: '.'</em><em>)</em><em></em>) &#8211; Marker.</li>
-<li><strong>markersize</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 5</em><em>)</em><em></em>) &#8211; Marker size.</li>
-<li><strong>alpha</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1.</em><em>)</em><em></em>) &#8211; Opacity.</li>
+<li><strong>two_sided_thres</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) &#8211; Whether to draw sig_thres for pos. and neg. values.</li>
+<li><strong>marker</strong> (<em>matplotlib marker symbol</em><em>, </em><em>optional</em><em> (</em><em>default: '.'</em><em>)</em>) &#8211; Marker.</li>
+<li><strong>markersize</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 5</em><em>)</em>) &#8211; Marker size.</li>
+<li><strong>alpha</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1.</em><em>)</em>) &#8211; Opacity.</li>
 </ul>
 </td>
 </tr>
@@ -1911,7 +2023,7 @@ val_matrix.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em><em></em>) &#8211; File name. If None, figure is shown in window.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; File name. If None, figure is shown in window.</td>
 </tr>
 </tbody>
 </table>
@@ -1949,7 +2061,7 @@ val_matrix.</li>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2017, Jakob Runge.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.4.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.6.
     </div>
   </body>
 </html>

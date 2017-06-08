@@ -109,9 +109,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span> <span class="o">=</span> <span class="n">missing_flag</span>
         <span class="n">T</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
 
-        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="o">!=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;data is of type </span><span class="si">%s</span><span class="s2">, &quot;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="o">+</span>
-                            <span class="s2">&quot;must be numpy.ndarray&quot;</span><span class="p">)</span>
+        <span class="c1"># if type(self.values) != numpy.ndarray:</span>
+        <span class="c1">#     raise TypeError(&quot;data is of type %s, &quot; % type(self.values) +</span>
+        <span class="c1">#                     &quot;must be numpy.ndarray&quot;)</span>
         <span class="k">if</span> <span class="n">N</span> <span class="o">&gt;</span> <span class="n">T</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;data.shape = </span><span class="si">%s</span><span class="s2">,&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span>
                           <span class="s2">&quot; is it of shape (observations, variables) ?&quot;</span><span class="p">)</span>
@@ -376,7 +376,7 @@
         <span class="n">array_mask</span> <span class="o">=</span> <span class="n">array_mask</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
     <span class="c1"># Add noise to destroy ties...</span>
-    <span class="n">array</span> <span class="o">+=</span> <span class="p">(</span><span class="mi">1</span><span class="n">E</span><span class="o">-</span><span class="mi">6</span> <span class="o">*</span> <span class="n">array</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">array</span> <span class="o">+=</span> <span class="p">(</span><span class="mf">1E-6</span> <span class="o">*</span> <span class="n">array</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
               <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float64&#39;</span><span class="p">))</span>
 
 
@@ -625,7 +625,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2017, Jakob Runge.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.4.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.6.
     </div>
   </body>
 </html>

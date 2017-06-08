@@ -674,47 +674,6 @@ class CondIndTest(object):
 
         return (conf_lower, conf_upper)
 
-    def get_shuffle_significance(self, array, xyz, value):
-        """Returns p-value for shuffle significance test.
-
-        For residual-based test statistics only the residuals are shuffled.
-
-        Parameters
-        ----------
-        array : array-like
-            data array with X, Y, Z in rows and observations in columns
-
-        xyz : array of ints
-            XYZ identifier array of shape (dim,).
-
-        value : number
-            Value of test statistic for unshuffled estimate.
-        
-        Returns
-        -------
-        pval : float
-            p-value
-        """
-
-        if self.residual_based:
-            x = self._get_single_residuals(array, target_var = 0)
-            y = self._get_single_residuals(array, target_var = 1)
-            array = numpy.array([x, y])
-            xyz = numpy.array([0,1])
-
-        null_dist = self._get_shuffle_dist(array, xyz,
-                               self.get_dependence_measure,
-                               sig_samples=self.sig_samples, 
-                               sig_blocklength=self.sig_blocklength,
-                               verbosity=self.verbosity)
-
-        pval = (null_dist >= numpy.abs(value)).mean()
-        if self.two_sided:
-            # Adjust p-value for two-sided measures
-            if pval < 1.: pval *= 2.
-
-        return pval
-
     def _get_acf(self, series, max_lag=None):
         """Returns autocorrelation function.
         
@@ -1166,6 +1125,50 @@ class ParCorr(CondIndTest):
         val, dummy = stats.pearsonr(x, y)
 
         return val
+
+    def get_shuffle_significance(self, array, xyz, value, 
+        return_null_dist=False):
+        """Returns p-value for shuffle significance test.
+
+        For residual-based test statistics only the residuals are shuffled.
+
+        Parameters
+        ----------
+        array : array-like
+            data array with X, Y, Z in rows and observations in columns
+
+        xyz : array of ints
+            XYZ identifier array of shape (dim,).
+
+        value : number
+            Value of test statistic for unshuffled estimate.
+        
+        Returns
+        -------
+        pval : float
+            p-value
+        """
+
+        x = self._get_single_residuals(array, target_var = 0)
+        y = self._get_single_residuals(array, target_var = 1)
+        array_resid = numpy.array([x, y])
+        xyz_resid = numpy.array([0,1])
+
+        null_dist = self._get_shuffle_dist(array_resid, xyz_resid,
+                               self.get_dependence_measure,
+                               sig_samples=self.sig_samples, 
+                               sig_blocklength=self.sig_blocklength,
+                               verbosity=self.verbosity)
+
+        pval = (null_dist >= numpy.abs(value)).mean()
+        
+        # Adjust p-value for two-sided measures
+        if pval < 1.: pval *= 2.
+
+        if return_null_dist:
+            return pval, null_dist
+        else:
+            return pval
 
     def get_analytic_significance(self, value, T, dim): 
         """Returns analytic p-value from Student's t-test for the Pearson
@@ -1660,6 +1663,47 @@ class GPACE(CondIndTest,GP):
         return val
 
 
+    def get_shuffle_significance(self, array, xyz, value, 
+        return_null_dist=False):
+        """Returns p-value for shuffle significance test.
+
+        For residual-based test statistics only the residuals are shuffled.
+
+        Parameters
+        ----------
+        array : array-like
+            data array with X, Y, Z in rows and observations in columns
+
+        xyz : array of ints
+            XYZ identifier array of shape (dim,).
+
+        value : number
+            Value of test statistic for unshuffled estimate.
+        
+        Returns
+        -------
+        pval : float
+            p-value
+        """
+
+        x = self._get_single_residuals(array, target_var = 0)
+        y = self._get_single_residuals(array, target_var = 1)
+        array_resid = numpy.array([x, y])
+        xyz_resid = numpy.array([0,1])
+
+        null_dist = self._get_shuffle_dist(array_resid, xyz_resid,
+                               self.get_dependence_measure,
+                               sig_samples=self.sig_samples, 
+                               sig_blocklength=self.sig_blocklength,
+                               verbosity=self.verbosity)
+
+        pval = (null_dist >= value).mean()
+        
+        if return_null_dist:
+            return pval, null_dist
+        else:
+            return pval
+
     def get_analytic_significance(self, value, T, dim):
         """Returns p-value for the maximal correlation coefficient.
         
@@ -1868,6 +1912,47 @@ class GPDC(CondIndTest,GP):
         return val
 
 
+    def get_shuffle_significance(self, array, xyz, value, 
+        return_null_dist=False):
+        """Returns p-value for shuffle significance test.
+
+        For residual-based test statistics only the residuals are shuffled.
+
+        Parameters
+        ----------
+        array : array-like
+            data array with X, Y, Z in rows and observations in columns
+
+        xyz : array of ints
+            XYZ identifier array of shape (dim,).
+
+        value : number
+            Value of test statistic for unshuffled estimate.
+        
+        Returns
+        -------
+        pval : float
+            p-value
+        """
+
+        x = self._get_single_residuals(array, target_var = 0)
+        y = self._get_single_residuals(array, target_var = 1)
+        array_resid = numpy.array([x, y])
+        xyz_resid = numpy.array([0,1])
+
+        null_dist = self._get_shuffle_dist(array_resid, xyz_resid,
+                               self.get_dependence_measure,
+                               sig_samples=self.sig_samples, 
+                               sig_blocklength=self.sig_blocklength,
+                               verbosity=self.verbosity)
+
+        pval = (null_dist >= value).mean()
+        
+        if return_null_dist:
+            return pval, null_dist
+        else:
+            return pval
+
     def get_analytic_significance(self, value, T, dim):
         """Returns p-value for the distance correlation coefficient.
         
@@ -1975,7 +2060,12 @@ class CMIknn(CondIndTest):
     knn : int, optional (default: 100)
         Number of nearest-neighbors which determines the size of hyper-cubes
         around each (high-dimensional) sample point.
-    
+
+    shuffle_neighbors : int, optional (default: 10)
+        Number of nearest-neighbors within Z for the shuffle surrogates which
+        determines the size of hyper-cubes around each (high-dimensional) sample
+        point.
+
     significance : str, optional (default: 'shuffle_test')
         Type of significance test to use. For CMIknn only 'fixed_thres' and 
         'shuffle_test' are available.
@@ -1985,17 +2075,23 @@ class CMIknn(CondIndTest):
     """
     def __init__(self,
                 knn=100,
+                shuffle_neighbors=10,
                 significance='shuffle_test',
                 **kwargs):
 
         CondIndTest.__init__(self, significance=significance, **kwargs)
 
         self.knn = knn
+        self.shuffle_neighbors = shuffle_neighbors
 
         self.measure = 'cmi_knn'
         self.two_sided = False
         self.residual_based = False
         self.recycle_residuals = False
+
+        if self.verbosity > 0:
+            print("Initialized CMIknn class with nearest-neighbor parameter"
+                  " knn = %d" % self.knn)
 
     def _get_nearest_neighbors(self, array, xyz, knn, transform='standardize'):
         """Returns nearest neighbors according to Frenzel and Pompe (2007).
@@ -2087,6 +2183,98 @@ class CMIknn(CondIndTest):
                                       special.digamma(k_z)).mean()
 
         return val
+
+
+    def get_shuffle_significance(self, array, xyz, value, 
+        return_null_dist=False):
+        """Returns p-value for nearest-neighbor shuffle significance test.
+
+        For non-empty Z, overwrites get_shuffle_significance from the parent
+        class  which is a block shuffle test, which does not preserve
+        dependencies of X and Y with Z. Here the parameter shuffle_neighbors is
+        used to permute only those values :math:`x_i` and :math:`x_j` for which
+        :math:`z_j` is among the nearest niehgbors of :math:`z_i`. If Z is
+        empty, the block-shuffle test is used.
+
+        Parameters
+        ----------
+        array : array-like
+            data array with X, Y, Z in rows and observations in columns
+
+        xyz : array of ints
+            XYZ identifier array of shape (dim,).
+
+        value : number
+            Value of test statistic for unshuffled estimate.
+        
+        Returns
+        -------
+        pval : float
+            p-value
+        """
+        dim, T = array.shape
+
+        # max_neighbors = max(1, int(max_neighbor_ratio*T))
+        x_indices = numpy.where(xyz == 0)[0]
+        z_indices = numpy.where(xyz == 2)[0]
+
+        if len(z_indices) > 0:
+            if self.verbosity > 2:
+                print("            nearest-neighbor shuffle significance "
+                      "test with n=%d and %d surrogates" % (
+                        self.shuffle_neighbors,  self.sig_samples))
+
+            # Get nearest neighbors around each sample point in Z
+            z_array = numpy.fastCopyAndTranspose(array[z_indices,:])
+            tree_xyz = spatial.cKDTree(z_array)
+            neighbors = tree_xyz.query(z_array, 
+                        k=self.shuffle_neighbors, 
+                        p=numpy.inf, 
+                        eps=0.)[1].astype('int32')  
+
+
+            null_dist = numpy.zeros(self.sig_samples)
+            for sam in range(self.sig_samples):
+
+                # Shuffle neighbor indices for each sample index
+                map(numpy.random.shuffle, neighbors)
+
+                # Generate random order in which to go through indices loop in
+                # next step
+                order = numpy.random.permutation(T).astype('int32')
+
+                # Select a series of neighbor indices that contains as few as
+                # possible duplicates
+                restricted_permutation = \
+                    tigramite_cython_code._get_restricted_permutation_cython(
+                                T=T, 
+                                shuffle_neighbors=self.shuffle_neighbors, 
+                                neighbors=neighbors, 
+                                order = order)
+
+                array_shuffled = numpy.copy(array)
+                for i in x_indices:
+                    array_shuffled[i] = array[i, restricted_permutation]
+
+                null_dist[sam] = self.get_dependence_measure(array_shuffled, 
+                                                             xyz)
+        
+        else:
+            null_dist = self._get_shuffle_dist(array, xyz,
+                               self.get_dependence_measure,
+                               sig_samples=self.sig_samples, 
+                               sig_blocklength=self.sig_blocklength,
+                               verbosity=self.verbosity)
+
+        # Sort
+        null_dist.sort()
+        pval = (null_dist >= value).mean()
+
+        if return_null_dist:
+            return pval, null_dist
+        else:
+            return pval
+
 
     def get_analytic_significance(self, value, T, dim):
         """Placeholder function, not available."""
@@ -2295,6 +2483,42 @@ class CMIsymb(CondIndTest):
 
         return val
 
+    def get_shuffle_significance(self, array, xyz, value, 
+        return_null_dist=False):
+        """Returns p-value for shuffle significance test.
+
+        For residual-based test statistics only the residuals are shuffled.
+
+        Parameters
+        ----------
+        array : array-like
+            data array with X, Y, Z in rows and observations in columns
+
+        xyz : array of ints
+            XYZ identifier array of shape (dim,).
+
+        value : number
+            Value of test statistic for unshuffled estimate.
+        
+        Returns
+        -------
+        pval : float
+            p-value
+        """
+
+        null_dist = self._get_shuffle_dist(array, xyz,
+                               self.get_dependence_measure,
+                               sig_samples=self.sig_samples, 
+                               sig_blocklength=self.sig_blocklength,
+                               verbosity=self.verbosity)
+
+        pval = (null_dist >= value).mean()
+        
+        if return_null_dist:
+            return pval, null_dist
+        else:
+            return pval
+
     def get_analytic_significance(self, value, T, dim):
         """Placeholder function, not available."""
         raise ValueError("Analytic confidence not implemented for %s"
@@ -2364,42 +2588,44 @@ if __name__ == '__main__':
     #     recycle_residuals=False,
     #     verbosity=4)
 
-    cond_ind_test = GPDC(
-        significance='analytic',
-        sig_samples=1000,
-        sig_blocklength=1,
+    # cond_ind_test = GPDC(
+    #     significance='analytic',
+    #     sig_samples=1000,
+    #     sig_blocklength=1,
 
-        confidence=False, # False  'bootstrap',
-        conf_lev=0.9,
-        conf_samples=100,
-        conf_blocklength=1,
+    #     confidence=False, # False  'bootstrap',
+    #     conf_lev=0.9,
+    #     conf_samples=100,
+    #     conf_blocklength=1,
 
-        use_mask=False,
-        mask_type=['y'],
+    #     use_mask=False,
+    #     mask_type=['y'],
 
-        null_dist_filename='/home/jakobrunge/test/test.npz', #'/home/tests/test.npz',
-        gp_version='new',
+    #     null_dist_filename='/home/jakobrunge/test/test.npz', #'/home/tests/test.npz',
+    #     gp_version='new',
 
-        recycle_residuals=False,
-        verbosity=4)
+    #     recycle_residuals=False,
+    #     verbosity=4)
 
     # cond_ind_test.generate_and_save_nulldists( sample_sizes=[100, 250],
     #     null_dist_filename='/home/jakobrunge/test/test.npz')
     # cond_ind_test.null_dist_filename = '/home/jakobrunge/test/test.npz'
 
-    # cond_ind_test = CMIknn()
-        # significance='shuffle_test',
-        # sig_samples=1000,
-        # knn=100,
-        # confidence='bootstrap', #'bootstrap',
-        # conf_lev=0.9,
-        # conf_samples=100,
-        # conf_blocklength=None,
+    cond_ind_test = CMIknn(
+        significance='shuffle_test',
+        sig_samples=1000,
+        knn=100,
+        shuffle_neighbors=10,
+        confidence='bootstrap', #'bootstrap',
+        conf_lev=0.9,
+        conf_samples=100,
+        conf_blocklength=None,
 
-        # use_mask=False,
-        # mask_type=['y'],
-        # recycle_residuals=False,
-        # verbosity=3)
+        use_mask=False,
+        mask_type=['y'],
+        recycle_residuals=False,
+        verbosity=3,
+        )
 
     # cond_ind_test = CMIsymb()
     #     significance='shuffle_test',

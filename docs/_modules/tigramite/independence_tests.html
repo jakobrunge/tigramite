@@ -738,47 +738,6 @@
 
         <span class="k">return</span> <span class="p">(</span><span class="n">conf_lower</span><span class="p">,</span> <span class="n">conf_upper</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="CondIndTest.get_shuffle_significance"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.CondIndTest.get_shuffle_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_shuffle_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns p-value for shuffle significance test.</span>
-
-<span class="sd">        For residual-based test statistics only the residuals are shuffled.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        array : array-like</span>
-<span class="sd">            data array with X, Y, Z in rows and observations in columns</span>
-
-<span class="sd">        xyz : array of ints</span>
-<span class="sd">            XYZ identifier array of shape (dim,).</span>
-
-<span class="sd">        value : number</span>
-<span class="sd">            Value of test statistic for unshuffled estimate.</span>
-<span class="sd">        </span>
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        pval : float</span>
-<span class="sd">            p-value</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">residual_based</span><span class="p">:</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_residuals</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">target_var</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
-            <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_residuals</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">target_var</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
-            <span class="n">array</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">])</span>
-            <span class="n">xyz</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
-
-        <span class="n">null_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_shuffle_dist</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span>
-                               <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">,</span>
-                               <span class="n">sig_samples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sig_samples</span><span class="p">,</span> 
-                               <span class="n">sig_blocklength</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sig_blocklength</span><span class="p">,</span>
-                               <span class="n">verbosity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
-
-        <span class="n">pval</span> <span class="o">=</span> <span class="p">(</span><span class="n">null_dist</span> <span class="o">&gt;=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">value</span><span class="p">))</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">two_sided</span><span class="p">:</span>
-            <span class="c1"># Adjust p-value for two-sided measures</span>
-            <span class="k">if</span> <span class="n">pval</span> <span class="o">&lt;</span> <span class="mf">1.</span><span class="p">:</span> <span class="n">pval</span> <span class="o">*=</span> <span class="mf">2.</span>
-
-        <span class="k">return</span> <span class="n">pval</span></div>
-
     <span class="k">def</span> <span class="nf">_get_acf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">series</span><span class="p">,</span> <span class="n">max_lag</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns autocorrelation function.</span>
 <span class="sd">        </span>
@@ -1107,7 +1066,7 @@
 
 
 <div class="viewcode-block" id="ParCorr"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.ParCorr">[docs]</a><span class="k">class</span> <span class="nc">ParCorr</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
-    <span class="sd">r&quot;&quot;&quot;Partial correlation test.</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Partial correlation test.</span>
 
 <span class="sd">    Partial correlation is estimated through linear ordinary least squares (OLS)</span>
 <span class="sd">    regression and a test for non-zero linear Pearson correlation on the</span>
@@ -1138,7 +1097,7 @@
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
         <span class="c1"># super(ParCorr, self).__init__(</span>
-        <span class="n">CondIndTest</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">CondIndTest</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">measure</span> <span class="o">=</span> <span class="s1">&#39;par_corr&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">two_sided</span> <span class="o">=</span> <span class="kc">True</span>
@@ -1230,6 +1189,50 @@
         <span class="n">val</span><span class="p">,</span> <span class="n">dummy</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">pearsonr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">val</span></div>
+
+<div class="viewcode-block" id="ParCorr.get_shuffle_significance"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.ParCorr.get_shuffle_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_shuffle_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> 
+        <span class="n">return_null_dist</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns p-value for shuffle significance test.</span>
+
+<span class="sd">        For residual-based test statistics only the residuals are shuffled.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        array : array-like</span>
+<span class="sd">            data array with X, Y, Z in rows and observations in columns</span>
+
+<span class="sd">        xyz : array of ints</span>
+<span class="sd">            XYZ identifier array of shape (dim,).</span>
+
+<span class="sd">        value : number</span>
+<span class="sd">            Value of test statistic for unshuffled estimate.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pval : float</span>
+<span class="sd">            p-value</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_residuals</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">target_var</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_residuals</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">target_var</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">array_resid</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">])</span>
+        <span class="n">xyz_resid</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">null_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_shuffle_dist</span><span class="p">(</span><span class="n">array_resid</span><span class="p">,</span> <span class="n">xyz_resid</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">,</span>
+                               <span class="n">sig_samples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sig_samples</span><span class="p">,</span> 
+                               <span class="n">sig_blocklength</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sig_blocklength</span><span class="p">,</span>
+                               <span class="n">verbosity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
+
+        <span class="n">pval</span> <span class="o">=</span> <span class="p">(</span><span class="n">null_dist</span> <span class="o">&gt;=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">value</span><span class="p">))</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        
+        <span class="c1"># Adjust p-value for two-sided measures</span>
+        <span class="k">if</span> <span class="n">pval</span> <span class="o">&lt;</span> <span class="mf">1.</span><span class="p">:</span> <span class="n">pval</span> <span class="o">*=</span> <span class="mf">2.</span>
+
+        <span class="k">if</span> <span class="n">return_null_dist</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pval</span><span class="p">,</span> <span class="n">null_dist</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pval</span></div>
 
 <div class="viewcode-block" id="ParCorr.get_analytic_significance"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.ParCorr.get_analytic_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span> 
         <span class="sd">&quot;&quot;&quot;Returns analytic p-value from Student&#39;s t-test for the Pearson</span>
@@ -1353,7 +1356,7 @@
         <span class="k">return</span> <span class="n">score</span></div></div>
 
 <div class="viewcode-block" id="GP"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GP">[docs]</a><span class="k">class</span> <span class="nc">GP</span><span class="p">():</span>
-    <span class="sd">r&quot;&quot;&quot;Gaussian processes base class.</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Gaussian processes base class.</span>
 
 <span class="sd">    GP is estimated with scikit-learn and allows to flexibly specify kernels and</span>
 <span class="sd">    hyperparameters or let them be optimized automatically. The kernel specifies</span>
@@ -1444,11 +1447,11 @@
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gp_version</span> <span class="o">==</span> <span class="s1">&#39;old&#39;</span><span class="p">:</span>
             <span class="c1"># Old GP failed for ties in the data</span>
-            <span class="n">z</span> <span class="o">+=</span> <span class="mi">1</span><span class="n">E</span><span class="o">-</span><span class="mi">10</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="o">*</span><span class="n">z</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="n">z</span> <span class="o">+=</span> <span class="mf">1E-10</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="o">*</span><span class="n">z</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 
             <span class="n">gp</span> <span class="o">=</span> <span class="n">gaussian_process</span><span class="o">.</span><span class="n">GaussianProcess</span><span class="p">(</span>
-                <span class="n">nugget</span><span class="o">=</span><span class="mi">1</span><span class="n">E</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span>
-                <span class="n">thetaL</span><span class="o">=</span><span class="mi">1</span><span class="n">E</span><span class="o">-</span><span class="mi">16</span><span class="p">,</span>
+                <span class="n">nugget</span><span class="o">=</span><span class="mf">1E-1</span><span class="p">,</span>
+                <span class="n">thetaL</span><span class="o">=</span><span class="mf">1E-16</span><span class="p">,</span>
                 <span class="n">thetaU</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
                 <span class="n">corr</span><span class="o">=</span><span class="s1">&#39;squared_exponential&#39;</span><span class="p">,</span>
                 <span class="n">optimizer</span><span class="o">=</span><span class="s1">&#39;fmin_cobyla&#39;</span><span class="p">,</span>
@@ -1545,7 +1548,7 @@
         <span class="k">return</span> <span class="n">score</span></div></div>
 
 <div class="viewcode-block" id="GPACE"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GPACE">[docs]</a><span class="k">class</span> <span class="nc">GPACE</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">,</span><span class="n">GP</span><span class="p">):</span>
-    <span class="sd">r&quot;&quot;&quot;GPACE conditional independence test based on Gaussian processes and</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;GPACE conditional independence test based on Gaussian processes and</span>
 <span class="sd">        maximal correlation.</span>
 
 <span class="sd">    GPACE is based on a Gaussian process (GP) regression and a maximal</span>
@@ -1613,9 +1616,9 @@
                 <span class="n">ace_version</span><span class="o">=</span><span class="s1">&#39;acepack&#39;</span><span class="p">,</span>
                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
-        <span class="n">CondIndTest</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">CondIndTest</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-        <span class="n">GP</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+        <span class="n">GP</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
                     <span class="n">gp_version</span><span class="o">=</span><span class="n">gp_version</span><span class="p">,</span>
                     <span class="n">gp_params</span><span class="o">=</span><span class="n">gp_params</span><span class="p">,</span>
                     <span class="p">)</span>
@@ -1724,6 +1727,47 @@
         <span class="k">return</span> <span class="n">val</span>
 
 
+<div class="viewcode-block" id="GPACE.get_shuffle_significance"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GPACE.get_shuffle_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_shuffle_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> 
+        <span class="n">return_null_dist</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns p-value for shuffle significance test.</span>
+
+<span class="sd">        For residual-based test statistics only the residuals are shuffled.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        array : array-like</span>
+<span class="sd">            data array with X, Y, Z in rows and observations in columns</span>
+
+<span class="sd">        xyz : array of ints</span>
+<span class="sd">            XYZ identifier array of shape (dim,).</span>
+
+<span class="sd">        value : number</span>
+<span class="sd">            Value of test statistic for unshuffled estimate.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pval : float</span>
+<span class="sd">            p-value</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_residuals</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">target_var</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_residuals</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">target_var</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">array_resid</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">])</span>
+        <span class="n">xyz_resid</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">null_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_shuffle_dist</span><span class="p">(</span><span class="n">array_resid</span><span class="p">,</span> <span class="n">xyz_resid</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">,</span>
+                               <span class="n">sig_samples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sig_samples</span><span class="p">,</span> 
+                               <span class="n">sig_blocklength</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sig_blocklength</span><span class="p">,</span>
+                               <span class="n">verbosity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
+
+        <span class="n">pval</span> <span class="o">=</span> <span class="p">(</span><span class="n">null_dist</span> <span class="o">&gt;=</span> <span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="n">return_null_dist</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pval</span><span class="p">,</span> <span class="n">null_dist</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pval</span></div>
+
 <div class="viewcode-block" id="GPACE.get_analytic_significance"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GPACE.get_analytic_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns p-value for the maximal correlation coefficient.</span>
 <span class="sd">        </span>
@@ -1780,7 +1824,7 @@
                          <span class="s2">&quot;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span><span class="p">)</span></div></div>
 
 <div class="viewcode-block" id="GPDC"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GPDC">[docs]</a><span class="k">class</span> <span class="nc">GPDC</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">,</span><span class="n">GP</span><span class="p">):</span>
-    <span class="sd">r&quot;&quot;&quot;GPDC conditional independence test based on Gaussian processes and</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;GPDC conditional independence test based on Gaussian processes and</span>
 <span class="sd">        distance correlation.</span>
 
 <span class="sd">    GPDC is based on a Gaussian process (GP) regression and a distance</span>
@@ -1845,9 +1889,9 @@
                 <span class="n">gp_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
-        <span class="n">CondIndTest</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">CondIndTest</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-        <span class="n">GP</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+        <span class="n">GP</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
                     <span class="n">gp_version</span><span class="o">=</span><span class="n">gp_version</span><span class="p">,</span>
                     <span class="n">gp_params</span><span class="o">=</span><span class="n">gp_params</span><span class="p">,</span>
                     <span class="p">)</span>
@@ -1932,6 +1976,47 @@
         <span class="k">return</span> <span class="n">val</span>
 
 
+<div class="viewcode-block" id="GPDC.get_shuffle_significance"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GPDC.get_shuffle_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_shuffle_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> 
+        <span class="n">return_null_dist</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns p-value for shuffle significance test.</span>
+
+<span class="sd">        For residual-based test statistics only the residuals are shuffled.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        array : array-like</span>
+<span class="sd">            data array with X, Y, Z in rows and observations in columns</span>
+
+<span class="sd">        xyz : array of ints</span>
+<span class="sd">            XYZ identifier array of shape (dim,).</span>
+
+<span class="sd">        value : number</span>
+<span class="sd">            Value of test statistic for unshuffled estimate.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pval : float</span>
+<span class="sd">            p-value</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_residuals</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">target_var</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_residuals</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">target_var</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">array_resid</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">])</span>
+        <span class="n">xyz_resid</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">null_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_shuffle_dist</span><span class="p">(</span><span class="n">array_resid</span><span class="p">,</span> <span class="n">xyz_resid</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">,</span>
+                               <span class="n">sig_samples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sig_samples</span><span class="p">,</span> 
+                               <span class="n">sig_blocklength</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sig_blocklength</span><span class="p">,</span>
+                               <span class="n">verbosity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
+
+        <span class="n">pval</span> <span class="o">=</span> <span class="p">(</span><span class="n">null_dist</span> <span class="o">&gt;=</span> <span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="n">return_null_dist</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pval</span><span class="p">,</span> <span class="n">null_dist</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pval</span></div>
+
 <div class="viewcode-block" id="GPDC.get_analytic_significance"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.GPDC.get_analytic_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns p-value for the distance correlation coefficient.</span>
 <span class="sd">        </span>
@@ -1988,7 +2073,7 @@
 
 
 <div class="viewcode-block" id="CMIknn"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.CMIknn">[docs]</a><span class="k">class</span> <span class="nc">CMIknn</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
-    <span class="sd">r&quot;&quot;&quot;Conditional mutual information test based on nearest-neighbor estimator.</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Conditional mutual information test based on nearest-neighbor estimator.</span>
 
 <span class="sd">    Conditional mutual information is the most general dependency measure coming</span>
 <span class="sd">    from an information-theoretic framework. It makes no assumptions about the</span>
@@ -2039,7 +2124,12 @@
 <span class="sd">    knn : int, optional (default: 100)</span>
 <span class="sd">        Number of nearest-neighbors which determines the size of hyper-cubes</span>
 <span class="sd">        around each (high-dimensional) sample point.</span>
-<span class="sd">    </span>
+
+<span class="sd">    shuffle_neighbors : int, optional (default: 10)</span>
+<span class="sd">        Number of nearest-neighbors within Z for the shuffle surrogates which</span>
+<span class="sd">        determines the size of hyper-cubes around each (high-dimensional) sample</span>
+<span class="sd">        point.</span>
+
 <span class="sd">    significance : str, optional (default: &#39;shuffle_test&#39;)</span>
 <span class="sd">        Type of significance test to use. For CMIknn only &#39;fixed_thres&#39; and </span>
 <span class="sd">        &#39;shuffle_test&#39; are available.</span>
@@ -2049,17 +2139,23 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                 <span class="n">knn</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                <span class="n">shuffle_neighbors</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
                 <span class="n">significance</span><span class="o">=</span><span class="s1">&#39;shuffle_test&#39;</span><span class="p">,</span>
                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
-        <span class="n">CondIndTest</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">significance</span><span class="o">=</span><span class="n">significance</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">CondIndTest</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">significance</span><span class="o">=</span><span class="n">significance</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">knn</span> <span class="o">=</span> <span class="n">knn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shuffle_neighbors</span> <span class="o">=</span> <span class="n">shuffle_neighbors</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">measure</span> <span class="o">=</span> <span class="s1">&#39;cmi_knn&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">two_sided</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">residual_based</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">recycle_residuals</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Initialized CMIknn class with nearest-neighbor parameter&quot;</span>
+                  <span class="s2">&quot; knn = </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">knn</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_get_nearest_neighbors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">knn</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="s1">&#39;standardize&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns nearest neighbors according to Frenzel and Pompe (2007).</span>
@@ -2107,7 +2203,7 @@
             <span class="n">array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trafo2uniform</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
 
         <span class="c1"># Add noise to destroy ties...</span>
-        <span class="n">array</span> <span class="o">+=</span> <span class="p">(</span><span class="mi">1</span><span class="n">E</span><span class="o">-</span><span class="mi">6</span> <span class="o">*</span> <span class="n">array</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">array</span> <span class="o">+=</span> <span class="p">(</span><span class="mf">1E-6</span> <span class="o">*</span> <span class="n">array</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
                   <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
 
         <span class="c1"># Use cKDTree to get distances eps to the k-th nearest neighbors for</span>
@@ -2152,6 +2248,98 @@
 
         <span class="k">return</span> <span class="n">val</span></div>
 
+
+<div class="viewcode-block" id="CMIknn.get_shuffle_significance"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.CMIknn.get_shuffle_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_shuffle_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> 
+        <span class="n">return_null_dist</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns p-value for nearest-neighbor shuffle significance test.</span>
+
+<span class="sd">        For non-empty Z, overwrites get_shuffle_significance from the parent</span>
+<span class="sd">        class  which is a block shuffle test, which does not preserve</span>
+<span class="sd">        dependencies of X and Y with Z. Here the parameter shuffle_neighbors is</span>
+<span class="sd">        used to permute only those values :math:`x_i` and :math:`x_j` for which</span>
+<span class="sd">        :math:`z_j` is among the nearest niehgbors of :math:`z_i`. If Z is</span>
+<span class="sd">        empty, the block-shuffle test is used.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        array : array-like</span>
+<span class="sd">            data array with X, Y, Z in rows and observations in columns</span>
+
+<span class="sd">        xyz : array of ints</span>
+<span class="sd">            XYZ identifier array of shape (dim,).</span>
+
+<span class="sd">        value : number</span>
+<span class="sd">            Value of test statistic for unshuffled estimate.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pval : float</span>
+<span class="sd">            p-value</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="c1"># max_neighbors = max(1, int(max_neighbor_ratio*T))</span>
+        <span class="n">x_indices</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">z_indices</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">z_indices</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;            nearest-neighbor shuffle significance &quot;</span>
+                      <span class="s2">&quot;test with n=</span><span class="si">%d</span><span class="s2"> and </span><span class="si">%d</span><span class="s2"> surrogates&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">shuffle_neighbors</span><span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">sig_samples</span><span class="p">))</span>
+
+            <span class="c1"># Get nearest neighbors around each sample point in Z</span>
+            <span class="n">z_array</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">fastCopyAndTranspose</span><span class="p">(</span><span class="n">array</span><span class="p">[</span><span class="n">z_indices</span><span class="p">,:])</span>
+            <span class="n">tree_xyz</span> <span class="o">=</span> <span class="n">spatial</span><span class="o">.</span><span class="n">cKDTree</span><span class="p">(</span><span class="n">z_array</span><span class="p">)</span>
+            <span class="n">neighbors</span> <span class="o">=</span> <span class="n">tree_xyz</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">z_array</span><span class="p">,</span> 
+                        <span class="n">k</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shuffle_neighbors</span><span class="p">,</span> 
+                        <span class="n">p</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> 
+                        <span class="n">eps</span><span class="o">=</span><span class="mf">0.</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>  
+
+
+            <span class="n">null_dist</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sig_samples</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">sam</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sig_samples</span><span class="p">):</span>
+
+                <span class="c1"># Shuffle neighbor indices for each sample index</span>
+                <span class="nb">map</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">,</span> <span class="n">neighbors</span><span class="p">)</span>
+
+                <span class="c1"># Generate random order in which to go through indices loop in</span>
+                <span class="c1"># next step</span>
+                <span class="n">order</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
+
+                <span class="c1"># Select a series of neighbor indices that contains as few as</span>
+                <span class="c1"># possible duplicates</span>
+                <span class="n">restricted_permutation</span> <span class="o">=</span> \
+                    <span class="n">tigramite_cython_code</span><span class="o">.</span><span class="n">_get_restricted_permutation_cython</span><span class="p">(</span>
+                                <span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">,</span> 
+                                <span class="n">shuffle_neighbors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shuffle_neighbors</span><span class="p">,</span> 
+                                <span class="n">neighbors</span><span class="o">=</span><span class="n">neighbors</span><span class="p">,</span> 
+                                <span class="n">order</span> <span class="o">=</span> <span class="n">order</span><span class="p">)</span>
+
+                <span class="n">array_shuffled</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">x_indices</span><span class="p">:</span>
+                    <span class="n">array_shuffled</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">restricted_permutation</span><span class="p">]</span>
+
+                <span class="n">null_dist</span><span class="p">[</span><span class="n">sam</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span><span class="n">array_shuffled</span><span class="p">,</span> 
+                                                             <span class="n">xyz</span><span class="p">)</span>
+        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">null_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_shuffle_dist</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">,</span>
+                               <span class="n">sig_samples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sig_samples</span><span class="p">,</span> 
+                               <span class="n">sig_blocklength</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sig_blocklength</span><span class="p">,</span>
+                               <span class="n">verbosity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
+
+        <span class="c1"># Sort</span>
+        <span class="n">null_dist</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+        <span class="n">pval</span> <span class="o">=</span> <span class="p">(</span><span class="n">null_dist</span> <span class="o">&gt;=</span> <span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">return_null_dist</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pval</span><span class="p">,</span> <span class="n">null_dist</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pval</span></div>
+
+
 <div class="viewcode-block" id="CMIknn.get_analytic_significance"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.CMIknn.get_analytic_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Placeholder function, not available.&quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Analytic significance not implemented for </span><span class="si">%s</span><span class="s2">&quot;</span>
@@ -2171,7 +2359,7 @@
 
 
 <div class="viewcode-block" id="CMIsymb"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.CMIsymb">[docs]</a><span class="k">class</span> <span class="nc">CMIsymb</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
-    <span class="sd">r&quot;&quot;&quot;Conditional mutual information test based on discrete estimator.</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Conditional mutual information test based on discrete estimator.</span>
 
 <span class="sd">    Conditional mutual information is the most general dependency measure</span>
 <span class="sd">    coming from an information-theoretic framework. It makes no assumptions</span>
@@ -2215,7 +2403,7 @@
                 <span class="n">conf_blocklength</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
-        <span class="n">CondIndTest</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+        <span class="n">CondIndTest</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
                              <span class="n">significance</span><span class="o">=</span><span class="n">significance</span><span class="p">,</span> 
                              <span class="n">sig_blocklength</span><span class="o">=</span><span class="n">sig_blocklength</span><span class="p">,</span>
                              <span class="n">conf_blocklength</span><span class="o">=</span><span class="n">conf_blocklength</span><span class="p">,</span>
@@ -2359,6 +2547,42 @@
 
         <span class="k">return</span> <span class="n">val</span></div>
 
+<div class="viewcode-block" id="CMIsymb.get_shuffle_significance"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.CMIsymb.get_shuffle_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_shuffle_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> 
+        <span class="n">return_null_dist</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns p-value for shuffle significance test.</span>
+
+<span class="sd">        For residual-based test statistics only the residuals are shuffled.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        array : array-like</span>
+<span class="sd">            data array with X, Y, Z in rows and observations in columns</span>
+
+<span class="sd">        xyz : array of ints</span>
+<span class="sd">            XYZ identifier array of shape (dim,).</span>
+
+<span class="sd">        value : number</span>
+<span class="sd">            Value of test statistic for unshuffled estimate.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pval : float</span>
+<span class="sd">            p-value</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">null_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_shuffle_dist</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">,</span>
+                               <span class="n">sig_samples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sig_samples</span><span class="p">,</span> 
+                               <span class="n">sig_blocklength</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sig_blocklength</span><span class="p">,</span>
+                               <span class="n">verbosity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
+
+        <span class="n">pval</span> <span class="o">=</span> <span class="p">(</span><span class="n">null_dist</span> <span class="o">&gt;=</span> <span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="n">return_null_dist</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pval</span><span class="p">,</span> <span class="n">null_dist</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pval</span></div>
+
 <div class="viewcode-block" id="CMIsymb.get_analytic_significance"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.CMIsymb.get_analytic_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Placeholder function, not available.&quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Analytic confidence not implemented for </span><span class="si">%s</span><span class="s2">&quot;</span>
@@ -2376,7 +2600,7 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Model selection not implemented for </span><span class="si">%s</span><span class="s2">&quot;</span>
                          <span class="s2">&quot;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span><span class="p">)</span></div></div>
 
-<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
 
     <span class="c1"># Quick test</span>
     <span class="kn">import</span> <span class="nn">data_processing</span> <span class="k">as</span> <span class="nn">pp</span>
@@ -2428,42 +2652,44 @@
     <span class="c1">#     recycle_residuals=False,</span>
     <span class="c1">#     verbosity=4)</span>
 
-    <span class="n">cond_ind_test</span> <span class="o">=</span> <span class="n">GPDC</span><span class="p">(</span>
-        <span class="n">significance</span><span class="o">=</span><span class="s1">&#39;analytic&#39;</span><span class="p">,</span>
-        <span class="n">sig_samples</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
-        <span class="n">sig_blocklength</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="c1"># cond_ind_test = GPDC(</span>
+    <span class="c1">#     significance=&#39;analytic&#39;,</span>
+    <span class="c1">#     sig_samples=1000,</span>
+    <span class="c1">#     sig_blocklength=1,</span>
 
-        <span class="n">confidence</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="c1"># False  &#39;bootstrap&#39;,</span>
-        <span class="n">conf_lev</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
-        <span class="n">conf_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-        <span class="n">conf_blocklength</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="c1">#     confidence=False, # False  &#39;bootstrap&#39;,</span>
+    <span class="c1">#     conf_lev=0.9,</span>
+    <span class="c1">#     conf_samples=100,</span>
+    <span class="c1">#     conf_blocklength=1,</span>
 
-        <span class="n">use_mask</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">mask_type</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span>
+    <span class="c1">#     use_mask=False,</span>
+    <span class="c1">#     mask_type=[&#39;y&#39;],</span>
 
-        <span class="n">null_dist_filename</span><span class="o">=</span><span class="s1">&#39;/home/jakobrunge/test/test.npz&#39;</span><span class="p">,</span> <span class="c1">#&#39;/home/tests/test.npz&#39;,</span>
-        <span class="n">gp_version</span><span class="o">=</span><span class="s1">&#39;new&#39;</span><span class="p">,</span>
+    <span class="c1">#     null_dist_filename=&#39;/home/jakobrunge/test/test.npz&#39;, #&#39;/home/tests/test.npz&#39;,</span>
+    <span class="c1">#     gp_version=&#39;new&#39;,</span>
 
-        <span class="n">recycle_residuals</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">verbosity</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="c1">#     recycle_residuals=False,</span>
+    <span class="c1">#     verbosity=4)</span>
 
     <span class="c1"># cond_ind_test.generate_and_save_nulldists( sample_sizes=[100, 250],</span>
     <span class="c1">#     null_dist_filename=&#39;/home/jakobrunge/test/test.npz&#39;)</span>
     <span class="c1"># cond_ind_test.null_dist_filename = &#39;/home/jakobrunge/test/test.npz&#39;</span>
 
-    <span class="c1"># cond_ind_test = CMIknn()</span>
-        <span class="c1"># significance=&#39;shuffle_test&#39;,</span>
-        <span class="c1"># sig_samples=1000,</span>
-        <span class="c1"># knn=100,</span>
-        <span class="c1"># confidence=&#39;bootstrap&#39;, #&#39;bootstrap&#39;,</span>
-        <span class="c1"># conf_lev=0.9,</span>
-        <span class="c1"># conf_samples=100,</span>
-        <span class="c1"># conf_blocklength=None,</span>
+    <span class="n">cond_ind_test</span> <span class="o">=</span> <span class="n">CMIknn</span><span class="p">(</span>
+        <span class="n">significance</span><span class="o">=</span><span class="s1">&#39;shuffle_test&#39;</span><span class="p">,</span>
+        <span class="n">sig_samples</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+        <span class="n">knn</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+        <span class="n">shuffle_neighbors</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+        <span class="n">confidence</span><span class="o">=</span><span class="s1">&#39;bootstrap&#39;</span><span class="p">,</span> <span class="c1">#&#39;bootstrap&#39;,</span>
+        <span class="n">conf_lev</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
+        <span class="n">conf_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+        <span class="n">conf_blocklength</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 
-        <span class="c1"># use_mask=False,</span>
-        <span class="c1"># mask_type=[&#39;y&#39;],</span>
-        <span class="c1"># recycle_residuals=False,</span>
-        <span class="c1"># verbosity=3)</span>
+        <span class="n">use_mask</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">mask_type</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span>
+        <span class="n">recycle_residuals</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">verbosity</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="c1"># cond_ind_test = CMIsymb()</span>
     <span class="c1">#     significance=&#39;shuffle_test&#39;,</span>
@@ -2521,7 +2747,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2017, Jakob Runge.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.4.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.6.
     </div>
   </body>
 </html>
