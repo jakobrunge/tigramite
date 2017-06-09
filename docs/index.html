@@ -493,21 +493,21 @@ containing estimated parents.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>selected_links</strong> (<em>list</em><em> or </em><em>None</em>) &#8211; List of form [(0, -1), (3, -2), ...]
+<li><strong>selected_links</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; List of form [(0, -1), (3, -2), ...]
 specifying whether only selected links should be tested. If None is
 passed, all links are tested</li>
-<li><strong>tau_min</strong> (<em>int</em><em>, </em><em>default: 1</em>) &#8211; Minimum time lag to test. Useful for multi-step ahead predictions.</li>
-<li><strong>tau_max</strong> (<em>int</em><em>, </em><em>default: 1</em>) &#8211; Maximum time lag. Must be larger or equal to tau_min.</li>
-<li><strong>save_iterations</strong> (<em>bool</em><em>, </em><em>default: False</em>) &#8211; Whether to save iteration step results such as conditions used.</li>
-<li><strong>pc_alpha</strong> (<em>float</em><em>, </em><em>default: 0.1</em>) &#8211; Significance level in algorithm.</li>
-<li><strong>max_conds_dim</strong> (<em>int</em><em> or </em><em>None</em>) &#8211; Maximum number of conditions to test. If None is passed, this number
+<li><strong>tau_min</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) &#8211; Minimum time lag to test. Useful for multi-step ahead predictions.</li>
+<li><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) &#8211; Maximum time lag. Must be larger or equal to tau_min.</li>
+<li><strong>save_iterations</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) &#8211; Whether to save iteration step results such as conditions used.</li>
+<li><strong>pc_alpha</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.1</em><em>)</em>) &#8211; Significance level in algorithm.</li>
+<li><strong>max_conds_dim</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Maximum number of conditions to test. If None is passed, this number
 is unrestricted.</li>
-<li><strong>max_combinations</strong> (<em>int</em><em>, </em><em>default: 1</em>) &#8211; Maximum number of combinations of conditions of current cardinality
+<li><strong>max_combinations</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) &#8211; Maximum number of combinations of conditions of current cardinality
 to test. Defaults to 1 for PC_1 algorithm. For original PC algorithm
 a larger number, such as 10, can be used.</li>
-<li><strong>max_conds_py</strong> (<em>int</em><em> or </em><em>None</em>) &#8211; Maximum number of conditions of Y to use. If None is passed, this
+<li><strong>max_conds_py</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Maximum number of conditions of Y to use. If None is passed, this
 number is unrestricted.</li>
-<li><strong>max_conds_px</strong> (<em>int</em><em> or </em><em>None</em>) &#8211; Maximum number of conditions of Z to use. If None is passed, this
+<li><strong>max_conds_px</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Maximum number of conditions of Z to use. If None is passed, this
 number is unrestricted.</li>
 <li><strong>fdr_method</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'none'</em><em>)</em>) &#8211; Correction method, default is Benjamini-Hochberg False Discovery
 Rate method.</li>
