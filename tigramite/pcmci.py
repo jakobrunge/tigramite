@@ -1287,37 +1287,37 @@ class PCMCI():
 
         Parameters
         ----------
-        selected_links : list or None
+        selected_links : list, optional (default: None)
           List of form [(0, -1), (3, -2), ...]
           specifying whether only selected links should be tested. If None is
           passed, all links are tested
 
-        tau_min : int, default: 1
+        tau_min : int, optional (default: 1)
           Minimum time lag to test. Useful for multi-step ahead predictions.
 
-        tau_max : int, default: 1
+        tau_max : int, optional (default: 1)
           Maximum time lag. Must be larger or equal to tau_min.
 
-        save_iterations : bool, default: False
+        save_iterations : bool, optional (default: False)
           Whether to save iteration step results such as conditions used.
 
-        pc_alpha : float, default: 0.1
+        pc_alpha : float, optional (default: 0.1)
           Significance level in algorithm. 
 
-        max_conds_dim : int or None
+        max_conds_dim : int, optional (default: None)
           Maximum number of conditions to test. If None is passed, this number
           is unrestricted.
 
-        max_combinations : int, default: 1
+        max_combinations : int, optional (default: 1)
           Maximum number of combinations of conditions of current cardinality
           to test. Defaults to 1 for PC_1 algorithm. For original PC algorithm
           a larger number, such as 10, can be used.
       
-        max_conds_py : int or None
+        max_conds_py : int, optional (default: None)
             Maximum number of conditions of Y to use. If None is passed, this 
             number is unrestricted.
 
-        max_conds_px : int or None
+        max_conds_px : int, optional (default: None)
             Maximum number of conditions of Z to use. If None is passed, this 
             number is unrestricted.
 
@@ -1342,8 +1342,6 @@ class PCMCI():
             max_conds_dim=max_conds_dim,
             max_combinations=max_combinations,
         )
-
-        # all_parents = self.all_parents
 
         results = self.run_mci(
                                 selected_links=selected_links,
