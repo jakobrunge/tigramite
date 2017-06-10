@@ -12,5 +12,6 @@ The package depends on the MASS and momentchi2 packages on CRAN, so please insta
 > library(RCIT)
 
 > RCIT(rnorm(1000),rnorm(1000),rnorm(1000))
+
 > RCoT(rnorm(1000),rnorm(1000),rnorm(1000))
 
