@@ -3,7 +3,7 @@ This is an R package implementing the Randomized Conditional Independence Test (
 
 # Update (6/9/17)
 
-Added an option for permutation testing. This method is slow but recommended for small samples (generally less than 500), where the asymptotic null cannot be accurately estimated.
+Added an option to approximate the null by permutation testing (approx="perm"). This method is slow but recommended for small samples (generally less than 500), where the asymptotic null cannot be accurately estimated.
 
 # Update (5/8/17)
 
