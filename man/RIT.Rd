@@ -11,7 +11,12 @@ RIT(x, y, approx = "lpd4", seed = NULL)
 
 \item{y}{Random variable y.}
 
-\item{approx}{Method for approximating the null distribution. Default is the "lpd4," the Lindsay-Pilla-Basak method. Other options include "gamma" for the Satterthwaite-Welch method, "hbe" for the Hall-Buckley-Eagleson method and "chi2" for a normalized statistic..}
+\item{approx}{Method for approximating the null distribution. Options include:
+"lpd4," the Lindsay-Pilla-Basak method (default),
+"gamma" for the Satterthwaite-Welch method,
+"hbe" for the Hall-Buckley-Eagleson method,
+"chi2" for a normalized chi-squared statistic,
+"perm" for permutation testing (warning: this one is slow but recommended for small samples generally <500 )}
 
 \item{seed}{The seed for controlling random number generation. Use if you want to replicate results exactly. Default is NULL.}
 }

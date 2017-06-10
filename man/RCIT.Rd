@@ -14,7 +14,12 @@ RCIT(x, y, z = NULL, approx = "lpd4", corr = TRUE, num_f = 25,
 
 \item{z}{Random variable z.}
 
-\item{approx}{Method for approximating the null distribution. Default is the "lpd4," the Lindsay-Pilla-Basak method. Other options include "gamma" for the Satterthwaite-Welch method, "hbe" for the Hall-Buckley-Eagleson method, and "chi2" for a normalized statistic.}
+\item{approx}{Method for approximating the null distribution. Options include:
+"lpd4," the Lindsay-Pilla-Basak method (default),
+"gamma" for the Satterthwaite-Welch method,
+"hbe" for the Hall-Buckley-Eagleson method,
+"chi2" for a normalized chi-squared statistic,
+"perm" for permutation testing (warning: this one is slow but recommended for small samples generally <500 )}
 
 \item{corr}{TRUE corresponds to RCoT and FALSE to RCIT. Default is TRUE.}
 
