@@ -61,7 +61,7 @@ RIT <- function(x,y,approx="lpd4",seed=NULL){
     Stas = c();
     for (p in 1:nperm){
       perm = sample(1:r,r);
-      Sta_p = RIT_Sta_perm(f_x[perm,],f_y,r)
+      Sta_p = Sta_perm(f_x[perm,],f_y,r)
       Stas = c(Stas, Sta_p);
 
     }

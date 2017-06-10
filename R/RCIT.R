@@ -74,18 +74,18 @@ RCIT <- function(x,y,z=NULL,approx="lpd4",corr=TRUE,num_f=25,seed=NULL){
     Cxz=cov(f_x,f_z);
     Czy=cov(f_z,f_y);
 
-    Cxy_z=Cxy-Cxz%*%i_Czz%*%Czy;
     z_i_Czz=f_z%*%i_Czz;
     e_x_z = z_i_Czz%*%t(Cxz);
     e_y_z = z_i_Czz%*%Czy;
-
-
-    Sta = r*sum(Cxy_z^2);
 
     #approximate null distributions
 
     res_x = f_x-e_x_z;
     res_y = f_y-e_y_z;
+
+    #Cxy_z=Cxy-Cxz%*%i_Czz%*%Czy; #less accurate for permutation testing
+    Cxy_z = cov(res_x, res_y);
+    Sta = r*sum(Cxy_z^2);
 
     d =expand.grid(1:ncol(f_x),1:ncol(f_y));
     res = res_x[,d[,1]]*res_y[,d[,2]];
@@ -97,7 +97,7 @@ RCIT <- function(x,y,z=NULL,approx="lpd4",corr=TRUE,num_f=25,seed=NULL){
       Stas = c();
       for (p in 1:nperm){
         perm = sample(1:r,r);
-        Sta_p = RIT_Sta_perm(res_x[perm,],res_y,r)
+        Sta_p = Sta_perm(res_x[perm,],res_y,r)
         Stas = c(Stas, Sta_p);
 
       }
