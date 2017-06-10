@@ -47,19 +47,11 @@ RIT <- function(x,y,approx="lpd4",seed=NULL){
 
   #approximate null distributions
 
-
-  res_x = f_x-repmat(t(matrix(colMeans(f_x))),r,1);
-  res_y = f_y-repmat(t(matrix(colMeans(f_y))),r,1);
-
-  d =expand.grid(1:ncol(f_x),1:ncol(f_y));
-  res = res_x[,d[,1]]*res_y[,d[,2]];
-  Cov = 1/r * (t(res)%*%res);
-
   if (approx == "perm"){
-    nperm =1000;
+    nperm =100;
 
     Stas = c();
-    for (p in 1:nperm){
+    for (ps in 1:nperm){
       perm = sample(1:r,r);
       Sta_p = Sta_perm(f_x[perm,],f_y,r)
       Stas = c(Stas, Sta_p);
@@ -68,7 +60,16 @@ RIT <- function(x,y,approx="lpd4",seed=NULL){
 
     p = 1-(sum(Sta >= Stas)/length(Stas));
 
-  } else if (approx == "chi2"){
+  } else{
+
+    res_x = f_x-repmat(t(matrix(colMeans(f_x))),r,1);
+    res_y = f_y-repmat(t(matrix(colMeans(f_y))),r,1);
+
+    d =expand.grid(1:ncol(f_x),1:ncol(f_y));
+    res = res_x[,d[,1]]*res_y[,d[,2]];
+    Cov = 1/r * (t(res)%*%res);
+
+    if (approx == "chi2"){
     i_Cov = ginv(Cov)
 
     Sta = r * (c(Cxy)%*%  i_Cov %*% c(Cxy) );
@@ -92,6 +93,7 @@ RIT <- function(x,y,approx="lpd4",seed=NULL){
         p=1-hbe(eig_d$values,Sta);
       }
     }
+  }
   }
 
   if (p<0) p=0;

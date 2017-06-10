@@ -1,4 +1,4 @@
-#' RCIT and RCoT - tests whether x and y are conditionally independent given z. Calls RIT if z is empty.
+#' RCoT - tests whether x and y are conditionally independent given z. Calls RIT if z is empty.
 #' @param x Random variable x.
 #' @param y Random variable y.
 #' @param z Random variable z.
@@ -21,7 +21,7 @@
 #' RCIT(x,y,z,seed=2);
 
 
-RCIT <- function(x,y,z=NULL,approx="lpd4",num_f=25,seed=NULL){
+RCoT <- function(x,y,z=NULL,approx="lpd4",num_f=25,seed=NULL){
 
   if (length(z)==0){
     out=RIT(x,y,approx=approx,seed=seed);
@@ -34,7 +34,6 @@ RCIT <- function(x,y,z=NULL,approx="lpd4",num_f=25,seed=NULL){
     z=matrix2(z);
 
     d=ncol(z);
-    y = cbind(y,z)
 
     z=z[,apply(z,2,sd)>0];
     z=matrix2(z);
@@ -109,30 +108,30 @@ RCIT <- function(x,y,z=NULL,approx="lpd4",num_f=25,seed=NULL){
       Cov = 1/r * (t(res)%*%res);
 
       if (approx == "chi2"){
-      i_Cov = ginv(Cov)
+        i_Cov = ginv(Cov)
 
-      Sta = r * (c(Cxy_z)%*%  i_Cov %*% c(Cxy_z) );
-      p = 1-pchisq(Sta, length(c(Cxy_z)));
-    } else{
+        Sta = r * (c(Cxy_z)%*%  i_Cov %*% c(Cxy_z) );
+        p = 1-pchisq(Sta, length(c(Cxy_z)));
+      } else{
 
-      eig_d = eigen(Cov);
-      eig_d$values=eig_d$values[eig_d$values>0];
+        eig_d = eigen(Cov);
+        eig_d$values=eig_d$values[eig_d$values>0];
 
-      if (approx == "gamma"){
-        p=1-sw(eig_d$values,Sta);
+        if (approx == "gamma"){
+          p=1-sw(eig_d$values,Sta);
 
-      } else if (approx == "hbe") {
+        } else if (approx == "hbe") {
 
-        p=1-hbe(eig_d$values,Sta);
-
-      } else if (approx == "lpd4"){
-        eig_d_values=eig_d$values;
-        p=try(1-lpb4(eig_d_values,Sta),silent=TRUE);
-        if (!is.numeric(p)){
           p=1-hbe(eig_d$values,Sta);
+
+        } else if (approx == "lpd4"){
+          eig_d_values=eig_d$values;
+          p=try(1-lpb4(eig_d_values,Sta),silent=TRUE);
+          if (!is.numeric(p)){
+            p=1-hbe(eig_d$values,Sta);
+          }
         }
       }
-    }
     }
 
     if (p<0) p=0;
