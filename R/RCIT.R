@@ -2,7 +2,12 @@
 #' @param x Random variable x.
 #' @param y Random variable y.
 #' @param z Random variable z.
-#' @param approx Method for approximating the null distribution. Default is the "lpd4," the Lindsay-Pilla-Basak method. Other options include "gamma" for the Satterthwaite-Welch method, "hbe" for the Hall-Buckley-Eagleson method, and "chi2" for a normalized statistic.
+#' @param approx Method for approximating the null distribution. Options include:
+#' "lpd4," the Lindsay-Pilla-Basak method (default),
+#' "gamma" for the Satterthwaite-Welch method,
+#' "hbe" for the Hall-Buckley-Eagleson method,
+#' "chi2" for a normalized chi-squared statistic,
+#' "perm" for permutation testing (warning: this one is slow but recommended for small samples generally <500 )
 #' @param corr TRUE corresponds to RCoT and FALSE to RCIT. Default is TRUE.
 #' @param num_f Number of features for conditioning set. Default is 25.
 #' @param seed The seed for controlling random number generation. Use if you want to replicate results exactly. Default is NULL.
@@ -20,7 +25,7 @@
 RCIT <- function(x,y,z=NULL,approx="lpd4",corr=TRUE,num_f=25,seed=NULL){
 
   if (length(z)==0){
-    out=RIT(x,y,approx="lpd4",seed=seed);
+    out=RIT(x,y,approx=approx,seed=seed);
     return(out)
   }
   else{
@@ -36,7 +41,7 @@ RCIT <- function(x,y,z=NULL,approx="lpd4",corr=TRUE,num_f=25,seed=NULL){
     z=matrix2(z);
 
     if (length(z)==0){
-      out=RIT(x,y,approx="lpd4", seed=seed);
+      out=RIT(x,y,approx=approx, seed=seed);
       return(out);
     } else if (sd(x)==0 | sd(y)==0){
       out=list(p=1,Sta=0);
@@ -86,7 +91,20 @@ RCIT <- function(x,y,z=NULL,approx="lpd4",corr=TRUE,num_f=25,seed=NULL){
     res = res_x[,d[,1]]*res_y[,d[,2]];
     Cov = 1/r * (t(res)%*%res);
 
-    if (approx == "chi2"){
+    if (approx == "perm"){
+      nperm =1000;
+
+      Stas = c();
+      for (p in 1:nperm){
+        perm = sample(1:r,r);
+        Sta_p = RIT_Sta_perm(res_x[perm,],res_y,r)
+        Stas = c(Stas, Sta_p);
+
+      }
+
+      p = 1-(sum(Sta >= Stas)/length(Stas));
+
+    } else if (approx == "chi2"){
       i_Cov = ginv(Cov)
 
       Sta = r * (c(Cxy_z)%*%  i_Cov %*% c(Cxy_z) );

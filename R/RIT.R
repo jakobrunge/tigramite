@@ -1,7 +1,12 @@
 #' Tests whether x and y are unconditionally independent
 #' @param x Random variable x.
 #' @param y Random variable y.
-#' @param approx Method for approximating the null distribution. Default is the "lpd4," the Lindsay-Pilla-Basak method. Other options include "gamma" for the Satterthwaite-Welch method, "hbe" for the Hall-Buckley-Eagleson method and "chi2" for a normalized statistic..
+#' @param approx Method for approximating the null distribution. Options include:
+#' "lpd4," the Lindsay-Pilla-Basak method (default),
+#' "gamma" for the Satterthwaite-Welch method,
+#' "hbe" for the Hall-Buckley-Eagleson method,
+#' "chi2" for a normalized chi-squared statistic,
+#' "perm" for permutation testing (warning: this one is slow but recommended for small samples generally <500 )
 #' @param seed The seed for controlling random number generation. Use if you want to replicate results exactly. Default is NULL.
 #' @return A list containing the p-value \code{p} and statistic \code{Sta}
 #' @examples
@@ -50,9 +55,20 @@ RIT <- function(x,y,approx="lpd4",seed=NULL){
   res = res_x[,d[,1]]*res_y[,d[,2]];
   Cov = 1/r * (t(res)%*%res);
 
+  if (approx == "perm"){
+    nperm =1000;
 
+    Stas = c();
+    for (p in 1:nperm){
+      perm = sample(1:r,r);
+      Sta_p = RIT_Sta_perm(f_x[perm,],f_y,r)
+      Stas = c(Stas, Sta_p);
 
-  if (approx == "chi2"){
+    }
+
+    p = 1-(sum(Sta >= Stas)/length(Stas));
+
+  } else if (approx == "chi2"){
     i_Cov = ginv(Cov)
 
     Sta = r * (c(Cxy)%*%  i_Cov %*% c(Cxy) );

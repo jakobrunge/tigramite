@@ -1,4 +1,4 @@
-#' KCIT - tests whether x and y are conditionally independent given z. Calls U_KCI if z is empty.
+#' RCIT and RCoT - tests whether x and y are conditionally independent given z. Calls U_KCI if z is empty.
 #' @param x Random variable x.
 #' @param y Random variable y.
 #' @param z Random variable z.
