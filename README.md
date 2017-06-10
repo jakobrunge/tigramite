@@ -1,10 +1,6 @@
 # RCIT
 This is an R package implementing the Randomized Conditional Independence Test (RCIT) and the Randomized conditional Correlation Test (RCoT).
 
-# Update (6/9/17)
-
-Added an option to approximate the null by permutation testing (approx="perm"). This method is slow but recommended for small samples (generally less than 500), where the asymptotic null cannot be accurately estimated.
-
 # Update (5/8/17)
 
 I have added an additional method for estimating the null distribution called "chi2" which normalizes the empirical partial cross-covariance matrix so that it asymptotically follows a Gaussian with diagonal covariance (after root-n multiplication). The resultant statistic therefore asymptotically obeys a central chi-squared distribution with d-degrees of freedom rather than a weighted sum of chi-squares. I find that the p-values are slightly less accurate than the default method in general. On the other hand, the new method outputs a normalized statistic, so the statistics are comparable without the same random seed. This method may be useful in algorithms like HITON-PC which initially sort variables according to the test statistic.
