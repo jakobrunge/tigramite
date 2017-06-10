@@ -1,6 +1,8 @@
 # 6/10/17
 -Added a permutation option to estimate the null (approx="perm"). May be better for smaller sample sizes, although the permutation doesn't change the fact that non-linear regression is difficult with few samples.
+
 -Separated RCIT and RCoT into two separate functions. 
+
 -Added KCIT from (Zhang et al., 2011).
 
 # 5/8/17
