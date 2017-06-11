@@ -7,7 +7,7 @@
 #' "gamma" for the Satterthwaite-Welch method,
 #' "hbe" for the Hall-Buckley-Eagleson method,
 #' "chi2" for a normalized chi-squared statistic,
-#' "perm" for permutation testing (warning: this one is slow but recommended for small samples generally <500 )
+#' "perm" for permutation testing (warning: this one is slow)
 #' @param num_f Number of features for conditioning set. Default is 25.
 #' @param seed The seed for controlling random number generation. Use if you want to replicate results exactly. Default is NULL.
 #' @return A list containing the p-value \code{p} and statistic \code{Sta}
