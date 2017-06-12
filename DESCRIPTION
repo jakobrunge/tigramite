@@ -7,6 +7,6 @@ Author: Eric V. Strobl
 Maintainer:  Eric V. Strobl <ericvonstrobl@gmail.com>
 Description:  RCIT and RCoT are approximate conditional independence tests that use random Fourier features taken from the same class of reproducing kernel Hilbert spaces used by KCIT. RCIT and RCoT are therefore significantly faster than KCIT while at least as accurate.
 Depends: momentchi2, MASS
-License: MIT
+License: CC BY-NC 4.0
 LazyData: TRUE
 RoxygenNote: 5.0.1
