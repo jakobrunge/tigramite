@@ -92,7 +92,7 @@
 
 <span class="kn">from</span> <span class="nn">tigramite.pcmci</span> <span class="k">import</span> <span class="n">PCMCI</span>
 
-<div class="viewcode-block" id="Model"><a class="viewcode-back" href="../../index.html#tigramite.models.Model">[docs]</a><span class="k">class</span> <span class="nc">Model</span><span class="p">():</span>
+<div class="viewcode-block" id="Models"><a class="viewcode-back" href="../../index.html#tigramite.models.Models">[docs]</a><span class="k">class</span> <span class="nc">Models</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;Base class for time series models.</span>
 
 <span class="sd">    Allows to fit any model from sklearn to the parents of a target variable.</span>
@@ -167,7 +167,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">=</span> <span class="n">verbosity</span>
 
 
-<div class="viewcode-block" id="Model.get_fit"><a class="viewcode-back" href="../../index.html#tigramite.models.Model.get_fit">[docs]</a>    <span class="k">def</span> <span class="nf">get_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">all_parents</span><span class="p">,</span> <span class="n">selected_variables</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<div class="viewcode-block" id="Models.get_fit"><a class="viewcode-back" href="../../index.html#tigramite.models.Models.get_fit">[docs]</a>    <span class="k">def</span> <span class="nf">get_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">all_parents</span><span class="p">,</span> <span class="n">selected_variables</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">tau_max</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Fit time series model.</span>
 
@@ -269,7 +269,7 @@
         <span class="k">return</span> <span class="n">fit_results</span></div>
 
 
-<div class="viewcode-block" id="Model.get_coefs"><a class="viewcode-back" href="../../index.html#tigramite.models.Model.get_coefs">[docs]</a>    <span class="k">def</span> <span class="nf">get_coefs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Models.get_coefs"><a class="viewcode-back" href="../../index.html#tigramite.models.Models.get_coefs">[docs]</a>    <span class="k">def</span> <span class="nf">get_coefs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns dictionary of coefficients for linear models.</span>
 
 <span class="sd">        Only for models from sklearn.linear_model</span>
@@ -292,7 +292,7 @@
         <span class="k">return</span> <span class="n">coeffs</span></div></div>
 
 
-<div class="viewcode-block" id="LinearMediation"><a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation">[docs]</a><span class="k">class</span> <span class="nc">LinearMediation</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="viewcode-block" id="LinearMediation"><a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation">[docs]</a><span class="k">class</span> <span class="nc">LinearMediation</span><span class="p">(</span><span class="n">Models</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Linear mediation analysis for time series models.</span>
 
 <span class="sd">    Fits linear model to parents and provides functions to return measures such</span>
@@ -405,7 +405,7 @@
                     <span class="k">return</span> <span class="n">X</span>
             <span class="n">data_transform</span> <span class="o">=</span> <span class="n">noscaler</span><span class="p">()</span>
 
-        <span class="n">Model</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+        <span class="n">Models</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
             <span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span>
             <span class="n">model</span><span class="o">=</span><span class="n">sklearn</span><span class="o">.</span><span class="n">linear_model</span><span class="o">.</span><span class="n">LinearRegression</span><span class="p">,</span>
             <span class="n">model_params</span><span class="o">=</span><span class="n">model_params</span><span class="p">,</span>
@@ -1024,7 +1024,7 @@
         <span class="k">return</span> <span class="n">amce</span></div></div>
        
 
-<div class="viewcode-block" id="Prediction"><a class="viewcode-back" href="../../index.html#tigramite.models.Prediction">[docs]</a><span class="k">class</span> <span class="nc">Prediction</span><span class="p">(</span><span class="n">Model</span><span class="p">,</span> <span class="n">PCMCI</span><span class="p">):</span>
+<div class="viewcode-block" id="Prediction"><a class="viewcode-back" href="../../index.html#tigramite.models.Prediction">[docs]</a><span class="k">class</span> <span class="nc">Prediction</span><span class="p">(</span><span class="n">Models</span><span class="p">,</span> <span class="n">PCMCI</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Prediction class for time series models.</span>
 
 <span class="sd">    Allows to fit and predict from any sklearn model. The optimal predictors can</span>
@@ -1088,7 +1088,7 @@
             <span class="p">):</span>
 
 
-        <span class="n">Model</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+        <span class="n">Models</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
             <span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span>
             <span class="n">model</span><span class="o">=</span><span class="n">prediction_model</span><span class="p">,</span>
             <span class="n">model_params</span><span class="o">=</span><span class="n">prediction_model_params</span><span class="p">,</span>
@@ -1217,7 +1217,7 @@
                         <span class="n">tau_max</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Fit time series model.</span>
 
-<span class="sd">        Wrapper around ``Model.get_fit()``. To each variable in</span>
+<span class="sd">        Wrapper around ``Models.get_fit()``. To each variable in</span>
 <span class="sd">        ``selected_targets``, the sklearn model is fitted with :math:`y` given</span>
 <span class="sd">        by the target variable, and :math:`X` given by its predictors. The</span>
 <span class="sd">        fitted model class is returned for later use.</span>
@@ -1329,7 +1329,7 @@
     <span class="kn">import</span> <span class="nn">data_processing</span> <span class="k">as</span> <span class="nn">pp</span>
 
     <span class="c1"># ###</span>
-    <span class="c1"># ### Model class</span>
+    <span class="c1"># ### Models class</span>
     <span class="c1"># ###</span>
 
     <span class="c1"># numpy.random.seed(44)</span>
@@ -1358,7 +1358,7 @@
     <span class="c1"># import sklearn</span>
     <span class="c1"># import sklearn.linear_model</span>
 
-    <span class="c1"># model = Model(dataframe=dataframe, </span>
+    <span class="c1"># model = Models(dataframe=dataframe, </span>
     <span class="c1">#     model = sklearn.linear_model.LinearRegression,</span>
     <span class="c1">#     # model = sklearn.gaussian_process.GaussianProcessRegressor,</span>
     <span class="c1">#     # model_params={&#39;fit_intercept&#39;:False},</span>

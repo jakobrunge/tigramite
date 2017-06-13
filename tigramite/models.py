@@ -28,7 +28,7 @@ except:
 
 from tigramite.pcmci import PCMCI
 
-class Model():
+class Models():
     """Base class for time series models.
 
     Allows to fit any model from sklearn to the parents of a target variable.
@@ -228,7 +228,7 @@ class Model():
         return coeffs
 
 
-class LinearMediation(Model):
+class LinearMediation(Models):
     r"""Linear mediation analysis for time series models.
 
     Fits linear model to parents and provides functions to return measures such
@@ -341,7 +341,7 @@ class LinearMediation(Model):
                     return X
             data_transform = noscaler()
 
-        Model.__init__(self, 
+        Models.__init__(self, 
             dataframe=dataframe,
             model=sklearn.linear_model.LinearRegression,
             model_params=model_params,
@@ -960,7 +960,7 @@ class LinearMediation(Model):
         return amce
        
 
-class Prediction(Model, PCMCI):
+class Prediction(Models, PCMCI):
     r"""Prediction class for time series models.
 
     Allows to fit and predict from any sklearn model. The optimal predictors can
@@ -1024,7 +1024,7 @@ class Prediction(Model, PCMCI):
             ):
 
 
-        Model.__init__(self, 
+        Models.__init__(self, 
             dataframe=dataframe,
             model=prediction_model,
             model_params=prediction_model_params,
@@ -1153,7 +1153,7 @@ class Prediction(Model, PCMCI):
                         tau_max=None):
         r"""Fit time series model.
 
-        Wrapper around ``Model.get_fit()``. To each variable in
+        Wrapper around ``Models.get_fit()``. To each variable in
         ``selected_targets``, the sklearn model is fitted with :math:`y` given
         by the target variable, and :math:`X` given by its predictors. The
         fitted model class is returned for later use.
@@ -1265,7 +1265,7 @@ if __name__ == '__main__':
     import data_processing as pp
 
     # ###
-    # ### Model class
+    # ### Models class
     # ###
 
     # numpy.random.seed(44)
@@ -1294,7 +1294,7 @@ if __name__ == '__main__':
     # import sklearn
     # import sklearn.linear_model
 
-    # model = Model(dataframe=dataframe, 
+    # model = Models(dataframe=dataframe, 
     #     model = sklearn.linear_model.LinearRegression,
     #     # model = sklearn.gaussian_process.GaussianProcessRegressor,
     #     # model_params={'fit_intercept':False},

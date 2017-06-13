@@ -129,7 +129,7 @@ Physical Review Letters, 108(25), 258701.
 <tr class="row-odd"><td><a class="reference internal" href="#module-tigramite.data_processing" title="tigramite.data_processing"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.data_processing</span></code></a></td>
 <td>Tigramite data processing functions.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="#tigramite.models.Model" title="tigramite.models.Model"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.models.Model</span></code></a>(dataframe,&nbsp;model[,&nbsp;...])</td>
+<tr class="row-even"><td><a class="reference internal" href="#tigramite.models.Models" title="tigramite.models.Models"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.models.Models</span></code></a>(dataframe,&nbsp;model[,&nbsp;...])</td>
 <td>Base class for time series models.</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#tigramite.models.LinearMediation" title="tigramite.models.LinearMediation"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.models.LinearMediation</span></code></a>(dataframe)</td>
@@ -1806,8 +1806,8 @@ its inverse) is implied. These should be the same for (i, j) and (j, i).</li>
 <h1><code class="xref py py-mod docutils literal"><span class="pre">tigramite.models</span></code>: Time series modeling, mediation, and prediction<a class="headerlink" href="#tigramite-models-time-series-modeling-mediation-and-prediction" title="Permalink to this headline">¶</a></h1>
 <p>Base class:</p>
 <dl class="class">
-<dt id="tigramite.models.Model">
-<em class="property">class </em><code class="descclassname">tigramite.models.</code><code class="descname">Model</code><span class="sig-paren">(</span><em>dataframe</em>, <em>model</em>, <em>model_params=None</em>, <em>data_transform=None</em>, <em>use_mask=False</em>, <em>mask_type=None</em>, <em>missing_flag=None</em>, <em>verbosity=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#Model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.Model" title="Permalink to this definition">¶</a></dt>
+<dt id="tigramite.models.Models">
+<em class="property">class </em><code class="descclassname">tigramite.models.</code><code class="descname">Models</code><span class="sig-paren">(</span><em>dataframe</em>, <em>model</em>, <em>model_params=None</em>, <em>data_transform=None</em>, <em>use_mask=False</em>, <em>mask_type=None</em>, <em>missing_flag=None</em>, <em>verbosity=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#Models"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.Models" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for time series models.</p>
 <p>Allows to fit any model from sklearn to the parents of a target variable.
 Also takes care of missing values, masking and preprocessing.</p>
@@ -1841,8 +1841,8 @@ Supplement of <a class="footnote-reference" href="#id5" id="id23">[1]</a>.</li>
 </tbody>
 </table>
 <dl class="method">
-<dt id="tigramite.models.Model.get_coefs">
-<code class="descname">get_coefs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#Model.get_coefs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.Model.get_coefs" title="Permalink to this definition">¶</a></dt>
+<dt id="tigramite.models.Models.get_coefs">
+<code class="descname">get_coefs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#Models.get_coefs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.Models.get_coefs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns dictionary of coefficients for linear models.</p>
 <p>Only for models from sklearn.linear_model</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -1859,8 +1859,8 @@ parents and the regression coefficients as values.</td>
 </dd></dl>
 
 <dl class="method">
-<dt id="tigramite.models.Model.get_fit">
-<code class="descname">get_fit</code><span class="sig-paren">(</span><em>all_parents</em>, <em>selected_variables=None</em>, <em>tau_max=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#Model.get_fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.Model.get_fit" title="Permalink to this definition">¶</a></dt>
+<dt id="tigramite.models.Models.get_fit">
+<code class="descname">get_fit</code><span class="sig-paren">(</span><em>all_parents</em>, <em>selected_variables=None</em>, <em>tau_max=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#Models.get_fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.Models.get_fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fit time series model.</p>
 <p>To each variable in selected_variables, the sklearn model is fitted
 with <img class="math" src="_images/math/276f7e256cbddeb81eee42e1efc348f3cb4ab5f8.png" alt="y"/> given by the target variable, and <img class="math" src="_images/math/7a7bb470119808e2db2879fc2b2526f467b7a40b.png" alt="X"/> given by its
@@ -2366,7 +2366,7 @@ Supplement of <a class="footnote-reference" href="#id5" id="id30">[1]</a>.</li>
 <dt id="tigramite.models.Prediction.fit">
 <code class="descname">fit</code><span class="sig-paren">(</span><em>target_predictors</em>, <em>selected_targets=None</em>, <em>tau_max=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#Prediction.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.Prediction.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fit time series model.</p>
-<p>Wrapper around <code class="docutils literal"><span class="pre">Model.get_fit()</span></code>. To each variable in
+<p>Wrapper around <code class="docutils literal"><span class="pre">Models.get_fit()</span></code>. To each variable in
 <code class="docutils literal"><span class="pre">selected_targets</span></code>, the sklearn model is fitted with <img class="math" src="_images/math/276f7e256cbddeb81eee42e1efc348f3cb4ab5f8.png" alt="y"/> given
 by the target variable, and <img class="math" src="_images/math/7a7bb470119808e2db2879fc2b2526f467b7a40b.png" alt="X"/> given by its predictors. The
 fitted model class is returned for later use.</p>
