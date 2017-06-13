@@ -30,6 +30,7 @@ def _construct_array(X, Y, Z, tau_max, data,
                      missing_flag=None,
                      return_cleaned_xyz=False,
                      do_checks=True,
+                     cut_off='2xtau_max',
                      verbosity=0):
     """Constructs array from variables X, Y, Z from data.
 
@@ -76,6 +77,14 @@ def _construct_array(X, Y, Z, tau_max, data,
 
     do_checks : bool, optional (default: True)
         Whether to perform sanity checks on input X,Y,Z
+
+    cut_off : {'2xtau_max', 'max_lag', 'max_lag_or_tau_max'}
+        How many samples to cutoff at the beginning. The default is '2xtau_max',
+        which guarantees that MCI tests are all conducted on the same samples. 
+        For modeling, 'max_lag_or_tau_max' can be used, which uses the maximum
+        of tau_max and the conditions, which is useful to compare multiple
+        models on the same sample. Last, 'max_lag' uses as much samples as
+        possible.
 
     verbosity : int, optional (default: 0)
         Level of verbosity.
@@ -136,8 +145,12 @@ def _construct_array(X, Y, Z, tau_max, data,
             raise ValueError("Y-nodes are %s, " % str(Y) +
                              "but one of the Y-nodes must have zero lag")
 
-    max_lag = 2*tau_max
-    # max_lag = max(abs(numpy.array(XYZ)[:, 1].min()), tau_max)
+    if cut_off == '2xtau_max':
+        max_lag = 2*tau_max
+    elif cut_off == 'max_lag':
+        max_lag = abs(numpy.array(XYZ)[:, 1].min())
+    elif cut_off == 'max_lag_or_tau_max':
+        max_lag = max(abs(numpy.array(XYZ)[:, 1].min()), tau_max)
 
     # Setup XYZ identifier
     xyz = numpy.array([0 for i in range(len(X))] +

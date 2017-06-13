@@ -94,6 +94,7 @@
                      <span class="n">missing_flag</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                      <span class="n">return_cleaned_xyz</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                      <span class="n">do_checks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                     <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;2xtau_max&#39;</span><span class="p">,</span>
                      <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Constructs array from variables X, Y, Z from data.</span>
 
@@ -140,6 +141,14 @@
 
 <span class="sd">    do_checks : bool, optional (default: True)</span>
 <span class="sd">        Whether to perform sanity checks on input X,Y,Z</span>
+
+<span class="sd">    cut_off : {&#39;2xtau_max&#39;, &#39;max_lag&#39;, &#39;max_lag_or_tau_max&#39;}</span>
+<span class="sd">        How many samples to cutoff at the beginning. The default is &#39;2xtau_max&#39;,</span>
+<span class="sd">        which guarantees that MCI tests are all conducted on the same samples. </span>
+<span class="sd">        For modeling, &#39;max_lag_or_tau_max&#39; can be used, which uses the maximum</span>
+<span class="sd">        of tau_max and the conditions, which is useful to compare multiple</span>
+<span class="sd">        models on the same sample. Last, &#39;max_lag&#39; uses as much samples as</span>
+<span class="sd">        possible.</span>
 
 <span class="sd">    verbosity : int, optional (default: 0)</span>
 <span class="sd">        Level of verbosity.</span>
@@ -200,8 +209,12 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Y-nodes are </span><span class="si">%s</span><span class="s2">, &quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span> <span class="o">+</span>
                              <span class="s2">&quot;but one of the Y-nodes must have zero lag&quot;</span><span class="p">)</span>
 
-    <span class="n">max_lag</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">tau_max</span>
-    <span class="c1"># max_lag = max(abs(numpy.array(XYZ)[:, 1].min()), tau_max)</span>
+    <span class="k">if</span> <span class="n">cut_off</span> <span class="o">==</span> <span class="s1">&#39;2xtau_max&#39;</span><span class="p">:</span>
+        <span class="n">max_lag</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">tau_max</span>
+    <span class="k">elif</span> <span class="n">cut_off</span> <span class="o">==</span> <span class="s1">&#39;max_lag&#39;</span><span class="p">:</span>
+        <span class="n">max_lag</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">XYZ</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
+    <span class="k">elif</span> <span class="n">cut_off</span> <span class="o">==</span> <span class="s1">&#39;max_lag_or_tau_max&#39;</span><span class="p">:</span>
+        <span class="n">max_lag</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">XYZ</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()),</span> <span class="n">tau_max</span><span class="p">)</span>
 
     <span class="c1"># Setup XYZ identifier</span>
     <span class="n">xyz</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">))]</span> <span class="o">+</span>

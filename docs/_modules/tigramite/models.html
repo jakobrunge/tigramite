@@ -168,7 +168,8 @@
 
 
 <div class="viewcode-block" id="Models.get_fit"><a class="viewcode-back" href="../../index.html#tigramite.models.Models.get_fit">[docs]</a>    <span class="k">def</span> <span class="nf">get_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">all_parents</span><span class="p">,</span> <span class="n">selected_variables</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">tau_max</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                 <span class="n">tau_max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;max_lag_or_tau_max&#39;</span><span class="p">,</span>
+                 <span class="n">return_data</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Fit time series model.</span>
 
 <span class="sd">        To each variable in selected_variables, the sklearn model is fitted</span>
@@ -187,6 +188,17 @@
 
 <span class="sd">        tau_max : int, optional (default: None)</span>
 <span class="sd">            Maximum time lag. If None, the maximum lag in all_parents is used.</span>
+
+<span class="sd">        cut_off : {&#39;2xtau_max&#39;, &#39;max_lag&#39;, &#39;max_lag_or_tau_max&#39;}</span>
+<span class="sd">            How many samples to cutoff at the beginning. The default is</span>
+<span class="sd">            &#39;2xtau_max&#39;, which guarantees that MCI tests are all conducted on</span>
+<span class="sd">            the same samples.  For modeling, &#39;max_lag_or_tau_max&#39; can be used,</span>
+<span class="sd">            which uses the maximum of tau_max and the conditions, which is</span>
+<span class="sd">            useful to compare multiple models on the same sample. Last,</span>
+<span class="sd">            &#39;max_lag&#39; uses as much samples as possible.</span>
+
+<span class="sd">        return_data : bool, optional (default: False)</span>
+<span class="sd">            Whether to save the data array.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -219,8 +231,6 @@
                                  <span class="s2">&quot; max_parents_lag = </span><span class="si">%d</span><span class="s2">&quot;</span>
                                  <span class="s2">&quot;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span><span class="p">,</span> <span class="n">max_parents_lag</span><span class="p">))</span>
 
-        <span class="c1"># data = self.dataframe.values</span>
-
         <span class="n">fit_results</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_variables</span><span class="p">:</span>
             <span class="n">Y</span> <span class="o">=</span> <span class="p">[(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
@@ -233,13 +243,9 @@
                                     <span class="n">mask</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span> 
                                     <span class="n">mask_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span><span class="p">,</span>
                                     <span class="n">missing_flag</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span><span class="p">,</span>
+                                    <span class="n">cut_off</span><span class="o">=</span><span class="n">cut_off</span><span class="p">,</span>
                                     <span class="n">verbosity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
 
-
-            <span class="c1"># print self.data</span>
-            <span class="c1"># print array.T</span>
-
-            <span class="c1"># print array.shape</span>
             <span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
             <span class="n">dim_z</span> <span class="o">=</span> <span class="n">dim</span> <span class="o">-</span> <span class="mi">2</span>
 
@@ -259,6 +265,8 @@
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_transform</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">fit_results</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="s1">&#39;data_transform&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_transform</span><span class="p">)</span>
 
+                <span class="k">if</span> <span class="n">return_data</span><span class="p">:</span>
+                    <span class="n">fit_results</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">array</span>
                 <span class="c1"># print j, model.coef_, model.intercept_</span>
 
             <span class="k">else</span><span class="p">:</span>
@@ -637,7 +645,7 @@
         <span class="k">return</span> <span class="n">tsg</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_get_mediation_graph_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>  <span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">include_neighbors</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="LinearMediation.get_mediation_graph_data"><a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_mediation_graph_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_mediation_graph_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>  <span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">include_neighbors</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Returns link and node weights for mediation analysis.</span>
 <span class="sd">        </span>
 <span class="sd">        Returns array with non-zero entries for links that are on causal</span>
@@ -701,7 +709,7 @@
                       <span class="s1">&#39;path_val_matrix&#39;</span><span class="p">:</span><span class="n">path_val_matrix</span><span class="p">,</span>
                       <span class="s1">&#39;tsg_path_val_matrix&#39;</span><span class="p">:</span><span class="n">tsg_path_val_matrix</span><span class="p">,}</span>
 
-        <span class="k">return</span> <span class="n">graph_data</span>
+        <span class="k">return</span> <span class="n">graph_data</span></div>
 
 
 <div class="viewcode-block" id="LinearMediation.get_coeff"><a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_coeff">[docs]</a>    <span class="k">def</span> <span class="nf">get_coeff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
@@ -1115,11 +1123,13 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">mask</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">mask</span>
 
+        <span class="n">T</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataframe</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">train_mask</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">train_mask</span><span class="p">[</span><span class="n">test_indices</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_mask</span><span class="p">[[</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">T</span><span class="p">)</span> <span class="k">if</span> <span class="n">t</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">train_indices</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">True</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">test_mask</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">test_mask</span><span class="p">[</span><span class="n">train_indices</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_mask</span><span class="p">[[</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">T</span><span class="p">)</span> <span class="k">if</span> <span class="n">t</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">test_indices</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">True</span>
 
         <span class="n">dataframe_here</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)</span>
         <span class="n">dataframe_here</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_mask</span>
@@ -1214,7 +1224,7 @@
 
 
 <div class="viewcode-block" id="Prediction.fit"><a class="viewcode-back" href="../../index.html#tigramite.models.Prediction.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_predictors</span><span class="p">,</span> <span class="n">selected_targets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                        <span class="n">tau_max</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                        <span class="n">tau_max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_data</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Fit time series model.</span>
 
 <span class="sd">        Wrapper around ``Models.get_fit()``. To each variable in</span>
@@ -1235,6 +1245,13 @@
 <span class="sd">        tau_max : int, optional (default: None)</span>
 <span class="sd">            Maximum time lag. If None, the maximum lag in target_predictors is </span>
 <span class="sd">            used.</span>
+
+<span class="sd">        return_data : bool, optional (default: False)</span>
+<span class="sd">            Whether to save the data array.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self : instance of self</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">target_predictors</span> <span class="o">=</span> <span class="n">target_predictors</span>
@@ -1254,10 +1271,15 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">fitted_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_fit</span><span class="p">(</span>
                                 <span class="n">all_parents</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">target_predictors</span><span class="p">,</span>
                                 <span class="n">selected_variables</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_targets</span><span class="p">,</span>
-                                <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span>
-                                <span class="p">)</span></div>
+                                <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
+                                <span class="n">return_data</span><span class="o">=</span><span class="n">return_data</span><span class="p">,</span>
+                                <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
     
-<div class="viewcode-block" id="Prediction.predict"><a class="viewcode-back" href="../../index.html#tigramite.models.Prediction.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">pred_params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Prediction.predict"><a class="viewcode-back" href="../../index.html#tigramite.models.Prediction.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">new_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pred_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;max_lag_or_tau_max&#39;</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Predict target variable with fitted model.</span>
 
 <span class="sd">        Uses the model.predict() function of the sklearn model.</span>
@@ -1267,8 +1289,19 @@
 <span class="sd">        target : int</span>
 <span class="sd">            Index of target variable.</span>
 
+<span class="sd">        new_data : data object, optional</span>
+<span class="sd">            New Tigramite dataframe object with optional new mask.</span>
+
 <span class="sd">        pred_params : dict, optional</span>
 <span class="sd">            Optional parameters passed on to sklearn prediction function.</span>
+
+<span class="sd">        cut_off : {&#39;2xtau_max&#39;, &#39;max_lag&#39;, &#39;max_lag_or_tau_max&#39;}</span>
+<span class="sd">            How many samples to cutoff at the beginning. The default is</span>
+<span class="sd">            &#39;2xtau_max&#39;, which guarantees that MCI tests are all conducted on</span>
+<span class="sd">            the same samples.  For modeling, &#39;max_lag_or_tau_max&#39; can be used,</span>
+<span class="sd">            which uses the maximum of tau_max and the conditions, which is</span>
+<span class="sd">            useful to compare multiple models on the same sample. Last,</span>
+<span class="sd">            &#39;max_lag&#39; uses as much samples as possible.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1284,15 +1317,20 @@
         <span class="k">if</span> <span class="n">pred_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">pred_params</span> <span class="o">=</span> <span class="p">{}</span>
 
+        <span class="k">if</span> <span class="n">new_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">values</span>
+            <span class="c1"># Set mask to test_indices</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_mask</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">new_data</span><span class="o">.</span><span class="n">values</span>
+            <span class="k">if</span> <span class="n">new_data</span><span class="o">.</span><span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">mask</span> <span class="o">=</span> <span class="n">new_data</span><span class="o">.</span><span class="n">mask</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mask</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+
         <span class="k">if</span> <span class="n">target</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_targets</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Target </span><span class="si">%s</span><span class="s2"> not yet fitted&quot;</span> <span class="o">%</span> <span class="n">target</span><span class="p">)</span>
-
-        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">values</span>
-
-        <span class="c1"># Set mask to test_indices</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_mask</span>
-
-        <span class="c1"># print self.tau_max</span>
 
         <span class="n">Y</span> <span class="o">=</span> <span class="p">[(</span><span class="n">target</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
         <span class="n">X</span> <span class="o">=</span> <span class="p">[(</span><span class="n">target</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span> <span class="c1"># dummy</span>
@@ -1300,11 +1338,12 @@
 
         <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span> <span class="o">=</span> <span class="n">_construct_array</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> 
                                 <span class="n">tau_max</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span><span class="p">,</span>
-                                <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                                <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
                                 <span class="n">use_mask</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">use_mask</span><span class="p">,</span>
-                                <span class="n">mask</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span> 
+                                <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span> 
                                 <span class="n">mask_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span><span class="p">,</span>
                                 <span class="n">missing_flag</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span><span class="p">,</span>
+                                <span class="n">cut_off</span><span class="o">=</span><span class="n">cut_off</span><span class="p">,</span>
                                 <span class="n">verbosity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_transform</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1313,15 +1352,21 @@
             <span class="n">array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitted_model</span><span class="p">[</span><span class="n">target</span><span class="p">][</span><span class="s1">&#39;data_transform&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">array</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">test_array</span> <span class="o">=</span> <span class="n">array</span>
+        <span class="c1"># print array.shape</span>
 
         <span class="n">pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitted_model</span><span class="p">[</span><span class="n">target</span><span class="p">][</span><span class="s1">&#39;model&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">array</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="o">**</span><span class="n">pred_params</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">pred</span></div>
 
 
+<div class="viewcode-block" id="Prediction.get_train_array"><a class="viewcode-back" href="../../index.html#tigramite.models.Prediction.get_train_array">[docs]</a>    <span class="k">def</span> <span class="nf">get_train_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns training array.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitted_model</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="s1">&#39;data&#39;</span><span class="p">]</span></div>
+
 <div class="viewcode-block" id="Prediction.get_test_array"><a class="viewcode-back" href="../../index.html#tigramite.models.Prediction.get_test_array">[docs]</a>    <span class="k">def</span> <span class="nf">get_test_array</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns test array.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_array</span></div></div>
+
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
 
@@ -1397,7 +1442,7 @@
 
     <span class="c1"># i=0; tau=3; j=2</span>
 
-    <span class="c1"># graph_data = med._get_mediation_graph_data(i=i, tau=tau, j=j, </span>
+    <span class="c1"># graph_data = med.get_mediation_graph_data(i=i, tau=tau, j=j, </span>
     <span class="c1">#                                         include_neighbors=True)</span>
 
     <span class="c1"># import plotting as tp</span>
@@ -1466,13 +1511,13 @@
         <span class="c1"># prediction_model_params = {&#39;n_neighbors&#39;:5},</span>
         <span class="c1"># prediction_model_params = {&#39;alpha&#39;:0., &#39;kernel&#39;:sklearn.gaussian_process.kernels.RBF() +</span>
         <span class="c1">#                                     sklearn.gaussian_process.kernels.WhiteKernel()},</span>
-        <span class="n">data_transform</span><span class="o">=</span><span class="n">sklearn</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">StandardScaler</span><span class="p">(),</span>
+        <span class="c1"># data_transform=sklearn.preprocessing.StandardScaler(),</span>
         <span class="n">train_indices</span><span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="mf">0.8</span><span class="o">*</span><span class="n">T</span><span class="p">)),</span>
         <span class="n">test_indices</span><span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="mf">0.8</span><span class="o">*</span><span class="n">T</span><span class="p">),</span> <span class="n">T</span><span class="p">),</span>
         <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span>
         <span class="p">)</span>
 
-    <span class="n">tau_max</span> <span class="o">=</span> <span class="mi">30</span>
+    <span class="n">tau_max</span> <span class="o">=</span> <span class="mi">25</span>
     <span class="n">steps_ahead</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">target</span> <span class="o">=</span> <span class="mi">2</span>
 
@@ -1485,21 +1530,29 @@
                       <span class="n">max_conds_dim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                       <span class="n">max_combinations</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                       <span class="p">)</span>
-    <span class="c1"># all_predictors = {2:[(2, -1)]}</span>
-    <span class="c1"># print med.all_parents</span>
+
+    <span class="nb">print</span> <span class="n">all_predictors</span>
     
     <span class="n">pred</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">target_predictors</span><span class="o">=</span><span class="n">all_predictors</span><span class="p">,</span> 
                     <span class="n">selected_targets</span><span class="o">=</span><span class="p">[</span><span class="n">target</span><span class="p">],</span>
-                        <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">)</span>
+                        <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
+                        <span class="n">return_data</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="c1"># print all_predictors[target]</span>
 
+    <span class="n">new_data</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">pp</span><span class="o">.</span><span class="n">var_process</span><span class="p">(</span><span class="n">links_coeffs</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="mi">100</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+
     <span class="n">predicted</span> <span class="o">=</span> <span class="n">pred</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">target</span><span class="p">,</span>
+                            <span class="c1"># new_data=new_data,</span>
+                            <span class="c1"># cut_off = &#39;max_lag&#39;,</span>
                             <span class="c1"># pred_params = {&#39;return_std&#39;:True}</span>
                             <span class="p">)</span>
     <span class="c1"># print predicted[1]</span>
 
     <span class="n">true_data</span> <span class="o">=</span> <span class="n">pred</span><span class="o">.</span><span class="n">get_test_array</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">train_data</span> <span class="o">=</span> <span class="n">pred</span><span class="o">.</span><span class="n">get_train_array</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="n">pred</span><span class="o">.</span><span class="n">get_test_array</span><span class="p">()[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:</span><span class="mi">10</span><span class="p">]</span>
+    <span class="nb">print</span> <span class="n">train_data</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:</span><span class="mi">10</span><span class="p">]</span>
 
     <span class="nb">print</span> <span class="s2">&quot;NRMSE = </span><span class="si">%.2f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">true_data</span> <span class="o">-</span> <span class="n">predicted</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">/</span><span class="n">true_data</span><span class="o">.</span><span class="n">std</span><span class="p">())</span>
     <span class="n">pylab</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">true_data</span><span class="p">,</span> <span class="n">predicted</span><span class="p">)</span>
@@ -1507,35 +1560,35 @@
 
     <span class="c1"># pylab.errorbar(true_data, predicted[0], yerr=predicted[1], fmt=&#39;o&#39;)</span>
 
-    <span class="n">pylab</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;grey&#39;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">pylab</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">transAxes</span><span class="p">)</span>
-    <span class="c1"># pylab.show()</span>
+    <span class="n">pylab</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">true_data</span><span class="p">,</span> <span class="n">true_data</span><span class="p">,</span> <span class="s1">&#39;k-&#39;</span><span class="p">)</span>
+    <span class="n">pylab</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
     <span class="c1"># pylab.figure()</span>
-    <span class="n">pred_bad</span> <span class="o">=</span> <span class="n">Prediction</span><span class="p">(</span>
-        <span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span>
-        <span class="n">cond_ind_model</span><span class="o">=</span><span class="n">ParCorr</span><span class="p">,</span>
-        <span class="n">prediction_model</span> <span class="o">=</span> <span class="n">sklearn</span><span class="o">.</span><span class="n">linear_model</span><span class="o">.</span><span class="n">LinearRegression</span><span class="p">,</span>
-        <span class="n">data_transform</span><span class="o">=</span><span class="n">sklearn</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">StandardScaler</span><span class="p">(),</span>
-        <span class="n">train_indices</span><span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="mf">0.8</span><span class="o">*</span><span class="n">T</span><span class="p">)),</span>
-        <span class="n">test_indices</span><span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="mf">0.8</span><span class="o">*</span><span class="n">T</span><span class="p">),</span> <span class="n">T</span><span class="p">),</span>
-        <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span>
-        <span class="p">)</span>
-    <span class="n">all_predictors</span> <span class="o">=</span> <span class="p">{</span><span class="mi">2</span><span class="p">:[(</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="n">tau</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="k">for</span> <span class="n">tau</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">+</span><span class="mi">1</span><span class="p">)]}</span>
-    <span class="n">pred_bad</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">target_predictors</span><span class="o">=</span><span class="n">all_predictors</span><span class="p">,</span> 
-                    <span class="n">selected_targets</span><span class="o">=</span><span class="p">[</span><span class="n">target</span><span class="p">],</span>
-                        <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">)</span>
+    <span class="c1"># pred_bad = Prediction(</span>
+    <span class="c1">#     dataframe=dataframe,</span>
+    <span class="c1">#     cond_ind_model=ParCorr,</span>
+    <span class="c1">#     prediction_model = sklearn.linear_model.LinearRegression,</span>
+    <span class="c1">#     data_transform=sklearn.preprocessing.StandardScaler(),</span>
+    <span class="c1">#     train_indices= range(int(0.8*T)),</span>
+    <span class="c1">#     test_indices= range(int(0.8*T), T),</span>
+    <span class="c1">#     verbosity=0</span>
+    <span class="c1">#     )</span>
+    <span class="c1"># all_predictors = {2:[(i, -tau) for i in range(3) for tau in range(1, tau_max+1)]}</span>
+    <span class="c1"># pred_bad.fit(target_predictors=all_predictors, </span>
+    <span class="c1">#                 selected_targets=[target],</span>
+    <span class="c1">#                     tau_max=tau_max)</span>
 
-    <span class="n">predicted</span> <span class="o">=</span> <span class="n">pred_bad</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
-    <span class="n">true_data</span> <span class="o">=</span> <span class="n">pred_bad</span><span class="o">.</span><span class="n">get_test_array</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="nb">print</span> <span class="s2">&quot;NRMSE = </span><span class="si">%.2f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">true_data</span> <span class="o">-</span> <span class="n">predicted</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">/</span><span class="n">true_data</span><span class="o">.</span><span class="n">std</span><span class="p">())</span>
+    <span class="c1"># predicted = pred_bad.predict(target)</span>
+    <span class="c1"># true_data = pred_bad.get_test_array()[0]</span>
+    <span class="c1"># print &quot;NRMSE = %.2f&quot; % (numpy.abs(true_data - predicted).mean()/true_data.std())</span>
 
-    <span class="n">pylab</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">true_data</span><span class="p">,</span> <span class="n">predicted</span><span class="p">)</span>
-    <span class="n">pylab</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">NRMSE = </span><span class="si">%.2f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">true_data</span> <span class="o">-</span> <span class="n">predicted</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">/</span><span class="n">true_data</span><span class="o">.</span><span class="n">std</span><span class="p">()))</span>
-    <span class="n">pylab</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;grey&#39;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">pylab</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">transAxes</span><span class="p">)</span>
-    <span class="n">pylab</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;True test data&#39;</span><span class="p">)</span>
-    <span class="n">pylab</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Predicted test data&#39;</span><span class="p">)</span>
+    <span class="c1"># pylab.scatter(true_data, predicted)</span>
+    <span class="c1"># pylab.title(&quot;\nNRMSE = %.2f&quot; % (numpy.abs(true_data - predicted).mean()/true_data.std()))</span>
+    <span class="c1"># pylab.plot(true_data, true_data, &#39;k-&#39;)</span>
+    <span class="c1"># pylab.xlabel(&#39;True test data&#39;)</span>
+    <span class="c1"># pylab.ylabel(&#39;Predicted test data&#39;)</span>
 
-    <span class="n">pylab</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="c1"># pylab.show()</span>
 </pre></div>
 
           </div>

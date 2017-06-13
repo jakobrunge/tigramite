@@ -104,7 +104,8 @@ class Models():
 
 
     def get_fit(self, all_parents, selected_variables=None,
-                 tau_max=None):
+                 tau_max=None, cut_off='max_lag_or_tau_max',
+                 return_data=False):
         """Fit time series model.
 
         To each variable in selected_variables, the sklearn model is fitted
@@ -123,6 +124,17 @@ class Models():
 
         tau_max : int, optional (default: None)
             Maximum time lag. If None, the maximum lag in all_parents is used.
+
+        cut_off : {'2xtau_max', 'max_lag', 'max_lag_or_tau_max'}
+            How many samples to cutoff at the beginning. The default is
+            '2xtau_max', which guarantees that MCI tests are all conducted on
+            the same samples.  For modeling, 'max_lag_or_tau_max' can be used,
+            which uses the maximum of tau_max and the conditions, which is
+            useful to compare multiple models on the same sample. Last,
+            'max_lag' uses as much samples as possible.
+
+        return_data : bool, optional (default: False)
+            Whether to save the data array.
 
         Returns
         -------
@@ -155,8 +167,6 @@ class Models():
                                  " max_parents_lag = %d"
                                  "" % (self.tau_max, max_parents_lag))
 
-        # data = self.dataframe.values
-
         fit_results = {}
         for j in self.selected_variables:
             Y = [(j, 0)]
@@ -169,13 +179,9 @@ class Models():
                                     mask=self.mask, 
                                     mask_type=self.mask_type,
                                     missing_flag=self.missing_flag,
+                                    cut_off=cut_off,
                                     verbosity=self.verbosity)
 
-
-            # print self.data
-            # print array.T
-
-            # print array.shape
             dim, T = array.shape
             dim_z = dim - 2
 
@@ -195,6 +201,8 @@ class Models():
                 if self.data_transform is not None:
                     fit_results[j]['data_transform'] = deepcopy(self.data_transform)
 
+                if return_data:
+                    fit_results[j]['data'] = array
                 # print j, model.coef_, model.intercept_
 
             else:
@@ -573,7 +581,7 @@ class LinearMediation(Models):
         return tsg
 
 
-    def _get_mediation_graph_data(self,  i, tau, j, include_neighbors=False):
+    def get_mediation_graph_data(self,  i, tau, j, include_neighbors=False):
         r"""Returns link and node weights for mediation analysis.
         
         Returns array with non-zero entries for links that are on causal
@@ -1051,11 +1059,13 @@ class Prediction(Models, PCMCI):
         else:
             mask = dataframe.mask
 
+        T = len(dataframe.values)
+
         self.train_mask = numpy.copy(mask)
-        self.train_mask[test_indices] = True
+        self.train_mask[[t for t in range(T) if t not in train_indices]] = True
 
         self.test_mask = numpy.copy(mask)
-        self.test_mask[train_indices] = True
+        self.test_mask[[t for t in range(T) if t not in test_indices]] = True
 
         dataframe_here = deepcopy(dataframe)
         dataframe_here.mask = self.train_mask
@@ -1150,7 +1160,7 @@ class Prediction(Models, PCMCI):
 
 
     def fit(self, target_predictors, selected_targets=None,
-                        tau_max=None):
+                        tau_max=None, return_data=False):
         r"""Fit time series model.
 
         Wrapper around ``Models.get_fit()``. To each variable in
@@ -1171,6 +1181,13 @@ class Prediction(Models, PCMCI):
         tau_max : int, optional (default: None)
             Maximum time lag. If None, the maximum lag in target_predictors is 
             used.
+
+        return_data : bool, optional (default: False)
+            Whether to save the data array.
+
+        Returns
+        -------
+        self : instance of self
         """
 
         self.target_predictors = target_predictors
@@ -1190,10 +1207,15 @@ class Prediction(Models, PCMCI):
         self.fitted_model = self.get_fit(
                                 all_parents=self.target_predictors,
                                 selected_variables=self.selected_targets,
-                                tau_max=tau_max
+                                tau_max=tau_max,
+                                return_data=return_data,
                                 )
+
+        return self
+
     
-    def predict(self, target, pred_params=None):
+    def predict(self, target, new_data=None, pred_params=None,
+                cut_off='max_lag_or_tau_max'):
         r"""Predict target variable with fitted model.
 
         Uses the model.predict() function of the sklearn model.
@@ -1203,8 +1225,19 @@ class Prediction(Models, PCMCI):
         target : int
             Index of target variable.
 
+        new_data : data object, optional
+            New Tigramite dataframe object with optional new mask.
+
         pred_params : dict, optional
             Optional parameters passed on to sklearn prediction function.
+
+        cut_off : {'2xtau_max', 'max_lag', 'max_lag_or_tau_max'}
+            How many samples to cutoff at the beginning. The default is
+            '2xtau_max', which guarantees that MCI tests are all conducted on
+            the same samples.  For modeling, 'max_lag_or_tau_max' can be used,
+            which uses the maximum of tau_max and the conditions, which is
+            useful to compare multiple models on the same sample. Last,
+            'max_lag' uses as much samples as possible.
 
         Returns
         -------
@@ -1220,15 +1253,20 @@ class Prediction(Models, PCMCI):
         if pred_params is None:
             pred_params = {}
 
+        if new_data is None:
+            data = self.dataframe.values
+            # Set mask to test_indices
+            mask = self.test_mask
+        else:
+            data = new_data.values
+            if new_data.mask is not None:
+                mask = new_data.mask
+            else:
+                mask = numpy.zeros(data.shape)
+
+
         if target not in self.selected_targets:
             raise ValueError("Target %s not yet fitted" % target)
-
-        data = self.dataframe.values
-
-        # Set mask to test_indices
-        self.mask = self.test_mask
-
-        # print self.tau_max
 
         Y = [(target, 0)]
         X = [(target, 0)] # dummy
@@ -1236,11 +1274,12 @@ class Prediction(Models, PCMCI):
 
         array, xyz = _construct_array(X, Y, Z, 
                                 tau_max=self.tau_max,
-                                data=self.data,
+                                data=data,
                                 use_mask=self.use_mask,
-                                mask=self.mask, 
+                                mask=mask, 
                                 mask_type=self.mask_type,
                                 missing_flag=self.missing_flag,
+                                cut_off=cut_off,
                                 verbosity=self.verbosity)
 
         if self.data_transform is not None:
@@ -1249,15 +1288,21 @@ class Prediction(Models, PCMCI):
             array = self.fitted_model[target]['data_transform'].transform(X=array.T).T
 
         self.test_array = array
+        # print array.shape
 
         pred = self.fitted_model[target]['model'].predict(X=array[2:].T, **pred_params)
 
         return pred
 
 
+    def get_train_array(self, j):
+        """Returns training array."""
+        return self.fitted_model[j]['data']
+
     def get_test_array(self):
         """Returns test array."""
         return self.test_array
+
 
 if __name__ == '__main__':
 
@@ -1333,7 +1378,7 @@ if __name__ == '__main__':
 
     # i=0; tau=3; j=2
 
-    # graph_data = med._get_mediation_graph_data(i=i, tau=tau, j=j, 
+    # graph_data = med.get_mediation_graph_data(i=i, tau=tau, j=j, 
     #                                         include_neighbors=True)
 
     # import plotting as tp
@@ -1402,13 +1447,13 @@ if __name__ == '__main__':
         # prediction_model_params = {'n_neighbors':5},
         # prediction_model_params = {'alpha':0., 'kernel':sklearn.gaussian_process.kernels.RBF() +
         #                                     sklearn.gaussian_process.kernels.WhiteKernel()},
-        data_transform=sklearn.preprocessing.StandardScaler(),
+        # data_transform=sklearn.preprocessing.StandardScaler(),
         train_indices= range(int(0.8*T)),
         test_indices= range(int(0.8*T), T),
         verbosity=0
         )
 
-    tau_max = 30
+    tau_max = 25
     steps_ahead = 1
     target = 2
 
@@ -1421,21 +1466,29 @@ if __name__ == '__main__':
                       max_conds_dim=None,
                       max_combinations=1,
                       )
-    # all_predictors = {2:[(2, -1)]}
-    # print med.all_parents
+
+    print all_predictors
     
     pred.fit(target_predictors=all_predictors, 
                     selected_targets=[target],
-                        tau_max=tau_max)
+                        tau_max=tau_max,
+                        return_data=True)
 
     # print all_predictors[target]
 
+    new_data = pp.DataFrame(pp.var_process(links_coeffs, T=100)[0])
+
     predicted = pred.predict(target,
+                            # new_data=new_data,
+                            # cut_off = 'max_lag',
                             # pred_params = {'return_std':True}
                             )
     # print predicted[1]
 
     true_data = pred.get_test_array()[0]
+    train_data = pred.get_train_array(target)
+    print pred.get_test_array()[0, :10]
+    print train_data[0, :10]
 
     print "NRMSE = %.2f" % (numpy.abs(true_data - predicted).mean()/true_data.std())
     pylab.scatter(true_data, predicted)
@@ -1443,32 +1496,32 @@ if __name__ == '__main__':
 
     # pylab.errorbar(true_data, predicted[0], yerr=predicted[1], fmt='o')
 
-    pylab.plot([0, 1], [0, 1], color='grey', transform=pylab.gca().transAxes)
-    # pylab.show()
+    pylab.plot(true_data, true_data, 'k-')
+    pylab.show()
 
     # pylab.figure()
-    pred_bad = Prediction(
-        dataframe=dataframe,
-        cond_ind_model=ParCorr,
-        prediction_model = sklearn.linear_model.LinearRegression,
-        data_transform=sklearn.preprocessing.StandardScaler(),
-        train_indices= range(int(0.8*T)),
-        test_indices= range(int(0.8*T), T),
-        verbosity=0
-        )
-    all_predictors = {2:[(i, -tau) for i in range(3) for tau in range(1, tau_max+1)]}
-    pred_bad.fit(target_predictors=all_predictors, 
-                    selected_targets=[target],
-                        tau_max=tau_max)
+    # pred_bad = Prediction(
+    #     dataframe=dataframe,
+    #     cond_ind_model=ParCorr,
+    #     prediction_model = sklearn.linear_model.LinearRegression,
+    #     data_transform=sklearn.preprocessing.StandardScaler(),
+    #     train_indices= range(int(0.8*T)),
+    #     test_indices= range(int(0.8*T), T),
+    #     verbosity=0
+    #     )
+    # all_predictors = {2:[(i, -tau) for i in range(3) for tau in range(1, tau_max+1)]}
+    # pred_bad.fit(target_predictors=all_predictors, 
+    #                 selected_targets=[target],
+    #                     tau_max=tau_max)
 
-    predicted = pred_bad.predict(target)
-    true_data = pred_bad.get_test_array()[0]
-    print "NRMSE = %.2f" % (numpy.abs(true_data - predicted).mean()/true_data.std())
+    # predicted = pred_bad.predict(target)
+    # true_data = pred_bad.get_test_array()[0]
+    # print "NRMSE = %.2f" % (numpy.abs(true_data - predicted).mean()/true_data.std())
 
-    pylab.scatter(true_data, predicted)
-    pylab.title("\nNRMSE = %.2f" % (numpy.abs(true_data - predicted).mean()/true_data.std()))
-    pylab.plot([0, 1], [0, 1], color='grey', transform=pylab.gca().transAxes)
-    pylab.xlabel('True test data')
-    pylab.ylabel('Predicted test data')
+    # pylab.scatter(true_data, predicted)
+    # pylab.title("\nNRMSE = %.2f" % (numpy.abs(true_data - predicted).mean()/true_data.std()))
+    # pylab.plot(true_data, true_data, 'k-')
+    # pylab.xlabel('True test data')
+    # pylab.ylabel('Predicted test data')
 
-    pylab.show()
+    # pylab.show()

@@ -80,7 +80,7 @@
             
   <div class="section" id="tigramite">
 <h1>TIGRAMITE<a class="headerlink" href="#tigramite" title="Permalink to this headline">¶</a></h1>
-<p>Tigramite is a causal time series analysis python package. With flexibly adaptable scripts it allows to reconstruct graphical models (conditional independence graphs) from discrete or continuously-valued time series based on a causal discovery algorithm and create high-quality plots of the results. Please cite the following papers depending on which method you use:</p>
+<p>Tigramite is a causal time series analysis python package. It allows to efficiently reconstruct causal graphs from high-dimensional time series datasets and model the obtained causal dependencies for causal mediation and prediction analyses. Causal discovery is based on linear as well as non-parametric conditional independence tests applicable to discrete or continuously-valued time series. Also includes functions for high-quality plots of the results. Please cite the following papers depending on which method you use:</p>
 <ol class="arabic simple">
 <li>J. Runge, D. Sejdinovic, S. Flaxman (2017): Detecting causal associations in large nonlinear time series datasets,
 <a class="reference external" href="https://arxiv.org/abs/1702.07007">https://arxiv.org/abs/1702.07007</a></li>
@@ -1860,7 +1860,7 @@ parents and the regression coefficients as values.</td>
 
 <dl class="method">
 <dt id="tigramite.models.Models.get_fit">
-<code class="descname">get_fit</code><span class="sig-paren">(</span><em>all_parents</em>, <em>selected_variables=None</em>, <em>tau_max=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#Models.get_fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.Models.get_fit" title="Permalink to this definition">¶</a></dt>
+<code class="descname">get_fit</code><span class="sig-paren">(</span><em>all_parents</em>, <em>selected_variables=None</em>, <em>tau_max=None</em>, <em>cut_off='max_lag_or_tau_max'</em>, <em>return_data=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#Models.get_fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.Models.get_fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fit time series model.</p>
 <p>To each variable in selected_variables, the sklearn model is fitted
 with <img class="math" src="_images/math/276f7e256cbddeb81eee42e1efc348f3cb4ab5f8.png" alt="y"/> given by the target variable, and <img class="math" src="_images/math/7a7bb470119808e2db2879fc2b2526f467b7a40b.png" alt="X"/> given by its
@@ -1875,6 +1875,13 @@ the parents estimated with PCMCI.</li>
 <li><strong>selected_variables</strong> (<em>list of integers</em><em>, </em><em>optional</em><em> (</em><em>default: range</em><em>(</em><a class="reference internal" href="#PCMCI.N" title="PCMCI.N"><em>N</em></a><em>)</em><em>)</em>) &#8211; Specify to estimate parents only for selected variables. If None is
 passed, parents are estimated for all variables.</li>
 <li><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Maximum time lag. If None, the maximum lag in all_parents is used.</li>
+<li><strong>cut_off</strong> (<em>{'2xtau_max'</em><em>, </em><em>'max_lag'</em><em>, </em><em>'max_lag_or_tau_max'}</em>) &#8211; How many samples to cutoff at the beginning. The default is
+&#8216;2xtau_max&#8217;, which guarantees that MCI tests are all conducted on
+the same samples.  For modeling, &#8216;max_lag_or_tau_max&#8217; can be used,
+which uses the maximum of tau_max and the conditions, which is
+useful to compare multiple models on the same sample. Last,
+&#8216;max_lag&#8217; uses as much samples as possible.</li>
+<li><strong>return_data</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) &#8211; Whether to save the data array.</li>
 </ul>
 </td>
 </tr>
@@ -2284,6 +2291,36 @@ through k.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="tigramite.models.LinearMediation.get_mediation_graph_data">
+<code class="descname">get_mediation_graph_data</code><span class="sig-paren">(</span><em>i</em>, <em>tau</em>, <em>j</em>, <em>include_neighbors=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#LinearMediation.get_mediation_graph_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.LinearMediation.get_mediation_graph_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns link and node weights for mediation analysis.</p>
+<p>Returns array with non-zero entries for links that are on causal
+paths between <img class="math" src="_images/math/df0deb143e5ac127f00bd248ee8001ecae572adc.png" alt="i"/> and <img class="math" src="_images/math/6b21e0b0899a0d2879d3b8019087fa630bab4ea2.png" alt="j"/> at lag <img class="math" src="_images/math/557d5fad862c9046d26e1a930f45a550c146d592.png" alt="\tau"/>.
+<code class="docutils literal"><span class="pre">path_val_matrix</span></code> contains the corresponding path coefficients and
+<code class="docutils literal"><span class="pre">path_node_array</span></code> the MCE values. <code class="docutils literal"><span class="pre">tsg_path_val_matrix</span></code> contains the
+corresponding values in the time series graph format.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>i</strong> (<em>int</em>) &#8211; Index of cause variable.</li>
+<li><strong>tau</strong> (<em>int</em>) &#8211; Lag of cause variable.</li>
+<li><strong>j</strong> (<em>int</em>) &#8211; Index of effect variable.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>graph_data</strong> &#8211; Dictionary of matrices for coloring mediation graph plots.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dictionary</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="tigramite.models.LinearMediation.get_tsg">
 <code class="descname">get_tsg</code><span class="sig-paren">(</span><em>link_matrix</em>, <em>val_matrix=None</em>, <em>include_neighbors=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#LinearMediation.get_tsg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.LinearMediation.get_tsg" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns time series graph matrix.</p>
@@ -2364,7 +2401,7 @@ Supplement of <a class="footnote-reference" href="#id5" id="id30">[1]</a>.</li>
 </table>
 <dl class="method">
 <dt id="tigramite.models.Prediction.fit">
-<code class="descname">fit</code><span class="sig-paren">(</span><em>target_predictors</em>, <em>selected_targets=None</em>, <em>tau_max=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#Prediction.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.Prediction.fit" title="Permalink to this definition">¶</a></dt>
+<code class="descname">fit</code><span class="sig-paren">(</span><em>target_predictors</em>, <em>selected_targets=None</em>, <em>tau_max=None</em>, <em>return_data=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#Prediction.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.Prediction.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fit time series model.</p>
 <p>Wrapper around <code class="docutils literal"><span class="pre">Models.get_fit()</span></code>. To each variable in
 <code class="docutils literal"><span class="pre">selected_targets</span></code>, the sklearn model is fitted with <img class="math" src="_images/math/276f7e256cbddeb81eee42e1efc348f3cb4ab5f8.png" alt="y"/> given
@@ -2374,14 +2411,21 @@ fitted model class is returned for later use.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>target_predictors</strong> (<em>dictionary</em>) &#8211; Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing
 the predictors estimated with PCMCI.</li>
 <li><strong>selected_targets</strong> (<em>list of integers</em><em>, </em><em>optional</em><em> (</em><em>default: range</em><em>(</em><a class="reference internal" href="#PCMCI.N" title="PCMCI.N"><em>N</em></a><em>)</em><em>)</em>) &#8211; Specify to fit model only for selected targets. If None is
 passed, models are estimated for all variables.</li>
 <li><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Maximum time lag. If None, the maximum lag in target_predictors is
 used.</li>
+<li><strong>return_data</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) &#8211; Whether to save the data array.</li>
 </ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>self</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">instance of self</p>
 </td>
 </tr>
 </tbody>
@@ -2436,8 +2480,14 @@ containing estimated predictors.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="tigramite.models.Prediction.get_train_array">
+<code class="descname">get_train_array</code><span class="sig-paren">(</span><em>j</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#Prediction.get_train_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.Prediction.get_train_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns training array.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="tigramite.models.Prediction.predict">
-<code class="descname">predict</code><span class="sig-paren">(</span><em>target</em>, <em>pred_params=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#Prediction.predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.Prediction.predict" title="Permalink to this definition">¶</a></dt>
+<code class="descname">predict</code><span class="sig-paren">(</span><em>target</em>, <em>new_data=None</em>, <em>pred_params=None</em>, <em>cut_off='max_lag_or_tau_max'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#Prediction.predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.Prediction.predict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Predict target variable with fitted model.</p>
 <p>Uses the model.predict() function of the sklearn model.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -2446,7 +2496,14 @@ containing estimated predictors.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>target</strong> (<em>int</em>) &#8211; Index of target variable.</li>
+<li><strong>new_data</strong> (<em>data object</em><em>, </em><em>optional</em>) &#8211; New Tigramite dataframe object with optional new mask.</li>
 <li><strong>pred_params</strong> (<em>dict</em><em>, </em><em>optional</em>) &#8211; Optional parameters passed on to sklearn prediction function.</li>
+<li><strong>cut_off</strong> (<em>{'2xtau_max'</em><em>, </em><em>'max_lag'</em><em>, </em><em>'max_lag_or_tau_max'}</em>) &#8211; How many samples to cutoff at the beginning. The default is
+&#8216;2xtau_max&#8217;, which guarantees that MCI tests are all conducted on
+the same samples.  For modeling, &#8216;max_lag_or_tau_max&#8217; can be used,
+which uses the maximum of tau_max and the conditions, which is
+useful to compare multiple models on the same sample. Last,
+&#8216;max_lag&#8217; uses as much samples as possible.</li>
 </ul>
 </td>
 </tr>
