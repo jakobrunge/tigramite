@@ -1,0 +1,498 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>tigramite.prediction &#8212; Tigramite 3.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '3.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for tigramite.prediction</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Tigramite causal discovery for time series.&quot;&quot;&quot;</span>
+
+<span class="c1"># Author: Jakob Runge &lt;jakobrunge@posteo.de&gt;</span>
+<span class="c1">#</span>
+<span class="c1"># License: GNU General Public License v3.0</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span>
+
+<span class="kn">from</span> <span class="nn">independence_tests</span> <span class="k">import</span> <span class="n">_construct_array</span><span class="p">,</span> <span class="n">ParCorr</span><span class="p">,</span> <span class="n">GPDC</span><span class="p">,</span> <span class="n">CMIknn</span>
+<span class="kn">from</span> <span class="nn">pcmci</span> <span class="k">import</span> <span class="n">PCMCI</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">sklearn</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Could not import sklearn&quot;</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">models</span> <span class="k">import</span> <span class="n">Model</span>
+
+
+<div class="viewcode-block" id="Prediction"><a class="viewcode-back" href="../../index.html#tigramite.prediction.Prediction">[docs]</a><span class="k">class</span> <span class="nc">Prediction</span><span class="p">(</span><span class="n">Model</span><span class="p">,</span> <span class="n">PCMCI</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Prediction class for time series models.</span>
+
+<span class="sd">    Allows to fit and predict from any sklearn model. The optimal predictors can</span>
+<span class="sd">    be estimated using PCMCI. Also takes care of missing values, masking and</span>
+<span class="sd">    preprocessing.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dataframe : data object</span>
+<span class="sd">        Tigramite dataframe object. It must have the attributes dataframe.values</span>
+<span class="sd">        yielding a numpy array of shape (observations T, variables N) and</span>
+<span class="sd">        optionally a mask of the same shape and a missing values flag.</span>
+
+<span class="sd">    train_indices : array-like</span>
+<span class="sd">        Either boolean array or time indices marking the training data.</span>
+
+<span class="sd">    test_indices : array-like</span>
+<span class="sd">        Either boolean array or time indices marking the test data.</span>
+
+<span class="sd">    prediction_model : sklearn model object</span>
+<span class="sd">        For example, sklearn.linear_model.LinearRegression for a linear</span>
+<span class="sd">        regression model.</span>
+
+<span class="sd">    prediction_model_params : dictionary, optional (default: None)</span>
+<span class="sd">        Optional parameters passed on to sklearn model</span>
+
+<span class="sd">    cond_ind_model : Conditional independence test class object, optional</span>
+<span class="sd">        Only needed if predictors are estimated with causal algorithm.</span>
+<span class="sd">        The class will be initialized with masking set to the training data. </span>
+<span class="sd">        Further parameters can be supplied by cond_ind_params.</span>
+
+<span class="sd">    cond_ind_params : dictionary, optional</span>
+<span class="sd">        Parameters for conditional independence test.</span>
+
+<span class="sd">    data_transform : sklearn preprocessing object, optional (default: None)</span>
+<span class="sd">        Used to transform data prior to fitting. For example, </span>
+<span class="sd">        sklearn.preprocessing.StandardScaler for simple standardization. The</span>
+<span class="sd">        fitted parameters are stored.</span>
+
+<span class="sd">    missing_flag : number, optional (default: None)</span>
+<span class="sd">        Flag for missing values. Dismisses all time slices of samples where</span>
+<span class="sd">        missing values occur in any variable and also flags samples for all lags</span>
+<span class="sd">        up to 2*tau_max. This avoids biases, see section on masking in</span>
+<span class="sd">        Supplement of [1]_.</span>
+
+<span class="sd">    verbosity : int, optional (default: 0)</span>
+<span class="sd">        Level of verbosity.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+            <span class="n">dataframe</span><span class="p">,</span>
+            <span class="n">train_indices</span><span class="p">,</span>
+            <span class="n">test_indices</span><span class="p">,</span>
+            <span class="n">prediction_model</span><span class="p">,</span>
+            <span class="n">prediction_model_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">cond_ind_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">cond_ind_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">data_transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">missing_flag</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="p">):</span>
+
+
+        <span class="n">Model</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+            <span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span>
+            <span class="n">model</span><span class="o">=</span><span class="n">prediction_model</span><span class="p">,</span>
+            <span class="n">model_params</span><span class="o">=</span><span class="n">prediction_model_params</span><span class="p">,</span>
+            <span class="n">data_transform</span><span class="o">=</span><span class="n">data_transform</span><span class="p">,</span>
+            <span class="n">use_mask</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">mask_type</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span>
+            <span class="n">missing_flag</span><span class="o">=</span><span class="n">missing_flag</span><span class="p">,</span>
+            <span class="n">verbosity</span><span class="o">=</span><span class="n">verbosity</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">cond_ind_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cond_ind_params</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="n">cond_ind_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cond_ind_test</span> <span class="o">=</span> <span class="n">cond_ind_model</span><span class="p">(</span>
+                    <span class="n">use_mask</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">mask_type</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span>
+                    <span class="n">verbosity</span><span class="o">=</span><span class="n">verbosity</span><span class="p">,</span>
+                    <span class="o">**</span><span class="n">cond_ind_params</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cond_ind_test</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">dataframe</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;bool&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_mask</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_mask</span><span class="p">[</span><span class="n">test_indices</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_mask</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_mask</span><span class="p">[</span><span class="n">train_indices</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">dataframe</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_mask</span>
+
+        <span class="k">if</span> <span class="n">cond_ind_test</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">PCMCI</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                <span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span>
+                <span class="n">cond_ind_test</span><span class="o">=</span><span class="n">cond_ind_test</span><span class="p">,</span>
+                <span class="n">selected_variables</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">var_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">verbosity</span><span class="o">=</span><span class="n">verbosity</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_model</span> <span class="o">=</span> <span class="n">cond_ind_model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prediction_model</span> <span class="o">=</span> <span class="n">prediction_model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prediction_model_params</span> <span class="o">=</span> <span class="n">prediction_model_params</span>
+
+<div class="viewcode-block" id="Prediction.get_predictors"><a class="viewcode-back" href="../../index.html#tigramite.prediction.Prediction.get_predictors">[docs]</a>    <span class="k">def</span> <span class="nf">get_predictors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                      <span class="n">selected_targets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">selected_links</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">steps_ahead</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                      <span class="n">tau_max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                      <span class="n">pc_alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+                      <span class="n">max_conds_dim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">max_combinations</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                      <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Estimate predictors using PC1 algorithm.</span>
+
+<span class="sd">        Wrapper around PCMCI.run_pc_stable that estimates causal predictors. </span>
+<span class="sd">        The lead time can be specified by ``steps_ahead``. </span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        selected_targets : list of ints, optional (default: None)</span>
+<span class="sd">            List of variables to estimate predictors of. If None, predictors of</span>
+<span class="sd">            all variables are estimated.</span>
+
+<span class="sd">        selected_links : dict or None</span>
+<span class="sd">            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} </span>
+<span class="sd">            specifying whether only selected links should be tested. If None is</span>
+<span class="sd">            passed, all links are tested</span>
+
+<span class="sd">        steps_ahead : int, default: 1</span>
+<span class="sd">            Minimum time lag to test. Useful for multi-step ahead predictions.</span>
+<span class="sd">        </span>
+<span class="sd">        tau_max : int, default: 1</span>
+<span class="sd">            Maximum time lag. Must be larger or equal to tau_min.</span>
+<span class="sd">                </span>
+<span class="sd">        pc_alpha : float or list of floats, default: 0.2</span>
+<span class="sd">            Significance level in algorithm. If a list or None is passed, the</span>
+<span class="sd">            pc_alpha level is optimized for every variable across the given </span>
+<span class="sd">            pc_alpha values using the score computed in </span>
+<span class="sd">            cond_ind_test.get_model_selection_criterion()</span>
+<span class="sd">        </span>
+<span class="sd">        max_conds_dim : int or None</span>
+<span class="sd">            Maximum number of conditions to test. If None is passed, this number</span>
+<span class="sd">            is unrestricted.</span>
+<span class="sd">        </span>
+<span class="sd">        max_combinations : int, default: 1</span>
+<span class="sd">            Maximum number of combinations of conditions of current cardinality</span>
+<span class="sd">            to test. Defaults to 1 for PC_1 algorithm. For original PC algorithm</span>
+<span class="sd">            a larger number, such as 10, can be used.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        predictors : dict</span>
+<span class="sd">            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} </span>
+<span class="sd">            containing estimated predictors.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No cond_ind_model given!&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">selected_targets</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">selected_variables</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>      
+            <span class="bp">self</span><span class="o">.</span><span class="n">selected_variables</span> <span class="o">=</span> <span class="n">selected_targets</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_mask</span>
+
+        <span class="n">predictors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_pc_stable</span><span class="p">(</span>
+                      <span class="n">selected_links</span><span class="o">=</span><span class="n">selected_links</span><span class="p">,</span>
+                      <span class="n">tau_min</span><span class="o">=</span><span class="n">steps_ahead</span><span class="p">,</span>
+                      <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
+                      <span class="n">save_iterations</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                      <span class="n">pc_alpha</span><span class="o">=</span><span class="n">pc_alpha</span><span class="p">,</span>
+                      <span class="n">max_conds_dim</span><span class="o">=</span><span class="n">max_conds_dim</span><span class="p">,</span>
+                      <span class="n">max_combinations</span><span class="o">=</span><span class="n">max_combinations</span><span class="p">,</span>
+                      <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">predictors</span></div>
+
+
+
+<div class="viewcode-block" id="Prediction.fit"><a class="viewcode-back" href="../../index.html#tigramite.prediction.Prediction.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_predictors</span><span class="p">,</span> <span class="n">selected_targets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">tau_max</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Fit time series model.</span>
+
+<span class="sd">        Wrapper around ``Model.get_fit()``. To each variable in</span>
+<span class="sd">        ``selected_targets``, the sklearn model is fitted with :math:`y` given</span>
+<span class="sd">        by the target variable, and :math:`X` given by its predictors. The</span>
+<span class="sd">        fitted model class is returned for later use.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        target_predictors : dictionary </span>
+<span class="sd">            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing</span>
+<span class="sd">            the predictors estimated with PCMCI.</span>
+<span class="sd">        </span>
+<span class="sd">        selected_targets : list of integers, optional (default: range(N))</span>
+<span class="sd">            Specify to fit model only for selected targets. If None is</span>
+<span class="sd">            passed, models are estimated for all variables.</span>
+
+<span class="sd">        tau_max : int, optional (default: None)</span>
+<span class="sd">            Maximum time lag. If None, the maximum lag in target_predictors is </span>
+<span class="sd">            used.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_predictors</span> <span class="o">=</span> <span class="n">target_predictors</span>
+
+        <span class="k">if</span> <span class="n">selected_targets</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">selected_targets</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">selected_targets</span> <span class="o">=</span> <span class="n">selected_targets</span>
+
+        <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_targets</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">target</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_predictors</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No predictors given for target </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">target</span><span class="p">)</span>
+
+        <span class="c1"># Set mask to train_indices</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_mask</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">fitted_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_fit</span><span class="p">(</span>
+                                <span class="n">all_parents</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">target_predictors</span><span class="p">,</span>
+                                <span class="n">selected_variables</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_targets</span><span class="p">,</span>
+                                <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span>
+                                <span class="p">)</span></div>
+    
+<div class="viewcode-block" id="Prediction.predict"><a class="viewcode-back" href="../../index.html#tigramite.prediction.Prediction.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">pred_params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Predict target variable with fitted model.</span>
+
+<span class="sd">        Uses the model.predict() function of the sklearn model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        target : int</span>
+<span class="sd">            Index of target variable.</span>
+
+<span class="sd">        pred_params : dict, optional</span>
+<span class="sd">            Optional parameters passed on to sklearn prediction function.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Results from prediction.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">##</span><span class="se">\n</span><span class="s2">## Predicting target </span><span class="si">%s</span><span class="se">\n</span><span class="s2">##&quot;</span> <span class="o">%</span> <span class="n">target</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">pred_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">pred_params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">pred_params</span><span class="p">[</span><span class="n">key</span><span class="p">]))</span>
+
+        <span class="k">if</span> <span class="n">pred_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">pred_params</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="n">target</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_targets</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Target </span><span class="si">%s</span><span class="s2"> not yet fitted&quot;</span> <span class="o">%</span> <span class="n">target</span><span class="p">)</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">values</span>
+
+        <span class="c1"># Set mask to test_indices</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_mask</span>
+
+        <span class="c1"># print self.tau_max</span>
+
+        <span class="n">Y</span> <span class="o">=</span> <span class="p">[(</span><span class="n">target</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="p">[(</span><span class="n">target</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span> <span class="c1"># dummy</span>
+        <span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_predictors</span><span class="p">[</span><span class="n">target</span><span class="p">]</span>
+
+        <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span> <span class="o">=</span> <span class="n">_construct_array</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> 
+                                <span class="n">tau_max</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span><span class="p">,</span>
+                                <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                                <span class="n">use_mask</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">use_mask</span><span class="p">,</span>
+                                <span class="n">mask</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span> 
+                                <span class="n">mask_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span><span class="p">,</span>
+                                <span class="n">missing_flag</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span><span class="p">,</span>
+                                <span class="n">verbosity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_transform</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># print array.shape</span>
+            <span class="c1"># print self.fitted_model[target][&#39;data_transform&#39;].mean_</span>
+            <span class="n">array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitted_model</span><span class="p">[</span><span class="n">target</span><span class="p">][</span><span class="s1">&#39;data_transform&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">array</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_array</span> <span class="o">=</span> <span class="n">array</span>
+
+        <span class="n">pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitted_model</span><span class="p">[</span><span class="n">target</span><span class="p">][</span><span class="s1">&#39;model&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">array</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="o">**</span><span class="n">pred_params</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">pred</span></div>
+
+
+<div class="viewcode-block" id="Prediction.get_test_array"><a class="viewcode-back" href="../../index.html#tigramite.prediction.Prediction.get_test_array">[docs]</a>    <span class="k">def</span> <span class="nf">get_test_array</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns test array.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_array</span></div></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+
+    <span class="c1"># Quick test</span>
+    <span class="kn">import</span> <span class="nn">data_processing</span> <span class="k">as</span> <span class="nn">pp</span>
+    <span class="kn">from</span> <span class="nn">independence_tests</span> <span class="k">import</span> <span class="n">ParCorr</span>
+    <span class="kn">from</span> <span class="nn">pcmci</span> <span class="k">import</span> <span class="n">PCMCI</span>
+
+    <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">44</span><span class="p">)</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="mf">0.8</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="mf">0.3</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="mi">1000</span>
+
+    <span class="n">verbosity</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># Each key refers to a variable and the incoming links are supplied as a</span>
+    <span class="c1"># list of format [((driver, lag), coeff), ...]</span>
+    <span class="n">links_coeffs</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">[((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">a</span><span class="p">)],</span>
+                    <span class="mi">1</span><span class="p">:</span> <span class="p">[((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">a</span><span class="p">),</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">c</span><span class="p">)],</span>
+                    <span class="mi">2</span><span class="p">:</span> <span class="p">[((</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">a</span><span class="p">),</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">c</span><span class="p">)],</span>  <span class="c1"># ((0, -1), c)],</span>
+                    <span class="p">}</span>
+
+    <span class="n">data</span><span class="p">,</span> <span class="n">true_parents_neighbors</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">var_process</span><span class="p">(</span><span class="n">links_coeffs</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">)</span>
+
+    <span class="c1"># print data</span>
+    <span class="c1"># print data.mean(axis=0), data.std(axis=0)</span>
+    <span class="n">data_mask</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="kn">import</span> <span class="nn">sklearn</span>
+    <span class="kn">import</span> <span class="nn">sklearn.preprocessing</span>
+    <span class="kn">import</span> <span class="nn">sklearn.neighbors</span>
+    <span class="kn">import</span> <span class="nn">sklearn.linear_model</span>
+
+    <span class="n">pred</span> <span class="o">=</span> <span class="n">Prediction</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span>
+            <span class="n">cond_ind_model</span><span class="o">=</span><span class="n">ParCorr</span><span class="p">,</span>
+            <span class="n">cond_ind_params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;significance&#39;</span><span class="p">:</span><span class="s1">&#39;analytic&#39;</span><span class="p">,</span>
+                               <span class="s1">&#39;fixed_thres&#39;</span><span class="p">:</span><span class="mf">0.01</span><span class="p">},</span>
+            <span class="n">prediction_model</span> <span class="o">=</span> <span class="n">sklearn</span><span class="o">.</span><span class="n">linear_model</span><span class="o">.</span><span class="n">LinearRegression</span><span class="p">,</span>
+            <span class="c1"># prediction_model = sklearn.gaussian_process.GaussianProcessRegressor,</span>
+            <span class="c1"># prediction_model = sklearn.neighbors.KNeighborsRegressor,</span>
+        <span class="c1"># prediction_model_params={&#39;fit_intercept&#39;:False},</span>
+        <span class="c1"># prediction_model_params = {&#39;n_neighbors&#39;:5},</span>
+        <span class="c1"># prediction_model_params = {&#39;alpha&#39;:0., &#39;kernel&#39;:sklearn.gaussian_process.kernels.RBF() +</span>
+        <span class="c1">#                                     sklearn.gaussian_process.kernels.WhiteKernel()},</span>
+        <span class="n">data_transform</span><span class="o">=</span><span class="n">sklearn</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">StandardScaler</span><span class="p">(),</span>
+        <span class="n">train_indices</span><span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="mf">0.8</span><span class="o">*</span><span class="n">T</span><span class="p">)),</span>
+        <span class="n">test_indices</span><span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="mf">0.8</span><span class="o">*</span><span class="n">T</span><span class="p">),</span> <span class="n">T</span><span class="p">),</span>
+        <span class="n">verbosity</span><span class="o">=</span><span class="mi">1</span>
+        <span class="p">)</span>
+
+    <span class="n">tau_max</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">steps_ahead</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="n">all_predictors</span> <span class="o">=</span> <span class="n">pred</span><span class="o">.</span><span class="n">get_predictors</span><span class="p">(</span>
+                      <span class="n">selected_targets</span><span class="o">=</span><span class="p">[</span><span class="n">target</span><span class="p">],</span>
+                      <span class="n">selected_links</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">steps_ahead</span><span class="o">=</span><span class="n">steps_ahead</span><span class="p">,</span>
+                      <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
+                      <span class="n">pc_alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">max_conds_dim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">max_combinations</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                      <span class="p">)</span>
+    <span class="c1"># all_predictors = {2:[(2, -1)]}</span>
+    <span class="c1"># print med.all_parents</span>
+    
+    <span class="n">pred</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">target_predictors</span><span class="o">=</span><span class="n">all_predictors</span><span class="p">,</span> 
+                    <span class="n">selected_targets</span><span class="o">=</span><span class="p">[</span><span class="n">target</span><span class="p">],</span>
+                        <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">)</span>
+
+    <span class="c1"># print all_predictors[target]</span>
+
+    <span class="n">predicted</span> <span class="o">=</span> <span class="n">pred</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">target</span><span class="p">,</span>
+                            <span class="c1"># pred_params = {&#39;return_std&#39;:True}</span>
+                            <span class="p">)</span>
+    <span class="c1"># print predicted[1]</span>
+    <span class="kn">import</span> <span class="nn">pylab</span>
+
+    <span class="n">true_data</span> <span class="o">=</span> <span class="n">pred</span><span class="o">.</span><span class="n">get_test_array</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">pylab</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">true_data</span><span class="p">,</span> <span class="n">predicted</span><span class="p">)</span>
+
+    <span class="c1"># pylab.errorbar(true_data, predicted[0], yerr=predicted[1], fmt=&#39;o&#39;)</span>
+
+
+    <span class="n">pylab</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;grey&#39;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">pylab</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">transAxes</span><span class="p">)</span>
+
+    <span class="n">pylab</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+
+
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Jakob Runge.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.6.
+    </div>
+  </body>
+</html>

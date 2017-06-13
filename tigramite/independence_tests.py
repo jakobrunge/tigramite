@@ -17,25 +17,6 @@ except:
     print("Could not import sklearn for GPACE")
 
 try:
-    import rpy2
-    import rpy2.robjects
-    rpy2.robjects.r['options'](warn=-1)
-
-    from rpy2.robjects.packages import importr
-    acepack = importr('acepack')
-    import rpy2.robjects.numpy2ri
-    rpy2.robjects.numpy2ri.activate()
-
-except:
-    print("Could not import rpy acepack package for GPACE,"
-          " use python ACE package")
-
-try: 
-    import ace
-except:
-    print("Could not import python ACE package for GPACE")
-
-try:
     from scipy import spatial
     import tigramite_cython_code
 except:
@@ -320,6 +301,35 @@ class CondIndTest(object):
         if self.mask_type is None:
             self.mask_type = 'y'
 
+
+        if self.verbosity > 0:
+            print("\n# Initialize conditional independence test\n"
+                  "\nParameters:")
+            print("independence test = %s" % self.measure
+                  + "\nsignificance = %s" % self.significance
+                  )
+            if self.significance == 'shuffle_test':
+                print(""
+                + "sig_samples = %s" % self.sig_samples
+                + "\nsig_blocklength = %s" % self.sig_blocklength)
+            elif self.significance == 'fixed_thres':
+                print(""
+                + "fixed_thres = %s" % self.fixed_thres)
+            if self.confidence:
+                print("confidence = %s" % self.confidence
+                + "\nconf_lev = %s" % self.conf_lev)
+                if self.confidenc == 'bootstrap':
+                    print(""
+                    + "conf_samples = %s" % self.conf_samples
+                    + "\nconf_blocklength = %s" % self.conf_blocklength)
+            if self.use_mask:
+                print(""
+                  + "use_mask = %s" % self.use_mask
+                  + "\nmask_type = %s" % self.mask_type)
+            if self.recycle_residuals:
+                print("recycle_residuals = %s" % self.recycle_residuals)
+
+            # print("\n")
         # if use_mask:
         #     if mask_type is None or len(set(mask_type) -
         #                                 set(['x', 'y', 'z'])) > 0:
@@ -433,7 +443,7 @@ class CondIndTest(object):
                                                  xyz=xyz,
                                                  value=val)
         elif self.significance == 'fixed_thres':
-            pval = get_fixed_thres_significance(value=val, 
+            pval = self.get_fixed_thres_significance(value=val, 
                                                 fixed_thres=self.fixed_thres)
         else:
             raise ValueError("%s not known." % self.significance)
@@ -1033,11 +1043,14 @@ class ParCorr(CondIndTest):
     def __init__(self, **kwargs):
 
         # super(ParCorr, self).__init__(
-        CondIndTest.__init__(self, **kwargs)
 
         self.measure = 'par_corr'
         self.two_sided = True
         self.residual_based = True
+
+        CondIndTest.__init__(self, **kwargs)
+        if self.verbosity > 0:
+            print("")
 
     # @profile
     def _get_single_residuals(self, array, target_var, 
@@ -1552,7 +1565,26 @@ class GPACE(CondIndTest,GP):
                 ace_version='acepack',
                 **kwargs):
 
-        CondIndTest.__init__(self, **kwargs)
+        try:
+            import rpy2
+            import rpy2.robjects
+            rpy2.robjects.r['options'](warn=-1)
+
+            from rpy2.robjects.packages import importr
+            acepack = importr('acepack')
+            import rpy2.robjects.numpy2ri
+            rpy2.robjects.numpy2ri.activate()
+
+        except:
+            print("Could not import rpy acepack package for GPACE,"
+                  " use python ACE package")
+
+        try: 
+            import ace
+        except:
+            print("Could not import python ACE package for GPACE")
+
+
 
         GP.__init__(self, 
                     gp_version=gp_version,
@@ -1567,6 +1599,18 @@ class GPACE(CondIndTest,GP):
 
         # Load null-dist file, adapt if necessary
         self.null_dist_filename = null_dist_filename
+
+        CondIndTest.__init__(self, **kwargs)
+
+        if self.verbosity > 0:
+            print("null_dist_filename = %s" % self.null_dist_filename)
+            print("gp_version = %s" % self.gp_version)
+            if self.gp_params is not None:
+                for key in  self.gp_params.keys():
+                    print("%s = %s" % (key, self.gp_params[key]))
+            print("ace_version = %s" % self.ace_version)
+            print("")
+
         if null_dist_filename is None:
             self.null_samples = self.sig_samples
             self.null_dists = {}
@@ -1825,8 +1869,6 @@ class GPDC(CondIndTest,GP):
                 gp_params=None,
                 **kwargs):
 
-        CondIndTest.__init__(self, **kwargs)
-
         GP.__init__(self, 
                     gp_version=gp_version,
                     gp_params=gp_params,
@@ -1838,6 +1880,17 @@ class GPDC(CondIndTest,GP):
 
         # Load null-dist file, adapt if necessary
         self.null_dist_filename = null_dist_filename
+
+        CondIndTest.__init__(self, **kwargs)
+
+        if self.verbosity > 0:
+            print("null_dist_filename = %s" % self.null_dist_filename)
+            print("gp_version = %s" % self.gp_version)
+            if self.gp_params is not None:
+                for key in  self.gp_params.keys():
+                    print("%s = %s" % (key, self.gp_params[key]))
+            print("")
+
         if null_dist_filename is None:
             self.null_samples = self.sig_samples
             self.null_dists = {}
@@ -2057,9 +2110,11 @@ class CMIknn(CondIndTest):
 
     Parameters
     ----------
-    knn : int, optional (default: 100)
+    knn : int or float, optional (default: 0.2)
         Number of nearest-neighbors which determines the size of hyper-cubes
-        around each (high-dimensional) sample point.
+        around each (high-dimensional) sample point. If smaller than 1, this is
+        computed as a fraction of T, hence knn=knn*T. For knn larger or equal to
+        1, this is the absolute number.
 
     shuffle_neighbors : int, optional (default: 10)
         Number of nearest-neighbors within Z for the shuffle surrogates which
@@ -2074,12 +2129,11 @@ class CMIknn(CondIndTest):
         Arguments passed on to parent class CondIndTest. 
     """
     def __init__(self,
-                knn=100,
-                shuffle_neighbors=10,
+                knn=0.2,
+                shuffle_neighbors=5,
                 significance='shuffle_test',
                 **kwargs):
 
-        CondIndTest.__init__(self, significance=significance, **kwargs)
 
         self.knn = knn
         self.shuffle_neighbors = shuffle_neighbors
@@ -2089,9 +2143,15 @@ class CMIknn(CondIndTest):
         self.residual_based = False
         self.recycle_residuals = False
 
+        CondIndTest.__init__(self, significance=significance, **kwargs)
+
         if self.verbosity > 0:
-            print("Initialized CMIknn class with nearest-neighbor parameter"
-                  " knn = %d" % self.knn)
+            if self.knn < 1:
+                print("knn/T = %s" % self.knn)
+            else:
+                print("knn = %s" % self.knn)
+            print("shuffle_neighbors = %d" % self.shuffle_neighbors)
+            print("")
 
     def _get_nearest_neighbors(self, array, xyz, knn, transform='standardize'):
         """Returns nearest neighbors according to Frenzel and Pompe (2007).
@@ -2108,9 +2168,11 @@ class CMIknn(CondIndTest):
         xyz : array of ints
             XYZ identifier array of shape (dim,).
        
-        knn : int
+        knn : int or float
             Number of nearest-neighbors which determines the size of hyper-cubes
-            around each (high-dimensional) sample point.
+            around each (high-dimensional) sample point. If smaller than 1, this
+            is computed as a fraction of T, hence knn=knn*T. For knn larger or
+            equal to 1, this is the absolute number.
 
         transform : {'standardize', 'uniform', False}, optional 
             (default: 'standardize')
@@ -2175,10 +2237,17 @@ class CMIknn(CondIndTest):
             Conditional mutual information estimate.
         """
 
-        k_xz, k_yz, k_z = self._get_nearest_neighbors(array=array, xyz=xyz,
-                                                 knn=self.knn)
+        dim, T = array.shape
 
-        val = special.digamma(self.knn) - (special.digamma(k_xz) +
+        if self.knn < 1:
+            knn_here = max(1, int(self.knn*T))
+        else:
+            knn_here = max(1, int(self.knn))
+
+        k_xz, k_yz, k_z = self._get_nearest_neighbors(array=array, xyz=xyz,
+                                                 knn=knn_here)
+
+        val = special.digamma(knn_here) - (special.digamma(k_xz) +
                                       special.digamma(k_yz) -
                                       special.digamma(k_z)).mean()
 
@@ -2339,11 +2408,6 @@ class CMIsymb(CondIndTest):
                 conf_blocklength=1,
                 **kwargs):
 
-        CondIndTest.__init__(self, 
-                             significance=significance, 
-                             sig_blocklength=sig_blocklength,
-                             conf_blocklength=conf_blocklength,
-                             **kwargs)
 
         self.measure = 'cmi_symb'
         self.two_sided = False
@@ -2351,6 +2415,16 @@ class CMIsymb(CondIndTest):
         self.recycle_residuals = False
 
         self.n_symbs = n_symbs
+
+        CondIndTest.__init__(self, 
+                             significance=significance, 
+                             sig_blocklength=sig_blocklength,
+                             conf_blocklength=conf_blocklength,
+                             **kwargs)
+
+        if self.verbosity > 0:
+            print("n_symbs = %s" % self.n_symbs)
+            print("")
 
         if self.conf_blocklength is None or self.sig_blocklength is None:
             warnings.warn("Automatic block-length estimations from decay of "
@@ -2565,7 +2639,7 @@ if __name__ == '__main__':
     #     conf_blocklength=1,
 
     #     use_mask=False,
-    #     mask_type=['y'],
+    #     mask_type='y',
     #     recycle_residuals=False,
     #     verbosity=3)
 
@@ -2580,7 +2654,7 @@ if __name__ == '__main__':
     #     conf_blocklength=None,
 
     #     use_mask=False,
-    #     mask_type=['y'],
+    #     mask_type='y',
 
     #     null_dist_filename=None,
     #     gp_version='new',
@@ -2588,44 +2662,44 @@ if __name__ == '__main__':
     #     recycle_residuals=False,
     #     verbosity=4)
 
-    # cond_ind_test = GPDC(
-    #     significance='analytic',
-    #     sig_samples=1000,
-    #     sig_blocklength=1,
+    cond_ind_test = GPDC(
+        significance='analytic',
+        sig_samples=1000,
+        sig_blocklength=1,
 
-    #     confidence=False, # False  'bootstrap',
-    #     conf_lev=0.9,
-    #     conf_samples=100,
-    #     conf_blocklength=1,
+        confidence=False, # False  'bootstrap',
+        conf_lev=0.9,
+        conf_samples=100,
+        conf_blocklength=1,
 
-    #     use_mask=False,
-    #     mask_type=['y'],
+        use_mask=False,
+        mask_type='y',
 
-    #     null_dist_filename='/home/jakobrunge/test/test.npz', #'/home/tests/test.npz',
-    #     gp_version='new',
+        null_dist_filename='/home/jakobrunge/test/test.npz', #'/home/tests/test.npz',
+        gp_version='new',
 
-    #     recycle_residuals=False,
-    #     verbosity=4)
+        recycle_residuals=False,
+        verbosity=4)
 
     # cond_ind_test.generate_and_save_nulldists( sample_sizes=[100, 250],
     #     null_dist_filename='/home/jakobrunge/test/test.npz')
     # cond_ind_test.null_dist_filename = '/home/jakobrunge/test/test.npz'
 
-    cond_ind_test = CMIknn(
-        significance='shuffle_test',
-        sig_samples=1000,
-        knn=100,
-        shuffle_neighbors=10,
-        confidence='bootstrap', #'bootstrap',
-        conf_lev=0.9,
-        conf_samples=100,
-        conf_blocklength=None,
+    # cond_ind_test = CMIknn(
+    #     significance='shuffle_test',
+    #     sig_samples=1000,
+    #     knn=100,
+    #     shuffle_neighbors=10,
+    #     confidence='bootstrap', #'bootstrap',
+    #     conf_lev=0.9,
+    #     conf_samples=100,
+    #     conf_blocklength=None,
 
-        use_mask=False,
-        mask_type=['y'],
-        recycle_residuals=False,
-        verbosity=3,
-        )
+    #     use_mask=False,
+    #     mask_type='y',
+    #     recycle_residuals=False,
+    #     verbosity=3,
+    #     )
 
     # cond_ind_test = CMIsymb()
     #     significance='shuffle_test',
@@ -2637,7 +2711,7 @@ if __name__ == '__main__':
     #     conf_blocklength=None,
 
     #     use_mask=False,
-    #     mask_type=['y'],
+    #     mask_type='y',
     #     recycle_residuals=False,
     #     verbosity=3)
 

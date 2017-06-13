@@ -149,6 +149,9 @@ def _get_restricted_permutation_cython(
 
     cdef int i, index, count, use
 
+    # Shuffle neighbor indices for each sample index
+    map(numpy.random.shuffle, neighbors)
+    
     for i in range(T):
 
         index = order[i];

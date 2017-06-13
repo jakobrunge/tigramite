@@ -1,0 +1,704 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>tigramite.linear_mediation &#8212; Tigramite 3.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '3.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for tigramite.linear_mediation</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Tigramite causal discovery for time series.&quot;&quot;&quot;</span>
+
+<span class="c1"># Author: Jakob Runge &lt;jakobrunge@posteo.de&gt;</span>
+<span class="c1">#</span>
+<span class="c1"># License: GNU General Public License v3.0</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">sklearn.linear_model</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Could not import sklearn&quot;</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">models</span> <span class="k">import</span> <span class="n">Model</span>
+
+<div class="viewcode-block" id="LinearMediation"><a class="viewcode-back" href="../../index.html#tigramite.linear_mediation.LinearMediation">[docs]</a><span class="k">class</span> <span class="nc">LinearMediation</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Linear mediation analysis for time series models.</span>
+
+<span class="sd">    Fits linear model to parents and provides functions to return measures such</span>
+<span class="sd">    as causal effect, mediated causal effect, average causal effect, etc. as</span>
+<span class="sd">    described in [4]_.</span>
+<span class="sd">    </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This class implements the following causal mediation measures introduced in</span>
+<span class="sd">    [4]_:</span>
+
+<span class="sd">      * causal effect (CE)</span>
+<span class="sd">      * mediated causal effect (MCE)</span>
+<span class="sd">      * average causal effect (ACE)</span>
+<span class="sd">      * average causal susceptibility (ACS)</span>
+<span class="sd">      * average mediated causal effect (AMCE)</span>
+
+<span class="sd">    Consider a simple model of a causal chain as given in the Example with</span>
+
+<span class="sd">    .. math:: X_t &amp;= \eta \\</span>
+<span class="sd">              Y_t &amp;= 0.5 X_{t-1} \\</span>
+<span class="sd">              Z_t &amp;= 0.5 Y_{t-1}</span>
+
+<span class="sd">    Here the link coefficient of :math:`X_{t-2} \to Z_t` is zero while the </span>
+<span class="sd">    causal effect is 0.25. MCE through :math:`Y` is 0.25 implying that *all* </span>
+<span class="sd">    of the the CE is explained by :math:`Y`. ACE from :math:`X` is 0.37 since it</span>
+<span class="sd">    has CE 0.5 on :math:`Y` and 0.25 on :math:`Z`.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from tigramite.linear_mediation import LinearMediation</span>
+<span class="sd">    &gt;&gt;&gt; numpy.random.seed(42)</span>
+<span class="sd">    &gt;&gt;&gt; links_coeffs = {0: [], 1: [((0, -1), 0.5)], 2: [((1, -1), 0.5)]}</span>
+<span class="sd">    &gt;&gt;&gt; data, true_parents = pp.var_process(links_coeffs, T=1000)</span>
+<span class="sd">    &gt;&gt;&gt; dataframe = pp.DataFrame(data)</span>
+<span class="sd">    &gt;&gt;&gt; med = LinearMediation(dataframe=dataframe)</span>
+<span class="sd">    &gt;&gt;&gt; med.fit_model(all_parents=true_parents, tau_max=3)</span>
+<span class="sd">    &gt;&gt;&gt; print &quot;Link coefficient (0, -2) --&gt; 2: &quot;, med.get_coeff(i=0, tau=-2, j=2)</span>
+<span class="sd">    &gt;&gt;&gt; print &quot;Causal effect (0, -2) --&gt; 2: &quot;, med.get_ce(i=0, tau=-2, j=2)</span>
+<span class="sd">    &gt;&gt;&gt; print &quot;Mediated Causal effect (0, -2) --&gt; 2 through 1: &quot;, med.get_mce(i=0, tau=-2, j=2, k=1)</span>
+<span class="sd">    &gt;&gt;&gt; print &quot;Average Causal Effect: &quot;, med.get_all_ace()</span>
+<span class="sd">    &gt;&gt;&gt; print &quot;Average Causal Susceptibility: &quot;, med.get_all_acs()</span>
+<span class="sd">    &gt;&gt;&gt; print &quot;Average Mediated Causal Effect: &quot;, med.get_all_amce()</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [4]  J. Runge et al. (2015): Identifying causal gateways and mediators in</span>
+<span class="sd">            complex spatio-temporal systems. </span>
+<span class="sd">            Nature Communications, 6, 8502. http://doi.org/10.1038/ncomms9502</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dataframe : data object</span>
+<span class="sd">        Tigramite dataframe object. It must have the attributes dataframe.values</span>
+<span class="sd">        yielding a numpy array of shape (observations T, variables N) and</span>
+<span class="sd">        optionally a mask of the same shape and a missing values flag.</span>
+
+<span class="sd">    model_params : dictionary, optional (default: None)</span>
+<span class="sd">        Optional parameters passed on to sklearn model</span>
+
+<span class="sd">    data_transform : sklearn preprocessing object, optional (default: None)</span>
+<span class="sd">        Used to transform data prior to fitting. For example, </span>
+<span class="sd">        sklearn.preprocessing.StandardScaler for simple standardization. The</span>
+<span class="sd">        fitted parameters are stored.</span>
+<span class="sd">    </span>
+<span class="sd">    use_mask : bool, optional (default: False)</span>
+<span class="sd">        Whether a supplied mask should be used.</span>
+
+<span class="sd">    mask_type : {&#39;y&#39;,&#39;x&#39;,&#39;z&#39;,&#39;xy&#39;,&#39;xz&#39;,&#39;yz&#39;,&#39;xyz&#39;}</span>
+<span class="sd">        Masking mode: Indicators for which variables in the dependence measure</span>
+<span class="sd">        I(X; Y | Z) the samples should be masked. If None, &#39;y&#39; is used, which</span>
+<span class="sd">        excludes all time slices containing masked samples in Y. Explained in</span>
+<span class="sd">        [1]_.</span>
+
+<span class="sd">    missing_flag : number, optional (default: None)</span>
+<span class="sd">        Flag for missing values. Dismisses all time slices of samples where</span>
+<span class="sd">        missing values occur in any variable and also flags samples for all lags</span>
+<span class="sd">        up to 2*tau_max. This avoids biases, see section on masking in</span>
+<span class="sd">        Supplement of [1]_.</span>
+
+<span class="sd">    verbosity : int, optional (default: 0)</span>
+<span class="sd">        Level of verbosity.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+            <span class="n">dataframe</span><span class="p">,</span>
+            <span class="n">model_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">data_transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">use_mask</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">mask_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">missing_flag</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="p">):</span>
+
+
+        <span class="k">if</span> <span class="n">data_transform</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">data_transform</span><span class="o">=</span><span class="n">sklearn</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">StandardScaler</span><span class="p">()</span>
+
+        <span class="n">Model</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+            <span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span>
+            <span class="n">model</span><span class="o">=</span><span class="n">sklearn</span><span class="o">.</span><span class="n">linear_model</span><span class="o">.</span><span class="n">LinearRegression</span><span class="p">,</span>
+            <span class="n">model_params</span><span class="o">=</span><span class="n">model_params</span><span class="p">,</span>
+            <span class="n">data_transform</span><span class="o">=</span><span class="n">data_transform</span><span class="p">,</span>
+            <span class="n">use_mask</span><span class="o">=</span><span class="n">use_mask</span><span class="p">,</span>
+            <span class="n">mask_type</span><span class="o">=</span><span class="n">mask_type</span><span class="p">,</span>
+            <span class="n">missing_flag</span><span class="o">=</span><span class="n">missing_flag</span><span class="p">,</span>
+            <span class="n">verbosity</span><span class="o">=</span><span class="n">verbosity</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="LinearMediation.fit_model"><a class="viewcode-back" href="../../index.html#tigramite.linear_mediation.LinearMediation.fit_model">[docs]</a>    <span class="k">def</span> <span class="nf">fit_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">all_parents</span><span class="p">,</span>
+                     <span class="n">tau_max</span><span class="o">=</span><span class="kc">None</span><span class="p">,):</span>
+        <span class="sd">&quot;&quot;&quot;Fit linear time series model.</span>
+
+<span class="sd">        Fits a sklearn.linear_model.LinearRegression model to the parents of</span>
+<span class="sd">        each variable and computes the coefficient matrices :math:`Phi` and </span>
+<span class="sd">        :math:`Psi` as described in [4]_.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        all_parents : dictionary </span>
+<span class="sd">            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing</span>
+<span class="sd">            the parents estimated with PCMCI.</span>
+<span class="sd">        </span>
+<span class="sd">        tau_max : int, optional (default: None)</span>
+<span class="sd">            Maximum time lag. If None, the maximum lag in all_parents is used.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_fit</span><span class="p">(</span><span class="n">all_parents</span><span class="o">=</span><span class="n">all_parents</span><span class="p">,</span>
+                                        <span class="n">selected_variables</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                        <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span>
+                                        <span class="p">)</span>
+
+        <span class="n">coeffs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_coefs</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">phi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_phi</span><span class="p">(</span><span class="n">coeffs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">psi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_psi</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">phi</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">all_psi_k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_all_psi_k</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">phi</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_check_sanity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Checks validity of some parameters.&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;X must be of form [(i, -tau)] and Y = [(j, 0)], &quot;</span>
+                             <span class="s2">&quot;but are X = </span><span class="si">%s</span><span class="s2">, Y=</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">))</span>
+        
+        <span class="n">i</span><span class="p">,</span> <span class="n">tau</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">tau</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;X must be of form [(i, -tau)] with&quot;</span>
+                             <span class="s2">&quot; tau &lt;= tau_max&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">k</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="n">k</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">k</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;k must be in [0, N)&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_phi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coeffs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the linear coefficient matrices for different lags.different</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        coeffs : dictionary</span>
+<span class="sd">            Dictionary of coefficients for each parent.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        phi : array-like, shape (tau_max + 1, N, N)</span>
+<span class="sd">            Matrices of coefficients for each time lag.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">phi</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">))</span>
+        <span class="n">phi</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">coeffs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="n">coeffs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">i</span><span class="p">,</span> <span class="n">tau</span> <span class="o">=</span> <span class="n">par</span>
+                <span class="n">phi</span><span class="p">[</span><span class="nb">abs</span><span class="p">(</span><span class="n">tau</span><span class="p">),</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">coeffs</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">par</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">phi</span> 
+
+    <span class="k">def</span> <span class="nf">_get_psi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">phi</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the linear causal effect matrices for different lags.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        phi : array-like</span>
+<span class="sd">            Coefficient matrices at different lags.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        psi : array-like, shape (tau_max + 1, N, N)</span>
+<span class="sd">            Matrices of causal effects for each time lag.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">psi</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">))</span>
+
+        <span class="n">psi</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">psi</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">))</span> 
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">psi</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">+=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">phi</span><span class="p">[</span><span class="n">s</span><span class="p">],</span> <span class="n">psi</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="n">s</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">psi</span>
+
+    <span class="k">def</span> <span class="nf">_get_psi_k</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">phi</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the linear causal effect matrices excluding variable k.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        phi : array-like</span>
+<span class="sd">            Coefficient matrices at different lags.</span>
+
+<span class="sd">        k : int</span>
+<span class="sd">            Variable index to exclude causal effects through.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        psi_k : array-like, shape (tau_max + 1, N, N)</span>
+<span class="sd">            Matrices of causal effects excluding k.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">psi_k</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">))</span>
+
+        <span class="n">psi_k</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+        <span class="n">phi_k</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+        <span class="c1"># print phi[1]</span>
+        <span class="n">phi_k</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="n">k</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="c1"># print phi_k[1]</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">psi_k</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">))</span> 
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">psi_k</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">+=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">phi_k</span><span class="p">[</span><span class="n">s</span><span class="p">],</span> <span class="n">psi_k</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="n">s</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">psi_k</span>
+
+    <span class="k">def</span> <span class="nf">_get_all_psi_k</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">phi</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the linear causal effect matrices excluding variables.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        phi : array-like</span>
+<span class="sd">            Coefficient matrices at different lags.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        all_psi_k : array-like, shape (N, tau_max + 1, N, N)</span>
+<span class="sd">            Matrices of causal effects where for each row another variable is</span>
+<span class="sd">            excluded.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">all_psi_k</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">all_psi_k</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_psi_k</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">all_psi_k</span>
+
+<div class="viewcode-block" id="LinearMediation.get_coeff"><a class="viewcode-back" href="../../index.html#tigramite.linear_mediation.LinearMediation.get_coeff">[docs]</a>    <span class="k">def</span> <span class="nf">get_coeff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns link coefficient.</span>
+<span class="sd">        </span>
+<span class="sd">        This is the causal effect for a particular link (i, tau) --&gt; j.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        i : int</span>
+<span class="sd">            Index of cause variable.</span>
+
+<span class="sd">        tau : int</span>
+<span class="sd">            Lag of cause variable.</span>
+
+<span class="sd">        j : int</span>
+<span class="sd">            Index of effect variable.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        coeff : float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">phi</span><span class="p">[</span><span class="nb">abs</span><span class="p">(</span><span class="n">tau</span><span class="p">),</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="LinearMediation.get_ce"><a class="viewcode-back" href="../../index.html#tigramite.linear_mediation.LinearMediation.get_ce">[docs]</a>    <span class="k">def</span> <span class="nf">get_ce</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the causal effect.</span>
+<span class="sd">        </span>
+<span class="sd">        This is the causal effect for  (i, tau) -- --&gt; j.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        i : int</span>
+<span class="sd">            Index of cause variable.</span>
+
+<span class="sd">        tau : int</span>
+<span class="sd">            Lag of cause variable.</span>
+
+<span class="sd">        j : int</span>
+<span class="sd">            Index of effect variable.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ce : float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi</span><span class="p">[</span><span class="nb">abs</span><span class="p">(</span><span class="n">tau</span><span class="p">),</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="LinearMediation.get_ce_max"><a class="viewcode-back" href="../../index.html#tigramite.linear_mediation.LinearMediation.get_ce_max">[docs]</a>    <span class="k">def</span> <span class="nf">get_ce_max</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the causal effect.</span>
+<span class="sd">        </span>
+<span class="sd">        This is the maximum absolute causal effect for  i --&gt; j across all lags.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        i : int</span>
+<span class="sd">            Index of cause variable.</span>
+
+<span class="sd">        j : int</span>
+<span class="sd">            Index of effect variable.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ce : float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psi</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="n">max</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="LinearMediation.get_mce"><a class="viewcode-back" href="../../index.html#tigramite.linear_mediation.LinearMediation.get_mce">[docs]</a>    <span class="k">def</span> <span class="nf">get_mce</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the mediated causal effect.</span>
+<span class="sd">        </span>
+<span class="sd">        This is the causal effect for  i --&gt; j minus the causal effect not going</span>
+<span class="sd">        through k.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        i : int</span>
+<span class="sd">            Index of cause variable.</span>
+
+<span class="sd">        tau : int</span>
+<span class="sd">            Lag of cause variable.</span>
+
+<span class="sd">        j : int</span>
+<span class="sd">            Index of effect variable.</span>
+
+<span class="sd">        k : int</span>
+<span class="sd">            Index of mediator variable.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mce : float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mce</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi</span><span class="p">[</span><span class="nb">abs</span><span class="p">(</span><span class="n">tau</span><span class="p">),</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_psi_k</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">tau</span><span class="p">),</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> 
+        
+        <span class="k">return</span> <span class="n">mce</span> </div>
+            
+
+<div class="viewcode-block" id="LinearMediation.get_ace"><a class="viewcode-back" href="../../index.html#tigramite.linear_mediation.LinearMediation.get_ace">[docs]</a>    <span class="k">def</span> <span class="nf">get_ace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">lag_mode</span><span class="o">=</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span> <span class="n">exclude_i</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the average causal effect.</span>
+<span class="sd">        </span>
+<span class="sd">        This is the average causal effect (ACE) emanating from variable i to any</span>
+<span class="sd">        other variable. With lag_mode=&#39;absmax&#39; this is based on the lag of</span>
+<span class="sd">        maximum CE for each pair.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        i : int</span>
+<span class="sd">            Index of cause variable.</span>
+<span class="sd">        </span>
+<span class="sd">        lag_mode : {&#39;absmax&#39;, &#39;all_lags&#39;}</span>
+<span class="sd">            Lag mode. Either average across all lags between each pair or only</span>
+<span class="sd">            at the lag of maximum absolute causal effect.</span>
+
+<span class="sd">        exclude_i : bool, optional (default: True)</span>
+<span class="sd">            Whether to exclude causal effects on the variable itself at later</span>
+<span class="sd">            lags.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ace :float</span>
+<span class="sd">            Average Causal Effect.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">all_but_i</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;bool&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">exclude_i</span><span class="p">:</span>
+            <span class="n">all_but_i</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">lag_mode</span> <span class="o">==</span> <span class="s1">&#39;absmax&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psi</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="n">all_but_i</span><span class="p">,</span> <span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">lag_mode</span> <span class="o">==</span> <span class="s1">&#39;all_lags&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psi</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="n">all_but_i</span><span class="p">,</span> <span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;lag_mode = </span><span class="si">%s</span><span class="s2"> not implemented&quot;</span> <span class="o">%</span> <span class="n">lag_mode</span><span class="p">)</span></div>
+    
+<div class="viewcode-block" id="LinearMediation.get_all_ace"><a class="viewcode-back" href="../../index.html#tigramite.linear_mediation.LinearMediation.get_all_ace">[docs]</a>    <span class="k">def</span> <span class="nf">get_all_ace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lag_mode</span><span class="o">=</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span> <span class="n">exclude_i</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the average causal effect for all variables.</span>
+<span class="sd">        </span>
+<span class="sd">        This is the average causal effect (ACE) emanating from variable i to any</span>
+<span class="sd">        other variable. With lag_mode=&#39;absmax&#39; this is based on the lag of</span>
+<span class="sd">        maximum CE for each pair.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------       </span>
+<span class="sd">        lag_mode : {&#39;absmax&#39;, &#39;all_lags&#39;}</span>
+<span class="sd">            Lag mode. Either average across all lags between each pair or only</span>
+<span class="sd">            at the lag of maximum absolute causal effect.</span>
+
+<span class="sd">        exclude_i : bool, optional (default: True)</span>
+<span class="sd">            Whether to exclude causal effects on the variable itself at later</span>
+<span class="sd">            lags.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ace : array of shape (N,)</span>
+<span class="sd">            Average Causal Effect for each variable.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">ace</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">ace</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ace</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">lag_mode</span><span class="o">=</span><span class="n">lag_mode</span><span class="p">,</span> <span class="n">exclude_i</span><span class="o">=</span><span class="n">exclude_i</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ace</span></div>
+
+<div class="viewcode-block" id="LinearMediation.get_acs"><a class="viewcode-back" href="../../index.html#tigramite.linear_mediation.LinearMediation.get_acs">[docs]</a>    <span class="k">def</span> <span class="nf">get_acs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">lag_mode</span><span class="o">=</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span> <span class="n">exclude_j</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the average causal susceptibility.</span>
+<span class="sd">        </span>
+<span class="sd">        This is the Average Causal Susceptibility (ACS) affecting a variable j</span>
+<span class="sd">        from any other variable. With lag_mode=&#39;absmax&#39; this is based on the lag</span>
+<span class="sd">        of maximum CE for each pair.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        j : int</span>
+<span class="sd">            Index of variable.</span>
+<span class="sd">        </span>
+<span class="sd">        lag_mode : {&#39;absmax&#39;, &#39;all_lags&#39;}</span>
+<span class="sd">            Lag mode. Either average across all lags between each pair or only</span>
+<span class="sd">            at the lag of maximum absolute causal effect.</span>
+
+<span class="sd">        exclude_j : bool, optional (default: True)</span>
+<span class="sd">            Whether to exclude causal effects on the variable itself at previous</span>
+<span class="sd">            lags.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        acs : float</span>
+<span class="sd">            Average Causal Susceptibility.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">all_but_j</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;bool&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">exclude_j</span><span class="p">:</span>
+            <span class="n">all_but_j</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">lag_mode</span> <span class="o">==</span> <span class="s1">&#39;absmax&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psi</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="n">j</span><span class="p">,</span> <span class="n">all_but_j</span><span class="p">])</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">lag_mode</span> <span class="o">==</span> <span class="s1">&#39;all_lags&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psi</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="n">j</span><span class="p">,</span> <span class="n">all_but_j</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;lag_mode = </span><span class="si">%s</span><span class="s2"> not implemented&quot;</span> <span class="o">%</span> <span class="n">lag_mode</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LinearMediation.get_all_acs"><a class="viewcode-back" href="../../index.html#tigramite.linear_mediation.LinearMediation.get_all_acs">[docs]</a>    <span class="k">def</span> <span class="nf">get_all_acs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lag_mode</span><span class="o">=</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span> <span class="n">exclude_j</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the average causal susceptibility.</span>
+<span class="sd">        </span>
+<span class="sd">        This is the Average Causal Susceptibility (ACS) for each variable from</span>
+<span class="sd">        any other variable. With lag_mode=&#39;absmax&#39; this is based on the lag of</span>
+<span class="sd">        maximum CE for each pair.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------        </span>
+<span class="sd">        lag_mode : {&#39;absmax&#39;, &#39;all_lags&#39;}</span>
+<span class="sd">            Lag mode. Either average across all lags between each pair or only</span>
+<span class="sd">            at the lag of maximum absolute causal effect.</span>
+
+<span class="sd">        exclude_j : bool, optional (default: True)</span>
+<span class="sd">            Whether to exclude causal effects on the variable itself at previous</span>
+<span class="sd">            lags.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        acs : array of shape (N,)</span>
+<span class="sd">            Average Causal Susceptibility.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">acs</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">acs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_acs</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">lag_mode</span><span class="o">=</span><span class="n">lag_mode</span><span class="p">,</span> <span class="n">exclude_j</span><span class="o">=</span><span class="n">exclude_j</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">acs</span></div>
+
+<div class="viewcode-block" id="LinearMediation.get_amce"><a class="viewcode-back" href="../../index.html#tigramite.linear_mediation.LinearMediation.get_amce">[docs]</a>    <span class="k">def</span> <span class="nf">get_amce</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">lag_mode</span><span class="o">=</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span> 
+                    <span class="n">exclude_k</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exclude_self_effects</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the average mediated causal effect.</span>
+<span class="sd">        </span>
+<span class="sd">        This is the Average Mediated Causal Effect (AMCE) through a variable k</span>
+<span class="sd">        With lag_mode=&#39;absmax&#39; this is based on the lag of maximum CE for each</span>
+<span class="sd">        pair.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        k : int</span>
+<span class="sd">            Index of variable.</span>
+<span class="sd">        </span>
+<span class="sd">        lag_mode : {&#39;absmax&#39;, &#39;all_lags&#39;}</span>
+<span class="sd">            Lag mode. Either average across all lags between each pair or only</span>
+<span class="sd">            at the lag of maximum absolute causal effect.</span>
+
+<span class="sd">        exclude_k : bool, optional (default: True)</span>
+<span class="sd">            Whether to exclude causal effects through the variable itself at </span>
+<span class="sd">            previous lags.</span>
+
+<span class="sd">        exclude_self_effects : bool, optional (default: True)</span>
+<span class="sd">            Whether to exclude causal self effects of variables on themselves.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        amce : float</span>
+<span class="sd">            Average Mediated Causal Effect.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">all_but_k</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;bool&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">exclude_k</span><span class="p">:</span>
+            <span class="n">all_but_k</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">N_new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">N_new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span>
+
+        <span class="k">if</span> <span class="n">exclude_self_effects</span><span class="p">:</span>
+            <span class="n">weights</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">N_new</span><span class="p">)</span> <span class="o">==</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">weights</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">N_new</span><span class="p">,</span> <span class="n">N_new</span><span class="p">),</span> <span class="n">dtype</span> <span class="o">=</span> <span class="s1">&#39;bool&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Mediation only nonzero for tau_max &gt;= 2&quot;</span><span class="p">)</span>
+
+        <span class="n">all_mce</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi</span><span class="p">[</span><span class="mi">2</span><span class="p">:,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_psi_k</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="mi">2</span><span class="p">:,</span> <span class="p">:,</span> <span class="p">:]</span> 
+        <span class="c1"># all_mce[:, range(self.N), range(self.N)] = 0.</span>
+
+        <span class="k">if</span> <span class="n">lag_mode</span> <span class="o">==</span> <span class="s1">&#39;absmax&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">all_mce</span><span class="p">[:,</span> <span class="n">all_but_k</span><span class="p">,</span> <span class="p">:]</span>
+                                                  <span class="p">[:,</span> <span class="p">:,</span> <span class="n">all_but_k</span><span class="p">]</span>
+                                                <span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">lag_mode</span> <span class="o">==</span> <span class="s1">&#39;all_lags&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">all_mce</span><span class="p">[:,</span> <span class="n">all_but_k</span><span class="p">,</span> <span class="p">:][:,:,</span> <span class="n">all_but_k</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;lag_mode = </span><span class="si">%s</span><span class="s2"> not implemented&quot;</span> <span class="o">%</span> <span class="n">lag_mode</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LinearMediation.get_all_amce"><a class="viewcode-back" href="../../index.html#tigramite.linear_mediation.LinearMediation.get_all_amce">[docs]</a>    <span class="k">def</span> <span class="nf">get_all_amce</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lag_mode</span><span class="o">=</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span> 
+                    <span class="n">exclude_k</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exclude_self_effects</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the average mediated causal effect.</span>
+<span class="sd">        </span>
+<span class="sd">        This is the Average Mediated Causal Effect (AMCE) through all variables</span>
+<span class="sd">        With lag_mode=&#39;absmax&#39; this is based on the lag of maximum CE for each</span>
+<span class="sd">        pair.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        lag_mode : {&#39;absmax&#39;, &#39;all_lags&#39;}</span>
+<span class="sd">            Lag mode. Either average across all lags between each pair or only</span>
+<span class="sd">            at the lag of maximum absolute causal effect.</span>
+
+<span class="sd">        exclude_k : bool, optional (default: True)</span>
+<span class="sd">            Whether to exclude causal effects through the variable itself at </span>
+<span class="sd">            previous lags.</span>
+
+<span class="sd">        exclude_self_effects : bool, optional (default: True)</span>
+<span class="sd">            Whether to exclude causal self effects of variables on themselves.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        amce : array of shape (N,)</span>
+<span class="sd">            Average Mediated Causal Effect.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">amce</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">amce</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_amce</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> 
+                                <span class="n">lag_mode</span><span class="o">=</span><span class="n">lag_mode</span><span class="p">,</span> 
+                                <span class="n">exclude_k</span><span class="o">=</span><span class="n">exclude_k</span><span class="p">,</span> 
+                                <span class="n">exclude_self_effects</span><span class="o">=</span><span class="n">exclude_self_effects</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">amce</span></div></div>
+       
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+
+    <span class="c1"># Quick test</span>
+    <span class="kn">import</span> <span class="nn">data_processing</span> <span class="k">as</span> <span class="nn">pp</span>
+
+    <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+    <span class="n">links_coeffs</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">[],</span>
+                    <span class="mi">1</span><span class="p">:</span> <span class="p">[((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.5</span><span class="p">)],</span>
+                    <span class="mi">2</span><span class="p">:</span> <span class="p">[((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.5</span><span class="p">)],</span>
+                    <span class="p">}</span>
+    <span class="n">data</span><span class="p">,</span> <span class="n">true_parents</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">var_process</span><span class="p">(</span><span class="n">links_coeffs</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+    <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">med</span> <span class="o">=</span> <span class="n">LinearMediation</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">)</span>
+    <span class="n">med</span><span class="o">.</span><span class="n">fit_model</span><span class="p">(</span><span class="n">all_parents</span><span class="o">=</span><span class="n">true_parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="s2">&quot;Link coefficient (0, -2) --&gt; 2: &quot;</span><span class="p">,</span> <span class="n">med</span><span class="o">.</span><span class="n">get_coeff</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tau</span><span class="o">=-</span><span class="mi">2</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="s2">&quot;Causal effect (0, -2) --&gt; 2: &quot;</span><span class="p">,</span> <span class="n">med</span><span class="o">.</span><span class="n">get_ce</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tau</span><span class="o">=-</span><span class="mi">2</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="s2">&quot;Mediated Causal effect (0, -2) --&gt; 2 through 1: &quot;</span><span class="p">,</span> <span class="n">med</span><span class="o">.</span><span class="n">get_mce</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tau</span><span class="o">=-</span><span class="mi">2</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="s2">&quot;Average Causal Effect: &quot;</span><span class="p">,</span> <span class="n">med</span><span class="o">.</span><span class="n">get_all_ace</span><span class="p">()</span>
+    <span class="nb">print</span> <span class="s2">&quot;Average Causal Susceptibility: &quot;</span><span class="p">,</span> <span class="n">med</span><span class="o">.</span><span class="n">get_all_acs</span><span class="p">()</span>
+    <span class="nb">print</span> <span class="s2">&quot;Average Mediated Causal Effect: &quot;</span><span class="p">,</span> <span class="n">med</span><span class="o">.</span><span class="n">get_all_amce</span><span class="p">()</span>
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Jakob Runge.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.6.
+    </div>
+  </body>
+</html>

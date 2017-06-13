@@ -38,8 +38,11 @@ Tigramite is a causal time series analysis python package. With flexibly adaptab
    tigramite.independence_tests.GPACE
    tigramite.independence_tests.GPDC
    tigramite.independence_tests.CMIknn
-   tigramite.independence_tests.CMIsymb
+   tigramite.independence_tests.CMIsymb  
    tigramite.data_processing
+   tigramite.models.Model
+   tigramite.models.LinearMediation
+   tigramite.models.Prediction
    tigramite.plotting
 
 
@@ -81,6 +84,22 @@ Test statistics:
 ===========================================================
 
 .. automodule:: tigramite.data_processing
+   :members:
+
+:mod:`tigramite.models`: Time series modeling, mediation, and prediction
+========================================================================
+
+Base class:
+
+.. autoclass:: tigramite.models.Model
+   :members:
+
+Derived classes:
+
+.. autoclass:: tigramite.models.LinearMediation
+   :members:
+
+.. autoclass:: tigramite.models.Prediction
    :members:
 
 :mod:`tigramite.plotting`: Plotting functions

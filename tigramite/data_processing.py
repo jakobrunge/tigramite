@@ -510,7 +510,8 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
         true_parents_neighbors[j] = []
         for node, coeff in parents_neighbors_coeffs[j]:
             i, tau = node[0], -node[1]
-            true_parents_neighbors[j].append((i, -tau))
+            if coeff != 0.:
+                true_parents_neighbors[j].append((i, -tau))
             if tau == 0:
                 innos[j, i] = innos[i, j] = coeff
             else:

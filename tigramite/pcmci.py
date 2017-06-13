@@ -635,6 +635,29 @@ class PCMCI():
 
         tau_min = max(1, tau_min)
 
+        if max_combinations <= 0:
+            raise ValueError("max_combinations must be > 0")
+
+        p_max = dict([(j, {}) for j in range(self.N)])
+        test_statistic_values = dict([(j, {}) for j in range(self.N)])
+
+        iterations = dict([(j, {}) for j in range(self.N)])
+
+        if self.verbosity > 0:
+            print("\n##\n## Running Tigramite PC algorithm\n##"
+                  "\n\nParameters:")
+            if len(self.selected_variables) < self.N:
+                print("selected_variables = %s" % self.selected_variables)
+            if selected_links is not None:
+                print("selected_links = %s" % self.selected_links)
+            print("independence test = %s" % self.cond_ind_test.measure
+                  + "\ntau_min = %d" % tau_min
+                  + "\ntau_max = %d" % tau_max
+                  + "\npc_alpha = %s" % pc_alpha
+                  + "\nmax_conds_dim = %s" % max_conds_dim
+                  + "\nmax_combinations = %d" % max_combinations)
+            print("\n")
+
         if selected_links is None:
             selected_links = {}
             for j in range(self.N):
@@ -646,25 +669,7 @@ class PCMCI():
                 else:
                     selected_links[j] = []
 
-        if max_combinations <= 0:
-            raise ValueError("max_combinations must be > 0")
-
-        p_max = dict([(j, {}) for j in range(self.N)])
-        test_statistic_values = dict([(j, {}) for j in range(self.N)])
         all_parents = selected_links
-
-        iterations = dict([(j, {}) for j in range(self.N)])
-
-        if self.verbosity > 0:
-            print("\n##\n## Running Tigramite PC algorithm\n##"
-                  "\n\nParameters:")
-            print("\nindependence test = %s" % self.cond_ind_test.measure
-                  + "\ntau_min = %d" % tau_min
-                  + "\ntau_max = %d" % tau_max
-                  + "\npc_alpha = %s" % pc_alpha
-                  + "\nmax_conds_dim = %s" % max_conds_dim
-                  + "\nmax_combinations = %d" % max_combinations)
-            print("\n")
 
         if max_conds_dim is None:
             max_conds_dim = self.N * tau_max

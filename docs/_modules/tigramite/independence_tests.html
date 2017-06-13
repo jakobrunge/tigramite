@@ -81,25 +81,6 @@
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Could not import sklearn for GPACE&quot;</span><span class="p">)</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">rpy2</span>
-    <span class="kn">import</span> <span class="nn">rpy2.robjects</span>
-    <span class="n">rpy2</span><span class="o">.</span><span class="n">robjects</span><span class="o">.</span><span class="n">r</span><span class="p">[</span><span class="s1">&#39;options&#39;</span><span class="p">](</span><span class="n">warn</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
-
-    <span class="kn">from</span> <span class="nn">rpy2.robjects.packages</span> <span class="k">import</span> <span class="n">importr</span>
-    <span class="n">acepack</span> <span class="o">=</span> <span class="n">importr</span><span class="p">(</span><span class="s1">&#39;acepack&#39;</span><span class="p">)</span>
-    <span class="kn">import</span> <span class="nn">rpy2.robjects.numpy2ri</span>
-    <span class="n">rpy2</span><span class="o">.</span><span class="n">robjects</span><span class="o">.</span><span class="n">numpy2ri</span><span class="o">.</span><span class="n">activate</span><span class="p">()</span>
-
-<span class="k">except</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Could not import rpy acepack package for GPACE,&quot;</span>
-          <span class="s2">&quot; use python ACE package&quot;</span><span class="p">)</span>
-
-<span class="k">try</span><span class="p">:</span> 
-    <span class="kn">import</span> <span class="nn">ace</span>
-<span class="k">except</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Could not import python ACE package for GPACE&quot;</span><span class="p">)</span>
-
-<span class="k">try</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">spatial</span>
     <span class="kn">import</span> <span class="nn">tigramite_cython_code</span>
 <span class="k">except</span><span class="p">:</span>
@@ -384,6 +365,35 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span> <span class="o">=</span> <span class="s1">&#39;y&#39;</span>
 
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"># Initialize conditional independence test</span><span class="se">\n</span><span class="s2">&quot;</span>
+                  <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Parameters:&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;independence test = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span>
+                  <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">significance = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">significance</span>
+                  <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">significance</span> <span class="o">==</span> <span class="s1">&#39;shuffle_test&#39;</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span>
+                <span class="o">+</span> <span class="s2">&quot;sig_samples = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">sig_samples</span>
+                <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">sig_blocklength = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">sig_blocklength</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">significance</span> <span class="o">==</span> <span class="s1">&#39;fixed_thres&#39;</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span>
+                <span class="o">+</span> <span class="s2">&quot;fixed_thres = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">fixed_thres</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">confidence</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;confidence = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">confidence</span>
+                <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">conf_lev = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf_lev</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">confidenc</span> <span class="o">==</span> <span class="s1">&#39;bootstrap&#39;</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span>
+                    <span class="o">+</span> <span class="s2">&quot;conf_samples = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf_samples</span>
+                    <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">conf_blocklength = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf_blocklength</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_mask</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span>
+                  <span class="o">+</span> <span class="s2">&quot;use_mask = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_mask</span>
+                  <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">mask_type = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">recycle_residuals</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;recycle_residuals = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">recycle_residuals</span><span class="p">)</span>
+
+            <span class="c1"># print(&quot;\n&quot;)</span>
         <span class="c1"># if use_mask:</span>
         <span class="c1">#     if mask_type is None or len(set(mask_type) -</span>
         <span class="c1">#                                 set([&#39;x&#39;, &#39;y&#39;, &#39;z&#39;])) &gt; 0:</span>
@@ -497,7 +507,7 @@
                                                  <span class="n">xyz</span><span class="o">=</span><span class="n">xyz</span><span class="p">,</span>
                                                  <span class="n">value</span><span class="o">=</span><span class="n">val</span><span class="p">)</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">significance</span> <span class="o">==</span> <span class="s1">&#39;fixed_thres&#39;</span><span class="p">:</span>
-            <span class="n">pval</span> <span class="o">=</span> <span class="n">get_fixed_thres_significance</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">val</span><span class="p">,</span> 
+            <span class="n">pval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_fixed_thres_significance</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">val</span><span class="p">,</span> 
                                                 <span class="n">fixed_thres</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fixed_thres</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> not known.&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">significance</span><span class="p">)</span>
@@ -1097,11 +1107,14 @@
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
         <span class="c1"># super(ParCorr, self).__init__(</span>
-        <span class="n">CondIndTest</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">measure</span> <span class="o">=</span> <span class="s1">&#39;par_corr&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">two_sided</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">residual_based</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">CondIndTest</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
     <span class="c1"># @profile</span>
     <span class="k">def</span> <span class="nf">_get_single_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="p">,</span> 
@@ -1616,7 +1629,26 @@
                 <span class="n">ace_version</span><span class="o">=</span><span class="s1">&#39;acepack&#39;</span><span class="p">,</span>
                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
-        <span class="n">CondIndTest</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">rpy2</span>
+            <span class="kn">import</span> <span class="nn">rpy2.robjects</span>
+            <span class="n">rpy2</span><span class="o">.</span><span class="n">robjects</span><span class="o">.</span><span class="n">r</span><span class="p">[</span><span class="s1">&#39;options&#39;</span><span class="p">](</span><span class="n">warn</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="kn">from</span> <span class="nn">rpy2.robjects.packages</span> <span class="k">import</span> <span class="n">importr</span>
+            <span class="n">acepack</span> <span class="o">=</span> <span class="n">importr</span><span class="p">(</span><span class="s1">&#39;acepack&#39;</span><span class="p">)</span>
+            <span class="kn">import</span> <span class="nn">rpy2.robjects.numpy2ri</span>
+            <span class="n">rpy2</span><span class="o">.</span><span class="n">robjects</span><span class="o">.</span><span class="n">numpy2ri</span><span class="o">.</span><span class="n">activate</span><span class="p">()</span>
+
+        <span class="k">except</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Could not import rpy acepack package for GPACE,&quot;</span>
+                  <span class="s2">&quot; use python ACE package&quot;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span> 
+            <span class="kn">import</span> <span class="nn">ace</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Could not import python ACE package for GPACE&quot;</span><span class="p">)</span>
+
+
 
         <span class="n">GP</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
                     <span class="n">gp_version</span><span class="o">=</span><span class="n">gp_version</span><span class="p">,</span>
@@ -1631,6 +1663,18 @@
 
         <span class="c1"># Load null-dist file, adapt if necessary</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">null_dist_filename</span> <span class="o">=</span> <span class="n">null_dist_filename</span>
+
+        <span class="n">CondIndTest</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;null_dist_filename = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">null_dist_filename</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;gp_version = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">gp_version</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gp_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span>  <span class="bp">self</span><span class="o">.</span><span class="n">gp_params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gp_params</span><span class="p">[</span><span class="n">key</span><span class="p">]))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ace_version = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">ace_version</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">null_dist_filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">null_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sig_samples</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">null_dists</span> <span class="o">=</span> <span class="p">{}</span>
@@ -1889,8 +1933,6 @@
                 <span class="n">gp_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
-        <span class="n">CondIndTest</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
         <span class="n">GP</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
                     <span class="n">gp_version</span><span class="o">=</span><span class="n">gp_version</span><span class="p">,</span>
                     <span class="n">gp_params</span><span class="o">=</span><span class="n">gp_params</span><span class="p">,</span>
@@ -1902,6 +1944,17 @@
 
         <span class="c1"># Load null-dist file, adapt if necessary</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">null_dist_filename</span> <span class="o">=</span> <span class="n">null_dist_filename</span>
+
+        <span class="n">CondIndTest</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;null_dist_filename = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">null_dist_filename</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;gp_version = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">gp_version</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gp_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span>  <span class="bp">self</span><span class="o">.</span><span class="n">gp_params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gp_params</span><span class="p">[</span><span class="n">key</span><span class="p">]))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">null_dist_filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">null_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sig_samples</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">null_dists</span> <span class="o">=</span> <span class="p">{}</span>
@@ -2121,9 +2174,11 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    knn : int, optional (default: 100)</span>
+<span class="sd">    knn : int or float, optional (default: 0.2)</span>
 <span class="sd">        Number of nearest-neighbors which determines the size of hyper-cubes</span>
-<span class="sd">        around each (high-dimensional) sample point.</span>
+<span class="sd">        around each (high-dimensional) sample point. If smaller than 1, this is</span>
+<span class="sd">        computed as a fraction of T, hence knn=knn*T. For knn larger or equal to</span>
+<span class="sd">        1, this is the absolute number.</span>
 
 <span class="sd">    shuffle_neighbors : int, optional (default: 10)</span>
 <span class="sd">        Number of nearest-neighbors within Z for the shuffle surrogates which</span>
@@ -2138,12 +2193,11 @@
 <span class="sd">        Arguments passed on to parent class CondIndTest. </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                <span class="n">knn</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-                <span class="n">shuffle_neighbors</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                <span class="n">knn</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+                <span class="n">shuffle_neighbors</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
                 <span class="n">significance</span><span class="o">=</span><span class="s1">&#39;shuffle_test&#39;</span><span class="p">,</span>
                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
-        <span class="n">CondIndTest</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">significance</span><span class="o">=</span><span class="n">significance</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">knn</span> <span class="o">=</span> <span class="n">knn</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">shuffle_neighbors</span> <span class="o">=</span> <span class="n">shuffle_neighbors</span>
@@ -2153,9 +2207,15 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">residual_based</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">recycle_residuals</span> <span class="o">=</span> <span class="kc">False</span>
 
+        <span class="n">CondIndTest</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">significance</span><span class="o">=</span><span class="n">significance</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Initialized CMIknn class with nearest-neighbor parameter&quot;</span>
-                  <span class="s2">&quot; knn = </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">knn</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">knn</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;knn/T = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">knn</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;knn = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">knn</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;shuffle_neighbors = </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">shuffle_neighbors</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_get_nearest_neighbors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">knn</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="s1">&#39;standardize&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns nearest neighbors according to Frenzel and Pompe (2007).</span>
@@ -2172,9 +2232,11 @@
 <span class="sd">        xyz : array of ints</span>
 <span class="sd">            XYZ identifier array of shape (dim,).</span>
 <span class="sd">       </span>
-<span class="sd">        knn : int</span>
+<span class="sd">        knn : int or float</span>
 <span class="sd">            Number of nearest-neighbors which determines the size of hyper-cubes</span>
-<span class="sd">            around each (high-dimensional) sample point.</span>
+<span class="sd">            around each (high-dimensional) sample point. If smaller than 1, this</span>
+<span class="sd">            is computed as a fraction of T, hence knn=knn*T. For knn larger or</span>
+<span class="sd">            equal to 1, this is the absolute number.</span>
 
 <span class="sd">        transform : {&#39;standardize&#39;, &#39;uniform&#39;, False}, optional </span>
 <span class="sd">            (default: &#39;standardize&#39;)</span>
@@ -2239,10 +2301,17 @@
 <span class="sd">            Conditional mutual information estimate.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">k_xz</span><span class="p">,</span> <span class="n">k_yz</span><span class="p">,</span> <span class="n">k_z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_nearest_neighbors</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="o">=</span><span class="n">xyz</span><span class="p">,</span>
-                                                 <span class="n">knn</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">knn</span><span class="p">)</span>
+        <span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
 
-        <span class="n">val</span> <span class="o">=</span> <span class="n">special</span><span class="o">.</span><span class="n">digamma</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">knn</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">special</span><span class="o">.</span><span class="n">digamma</span><span class="p">(</span><span class="n">k_xz</span><span class="p">)</span> <span class="o">+</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">knn</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">knn_here</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">knn</span><span class="o">*</span><span class="n">T</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">knn_here</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">knn</span><span class="p">))</span>
+
+        <span class="n">k_xz</span><span class="p">,</span> <span class="n">k_yz</span><span class="p">,</span> <span class="n">k_z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_nearest_neighbors</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="o">=</span><span class="n">xyz</span><span class="p">,</span>
+                                                 <span class="n">knn</span><span class="o">=</span><span class="n">knn_here</span><span class="p">)</span>
+
+        <span class="n">val</span> <span class="o">=</span> <span class="n">special</span><span class="o">.</span><span class="n">digamma</span><span class="p">(</span><span class="n">knn_here</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">special</span><span class="o">.</span><span class="n">digamma</span><span class="p">(</span><span class="n">k_xz</span><span class="p">)</span> <span class="o">+</span>
                                       <span class="n">special</span><span class="o">.</span><span class="n">digamma</span><span class="p">(</span><span class="n">k_yz</span><span class="p">)</span> <span class="o">-</span>
                                       <span class="n">special</span><span class="o">.</span><span class="n">digamma</span><span class="p">(</span><span class="n">k_z</span><span class="p">))</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 
@@ -2403,11 +2472,6 @@
                 <span class="n">conf_blocklength</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
-        <span class="n">CondIndTest</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
-                             <span class="n">significance</span><span class="o">=</span><span class="n">significance</span><span class="p">,</span> 
-                             <span class="n">sig_blocklength</span><span class="o">=</span><span class="n">sig_blocklength</span><span class="p">,</span>
-                             <span class="n">conf_blocklength</span><span class="o">=</span><span class="n">conf_blocklength</span><span class="p">,</span>
-                             <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">measure</span> <span class="o">=</span> <span class="s1">&#39;cmi_symb&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">two_sided</span> <span class="o">=</span> <span class="kc">False</span>
@@ -2415,6 +2479,16 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">recycle_residuals</span> <span class="o">=</span> <span class="kc">False</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">n_symbs</span> <span class="o">=</span> <span class="n">n_symbs</span>
+
+        <span class="n">CondIndTest</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+                             <span class="n">significance</span><span class="o">=</span><span class="n">significance</span><span class="p">,</span> 
+                             <span class="n">sig_blocklength</span><span class="o">=</span><span class="n">sig_blocklength</span><span class="p">,</span>
+                             <span class="n">conf_blocklength</span><span class="o">=</span><span class="n">conf_blocklength</span><span class="p">,</span>
+                             <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;n_symbs = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_symbs</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf_blocklength</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">sig_blocklength</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Automatic block-length estimations from decay of &quot;</span>
@@ -2629,7 +2703,7 @@
     <span class="c1">#     conf_blocklength=1,</span>
 
     <span class="c1">#     use_mask=False,</span>
-    <span class="c1">#     mask_type=[&#39;y&#39;],</span>
+    <span class="c1">#     mask_type=&#39;y&#39;,</span>
     <span class="c1">#     recycle_residuals=False,</span>
     <span class="c1">#     verbosity=3)</span>
 
@@ -2644,7 +2718,7 @@
     <span class="c1">#     conf_blocklength=None,</span>
 
     <span class="c1">#     use_mask=False,</span>
-    <span class="c1">#     mask_type=[&#39;y&#39;],</span>
+    <span class="c1">#     mask_type=&#39;y&#39;,</span>
 
     <span class="c1">#     null_dist_filename=None,</span>
     <span class="c1">#     gp_version=&#39;new&#39;,</span>
@@ -2652,44 +2726,44 @@
     <span class="c1">#     recycle_residuals=False,</span>
     <span class="c1">#     verbosity=4)</span>
 
-    <span class="c1"># cond_ind_test = GPDC(</span>
-    <span class="c1">#     significance=&#39;analytic&#39;,</span>
-    <span class="c1">#     sig_samples=1000,</span>
-    <span class="c1">#     sig_blocklength=1,</span>
+    <span class="n">cond_ind_test</span> <span class="o">=</span> <span class="n">GPDC</span><span class="p">(</span>
+        <span class="n">significance</span><span class="o">=</span><span class="s1">&#39;analytic&#39;</span><span class="p">,</span>
+        <span class="n">sig_samples</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+        <span class="n">sig_blocklength</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
 
-    <span class="c1">#     confidence=False, # False  &#39;bootstrap&#39;,</span>
-    <span class="c1">#     conf_lev=0.9,</span>
-    <span class="c1">#     conf_samples=100,</span>
-    <span class="c1">#     conf_blocklength=1,</span>
+        <span class="n">confidence</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="c1"># False  &#39;bootstrap&#39;,</span>
+        <span class="n">conf_lev</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
+        <span class="n">conf_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+        <span class="n">conf_blocklength</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
 
-    <span class="c1">#     use_mask=False,</span>
-    <span class="c1">#     mask_type=[&#39;y&#39;],</span>
+        <span class="n">use_mask</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">mask_type</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span>
 
-    <span class="c1">#     null_dist_filename=&#39;/home/jakobrunge/test/test.npz&#39;, #&#39;/home/tests/test.npz&#39;,</span>
-    <span class="c1">#     gp_version=&#39;new&#39;,</span>
+        <span class="n">null_dist_filename</span><span class="o">=</span><span class="s1">&#39;/home/jakobrunge/test/test.npz&#39;</span><span class="p">,</span> <span class="c1">#&#39;/home/tests/test.npz&#39;,</span>
+        <span class="n">gp_version</span><span class="o">=</span><span class="s1">&#39;new&#39;</span><span class="p">,</span>
 
-    <span class="c1">#     recycle_residuals=False,</span>
-    <span class="c1">#     verbosity=4)</span>
+        <span class="n">recycle_residuals</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">verbosity</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 
     <span class="c1"># cond_ind_test.generate_and_save_nulldists( sample_sizes=[100, 250],</span>
     <span class="c1">#     null_dist_filename=&#39;/home/jakobrunge/test/test.npz&#39;)</span>
     <span class="c1"># cond_ind_test.null_dist_filename = &#39;/home/jakobrunge/test/test.npz&#39;</span>
 
-    <span class="n">cond_ind_test</span> <span class="o">=</span> <span class="n">CMIknn</span><span class="p">(</span>
-        <span class="n">significance</span><span class="o">=</span><span class="s1">&#39;shuffle_test&#39;</span><span class="p">,</span>
-        <span class="n">sig_samples</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
-        <span class="n">knn</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-        <span class="n">shuffle_neighbors</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-        <span class="n">confidence</span><span class="o">=</span><span class="s1">&#39;bootstrap&#39;</span><span class="p">,</span> <span class="c1">#&#39;bootstrap&#39;,</span>
-        <span class="n">conf_lev</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
-        <span class="n">conf_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-        <span class="n">conf_blocklength</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="c1"># cond_ind_test = CMIknn(</span>
+    <span class="c1">#     significance=&#39;shuffle_test&#39;,</span>
+    <span class="c1">#     sig_samples=1000,</span>
+    <span class="c1">#     knn=100,</span>
+    <span class="c1">#     shuffle_neighbors=10,</span>
+    <span class="c1">#     confidence=&#39;bootstrap&#39;, #&#39;bootstrap&#39;,</span>
+    <span class="c1">#     conf_lev=0.9,</span>
+    <span class="c1">#     conf_samples=100,</span>
+    <span class="c1">#     conf_blocklength=None,</span>
 
-        <span class="n">use_mask</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">mask_type</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span>
-        <span class="n">recycle_residuals</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">verbosity</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
-        <span class="p">)</span>
+    <span class="c1">#     use_mask=False,</span>
+    <span class="c1">#     mask_type=&#39;y&#39;,</span>
+    <span class="c1">#     recycle_residuals=False,</span>
+    <span class="c1">#     verbosity=3,</span>
+    <span class="c1">#     )</span>
 
     <span class="c1"># cond_ind_test = CMIsymb()</span>
     <span class="c1">#     significance=&#39;shuffle_test&#39;,</span>
@@ -2701,7 +2775,7 @@
     <span class="c1">#     conf_blocklength=None,</span>
 
     <span class="c1">#     use_mask=False,</span>
-    <span class="c1">#     mask_type=[&#39;y&#39;],</span>
+    <span class="c1">#     mask_type=&#39;y&#39;,</span>
     <span class="c1">#     recycle_residuals=False,</span>
     <span class="c1">#     verbosity=3)</span>
 

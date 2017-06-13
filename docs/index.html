@@ -48,6 +48,7 @@
 <li><a class="reference internal" href="#tigramite-pcmci-pcmci"><code class="docutils literal"><span class="pre">tigramite.pcmci</span></code>: PCMCI</a></li>
 <li><a class="reference internal" href="#tigramite-independence-tests-conditional-independence-tests"><code class="docutils literal"><span class="pre">tigramite.independence_tests</span></code>: Conditional independence tests</a></li>
 <li><a class="reference internal" href="#module-tigramite.data_processing"><code class="docutils literal"><span class="pre">tigramite.data_processing</span></code>: Data processing functions</a></li>
+<li><a class="reference internal" href="#tigramite-models-time-series-modeling-mediation-and-prediction"><code class="docutils literal"><span class="pre">tigramite.models</span></code>: Time series modeling, mediation, and prediction</a></li>
 <li><a class="reference internal" href="#module-tigramite.plotting"><code class="docutils literal"><span class="pre">tigramite.plotting</span></code>: Plotting functions</a></li>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
 </ul>
@@ -128,7 +129,16 @@ Physical Review Letters, 108(25), 258701.
 <tr class="row-odd"><td><a class="reference internal" href="#module-tigramite.data_processing" title="tigramite.data_processing"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.data_processing</span></code></a></td>
 <td>Tigramite data processing functions.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="#module-tigramite.plotting" title="tigramite.plotting"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.plotting</span></code></a></td>
+<tr class="row-even"><td><a class="reference internal" href="#tigramite.models.Model" title="tigramite.models.Model"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.models.Model</span></code></a>(dataframe,&nbsp;model[,&nbsp;...])</td>
+<td>Base class for time series models.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#tigramite.models.LinearMediation" title="tigramite.models.LinearMediation"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.models.LinearMediation</span></code></a>(dataframe)</td>
+<td>Linear mediation analysis for time series models.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#tigramite.models.Prediction" title="tigramite.models.Prediction"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.models.Prediction</span></code></a>(dataframe,&nbsp;...)</td>
+<td>Prediction class for time series models.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#module-tigramite.plotting" title="tigramite.plotting"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.plotting</span></code></a></td>
 <td>Tigramite plotting package.</td>
 </tr>
 </tbody>
@@ -215,7 +225,7 @@ criteria.</p>
 <table class="docutils footnote" frame="void" id="id5" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[1]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>, <a class="fn-backref" href="#id3">3</a>, <a class="fn-backref" href="#id4">4</a>, <a class="fn-backref" href="#id6">5</a>, <a class="fn-backref" href="#id7">6</a>, <a class="fn-backref" href="#id8">7</a>, <a class="fn-backref" href="#id9">8</a>, <a class="fn-backref" href="#id10">9</a>, <a class="fn-backref" href="#id11">10</a>, <a class="fn-backref" href="#id12">11</a>, <a class="fn-backref" href="#id13">12</a>, <a class="fn-backref" href="#id14">13</a>, <a class="fn-backref" href="#id18">14</a>, <a class="fn-backref" href="#id21">15</a>, <a class="fn-backref" href="#id22">16</a>)</em> J. Runge, D. Sejdinovic, S. Flaxman (2017): Detecting causal
+<tr><td class="label">[1]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>, <a class="fn-backref" href="#id3">3</a>, <a class="fn-backref" href="#id4">4</a>, <a class="fn-backref" href="#id6">5</a>, <a class="fn-backref" href="#id7">6</a>, <a class="fn-backref" href="#id8">7</a>, <a class="fn-backref" href="#id9">8</a>, <a class="fn-backref" href="#id10">9</a>, <a class="fn-backref" href="#id11">10</a>, <a class="fn-backref" href="#id12">11</a>, <a class="fn-backref" href="#id13">12</a>, <a class="fn-backref" href="#id14">13</a>, <a class="fn-backref" href="#id18">14</a>, <a class="fn-backref" href="#id21">15</a>, <a class="fn-backref" href="#id22">16</a>, <a class="fn-backref" href="#id23">17</a>, <a class="fn-backref" href="#id27">18</a>, <a class="fn-backref" href="#id28">19</a>, <a class="fn-backref" href="#id30">20</a>, <a class="fn-backref" href="#id31">21</a>)</em> J. Runge, D. Sejdinovic, S. Flaxman (2017): Detecting causal
 associations in large nonlinear time series datasets,
 <a class="reference external" href="https://arxiv.org/abs/1702.07007">https://arxiv.org/abs/1702.07007</a></td></tr>
 </tbody>
@@ -1307,7 +1317,7 @@ regression.</p>
 
 <dl class="class">
 <dt id="tigramite.independence_tests.CMIknn">
-<em class="property">class </em><code class="descclassname">tigramite.independence_tests.</code><code class="descname">CMIknn</code><span class="sig-paren">(</span><em>knn=100</em>, <em>shuffle_neighbors=10</em>, <em>significance='shuffle_test'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#CMIknn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.CMIknn" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">tigramite.independence_tests.</code><code class="descname">CMIknn</code><span class="sig-paren">(</span><em>knn=0.2</em>, <em>shuffle_neighbors=5</em>, <em>significance='shuffle_test'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#CMIknn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.CMIknn" title="Permalink to this definition">¶</a></dt>
 <dd><p>Conditional mutual information test based on nearest-neighbor estimator.</p>
 <p>Conditional mutual information is the most general dependency measure coming
 from an information-theoretic framework. It makes no assumptions about the
@@ -1354,8 +1364,10 @@ Transfer Entropy. Physical Review Letters, 108(25), 258701.
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>knn</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 100</em><em>)</em>) &#8211; Number of nearest-neighbors which determines the size of hyper-cubes
-around each (high-dimensional) sample point.</li>
+<li><strong>knn</strong> (<em>int</em><em> or </em><em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.2</em><em>)</em>) &#8211; Number of nearest-neighbors which determines the size of hyper-cubes
+around each (high-dimensional) sample point. If smaller than 1, this is
+computed as a fraction of T, hence knn=knn*T. For knn larger or equal to
+1, this is the absolute number.</li>
 <li><strong>shuffle_neighbors</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em>) &#8211; Number of nearest-neighbors within Z for the shuffle surrogates which
 determines the size of hyper-cubes around each (high-dimensional) sample
 point.</li>
@@ -1790,6 +1802,667 @@ its inverse) is implied. These should be the same for (i, j) and (j, i).</li>
 </dd></dl>
 
 </div>
+<div class="section" id="tigramite-models-time-series-modeling-mediation-and-prediction">
+<h1><code class="xref py py-mod docutils literal"><span class="pre">tigramite.models</span></code>: Time series modeling, mediation, and prediction<a class="headerlink" href="#tigramite-models-time-series-modeling-mediation-and-prediction" title="Permalink to this headline">¶</a></h1>
+<p>Base class:</p>
+<dl class="class">
+<dt id="tigramite.models.Model">
+<em class="property">class </em><code class="descclassname">tigramite.models.</code><code class="descname">Model</code><span class="sig-paren">(</span><em>dataframe</em>, <em>model</em>, <em>model_params=None</em>, <em>data_transform=None</em>, <em>use_mask=False</em>, <em>mask_type=None</em>, <em>missing_flag=None</em>, <em>verbosity=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#Model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.Model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for time series models.</p>
+<p>Allows to fit any model from sklearn to the parents of a target variable.
+Also takes care of missing values, masking and preprocessing.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>dataframe</strong> (<em>data object</em>) &#8211; Tigramite dataframe object. It must have the attributes dataframe.values
+yielding a numpy array of shape (observations T, variables N) and
+optionally a mask of the same shape and a missing values flag.</li>
+<li><strong>model</strong> (<em>sklearn model object</em>) &#8211; For example, sklearn.linear_model.LinearRegression for a linear
+regression model.</li>
+<li><strong>model_params</strong> (<em>dictionary</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Optional parameters passed on to sklearn model</li>
+<li><strong>data_transform</strong> (<em>sklearn preprocessing object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Used to transform data prior to fitting. For example,
+sklearn.preprocessing.StandardScaler for simple standardization. The
+fitted parameters are stored.</li>
+<li><strong>use_mask</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) &#8211; Whether a supplied mask should be used.</li>
+<li><strong>mask_type</strong> (<em>{'y'</em><em>,</em><em>'x'</em><em>,</em><em>'z'</em><em>,</em><em>'xy'</em><em>,</em><em>'xz'</em><em>,</em><em>'yz'</em><em>,</em><em>'xyz'}</em>) &#8211; Masking mode: Indicators for which variables in the dependence measure
+I(X; Y | Z) the samples should be masked. If None, &#8216;y&#8217; is used, which
+excludes all time slices containing masked samples in Y. Explained in
+<a class="footnote-reference" href="#id5" id="id22">[1]</a>.</li>
+<li><strong>missing_flag</strong> (<em>number</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Flag for missing values. Dismisses all time slices of samples where
+missing values occur in any variable and also flags samples for all lags
+up to 2*tau_max. This avoids biases, see section on masking in
+Supplement of <a class="footnote-reference" href="#id5" id="id23">[1]</a>.</li>
+<li><strong>verbosity</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) &#8211; Level of verbosity.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="tigramite.models.Model.get_coefs">
+<code class="descname">get_coefs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#Model.get_coefs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.Model.get_coefs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns dictionary of coefficients for linear models.</p>
+<p>Only for models from sklearn.linear_model</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>coeffs</strong> &#8211; Dictionary of dictionaries for each variable with keys given by the
+parents and the regression coefficients as values.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">dictionary</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tigramite.models.Model.get_fit">
+<code class="descname">get_fit</code><span class="sig-paren">(</span><em>all_parents</em>, <em>selected_variables=None</em>, <em>tau_max=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#Model.get_fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.Model.get_fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit time series model.</p>
+<p>To each variable in selected_variables, the sklearn model is fitted
+with <img class="math" src="_images/math/276f7e256cbddeb81eee42e1efc348f3cb4ab5f8.png" alt="y"/> given by the target variable, and <img class="math" src="_images/math/7a7bb470119808e2db2879fc2b2526f467b7a40b.png" alt="X"/> given by its
+parents. The fitted model class is returned for later use.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>all_parents</strong> (<em>dictionary</em>) &#8211; Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing
+the parents estimated with PCMCI.</li>
+<li><strong>selected_variables</strong> (<em>list of integers</em><em>, </em><em>optional</em><em> (</em><em>default: range</em><em>(</em><a class="reference internal" href="#PCMCI.N" title="PCMCI.N"><em>N</em></a><em>)</em><em>)</em>) &#8211; Specify to estimate parents only for selected variables. If None is
+passed, parents are estimated for all variables.</li>
+<li><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Maximum time lag. If None, the maximum lag in all_parents is used.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>fit_results</strong> &#8211; Returns the sklearn model after fitting. Also returns the data
+transformation parameters.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dictionary of sklearn model objects for each variable</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<p>Derived classes:</p>
+<dl class="class">
+<dt id="tigramite.models.LinearMediation">
+<em class="property">class </em><code class="descclassname">tigramite.models.</code><code class="descname">LinearMediation</code><span class="sig-paren">(</span><em>dataframe</em>, <em>model_params=None</em>, <em>data_transform=None</em>, <em>use_mask=False</em>, <em>mask_type=None</em>, <em>missing_flag=None</em>, <em>verbosity=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#LinearMediation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.LinearMediation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Linear mediation analysis for time series models.</p>
+<p>Fits linear model to parents and provides functions to return measures such
+as causal effect, mediated causal effect, average causal effect, etc. as
+described in <a class="footnote-reference" href="#id26" id="id24">[4]</a>.</p>
+<p class="rubric">Notes</p>
+<p>This class implements the following causal mediation measures introduced in
+<a class="footnote-reference" href="#id26" id="id25">[4]</a>:</p>
+<blockquote>
+<div><ul class="simple">
+<li>causal effect (CE)</li>
+<li>mediated causal effect (MCE)</li>
+<li>average causal effect (ACE)</li>
+<li>average causal susceptibility (ACS)</li>
+<li>average mediated causal effect (AMCE)</li>
+</ul>
+</div></blockquote>
+<p>Consider a simple model of a causal chain as given in the Example with</p>
+<div class="math">
+<p><img src="_images/math/90efcfdee16eaaec575238e2e6df5f731c8609bf.png" alt="X_t &amp;= \eta^X_t \\
+Y_t &amp;= 0.5 X_{t-1} +  \eta^Y_t \\
+Z_t &amp;= 0.5 Y_{t-1} +  \eta^Z_t"/></p>
+</div><p>Here the link coefficient of <img class="math" src="_images/math/5c8ff70420eb65f959d5e2a9b244fc565d9ecbd6.png" alt="X_{t-2} \to Z_t"/> is zero while the
+causal effect is 0.25. MCE through <img class="math" src="_images/math/0062c26909b3e07ee8f5a6285b2563d69bc979ff.png" alt="Y"/> is 0.25 implying that <em>all</em>
+of the the CE is explained by <img class="math" src="_images/math/0062c26909b3e07ee8f5a6285b2563d69bc979ff.png" alt="Y"/>. ACE from <img class="math" src="_images/math/7a7bb470119808e2db2879fc2b2526f467b7a40b.png" alt="X"/> is 0.37 since it
+has CE 0.5 on <img class="math" src="_images/math/0062c26909b3e07ee8f5a6285b2563d69bc979ff.png" alt="Y"/> and 0.25 on <img class="math" src="_images/math/bcb2457ac9d8995a4f34d57cadac7ecbbe58f3bd.png" alt="Z"/>.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">links_coeffs</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">[],</span> <span class="mi">1</span><span class="p">:</span> <span class="p">[((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.5</span><span class="p">)],</span> <span class="mi">2</span><span class="p">:</span> <span class="p">[((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.5</span><span class="p">)]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="p">,</span> <span class="n">true_parents</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">var_process</span><span class="p">(</span><span class="n">links_coeffs</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dataframe</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">med</span> <span class="o">=</span> <span class="n">LinearMediation</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">med</span><span class="o">.</span><span class="n">fit_model</span><span class="p">(</span><span class="n">all_parents</span><span class="o">=</span><span class="n">true_parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="s2">&quot;Link coefficient (0, -2) --&gt; 2: &quot;</span><span class="p">,</span> <span class="n">med</span><span class="o">.</span><span class="n">get_coeff</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tau</span><span class="o">=-</span><span class="mi">2</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="s2">&quot;Causal effect (0, -2) --&gt; 2: &quot;</span><span class="p">,</span> <span class="n">med</span><span class="o">.</span><span class="n">get_ce</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tau</span><span class="o">=-</span><span class="mi">2</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="s2">&quot;Mediated Causal effect (0, -2) --&gt; 2 through 1: &quot;</span><span class="p">,</span> <span class="n">med</span><span class="o">.</span><span class="n">get_mce</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tau</span><span class="o">=-</span><span class="mi">2</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="s2">&quot;Average Causal Effect: &quot;</span><span class="p">,</span> <span class="n">med</span><span class="o">.</span><span class="n">get_all_ace</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="s2">&quot;Average Causal Susceptibility: &quot;</span><span class="p">,</span> <span class="n">med</span><span class="o">.</span><span class="n">get_all_acs</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="s2">&quot;Average Mediated Causal Effect: &quot;</span><span class="p">,</span> <span class="n">med</span><span class="o">.</span><span class="n">get_all_amce</span><span class="p">()</span>
+<span class="go">Link coefficient (0, -2) --&gt; 2:  0.0</span>
+<span class="go">Causal effect (0, -2) --&gt; 2:  0.250648072987</span>
+<span class="go">Mediated Causal effect (0, -2) --&gt; 2 through 1:  0.250648072987</span>
+<span class="go">Average Causal Effect:  [ 0.36897445  0.25718002  0.        ]</span>
+<span class="go">Average Causal Susceptibility:  [ 0.          0.24365041  0.38250406]</span>
+<span class="go">Average Mediated Causal Effect:  [ 0.          0.12532404  0.        ]</span>
+</pre></div>
+</div>
+<p class="rubric">References</p>
+<table class="docutils footnote" frame="void" id="id26" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[4]</td><td><em>(<a class="fn-backref" href="#id24">1</a>, <a class="fn-backref" href="#id25">2</a>, <a class="fn-backref" href="#id29">3</a>)</em> J. Runge et al. (2015): Identifying causal gateways and mediators in
+complex spatio-temporal systems.
+Nature Communications, 6, 8502. <a class="reference external" href="http://doi.org/10.1038/ncomms9502">http://doi.org/10.1038/ncomms9502</a></td></tr>
+</tbody>
+</table>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>dataframe</strong> (<em>data object</em>) &#8211; Tigramite dataframe object. It must have the attributes dataframe.values
+yielding a numpy array of shape (observations T, variables N) and
+optionally a mask of the same shape and a missing values flag.</li>
+<li><strong>model_params</strong> (<em>dictionary</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Optional parameters passed on to sklearn model</li>
+<li><strong>data_transform</strong> (<em>sklearn preprocessing object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Used to transform data prior to fitting. For example,
+sklearn.preprocessing.StandardScaler for simple standardization. The
+fitted parameters are stored.</li>
+<li><strong>use_mask</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) &#8211; Whether a supplied mask should be used.</li>
+<li><strong>mask_type</strong> (<em>{'y'</em><em>,</em><em>'x'</em><em>,</em><em>'z'</em><em>,</em><em>'xy'</em><em>,</em><em>'xz'</em><em>,</em><em>'yz'</em><em>,</em><em>'xyz'}</em>) &#8211; Masking mode: Indicators for which variables in the dependence measure
+I(X; Y | Z) the samples should be masked. If None, &#8216;y&#8217; is used, which
+excludes all time slices containing masked samples in Y. Explained in
+<a class="footnote-reference" href="#id5" id="id27">[1]</a>.</li>
+<li><strong>missing_flag</strong> (<em>number</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Flag for missing values. Dismisses all time slices of samples where
+missing values occur in any variable and also flags samples for all lags
+up to 2*tau_max. This avoids biases, see section on masking in
+Supplement of <a class="footnote-reference" href="#id5" id="id28">[1]</a>.</li>
+<li><strong>verbosity</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) &#8211; Level of verbosity.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="tigramite.models.LinearMediation.fit_model">
+<code class="descname">fit_model</code><span class="sig-paren">(</span><em>all_parents</em>, <em>tau_max=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#LinearMediation.fit_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.LinearMediation.fit_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit linear time series model.</p>
+<p>Fits a sklearn.linear_model.LinearRegression model to the parents of
+each variable and computes the coefficient matrices <img class="math" src="_images/math/e486de19dbb61c9a63584f6e4ddd6e92ef03d665.png" alt="\Phi"/> and
+<img class="math" src="_images/math/334b0728f25dd84a28e483181038a307ea6e483e.png" alt="\Psi"/> as described in <a class="footnote-reference" href="#id26" id="id29">[4]</a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>all_parents</strong> (<em>dictionary</em>) &#8211; Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing
+the parents estimated with PCMCI.</li>
+<li><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Maximum time lag. If None, the maximum lag in all_parents is used.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tigramite.models.LinearMediation.get_ace">
+<code class="descname">get_ace</code><span class="sig-paren">(</span><em>i</em>, <em>lag_mode='absmax'</em>, <em>exclude_i=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#LinearMediation.get_ace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.LinearMediation.get_ace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the average causal effect.</p>
+<p>This is the average causal effect (ACE) emanating from variable i to any
+other variable. With lag_mode=&#8217;absmax&#8217; this is based on the lag of
+maximum CE for each pair.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>i</strong> (<em>int</em>) &#8211; Index of cause variable.</li>
+<li><strong>lag_mode</strong> (<em>{'absmax'</em><em>, </em><em>'all_lags'}</em>) &#8211; Lag mode. Either average across all lags between each pair or only
+at the lag of maximum absolute causal effect.</li>
+<li><strong>exclude_i</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) &#8211; Whether to exclude causal effects on the variable itself at later
+lags.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>ace</strong> &#8211; Average Causal Effect.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tigramite.models.LinearMediation.get_acs">
+<code class="descname">get_acs</code><span class="sig-paren">(</span><em>j</em>, <em>lag_mode='absmax'</em>, <em>exclude_j=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#LinearMediation.get_acs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.LinearMediation.get_acs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the average causal susceptibility.</p>
+<p>This is the Average Causal Susceptibility (ACS) affecting a variable j
+from any other variable. With lag_mode=&#8217;absmax&#8217; this is based on the lag
+of maximum CE for each pair.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>j</strong> (<em>int</em>) &#8211; Index of variable.</li>
+<li><strong>lag_mode</strong> (<em>{'absmax'</em><em>, </em><em>'all_lags'}</em>) &#8211; Lag mode. Either average across all lags between each pair or only
+at the lag of maximum absolute causal effect.</li>
+<li><strong>exclude_j</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) &#8211; Whether to exclude causal effects on the variable itself at previous
+lags.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>acs</strong> &#8211; Average Causal Susceptibility.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tigramite.models.LinearMediation.get_all_ace">
+<code class="descname">get_all_ace</code><span class="sig-paren">(</span><em>lag_mode='absmax'</em>, <em>exclude_i=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#LinearMediation.get_all_ace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.LinearMediation.get_all_ace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the average causal effect for all variables.</p>
+<p>This is the average causal effect (ACE) emanating from variable i to any
+other variable. With lag_mode=&#8217;absmax&#8217; this is based on the lag of
+maximum CE for each pair.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>lag_mode</strong> (<em>{'absmax'</em><em>, </em><em>'all_lags'}</em>) &#8211; Lag mode. Either average across all lags between each pair or only
+at the lag of maximum absolute causal effect.</li>
+<li><strong>exclude_i</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) &#8211; Whether to exclude causal effects on the variable itself at later
+lags.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>ace</strong> &#8211; Average Causal Effect for each variable.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">array of shape (<a class="reference internal" href="#PCMCI.N" title="PCMCI.N">N</a>,)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tigramite.models.LinearMediation.get_all_acs">
+<code class="descname">get_all_acs</code><span class="sig-paren">(</span><em>lag_mode='absmax'</em>, <em>exclude_j=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#LinearMediation.get_all_acs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.LinearMediation.get_all_acs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the average causal susceptibility.</p>
+<p>This is the Average Causal Susceptibility (ACS) for each variable from
+any other variable. With lag_mode=&#8217;absmax&#8217; this is based on the lag of
+maximum CE for each pair.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>lag_mode</strong> (<em>{'absmax'</em><em>, </em><em>'all_lags'}</em>) &#8211; Lag mode. Either average across all lags between each pair or only
+at the lag of maximum absolute causal effect.</li>
+<li><strong>exclude_j</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) &#8211; Whether to exclude causal effects on the variable itself at previous
+lags.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>acs</strong> &#8211; Average Causal Susceptibility.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">array of shape (<a class="reference internal" href="#PCMCI.N" title="PCMCI.N">N</a>,)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tigramite.models.LinearMediation.get_all_amce">
+<code class="descname">get_all_amce</code><span class="sig-paren">(</span><em>lag_mode='absmax'</em>, <em>exclude_k=True</em>, <em>exclude_self_effects=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#LinearMediation.get_all_amce"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.LinearMediation.get_all_amce" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the average mediated causal effect.</p>
+<p>This is the Average Mediated Causal Effect (AMCE) through all variables
+With lag_mode=&#8217;absmax&#8217; this is based on the lag of maximum CE for each
+pair.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>lag_mode</strong> (<em>{'absmax'</em><em>, </em><em>'all_lags'}</em>) &#8211; Lag mode. Either average across all lags between each pair or only
+at the lag of maximum absolute causal effect.</li>
+<li><strong>exclude_k</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) &#8211; Whether to exclude causal effects through the variable itself at
+previous lags.</li>
+<li><strong>exclude_self_effects</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) &#8211; Whether to exclude causal self effects of variables on themselves.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>amce</strong> &#8211; Average Mediated Causal Effect.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">array of shape (<a class="reference internal" href="#PCMCI.N" title="PCMCI.N">N</a>,)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tigramite.models.LinearMediation.get_amce">
+<code class="descname">get_amce</code><span class="sig-paren">(</span><em>k</em>, <em>lag_mode='absmax'</em>, <em>exclude_k=True</em>, <em>exclude_self_effects=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#LinearMediation.get_amce"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.LinearMediation.get_amce" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the average mediated causal effect.</p>
+<p>This is the Average Mediated Causal Effect (AMCE) through a variable k
+With lag_mode=&#8217;absmax&#8217; this is based on the lag of maximum CE for each
+pair.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>k</strong> (<em>int</em>) &#8211; Index of variable.</li>
+<li><strong>lag_mode</strong> (<em>{'absmax'</em><em>, </em><em>'all_lags'}</em>) &#8211; Lag mode. Either average across all lags between each pair or only
+at the lag of maximum absolute causal effect.</li>
+<li><strong>exclude_k</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) &#8211; Whether to exclude causal effects through the variable itself at
+previous lags.</li>
+<li><strong>exclude_self_effects</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) &#8211; Whether to exclude causal self effects of variables on themselves.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>amce</strong> &#8211; Average Mediated Causal Effect.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tigramite.models.LinearMediation.get_ce">
+<code class="descname">get_ce</code><span class="sig-paren">(</span><em>i</em>, <em>tau</em>, <em>j</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#LinearMediation.get_ce"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.LinearMediation.get_ce" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the causal effect.</p>
+<p>This is the causal effect for  (i, tau) &#8211; &#8211;&gt; j.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>i</strong> (<em>int</em>) &#8211; Index of cause variable.</li>
+<li><strong>tau</strong> (<em>int</em>) &#8211; Lag of cause variable.</li>
+<li><strong>j</strong> (<em>int</em>) &#8211; Index of effect variable.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>ce</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tigramite.models.LinearMediation.get_ce_max">
+<code class="descname">get_ce_max</code><span class="sig-paren">(</span><em>i</em>, <em>j</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#LinearMediation.get_ce_max"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.LinearMediation.get_ce_max" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the causal effect.</p>
+<p>This is the maximum absolute causal effect for  i &#8211;&gt; j across all lags.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>i</strong> (<em>int</em>) &#8211; Index of cause variable.</li>
+<li><strong>j</strong> (<em>int</em>) &#8211; Index of effect variable.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>ce</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tigramite.models.LinearMediation.get_coeff">
+<code class="descname">get_coeff</code><span class="sig-paren">(</span><em>i</em>, <em>tau</em>, <em>j</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#LinearMediation.get_coeff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.LinearMediation.get_coeff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns link coefficient.</p>
+<p>This is the causal effect for a particular link (i, tau) &#8211;&gt; j.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>i</strong> (<em>int</em>) &#8211; Index of cause variable.</li>
+<li><strong>tau</strong> (<em>int</em>) &#8211; Lag of cause variable.</li>
+<li><strong>j</strong> (<em>int</em>) &#8211; Index of effect variable.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>coeff</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tigramite.models.LinearMediation.get_mce">
+<code class="descname">get_mce</code><span class="sig-paren">(</span><em>i</em>, <em>tau</em>, <em>j</em>, <em>k</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#LinearMediation.get_mce"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.LinearMediation.get_mce" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the mediated causal effect.</p>
+<p>This is the causal effect for  i &#8211;&gt; j minus the causal effect not going
+through k.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>i</strong> (<em>int</em>) &#8211; Index of cause variable.</li>
+<li><strong>tau</strong> (<em>int</em>) &#8211; Lag of cause variable.</li>
+<li><strong>j</strong> (<em>int</em>) &#8211; Index of effect variable.</li>
+<li><strong>k</strong> (<em>int</em>) &#8211; Index of mediator variable.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>mce</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tigramite.models.LinearMediation.get_tsg">
+<code class="descname">get_tsg</code><span class="sig-paren">(</span><em>link_matrix</em>, <em>val_matrix=None</em>, <em>include_neighbors=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#LinearMediation.get_tsg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.LinearMediation.get_tsg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns time series graph matrix.</p>
+<p>Constructs a matrix of shape (N*tau_max, N*tau_max) from link_matrix.
+This matrix can be used for plotting the time series graph and analyzing
+causal pathways.</p>
+<dl class="docutils">
+<dt>link_matrix <span class="classifier-delimiter">:</span> <span class="classifier">bool array-like, optional (default: None)</span></dt>
+<dd>Matrix of significant links. Must be of same shape as val_matrix. Either
+sig_thres or link_matrix has to be provided.</dd>
+<dt>val_matrix <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd>Matrix of shape (N, N, tau_max+1) containing test statistic values.</dd>
+<dt>include_neighbors <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional (default: False)</span></dt>
+<dd>Whether to include causal paths emanating from neighbors of i</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>tsg</strong> &#8211; Time series graph matrix.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">array of shape (N*tau_max, N*tau_max)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tigramite.models.LinearMediation.net_to_tsg">
+<code class="descname">net_to_tsg</code><span class="sig-paren">(</span><em>row</em>, <em>lag</em>, <em>max_lag</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#LinearMediation.net_to_tsg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.LinearMediation.net_to_tsg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function to translate from network to time series graph.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tigramite.models.LinearMediation.tsg_to_net">
+<code class="descname">tsg_to_net</code><span class="sig-paren">(</span><em>node</em>, <em>max_lag</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#LinearMediation.tsg_to_net"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.LinearMediation.tsg_to_net" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function to translate from time series graph to network.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tigramite.models.Prediction">
+<em class="property">class </em><code class="descclassname">tigramite.models.</code><code class="descname">Prediction</code><span class="sig-paren">(</span><em>dataframe</em>, <em>train_indices</em>, <em>test_indices</em>, <em>prediction_model</em>, <em>prediction_model_params=None</em>, <em>cond_ind_model=None</em>, <em>cond_ind_params=None</em>, <em>data_transform=None</em>, <em>missing_flag=None</em>, <em>verbosity=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#Prediction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.Prediction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prediction class for time series models.</p>
+<p>Allows to fit and predict from any sklearn model. The optimal predictors can
+be estimated using PCMCI. Also takes care of missing values, masking and
+preprocessing.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>dataframe</strong> (<em>data object</em>) &#8211; Tigramite dataframe object. It must have the attributes dataframe.values
+yielding a numpy array of shape (observations T, variables N) and
+optionally a mask of the same shape and a missing values flag.</li>
+<li><strong>train_indices</strong> (<em>array-like</em>) &#8211; Either boolean array or time indices marking the training data.</li>
+<li><strong>test_indices</strong> (<em>array-like</em>) &#8211; Either boolean array or time indices marking the test data.</li>
+<li><strong>prediction_model</strong> (<em>sklearn model object</em>) &#8211; For example, sklearn.linear_model.LinearRegression for a linear
+regression model.</li>
+<li><strong>prediction_model_params</strong> (<em>dictionary</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Optional parameters passed on to sklearn model</li>
+<li><strong>cond_ind_model</strong> (<em>Conditional independence test class object</em><em>, </em><em>optional</em>) &#8211; Only needed if predictors are estimated with causal algorithm.
+The class will be initialized with masking set to the training data.
+Further parameters can be supplied by cond_ind_params.</li>
+<li><strong>cond_ind_params</strong> (<em>dictionary</em><em>, </em><em>optional</em>) &#8211; Parameters for conditional independence test.</li>
+<li><strong>data_transform</strong> (<em>sklearn preprocessing object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Used to transform data prior to fitting. For example,
+sklearn.preprocessing.StandardScaler for simple standardization. The
+fitted parameters are stored.</li>
+<li><strong>missing_flag</strong> (<em>number</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Flag for missing values. Dismisses all time slices of samples where
+missing values occur in any variable and also flags samples for all lags
+up to 2*tau_max. This avoids biases, see section on masking in
+Supplement of <a class="footnote-reference" href="#id5" id="id30">[1]</a>.</li>
+<li><strong>verbosity</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) &#8211; Level of verbosity.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="tigramite.models.Prediction.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>target_predictors</em>, <em>selected_targets=None</em>, <em>tau_max=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#Prediction.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.Prediction.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit time series model.</p>
+<p>Wrapper around <code class="docutils literal"><span class="pre">Model.get_fit()</span></code>. To each variable in
+<code class="docutils literal"><span class="pre">selected_targets</span></code>, the sklearn model is fitted with <img class="math" src="_images/math/276f7e256cbddeb81eee42e1efc348f3cb4ab5f8.png" alt="y"/> given
+by the target variable, and <img class="math" src="_images/math/7a7bb470119808e2db2879fc2b2526f467b7a40b.png" alt="X"/> given by its predictors. The
+fitted model class is returned for later use.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>target_predictors</strong> (<em>dictionary</em>) &#8211; Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing
+the predictors estimated with PCMCI.</li>
+<li><strong>selected_targets</strong> (<em>list of integers</em><em>, </em><em>optional</em><em> (</em><em>default: range</em><em>(</em><a class="reference internal" href="#PCMCI.N" title="PCMCI.N"><em>N</em></a><em>)</em><em>)</em>) &#8211; Specify to fit model only for selected targets. If None is
+passed, models are estimated for all variables.</li>
+<li><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Maximum time lag. If None, the maximum lag in target_predictors is
+used.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tigramite.models.Prediction.get_predictors">
+<code class="descname">get_predictors</code><span class="sig-paren">(</span><em>selected_targets=None</em>, <em>selected_links=None</em>, <em>steps_ahead=1</em>, <em>tau_max=1</em>, <em>pc_alpha=0.2</em>, <em>max_conds_dim=None</em>, <em>max_combinations=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#Prediction.get_predictors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.Prediction.get_predictors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate predictors using PC1 algorithm.</p>
+<p>Wrapper around PCMCI.run_pc_stable that estimates causal predictors.
+The lead time can be specified by <code class="docutils literal"><span class="pre">steps_ahead</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>selected_targets</strong> (<em>list of ints</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; List of variables to estimate predictors of. If None, predictors of
+all variables are estimated.</li>
+<li><strong>selected_links</strong> (<em>dict</em><em> or </em><em>None</em>) &#8211; Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}
+specifying whether only selected links should be tested. If None is
+passed, all links are tested</li>
+<li><strong>steps_ahead</strong> (<em>int</em><em>, </em><em>default: 1</em>) &#8211; Minimum time lag to test. Useful for multi-step ahead predictions.</li>
+<li><strong>tau_max</strong> (<em>int</em><em>, </em><em>default: 1</em>) &#8211; Maximum time lag. Must be larger or equal to tau_min.</li>
+<li><strong>pc_alpha</strong> (<em>float</em><em> or </em><em>list of floats</em><em>, </em><em>default: 0.2</em>) &#8211; Significance level in algorithm. If a list or None is passed, the
+pc_alpha level is optimized for every variable across the given
+pc_alpha values using the score computed in
+cond_ind_test.get_model_selection_criterion()</li>
+<li><strong>max_conds_dim</strong> (<em>int</em><em> or </em><em>None</em>) &#8211; Maximum number of conditions to test. If None is passed, this number
+is unrestricted.</li>
+<li><strong>max_combinations</strong> (<em>int</em><em>, </em><em>default: 1</em>) &#8211; Maximum number of combinations of conditions of current cardinality
+to test. Defaults to 1 for PC_1 algorithm. For original PC algorithm
+a larger number, such as 10, can be used.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>predictors</strong> &#8211; Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}
+containing estimated predictors.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dict</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tigramite.models.Prediction.get_test_array">
+<code class="descname">get_test_array</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#Prediction.get_test_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.Prediction.get_test_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns test array.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tigramite.models.Prediction.predict">
+<code class="descname">predict</code><span class="sig-paren">(</span><em>target</em>, <em>pred_params=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#Prediction.predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.Prediction.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict target variable with fitted model.</p>
+<p>Uses the model.predict() function of the sklearn model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>target</strong> (<em>int</em>) &#8211; Index of target variable.</li>
+<li><strong>pred_params</strong> (<em>dict</em><em>, </em><em>optional</em>) &#8211; Optional parameters passed on to sklearn prediction function.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">Results from prediction.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
 <div class="section" id="module-tigramite.plotting">
 <span id="tigramite-plotting-plotting-functions"></span><h1><a class="reference internal" href="#module-tigramite.plotting" title="tigramite.plotting"><code class="xref py py-mod docutils literal"><span class="pre">tigramite.plotting</span></code></a>: Plotting functions<a class="headerlink" href="#module-tigramite.plotting" title="Permalink to this headline">¶</a></h1>
 <p>Tigramite plotting package.</p>
@@ -1873,6 +2546,108 @@ function.</td>
 </dd></dl>
 
 <dl class="function">
+<dt id="tigramite.plotting.plot_mediation_graph">
+<code class="descclassname">tigramite.plotting.</code><code class="descname">plot_mediation_graph</code><span class="sig-paren">(</span><em>path_val_matrix</em>, <em>path_node_array=None</em>, <em>var_names=None</em>, <em>fig_ax=None</em>, <em>figsize=None</em>, <em>save_name=None</em>, <em>link_colorbar_label='link coeff. (edge color)'</em>, <em>node_colorbar_label='MCE (node color)'</em>, <em>link_width=None</em>, <em>node_pos=None</em>, <em>arrow_linewidth=30.0</em>, <em>vmin_edges=-1</em>, <em>vmax_edges=1.0</em>, <em>edge_ticks=0.4</em>, <em>cmap_edges='RdBu_r'</em>, <em>vmin_nodes=-1.0</em>, <em>vmax_nodes=1.0</em>, <em>node_ticks=0.4</em>, <em>cmap_nodes='RdBu_r'</em>, <em>node_size=20</em>, <em>arrowhead_size=20</em>, <em>curved_radius=0.2</em>, <em>label_fontsize=10</em>, <em>alpha=1.0</em>, <em>node_label_size=10</em>, <em>link_label_fontsize=6</em>, <em>network_lower_bound=0.2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_mediation_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.plot_mediation_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a network plot visualizing the pathways of a mediation analysis.</p>
+<p>This is still in beta. The network is defined from non-zero entries in
+<code class="docutils literal"><span class="pre">path_val_matrix</span></code>.  Nodes denote variables, straight links contemporaneous
+dependencies and curved arrows lagged dependencies. The node color denotes
+the mediated causal effect (MCE) and the link color the value at the lag
+with maximal link coefficient. The link label lists the lags with
+significant dependency in order of absolute magnitude. The network can also
+be plotted over a map drawn before on the same axis. Then the node positions
+can be supplied in appropriate axis coordinates via node_pos.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>path_val_matrix</strong> (<em>array_like</em>) &#8211; Matrix of shape (N, N, tau_max+1) containing link weight values.</li>
+<li><strong>path_node_array</strong> (<em>array_like</em>) &#8211; Array of shape (N,) containing node values.</li>
+<li><strong>var_names</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; List of variable names. If None, range(N) is used.</li>
+<li><strong>fig_ax</strong> (<em>tuple of figure and axis object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Figure and axes instance. If None they are created.</li>
+<li><strong>figsize</strong> (<em>tuple</em>) &#8211; Size of figure.</li>
+<li><strong>save_name</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Name of figure file to save figure. If None, figure is shown in window.</li>
+<li><strong>link_colorbar_label</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'link coeff.</em><em> (</em><em>edge color</em><em>)</em><em>'</em><em>)</em>) &#8211; Link colorbar label.</li>
+<li><strong>node_colorbar_label</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'MCE</em><em> (</em><em>node color</em><em>)</em><em>'</em><em>)</em>) &#8211; Node colorbar label.</li>
+<li><strong>link_width</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Array of val_matrix.shape specifying relative link width with maximum
+given by arrow_linewidth. If None, all links have same width.</li>
+<li><strong>node_pos</strong> (<em>dictionary</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Dictionary of node positions in axis coordinates of form
+node_pos = {&#8216;x&#8217;:array of shape (N,), &#8216;y&#8217;:array of shape(N)}. These
+coordinates could have been transformed before for basemap plots.</li>
+<li><strong>arrow_linewidth</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 30</em><em>)</em>) &#8211; Linewidth.</li>
+<li><strong>vmin_edges</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: -1</em><em>)</em>) &#8211; Link colorbar scale lower bound.</li>
+<li><strong>vmax_edges</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) &#8211; Link colorbar scale upper bound.</li>
+<li><strong>edge_ticks</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.4</em><em>)</em>) &#8211; Link tick mark interval.</li>
+<li><strong>cmap_edges</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'RdBu_r'</em><em>)</em>) &#8211; Colormap for links.</li>
+<li><strong>vmin_nodes</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) &#8211; Node colorbar scale lower bound.</li>
+<li><strong>vmax_nodes</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) &#8211; Node colorbar scale upper bound.</li>
+<li><strong>node_ticks</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.4</em><em>)</em>) &#8211; Node tick mark interval.</li>
+<li><strong>cmap_nodes</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'OrRd'</em><em>)</em>) &#8211; Colormap for links.</li>
+<li><strong>node_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 20</em><em>)</em>) &#8211; Node size.</li>
+<li><strong>arrowhead_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 20</em><em>)</em>) &#8211; Size of link arrow head. Passed on to FancyArrowPatch object.</li>
+<li><strong>float</strong><strong>, </strong><strong>optional</strong><strong> (</strong><strong>default</strong> (<em>curved_radius</em><em>,</em>) &#8211; Curvature of links. Passed on to FancyArrowPatch object.</li>
+<li><strong>label_fontsize</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em>) &#8211; Fontsize of colorbar labels.</li>
+<li><strong>alpha</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1.</em><em>)</em>) &#8211; Opacity.</li>
+<li><strong>node_label_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em>) &#8211; Fontsize of node labels.</li>
+<li><strong>link_label_fontsize</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 6</em><em>)</em>) &#8211; Fontsize of link labels.</li>
+<li><strong>network_lower_bound</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.2</em><em>)</em>) &#8211; Fraction of vertical space below graph plot.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="tigramite.plotting.plot_mediation_time_series_graph">
+<code class="descclassname">tigramite.plotting.</code><code class="descname">plot_mediation_time_series_graph</code><span class="sig-paren">(</span><em>path_node_array</em>, <em>tsg_path_val_matrix</em>, <em>var_names=None</em>, <em>fig_ax=None</em>, <em>figsize=None</em>, <em>link_colorbar_label='link coeff. (edge color)'</em>, <em>node_colorbar_label='MCE (node color)'</em>, <em>save_name=None</em>, <em>link_width=None</em>, <em>arrow_linewidth=20.0</em>, <em>vmin_edges=-1</em>, <em>vmax_edges=1.0</em>, <em>edge_ticks=0.4</em>, <em>cmap_edges='RdBu_r'</em>, <em>order=None</em>, <em>vmin_nodes=-1.0</em>, <em>vmax_nodes=1.0</em>, <em>node_ticks=0.4</em>, <em>cmap_nodes='RdBu_r'</em>, <em>node_size=10</em>, <em>arrowhead_size=20</em>, <em>curved_radius=0.2</em>, <em>label_fontsize=10</em>, <em>alpha=1.0</em>, <em>node_label_size=10</em>, <em>label_space_left=0.1</em>, <em>label_space_top=0.0</em>, <em>network_lower_bound=0.2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_mediation_time_series_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.plot_mediation_time_series_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a mediation time series graph plot.</p>
+<p>This is still in beta. The time series graph&#8217;s links are colored by
+val_matrix.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>tsg_path_val_matrix</strong> (<em>array_like</em>) &#8211; Matrix of shape (N*tau_max, N*tau_max) containing link weight values.</li>
+<li><strong>path_node_array</strong> (<em>array_like</em>) &#8211; Array of shape (N,) containing node values.</li>
+<li><strong>var_names</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; List of variable names. If None, range(N) is used.</li>
+<li><strong>fig_ax</strong> (<em>tuple of figure and axis object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Figure and axes instance. If None they are created.</li>
+<li><strong>figsize</strong> (<em>tuple</em>) &#8211; Size of figure.</li>
+<li><strong>save_name</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Name of figure file to save figure. If None, figure is shown in window.</li>
+<li><strong>link_colorbar_label</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'link coeff.</em><em> (</em><em>edge color</em><em>)</em><em>'</em><em>)</em>) &#8211; Link colorbar label.</li>
+<li><strong>node_colorbar_label</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'MCE</em><em> (</em><em>node color</em><em>)</em><em>'</em><em>)</em>) &#8211; Node colorbar label.</li>
+<li><strong>link_width</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Array of val_matrix.shape specifying relative link width with maximum
+given by arrow_linewidth. If None, all links have same width.</li>
+<li><strong>order</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; order of variables from top to bottom.</li>
+<li><strong>arrow_linewidth</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 30</em><em>)</em>) &#8211; Linewidth.</li>
+<li><strong>vmin_edges</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: -1</em><em>)</em>) &#8211; Link colorbar scale lower bound.</li>
+<li><strong>vmax_edges</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) &#8211; Link colorbar scale upper bound.</li>
+<li><strong>edge_ticks</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.4</em><em>)</em>) &#8211; Link tick mark interval.</li>
+<li><strong>cmap_edges</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'RdBu_r'</em><em>)</em>) &#8211; Colormap for links.</li>
+<li><strong>vmin_nodes</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) &#8211; Node colorbar scale lower bound.</li>
+<li><strong>vmax_nodes</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) &#8211; Node colorbar scale upper bound.</li>
+<li><strong>node_ticks</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.4</em><em>)</em>) &#8211; Node tick mark interval.</li>
+<li><strong>cmap_nodes</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'OrRd'</em><em>)</em>) &#8211; Colormap for links.</li>
+<li><strong>node_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 20</em><em>)</em>) &#8211; Node size.</li>
+<li><strong>arrowhead_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 20</em><em>)</em>) &#8211; Size of link arrow head. Passed on to FancyArrowPatch object.</li>
+<li><strong>float</strong><strong>, </strong><strong>optional</strong><strong> (</strong><strong>default</strong> (<em>curved_radius</em><em>,</em>) &#8211; Curvature of links. Passed on to FancyArrowPatch object.</li>
+<li><strong>label_fontsize</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em>) &#8211; Fontsize of colorbar labels.</li>
+<li><strong>alpha</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1.</em><em>)</em>) &#8211; Opacity.</li>
+<li><strong>node_label_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em>) &#8211; Fontsize of node labels.</li>
+<li><strong>link_label_fontsize</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 6</em><em>)</em>) &#8211; Fontsize of link labels.</li>
+<li><strong>label_space_left</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.1</em><em>)</em>) &#8211; Fraction of horizontal figure space to allocate left of plot for labels.</li>
+<li><strong>label_space_top</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.</em><em>)</em>) &#8211; Fraction of vertical figure space to allocate top of plot for labels.</li>
+<li><strong>network_lower_bound</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.2</em><em>)</em>) &#8211; Fraction of vertical space below graph plot.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="tigramite.plotting.plot_time_series_graph">
 <code class="descclassname">tigramite.plotting.</code><code class="descname">plot_time_series_graph</code><span class="sig-paren">(</span><em>val_matrix</em>, <em>var_names=None</em>, <em>fig_ax=None</em>, <em>figsize=None</em>, <em>sig_thres=None</em>, <em>link_matrix=None</em>, <em>link_colorbar_label='MCI'</em>, <em>save_name=None</em>, <em>link_width=None</em>, <em>arrow_linewidth=20.0</em>, <em>vmin_edges=-1</em>, <em>vmax_edges=1.0</em>, <em>edge_ticks=0.4</em>, <em>cmap_edges='RdBu_r'</em>, <em>order=None</em>, <em>node_size=10</em>, <em>arrowhead_size=20</em>, <em>curved_radius=0.2</em>, <em>label_fontsize=10</em>, <em>alpha=1.0</em>, <em>node_label_size=10</em>, <em>label_space_left=0.1</em>, <em>label_space_top=0.0</em>, <em>network_lower_bound=0.2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_time_series_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.plot_time_series_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a time series graph.</p>
@@ -1943,7 +2718,7 @@ is used.</li>
 <li><strong>missing_flag</strong> (<em>number</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Flag for missing values in dataframe. Dismisses all time slices of
 samples where missing values occur in any variable and also flags
 samples for all lags up to 2*tau_max. This avoids biases, see section on
-masking in Supplement of <a class="footnote-reference" href="#id5" id="id22">[1]</a>.</li>
+masking in Supplement of <a class="footnote-reference" href="#id5" id="id31">[1]</a>.</li>
 <li><strong>grey_masked_samples</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) &#8211; Whether to mark masked samples by grey fills (&#8216;fill&#8217;) or grey data (&#8216;data&#8217;).</li>
 <li><strong>data_linewidth</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1.</em><em>)</em>) &#8211; Linewidth.</li>
 <li><strong>skip_ticks_data_x</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) &#8211; Skip every other tickmark.</li>

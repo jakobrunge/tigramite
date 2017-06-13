@@ -699,6 +699,29 @@
 
         <span class="n">tau_min</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">tau_min</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="n">max_combinations</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_combinations must be &gt; 0&quot;</span><span class="p">)</span>
+
+        <span class="n">p_max</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">j</span><span class="p">,</span> <span class="p">{})</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)])</span>
+        <span class="n">test_statistic_values</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">j</span><span class="p">,</span> <span class="p">{})</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)])</span>
+
+        <span class="n">iterations</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">j</span><span class="p">,</span> <span class="p">{})</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)])</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">##</span><span class="se">\n</span><span class="s2">## Running Tigramite PC algorithm</span><span class="se">\n</span><span class="s2">##&quot;</span>
+                  <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">Parameters:&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_variables</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;selected_variables = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_variables</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">selected_links</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;selected_links = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_links</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;independence test = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span><span class="o">.</span><span class="n">measure</span>
+                  <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">tau_min = </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">tau_min</span>
+                  <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">tau_max = </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">tau_max</span>
+                  <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">pc_alpha = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">pc_alpha</span>
+                  <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">max_conds_dim = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">max_conds_dim</span>
+                  <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">max_combinations = </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">max_combinations</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">selected_links</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">selected_links</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
@@ -710,25 +733,7 @@
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">selected_links</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="k">if</span> <span class="n">max_combinations</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_combinations must be &gt; 0&quot;</span><span class="p">)</span>
-
-        <span class="n">p_max</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">j</span><span class="p">,</span> <span class="p">{})</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)])</span>
-        <span class="n">test_statistic_values</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">j</span><span class="p">,</span> <span class="p">{})</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)])</span>
         <span class="n">all_parents</span> <span class="o">=</span> <span class="n">selected_links</span>
-
-        <span class="n">iterations</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">j</span><span class="p">,</span> <span class="p">{})</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)])</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">##</span><span class="se">\n</span><span class="s2">## Running Tigramite PC algorithm</span><span class="se">\n</span><span class="s2">##&quot;</span>
-                  <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">Parameters:&quot;</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">independence test = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span><span class="o">.</span><span class="n">measure</span>
-                  <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">tau_min = </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">tau_min</span>
-                  <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">tau_max = </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">tau_max</span>
-                  <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">pc_alpha = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">pc_alpha</span>
-                  <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">max_conds_dim = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">max_conds_dim</span>
-                  <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">max_combinations = </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">max_combinations</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">max_conds_dim</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">max_conds_dim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">*</span> <span class="n">tau_max</span>
