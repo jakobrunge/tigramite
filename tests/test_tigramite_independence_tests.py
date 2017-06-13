@@ -4,7 +4,7 @@ import numpy
 # import sys, os
 # sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from tigramite.independence_tests import ParCorr, GPACE, GPDC, CMIknn, CMIsymb
+from tigramite.independence_tests import ParCorr, GPACE, GPDC, CMIknn, CMIsymb, _construct_array
 import tigramite.data_processing as pp
 
 import nose
@@ -56,24 +56,6 @@ class TestCondInd():  #unittest.TestCase):
                            recycle_residuals=False,
                            verbosity=0)
 
-       self.ci_gpace = GPACE(
-                            significance='analytic',
-                            sig_samples=1000,
-                            sig_blocklength=1,
-
-                            confidence='bootstrap', 
-                            conf_lev=0.9,
-                            conf_samples=100,
-                            conf_blocklength=None,
-
-                            use_mask=False,
-                            mask_type=['y'],
-                            gp_version='new',
-                            gp_kernel=None,
-                            gp_alpha=None,
-                            gp_restarts=None,
-                            recycle_residuals=False,
-                            verbosity=0)
 
        self.ci_gpdc = GPDC(
                             significance='analytic',
@@ -86,11 +68,7 @@ class TestCondInd():  #unittest.TestCase):
                             conf_blocklength=None,
 
                             use_mask=False,
-                            mask_type=['y'],
-                            gp_version='new',
-                            gp_kernel=None,
-                            gp_alpha=None,
-                            gp_restarts=None,
+                            mask_type='y',
                             recycle_residuals=False,
                             verbosity=0)
 
@@ -118,7 +96,7 @@ class TestCondInd():  #unittest.TestCase):
         tau_max = 2
 
         # No masking
-        res = self.ci_par_corr._construct_array(
+        res = _construct_array(
             X=X, Y=Y, Z=Z,
             tau_max=tau_max,
             use_mask=False,
@@ -136,7 +114,7 @@ class TestCondInd():  #unittest.TestCase):
         numpy.testing.assert_almost_equal(res[1], numpy.array([0, 1, 2, 2, 2]))
 
         # masking y
-        res = self.ci_par_corr._construct_array(
+        res = _construct_array(
             X=X, Y=Y, Z=Z,
             tau_max=tau_max,
             use_mask=True,
@@ -155,7 +133,7 @@ class TestCondInd():  #unittest.TestCase):
         numpy.testing.assert_almost_equal(res[1], numpy.array([0, 1, 2, 2, 2]))
 
         # masking all
-        res = self.ci_par_corr._construct_array(
+        res = _construct_array(
             X=X, Y=Y, Z=Z,
             tau_max=tau_max,
             use_mask=True,
@@ -198,7 +176,7 @@ class TestCondInd():  #unittest.TestCase):
         tau_max = 1
 
         # Missing values
-        res = self.ci_par_corr._construct_array(
+        res = _construct_array(
             X=X, Y=Y, Z=Z,
             tau_max=tau_max,
             use_mask=False,
@@ -316,10 +294,10 @@ class TestCondInd():  #unittest.TestCase):
                                    numpy.array(val_est),
                                    atol=0.02)
 
-    def test__gpace_get_single_residuals(self):
+    def test__gpdc_get_single_residuals(self):
 
 
-        ci_test = self.ci_gpace
+        ci_test = self.ci_gpdc
         # ci_test = self.ci_par_corr
 
         c = .3
@@ -335,9 +313,6 @@ class TestCondInd():  #unittest.TestCase):
         xyz = numpy.array([0,1] + [2 for i in range(array.shape[0]-2)])
 
         target_var = 1    
-
-        if ci_test.measure == 'gp_ace':
-            ci_test.gp_version = 'new'
 
         dim, T = array.shape
         # array -= array.mean(axis=1).reshape(dim, 1)
@@ -357,11 +332,11 @@ class TestCondInd():  #unittest.TestCase):
         numpy.testing.assert_allclose(pred[center], 
             c_std*func(array_orig[2][center]), atol=0.2)
 
-    def plot__gpace_get_single_residuals(self):
+    def plot__gpdc_get_single_residuals(self):
 
 
         #######
-        ci_test = self.ci_gpace
+        ci_test = self.ci_gpdc
         # ci_test = self.ci_par_corr
 
         a = 0.
@@ -398,9 +373,6 @@ class TestCondInd():  #unittest.TestCase):
         print 'xyz ', xyz, numpy.where(xyz==1)
         target_var = 1    
 
-        if ci_test.measure == 'gp_ace':
-            ci_test.gp_version = 'new'
-
         dim, T = array.shape
         # array -= array.mean(axis=1).reshape(dim, 1)
         c_std = c  #/array[1].std()
@@ -425,10 +397,10 @@ class TestCondInd():  #unittest.TestCase):
         ax.scatter(array_orig[2], pred_parcorr, color='green')
         ax.plot(numpy.sort(array_orig[2]), c_std*func(numpy.sort(array_orig[2])), color='black')
 
-        pyplot.savefig('/home/jakobrunge/test/gpacetest.pdf')
+        pyplot.savefig('/home/jakobrunge/test/gpdctest.pdf')
 
 
-    def test_shuffle_vs_analytic_significance_gpace(self):
+    def test_shuffle_vs_analytic_significance_gpdc(self):
 
         cov = numpy.array([[1., 0.2], [0.2, 1.]])
         array = numpy.random.multivariate_normal(mean=numpy.zeros(2),
@@ -437,12 +409,12 @@ class TestCondInd():  #unittest.TestCase):
         dim, T = array.shape
         xyz = numpy.array([0,1])
 
-        val = self.ci_gpace.get_dependence_measure(array, xyz)
+        val = self.ci_gpdc.get_dependence_measure(array, xyz)
 
-        pval_ana = self.ci_gpace.get_analytic_significance(value=val,
+        pval_ana = self.ci_gpdc.get_analytic_significance(value=val,
                                                              T=T, dim=dim)
 
-        pval_shuffle = self.ci_gpace.get_shuffle_significance(array, xyz,
+        pval_shuffle = self.ci_gpdc.get_shuffle_significance(array, xyz,
                                val)
 
         print pval_ana
@@ -534,7 +506,7 @@ class TestCondInd():  #unittest.TestCase):
 
         bins = 10
 
-        uniform = self.ci_gpace._trafo2uniform(array)
+        uniform = self.ci_gpdc._trafo2uniform(array)
         # print uniform
 
         # import matplotlib
@@ -610,7 +582,7 @@ if __name__ == "__main__":
     # tci.test_trafo2uniform()
     # tci.test_cmi_symb()
     # tci.test_bootstrap_vs_analytic_confidence()
-    # tci.test_shuffle_vs_analytic_significance_gpace()
-    # tci.test__gpace_get_single_residuals()
+    # tci.test_shuffle_vs_analytic_significance_gpdc()
+    # tci.test__gpdc_get_single_residuals()
     # unittest.main()
     nose.run()

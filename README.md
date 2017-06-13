@@ -10,8 +10,7 @@ Version 3.0 described in http://arxiv.org/abs/1702.07007
 
 ## General Notes
 
-TIGRAMITE is a time series analysis python module. It implements the PCMCI causal discovery method that allows to reconstruct graphical models (conditional independence graphs) from discrete or continuously-valued time series and includes modules for high-quality plots of the results.
-TODO: also mediation, prediction
+Tigramite is a causal time series analysis python package. It allows to efficiently reconstruct causal graphs from high-dimensional time series datasets and model the obtained causal dependencies for causal mediation and prediction analyses. Causal discovery is based on linear as well as non-parametric conditional independence tests applicable to discrete or continuously-valued time series. Also includes functions for high-quality plots of the results. Please cite the following papers depending on which method you use:
 
 ## Features
 
@@ -20,11 +19,11 @@ TODO: also mediation, prediction
   continuously-valued or discrete data, and different assumptions about
   linear or nonlinear dependencies
 - automatic hyperparameter optimization
-- easy parallelization
+- parallel computing script based on mpi4py
 - handling of missing values and masks
 - p-value correction and confidence interval estimation
-- can be used for feature selection and prediction
-TODO: also mediation, prediction
+- causal mediation class to analyze causal pathways
+- prediction class based on sklearn models including causal feature selection
 
 
 ## Required python packages
