@@ -601,6 +601,9 @@ class LinearMediation(Models):
         j : int
             Index of effect variable.
 
+        include_neighbors : bool, optional (default: False)
+            Whether to include causal paths emanating from neighbors of i
+
         Returns
         -------
         graph_data : dictionary
@@ -621,8 +624,22 @@ class LinearMediation(Models):
 
         max_lag = link_matrix.shape[2] + 1
 
+        # include_neighbors = False because True would allow
+        # --> o -- motifs in networkx.all_simple_paths as paths, but
+        # these are blocked...
         tsg = self.get_tsg(link_matrix, val_matrix=val_matrix, 
                             include_neighbors = False)
+
+        if include_neighbors:
+            # Add contemporaneous links only at source node
+            for m, n in zip(*numpy.where(link_matrix[:,:,0])):
+                # print m,n
+                if m != n:
+                    tsg[self.net_to_tsg(m, max_lag-tau-1, max_lag),
+                        self.net_to_tsg(n, max_lag-tau-1, max_lag)
+                        ] = val_matrix[m, n, 0]
+
+        # neighbors.remove(neighbors.index(i))
         tsg_path_val_matrix = numpy.zeros(tsg.shape)
 
         graph = networkx.DiGraph(tsg)
@@ -639,7 +656,11 @@ class LinearMediation(Models):
                 link_start = self.tsg_to_net(path[ip], max_lag)
                 link_end = self.tsg_to_net(p, max_lag)
                 delta_tau = abs(link_end[1] - link_start[1])
-                path_val_matrix[link_start[0], link_end[0], delta_tau] = val_matrix[link_start[0], link_end[0], delta_tau]
+                path_val_matrix[link_start[0], 
+                                link_end[0], 
+                                delta_tau] = val_matrix[link_start[0], 
+                                                        link_end[0], 
+                                                        delta_tau]
 
         graph_data = {'path_node_array':path_node_array,
                       'path_val_matrix':path_val_matrix,
@@ -1356,148 +1377,148 @@ if __name__ == '__main__':
     #     print results[j]['model']  #.coef_
 
 
-    # ###
-    # ### Linear Mediation
-    # ###
-    # numpy.random.seed(42)
-    # links_coeffs = {0: [((0, -1), 0.6), ((1, 0), 0.6)],
-    #                 1: [((1, -1), 0.8), ((0, -1), 0.5), ((0, 0), 0.6)],
-    #                 2: [((2, -1), 0.9), ((1, -1), 0.5), ((0, -2), 0.)],
-    #                 }
-
-    # data, true_parents = pp.var_process(links_coeffs, T=10000)
-    # dataframe = pp.DataFrame(data)
-    # med = LinearMediation(dataframe=dataframe, data_transform=False)
-    # med.fit_model(all_parents=true_parents, tau_max=3)
-    # print "Link coefficient (0, -2) --> 2: ", med.get_coeff(i=0, tau=-2, j=2)
-    # print "Causal effect (0, -2) --> 2: ", med.get_ce(i=0, tau=-2, j=2)
-    # print "Mediated Causal effect (0, -2) --> 2 through 1: ", med.get_mce(i=0, tau=-2, j=2, k=1)
-    # print "Average Causal Effect: ", med.get_all_ace()
-    # print "Average Causal Susceptibility: ", med.get_all_acs()
-    # print "Average Mediated Causal Effect: ", med.get_all_amce()
-
-    # i=0; tau=3; j=2
-
-    # graph_data = med.get_mediation_graph_data(i=i, tau=tau, j=j, 
-    #                                         include_neighbors=True)
-
-    # import plotting as tp
-
-    # # for key in graph_data.keys():
-    # #     print key
-    # #     print graph_data[key].round(2)
-
-
-    # tp.plot_mediation_graph(
-    #             var_names=['X', 'Y', 'Z'],
-    #             path_val_matrix=graph_data['path_val_matrix'], 
-    #            path_node_array=graph_data['path_node_array'],
-    #            save_name="/home/jakobrunge/test/test_graph.pdf"
-    #             )
-
-    # tp.plot_mediation_time_series_graph(
-    #     var_names=['X', 'Y', 'Z'],
-    #     path_node_array=graph_data['path_node_array'],
-    #     tsg_path_val_matrix=graph_data['tsg_path_val_matrix'],
-    #     # vmin_edges=-0.5, vmax_edges=0.5, edge_ticks=0.1,
-    #     # vmin_nodes=-0.5, vmax_nodes=0.5, node_ticks=0.1,
-    #     save_name="/home/jakobrunge/test/test_tsg_graph.pdf"
-    #     )
-
-    ##
-    ## Prediction
-    ##
-    import pylab
-
-    numpy.random.seed(44)
-    a = 0.4
-    c = 0.6
-    T = 200
-
-    verbosity = 0
-    # Each key refers to a variable and the incoming links are supplied as a
-    # list of format [((driver, lag), coeff), ...]
-    links_coeffs = {0: [((0, -1), a)],
-                    1: [((1, -1), a), ((0, -1), c)],
-                    2: [((2, -1), a), ((1, -1), c)],  # ((0, -1), c)],
+    ###
+    ### Linear Mediation
+    ###
+    numpy.random.seed(42)
+    links_coeffs = {0: [((0, -1), 0.6), ((1, 0), 0.6)],
+                    1: [((1, -1), 0.8), ((0, -1), 0.5), ((0, 0), 0.6)],
+                    2: [((2, -1), 0.9), ((1, -1), 0.5), ((0, -2), 0.)],
                     }
 
-    data, true_parents_neighbors = pp.var_process(links_coeffs, T=T)
-
-    # print data
-    # print data.mean(axis=0), data.std(axis=0)
-    data_mask = numpy.zeros(data.shape)
-
+    data, true_parents = pp.var_process(links_coeffs, T=1000)
     dataframe = pp.DataFrame(data)
+    med = LinearMediation(dataframe=dataframe, data_transform=False)
+    med.fit_model(all_parents=true_parents, tau_max=3)
+    print "Link coefficient (0, -2) --> 2: ", med.get_coeff(i=0, tau=-2, j=2)
+    print "Causal effect (0, -2) --> 2: ", med.get_ce(i=0, tau=-2, j=2)
+    print "Mediated Causal effect (0, -2) --> 2 through 1: ", med.get_mce(i=0, tau=-2, j=2, k=1)
+    print "Average Causal Effect: ", med.get_all_ace()
+    print "Average Causal Susceptibility: ", med.get_all_acs()
+    print "Average Mediated Causal Effect: ", med.get_all_amce()
 
-    from tigramite.independence_tests import ParCorr
-    # import sklearn
-    # import sklearn.preprocessing
-    # import sklearn.neighbors
-    # import sklearn.linear_model
+    i=0; tau=3; j=2
 
-    pred = Prediction(dataframe=dataframe,
-            cond_ind_model=ParCorr,
-            cond_ind_params = {'significance':'analytic',
-                               'fixed_thres':0.01},
-            prediction_model = sklearn.linear_model.LinearRegression,
-            # prediction_model = sklearn.gaussian_process.GaussianProcessRegressor,
-            # prediction_model = sklearn.neighbors.KNeighborsRegressor,
-        # prediction_model_params={'fit_intercept':False},
-        # prediction_model_params = {'n_neighbors':5},
-        # prediction_model_params = {'alpha':0., 'kernel':sklearn.gaussian_process.kernels.RBF() +
-        #                                     sklearn.gaussian_process.kernels.WhiteKernel()},
-        # data_transform=sklearn.preprocessing.StandardScaler(),
-        train_indices= range(int(0.8*T)),
-        test_indices= range(int(0.8*T), T),
-        verbosity=0
+    graph_data = med.get_mediation_graph_data(i=i, tau=tau, j=j, 
+                                            include_neighbors=True)
+
+    import plotting as tp
+
+    # for key in graph_data.keys():
+    #     print key
+    #     print graph_data[key].round(2)
+
+
+    tp.plot_mediation_graph(
+                var_names=['X', 'Y', 'Z'],
+                path_val_matrix=graph_data['path_val_matrix'], 
+               path_node_array=graph_data['path_node_array'],
+               save_name="/home/jakobrunge/test/test_graph.pdf"
+                )
+
+    tp.plot_mediation_time_series_graph(
+        var_names=['X', 'Y', 'Z'],
+        path_node_array=graph_data['path_node_array'],
+        tsg_path_val_matrix=graph_data['tsg_path_val_matrix'],
+        # vmin_edges=-0.5, vmax_edges=0.5, edge_ticks=0.1,
+        # vmin_nodes=-0.5, vmax_nodes=0.5, node_ticks=0.1,
+        save_name="/home/jakobrunge/test/test_tsg_graph.pdf"
         )
 
-    tau_max = 25
-    steps_ahead = 1
-    target = 2
+    # ##
+    # ## Prediction
+    # ##
+    # import pylab
 
-    all_predictors = pred.get_predictors(
-                      selected_targets=[target],
-                      selected_links=None,
-                      steps_ahead=steps_ahead,
-                      tau_max=tau_max,
-                      pc_alpha=None,
-                      max_conds_dim=None,
-                      max_combinations=1,
-                      )
+    # numpy.random.seed(44)
+    # a = 0.4
+    # c = 0.6
+    # T = 200
 
-    print all_predictors
+    # verbosity = 0
+    # # Each key refers to a variable and the incoming links are supplied as a
+    # # list of format [((driver, lag), coeff), ...]
+    # links_coeffs = {0: [((0, -1), a)],
+    #                 1: [((1, -1), a), ((0, -1), c)],
+    #                 2: [((2, -1), a), ((1, -1), c)],  # ((0, -1), c)],
+    #                 }
+
+    # data, true_parents_neighbors = pp.var_process(links_coeffs, T=T)
+
+    # # print data
+    # # print data.mean(axis=0), data.std(axis=0)
+    # data_mask = numpy.zeros(data.shape)
+
+    # dataframe = pp.DataFrame(data)
+
+    # from tigramite.independence_tests import ParCorr
+    # # import sklearn
+    # # import sklearn.preprocessing
+    # # import sklearn.neighbors
+    # # import sklearn.linear_model
+
+    # pred = Prediction(dataframe=dataframe,
+    #         cond_ind_model=ParCorr,
+    #         cond_ind_params = {'significance':'analytic',
+    #                            'fixed_thres':0.01},
+    #         prediction_model = sklearn.linear_model.LinearRegression,
+    #         # prediction_model = sklearn.gaussian_process.GaussianProcessRegressor,
+    #         # prediction_model = sklearn.neighbors.KNeighborsRegressor,
+    #     # prediction_model_params={'fit_intercept':False},
+    #     # prediction_model_params = {'n_neighbors':5},
+    #     # prediction_model_params = {'alpha':0., 'kernel':sklearn.gaussian_process.kernels.RBF() +
+    #     #                                     sklearn.gaussian_process.kernels.WhiteKernel()},
+    #     # data_transform=sklearn.preprocessing.StandardScaler(),
+    #     train_indices= range(int(0.8*T)),
+    #     test_indices= range(int(0.8*T), T),
+    #     verbosity=0
+    #     )
+
+    # tau_max = 25
+    # steps_ahead = 1
+    # target = 2
+
+    # all_predictors = pred.get_predictors(
+    #                   selected_targets=[target],
+    #                   selected_links=None,
+    #                   steps_ahead=steps_ahead,
+    #                   tau_max=tau_max,
+    #                   pc_alpha=None,
+    #                   max_conds_dim=None,
+    #                   max_combinations=1,
+    #                   )
+
+    # print all_predictors
     
-    pred.fit(target_predictors=all_predictors, 
-                    selected_targets=[target],
-                        tau_max=tau_max,
-                        return_data=True)
+    # pred.fit(target_predictors=all_predictors, 
+    #                 selected_targets=[target],
+    #                     tau_max=tau_max,
+    #                     return_data=True)
 
-    # print all_predictors[target]
+    # # print all_predictors[target]
 
-    new_data = pp.DataFrame(pp.var_process(links_coeffs, T=100)[0])
+    # new_data = pp.DataFrame(pp.var_process(links_coeffs, T=100)[0])
 
-    predicted = pred.predict(target,
-                            # new_data=new_data,
-                            # cut_off = 'max_lag',
-                            # pred_params = {'return_std':True}
-                            )
-    # print predicted[1]
+    # predicted = pred.predict(target,
+    #                         # new_data=new_data,
+    #                         # cut_off = 'max_lag',
+    #                         # pred_params = {'return_std':True}
+    #                         )
+    # # print predicted[1]
 
-    true_data = pred.get_test_array()[0]
-    train_data = pred.get_train_array(target)
-    print pred.get_test_array()[0, :10]
-    print train_data[0, :10]
+    # true_data = pred.get_test_array()[0]
+    # train_data = pred.get_train_array(target)
+    # print pred.get_test_array()[0, :10]
+    # print train_data[0, :10]
 
-    print "NRMSE = %.2f" % (numpy.abs(true_data - predicted).mean()/true_data.std())
-    pylab.scatter(true_data, predicted)
-    pylab.title("NRMSE = %.2f" % (numpy.abs(true_data - predicted).mean()/true_data.std()))
+    # print "NRMSE = %.2f" % (numpy.abs(true_data - predicted).mean()/true_data.std())
+    # pylab.scatter(true_data, predicted)
+    # pylab.title("NRMSE = %.2f" % (numpy.abs(true_data - predicted).mean()/true_data.std()))
 
-    # pylab.errorbar(true_data, predicted[0], yerr=predicted[1], fmt='o')
+    # # pylab.errorbar(true_data, predicted[0], yerr=predicted[1], fmt='o')
 
-    pylab.plot(true_data, true_data, 'k-')
-    pylab.show()
+    # pylab.plot(true_data, true_data, 'k-')
+    # pylab.show()
 
     # pylab.figure()
     # pred_bad = Prediction(
