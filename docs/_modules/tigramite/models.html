@@ -665,6 +665,9 @@
 <span class="sd">        j : int</span>
 <span class="sd">            Index of effect variable.</span>
 
+<span class="sd">        include_neighbors : bool, optional (default: False)</span>
+<span class="sd">            Whether to include causal paths emanating from neighbors of i</span>
+
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        graph_data : dictionary</span>
@@ -685,8 +688,21 @@
 
         <span class="n">max_lag</span> <span class="o">=</span> <span class="n">link_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
 
+        <span class="c1"># include_neighbors = False because True would allow</span>
+        <span class="c1"># --&gt; o -- motifs in networkx.all_simple_paths as paths, but</span>
+        <span class="c1"># these are blocked...</span>
         <span class="n">tsg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_tsg</span><span class="p">(</span><span class="n">link_matrix</span><span class="p">,</span> <span class="n">val_matrix</span><span class="o">=</span><span class="n">val_matrix</span><span class="p">,</span> 
                             <span class="n">include_neighbors</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">include_neighbors</span><span class="p">:</span>
+            <span class="c1"># Add contemporaneous links only at source node</span>
+            <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">link_matrix</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">])):</span>
+                <span class="c1"># print m,n</span>
+                <span class="k">if</span> <span class="n">m</span> <span class="o">!=</span> <span class="n">n</span><span class="p">:</span>
+                    <span class="n">tsg</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">net_to_tsg</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">max_lag</span><span class="o">-</span><span class="n">tau</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_lag</span><span class="p">),</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">net_to_tsg</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">max_lag</span><span class="o">-</span><span class="n">tau</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_lag</span><span class="p">)</span>
+                        <span class="p">]</span> <span class="o">=</span> <span class="n">val_matrix</span><span class="p">[</span><span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+
         <span class="n">tsg_path_val_matrix</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">tsg</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 
         <span class="n">graph</span> <span class="o">=</span> <span class="n">networkx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">(</span><span class="n">tsg</span><span class="p">)</span>
@@ -703,7 +719,11 @@
                 <span class="n">link_start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tsg_to_net</span><span class="p">(</span><span class="n">path</span><span class="p">[</span><span class="n">ip</span><span class="p">],</span> <span class="n">max_lag</span><span class="p">)</span>
                 <span class="n">link_end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tsg_to_net</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">max_lag</span><span class="p">)</span>
                 <span class="n">delta_tau</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">link_end</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">link_start</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-                <span class="n">path_val_matrix</span><span class="p">[</span><span class="n">link_start</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">link_end</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">delta_tau</span><span class="p">]</span> <span class="o">=</span> <span class="n">val_matrix</span><span class="p">[</span><span class="n">link_start</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">link_end</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">delta_tau</span><span class="p">]</span>
+                <span class="n">path_val_matrix</span><span class="p">[</span><span class="n">link_start</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> 
+                                <span class="n">link_end</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> 
+                                <span class="n">delta_tau</span><span class="p">]</span> <span class="o">=</span> <span class="n">val_matrix</span><span class="p">[</span><span class="n">link_start</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> 
+                                                        <span class="n">link_end</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> 
+                                                        <span class="n">delta_tau</span><span class="p">]</span>
 
         <span class="n">graph_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;path_node_array&#39;</span><span class="p">:</span><span class="n">path_node_array</span><span class="p">,</span>
                       <span class="s1">&#39;path_val_matrix&#39;</span><span class="p">:</span><span class="n">path_val_matrix</span><span class="p">,</span>
@@ -1420,148 +1440,148 @@
     <span class="c1">#     print results[j][&#39;model&#39;]  #.coef_</span>
 
 
-    <span class="c1"># ###</span>
-    <span class="c1"># ### Linear Mediation</span>
-    <span class="c1"># ###</span>
-    <span class="c1"># numpy.random.seed(42)</span>
-    <span class="c1"># links_coeffs = {0: [((0, -1), 0.6), ((1, 0), 0.6)],</span>
-    <span class="c1">#                 1: [((1, -1), 0.8), ((0, -1), 0.5), ((0, 0), 0.6)],</span>
-    <span class="c1">#                 2: [((2, -1), 0.9), ((1, -1), 0.5), ((0, -2), 0.)],</span>
-    <span class="c1">#                 }</span>
-
-    <span class="c1"># data, true_parents = pp.var_process(links_coeffs, T=10000)</span>
-    <span class="c1"># dataframe = pp.DataFrame(data)</span>
-    <span class="c1"># med = LinearMediation(dataframe=dataframe, data_transform=False)</span>
-    <span class="c1"># med.fit_model(all_parents=true_parents, tau_max=3)</span>
-    <span class="c1"># print &quot;Link coefficient (0, -2) --&gt; 2: &quot;, med.get_coeff(i=0, tau=-2, j=2)</span>
-    <span class="c1"># print &quot;Causal effect (0, -2) --&gt; 2: &quot;, med.get_ce(i=0, tau=-2, j=2)</span>
-    <span class="c1"># print &quot;Mediated Causal effect (0, -2) --&gt; 2 through 1: &quot;, med.get_mce(i=0, tau=-2, j=2, k=1)</span>
-    <span class="c1"># print &quot;Average Causal Effect: &quot;, med.get_all_ace()</span>
-    <span class="c1"># print &quot;Average Causal Susceptibility: &quot;, med.get_all_acs()</span>
-    <span class="c1"># print &quot;Average Mediated Causal Effect: &quot;, med.get_all_amce()</span>
-
-    <span class="c1"># i=0; tau=3; j=2</span>
-
-    <span class="c1"># graph_data = med.get_mediation_graph_data(i=i, tau=tau, j=j, </span>
-    <span class="c1">#                                         include_neighbors=True)</span>
-
-    <span class="c1"># import plotting as tp</span>
-
-    <span class="c1"># # for key in graph_data.keys():</span>
-    <span class="c1"># #     print key</span>
-    <span class="c1"># #     print graph_data[key].round(2)</span>
-
-
-    <span class="c1"># tp.plot_mediation_graph(</span>
-    <span class="c1">#             var_names=[&#39;X&#39;, &#39;Y&#39;, &#39;Z&#39;],</span>
-    <span class="c1">#             path_val_matrix=graph_data[&#39;path_val_matrix&#39;], </span>
-    <span class="c1">#            path_node_array=graph_data[&#39;path_node_array&#39;],</span>
-    <span class="c1">#            save_name=&quot;/home/jakobrunge/test/test_graph.pdf&quot;</span>
-    <span class="c1">#             )</span>
-
-    <span class="c1"># tp.plot_mediation_time_series_graph(</span>
-    <span class="c1">#     var_names=[&#39;X&#39;, &#39;Y&#39;, &#39;Z&#39;],</span>
-    <span class="c1">#     path_node_array=graph_data[&#39;path_node_array&#39;],</span>
-    <span class="c1">#     tsg_path_val_matrix=graph_data[&#39;tsg_path_val_matrix&#39;],</span>
-    <span class="c1">#     # vmin_edges=-0.5, vmax_edges=0.5, edge_ticks=0.1,</span>
-    <span class="c1">#     # vmin_nodes=-0.5, vmax_nodes=0.5, node_ticks=0.1,</span>
-    <span class="c1">#     save_name=&quot;/home/jakobrunge/test/test_tsg_graph.pdf&quot;</span>
-    <span class="c1">#     )</span>
-
-    <span class="c1">##</span>
-    <span class="c1">## Prediction</span>
-    <span class="c1">##</span>
-    <span class="kn">import</span> <span class="nn">pylab</span>
-
-    <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">44</span><span class="p">)</span>
-    <span class="n">a</span> <span class="o">=</span> <span class="mf">0.4</span>
-    <span class="n">c</span> <span class="o">=</span> <span class="mf">0.6</span>
-    <span class="n">T</span> <span class="o">=</span> <span class="mi">200</span>
-
-    <span class="n">verbosity</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="c1"># Each key refers to a variable and the incoming links are supplied as a</span>
-    <span class="c1"># list of format [((driver, lag), coeff), ...]</span>
-    <span class="n">links_coeffs</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">[((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">a</span><span class="p">)],</span>
-                    <span class="mi">1</span><span class="p">:</span> <span class="p">[((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">a</span><span class="p">),</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">c</span><span class="p">)],</span>
-                    <span class="mi">2</span><span class="p">:</span> <span class="p">[((</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">a</span><span class="p">),</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">c</span><span class="p">)],</span>  <span class="c1"># ((0, -1), c)],</span>
+    <span class="c1">###</span>
+    <span class="c1">### Linear Mediation</span>
+    <span class="c1">###</span>
+    <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+    <span class="n">links_coeffs</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">[((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.6</span><span class="p">),</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mf">0.6</span><span class="p">)],</span>
+                    <span class="mi">1</span><span class="p">:</span> <span class="p">[((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.8</span><span class="p">),</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.5</span><span class="p">),</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mf">0.6</span><span class="p">)],</span>
+                    <span class="mi">2</span><span class="p">:</span> <span class="p">[((</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.9</span><span class="p">),</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.5</span><span class="p">),</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">),</span> <span class="mf">0.</span><span class="p">)],</span>
                     <span class="p">}</span>
 
-    <span class="n">data</span><span class="p">,</span> <span class="n">true_parents_neighbors</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">var_process</span><span class="p">(</span><span class="n">links_coeffs</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">)</span>
-
-    <span class="c1"># print data</span>
-    <span class="c1"># print data.mean(axis=0), data.std(axis=0)</span>
-    <span class="n">data_mask</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-
+    <span class="n">data</span><span class="p">,</span> <span class="n">true_parents</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">var_process</span><span class="p">(</span><span class="n">links_coeffs</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
     <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">med</span> <span class="o">=</span> <span class="n">LinearMediation</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span> <span class="n">data_transform</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">med</span><span class="o">.</span><span class="n">fit_model</span><span class="p">(</span><span class="n">all_parents</span><span class="o">=</span><span class="n">true_parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="s2">&quot;Link coefficient (0, -2) --&gt; 2: &quot;</span><span class="p">,</span> <span class="n">med</span><span class="o">.</span><span class="n">get_coeff</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tau</span><span class="o">=-</span><span class="mi">2</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="s2">&quot;Causal effect (0, -2) --&gt; 2: &quot;</span><span class="p">,</span> <span class="n">med</span><span class="o">.</span><span class="n">get_ce</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tau</span><span class="o">=-</span><span class="mi">2</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="s2">&quot;Mediated Causal effect (0, -2) --&gt; 2 through 1: &quot;</span><span class="p">,</span> <span class="n">med</span><span class="o">.</span><span class="n">get_mce</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tau</span><span class="o">=-</span><span class="mi">2</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="s2">&quot;Average Causal Effect: &quot;</span><span class="p">,</span> <span class="n">med</span><span class="o">.</span><span class="n">get_all_ace</span><span class="p">()</span>
+    <span class="nb">print</span> <span class="s2">&quot;Average Causal Susceptibility: &quot;</span><span class="p">,</span> <span class="n">med</span><span class="o">.</span><span class="n">get_all_acs</span><span class="p">()</span>
+    <span class="nb">print</span> <span class="s2">&quot;Average Mediated Causal Effect: &quot;</span><span class="p">,</span> <span class="n">med</span><span class="o">.</span><span class="n">get_all_amce</span><span class="p">()</span>
 
-    <span class="kn">from</span> <span class="nn">tigramite.independence_tests</span> <span class="k">import</span> <span class="n">ParCorr</span>
-    <span class="c1"># import sklearn</span>
-    <span class="c1"># import sklearn.preprocessing</span>
-    <span class="c1"># import sklearn.neighbors</span>
-    <span class="c1"># import sklearn.linear_model</span>
+    <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">tau</span><span class="o">=</span><span class="mi">3</span><span class="p">;</span> <span class="n">j</span><span class="o">=</span><span class="mi">2</span>
 
-    <span class="n">pred</span> <span class="o">=</span> <span class="n">Prediction</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span>
-            <span class="n">cond_ind_model</span><span class="o">=</span><span class="n">ParCorr</span><span class="p">,</span>
-            <span class="n">cond_ind_params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;significance&#39;</span><span class="p">:</span><span class="s1">&#39;analytic&#39;</span><span class="p">,</span>
-                               <span class="s1">&#39;fixed_thres&#39;</span><span class="p">:</span><span class="mf">0.01</span><span class="p">},</span>
-            <span class="n">prediction_model</span> <span class="o">=</span> <span class="n">sklearn</span><span class="o">.</span><span class="n">linear_model</span><span class="o">.</span><span class="n">LinearRegression</span><span class="p">,</span>
-            <span class="c1"># prediction_model = sklearn.gaussian_process.GaussianProcessRegressor,</span>
-            <span class="c1"># prediction_model = sklearn.neighbors.KNeighborsRegressor,</span>
-        <span class="c1"># prediction_model_params={&#39;fit_intercept&#39;:False},</span>
-        <span class="c1"># prediction_model_params = {&#39;n_neighbors&#39;:5},</span>
-        <span class="c1"># prediction_model_params = {&#39;alpha&#39;:0., &#39;kernel&#39;:sklearn.gaussian_process.kernels.RBF() +</span>
-        <span class="c1">#                                     sklearn.gaussian_process.kernels.WhiteKernel()},</span>
-        <span class="c1"># data_transform=sklearn.preprocessing.StandardScaler(),</span>
-        <span class="n">train_indices</span><span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="mf">0.8</span><span class="o">*</span><span class="n">T</span><span class="p">)),</span>
-        <span class="n">test_indices</span><span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="mf">0.8</span><span class="o">*</span><span class="n">T</span><span class="p">),</span> <span class="n">T</span><span class="p">),</span>
-        <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span>
+    <span class="n">graph_data</span> <span class="o">=</span> <span class="n">med</span><span class="o">.</span><span class="n">get_mediation_graph_data</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="n">tau</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="n">j</span><span class="p">,</span> 
+                                            <span class="n">include_neighbors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="kn">import</span> <span class="nn">plotting</span> <span class="k">as</span> <span class="nn">tp</span>
+
+    <span class="c1"># for key in graph_data.keys():</span>
+    <span class="c1">#     print key</span>
+    <span class="c1">#     print graph_data[key].round(2)</span>
+
+
+    <span class="n">tp</span><span class="o">.</span><span class="n">plot_mediation_graph</span><span class="p">(</span>
+                <span class="n">var_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="s1">&#39;Y&#39;</span><span class="p">,</span> <span class="s1">&#39;Z&#39;</span><span class="p">],</span>
+                <span class="n">path_val_matrix</span><span class="o">=</span><span class="n">graph_data</span><span class="p">[</span><span class="s1">&#39;path_val_matrix&#39;</span><span class="p">],</span> 
+               <span class="n">path_node_array</span><span class="o">=</span><span class="n">graph_data</span><span class="p">[</span><span class="s1">&#39;path_node_array&#39;</span><span class="p">],</span>
+               <span class="n">save_name</span><span class="o">=</span><span class="s2">&quot;/home/jakobrunge/test/test_graph.pdf&quot;</span>
+                <span class="p">)</span>
+
+    <span class="n">tp</span><span class="o">.</span><span class="n">plot_mediation_time_series_graph</span><span class="p">(</span>
+        <span class="n">var_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="s1">&#39;Y&#39;</span><span class="p">,</span> <span class="s1">&#39;Z&#39;</span><span class="p">],</span>
+        <span class="n">path_node_array</span><span class="o">=</span><span class="n">graph_data</span><span class="p">[</span><span class="s1">&#39;path_node_array&#39;</span><span class="p">],</span>
+        <span class="n">tsg_path_val_matrix</span><span class="o">=</span><span class="n">graph_data</span><span class="p">[</span><span class="s1">&#39;tsg_path_val_matrix&#39;</span><span class="p">],</span>
+        <span class="c1"># vmin_edges=-0.5, vmax_edges=0.5, edge_ticks=0.1,</span>
+        <span class="c1"># vmin_nodes=-0.5, vmax_nodes=0.5, node_ticks=0.1,</span>
+        <span class="n">save_name</span><span class="o">=</span><span class="s2">&quot;/home/jakobrunge/test/test_tsg_graph.pdf&quot;</span>
         <span class="p">)</span>
 
-    <span class="n">tau_max</span> <span class="o">=</span> <span class="mi">25</span>
-    <span class="n">steps_ahead</span> <span class="o">=</span> <span class="mi">1</span>
-    <span class="n">target</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="c1"># ##</span>
+    <span class="c1"># ## Prediction</span>
+    <span class="c1"># ##</span>
+    <span class="c1"># import pylab</span>
 
-    <span class="n">all_predictors</span> <span class="o">=</span> <span class="n">pred</span><span class="o">.</span><span class="n">get_predictors</span><span class="p">(</span>
-                      <span class="n">selected_targets</span><span class="o">=</span><span class="p">[</span><span class="n">target</span><span class="p">],</span>
-                      <span class="n">selected_links</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                      <span class="n">steps_ahead</span><span class="o">=</span><span class="n">steps_ahead</span><span class="p">,</span>
-                      <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
-                      <span class="n">pc_alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                      <span class="n">max_conds_dim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                      <span class="n">max_combinations</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                      <span class="p">)</span>
+    <span class="c1"># numpy.random.seed(44)</span>
+    <span class="c1"># a = 0.4</span>
+    <span class="c1"># c = 0.6</span>
+    <span class="c1"># T = 200</span>
 
-    <span class="nb">print</span> <span class="n">all_predictors</span>
+    <span class="c1"># verbosity = 0</span>
+    <span class="c1"># # Each key refers to a variable and the incoming links are supplied as a</span>
+    <span class="c1"># # list of format [((driver, lag), coeff), ...]</span>
+    <span class="c1"># links_coeffs = {0: [((0, -1), a)],</span>
+    <span class="c1">#                 1: [((1, -1), a), ((0, -1), c)],</span>
+    <span class="c1">#                 2: [((2, -1), a), ((1, -1), c)],  # ((0, -1), c)],</span>
+    <span class="c1">#                 }</span>
+
+    <span class="c1"># data, true_parents_neighbors = pp.var_process(links_coeffs, T=T)</span>
+
+    <span class="c1"># # print data</span>
+    <span class="c1"># # print data.mean(axis=0), data.std(axis=0)</span>
+    <span class="c1"># data_mask = numpy.zeros(data.shape)</span>
+
+    <span class="c1"># dataframe = pp.DataFrame(data)</span>
+
+    <span class="c1"># from tigramite.independence_tests import ParCorr</span>
+    <span class="c1"># # import sklearn</span>
+    <span class="c1"># # import sklearn.preprocessing</span>
+    <span class="c1"># # import sklearn.neighbors</span>
+    <span class="c1"># # import sklearn.linear_model</span>
+
+    <span class="c1"># pred = Prediction(dataframe=dataframe,</span>
+    <span class="c1">#         cond_ind_model=ParCorr,</span>
+    <span class="c1">#         cond_ind_params = {&#39;significance&#39;:&#39;analytic&#39;,</span>
+    <span class="c1">#                            &#39;fixed_thres&#39;:0.01},</span>
+    <span class="c1">#         prediction_model = sklearn.linear_model.LinearRegression,</span>
+    <span class="c1">#         # prediction_model = sklearn.gaussian_process.GaussianProcessRegressor,</span>
+    <span class="c1">#         # prediction_model = sklearn.neighbors.KNeighborsRegressor,</span>
+    <span class="c1">#     # prediction_model_params={&#39;fit_intercept&#39;:False},</span>
+    <span class="c1">#     # prediction_model_params = {&#39;n_neighbors&#39;:5},</span>
+    <span class="c1">#     # prediction_model_params = {&#39;alpha&#39;:0., &#39;kernel&#39;:sklearn.gaussian_process.kernels.RBF() +</span>
+    <span class="c1">#     #                                     sklearn.gaussian_process.kernels.WhiteKernel()},</span>
+    <span class="c1">#     # data_transform=sklearn.preprocessing.StandardScaler(),</span>
+    <span class="c1">#     train_indices= range(int(0.8*T)),</span>
+    <span class="c1">#     test_indices= range(int(0.8*T), T),</span>
+    <span class="c1">#     verbosity=0</span>
+    <span class="c1">#     )</span>
+
+    <span class="c1"># tau_max = 25</span>
+    <span class="c1"># steps_ahead = 1</span>
+    <span class="c1"># target = 2</span>
+
+    <span class="c1"># all_predictors = pred.get_predictors(</span>
+    <span class="c1">#                   selected_targets=[target],</span>
+    <span class="c1">#                   selected_links=None,</span>
+    <span class="c1">#                   steps_ahead=steps_ahead,</span>
+    <span class="c1">#                   tau_max=tau_max,</span>
+    <span class="c1">#                   pc_alpha=None,</span>
+    <span class="c1">#                   max_conds_dim=None,</span>
+    <span class="c1">#                   max_combinations=1,</span>
+    <span class="c1">#                   )</span>
+
+    <span class="c1"># print all_predictors</span>
     
-    <span class="n">pred</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">target_predictors</span><span class="o">=</span><span class="n">all_predictors</span><span class="p">,</span> 
-                    <span class="n">selected_targets</span><span class="o">=</span><span class="p">[</span><span class="n">target</span><span class="p">],</span>
-                        <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
-                        <span class="n">return_data</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># pred.fit(target_predictors=all_predictors, </span>
+    <span class="c1">#                 selected_targets=[target],</span>
+    <span class="c1">#                     tau_max=tau_max,</span>
+    <span class="c1">#                     return_data=True)</span>
 
-    <span class="c1"># print all_predictors[target]</span>
+    <span class="c1"># # print all_predictors[target]</span>
 
-    <span class="n">new_data</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">pp</span><span class="o">.</span><span class="n">var_process</span><span class="p">(</span><span class="n">links_coeffs</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="mi">100</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="c1"># new_data = pp.DataFrame(pp.var_process(links_coeffs, T=100)[0])</span>
 
-    <span class="n">predicted</span> <span class="o">=</span> <span class="n">pred</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">target</span><span class="p">,</span>
-                            <span class="c1"># new_data=new_data,</span>
-                            <span class="c1"># cut_off = &#39;max_lag&#39;,</span>
-                            <span class="c1"># pred_params = {&#39;return_std&#39;:True}</span>
-                            <span class="p">)</span>
-    <span class="c1"># print predicted[1]</span>
+    <span class="c1"># predicted = pred.predict(target,</span>
+    <span class="c1">#                         # new_data=new_data,</span>
+    <span class="c1">#                         # cut_off = &#39;max_lag&#39;,</span>
+    <span class="c1">#                         # pred_params = {&#39;return_std&#39;:True}</span>
+    <span class="c1">#                         )</span>
+    <span class="c1"># # print predicted[1]</span>
 
-    <span class="n">true_data</span> <span class="o">=</span> <span class="n">pred</span><span class="o">.</span><span class="n">get_test_array</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">train_data</span> <span class="o">=</span> <span class="n">pred</span><span class="o">.</span><span class="n">get_train_array</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
-    <span class="nb">print</span> <span class="n">pred</span><span class="o">.</span><span class="n">get_test_array</span><span class="p">()[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:</span><span class="mi">10</span><span class="p">]</span>
-    <span class="nb">print</span> <span class="n">train_data</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:</span><span class="mi">10</span><span class="p">]</span>
+    <span class="c1"># true_data = pred.get_test_array()[0]</span>
+    <span class="c1"># train_data = pred.get_train_array(target)</span>
+    <span class="c1"># print pred.get_test_array()[0, :10]</span>
+    <span class="c1"># print train_data[0, :10]</span>
 
-    <span class="nb">print</span> <span class="s2">&quot;NRMSE = </span><span class="si">%.2f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">true_data</span> <span class="o">-</span> <span class="n">predicted</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">/</span><span class="n">true_data</span><span class="o">.</span><span class="n">std</span><span class="p">())</span>
-    <span class="n">pylab</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">true_data</span><span class="p">,</span> <span class="n">predicted</span><span class="p">)</span>
-    <span class="n">pylab</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;NRMSE = </span><span class="si">%.2f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">true_data</span> <span class="o">-</span> <span class="n">predicted</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">/</span><span class="n">true_data</span><span class="o">.</span><span class="n">std</span><span class="p">()))</span>
+    <span class="c1"># print &quot;NRMSE = %.2f&quot; % (numpy.abs(true_data - predicted).mean()/true_data.std())</span>
+    <span class="c1"># pylab.scatter(true_data, predicted)</span>
+    <span class="c1"># pylab.title(&quot;NRMSE = %.2f&quot; % (numpy.abs(true_data - predicted).mean()/true_data.std()))</span>
 
-    <span class="c1"># pylab.errorbar(true_data, predicted[0], yerr=predicted[1], fmt=&#39;o&#39;)</span>
+    <span class="c1"># # pylab.errorbar(true_data, predicted[0], yerr=predicted[1], fmt=&#39;o&#39;)</span>
 
-    <span class="n">pylab</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">true_data</span><span class="p">,</span> <span class="n">true_data</span><span class="p">,</span> <span class="s1">&#39;k-&#39;</span><span class="p">)</span>
-    <span class="n">pylab</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="c1"># pylab.plot(true_data, true_data, &#39;k-&#39;)</span>
+    <span class="c1"># pylab.show()</span>
 
     <span class="c1"># pylab.figure()</span>
     <span class="c1"># pred_bad = Prediction(</span>

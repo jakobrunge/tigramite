@@ -639,7 +639,6 @@ class LinearMediation(Models):
                         self.net_to_tsg(n, max_lag-tau-1, max_lag)
                         ] = val_matrix[m, n, 0]
 
-        # neighbors.remove(neighbors.index(i))
         tsg_path_val_matrix = numpy.zeros(tsg.shape)
 
         graph = networkx.DiGraph(tsg)
