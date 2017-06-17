@@ -571,6 +571,19 @@
 
         <span class="k">return</span> <span class="n">all_psi_k</span>
 
+<div class="viewcode-block" id="LinearMediation.get_val_matrix"><a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_val_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">get_val_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the matrix of linear coefficients.</span>
+
+<span class="sd">        Format is val_matrix[i, j, tau] denotes coefficient of link </span>
+<span class="sd">        i --tau--&gt; j.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        val_matrix : array</span>
+<span class="sd">            Matrix of linear coefficients, shape (N, N, tau_max + 1).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">phi</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span></div>
 
     <span class="c1"># def get_link_matrix_from_parents(self, all_parents):</span>
         

@@ -507,6 +507,19 @@ class LinearMediation(Models):
 
         return all_psi_k
 
+    def get_val_matrix(self,):
+        """Returns the matrix of linear coefficients.
+
+        Format is val_matrix[i, j, tau] denotes coefficient of link 
+        i --tau--> j.
+
+        Returns
+        -------
+        val_matrix : array
+            Matrix of linear coefficients, shape (N, N, tau_max + 1).
+        """
+
+        return self.phi.transpose()
 
     # def get_link_matrix_from_parents(self, all_parents):
         

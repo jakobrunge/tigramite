@@ -2350,6 +2350,24 @@ sig_thres or link_matrix has to be provided.</dd>
 </dd></dl>
 
 <dl class="method">
+<dt id="tigramite.models.LinearMediation.get_val_matrix">
+<code class="descname">get_val_matrix</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#LinearMediation.get_val_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.LinearMediation.get_val_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the matrix of linear coefficients.</p>
+<p>Format is val_matrix[i, j, tau] denotes coefficient of link
+i &#8211;tau&#8211;&gt; j.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>val_matrix</strong> &#8211; Matrix of linear coefficients, shape (N, N, tau_max + 1).</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">array</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="tigramite.models.LinearMediation.net_to_tsg">
 <code class="descname">net_to_tsg</code><span class="sig-paren">(</span><em>row</em>, <em>lag</em>, <em>max_lag</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#LinearMediation.net_to_tsg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.LinearMediation.net_to_tsg" title="Permalink to this definition">¶</a></dt>
 <dd><p>Helper function to translate from network to time series graph.</p>
