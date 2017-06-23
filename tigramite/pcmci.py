@@ -58,7 +58,7 @@ class PCMCI():
     problematic due to high-dimensionality and because conditioning on
     irrelevant variables leads to biases [1]_.
 
-    PCMCI estimates the links through a two-step procedure:
+    PCMCI estimates causal links by a two-step procedure:
 
     1.  Condition-selection: For each variable :math:`j`, estimate a
         *superset*  of parents :math:`\tilde{\mathcal{P}}(X^j_t)` with the 

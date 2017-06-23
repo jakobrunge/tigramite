@@ -331,7 +331,7 @@ class CondIndTest(object):
             if self.confidence:
                 print("confidence = %s" % self.confidence
                 + "\nconf_lev = %s" % self.conf_lev)
-                if self.confidenc == 'bootstrap':
+                if self.confidence == 'bootstrap':
                     print(""
                     + "conf_samples = %s" % self.conf_samples
                     + "\nconf_blocklength = %s" % self.conf_blocklength)
@@ -2073,7 +2073,6 @@ class GPDC(CondIndTest,GP):
         raise ValueError("Analytic confidence not implemented for %s"
                          "" % self.measure)
 
-
 class CMIknn(CondIndTest):
     r"""Conditional mutual information test based on nearest-neighbor estimator.
 
@@ -2134,6 +2133,11 @@ class CMIknn(CondIndTest):
         determines the size of hyper-cubes around each (high-dimensional) sample
         point.
 
+    transform : {'standardize', 'ranks',  'uniform', False}, optional 
+        (default: 'standardize')
+        Whether to transform the array beforehand by standardizing
+        or transforming to uniform marginals.
+
     significance : str, optional (default: 'shuffle_test')
         Type of significance test to use. For CMIknn only 'fixed_thres' and 
         'shuffle_test' are available.
@@ -2145,11 +2149,13 @@ class CMIknn(CondIndTest):
                 knn=0.2,
                 shuffle_neighbors=5,
                 significance='shuffle_test',
+                transform='standardize',
                 **kwargs):
 
 
         self.knn = knn
         self.shuffle_neighbors = shuffle_neighbors
+        self.transform = transform
 
         self.measure = 'cmi_knn'
         self.two_sided = False
@@ -2166,7 +2172,7 @@ class CMIknn(CondIndTest):
             print("shuffle_neighbors = %d" % self.shuffle_neighbors)
             print("")
 
-    def _get_nearest_neighbors(self, array, xyz, knn, transform='standardize'):
+    def _get_nearest_neighbors(self, array, xyz, knn):
         """Returns nearest neighbors according to Frenzel and Pompe (2007).
 
         Retrieves the distances eps to the k-th nearest neighbors for every
@@ -2187,11 +2193,6 @@ class CMIknn(CondIndTest):
             is computed as a fraction of T, hence knn=knn*T. For knn larger or
             equal to 1, this is the absolute number.
 
-        transform : {'standardize', 'uniform', False}, optional 
-            (default: 'standardize')
-            Whether to transform the array beforehand by standardizing
-            or transforming to uniform marginals.
-
         Returns
         -------
         k_xz, k_yz, k_z : tuple of arrays of shape (T,)
@@ -2199,8 +2200,13 @@ class CMIknn(CondIndTest):
         """
 
         dim, T = array.shape
+        array = array.astype('float')
+        
+        # Add noise to destroy ties...
+        array += (1E-6 * array.std(axis=1).reshape(dim, 1)
+                  * numpy.random.rand(array.shape[0], array.shape[1]))
 
-        if transform == 'standardize':
+        if self.transform == 'standardize':
             # Standardize
             array = array.astype('float')
             array -= array.mean(axis=1).reshape(dim, 1)
@@ -2210,12 +2216,11 @@ class CMIknn(CondIndTest):
             if numpy.isnan(array).sum() != 0:
                 raise ValueError("nans after standardizing, "
                                  "possibly constant array!")
-        elif transform == 'uniform':
+        elif self.transform == 'uniform':
             array = self._trafo2uniform(array)
+        elif self.transform == 'ranks':
+            array = array.argsort(axis=1).argsort(axis=1).astype('float')
 
-        # Add noise to destroy ties...
-        array += (1E-6 * array.std(axis=1).reshape(dim, 1)
-                  * numpy.random.rand(array.shape[0], array.shape[1]))
 
         # Use cKDTree to get distances eps to the k-th nearest neighbors for
         # every sample in joint space XYZ with maximum norm
@@ -2300,10 +2305,10 @@ class CMIknn(CondIndTest):
         x_indices = numpy.where(xyz == 0)[0]
         z_indices = numpy.where(xyz == 2)[0]
 
-        if len(z_indices) > 0:
+        if len(z_indices) > 0 and self.shuffle_neighbors < T:
             if self.verbosity > 2:
                 print("            nearest-neighbor shuffle significance "
-                      "test with n=%d and %d surrogates" % (
+                      "test with n = %d and %d surrogates" % (
                         self.shuffle_neighbors,  self.sig_samples))
 
             # Get nearest neighbors around each sample point in Z
@@ -2313,13 +2318,10 @@ class CMIknn(CondIndTest):
                         k=self.shuffle_neighbors, 
                         p=numpy.inf, 
                         eps=0.)[1].astype('int32')  
-
+            # print neighbors
 
             null_dist = numpy.zeros(self.sig_samples)
             for sam in range(self.sig_samples):
-
-                # Shuffle neighbor indices for each sample index
-                map(numpy.random.shuffle, neighbors)
 
                 # Generate random order in which to go through indices loop in
                 # next step
@@ -2374,7 +2376,6 @@ class CMIknn(CondIndTest):
         """Placeholder function, not available."""
         raise ValueError("Model selection not implemented for %s"
                          "" % self.measure)
-
 
 class CMIsymb(CondIndTest):
     r"""Conditional mutual information test based on discrete estimator.
@@ -2675,44 +2676,45 @@ if __name__ == '__main__':
     #     recycle_residuals=False,
     #     verbosity=4)
 
-    cond_ind_test = GPDC(
-        significance='analytic',
-        sig_samples=1000,
-        sig_blocklength=1,
+    # cond_ind_test = GPDC(
+    #     significance='analytic',
+    #     sig_samples=1000,
+    #     sig_blocklength=1,
 
-        confidence=False, # False  'bootstrap',
-        conf_lev=0.9,
-        conf_samples=100,
-        conf_blocklength=1,
+    #     confidence=False, # False  'bootstrap',
+    #     conf_lev=0.9,
+    #     conf_samples=100,
+    #     conf_blocklength=1,
 
-        use_mask=False,
-        mask_type='y',
+    #     use_mask=False,
+    #     mask_type='y',
 
-        null_dist_filename='/home/jakobrunge/test/test.npz', #'/home/tests/test.npz',
-        gp_version='new',
+    #     null_dist_filename='/home/jakobrunge/test/test.npz', #'/home/tests/test.npz',
+    #     gp_version='new',
 
-        recycle_residuals=False,
-        verbosity=4)
+    #     recycle_residuals=False,
+    #     verbosity=4)
 
     # cond_ind_test.generate_and_save_nulldists( sample_sizes=[100, 250],
     #     null_dist_filename='/home/jakobrunge/test/test.npz')
     # cond_ind_test.null_dist_filename = '/home/jakobrunge/test/test.npz'
 
-    # cond_ind_test = CMIknn(
-    #     significance='shuffle_test',
-    #     sig_samples=1000,
-    #     knn=100,
-    #     shuffle_neighbors=10,
-    #     confidence='bootstrap', #'bootstrap',
-    #     conf_lev=0.9,
-    #     conf_samples=100,
-    #     conf_blocklength=None,
+    cond_ind_test = CMIknn(
+        significance='shuffle_test',
+        sig_samples=1000,
+        knn=100,
+        transform='ranks',
+        shuffle_neighbors=5,
+        confidence='bootstrap', #'bootstrap',
+        conf_lev=0.9,
+        conf_samples=100,
+        conf_blocklength=None,
 
-    #     use_mask=False,
-    #     mask_type='y',
-    #     recycle_residuals=False,
-    #     verbosity=3,
-    #     )
+        use_mask=False,
+        mask_type='y',
+        recycle_residuals=False,
+        verbosity=3,
+        )
 
     # cond_ind_test = CMIsymb()
     #     significance='shuffle_test',

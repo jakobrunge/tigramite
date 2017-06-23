@@ -182,7 +182,7 @@ link towards it (blue and red boxes in Figure). Estimating these parents
 directly by testing for conditional independence on the whole past is
 problematic due to high-dimensionality and because conditioning on
 irrelevant variables leads to biases <a class="footnote-reference" href="#id5" id="id3">[1]</a>.</p>
-<p>PCMCI estimates the links through a two-step procedure:</p>
+<p>PCMCI estimates causal links by a two-step procedure:</p>
 <ol class="arabic">
 <li><p class="first">Condition-selection: For each variable <img class="math" src="_images/math/6b21e0b0899a0d2879d3b8019087fa630bab4ea2.png" alt="j"/>, estimate a
 <em>superset</em>  of parents <img class="math" src="_images/math/f75f28dbcbec776fbe031f8ac923f83f9260bd8a.png" alt="\tilde{\mathcal{P}}(X^j_t)"/> with the
@@ -1317,7 +1317,7 @@ regression.</p>
 
 <dl class="class">
 <dt id="tigramite.independence_tests.CMIknn">
-<em class="property">class </em><code class="descclassname">tigramite.independence_tests.</code><code class="descname">CMIknn</code><span class="sig-paren">(</span><em>knn=0.2</em>, <em>shuffle_neighbors=5</em>, <em>significance='shuffle_test'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#CMIknn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.CMIknn" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">tigramite.independence_tests.</code><code class="descname">CMIknn</code><span class="sig-paren">(</span><em>knn=0.2</em>, <em>shuffle_neighbors=5</em>, <em>significance='shuffle_test'</em>, <em>transform='standardize'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#CMIknn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.CMIknn" title="Permalink to this definition">¶</a></dt>
 <dd><p>Conditional mutual information test based on nearest-neighbor estimator.</p>
 <p>Conditional mutual information is the most general dependency measure coming
 from an information-theoretic framework. It makes no assumptions about the
@@ -1371,6 +1371,9 @@ computed as a fraction of T, hence knn=knn*T. For knn larger or equal to
 <li><strong>shuffle_neighbors</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em>) &#8211; Number of nearest-neighbors within Z for the shuffle surrogates which
 determines the size of hyper-cubes around each (high-dimensional) sample
 point.</li>
+<li><strong>transform</strong> (<em>{'standardize'</em><em>, </em><em>'ranks'</em><em>,  </em><em>'uniform'</em><em>, </em><em>False}</em><em>, </em><em>optional</em>) &#8211; (default: &#8216;standardize&#8217;)
+Whether to transform the array beforehand by standardizing
+or transforming to uniform marginals.</li>
 <li><strong>significance</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'shuffle_test'</em><em>)</em>) &#8211; Type of significance test to use. For CMIknn only &#8216;fixed_thres&#8217; and
 &#8216;shuffle_test&#8217; are available.</li>
 <li><strong>**kwargs</strong> &#8211; Arguments passed on to parent class CondIndTest.</li>

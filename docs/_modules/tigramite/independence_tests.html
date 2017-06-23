@@ -395,7 +395,7 @@
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">confidence</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;confidence = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">confidence</span>
                 <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">conf_lev = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf_lev</span><span class="p">)</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">confidenc</span> <span class="o">==</span> <span class="s1">&#39;bootstrap&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">confidence</span> <span class="o">==</span> <span class="s1">&#39;bootstrap&#39;</span><span class="p">:</span>
                     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span>
                     <span class="o">+</span> <span class="s2">&quot;conf_samples = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf_samples</span>
                     <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">conf_blocklength = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf_blocklength</span><span class="p">)</span>
@@ -2137,7 +2137,6 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Analytic confidence not implemented for </span><span class="si">%s</span><span class="s2">&quot;</span>
                          <span class="s2">&quot;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span><span class="p">)</span></div></div>
 
-
 <div class="viewcode-block" id="CMIknn"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.CMIknn">[docs]</a><span class="k">class</span> <span class="nc">CMIknn</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Conditional mutual information test based on nearest-neighbor estimator.</span>
 
@@ -2198,6 +2197,11 @@
 <span class="sd">        determines the size of hyper-cubes around each (high-dimensional) sample</span>
 <span class="sd">        point.</span>
 
+<span class="sd">    transform : {&#39;standardize&#39;, &#39;ranks&#39;,  &#39;uniform&#39;, False}, optional </span>
+<span class="sd">        (default: &#39;standardize&#39;)</span>
+<span class="sd">        Whether to transform the array beforehand by standardizing</span>
+<span class="sd">        or transforming to uniform marginals.</span>
+
 <span class="sd">    significance : str, optional (default: &#39;shuffle_test&#39;)</span>
 <span class="sd">        Type of significance test to use. For CMIknn only &#39;fixed_thres&#39; and </span>
 <span class="sd">        &#39;shuffle_test&#39; are available.</span>
@@ -2209,11 +2213,13 @@
                 <span class="n">knn</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
                 <span class="n">shuffle_neighbors</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
                 <span class="n">significance</span><span class="o">=</span><span class="s1">&#39;shuffle_test&#39;</span><span class="p">,</span>
+                <span class="n">transform</span><span class="o">=</span><span class="s1">&#39;standardize&#39;</span><span class="p">,</span>
                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
 
         <span class="bp">self</span><span class="o">.</span><span class="n">knn</span> <span class="o">=</span> <span class="n">knn</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">shuffle_neighbors</span> <span class="o">=</span> <span class="n">shuffle_neighbors</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">transform</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">measure</span> <span class="o">=</span> <span class="s1">&#39;cmi_knn&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">two_sided</span> <span class="o">=</span> <span class="kc">False</span>
@@ -2230,7 +2236,7 @@
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;shuffle_neighbors = </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">shuffle_neighbors</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_get_nearest_neighbors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">knn</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="s1">&#39;standardize&#39;</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_get_nearest_neighbors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">knn</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns nearest neighbors according to Frenzel and Pompe (2007).</span>
 
 <span class="sd">        Retrieves the distances eps to the k-th nearest neighbors for every</span>
@@ -2251,11 +2257,6 @@
 <span class="sd">            is computed as a fraction of T, hence knn=knn*T. For knn larger or</span>
 <span class="sd">            equal to 1, this is the absolute number.</span>
 
-<span class="sd">        transform : {&#39;standardize&#39;, &#39;uniform&#39;, False}, optional </span>
-<span class="sd">            (default: &#39;standardize&#39;)</span>
-<span class="sd">            Whether to transform the array beforehand by standardizing</span>
-<span class="sd">            or transforming to uniform marginals.</span>
-
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        k_xz, k_yz, k_z : tuple of arrays of shape (T,)</span>
@@ -2263,8 +2264,13 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+        
+        <span class="c1"># Add noise to destroy ties...</span>
+        <span class="n">array</span> <span class="o">+=</span> <span class="p">(</span><span class="mf">1E-6</span> <span class="o">*</span> <span class="n">array</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                  <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
 
-        <span class="k">if</span> <span class="n">transform</span> <span class="o">==</span> <span class="s1">&#39;standardize&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span> <span class="o">==</span> <span class="s1">&#39;standardize&#39;</span><span class="p">:</span>
             <span class="c1"># Standardize</span>
             <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
             <span class="n">array</span> <span class="o">-=</span> <span class="n">array</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
@@ -2274,12 +2280,11 @@
             <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;nans after standardizing, &quot;</span>
                                  <span class="s2">&quot;possibly constant array!&quot;</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">transform</span> <span class="o">==</span> <span class="s1">&#39;uniform&#39;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span> <span class="o">==</span> <span class="s1">&#39;uniform&#39;</span><span class="p">:</span>
             <span class="n">array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trafo2uniform</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span> <span class="o">==</span> <span class="s1">&#39;ranks&#39;</span><span class="p">:</span>
+            <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
 
-        <span class="c1"># Add noise to destroy ties...</span>
-        <span class="n">array</span> <span class="o">+=</span> <span class="p">(</span><span class="mf">1E-6</span> <span class="o">*</span> <span class="n">array</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-                  <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
 
         <span class="c1"># Use cKDTree to get distances eps to the k-th nearest neighbors for</span>
         <span class="c1"># every sample in joint space XYZ with maximum norm</span>
@@ -2364,10 +2369,10 @@
         <span class="n">x_indices</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">z_indices</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">z_indices</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">z_indices</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">shuffle_neighbors</span> <span class="o">&lt;</span> <span class="n">T</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;            nearest-neighbor shuffle significance &quot;</span>
-                      <span class="s2">&quot;test with n=</span><span class="si">%d</span><span class="s2"> and </span><span class="si">%d</span><span class="s2"> surrogates&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                      <span class="s2">&quot;test with n = </span><span class="si">%d</span><span class="s2"> and </span><span class="si">%d</span><span class="s2"> surrogates&quot;</span> <span class="o">%</span> <span class="p">(</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">shuffle_neighbors</span><span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">sig_samples</span><span class="p">))</span>
 
             <span class="c1"># Get nearest neighbors around each sample point in Z</span>
@@ -2377,13 +2382,10 @@
                         <span class="n">k</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shuffle_neighbors</span><span class="p">,</span> 
                         <span class="n">p</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> 
                         <span class="n">eps</span><span class="o">=</span><span class="mf">0.</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>  
-
+            <span class="c1"># print neighbors</span>
 
             <span class="n">null_dist</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sig_samples</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">sam</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sig_samples</span><span class="p">):</span>
-
-                <span class="c1"># Shuffle neighbor indices for each sample index</span>
-                <span class="nb">map</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">,</span> <span class="n">neighbors</span><span class="p">)</span>
 
                 <span class="c1"># Generate random order in which to go through indices loop in</span>
                 <span class="c1"># next step</span>
@@ -2438,7 +2440,6 @@
         <span class="sd">&quot;&quot;&quot;Placeholder function, not available.&quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Model selection not implemented for </span><span class="si">%s</span><span class="s2">&quot;</span>
                          <span class="s2">&quot;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span><span class="p">)</span></div></div>
-
 
 <div class="viewcode-block" id="CMIsymb"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.CMIsymb">[docs]</a><span class="k">class</span> <span class="nc">CMIsymb</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Conditional mutual information test based on discrete estimator.</span>
@@ -2739,44 +2740,45 @@
     <span class="c1">#     recycle_residuals=False,</span>
     <span class="c1">#     verbosity=4)</span>
 
-    <span class="n">cond_ind_test</span> <span class="o">=</span> <span class="n">GPDC</span><span class="p">(</span>
-        <span class="n">significance</span><span class="o">=</span><span class="s1">&#39;analytic&#39;</span><span class="p">,</span>
-        <span class="n">sig_samples</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
-        <span class="n">sig_blocklength</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="c1"># cond_ind_test = GPDC(</span>
+    <span class="c1">#     significance=&#39;analytic&#39;,</span>
+    <span class="c1">#     sig_samples=1000,</span>
+    <span class="c1">#     sig_blocklength=1,</span>
 
-        <span class="n">confidence</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="c1"># False  &#39;bootstrap&#39;,</span>
-        <span class="n">conf_lev</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
-        <span class="n">conf_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-        <span class="n">conf_blocklength</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="c1">#     confidence=False, # False  &#39;bootstrap&#39;,</span>
+    <span class="c1">#     conf_lev=0.9,</span>
+    <span class="c1">#     conf_samples=100,</span>
+    <span class="c1">#     conf_blocklength=1,</span>
 
-        <span class="n">use_mask</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">mask_type</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span>
+    <span class="c1">#     use_mask=False,</span>
+    <span class="c1">#     mask_type=&#39;y&#39;,</span>
 
-        <span class="n">null_dist_filename</span><span class="o">=</span><span class="s1">&#39;/home/jakobrunge/test/test.npz&#39;</span><span class="p">,</span> <span class="c1">#&#39;/home/tests/test.npz&#39;,</span>
-        <span class="n">gp_version</span><span class="o">=</span><span class="s1">&#39;new&#39;</span><span class="p">,</span>
+    <span class="c1">#     null_dist_filename=&#39;/home/jakobrunge/test/test.npz&#39;, #&#39;/home/tests/test.npz&#39;,</span>
+    <span class="c1">#     gp_version=&#39;new&#39;,</span>
 
-        <span class="n">recycle_residuals</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">verbosity</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="c1">#     recycle_residuals=False,</span>
+    <span class="c1">#     verbosity=4)</span>
 
     <span class="c1"># cond_ind_test.generate_and_save_nulldists( sample_sizes=[100, 250],</span>
     <span class="c1">#     null_dist_filename=&#39;/home/jakobrunge/test/test.npz&#39;)</span>
     <span class="c1"># cond_ind_test.null_dist_filename = &#39;/home/jakobrunge/test/test.npz&#39;</span>
 
-    <span class="c1"># cond_ind_test = CMIknn(</span>
-    <span class="c1">#     significance=&#39;shuffle_test&#39;,</span>
-    <span class="c1">#     sig_samples=1000,</span>
-    <span class="c1">#     knn=100,</span>
-    <span class="c1">#     shuffle_neighbors=10,</span>
-    <span class="c1">#     confidence=&#39;bootstrap&#39;, #&#39;bootstrap&#39;,</span>
-    <span class="c1">#     conf_lev=0.9,</span>
-    <span class="c1">#     conf_samples=100,</span>
-    <span class="c1">#     conf_blocklength=None,</span>
+    <span class="n">cond_ind_test</span> <span class="o">=</span> <span class="n">CMIknn</span><span class="p">(</span>
+        <span class="n">significance</span><span class="o">=</span><span class="s1">&#39;shuffle_test&#39;</span><span class="p">,</span>
+        <span class="n">sig_samples</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+        <span class="n">knn</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+        <span class="n">transform</span><span class="o">=</span><span class="s1">&#39;ranks&#39;</span><span class="p">,</span>
+        <span class="n">shuffle_neighbors</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+        <span class="n">confidence</span><span class="o">=</span><span class="s1">&#39;bootstrap&#39;</span><span class="p">,</span> <span class="c1">#&#39;bootstrap&#39;,</span>
+        <span class="n">conf_lev</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
+        <span class="n">conf_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+        <span class="n">conf_blocklength</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 
-    <span class="c1">#     use_mask=False,</span>
-    <span class="c1">#     mask_type=&#39;y&#39;,</span>
-    <span class="c1">#     recycle_residuals=False,</span>
-    <span class="c1">#     verbosity=3,</span>
-    <span class="c1">#     )</span>
+        <span class="n">use_mask</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">mask_type</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span>
+        <span class="n">recycle_residuals</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">verbosity</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="c1"># cond_ind_test = CMIsymb()</span>
     <span class="c1">#     significance=&#39;shuffle_test&#39;,</span>
