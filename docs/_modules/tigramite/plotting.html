@@ -1548,8 +1548,6 @@
 
     <span class="kn">import</span> <span class="nn">networkx</span>
 
-    <span class="k">if</span> <span class="n">var_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">var_names</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">fig_ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">fig</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -1570,6 +1568,10 @@
     <span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">dummy</span> <span class="o">=</span> <span class="n">val_matrix</span><span class="o">.</span><span class="n">shape</span>
     <span class="n">tau_max</span> <span class="o">=</span> <span class="n">dummy</span> <span class="o">-</span> <span class="mi">1</span>
     <span class="n">max_lag</span> <span class="o">=</span> <span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">var_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">var_names</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+
 
     <span class="k">if</span> <span class="n">order</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">order</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
