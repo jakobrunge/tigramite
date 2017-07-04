@@ -783,7 +783,7 @@ class PCMCI():
         """
     
 
-        if len(parents) < 20:
+        if len(parents) < 20 or hasattr(self, 'iterations'):
             print("\n    Variable %s has %d parent(s):" % (
                             self.var_names[j], len(parents)))
             # if hasattr(self, 'iterations'):
@@ -1246,30 +1246,25 @@ class PCMCI():
 
             n_links = len(links)
 
-            string = ""
-            if n_links < 20:
-                string = ("\n    Variable %s has %d "
-                          "link(s):" % (self.var_names[j], n_links))
-                for p in sorted_links:
-                    string += ("\n        (%s %d): pval = %.5f" %
-                               (self.var_names[p[0]], p[1], 
-                                p_matrix[p[0], j, abs(p[1])]))
+            string = ("\n    Variable %s has %d "
+                      "link(s):" % (self.var_names[j], n_links))
+            for p in sorted_links:
+                string += ("\n        (%s %d): pval = %.5f" %
+                           (self.var_names[p[0]], p[1], 
+                            p_matrix[p[0], j, abs(p[1])]))
 
-                    if q_matrix is not None:
-                        string += " | qval = %.5f" % (
-                            q_matrix[p[0], j, abs(p[1])])
+                if q_matrix is not None:
+                    string += " | qval = %.5f" % (
+                        q_matrix[p[0], j, abs(p[1])])
 
-                    string += " | val = %.3f" % (
-                        val_matrix[p[0], j, abs(p[1])])
+                string += " | val = %.3f" % (
+                    val_matrix[p[0], j, abs(p[1])])
 
-                    if conf_matrix is not None:
-                        string += " | conf = (%.3f, %.3f)" % (
-                            conf_matrix[p[0], j, abs(p[1])][0], 
-                            conf_matrix[p[0], j, abs(p[1])][1])
+                if conf_matrix is not None:
+                    string += " | conf = (%.3f, %.3f)" % (
+                        conf_matrix[p[0], j, abs(p[1])][0], 
+                        conf_matrix[p[0], j, abs(p[1])][1])
 
-            else:
-                string = ("\n    Variable %s has %d link(s)" % (
-                                self.var_names[j], n_links))
             print string
 
     # @profile

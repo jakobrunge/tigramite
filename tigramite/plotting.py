@@ -412,6 +412,9 @@ def plot_lagfuncs(val_matrix, **kwargs):
                                                     kwargs.iteritems() if key 
                             in setup_matrix.add_lagfuncs.func_code.co_varnames})
 
+    if "name" in kwargs.keys():
+        matrix.savefig(name=kwargs["name"])
+
     return matrix
 
 class setup_matrix():
@@ -479,12 +482,23 @@ class setup_matrix():
                  x_base=1., y_base=0.5,
                  plot_gridlines=False,
                  lag_units='',
+                 lag_array=None,
                  label_fontsize=10):
 
         self.tau_max = tau_max
 
         self.labels = []
         self.lag_units = lag_units
+        # if lag_array is None:
+        #     self.lag_array = numpy.arange(0, self.tau_max + 1)
+        # else:
+        self.lag_array = lag_array
+        if x_base is None:
+            self.x_base = 1
+        else:
+            self.x_base = x_base
+
+
         self.legend_width = legend_width
         self.legend_fontsize = legend_fontsize
 
@@ -562,7 +576,6 @@ class setup_matrix():
                                                 zorder=-5)
 
                 plot_index += 1
-
 
     def add_lagfuncs(self, val_matrix, 
                      sig_thres=None,
@@ -709,6 +722,12 @@ class setup_matrix():
             pyplot.figtext(
                 0.55, 0.01, r'lag $\tau$ [%s]' % self.lag_units,
                 horizontalalignment='center', fontsize=self.label_fontsize)
+
+        if self.lag_array is not None:
+            for ij in self.axes_dict.keys():
+                i = ij[0]
+                j = ij[1]            
+                self.axes_dict[(i, j)].set_xticklabels(self.lag_array[::self.x_base])
 
         if name is not None:
             self.fig.savefig(name)
@@ -2261,25 +2280,32 @@ if __name__ == '__main__':
     mask[:len(data)/2]=True
 
     data[:,0] = -99.
-    # plot_lagfuncs(val_matrix, var_names=range(3), markersize=5)
+    plot_lagfuncs(val_matrix, 
+        figsize=(10,10),
+     label_space_top=0.5,
+     label_space_left=0.1,
+      x_base=1, y_base=5,
+      name='test.pdf',
+        var_names=range(3), markersize=5,
+        lag_array=['a%d' % i for  i in range(4)])
 
 
-    plot_timeseries(data,  
-                    # datatime=None,
-                    # save_name=None,
-                    # fig_axes=None,
-                    # var_units=None,
-                    # time_label='years',
-                    # use_mask=False,
-                    # missing_flag=-99.,
-                    # mask=mask,
-                    # grey_masked_samples='fill',
-                    # data_linewidth=1.,
-                    # skip_ticks_data_x=1,
-                    # skip_ticks_data_y=1,
-                    # label_fontsize=8,
-                    # figsize=(3.375, 3.),
-                    )
+    # plot_timeseries(data,  
+    #                 # datatime=None,
+    #                 # save_name=None,
+    #                 # fig_axes=None,
+    #                 # var_units=None,
+    #                 # time_label='years',
+    #                 # use_mask=False,
+    #                 # missing_flag=-99.,
+    #                 # mask=mask,
+    #                 # grey_masked_samples='fill',
+    #                 # data_linewidth=1.,
+    #                 # skip_ticks_data_x=1,
+    #                 # skip_ticks_data_y=1,
+    #                 # label_fontsize=8,
+    #                 # figsize=(3.375, 3.),
+    #                 )
 
     # lagmat = setup_matrix(3, 3, range(3), lag_units = 'months')
 
@@ -2308,4 +2334,4 @@ if __name__ == '__main__':
     #     var_names=range(len(val_matrix)),
 
     # )
-    # pyplot.show()
+    pyplot.show()

@@ -476,6 +476,9 @@
                                                     <span class="n">kwargs</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> 
                             <span class="ow">in</span> <span class="n">setup_matrix</span><span class="o">.</span><span class="n">add_lagfuncs</span><span class="o">.</span><span class="n">func_code</span><span class="o">.</span><span class="n">co_varnames</span><span class="p">})</span>
 
+    <span class="k">if</span> <span class="s2">&quot;name&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">matrix</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">])</span>
+
     <span class="k">return</span> <span class="n">matrix</span></div>
 
 <div class="viewcode-block" id="setup_matrix"><a class="viewcode-back" href="../../index.html#tigramite.plotting.setup_matrix">[docs]</a><span class="k">class</span> <span class="nc">setup_matrix</span><span class="p">():</span>
@@ -543,12 +546,23 @@
                  <span class="n">x_base</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">y_base</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
                  <span class="n">plot_gridlines</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">lag_units</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                 <span class="n">lag_array</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">label_fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">=</span> <span class="n">tau_max</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lag_units</span> <span class="o">=</span> <span class="n">lag_units</span>
+        <span class="c1"># if lag_array is None:</span>
+        <span class="c1">#     self.lag_array = numpy.arange(0, self.tau_max + 1)</span>
+        <span class="c1"># else:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lag_array</span> <span class="o">=</span> <span class="n">lag_array</span>
+        <span class="k">if</span> <span class="n">x_base</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x_base</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x_base</span> <span class="o">=</span> <span class="n">x_base</span>
+
+
         <span class="bp">self</span><span class="o">.</span><span class="n">legend_width</span> <span class="o">=</span> <span class="n">legend_width</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">legend_fontsize</span> <span class="o">=</span> <span class="n">legend_fontsize</span>
 
@@ -626,7 +640,6 @@
                                                 <span class="n">zorder</span><span class="o">=-</span><span class="mi">5</span><span class="p">)</span>
 
                 <span class="n">plot_index</span> <span class="o">+=</span> <span class="mi">1</span>
-
 
 <div class="viewcode-block" id="setup_matrix.add_lagfuncs"><a class="viewcode-back" href="../../index.html#tigramite.plotting.setup_matrix.add_lagfuncs">[docs]</a>    <span class="k">def</span> <span class="nf">add_lagfuncs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val_matrix</span><span class="p">,</span> 
                      <span class="n">sig_thres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -773,6 +786,12 @@
             <span class="n">pyplot</span><span class="o">.</span><span class="n">figtext</span><span class="p">(</span>
                 <span class="mf">0.55</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;lag $\tau$ [</span><span class="si">%s</span><span class="s1">]&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">lag_units</span><span class="p">,</span>
                 <span class="n">horizontalalignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label_fontsize</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lag_array</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">ij</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">i</span> <span class="o">=</span> <span class="n">ij</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">j</span> <span class="o">=</span> <span class="n">ij</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>            
+                <span class="bp">self</span><span class="o">.</span><span class="n">axes_dict</span><span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)]</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lag_array</span><span class="p">[::</span><span class="bp">self</span><span class="o">.</span><span class="n">x_base</span><span class="p">])</span>
 
         <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
@@ -2325,25 +2344,32 @@
     <span class="n">mask</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="kc">True</span>
 
     <span class="n">data</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">99.</span>
-    <span class="c1"># plot_lagfuncs(val_matrix, var_names=range(3), markersize=5)</span>
+    <span class="n">plot_lagfuncs</span><span class="p">(</span><span class="n">val_matrix</span><span class="p">,</span> 
+        <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">),</span>
+     <span class="n">label_space_top</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+     <span class="n">label_space_left</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+      <span class="n">x_base</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">y_base</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+      <span class="n">name</span><span class="o">=</span><span class="s1">&#39;test.pdf&#39;</span><span class="p">,</span>
+        <span class="n">var_names</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+        <span class="n">lag_array</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;a</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span>  <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)])</span>
 
 
-    <span class="n">plot_timeseries</span><span class="p">(</span><span class="n">data</span><span class="p">,</span>  
-                    <span class="c1"># datatime=None,</span>
-                    <span class="c1"># save_name=None,</span>
-                    <span class="c1"># fig_axes=None,</span>
-                    <span class="c1"># var_units=None,</span>
-                    <span class="c1"># time_label=&#39;years&#39;,</span>
-                    <span class="c1"># use_mask=False,</span>
-                    <span class="c1"># missing_flag=-99.,</span>
-                    <span class="c1"># mask=mask,</span>
-                    <span class="c1"># grey_masked_samples=&#39;fill&#39;,</span>
-                    <span class="c1"># data_linewidth=1.,</span>
-                    <span class="c1"># skip_ticks_data_x=1,</span>
-                    <span class="c1"># skip_ticks_data_y=1,</span>
-                    <span class="c1"># label_fontsize=8,</span>
-                    <span class="c1"># figsize=(3.375, 3.),</span>
-                    <span class="p">)</span>
+    <span class="c1"># plot_timeseries(data,  </span>
+    <span class="c1">#                 # datatime=None,</span>
+    <span class="c1">#                 # save_name=None,</span>
+    <span class="c1">#                 # fig_axes=None,</span>
+    <span class="c1">#                 # var_units=None,</span>
+    <span class="c1">#                 # time_label=&#39;years&#39;,</span>
+    <span class="c1">#                 # use_mask=False,</span>
+    <span class="c1">#                 # missing_flag=-99.,</span>
+    <span class="c1">#                 # mask=mask,</span>
+    <span class="c1">#                 # grey_masked_samples=&#39;fill&#39;,</span>
+    <span class="c1">#                 # data_linewidth=1.,</span>
+    <span class="c1">#                 # skip_ticks_data_x=1,</span>
+    <span class="c1">#                 # skip_ticks_data_y=1,</span>
+    <span class="c1">#                 # label_fontsize=8,</span>
+    <span class="c1">#                 # figsize=(3.375, 3.),</span>
+    <span class="c1">#                 )</span>
 
     <span class="c1"># lagmat = setup_matrix(3, 3, range(3), lag_units = &#39;months&#39;)</span>
 
@@ -2372,7 +2398,7 @@
     <span class="c1">#     var_names=range(len(val_matrix)),</span>
 
     <span class="c1"># )</span>
-    <span class="c1"># pyplot.show()</span>
+    <span class="n">pyplot</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 
           </div>
