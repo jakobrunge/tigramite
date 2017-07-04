@@ -530,6 +530,9 @@
 
 <span class="sd">    lag_units : str, optional (default: &#39;&#39;)</span>
 
+<span class="sd">    lag_array : array, optional (default: None)</span>
+<span class="sd">        Optional specification of lags overwriting numpy.arange(0, tau_max+1)</span>
+
 <span class="sd">    label_fontsize : int, optional (default: 10)   </span>
 <span class="sd">        Fontsize of variable labels.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -788,6 +791,7 @@
                 <span class="n">horizontalalignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label_fontsize</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lag_array</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">lag_array</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span>
             <span class="k">for</span> <span class="n">ij</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                 <span class="n">i</span> <span class="o">=</span> <span class="n">ij</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
                 <span class="n">j</span> <span class="o">=</span> <span class="n">ij</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>            
@@ -812,7 +816,7 @@
     <span class="n">label_fraction</span><span class="o">=.</span><span class="mi">5</span><span class="p">,</span> <span class="n">link_colorbar_label</span><span class="o">=</span><span class="s1">&#39;link&#39;</span><span class="p">,</span>
     <span class="n">link_edge_colorbar_label</span><span class="o">=</span><span class="s1">&#39;link_edge&#39;</span><span class="p">,</span>
     <span class="n">undirected_curved</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">undirected_style</span><span class="o">=</span><span class="s1">&#39;solid&#39;</span><span class="p">,</span>
-    <span class="n">network_lower_bound</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+    <span class="n">network_lower_bound</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> 
     <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Function to draw a network from networkx graph instance.</span>
 
@@ -1188,6 +1192,7 @@
                <span class="n">alpha</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
                <span class="n">node_label_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
                <span class="n">link_label_fontsize</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+               <span class="n">lag_array</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                <span class="n">network_lower_bound</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
                <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Creates a network plot.</span>
@@ -1289,6 +1294,9 @@
 <span class="sd">    </span>
 <span class="sd">    link_label_fontsize : int, optional (default: 6)   </span>
 <span class="sd">        Fontsize of link labels.</span>
+
+<span class="sd">    lag_array : array, optional (default: None)</span>
+<span class="sd">        Optional specification of lags overwriting numpy.arange(0, tau_max+1)</span>
 
 <span class="sd">    network_lower_bound : float, optional (default: 0.2)</span>
 <span class="sd">        Fraction of vertical space below graph plot.</span>
@@ -1392,7 +1400,10 @@
                 <span class="n">sig_lags</span> <span class="o">=</span> <span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">link_matrix</span><span class="p">[</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span><span class="mi">1</span><span class="p">:])[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">lags</span><span class="p">,</span> <span class="n">sig_lags</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
-            <span class="n">dic</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">([</span><span class="n">l</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">lags</span> <span class="k">if</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">sig_lags</span><span class="p">])[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">lag_array</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">dic</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">([</span><span class="n">lag_array</span><span class="p">[</span><span class="n">l</span><span class="p">]</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">lags</span> <span class="k">if</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">sig_lags</span><span class="p">])[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">dic</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">([</span><span class="n">l</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">lags</span> <span class="k">if</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">sig_lags</span><span class="p">])[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Node color is max of average autodependency</span>
             <span class="n">node_color</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="n">val_matrix</span><span class="p">[</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">][</span><span class="n">argmax</span><span class="p">]</span>
@@ -2070,6 +2081,7 @@
                <span class="n">arrowhead_size</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
                <span class="n">curved_radius</span><span class="o">=.</span><span class="mi">2</span><span class="p">,</span>
                <span class="n">label_fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+               <span class="n">lag_array</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                <span class="n">alpha</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
                <span class="n">node_label_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
                <span class="n">link_label_fontsize</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
@@ -2171,6 +2183,9 @@
 
 <span class="sd">    network_lower_bound : float, optional (default: 0.2)</span>
 <span class="sd">        Fraction of vertical space below graph plot.</span>
+
+<span class="sd">    lag_array : array, optional (default: None)</span>
+<span class="sd">        Optional specification of lags overwriting numpy.arange(0, tau_max+1)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">import</span> <span class="nn">networkx</span>
 
@@ -2265,7 +2280,10 @@
                 <span class="n">sig_lags</span> <span class="o">=</span> <span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">link_matrix</span><span class="p">[</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span><span class="mi">1</span><span class="p">:])[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">lags</span><span class="p">,</span> <span class="n">sig_lags</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
-            <span class="n">dic</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">([</span><span class="n">l</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">lags</span> <span class="k">if</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">sig_lags</span><span class="p">])[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">lag_array</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">dic</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">([</span><span class="n">lag_array</span><span class="p">[</span><span class="n">l</span><span class="p">]</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">lags</span> <span class="k">if</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">sig_lags</span><span class="p">])[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">dic</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">([</span><span class="n">l</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">lags</span> <span class="k">if</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">sig_lags</span><span class="p">])[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Node color is max of average autodependency</span>
             <span class="n">node_color</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="n">val_matrix</span><span class="p">[</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">][</span><span class="n">argmax</span><span class="p">]</span>

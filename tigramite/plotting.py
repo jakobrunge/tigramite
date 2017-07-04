@@ -466,6 +466,9 @@ class setup_matrix():
 
     lag_units : str, optional (default: '')
 
+    lag_array : array, optional (default: None)
+        Optional specification of lags overwriting numpy.arange(0, tau_max+1)
+
     label_fontsize : int, optional (default: 10)   
         Fontsize of variable labels.
     """
@@ -724,6 +727,7 @@ class setup_matrix():
                 horizontalalignment='center', fontsize=self.label_fontsize)
 
         if self.lag_array is not None:
+            assert self.lag_array.shape == numpy.arange(self.tau_max + 1).shape
             for ij in self.axes_dict.keys():
                 i = ij[0]
                 j = ij[1]            
@@ -748,7 +752,7 @@ def _draw_network_with_curved_edges(
     label_fraction=.5, link_colorbar_label='link',
     link_edge_colorbar_label='link_edge',
     undirected_curved=False, undirected_style='solid',
-    network_lower_bound=0.2,
+    network_lower_bound=0.2, 
     ):
     """Function to draw a network from networkx graph instance.
 
@@ -1124,6 +1128,7 @@ def plot_graph(val_matrix,
                alpha=1.,
                node_label_size=10,
                link_label_fontsize=6,
+               lag_array=None,
                network_lower_bound=0.2,
                ):
     """Creates a network plot.
@@ -1225,6 +1230,9 @@ def plot_graph(val_matrix,
     
     link_label_fontsize : int, optional (default: 6)   
         Fontsize of link labels.
+
+    lag_array : array, optional (default: None)
+        Optional specification of lags overwriting numpy.arange(0, tau_max+1)
 
     network_lower_bound : float, optional (default: 0.2)
         Fraction of vertical space below graph plot.
@@ -1328,7 +1336,10 @@ def plot_graph(val_matrix,
                 sig_lags = (numpy.where(link_matrix[u, v,1:])[0] + 1).tolist()
             else:
                 lags, sig_lags = [], []
-            dic['label'] = str([l for l in lags if l in sig_lags])[1:-1]
+            if lag_array is not None:
+                dic['label'] = str([lag_array[l] for l in lags if l in sig_lags])[1:-1]
+            else:
+                dic['label'] = str([l for l in lags if l in sig_lags])[1:-1]
         else:
             # Node color is max of average autodependency
             node_color[u] = val_matrix[u, v][argmax]
@@ -2006,6 +2017,7 @@ def plot_mediation_graph(
                arrowhead_size=20,
                curved_radius=.2,
                label_fontsize=10,
+               lag_array=None,
                alpha=1.,
                node_label_size=10,
                link_label_fontsize=6,
@@ -2107,6 +2119,9 @@ def plot_mediation_graph(
 
     network_lower_bound : float, optional (default: 0.2)
         Fraction of vertical space below graph plot.
+
+    lag_array : array, optional (default: None)
+        Optional specification of lags overwriting numpy.arange(0, tau_max+1)
     """
     import networkx
 
@@ -2201,7 +2216,10 @@ def plot_mediation_graph(
                 sig_lags = (numpy.where(link_matrix[u, v,1:])[0] + 1).tolist()
             else:
                 lags, sig_lags = [], []
-            dic['label'] = str([l for l in lags if l in sig_lags])[1:-1]
+            if lag_array is not None:
+                dic['label'] = str([lag_array[l] for l in lags if l in sig_lags])[1:-1]
+            else:
+                dic['label'] = str([l for l in lags if l in sig_lags])[1:-1]
         else:
             # Node color is max of average autodependency
             node_color[u] = val_matrix[u, v][argmax]

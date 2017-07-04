@@ -2547,7 +2547,7 @@ useful to compare multiple models on the same sample. Last,
 <p>Tigramite plotting package.</p>
 <dl class="function">
 <dt id="tigramite.plotting.plot_graph">
-<code class="descclassname">tigramite.plotting.</code><code class="descname">plot_graph</code><span class="sig-paren">(</span><em>val_matrix</em>, <em>var_names=None</em>, <em>fig_ax=None</em>, <em>figsize=None</em>, <em>sig_thres=None</em>, <em>link_matrix=None</em>, <em>save_name=None</em>, <em>link_colorbar_label='MCI'</em>, <em>node_colorbar_label='auto-MCI'</em>, <em>link_width=None</em>, <em>node_pos=None</em>, <em>arrow_linewidth=30.0</em>, <em>vmin_edges=-1</em>, <em>vmax_edges=1.0</em>, <em>edge_ticks=0.4</em>, <em>cmap_edges='RdBu_r'</em>, <em>vmin_nodes=0</em>, <em>vmax_nodes=1.0</em>, <em>node_ticks=0.4</em>, <em>cmap_nodes='OrRd'</em>, <em>node_size=20</em>, <em>arrowhead_size=20</em>, <em>curved_radius=0.2</em>, <em>label_fontsize=10</em>, <em>alpha=1.0</em>, <em>node_label_size=10</em>, <em>link_label_fontsize=6</em>, <em>network_lower_bound=0.2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.plot_graph" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">tigramite.plotting.</code><code class="descname">plot_graph</code><span class="sig-paren">(</span><em>val_matrix</em>, <em>var_names=None</em>, <em>fig_ax=None</em>, <em>figsize=None</em>, <em>sig_thres=None</em>, <em>link_matrix=None</em>, <em>save_name=None</em>, <em>link_colorbar_label='MCI'</em>, <em>node_colorbar_label='auto-MCI'</em>, <em>link_width=None</em>, <em>node_pos=None</em>, <em>arrow_linewidth=30.0</em>, <em>vmin_edges=-1</em>, <em>vmax_edges=1.0</em>, <em>edge_ticks=0.4</em>, <em>cmap_edges='RdBu_r'</em>, <em>vmin_nodes=0</em>, <em>vmax_nodes=1.0</em>, <em>node_ticks=0.4</em>, <em>cmap_nodes='OrRd'</em>, <em>node_size=20</em>, <em>arrowhead_size=20</em>, <em>curved_radius=0.2</em>, <em>label_fontsize=10</em>, <em>alpha=1.0</em>, <em>node_label_size=10</em>, <em>link_label_fontsize=6</em>, <em>lag_array=None</em>, <em>network_lower_bound=0.2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.plot_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a network plot.</p>
 <p>This is still in beta. The network is defined either from True values in
 link_matrix, or from thresholding the val_matrix with sig_thres.  Nodes
@@ -2595,6 +2595,7 @@ coordinates could have been transformed before for basemap plots.</li>
 <li><strong>alpha</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1.</em><em>)</em>) &#8211; Opacity.</li>
 <li><strong>node_label_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em>) &#8211; Fontsize of node labels.</li>
 <li><strong>link_label_fontsize</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 6</em><em>)</em>) &#8211; Fontsize of link labels.</li>
+<li><strong>lag_array</strong> (<em>array</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Optional specification of lags overwriting numpy.arange(0, tau_max+1)</li>
 <li><strong>network_lower_bound</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.2</em><em>)</em>) &#8211; Fraction of vertical space below graph plot.</li>
 </ul>
 </td>
@@ -2626,7 +2627,7 @@ function.</td>
 
 <dl class="function">
 <dt id="tigramite.plotting.plot_mediation_graph">
-<code class="descclassname">tigramite.plotting.</code><code class="descname">plot_mediation_graph</code><span class="sig-paren">(</span><em>path_val_matrix</em>, <em>path_node_array=None</em>, <em>var_names=None</em>, <em>fig_ax=None</em>, <em>figsize=None</em>, <em>save_name=None</em>, <em>link_colorbar_label='link coeff. (edge color)'</em>, <em>node_colorbar_label='MCE (node color)'</em>, <em>link_width=None</em>, <em>node_pos=None</em>, <em>arrow_linewidth=30.0</em>, <em>vmin_edges=-1</em>, <em>vmax_edges=1.0</em>, <em>edge_ticks=0.4</em>, <em>cmap_edges='RdBu_r'</em>, <em>vmin_nodes=-1.0</em>, <em>vmax_nodes=1.0</em>, <em>node_ticks=0.4</em>, <em>cmap_nodes='RdBu_r'</em>, <em>node_size=20</em>, <em>arrowhead_size=20</em>, <em>curved_radius=0.2</em>, <em>label_fontsize=10</em>, <em>alpha=1.0</em>, <em>node_label_size=10</em>, <em>link_label_fontsize=6</em>, <em>network_lower_bound=0.2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_mediation_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.plot_mediation_graph" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">tigramite.plotting.</code><code class="descname">plot_mediation_graph</code><span class="sig-paren">(</span><em>path_val_matrix</em>, <em>path_node_array=None</em>, <em>var_names=None</em>, <em>fig_ax=None</em>, <em>figsize=None</em>, <em>save_name=None</em>, <em>link_colorbar_label='link coeff. (edge color)'</em>, <em>node_colorbar_label='MCE (node color)'</em>, <em>link_width=None</em>, <em>node_pos=None</em>, <em>arrow_linewidth=30.0</em>, <em>vmin_edges=-1</em>, <em>vmax_edges=1.0</em>, <em>edge_ticks=0.4</em>, <em>cmap_edges='RdBu_r'</em>, <em>vmin_nodes=-1.0</em>, <em>vmax_nodes=1.0</em>, <em>node_ticks=0.4</em>, <em>cmap_nodes='RdBu_r'</em>, <em>node_size=20</em>, <em>arrowhead_size=20</em>, <em>curved_radius=0.2</em>, <em>label_fontsize=10</em>, <em>lag_array=None</em>, <em>alpha=1.0</em>, <em>node_label_size=10</em>, <em>link_label_fontsize=6</em>, <em>network_lower_bound=0.2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_mediation_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.plot_mediation_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a network plot visualizing the pathways of a mediation analysis.</p>
 <p>This is still in beta. The network is defined from non-zero entries in
 <code class="docutils literal"><span class="pre">path_val_matrix</span></code>.  Nodes denote variables, straight links contemporaneous
@@ -2671,6 +2672,7 @@ coordinates could have been transformed before for basemap plots.</li>
 <li><strong>node_label_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em>) &#8211; Fontsize of node labels.</li>
 <li><strong>link_label_fontsize</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 6</em><em>)</em>) &#8211; Fontsize of link labels.</li>
 <li><strong>network_lower_bound</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.2</em><em>)</em>) &#8211; Fraction of vertical space below graph plot.</li>
+<li><strong>lag_array</strong> (<em>array</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Optional specification of lags overwriting numpy.arange(0, tau_max+1)</li>
 </ul>
 </td>
 </tr>
@@ -2837,6 +2839,7 @@ legend.</li>
 <li><strong>y_base</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: .4</em><em>)</em>) &#8211; y-tick intervals to show.</li>
 <li><strong>plot_gridlines</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) &#8211; Whether to show a grid.</li>
 <li><strong>lag_units</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: ''</em><em>)</em>) &#8211; </li>
+<li><strong>lag_array</strong> (<em>array</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Optional specification of lags overwriting numpy.arange(0, tau_max+1)</li>
 <li><strong>label_fontsize</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em>) &#8211; Fontsize of variable labels.</li>
 </ul>
 </td>
