@@ -1267,7 +1267,6 @@ class PCMCI():
 
             print string
 
-    # @profile
     def run_pcmci(self,
                   selected_links=None,
                   tau_min=1,
