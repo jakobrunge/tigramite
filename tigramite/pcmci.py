@@ -1287,10 +1287,10 @@ class PCMCI():
 
         Parameters
         ----------
-        selected_links : list, optional (default: None)
-          List of form [(0, -1), (3, -2), ...]
-          specifying whether only selected links should be tested. If None is
-          passed, all links are tested
+        selected_links : dict or None
+            Dictionary of form {0:all_parents (3, -2), ...], 1:[], ...} 
+            specifying whether only selected links should be tested. If None is
+            passed, all links are tested
 
         tau_min : int, optional (default: 1)
           Minimum time lag to test. Useful for multi-step ahead predictions.
