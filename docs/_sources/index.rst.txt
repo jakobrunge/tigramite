@@ -6,9 +6,11 @@
 TIGRAMITE
 =========
 
+`Github repo <https://github.com/jakobrunge/tigramite/>`_
+
 Tigramite is a causal time series analysis python package. It allows to efficiently reconstruct causal graphs from high-dimensional time series datasets and model the obtained causal dependencies for causal mediation and prediction analyses. Causal discovery is based on linear as well as non-parametric conditional independence tests applicable to discrete or continuously-valued time series. Also includes functions for high-quality plots of the results. Please cite the following papers depending on which method you use:
 
-1. J. Runge, D. Sejdinovic, S. Flaxman (2017): Detecting causal associations in large nonlinear time series datasets, 
+1. J. Runge, S. Flaxman, D. Sejdinovic (2017): Detecting causal associations in large nonlinear time series datasets, 
    https://arxiv.org/abs/1702.07007
 
 2. J. Runge et al. (2015): Identifying causal gateways and mediators in complex spatio-temporal systems. 
@@ -22,7 +24,6 @@ Tigramite is a causal time series analysis python package. It allows to efficien
 4. J. Runge, J. Heitzig, V. Petoukhov, and J. Kurths (2012): Escaping the Curse of Dimensionality in Estimating Multivariate Transfer Entropy. 
    Physical Review Letters, 108(25), 258701. 
    http://doi.org/10.1103/PhysRevLett.108.258701
-
 
 
 .. toctree::
