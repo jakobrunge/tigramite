@@ -3,9 +3,9 @@ Version 3.0 described in http://arxiv.org/abs/1702.07007
 
 (Python Package)
 
-[Github](https://github.com/jakobrunge/tigramite_v3.git)
+[Github](https://github.com/jakobrunge/tigramite.git)
 
-[Documentation](https://jakobrunge.github.io/tigramite_v3/)
+[Documentation](https://jakobrunge.github.io/tigramite/)
 
 
 ## General Notes
