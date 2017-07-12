@@ -1265,7 +1265,7 @@ class PCMCI():
                         conf_matrix[p[0], j, abs(p[1])][0], 
                         conf_matrix[p[0], j, abs(p[1])][1])
 
-            print string
+            print(string)
 
 
     def run_pcmci(self,

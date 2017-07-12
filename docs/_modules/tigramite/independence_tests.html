@@ -82,7 +82,7 @@
 
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">spatial</span>
-    <span class="kn">import</span> <span class="nn">tigramite_cython_code</span>
+    <span class="kn">from</span> <span class="nn">tigramite</span> <span class="k">import</span> <span class="n">tigramite_cython_code</span>
 <span class="k">except</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Could not import packages for knn-CMI estimation&quot;</span><span class="p">)</span>
 
@@ -2813,7 +2813,7 @@
 
     <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;I(X,Y|Z) = </span><span class="si">%.2f</span><span class="s2"> | p-value = </span><span class="si">%.3f</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">pval</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">conf_interval</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="nb">print</span> <span class="s2">&quot;[</span><span class="si">%.2f</span><span class="s2">, </span><span class="si">%.2f</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="n">conf_interval</span>
+        <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;[</span><span class="si">%.2f</span><span class="s2">, </span><span class="si">%.2f</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="n">conf_interval</span><span class="p">)</span>
 </pre></div>
 
           </div>

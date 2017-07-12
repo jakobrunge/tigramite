@@ -12,7 +12,7 @@ import math
 from scipy import linalg, special, stats
 from copy import deepcopy
 
-from independence_tests import _construct_array
+from tigramite.independence_tests import _construct_array
 
 try:
     import sklearn
@@ -1340,7 +1340,7 @@ class Prediction(Models, PCMCI):
 if __name__ == '__main__':
 
 
-    import data_processing as pp
+    import tigramite.data_processing as pp
 
     # ###
     # ### Models class
@@ -1402,12 +1402,12 @@ if __name__ == '__main__':
     dataframe = pp.DataFrame(data)
     med = LinearMediation(dataframe=dataframe, data_transform=False)
     med.fit_model(all_parents=true_parents, tau_max=3)
-    print "Link coefficient (0, -2) --> 2: ", med.get_coeff(i=0, tau=-2, j=2)
-    print "Causal effect (0, -2) --> 2: ", med.get_ce(i=0, tau=-2, j=2)
-    print "Mediated Causal effect (0, -2) --> 2 through 1: ", med.get_mce(i=0, tau=-2, j=2, k=1)
-    print "Average Causal Effect: ", med.get_all_ace()
-    print "Average Causal Susceptibility: ", med.get_all_acs()
-    print "Average Mediated Causal Effect: ", med.get_all_amce()
+    print ("Link coefficient (0, -2) --> 2: ", med.get_coeff(i=0, tau=-2, j=2))
+    print ("Causal effect (0, -2) --> 2: ", med.get_ce(i=0, tau=-2, j=2))
+    print ("Mediated Causal effect (0, -2) --> 2 through 1: ", med.get_mce(i=0, tau=-2, j=2, k=1))
+    print ("Average Causal Effect: ", med.get_all_ace())
+    print ("Average Causal Susceptibility: ", med.get_all_acs())
+    print ("Average Mediated Causal Effect: ", med.get_all_amce())
 
     i=0; tau=3; j=2
 

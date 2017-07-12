@@ -207,8 +207,14 @@ def _add_timeseries(fig, axes, i, time, dataseries, label,
     except:
         ax = axes
 
-    dataseries_nomissing = numpy.ma.masked_where(dataseries==missing_flag, 
+    if missing_flag is not None:
+        dataseries_nomissing = numpy.ma.masked_where(dataseries==missing_flag, 
                                                  dataseries)
+    else:
+        dataseries_nomissing = numpy.ma.masked_where(
+                                                 numpy.zeros(dataseries.shape), 
+                                                 dataseries)
+
     if use_mask:
 
         maskdata = numpy.ma.masked_where(mask, dataseries_nomissing)
@@ -1610,7 +1616,7 @@ def plot_time_series_graph(val_matrix,
         all_strengths = [0.]
 
     posarray = numpy.zeros((N * max_lag, 2))
-    for i in xrange(N * max_lag):
+    for i in range(N * max_lag):
 
         posarray[i] = numpy.array([(i % max_lag), (1. - i / max_lag)])
 

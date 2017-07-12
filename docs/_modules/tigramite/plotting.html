@@ -271,8 +271,14 @@
     <span class="k">except</span><span class="p">:</span>
         <span class="n">ax</span> <span class="o">=</span> <span class="n">axes</span>
 
-    <span class="n">dataseries_nomissing</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span><span class="n">dataseries</span><span class="o">==</span><span class="n">missing_flag</span><span class="p">,</span> 
+    <span class="k">if</span> <span class="n">missing_flag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">dataseries_nomissing</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span><span class="n">dataseries</span><span class="o">==</span><span class="n">missing_flag</span><span class="p">,</span> 
                                                  <span class="n">dataseries</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dataseries_nomissing</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span>
+                                                 <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">dataseries</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> 
+                                                 <span class="n">dataseries</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="n">use_mask</span><span class="p">:</span>
 
         <span class="n">maskdata</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">dataseries_nomissing</span><span class="p">)</span>
@@ -1674,7 +1680,7 @@
         <span class="n">all_strengths</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.</span><span class="p">]</span>
 
     <span class="n">posarray</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span> <span class="o">*</span> <span class="n">max_lag</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="n">N</span> <span class="o">*</span> <span class="n">max_lag</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span> <span class="o">*</span> <span class="n">max_lag</span><span class="p">):</span>
 
         <span class="n">posarray</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="n">i</span> <span class="o">%</span> <span class="n">max_lag</span><span class="p">),</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">i</span> <span class="o">/</span> <span class="n">max_lag</span><span class="p">)])</span>
 

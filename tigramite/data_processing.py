@@ -457,7 +457,7 @@ def _var_network(graph,
     else:
         noise = numpy.random.randn(T, N)
 
-    for t in xrange(P, T):
+    for t in range(P, T):
         Xpast = numpy.repeat(
             X[:, t - P:t][:, ::-1].reshape(1, N, P), N, axis=0)
         X[:, t] = (Xpast * graph).sum(axis=2).sum(axis=1) + noise[t]

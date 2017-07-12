@@ -18,7 +18,7 @@ except:
 
 try:
     from scipy import spatial
-    import tigramite_cython_code
+    from tigramite import tigramite_cython_code
 except:
     print("Could not import packages for knn-CMI estimation")
 
@@ -2749,4 +2749,4 @@ if __name__ == '__main__':
 
     print ("I(X,Y|Z) = %.2f | p-value = %.3f " % (val, pval))
     if conf_interval is not None:
-        print "[%.2f, %.2f]" % conf_interval
+        print ("[%.2f, %.2f]" % conf_interval)
