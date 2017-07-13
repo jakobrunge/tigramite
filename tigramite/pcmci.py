@@ -1365,7 +1365,7 @@ class PCMCI():
         else:
             q_matrix = None
 
-
+        self.all_parents = all_parents
         return {'val_matrix':val_matrix, 
                 'p_matrix':p_matrix, 
                 'q_matrix':q_matrix,
