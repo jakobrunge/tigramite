@@ -423,8 +423,8 @@ class LinearMediation(Models):
         phi = numpy.zeros((self.tau_max + 1, self.N, self.N))
         phi[0] = numpy.identity(self.N)
 
-        for j in coeffs.keys():
-            for par in coeffs[j].keys():
+        for j in list(coeffs):
+            for par in list(coeffs[j]):
                 i, tau = par
                 phi[abs(tau), j, i] = coeffs[j][par]
 
@@ -521,25 +521,6 @@ class LinearMediation(Models):
 
         return self.phi.transpose()
 
-    # def get_link_matrix_from_parents(self, all_parents):
-        
-    #     N = len(all_parents)
-
-    #     max_parents_lag = 0
-    #     for j in all_parents.keys():
-    #         # print self.all_parents[j]
-    #         if len(all_parents[j]) > 0:
-    #             max_parents_lag = max(max_parents_lag, numpy.abs(numpy.array(
-    #                     all_parents[j])[:,1]).max())
-                    
-    #     link_matrix = numpy.zeros((N, N, max_parents_lag + 1), dtype='bool')
-    #     for j in all_parents.keys():
-    #         for par in all_parents[j]:
-    #             i = par[0]
-    #             tau = abs(par[1])
-    #             link_matrix[i,j,tau] = True
-                
-    #     return link_matrix
     
     def net_to_tsg(self, row, lag, max_lag):
         """Helper function to translate from network to time series graph."""
@@ -1231,7 +1212,7 @@ class Prediction(Models, PCMCI):
             self.selected_targets = selected_targets
 
         for target in self.selected_targets:
-            if target not in self.target_predictors.keys():
+            if target not in list(self.target_predictors):
                 raise ValueError("No predictors given for target %s" % target)
 
         # Set mask to train_indices
@@ -1280,7 +1261,7 @@ class Prediction(Models, PCMCI):
         if self.verbosity > 0:
             print("\n##\n## Predicting target %s\n##" % target)
             if pred_params is not None:
-                for key in pred_params.keys():
+                for key in list(pred_params):
                     print("%s = %s" % (key, pred_params[key]))
 
         if pred_params is None:
@@ -1385,7 +1366,7 @@ if __name__ == '__main__':
     # results = model.get_fit(all_parents=all_parents, 
     #                         )
 
-    # for j in results.keys():
+    # for j in list(results):
     #     print results[j]['model']  #.coef_
 
 
@@ -1415,10 +1396,6 @@ if __name__ == '__main__':
                                             include_neighbors=True)
 
     import plotting as tp
-
-    # for key in graph_data.keys():
-    #     print key
-    #     print graph_data[key].round(2)
 
 
     tp.plot_mediation_graph(

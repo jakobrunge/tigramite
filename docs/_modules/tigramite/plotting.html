@@ -127,7 +127,7 @@
         <span class="n">skip_x</span> <span class="o">=</span> <span class="n">skip</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">skip_y</span> <span class="o">=</span> <span class="n">skip</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
-    <span class="k">for</span> <span class="n">loc</span><span class="p">,</span> <span class="n">spine</span> <span class="ow">in</span> <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+    <span class="k">for</span> <span class="n">loc</span><span class="p">,</span> <span class="n">spine</span> <span class="ow">in</span> <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="k">if</span> <span class="n">loc</span> <span class="ow">in</span> <span class="n">where</span><span class="p">:</span>
             <span class="n">spine</span><span class="o">.</span><span class="n">set_position</span><span class="p">((</span><span class="s1">&#39;outward&#39;</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>  <span class="c1"># outward by 10 points</span>
             <span class="n">spine</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="n">color</span><span class="p">[</span><span class="n">loc</span><span class="p">])</span>
@@ -476,10 +476,10 @@
     <span class="n">tau_max</span> <span class="o">=</span> <span class="n">tau_max_plusone</span> <span class="o">-</span> <span class="mi">1</span>
 
     <span class="n">matrix</span> <span class="o">=</span> <span class="n">setup_matrix</span><span class="p">(</span><span class="n">N</span><span class="o">=</span><span class="n">N</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> 
-                                                   <span class="n">kwargs</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> 
+                                                   <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> 
                               <span class="ow">in</span> <span class="n">setup_matrix</span><span class="o">.</span><span class="fm">__init__</span><span class="o">.</span><span class="n">func_code</span><span class="o">.</span><span class="n">co_varnames</span><span class="p">})</span>
     <span class="n">matrix</span><span class="o">.</span><span class="n">add_lagfuncs</span><span class="p">(</span><span class="n">val_matrix</span><span class="o">=</span><span class="n">val_matrix</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> 
-                                                    <span class="n">kwargs</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> 
+                                                    <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> 
                             <span class="ow">in</span> <span class="n">setup_matrix</span><span class="o">.</span><span class="n">add_lagfuncs</span><span class="o">.</span><span class="n">func_code</span><span class="o">.</span><span class="n">co_varnames</span><span class="p">})</span>
 
     <span class="k">if</span> <span class="s2">&quot;name&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
@@ -2375,7 +2375,7 @@
       <span class="n">x_base</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">y_base</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
       <span class="n">name</span><span class="o">=</span><span class="s1">&#39;test.pdf&#39;</span><span class="p">,</span>
         <span class="n">var_names</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
-        <span class="n">lag_array</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;a</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span>  <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)])</span>
+        <span class="n">lag_array</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39;a</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span>  <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)]))</span>
 
 
     <span class="c1"># plot_timeseries(data,  </span>
@@ -2395,14 +2395,14 @@
     <span class="c1">#                 # figsize=(3.375, 3.),</span>
     <span class="c1">#                 )</span>
 
-    <span class="c1"># lagmat = setup_matrix(3, 3, range(3), lag_units = &#39;months&#39;)</span>
+    <span class="n">lagmat</span> <span class="o">=</span> <span class="n">setup_matrix</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">lag_units</span> <span class="o">=</span> <span class="s1">&#39;months&#39;</span><span class="p">)</span>
 
-    <span class="c1"># lagmat.add_lagfuncs(</span>
-    <span class="c1">#     val_matrix=val_matrix,</span>
-    <span class="c1">#     # sig_thres=None,</span>
-    <span class="c1">#     # link_matrix=link_matrix</span>
-    <span class="c1">#     )</span>
-    <span class="c1"># lagmat.savefig()</span>
+    <span class="n">lagmat</span><span class="o">.</span><span class="n">add_lagfuncs</span><span class="p">(</span>
+        <span class="n">val_matrix</span><span class="o">=</span><span class="n">val_matrix</span><span class="p">,</span>
+        <span class="c1"># sig_thres=None,</span>
+        <span class="c1"># link_matrix=link_matrix</span>
+        <span class="p">)</span>
+    <span class="n">lagmat</span><span class="o">.</span><span class="n">savefig</span><span class="p">()</span>
     
     <span class="c1"># fig = pyplot.figure(figsize=(4, 3), frameon=False)</span>
     <span class="c1"># ax = fig.add_subplot(111, frame_on=False)</span>

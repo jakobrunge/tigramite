@@ -351,7 +351,7 @@ class PCMCI():
                   "\n    weight(i-tau->j) = min_{iterations} |I_{ij}(tau)| ")
 
         abs_values = dict([(key, numpy.abs(test_statistic_values[key]))
-                           for key in test_statistic_values.keys()])
+                           for key in list(test_statistic_values)])
 
         parents = sorted(abs_values,
                          key=abs_values.get,
@@ -505,13 +505,13 @@ class PCMCI():
 
                     # Keep track of maximum p-value and minimum estimated value
                     # for each pair (across any condition)
-                    if (i, tau) in test_statistic_values.keys():
+                    if (i, tau) in list(test_statistic_values):
                         test_statistic_values[(i, tau)] = min(numpy.abs(val),
                                                 test_statistic_values[(i, tau)])
                     else:
                         test_statistic_values[(i, tau)] = numpy.abs(val)
 
-                    if (i, tau) in p_max.keys():
+                    if (i, tau) in list(p_max):
                         p_max[(i, tau)] = max(numpy.abs(pval),
                                               p_max[(i, tau)])
                     else:
@@ -789,7 +789,7 @@ class PCMCI():
             # if hasattr(self, 'iterations'):
             #     print self.iterations
             if (hasattr(self, 'iterations') 
-                and 'optimal_pc_alpha' in self.iterations[j].keys()):
+                and 'optimal_pc_alpha' in list(self.iterations[j])):
                     print("    [pc_alpha = %s]" % (
                                     self.iterations[j]['optimal_pc_alpha']))    
             for p in parents:
@@ -823,7 +823,7 @@ class PCMCI():
         -------
         self : returns an instance of self.
         """
-        for j in [var for var in all_parents.keys()]:
+        for j in [var for var in list(all_parents)]:
             self._print_parents_single(j, all_parents[j],
                                        test_statistic_values[j], p_max[j])
         return self

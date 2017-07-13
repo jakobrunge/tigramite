@@ -63,7 +63,7 @@ def _make_nice_axes(ax, where=None, skip=2, color=None):
         skip_x = skip[0]
         skip_y = skip[1]
 
-    for loc, spine in ax.spines.iteritems():
+    for loc, spine in ax.spines.items():
         if loc in where:
             spine.set_position(('outward', 5))  # outward by 10 points
             spine.set_color(color[loc])
@@ -412,13 +412,13 @@ def plot_lagfuncs(val_matrix, **kwargs):
     tau_max = tau_max_plusone - 1
 
     matrix = setup_matrix(N=N, tau_max=tau_max, **{key: value for key, value in 
-                                                   kwargs.iteritems() if key 
+                                                   kwargs.items() if key 
                               in setup_matrix.__init__.func_code.co_varnames})
     matrix.add_lagfuncs(val_matrix=val_matrix, **{key: value for key, value in 
-                                                    kwargs.iteritems() if key 
+                                                    kwargs.items() if key 
                             in setup_matrix.add_lagfuncs.func_code.co_varnames})
 
-    if "name" in kwargs.keys():
+    if "name" in list(kwargs):
         matrix.savefig(name=kwargs["name"])
 
     return matrix
@@ -633,7 +633,7 @@ class setup_matrix():
             self.labels.append((label, color, marker, markersize, alpha))
 
 
-        for ij in self.axes_dict.keys():
+        for ij in list(self.axes_dict):
             i = ij[0]
             j = ij[1]
             maskedres = numpy.copy(val_matrix[i, j, int(i == j):])
@@ -734,7 +734,7 @@ class setup_matrix():
 
         if self.lag_array is not None:
             assert self.lag_array.shape == numpy.arange(self.tau_max + 1).shape
-            for ij in self.axes_dict.keys():
+            for ij in list(self.axes_dict):
                 i = ij[0]
                 j = ij[1]            
                 self.axes_dict[(i, j)].set_xticklabels(self.lag_array[::self.x_base])
@@ -892,8 +892,8 @@ def _draw_network_with_curved_edges(
     ##
     # Draw nodes
     ##
-    node_sizes = numpy.zeros((len(node_rings.keys()), N))
-    for ring in node_rings.keys():  # iterate through to get all node sizes
+    node_sizes = numpy.zeros((len(node_rings), N))
+    for ring in list(node_rings):  # iterate through to get all node sizes
         if node_rings[ring]['sizes'] is not None:
             node_sizes[ring] = node_rings[ring]['sizes']
         else:
@@ -906,7 +906,7 @@ def _draw_network_with_curved_edges(
 #    print  'node_sizes ', node_sizes
 
     # start drawing the outer ring first...
-    for ring in node_rings.keys()[::-1]:
+    for ring in list(node_rings)[::-1]:
         #        print ring
         # dictionary of rings: {0:{'sizes':(N,)-array, 'color_array':(N,)-array
         # or None, 'cmap':string, 'vmin':float or None, 'vmax':float or None}}
@@ -939,7 +939,7 @@ def _draw_network_with_curved_edges(
                 cax_n = pyplot.axes([0.05, ax.figbox.bounds[1] + 0.02 +
                                      ring * 0.11,
                                      0.4, 0.025 +
-                                     (len(node_rings.keys()) == 1) * 0.035],
+                                     (len(node_rings) == 1) * 0.035],
                                     frameon=False)
                 cb_n = pyplot.colorbar(
                     data_to_rgb, cax=cax_n, orientation='horizontal')
@@ -2311,7 +2311,7 @@ if __name__ == '__main__':
       x_base=1, y_base=5,
       name='test.pdf',
         var_names=range(3), markersize=5,
-        lag_array=['a%d' % i for  i in range(4)])
+        lag_array=numpy.array(['a%d' % i for  i in range(4)]))
 
 
     # plot_timeseries(data,  
@@ -2331,14 +2331,14 @@ if __name__ == '__main__':
     #                 # figsize=(3.375, 3.),
     #                 )
 
-    # lagmat = setup_matrix(3, 3, range(3), lag_units = 'months')
+    lagmat = setup_matrix(3, 3, range(3), lag_units = 'months')
 
-    # lagmat.add_lagfuncs(
-    #     val_matrix=val_matrix,
-    #     # sig_thres=None,
-    #     # link_matrix=link_matrix
-    #     )
-    # lagmat.savefig()
+    lagmat.add_lagfuncs(
+        val_matrix=val_matrix,
+        # sig_thres=None,
+        # link_matrix=link_matrix
+        )
+    lagmat.savefig()
     
     # fig = pyplot.figure(figsize=(4, 3), frameon=False)
     # ax = fig.add_subplot(111, frame_on=False)

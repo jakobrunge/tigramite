@@ -441,7 +441,6 @@ class TestCondInd():  #unittest.TestCase):
 
         pval_shuffle = self.ci_gpdc.get_shuffle_significance(array, xyz,
                                val)
-        # print self.ci_gpdc.null_dists.keys()
         print pval_ana
         print pval_shuffle
 

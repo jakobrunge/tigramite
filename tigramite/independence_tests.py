@@ -426,14 +426,14 @@ class CondIndTest(object):
             raise ValueError("nans in the array!")
 
         if self.recycle_residuals:
-            if self._keyfy(X, Z) in self.residuals.keys():
+            if self._keyfy(X, Z) in list(self.residuals):
                 x_resid = self.residuals[self._keyfy(X, Z)]
             else:
                 x_resid = self._get_single_residuals(array, target_var = 0)
                 if len(Z) > 0:
                     self.residuals[self._keyfy(X, Z)] = x_resid
 
-            if self._keyfy(Y, Z) in self.residuals.keys():
+            if self._keyfy(Y, Z) in list(self.residuals):
                 y_resid = self.residuals[self._keyfy(Y, Z)]
             else:
                 y_resid = self._get_single_residuals(array, target_var = 1)
@@ -501,14 +501,14 @@ class CondIndTest(object):
             raise ValueError("nans in the array!")
 
         if self.recycle_residuals:
-            if self._keyfy(X, Z) in self.residuals.keys():
+            if self._keyfy(X, Z) in list(self.residuals):
                 x_resid = self.residuals[self._keyfy(X, Z)]
             else:
                 x_resid = self._get_single_residuals(array, target_var = 0)
                 if len(Z) > 0:
                     self.residuals[self._keyfy(X, Z)] = x_resid
 
-            if self._keyfy(Y, Z) in self.residuals.keys():
+            if self._keyfy(Y, Z) in list(self.residuals):
                 y_resid = self.residuals[self._keyfy(Y, Z)]
             else:
                 y_resid = self._get_single_residuals(array,target_var = 1)
@@ -1424,14 +1424,14 @@ class GP():
         elif self.gp_version == 'new':
             # Overwrite default kernel and alpha values 
             params = self.gp_params.copy()
-            if 'kernel' not in self.gp_params.keys():
+            if 'kernel' not in list(self.gp_params):
                 kernel = gaussian_process.kernels.RBF() +\
                          gaussian_process.kernels.WhiteKernel()
             else:
                 kernel = self.gp_params['kernel']
                 del params['kernel']
 
-            if 'alpha' not in self.gp_params.keys():
+            if 'alpha' not in list(self.gp_params):
                 alpha = 0.
             else:
                 alpha = self.gp_params['alpha']
@@ -1619,7 +1619,7 @@ class GPACE(CondIndTest,GP):
             print("null_dist_filename = %s" % self.null_dist_filename)
             print("gp_version = %s" % self.gp_version)
             if self.gp_params is not None:
-                for key in  self.gp_params.keys():
+                for key in  list(self.gp_params):
                     print("%s = %s" % (key, self.gp_params[key]))
             print("ace_version = %s" % self.ace_version)
             print("")
@@ -1798,7 +1798,7 @@ class GPACE(CondIndTest,GP):
         else:
             # idx_near = (numpy.abs(self.sample_sizes - df)).argmin()
 
-            if int(df) not in self.null_dists.keys():
+            if int(df) not in list(self.null_dists):
             # numpy.abs(self.sample_sizes[idx_near] - df) / float(df) > 0.01:
                 if self.verbosity > 0:
                     print("Null distribution for GPACE not available "
@@ -1900,7 +1900,7 @@ class GPDC(CondIndTest,GP):
             print("null_dist_filename = %s" % self.null_dist_filename)
             print("gp_version = %s" % self.gp_version)
             if self.gp_params is not None:
-                for key in  self.gp_params.keys():
+                for key in  list(self.gp_params):
                     print("%s = %s" % (key, self.gp_params[key]))
             print("")
 
@@ -2054,7 +2054,7 @@ class GPDC(CondIndTest,GP):
             pval = numpy.nan
         else:
             # idx_near = (numpy.abs(self.sample_sizes - df)).argmin()
-            if int(df) not in self.null_dists.keys():
+            if int(df) not in list(self.null_dists):
             # if numpy.abs(self.sample_sizes[idx_near] - df) / float(df) > 0.01:
                 if self.verbosity > 0:
                     print("Null distribution for GPDC not available "

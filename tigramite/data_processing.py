@@ -495,18 +495,18 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
         Array of realization.
     """
     max_lag = 0
-    for j in parents_neighbors_coeffs.keys():
+    for j in list(parents_neighbors_coeffs):
         for node, coeff in parents_neighbors_coeffs[j]:
             i, tau = node[0], -node[1]
             max_lag = max(max_lag, abs(tau))
-    N = max(parents_neighbors_coeffs.keys()) + 1
+    N = max(list(parents_neighbors_coeffs)) + 1
     graph = numpy.zeros((N, N, max_lag + 1))
 
     innos = numpy.zeros((N, N))
     innos[range(N), range(N)] = 1.
     true_parents_neighbors = {}
     # print graph.shape
-    for j in parents_neighbors_coeffs.keys():
+    for j in list(parents_neighbors_coeffs):
         true_parents_neighbors[j] = []
         for node, coeff in parents_neighbors_coeffs[j]:
             i, tau = node[0], -node[1]

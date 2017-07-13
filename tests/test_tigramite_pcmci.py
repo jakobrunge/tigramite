@@ -18,7 +18,7 @@ import nose.tools as nt
 def assert_graphs_equal(actual, expected):
     """Check whether lists in dict are equal"""
 
-    for j in expected.keys():
+    for j in list(expected):
         nt.assert_items_equal(actual[j], expected[j])
 
 
@@ -26,7 +26,7 @@ def _get_parent_graph(nodes, exclude=None):
     """Returns parents"""
 
     graph = {}
-    for j in nodes.keys():
+    for j in list(nodes):
         graph[j] = []
         for var, lag in nodes[j]:
             if lag != 0 and (var, lag) != exclude:
@@ -38,7 +38,7 @@ def _get_parent_graph(nodes, exclude=None):
 def _get_neighbor_graph(nodes, exclude=None):
 
     graph = {}
-    for j in nodes.keys():
+    for j in list(nodes):
         graph[j] = []
         for var, lag in nodes[j]:
             if lag == 0 and (var, lag) != exclude:

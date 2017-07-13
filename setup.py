@@ -3,6 +3,8 @@ from setuptools import setup, Extension
 
 import numpy
 
+import io
+
 # If cython is available, the included cython *.pyx file
 # is compiled, otherwise the *.c file is used
 try:
@@ -55,7 +57,7 @@ setup(
     author='Jakob Runge',
     author_email='jakobrunge@posteo.de',
     url='https://github.com/jakobrunge/tigramite/',
-    long_description=open('README.md', 'r', encoding='utf-8').read(),
+    long_description=io.open('README.md', 'r', encoding='utf-8').read(),
     keywords = 'causality time-series',
     cmdclass = cmdclass,
     ext_modules=ext_modules,
