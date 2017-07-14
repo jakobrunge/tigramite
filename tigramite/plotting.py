@@ -390,7 +390,7 @@ def plot_timeseries(data,
     else:
         pyplot.show()
 
-def plot_lagfuncs(val_matrix, **kwargs):
+def plot_lagfuncs(val_matrix, name=None, setup_args={}, add_lagfunc_args={}):
     """Wrapper helper function to plot lag functions.
 
     Sets up the matrix object and plots the lagfunction, see parameters in setup_matrix
@@ -401,6 +401,16 @@ def plot_lagfuncs(val_matrix, **kwargs):
     val_matrix : array_like
         Matrix of shape (N, N, tau_max+1) containing test statistic values.
     
+    name : str, optional (default: None)
+        File name. If None, figure is shown in window.
+
+    setup_args : dict
+        Arguments for setting up the lag function matrix, see doc of 
+        setup_matrix.
+
+    add_lagfunc_args : dict
+        Arguments for adding a lag function matrix, see doc of add_lagfuncs.
+
     Returns
     -------
     matrix : object
@@ -411,15 +421,17 @@ def plot_lagfuncs(val_matrix, **kwargs):
     N, N, tau_max_plusone = val_matrix.shape
     tau_max = tau_max_plusone - 1
 
-    matrix = setup_matrix(N=N, tau_max=tau_max, **{key: value for key, value in 
-                                                   kwargs.items() if key 
-                              in setup_matrix.__init__.func_code.co_varnames})
-    matrix.add_lagfuncs(val_matrix=val_matrix, **{key: value for key, value in 
-                                                    kwargs.items() if key 
-                            in setup_matrix.add_lagfuncs.func_code.co_varnames})
+    matrix = setup_matrix(N=N, tau_max=tau_max, **setup_args)
+     # **{key: value for key, value in 
+     #                                               kwargs.items() if key 
+     #                          in setup_matrix.__init__.func_code.co_varnames})
+    matrix.add_lagfuncs(val_matrix=val_matrix, **add_lagfunc_args)
+        # **{key: value for key, value in 
+        #                                             kwargs.items() if key 
+        #                     in setup_matrix.add_lagfuncs.func_code.co_varnames})
 
-    if "name" in list(kwargs):
-        matrix.savefig(name=kwargs["name"])
+    if name is not None:
+        matrix.savefig(name=name)
 
     return matrix
 
@@ -2304,14 +2316,15 @@ if __name__ == '__main__':
     mask[:len(data)/2]=True
 
     data[:,0] = -99.
-    plot_lagfuncs(val_matrix, 
-        figsize=(10,10),
-     label_space_top=0.5,
-     label_space_left=0.1,
-      x_base=1, y_base=5,
-      name='test.pdf',
-        var_names=range(3), markersize=5,
-        lag_array=numpy.array(['a%d' % i for  i in range(4)]))
+    plot_lagfuncs(val_matrix=val_matrix, 
+        setup_args={'figsize':(10,10),
+     'label_space_top':0.05,
+     'label_space_left':0.1,
+      'x_base':1, 'y_base':5,
+        'var_names':range(3), 
+        'lag_array':numpy.array(['a%d' % i for  i in range(4)])},
+        name='test.pdf',
+ )
 
 
     # plot_timeseries(data,  

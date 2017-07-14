@@ -226,6 +226,8 @@ def time_bin_with_mask(data, time_bin_length, sample_selector=None):
 
     T = len(data)
 
+    time_bin_length = int(time_bin_length)
+
     if sample_selector is None:
         sample_selector = numpy.ones(data.shape)
 

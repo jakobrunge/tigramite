@@ -487,8 +487,8 @@
         <span class="n">phi</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">))</span>
         <span class="n">phi</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
 
-        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">coeffs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="n">coeffs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">coeffs</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">coeffs</span><span class="p">[</span><span class="n">j</span><span class="p">]):</span>
                 <span class="n">i</span><span class="p">,</span> <span class="n">tau</span> <span class="o">=</span> <span class="n">par</span>
                 <span class="n">phi</span><span class="p">[</span><span class="nb">abs</span><span class="p">(</span><span class="n">tau</span><span class="p">),</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">coeffs</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">par</span><span class="p">]</span>
 
@@ -585,25 +585,6 @@
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">phi</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span></div>
 
-    <span class="c1"># def get_link_matrix_from_parents(self, all_parents):</span>
-        
-    <span class="c1">#     N = len(all_parents)</span>
-
-    <span class="c1">#     max_parents_lag = 0</span>
-    <span class="c1">#     for j in all_parents.keys():</span>
-    <span class="c1">#         # print self.all_parents[j]</span>
-    <span class="c1">#         if len(all_parents[j]) &gt; 0:</span>
-    <span class="c1">#             max_parents_lag = max(max_parents_lag, numpy.abs(numpy.array(</span>
-    <span class="c1">#                     all_parents[j])[:,1]).max())</span>
-                    
-    <span class="c1">#     link_matrix = numpy.zeros((N, N, max_parents_lag + 1), dtype=&#39;bool&#39;)</span>
-    <span class="c1">#     for j in all_parents.keys():</span>
-    <span class="c1">#         for par in all_parents[j]:</span>
-    <span class="c1">#             i = par[0]</span>
-    <span class="c1">#             tau = abs(par[1])</span>
-    <span class="c1">#             link_matrix[i,j,tau] = True</span>
-                
-    <span class="c1">#     return link_matrix</span>
     
 <div class="viewcode-block" id="LinearMediation.net_to_tsg"><a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.net_to_tsg">[docs]</a>    <span class="k">def</span> <span class="nf">net_to_tsg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">lag</span><span class="p">,</span> <span class="n">max_lag</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Helper function to translate from network to time series graph.&quot;&quot;&quot;</span>
@@ -1295,7 +1276,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">selected_targets</span> <span class="o">=</span> <span class="n">selected_targets</span>
 
         <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_targets</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">target</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_predictors</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">target</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_predictors</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No predictors given for target </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">target</span><span class="p">)</span>
 
         <span class="c1"># Set mask to train_indices</span>
@@ -1344,7 +1325,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">##</span><span class="se">\n</span><span class="s2">## Predicting target </span><span class="si">%s</span><span class="se">\n</span><span class="s2">##&quot;</span> <span class="o">%</span> <span class="n">target</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">pred_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">pred_params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">pred_params</span><span class="p">):</span>
                     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">pred_params</span><span class="p">[</span><span class="n">key</span><span class="p">]))</span>
 
         <span class="k">if</span> <span class="n">pred_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1449,7 +1430,7 @@
     <span class="c1"># results = model.get_fit(all_parents=all_parents, </span>
     <span class="c1">#                         )</span>
 
-    <span class="c1"># for j in results.keys():</span>
+    <span class="c1"># for j in list(results):</span>
     <span class="c1">#     print results[j][&#39;model&#39;]  #.coef_</span>
 
 
@@ -1465,7 +1446,7 @@
     <span class="n">data</span><span class="p">,</span> <span class="n">true_parents</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">var_process</span><span class="p">(</span><span class="n">links_coeffs</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
     <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
     <span class="n">med</span> <span class="o">=</span> <span class="n">LinearMediation</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span> <span class="n">data_transform</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="n">med</span><span class="o">.</span><span class="n">fit_model</span><span class="p">(</span><span class="n">all_parents</span><span class="o">=</span><span class="n">true_parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">med</span><span class="o">.</span><span class="n">fit_model</span><span class="p">(</span><span class="n">all_parents</span><span class="o">=</span><span class="n">true_parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
     <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;Link coefficient (0, -2) --&gt; 2: &quot;</span><span class="p">,</span> <span class="n">med</span><span class="o">.</span><span class="n">get_coeff</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tau</span><span class="o">=-</span><span class="mi">2</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
     <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;Causal effect (0, -2) --&gt; 2: &quot;</span><span class="p">,</span> <span class="n">med</span><span class="o">.</span><span class="n">get_ce</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tau</span><span class="o">=-</span><span class="mi">2</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
     <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;Mediated Causal effect (0, -2) --&gt; 2 through 1: &quot;</span><span class="p">,</span> <span class="n">med</span><span class="o">.</span><span class="n">get_mce</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tau</span><span class="o">=-</span><span class="mi">2</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
@@ -1473,16 +1454,12 @@
     <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;Average Causal Susceptibility: &quot;</span><span class="p">,</span> <span class="n">med</span><span class="o">.</span><span class="n">get_all_acs</span><span class="p">())</span>
     <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;Average Mediated Causal Effect: &quot;</span><span class="p">,</span> <span class="n">med</span><span class="o">.</span><span class="n">get_all_amce</span><span class="p">())</span>
 
-    <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">tau</span><span class="o">=</span><span class="mi">3</span><span class="p">;</span> <span class="n">j</span><span class="o">=</span><span class="mi">2</span>
+    <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">tau</span><span class="o">=</span><span class="mi">4</span><span class="p">;</span> <span class="n">j</span><span class="o">=</span><span class="mi">2</span>
 
     <span class="n">graph_data</span> <span class="o">=</span> <span class="n">med</span><span class="o">.</span><span class="n">get_mediation_graph_data</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="n">tau</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="n">j</span><span class="p">,</span> 
                                             <span class="n">include_neighbors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="kn">import</span> <span class="nn">plotting</span> <span class="k">as</span> <span class="nn">tp</span>
-
-    <span class="c1"># for key in graph_data.keys():</span>
-    <span class="c1">#     print key</span>
-    <span class="c1">#     print graph_data[key].round(2)</span>
 
 
     <span class="n">tp</span><span class="o">.</span><span class="n">plot_mediation_graph</span><span class="p">(</span>

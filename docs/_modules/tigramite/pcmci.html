@@ -415,7 +415,7 @@
                   <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">    weight(i-tau-&gt;j) = min_</span><span class="si">{iterations}</span><span class="s2"> |I_</span><span class="si">{ij}</span><span class="s2">(tau)| &quot;</span><span class="p">)</span>
 
         <span class="n">abs_values</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">key</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">test_statistic_values</span><span class="p">[</span><span class="n">key</span><span class="p">]))</span>
-                           <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">test_statistic_values</span><span class="o">.</span><span class="n">keys</span><span class="p">()])</span>
+                           <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">test_statistic_values</span><span class="p">)])</span>
 
         <span class="n">parents</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">abs_values</span><span class="p">,</span>
                          <span class="n">key</span><span class="o">=</span><span class="n">abs_values</span><span class="o">.</span><span class="n">get</span><span class="p">,</span>
@@ -569,13 +569,13 @@
 
                     <span class="c1"># Keep track of maximum p-value and minimum estimated value</span>
                     <span class="c1"># for each pair (across any condition)</span>
-                    <span class="k">if</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">)</span> <span class="ow">in</span> <span class="n">test_statistic_values</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">test_statistic_values</span><span class="p">):</span>
                         <span class="n">test_statistic_values</span><span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">)]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">val</span><span class="p">),</span>
                                                 <span class="n">test_statistic_values</span><span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">)])</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="n">test_statistic_values</span><span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">)]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
 
-                    <span class="k">if</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">)</span> <span class="ow">in</span> <span class="n">p_max</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">p_max</span><span class="p">):</span>
                         <span class="n">p_max</span><span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">)]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">pval</span><span class="p">),</span>
                                               <span class="n">p_max</span><span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">)])</span>
                     <span class="k">else</span><span class="p">:</span>
@@ -853,7 +853,7 @@
             <span class="c1"># if hasattr(self, &#39;iterations&#39;):</span>
             <span class="c1">#     print self.iterations</span>
             <span class="k">if</span> <span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;iterations&#39;</span><span class="p">)</span> 
-                <span class="ow">and</span> <span class="s1">&#39;optimal_pc_alpha&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterations</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+                <span class="ow">and</span> <span class="s1">&#39;optimal_pc_alpha&#39;</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iterations</span><span class="p">[</span><span class="n">j</span><span class="p">])):</span>
                     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    [pc_alpha = </span><span class="si">%s</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="p">(</span>
                                     <span class="bp">self</span><span class="o">.</span><span class="n">iterations</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="s1">&#39;optimal_pc_alpha&#39;</span><span class="p">]))</span>    
             <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parents</span><span class="p">:</span>
@@ -887,7 +887,7 @@
 <span class="sd">        -------</span>
 <span class="sd">        self : returns an instance of self.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="p">[</span><span class="n">var</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">all_parents</span><span class="o">.</span><span class="n">keys</span><span class="p">()]:</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="p">[</span><span class="n">var</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">all_parents</span><span class="p">)]:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_print_parents_single</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">all_parents</span><span class="p">[</span><span class="n">j</span><span class="p">],</span>
                                        <span class="n">test_statistic_values</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">p_max</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
         <span class="k">return</span> <span class="bp">self</span>

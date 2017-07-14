@@ -1382,7 +1382,7 @@ if __name__ == '__main__':
     data, true_parents = pp.var_process(links_coeffs, T=1000)
     dataframe = pp.DataFrame(data)
     med = LinearMediation(dataframe=dataframe, data_transform=False)
-    med.fit_model(all_parents=true_parents, tau_max=3)
+    med.fit_model(all_parents=true_parents, tau_max=4)
     print ("Link coefficient (0, -2) --> 2: ", med.get_coeff(i=0, tau=-2, j=2))
     print ("Causal effect (0, -2) --> 2: ", med.get_ce(i=0, tau=-2, j=2))
     print ("Mediated Causal effect (0, -2) --> 2 through 1: ", med.get_mce(i=0, tau=-2, j=2, k=1))
@@ -1390,7 +1390,7 @@ if __name__ == '__main__':
     print ("Average Causal Susceptibility: ", med.get_all_acs())
     print ("Average Mediated Causal Effect: ", med.get_all_amce())
 
-    i=0; tau=3; j=2
+    i=0; tau=4; j=2
 
     graph_data = med.get_mediation_graph_data(i=i, tau=tau, j=j, 
                                             include_neighbors=True)

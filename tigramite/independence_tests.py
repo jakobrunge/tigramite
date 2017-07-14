@@ -20,7 +20,7 @@ try:
     from scipy import spatial
     from tigramite import tigramite_cython_code
 except:
-    print("Could not import packages for knn-CMI estimation")
+    print("Could not import packages for CMIknn and GPDC estimation")
 
 
 # @staticmethod

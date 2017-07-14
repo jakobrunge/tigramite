@@ -454,7 +454,7 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">pyplot</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="plot_lagfuncs"><a class="viewcode-back" href="../../index.html#tigramite.plotting.plot_lagfuncs">[docs]</a><span class="k">def</span> <span class="nf">plot_lagfuncs</span><span class="p">(</span><span class="n">val_matrix</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="plot_lagfuncs"><a class="viewcode-back" href="../../index.html#tigramite.plotting.plot_lagfuncs">[docs]</a><span class="k">def</span> <span class="nf">plot_lagfuncs</span><span class="p">(</span><span class="n">val_matrix</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">setup_args</span><span class="o">=</span><span class="p">{},</span> <span class="n">add_lagfunc_args</span><span class="o">=</span><span class="p">{}):</span>
     <span class="sd">&quot;&quot;&quot;Wrapper helper function to plot lag functions.</span>
 
 <span class="sd">    Sets up the matrix object and plots the lagfunction, see parameters in setup_matrix</span>
@@ -465,6 +465,16 @@
 <span class="sd">    val_matrix : array_like</span>
 <span class="sd">        Matrix of shape (N, N, tau_max+1) containing test statistic values.</span>
 <span class="sd">    </span>
+<span class="sd">    name : str, optional (default: None)</span>
+<span class="sd">        File name. If None, figure is shown in window.</span>
+
+<span class="sd">    setup_args : dict</span>
+<span class="sd">        Arguments for setting up the lag function matrix, see doc of </span>
+<span class="sd">        setup_matrix.</span>
+
+<span class="sd">    add_lagfunc_args : dict</span>
+<span class="sd">        Arguments for adding a lag function matrix, see doc of add_lagfuncs.</span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    matrix : object</span>
@@ -475,15 +485,17 @@
     <span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">tau_max_plusone</span> <span class="o">=</span> <span class="n">val_matrix</span><span class="o">.</span><span class="n">shape</span>
     <span class="n">tau_max</span> <span class="o">=</span> <span class="n">tau_max_plusone</span> <span class="o">-</span> <span class="mi">1</span>
 
-    <span class="n">matrix</span> <span class="o">=</span> <span class="n">setup_matrix</span><span class="p">(</span><span class="n">N</span><span class="o">=</span><span class="n">N</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> 
-                                                   <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> 
-                              <span class="ow">in</span> <span class="n">setup_matrix</span><span class="o">.</span><span class="fm">__init__</span><span class="o">.</span><span class="n">func_code</span><span class="o">.</span><span class="n">co_varnames</span><span class="p">})</span>
-    <span class="n">matrix</span><span class="o">.</span><span class="n">add_lagfuncs</span><span class="p">(</span><span class="n">val_matrix</span><span class="o">=</span><span class="n">val_matrix</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> 
-                                                    <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> 
-                            <span class="ow">in</span> <span class="n">setup_matrix</span><span class="o">.</span><span class="n">add_lagfuncs</span><span class="o">.</span><span class="n">func_code</span><span class="o">.</span><span class="n">co_varnames</span><span class="p">})</span>
+    <span class="n">matrix</span> <span class="o">=</span> <span class="n">setup_matrix</span><span class="p">(</span><span class="n">N</span><span class="o">=</span><span class="n">N</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span> <span class="o">**</span><span class="n">setup_args</span><span class="p">)</span>
+     <span class="c1"># **{key: value for key, value in </span>
+     <span class="c1">#                                               kwargs.items() if key </span>
+     <span class="c1">#                          in setup_matrix.__init__.func_code.co_varnames})</span>
+    <span class="n">matrix</span><span class="o">.</span><span class="n">add_lagfuncs</span><span class="p">(</span><span class="n">val_matrix</span><span class="o">=</span><span class="n">val_matrix</span><span class="p">,</span> <span class="o">**</span><span class="n">add_lagfunc_args</span><span class="p">)</span>
+        <span class="c1"># **{key: value for key, value in </span>
+        <span class="c1">#                                             kwargs.items() if key </span>
+        <span class="c1">#                     in setup_matrix.add_lagfuncs.func_code.co_varnames})</span>
 
-    <span class="k">if</span> <span class="s2">&quot;name&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-        <span class="n">matrix</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">matrix</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">matrix</span></div>
 
@@ -697,7 +709,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">label</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">marker</span><span class="p">,</span> <span class="n">markersize</span><span class="p">,</span> <span class="n">alpha</span><span class="p">))</span>
 
 
-        <span class="k">for</span> <span class="n">ij</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">ij</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">axes_dict</span><span class="p">):</span>
             <span class="n">i</span> <span class="o">=</span> <span class="n">ij</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">j</span> <span class="o">=</span> <span class="n">ij</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
             <span class="n">maskedres</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">val_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">i</span> <span class="o">==</span> <span class="n">j</span><span class="p">):])</span>
@@ -798,7 +810,7 @@
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lag_array</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">lag_array</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span>
-            <span class="k">for</span> <span class="n">ij</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">ij</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">axes_dict</span><span class="p">):</span>
                 <span class="n">i</span> <span class="o">=</span> <span class="n">ij</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
                 <span class="n">j</span> <span class="o">=</span> <span class="n">ij</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>            
                 <span class="bp">self</span><span class="o">.</span><span class="n">axes_dict</span><span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)]</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lag_array</span><span class="p">[::</span><span class="bp">self</span><span class="o">.</span><span class="n">x_base</span><span class="p">])</span>
@@ -956,8 +968,8 @@
     <span class="c1">##</span>
     <span class="c1"># Draw nodes</span>
     <span class="c1">##</span>
-    <span class="n">node_sizes</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">node_rings</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="n">N</span><span class="p">))</span>
-    <span class="k">for</span> <span class="n">ring</span> <span class="ow">in</span> <span class="n">node_rings</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>  <span class="c1"># iterate through to get all node sizes</span>
+    <span class="n">node_sizes</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">node_rings</span><span class="p">),</span> <span class="n">N</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">ring</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">node_rings</span><span class="p">):</span>  <span class="c1"># iterate through to get all node sizes</span>
         <span class="k">if</span> <span class="n">node_rings</span><span class="p">[</span><span class="n">ring</span><span class="p">][</span><span class="s1">&#39;sizes&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">node_sizes</span><span class="p">[</span><span class="n">ring</span><span class="p">]</span> <span class="o">=</span> <span class="n">node_rings</span><span class="p">[</span><span class="n">ring</span><span class="p">][</span><span class="s1">&#39;sizes&#39;</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
@@ -970,7 +982,7 @@
 <span class="c1">#    print  &#39;node_sizes &#39;, node_sizes</span>
 
     <span class="c1"># start drawing the outer ring first...</span>
-    <span class="k">for</span> <span class="n">ring</span> <span class="ow">in</span> <span class="n">node_rings</span><span class="o">.</span><span class="n">keys</span><span class="p">()[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+    <span class="k">for</span> <span class="n">ring</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">node_rings</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
         <span class="c1">#        print ring</span>
         <span class="c1"># dictionary of rings: {0:{&#39;sizes&#39;:(N,)-array, &#39;color_array&#39;:(N,)-array</span>
         <span class="c1"># or None, &#39;cmap&#39;:string, &#39;vmin&#39;:float or None, &#39;vmax&#39;:float or None}}</span>
@@ -1003,7 +1015,7 @@
                 <span class="n">cax_n</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">axes</span><span class="p">([</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">ax</span><span class="o">.</span><span class="n">figbox</span><span class="o">.</span><span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.02</span> <span class="o">+</span>
                                      <span class="n">ring</span> <span class="o">*</span> <span class="mf">0.11</span><span class="p">,</span>
                                      <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.025</span> <span class="o">+</span>
-                                     <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">node_rings</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.035</span><span class="p">],</span>
+                                     <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">node_rings</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.035</span><span class="p">],</span>
                                     <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
                 <span class="n">cb_n</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span>
                     <span class="n">data_to_rgb</span><span class="p">,</span> <span class="n">cax</span><span class="o">=</span><span class="n">cax_n</span><span class="p">,</span> <span class="n">orientation</span><span class="o">=</span><span class="s1">&#39;horizontal&#39;</span><span class="p">)</span>
@@ -2368,14 +2380,15 @@
     <span class="n">mask</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="kc">True</span>
 
     <span class="n">data</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">99.</span>
-    <span class="n">plot_lagfuncs</span><span class="p">(</span><span class="n">val_matrix</span><span class="p">,</span> 
-        <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">),</span>
-     <span class="n">label_space_top</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
-     <span class="n">label_space_left</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
-      <span class="n">x_base</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">y_base</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
-      <span class="n">name</span><span class="o">=</span><span class="s1">&#39;test.pdf&#39;</span><span class="p">,</span>
-        <span class="n">var_names</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
-        <span class="n">lag_array</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39;a</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span>  <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)]))</span>
+    <span class="n">plot_lagfuncs</span><span class="p">(</span><span class="n">val_matrix</span><span class="o">=</span><span class="n">val_matrix</span><span class="p">,</span> 
+        <span class="n">setup_args</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;figsize&#39;</span><span class="p">:(</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">),</span>
+     <span class="s1">&#39;label_space_top&#39;</span><span class="p">:</span><span class="mf">0.5</span><span class="p">,</span>
+     <span class="s1">&#39;label_space_left&#39;</span><span class="p">:</span><span class="mf">0.1</span><span class="p">,</span>
+      <span class="s1">&#39;x_base&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;y_base&#39;</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span>
+        <span class="s1">&#39;var_names&#39;</span><span class="p">:</span><span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> 
+        <span class="s1">&#39;lag_array&#39;</span><span class="p">:</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39;a</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span>  <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)])},</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;test.pdf&#39;</span><span class="p">,</span>
+ <span class="p">)</span>
 
 
     <span class="c1"># plot_timeseries(data,  </span>

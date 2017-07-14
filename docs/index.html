@@ -2607,7 +2607,7 @@ coordinates could have been transformed before for basemap plots.</li>
 
 <dl class="function">
 <dt id="tigramite.plotting.plot_lagfuncs">
-<code class="descclassname">tigramite.plotting.</code><code class="descname">plot_lagfuncs</code><span class="sig-paren">(</span><em>val_matrix</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_lagfuncs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.plot_lagfuncs" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">tigramite.plotting.</code><code class="descname">plot_lagfuncs</code><span class="sig-paren">(</span><em>val_matrix</em>, <em>name=None</em>, <em>setup_args={}</em>, <em>add_lagfunc_args={}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_lagfuncs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.plot_lagfuncs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wrapper helper function to plot lag functions.</p>
 <p>Sets up the matrix object and plots the lagfunction, see parameters in setup_matrix
 and add_lagfuncs.</p>
@@ -2615,12 +2615,21 @@ and add_lagfuncs.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>val_matrix</strong> (<em>array_like</em>) &#8211; Matrix of shape (N, N, tau_max+1) containing test statistic values.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>val_matrix</strong> (<em>array_like</em>) &#8211; Matrix of shape (N, N, tau_max+1) containing test statistic values.</li>
+<li><strong>name</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; File name. If None, figure is shown in window.</li>
+<li><strong>setup_args</strong> (<em>dict</em>) &#8211; Arguments for setting up the lag function matrix, see doc of
+setup_matrix.</li>
+<li><strong>add_lagfunc_args</strong> (<em>dict</em>) &#8211; Arguments for adding a lag function matrix, see doc of add_lagfuncs.</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>matrix</strong> &#8211; Further lag functions can be overlaid using the matrix.add_lagfuncs(val_matrix)
-function.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>matrix</strong> &#8211; Further lag functions can be overlaid using the matrix.add_lagfuncs(val_matrix)
+function.</p>
+</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">object</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">object</p>
+</td>
 </tr>
 </tbody>
 </table>
