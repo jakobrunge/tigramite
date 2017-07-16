@@ -592,7 +592,7 @@
 
 <div class="viewcode-block" id="LinearMediation.tsg_to_net"><a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.tsg_to_net">[docs]</a>    <span class="k">def</span> <span class="nf">tsg_to_net</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">max_lag</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Helper function to translate from time series graph to network.&quot;&quot;&quot;</span>
-        <span class="n">row</span> <span class="o">=</span> <span class="n">node</span> <span class="o">/</span> <span class="n">max_lag</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="n">node</span> <span class="o">//</span> <span class="n">max_lag</span>
         <span class="n">lag</span> <span class="o">=</span> <span class="n">node</span> <span class="o">%</span> <span class="n">max_lag</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="o">-</span><span class="n">lag</span><span class="p">)</span>        </div>
 

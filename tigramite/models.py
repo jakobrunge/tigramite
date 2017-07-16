@@ -528,7 +528,7 @@ class LinearMediation(Models):
 
     def tsg_to_net(self, node, max_lag):
         """Helper function to translate from time series graph to network."""
-        row = node / max_lag
+        row = node // max_lag
         lag = node % max_lag
         return (row, -lag)        
 

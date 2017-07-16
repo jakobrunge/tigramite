@@ -1630,7 +1630,7 @@ def plot_time_series_graph(val_matrix,
     posarray = numpy.zeros((N * max_lag, 2))
     for i in range(N * max_lag):
 
-        posarray[i] = numpy.array([(i % max_lag), (1. - i / max_lag)])
+        posarray[i] = numpy.array([(i % max_lag), (1. - i // max_lag)])
 
     pos_tmp = {}
     for i in range(N * max_lag):
@@ -1640,11 +1640,11 @@ def plot_time_series_graph(val_matrix,
         pos_tmp[i] = numpy.array([((i % max_lag) - posarray.min(axis=0)[0]) /
                                   (posarray.max(axis=0)[0] -
                                    posarray.min(axis=0)[0]),
-                                  ((1. - i / max_lag) -
+                                  ((1. - i // max_lag) -
                                    posarray.min(axis=0)[1]) /
                                   (posarray.max(axis=0)[1] -
                                    posarray.min(axis=0)[1])])
-#                    print pos[i]
+
     pos = {}
     for n in range(N):
         for tau in range(max_lag):
@@ -1843,7 +1843,7 @@ def plot_mediation_time_series_graph(
 
     N = len(path_node_array)
     Nmaxlag = tsg_path_val_matrix.shape[0]
-    max_lag = Nmaxlag/N
+    max_lag = Nmaxlag // N
 
     if var_names is None:
         var_names = range(N)
@@ -1917,7 +1917,7 @@ def plot_mediation_time_series_graph(
     posarray = numpy.zeros((N * max_lag, 2))
     for i in range(N * max_lag):
 
-        posarray[i] = numpy.array([(i % max_lag), (1. - i / max_lag)])
+        posarray[i] = numpy.array([(i % max_lag), (1. - i // max_lag)])
 
     pos_tmp = {}
     for i in range(N * max_lag):
@@ -1927,7 +1927,7 @@ def plot_mediation_time_series_graph(
         pos_tmp[i] = numpy.array([((i % max_lag) - posarray.min(axis=0)[0]) /
                                   (posarray.max(axis=0)[0] -
                                    posarray.min(axis=0)[0]),
-                                  ((1. - i / max_lag) -
+                                  ((1. - i // max_lag) -
                                    posarray.min(axis=0)[1]) /
                                   (posarray.max(axis=0)[1] -
                                    posarray.min(axis=0)[1])])
@@ -2313,7 +2313,8 @@ if __name__ == '__main__':
     data = numpy.random.randn(100, 3)
     datatime = numpy.arange(100)
     mask = numpy.zeros(data.shape)
-    mask[:len(data)/2]=True
+
+    mask[:int(len(data)/2)]=True
 
     data[:,0] = -99.
     plot_lagfuncs(val_matrix=val_matrix, 
@@ -2344,14 +2345,14 @@ if __name__ == '__main__':
     #                 # figsize=(3.375, 3.),
     #                 )
 
-    lagmat = setup_matrix(3, 3, range(3), lag_units = 'months')
+    # lagmat = setup_matrix(3, 3, range(3), lag_units = 'months')
 
-    lagmat.add_lagfuncs(
-        val_matrix=val_matrix,
-        # sig_thres=None,
-        # link_matrix=link_matrix
-        )
-    lagmat.savefig()
+    # lagmat.add_lagfuncs(
+    #     val_matrix=val_matrix,
+    #     # sig_thres=None,
+    #     # link_matrix=link_matrix
+    #     )
+    # lagmat.savefig()
     
     # fig = pyplot.figure(figsize=(4, 3), frameon=False)
     # ax = fig.add_subplot(111, frame_on=False)
@@ -2364,11 +2365,11 @@ if __name__ == '__main__':
     # )
 
 
-    # plot_time_series_graph(
-    #     val_matrix=val_matrix,
-    #     sig_thres=None,
-    #     link_matrix=link_matrix,
-    #     var_names=range(len(val_matrix)),
+    plot_time_series_graph(
+        val_matrix=val_matrix,
+        sig_thres=None,
+        link_matrix=link_matrix,
+        var_names=range(len(val_matrix)),
 
-    # )
+    )
     pyplot.show()

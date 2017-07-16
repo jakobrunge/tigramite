@@ -236,7 +236,7 @@ def time_bin_with_mask(data, time_bin_length, sample_selector=None):
         sample_selector.shape = (T, 1)
 
     bindata = numpy.zeros(
-        (T / time_bin_length,) + data.shape[1:], dtype="float32")
+        (T // time_bin_length,) + data.shape[1:], dtype="float32")
     for index, i in enumerate(range(0, T - time_bin_length + 1,
                                     time_bin_length)):
         # print weighted_avg_and_std(fulldata[i:i+time_bin_length], axis=0,

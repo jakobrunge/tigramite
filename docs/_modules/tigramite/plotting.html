@@ -1694,7 +1694,7 @@
     <span class="n">posarray</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span> <span class="o">*</span> <span class="n">max_lag</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span> <span class="o">*</span> <span class="n">max_lag</span><span class="p">):</span>
 
-        <span class="n">posarray</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="n">i</span> <span class="o">%</span> <span class="n">max_lag</span><span class="p">),</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">i</span> <span class="o">/</span> <span class="n">max_lag</span><span class="p">)])</span>
+        <span class="n">posarray</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="n">i</span> <span class="o">%</span> <span class="n">max_lag</span><span class="p">),</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">i</span> <span class="o">//</span> <span class="n">max_lag</span><span class="p">)])</span>
 
     <span class="n">pos_tmp</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span> <span class="o">*</span> <span class="n">max_lag</span><span class="p">):</span>
@@ -1704,11 +1704,11 @@
         <span class="n">pos_tmp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([((</span><span class="n">i</span> <span class="o">%</span> <span class="n">max_lag</span><span class="p">)</span> <span class="o">-</span> <span class="n">posarray</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span>
                                   <span class="p">(</span><span class="n">posarray</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span>
                                    <span class="n">posarray</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]),</span>
-                                  <span class="p">((</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">i</span> <span class="o">/</span> <span class="n">max_lag</span><span class="p">)</span> <span class="o">-</span>
+                                  <span class="p">((</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">i</span> <span class="o">//</span> <span class="n">max_lag</span><span class="p">)</span> <span class="o">-</span>
                                    <span class="n">posarray</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span>
                                   <span class="p">(</span><span class="n">posarray</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span>
                                    <span class="n">posarray</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">1</span><span class="p">])])</span>
-<span class="c1">#                    print pos[i]</span>
+
     <span class="n">pos</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">tau</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_lag</span><span class="p">):</span>
@@ -1907,7 +1907,7 @@
 
     <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">path_node_array</span><span class="p">)</span>
     <span class="n">Nmaxlag</span> <span class="o">=</span> <span class="n">tsg_path_val_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">max_lag</span> <span class="o">=</span> <span class="n">Nmaxlag</span><span class="o">/</span><span class="n">N</span>
+    <span class="n">max_lag</span> <span class="o">=</span> <span class="n">Nmaxlag</span> <span class="o">//</span> <span class="n">N</span>
 
     <span class="k">if</span> <span class="n">var_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">var_names</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
@@ -1981,7 +1981,7 @@
     <span class="n">posarray</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span> <span class="o">*</span> <span class="n">max_lag</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span> <span class="o">*</span> <span class="n">max_lag</span><span class="p">):</span>
 
-        <span class="n">posarray</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="n">i</span> <span class="o">%</span> <span class="n">max_lag</span><span class="p">),</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">i</span> <span class="o">/</span> <span class="n">max_lag</span><span class="p">)])</span>
+        <span class="n">posarray</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="n">i</span> <span class="o">%</span> <span class="n">max_lag</span><span class="p">),</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">i</span> <span class="o">//</span> <span class="n">max_lag</span><span class="p">)])</span>
 
     <span class="n">pos_tmp</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span> <span class="o">*</span> <span class="n">max_lag</span><span class="p">):</span>
@@ -1991,7 +1991,7 @@
         <span class="n">pos_tmp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([((</span><span class="n">i</span> <span class="o">%</span> <span class="n">max_lag</span><span class="p">)</span> <span class="o">-</span> <span class="n">posarray</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span>
                                   <span class="p">(</span><span class="n">posarray</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span>
                                    <span class="n">posarray</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]),</span>
-                                  <span class="p">((</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">i</span> <span class="o">/</span> <span class="n">max_lag</span><span class="p">)</span> <span class="o">-</span>
+                                  <span class="p">((</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">i</span> <span class="o">//</span> <span class="n">max_lag</span><span class="p">)</span> <span class="o">-</span>
                                    <span class="n">posarray</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span>
                                   <span class="p">(</span><span class="n">posarray</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span>
                                    <span class="n">posarray</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">1</span><span class="p">])])</span>
@@ -2377,12 +2377,13 @@
     <span class="n">data</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
     <span class="n">datatime</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
     <span class="n">mask</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-    <span class="n">mask</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="kc">True</span>
+
+    <span class="n">mask</span><span class="p">[:</span><span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)]</span><span class="o">=</span><span class="kc">True</span>
 
     <span class="n">data</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">99.</span>
     <span class="n">plot_lagfuncs</span><span class="p">(</span><span class="n">val_matrix</span><span class="o">=</span><span class="n">val_matrix</span><span class="p">,</span> 
         <span class="n">setup_args</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;figsize&#39;</span><span class="p">:(</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">),</span>
-     <span class="s1">&#39;label_space_top&#39;</span><span class="p">:</span><span class="mf">0.5</span><span class="p">,</span>
+     <span class="s1">&#39;label_space_top&#39;</span><span class="p">:</span><span class="mf">0.05</span><span class="p">,</span>
      <span class="s1">&#39;label_space_left&#39;</span><span class="p">:</span><span class="mf">0.1</span><span class="p">,</span>
       <span class="s1">&#39;x_base&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;y_base&#39;</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span>
         <span class="s1">&#39;var_names&#39;</span><span class="p">:</span><span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> 
@@ -2408,14 +2409,14 @@
     <span class="c1">#                 # figsize=(3.375, 3.),</span>
     <span class="c1">#                 )</span>
 
-    <span class="n">lagmat</span> <span class="o">=</span> <span class="n">setup_matrix</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">lag_units</span> <span class="o">=</span> <span class="s1">&#39;months&#39;</span><span class="p">)</span>
+    <span class="c1"># lagmat = setup_matrix(3, 3, range(3), lag_units = &#39;months&#39;)</span>
 
-    <span class="n">lagmat</span><span class="o">.</span><span class="n">add_lagfuncs</span><span class="p">(</span>
-        <span class="n">val_matrix</span><span class="o">=</span><span class="n">val_matrix</span><span class="p">,</span>
-        <span class="c1"># sig_thres=None,</span>
-        <span class="c1"># link_matrix=link_matrix</span>
-        <span class="p">)</span>
-    <span class="n">lagmat</span><span class="o">.</span><span class="n">savefig</span><span class="p">()</span>
+    <span class="c1"># lagmat.add_lagfuncs(</span>
+    <span class="c1">#     val_matrix=val_matrix,</span>
+    <span class="c1">#     # sig_thres=None,</span>
+    <span class="c1">#     # link_matrix=link_matrix</span>
+    <span class="c1">#     )</span>
+    <span class="c1"># lagmat.savefig()</span>
     
     <span class="c1"># fig = pyplot.figure(figsize=(4, 3), frameon=False)</span>
     <span class="c1"># ax = fig.add_subplot(111, frame_on=False)</span>
@@ -2428,13 +2429,13 @@
     <span class="c1"># )</span>
 
 
-    <span class="c1"># plot_time_series_graph(</span>
-    <span class="c1">#     val_matrix=val_matrix,</span>
-    <span class="c1">#     sig_thres=None,</span>
-    <span class="c1">#     link_matrix=link_matrix,</span>
-    <span class="c1">#     var_names=range(len(val_matrix)),</span>
+    <span class="n">plot_time_series_graph</span><span class="p">(</span>
+        <span class="n">val_matrix</span><span class="o">=</span><span class="n">val_matrix</span><span class="p">,</span>
+        <span class="n">sig_thres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">link_matrix</span><span class="o">=</span><span class="n">link_matrix</span><span class="p">,</span>
+        <span class="n">var_names</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">val_matrix</span><span class="p">)),</span>
 
-    <span class="c1"># )</span>
+    <span class="p">)</span>
     <span class="n">pyplot</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 

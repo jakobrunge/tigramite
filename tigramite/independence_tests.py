@@ -715,7 +715,7 @@ class CondIndTest(object):
             Autocorrelation function.
         """
         if max_lag is None:
-            max_lag = max(5, len(series) / 10)
+            max_lag = int(max(5, 0.1*len(series)))
 
         autocorr = numpy.ones(max_lag + 1)
         for lag in range(1, max_lag + 1):
@@ -766,7 +766,7 @@ class CondIndTest(object):
             indices = range(dim)
 
         # Maximum lag for autocov estimation
-        max_lag = T / 10
+        max_lag = int(0.1*T)
 
         def func(x, a, decay):
             return a * decay**x
