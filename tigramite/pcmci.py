@@ -1049,6 +1049,9 @@ class PCMCI():
 
         for j in self.selected_variables:
 
+            if self.verbosity > 0:
+                print("\n\tVariable %s" % self.var_names[j])
+
             conds_y = parents[j][:max_conds_py]
 
             parent_list = [parent for parent in selected_links[j]

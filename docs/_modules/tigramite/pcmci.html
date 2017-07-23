@@ -1113,6 +1113,9 @@
 
         <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_variables</span><span class="p">:</span>
 
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\t</span><span class="s2">Variable </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+
             <span class="n">conds_y</span> <span class="o">=</span> <span class="n">parents</span><span class="p">[</span><span class="n">j</span><span class="p">][:</span><span class="n">max_conds_py</span><span class="p">]</span>
 
             <span class="n">parent_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">parent</span> <span class="k">for</span> <span class="n">parent</span> <span class="ow">in</span> <span class="n">selected_links</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>

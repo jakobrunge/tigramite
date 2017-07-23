@@ -1466,7 +1466,7 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;nans after standardizing, &quot;</span>
                                  <span class="s2">&quot;possibly constant array!&quot;</span><span class="p">)</span>
 
-        <span class="n">var</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">target_var</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">target_series</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">target_var</span><span class="p">,</span> <span class="p">:]</span>
         <span class="n">z</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">fastCopyAndTranspose</span><span class="p">(</span><span class="n">array</span><span class="p">[</span><span class="mi">2</span><span class="p">:])</span>
         <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">z</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
@@ -1474,7 +1474,8 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gp_version</span> <span class="o">==</span> <span class="s1">&#39;old&#39;</span><span class="p">:</span>
             <span class="c1"># Old GP failed for ties in the data</span>
             <span class="n">z</span> <span class="o">+=</span> <span class="mf">1E-10</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="o">*</span><span class="n">z</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-
+            <span class="n">target_series</span> <span class="o">+=</span> <span class="mf">1E-10</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="o">*</span><span class="n">target_series</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            
             <span class="n">gp</span> <span class="o">=</span> <span class="n">gaussian_process</span><span class="o">.</span><span class="n">GaussianProcess</span><span class="p">(</span>
                 <span class="n">nugget</span><span class="o">=</span><span class="mf">1E-1</span><span class="p">,</span>
                 <span class="n">thetaL</span><span class="o">=</span><span class="mf">1E-16</span><span class="p">,</span>
@@ -1506,14 +1507,15 @@
                 <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
                  <span class="o">**</span><span class="n">params</span><span class="p">)</span>
 
-        <span class="n">gp</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">var</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">gp</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">target_series</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="c1"># print kernel, alpha, gp.kernel_, gp.alpha_</span>
 
         <span class="k">if</span> <span class="n">return_likelihood</span><span class="p">:</span>
             <span class="n">likelihood</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">log_marginal_likelihood</span><span class="p">()</span>
 
         <span class="n">mean</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
 
-        <span class="n">resid</span> <span class="o">=</span> <span class="n">var</span> <span class="o">-</span> <span class="n">mean</span>
+        <span class="n">resid</span> <span class="o">=</span> <span class="n">target_series</span> <span class="o">-</span> <span class="n">mean</span>
 
         <span class="k">if</span> <span class="n">return_means</span> <span class="ow">and</span> <span class="n">return_likelihood</span><span class="o">==</span><span class="kc">False</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">(</span><span class="n">resid</span><span class="p">,</span> <span class="n">mean</span><span class="p">)</span>

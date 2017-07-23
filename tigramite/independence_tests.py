@@ -1402,7 +1402,7 @@ class GP():
                 raise ValueError("nans after standardizing, "
                                  "possibly constant array!")
 
-        var = array[target_var, :]
+        target_series = array[target_var, :]
         z = numpy.fastCopyAndTranspose(array[2:])
         if numpy.ndim(z) == 1:
             z = z.reshape(-1, 1)
@@ -1410,7 +1410,8 @@ class GP():
         if self.gp_version == 'old':
             # Old GP failed for ties in the data
             z += 1E-10 * numpy.random.rand(*z.shape)
-
+            target_series += 1E-10 * numpy.random.rand(*target_series.shape)
+            
             gp = gaussian_process.GaussianProcess(
                 nugget=1E-1,
                 thetaL=1E-16,
@@ -1442,14 +1443,15 @@ class GP():
                 alpha=alpha,
                  **params)
 
-        gp.fit(z, var.reshape(-1, 1))
+        gp.fit(z, target_series.reshape(-1, 1))
+        # print kernel, alpha, gp.kernel_, gp.alpha_
 
         if return_likelihood:
             likelihood = gp.log_marginal_likelihood()
 
         mean = gp.predict(z).squeeze()
 
-        resid = var - mean
+        resid = target_series - mean
 
         if return_means and return_likelihood==False:
             return (resid, mean)
