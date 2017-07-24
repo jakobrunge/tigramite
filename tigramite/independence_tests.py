@@ -1409,8 +1409,8 @@ class GP():
 
         if self.gp_version == 'old':
             # Old GP failed for ties in the data
-            z += 1E-6 * numpy.random.rand(*z.shape)
-            target_series += 1E-6 * numpy.random.rand(*target_series.shape)
+            z += 1E-4 * numpy.random.rand(*z.shape)
+            target_series += 1E-4 * numpy.random.rand(*target_series.shape)
             
             gp = gaussian_process.GaussianProcess(
                 nugget=1E-1,
