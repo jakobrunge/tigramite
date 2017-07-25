@@ -1418,7 +1418,7 @@ class GP():
                     if cnt > 100: break
                 return series
 
-            # z = remove_ties(z)  #z += 1E-3 * numpy.random.rand(*z.shape)
+            z = remove_ties(z)  #z += 1E-3 * numpy.random.rand(*z.shape)
             target_series = remove_ties(target_series)  #target_series += 1E-3 * numpy.random.rand(*target_series.shape)
             
             gp = gaussian_process.GaussianProcess(
