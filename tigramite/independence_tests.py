@@ -1409,8 +1409,17 @@ class GP():
 
         if self.gp_version == 'old':
             # Old GP failed for ties in the data
-            z += 1E-3 * numpy.random.rand(*z.shape)
-            target_series += 1E-3 * numpy.random.rand(*target_series.shape)
+            def remove_ties(series, verbosity=0):
+                # Test whether ties exist and add noise to destroy ties...
+                cnt = 0
+                while len(numpy.unique(series)) < numpy.size(series):
+                    series += 1E-6 * numpy.random.rand(*series.shape)
+                    cnt += 1
+                    if cnt > 100: break
+                return series
+
+            # z = remove_ties(z)  #z += 1E-3 * numpy.random.rand(*z.shape)
+            target_series = remove_ties(target_series)  #target_series += 1E-3 * numpy.random.rand(*target_series.shape)
             
             gp = gaussian_process.GaussianProcess(
                 nugget=1E-1,
@@ -1444,7 +1453,9 @@ class GP():
                  **params)
 
         gp.fit(z, target_series.reshape(-1, 1))
-        # print kernel, alpha, gp.kernel_, gp.alpha_
+
+        if self.verbosity > 3:
+            print(kernel, alpha, gp.kernel_, gp.alpha)
 
         if return_likelihood:
             likelihood = gp.log_marginal_likelihood()
