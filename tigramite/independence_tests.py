@@ -1454,8 +1454,11 @@ class GP():
 
         gp.fit(z, target_series.reshape(-1, 1))
 
-        if self.verbosity > 3:
+        if self.verbosity > 3 and self.gp_version == 'new':
             print(kernel, alpha, gp.kernel_, gp.alpha)
+        
+        if self.verbosity > 3 and self.gp_version == 'old':
+            print(gp.get_params)
 
         if return_likelihood:
             likelihood = gp.log_marginal_likelihood()

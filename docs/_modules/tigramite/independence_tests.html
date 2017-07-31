@@ -1473,8 +1473,17 @@
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gp_version</span> <span class="o">==</span> <span class="s1">&#39;old&#39;</span><span class="p">:</span>
             <span class="c1"># Old GP failed for ties in the data</span>
-            <span class="n">z</span> <span class="o">+=</span> <span class="mf">1E-10</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="o">*</span><span class="n">z</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-            <span class="n">target_series</span> <span class="o">+=</span> <span class="mf">1E-10</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="o">*</span><span class="n">target_series</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">remove_ties</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+                <span class="c1"># Test whether ties exist and add noise to destroy ties...</span>
+                <span class="n">cnt</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">series</span><span class="p">))</span> <span class="o">&lt;</span> <span class="n">numpy</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">series</span><span class="p">):</span>
+                    <span class="n">series</span> <span class="o">+=</span> <span class="mf">1E-6</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="o">*</span><span class="n">series</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+                    <span class="n">cnt</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">if</span> <span class="n">cnt</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">:</span> <span class="k">break</span>
+                <span class="k">return</span> <span class="n">series</span>
+
+            <span class="n">z</span> <span class="o">=</span> <span class="n">remove_ties</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>  <span class="c1">#z += 1E-3 * numpy.random.rand(*z.shape)</span>
+            <span class="n">target_series</span> <span class="o">=</span> <span class="n">remove_ties</span><span class="p">(</span><span class="n">target_series</span><span class="p">)</span>  <span class="c1">#target_series += 1E-3 * numpy.random.rand(*target_series.shape)</span>
             
             <span class="n">gp</span> <span class="o">=</span> <span class="n">gaussian_process</span><span class="o">.</span><span class="n">GaussianProcess</span><span class="p">(</span>
                 <span class="n">nugget</span><span class="o">=</span><span class="mf">1E-1</span><span class="p">,</span>
@@ -1508,7 +1517,12 @@
                  <span class="o">**</span><span class="n">params</span><span class="p">)</span>
 
         <span class="n">gp</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">target_series</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-        <span class="c1"># print kernel, alpha, gp.kernel_, gp.alpha_</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">3</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">gp_version</span> <span class="o">==</span> <span class="s1">&#39;new&#39;</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">kernel</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">gp</span><span class="o">.</span><span class="n">kernel_</span><span class="p">,</span> <span class="n">gp</span><span class="o">.</span><span class="n">alpha</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">3</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">gp_version</span> <span class="o">==</span> <span class="s1">&#39;old&#39;</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">gp</span><span class="o">.</span><span class="n">get_params</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">return_likelihood</span><span class="p">:</span>
             <span class="n">likelihood</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">log_marginal_likelihood</span><span class="p">()</span>

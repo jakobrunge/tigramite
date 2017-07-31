@@ -195,8 +195,8 @@ class PCMCI():
         Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing the
         conditioning-parents estimated with PC algorithm.
     
-    test_statistic_values : dictionary
-        Dictionary of form test_statistic_values[j][(i, -tau)] = float
+    val_min : dictionary
+        Dictionary of form val_min[j][(i, -tau)] = float
         containing the minimum test statistic value for each link estimated in
         the PC algorithm.
     
@@ -329,14 +329,14 @@ class PCMCI():
 
             return False
 
-    def _sort_parents(self, test_statistic_values):
+    def _sort_parents(self, parents_values):
         """Sort current parents according to test statistic values.
 
         Sorting is from strongest to weakest absolute values.
 
-        Paramters
+        Parameters
         ---------
-        test_statistic_values : dict
+        parents_values : dict
             Dictionary of form {(0, -1):float, ...} containing the minimum test
             statistic value of a link
 
@@ -350,14 +350,41 @@ class PCMCI():
             print("\n    Sorting parents in decreasing order with "
                   "\n    weight(i-tau->j) = min_{iterations} |I_{ij}(tau)| ")
 
-        abs_values = dict([(key, numpy.abs(test_statistic_values[key]))
-                           for key in list(test_statistic_values)])
+        abs_values = dict([(key, numpy.abs(parents_values[key]))
+                           for key in list(parents_values)])
 
         parents = sorted(abs_values,
                          key=abs_values.get,
                          reverse=True)
 
         return parents
+
+    def _dict_to_matrix(self, val_dict, tau_max):
+        """Helper function to convert dictionary to matrix formart.
+        
+        Parameters
+        ---------
+        val_dict : dict
+            Dictionary of form {0:{(0, -1):float, ...}, 1:{...}, ...}
+
+        tau_max : int
+            Maximum lag.
+
+        Returns
+        -------
+        matrix : array of shape (N, N, tau_max+1)
+            Matrix format of p-values and test statistic values.
+        """
+
+        N = len(val_dict)
+
+        matrix = numpy.ones((N, N, tau_max + 1))
+        for j in val_dict.keys():
+            for link in val_dict[j].keys():
+                k, tau = link
+                matrix[k, j, abs(tau)] = val_dict[j][link]
+        
+        return matrix
 
     # @profile
     def _run_pc_stable_single(self, j,
@@ -383,7 +410,7 @@ class PCMCI():
         
         tau_min : int, optional (default: 1)
             Minimum time lag to test. Useful for variable selection in 
-            multi-step ahead predictions.
+            multi-step ahead predictions. Must be greater zero.
         
         tau_max : int, optional (default: 1)
             Maximum time lag. Must be larger or equal to tau_min.
@@ -411,7 +438,7 @@ class PCMCI():
         parents : list
             List of estimated parents.
         
-        test_statistic_values : dict
+        val_min : dict
             Dictionary of form {(0, -1):float, ...} containing the minimum test
             statistic value of a link.
         
@@ -427,7 +454,9 @@ class PCMCI():
             pc_alpha = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
 
         p_max = {}
-        test_statistic_values = {}
+        val_min = {}
+
+        parents_values = {}
         parents = selected_links
 
         iterations = {'iterations': {}}
@@ -505,17 +534,20 @@ class PCMCI():
 
                     # Keep track of maximum p-value and minimum estimated value
                     # for each pair (across any condition)
-                    if (i, tau) in list(test_statistic_values):
-                        test_statistic_values[(i, tau)] = min(numpy.abs(val),
-                                                test_statistic_values[(i, tau)])
+                    if (i, tau) in list(parents_values):
+                        parents_values[(i, tau)] = min(numpy.abs(val),
+                                                parents_values[(i, tau)])
                     else:
-                        test_statistic_values[(i, tau)] = numpy.abs(val)
+                        parents_values[(i, tau)] = numpy.abs(val)
 
                     if (i, tau) in list(p_max):
                         p_max[(i, tau)] = max(numpy.abs(pval),
                                               p_max[(i, tau)])
+                        val_min[(i, tau)] = min(numpy.abs(val),
+                                              val_min[(i, tau)])
                     else:
                         p_max[(i, tau)] = pval
+                        val_min[(i, tau)] = numpy.abs(val)
 
                     if save_iterations:
                         iterations['iterations'][conds_dim][parent][
@@ -542,18 +574,18 @@ class PCMCI():
             for j_parent in nonsig_parents:
                 j, parent = j_parent
 
-                del parents[parents.index(parent)]
-                del test_statistic_values[parent]
+                # del parents[parents.index(parent)]
+                del parents_values[parent]
 
-            parents = self._sort_parents(test_statistic_values)
+            parents = self._sort_parents(parents_values)
 
             if self.verbosity > 1:
                 print("\nUpdating parents:")
                 self._print_parents_single(
-                    j, parents, test_statistic_values, p_max)
+                    j, parents, parents_values, p_max)
 
-        if save_iterations:
-            iterations['p_max'] = p_max
+        # if save_iterations:
+        #     iterations['p_max'] = p_max
 
         if self.verbosity > 1:
             if converged:
@@ -565,7 +597,7 @@ class PCMCI():
                     " reached." % max_conds_dim)
 
         return {'parents':parents, 
-                'test_statistic_values':test_statistic_values,
+                'val_min':val_min,
                 'p_max':p_max, 
                 'iterations':iterations}
 
@@ -591,6 +623,7 @@ class PCMCI():
 
         tau_min : int, default: 1
             Minimum time lag to test. Useful for multi-step ahead predictions.
+            Must be greater zero.
         
         tau_max : int, default: 1
             Maximum time lag. Must be larger or equal to tau_min.
@@ -639,7 +672,7 @@ class PCMCI():
             raise ValueError("max_combinations must be > 0")
 
         p_max = dict([(j, {}) for j in range(self.N)])
-        test_statistic_values = dict([(j, {}) for j in range(self.N)])
+        val_min = dict([(j, {}) for j in range(self.N)])
 
         iterations = dict([(j, {}) for j in range(self.N)])
 
@@ -693,7 +726,7 @@ class PCMCI():
                                             max_combinations=max_combinations,
                                             )
                 all_parents[j] = result['parents']
-                test_statistic_values[j] = result['test_statistic_values']
+                val_min[j] = result['val_min']
                 p_max[j] = result['p_max']
                 iterations[j] = result['iterations']
 
@@ -741,24 +774,24 @@ class PCMCI():
                           (self.var_names[j], optimal_alpha))
 
                 all_parents[j] = results[optimal_alpha]['parents']
-                test_statistic_values[j] = results[optimal_alpha]['test_statistic_values']
+                val_min[j] = results[optimal_alpha]['val_min']
                 p_max[j] = results[optimal_alpha]['p_max']
                 iterations[j] = results[optimal_alpha]['iterations']
 
                 iterations[j]['optimal_pc_alpha'] = optimal_alpha
 
         self.all_parents = all_parents
-        self.test_statistic_values = test_statistic_values
-        self.p_max = p_max
+        self.val_matrix = self._dict_to_matrix(val_min, tau_max)
+        self.p_matrix = self._dict_to_matrix(p_max, tau_max)
         self.iterations = iterations
 
         if self.verbosity > 0:
             print("\n## Resulting condition sets:")
-            self._print_parents(all_parents, test_statistic_values, p_max)
+            self._print_parents(all_parents, val_min, p_max)
 
         return all_parents
 
-    def _print_parents_single(self, j, parents, test_statistic_values, p_max):
+    def _print_parents_single(self, j, parents, val_min, p_max):
         """Print current parents for variable j.
 
         Parameters
@@ -769,7 +802,7 @@ class PCMCI():
         parents : list
             List of form [(0, -1), (3, -2), ...]
         
-        test_statistic_values : dict
+        val_min : dict
             Dictionary of form {(0, -1):float, ...} containing the minimum test
             statistic value of a link
 
@@ -795,14 +828,14 @@ class PCMCI():
             for p in parents:
                 print("        (%s %d): max_pval = %.5f, min_val = %.3f" % (
                     self.var_names[p[0]], p[1], p_max[p], 
-                    test_statistic_values[p]))
+                    val_min[p]))
         else:
             print("\n    Variable %s has %d parent(s):" % (
                 self.var_names[j], len(parents)))
 
         return self
 
-    def _print_parents(self, all_parents, test_statistic_values, p_max):
+    def _print_parents(self, all_parents, val_min, p_max):
         """Print current parents.
 
         Parameters
@@ -811,7 +844,7 @@ class PCMCI():
             Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing 
             the conditioning-parents estimated with PC algorithm.
 
-        test_statistic_values : dict
+        val_min : dict
             Dictionary of form {0:{(0, -1):float, ...}} containing the minimum 
             test statistic value of a link
 
@@ -825,7 +858,7 @@ class PCMCI():
         """
         for j in [var for var in list(all_parents)]:
             self._print_parents_single(j, all_parents[j],
-                                       test_statistic_values[j], p_max[j])
+                                       val_min[j], p_max[j])
         return self
  
     def get_lagged_dependencies(self,
@@ -846,8 +879,8 @@ class PCMCI():
             specifying whether only selected links should be tested. If None is
             passed, all links are tested
 
-        tau_min : int, default: 1
-            Minimum time lag to test. Useful for multi-step ahead predictions.
+        tau_min : int, default: 0
+            Minimum time lag.
 
         tau_max : int, default: 1
             Maximum time lag. Must be larger or equal to tau_min.
@@ -978,7 +1011,7 @@ class PCMCI():
             passed, all links are tested
 
         tau_min : int, default: 1
-            Minimum time lag to test. Useful for multi-step ahead predictions.
+            Minimum time lag to test. Note that zero-lags are undirected.
         
         tau_max : int, default: 1
             Maximum time lag. Must be larger or equal to tau_min.
@@ -1296,7 +1329,7 @@ class PCMCI():
             passed, all links are tested
 
         tau_min : int, optional (default: 1)
-          Minimum time lag to test. Useful for multi-step ahead predictions.
+          Minimum time lag to test. Note that zero-lags are undirected. 
 
         tau_max : int, optional (default: 1)
           Maximum time lag. Must be larger or equal to tau_min.
@@ -1344,16 +1377,16 @@ class PCMCI():
             pc_alpha=pc_alpha,
             max_conds_dim=max_conds_dim,
             max_combinations=max_combinations,
-        )
+            )
 
         results = self.run_mci(
-                                selected_links=selected_links,
-                                tau_min=tau_min,
-                                tau_max=tau_max,
-                                parents=all_parents,
-                                max_conds_py=max_conds_py,
-                                max_conds_px=max_conds_px,
-                                )
+            selected_links=selected_links,
+            tau_min=tau_min,
+            tau_max=tau_max,
+            parents=all_parents,
+            max_conds_py=max_conds_py,
+            max_conds_px=max_conds_px,
+            )
 
         val_matrix = results['val_matrix']
         p_matrix = results['p_matrix']
@@ -1494,28 +1527,35 @@ if __name__ == '__main__':
         var_names=var_names,
         verbosity=verbosity)
 
-    results = pcmci.run_pcmci(
-        selected_links=None,
-        tau_min=1,
-        tau_max=tau_max,
-        save_iterations=False,
+    # results = pcmci.run_pcmci(
+    #     selected_links=None,
+    #     tau_min=1,
+    #     tau_max=tau_max,
+    #     save_iterations=False,
 
-        pc_alpha=pc_alpha,
-        max_conds_dim=None,
-        max_combinations=1,
+    #     pc_alpha=pc_alpha,
+    #     max_conds_dim=None,
+    #     max_combinations=1,
 
-        max_conds_py=None,
-        max_conds_px=None,
+    #     max_conds_py=None,
+    #     max_conds_px=None,
 
-        fdr_method='fdr_bh',
-    )
+    #     fdr_method='fdr_bh',
+    # )
+    results = pcmci.run_pc_stable( 
+                      tau_max=tau_max,
+                      save_iterations=True,
+                      pc_alpha=0.2,
+                      max_conds_dim=None,
+                      max_combinations=1000,
+                      )
 
-    pcmci._print_significant_links(
-                   p_matrix=results['p_matrix'],
-                   q_matrix=results['q_matrix'], 
-                   val_matrix=results['val_matrix'],
-                   alpha_level=alpha_level,
-                   conf_matrix=results['conf_matrix'])
+    # pcmci._print_significant_links(
+    #                p_matrix=results['p_matrix'],
+    #                q_matrix=results['q_matrix'], 
+    #                val_matrix=results['val_matrix'],
+    #                alpha_level=alpha_level,
+    #                conf_matrix=results['conf_matrix'])
 
     # pcmci.run_mci(
     #     selected_links=None,

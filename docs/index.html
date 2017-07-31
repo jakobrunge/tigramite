@@ -322,9 +322,9 @@ conditioning-parents estimated with PC algorithm.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="PCMCI.test_statistic_values">
-<code class="descname">test_statistic_values</code><a class="headerlink" href="#PCMCI.test_statistic_values" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>dictionary</em> &#8211; Dictionary of form test_statistic_values[j][(i, -tau)] = float
+<dt id="PCMCI.val_min">
+<code class="descname">val_min</code><a class="headerlink" href="#PCMCI.val_min" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>dictionary</em> &#8211; Dictionary of form val_min[j][(i, -tau)] = float
 containing the minimum test statistic value for each link estimated in
 the PC algorithm.</p>
 </dd></dl>
@@ -395,7 +395,7 @@ Rate method.</li>
 <li><strong>selected_links</strong> (<em>dict</em><em> or </em><em>None</em>) &#8211; Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}
 specifying whether only selected links should be tested. If None is
 passed, all links are tested</li>
-<li><strong>tau_min</strong> (<em>int</em><em>, </em><em>default: 1</em>) &#8211; Minimum time lag to test. Useful for multi-step ahead predictions.</li>
+<li><strong>tau_min</strong> (<em>int</em><em>, </em><em>default: 0</em>) &#8211; Minimum time lag.</li>
 <li><strong>tau_max</strong> (<em>int</em><em>, </em><em>default: 1</em>) &#8211; Maximum time lag. Must be larger or equal to tau_min.</li>
 <li><strong>parents</strong> (<em>dict</em><em> or </em><em>None</em>) &#8211; Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}
 specifying the conditions for each variable. If None is
@@ -432,7 +432,7 @@ test statistic values,  p-values, and confidence intervals.</p>
 <li><strong>selected_links</strong> (<em>dict</em><em> or </em><em>None</em>) &#8211; Dictionary of form {0:all_parents (3, -2), ...], 1:[], ...}
 specifying whether only selected links should be tested. If None is
 passed, all links are tested</li>
-<li><strong>tau_min</strong> (<em>int</em><em>, </em><em>default: 1</em>) &#8211; Minimum time lag to test. Useful for multi-step ahead predictions.</li>
+<li><strong>tau_min</strong> (<em>int</em><em>, </em><em>default: 1</em>) &#8211; Minimum time lag to test. Note that zero-lags are undirected.</li>
 <li><strong>tau_max</strong> (<em>int</em><em>, </em><em>default: 1</em>) &#8211; Maximum time lag. Must be larger or equal to tau_min.</li>
 <li><strong>parents</strong> (<em>dict</em><em> or </em><em>None</em>) &#8211; Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}
 specifying the conditions for each variable. If None is
@@ -468,7 +468,8 @@ and optionally conf_matrix which is of shape [N, N, tau_max+1,2]</p>
 <li><strong>selected_links</strong> (<em>dict</em><em> or </em><em>None</em>) &#8211; Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}
 specifying whether only selected links should be tested. If None is
 passed, all links are tested</li>
-<li><strong>tau_min</strong> (<em>int</em><em>, </em><em>default: 1</em>) &#8211; Minimum time lag to test. Useful for multi-step ahead predictions.</li>
+<li><strong>tau_min</strong> (<em>int</em><em>, </em><em>default: 1</em>) &#8211; Minimum time lag to test. Useful for multi-step ahead predictions.
+Must be greater zero.</li>
 <li><strong>tau_max</strong> (<em>int</em><em>, </em><em>default: 1</em>) &#8211; Maximum time lag. Must be larger or equal to tau_min.</li>
 <li><strong>save_iterations</strong> (<em>bool</em><em>, </em><em>default: False</em>) &#8211; Whether to save iteration step results such as conditions used.</li>
 <li><strong>pc_alpha</strong> (<em>float</em><em> or </em><em>list of floats</em><em>, </em><em>default: 0.3</em>) &#8211; Significance level in algorithm. If a list or None is passed, the
@@ -507,7 +508,7 @@ containing estimated parents.</p>
 <li><strong>selected_links</strong> (<em>dict</em><em> or </em><em>None</em>) &#8211; Dictionary of form {0:all_parents (3, -2), ...], 1:[], ...}
 specifying whether only selected links should be tested. If None is
 passed, all links are tested</li>
-<li><strong>tau_min</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) &#8211; Minimum time lag to test. Useful for multi-step ahead predictions.</li>
+<li><strong>tau_min</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) &#8211; Minimum time lag to test. Note that zero-lags are undirected.</li>
 <li><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) &#8211; Maximum time lag. Must be larger or equal to tau_min.</li>
 <li><strong>save_iterations</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) &#8211; Whether to save iteration step results such as conditions used.</li>
 <li><strong>pc_alpha</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.1</em><em>)</em>) &#8211; Significance level in algorithm.</li>
