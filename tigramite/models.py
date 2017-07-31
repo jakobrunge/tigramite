@@ -4,7 +4,6 @@
 #
 # License: GNU General Public License v3.0
 
-import warnings
 import numpy
 import sys, os
 import math
