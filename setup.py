@@ -21,9 +21,12 @@ class UseNumpyHeadersBuildExt(build_ext):
 CMDCLASS = {'build_ext': UseNumpyHeadersBuildExt}
 
 # Read in all the installation requirements from the requirements.txt file
+# This will read them in as first-in last-out.  Reverse the order of the list to
+# get first-in first-out
 PWD = os.path.abspath(os.path.dirname(__file__))
 with io.open(os.path.join(PWD, 'requirements.txt')) as f:
     INSTALL_REQUIRES = f.read().split('\n')
+    INSTALL_REQUIRES = INSTALL_REQUIRES[::-1]
 
 # Define the extras needed
 EXTRAS_REQUIRE = {
