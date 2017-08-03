@@ -4,5 +4,4 @@ scikit-learn >= 0.18.1
 ace >= 0.3.0
 matplotlib >= 1.5.1
 networkx == 1.10.0
-cython >= 0.26
 statsmodels >= 0.8.0
