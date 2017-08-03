@@ -20,7 +20,7 @@ class UseNumpyHeadersBuildExt(build_ext):
 CMDCLASS = {'build_ext': UseNumpyHeadersBuildExt}
 
 # Define the minimal classes needed to install and run tigramite
-INSTALL_REQUIRES = ["numpy", "scipy"]
+INSTALL_REQUIRES = ["numpy", "scipy", "sklearn"]
 
 # Define the extras needed
 EXTRAS_REQUIRE = {
