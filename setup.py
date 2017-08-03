@@ -1,5 +1,4 @@
 import io
-import os
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 
@@ -20,13 +19,8 @@ class UseNumpyHeadersBuildExt(build_ext):
         build_ext.run(self)
 CMDCLASS = {'build_ext': UseNumpyHeadersBuildExt}
 
-# Read in all the installation requirements from the requirements.txt file
-# This will read them in as first-in last-out.  Reverse the order of the list to
-# get first-in first-out
-PWD = os.path.abspath(os.path.dirname(__file__))
-with io.open(os.path.join(PWD, 'requirements.txt')) as f:
-    INSTALL_REQUIRES = f.read().split('\n')
-    INSTALL_REQUIRES = INSTALL_REQUIRES[::-1]
+# Define the minimal classes needed to install and run tigramite
+INSTALL_REQUIRES = ["numpy", "scipy"]
 
 # Define the extras needed
 EXTRAS_REQUIRE = {
@@ -44,9 +38,10 @@ TESTS_REQUIRE = ['nose']
 EXT_MODULES = [Extension("tigramite.tigramite_cython_code",
                          ["tigramite/tigramite_cython_code.c"])]
 
+# Run the setup
 setup(
     name='tigramite',
-    version='3.0b0',
+    version='3.0.0-beta',
     packages=['tigramite'],
     license='GNU General Public License v3.0',
     description='Tigramite causal discovery for time series',
