@@ -1,4 +1,5 @@
 import io
+import sys
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 
@@ -19,6 +20,33 @@ class UseNumpyHeadersBuildExt(build_ext):
         build_ext.run(self)
 CMDCLASS = {'build_ext': UseNumpyHeadersBuildExt}
 
+# Handle cythonizing code only in development mode
+def define_extension(extension_name, source_files=None):
+    """
+    Will define an extension from the *.c files unless in "setup.py develop"
+    is called.  If this is in develop mode, then it tries to import cython
+    and regenerate the *.c files from the *.pyx files
+    :return: single-element list of needed extension
+    """
+    # Default source file
+    if source_files is None:
+        source_files = [extension_name.replace(".", "/") + ".c"]
+    # Check if we are in develop mode
+    if len(sys.argv) >= 2 and (sys.argv[1] in ['develop']):
+        # If we are, try to import and use cythonize
+        try:
+            from Cython.Build import cythonize
+            # Replace any extension in the source file list with .pyx
+            source_files = [".".join(f.split(".")[:-1] + ["pyx"]) \
+                            for f in source_files]
+            # Return the cythonized extension
+            return cythonize(Extension(extension_name, source_files))
+        except ImportError:
+            print("Cython is needed for development installation")
+            raise ImportError
+    else:
+        return [Extension(extension_name, source_files)]
+
 # Define the minimal classes needed to install and run tigramite
 INSTALL_REQUIRES = ["numpy", "scipy", "sklearn"]
 
@@ -35,8 +63,8 @@ EXTRAS_REQUIRE = {
 TESTS_REQUIRE = ['nose']
 
 # Define the external modules to build
-EXT_MODULES = [Extension("tigramite.tigramite_cython_code",
-                         ["tigramite/tigramite_cython_code.c"])]
+EXT_MODULES = []
+EXT_MODULES += define_extension("tigramite.tigramite_cython_code")
 
 # Run the setup
 setup(
@@ -64,5 +92,5 @@ setup(
             ':: OSI Approved '\
             ':: GNU General Public License v3 or later (GPLv3+)',
         'Programming Language :: Python :: 2.7',
-    ],
+    ]
 )
