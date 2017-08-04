@@ -48,16 +48,19 @@ def define_extension(extension_name, source_files=None):
         return [Extension(extension_name, source_files)]
 
 # Define the minimal classes needed to install and run tigramite
-INSTALL_REQUIRES = ["numpy", "scipy", "sklearn"]
+INSTALL_REQUIRES = ["numpy", "scipy"]
 
-# Define the extras needed
+# Define the all the possible extras needed
 EXTRAS_REQUIRE = {
-    'Gaussian Process (GP) Regression':  ['sklearn>=0.18'],
-    'R-based ACE, also requires acepack installed in R':  ['rpy2'],
-    'pure-python ACE':  ['ace>=0.3'],
-    'plotting': ['matplotlib>=1.5', 'networkx>=1.10'],
-    'p-value corrections': ['statsmodels']
-}
+    'all' : ['scikit-learn>=0.18',#Gaussian Process (GP) Regression
+             'ace>=0.3',          #pure-python ACE
+             'matplotlib>=1.5',   #plotting
+             'networkx>=1.10',    #plotting
+             'statsmodels'],      #p-value corrections
+    'R'   : ['rpy2']              #R-based ACE, requires acepack installed in R
+    }
+# Define the extras needed for development
+EXTRAS_REQUIRE['dev'] = EXTRAS_REQUIRE['all'] + ['nose', 'cython']
 
 # Define the packages needed for testing
 TESTS_REQUIRE = ['nose']
@@ -81,6 +84,7 @@ setup(
     cmdclass=CMDCLASS,
     ext_modules=EXT_MODULES,
     install_requires=INSTALL_REQUIRES,
+    extras_require=EXTRAS_REQUIRE,
     test_suite='nose.collector',
     tests_require=TESTS_REQUIRE,
     classifiers=[
