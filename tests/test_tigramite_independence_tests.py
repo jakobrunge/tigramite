@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy
 
 # Make Python see modules in parent package
@@ -104,7 +105,7 @@ class TestCondInd():  #unittest.TestCase):
             mask=data_mask,
             missing_flag=None,
             mask_type=None, verbosity=verbosity)
-        print res[0]
+        print(res[0])
         numpy.testing.assert_almost_equal(res[0],
                                           numpy.array([[13, 14, 15],
                                                      [ 4,  5,  6],
@@ -121,7 +122,7 @@ class TestCondInd():  #unittest.TestCase):
             data=data,
             mask=data_mask,
             mask_type=['y'], verbosity=verbosity)
-        print res[0]
+        print(res[0])
 
         numpy.testing.assert_almost_equal(res[0],
                                           numpy.array([[13, 14, 15],
@@ -140,7 +141,7 @@ class TestCondInd():  #unittest.TestCase):
             data=data,
             mask=data_mask,
             mask_type=['x', 'y', 'z'], verbosity=verbosity)
-        print res[0]
+        print(res[0])
 
         numpy.testing.assert_almost_equal(res[0],
                                           numpy.array([[13, 14, 15],
@@ -185,7 +186,7 @@ class TestCondInd():  #unittest.TestCase):
             missing_flag=999,
             mask_type=['y'], verbosity=verbosity)
 
-        # print res[0]
+        # print(res[0])
         numpy.testing.assert_almost_equal(res[0],
                                           numpy.array([[10, 14],
                                                      [ 2,  6],
@@ -199,7 +200,7 @@ class TestCondInd():  #unittest.TestCase):
                         cov=cov, size=150).T
 
         val = numpy.corrcoef(array)[0,1]
-        # print val
+        # print(val)
         dim, T = array.shape
         xyz = numpy.array([0,1])
 
@@ -215,8 +216,8 @@ class TestCondInd():  #unittest.TestCase):
             conf_lev=self.ci_par_corr.conf_lev, 
             )
         
-        print conf_ana
-        print conf_boots
+        print(conf_ana)
+        print(conf_boots)
 
         numpy.testing.assert_allclose(numpy.array(conf_ana), 
                                    numpy.array(conf_boots),
@@ -230,7 +231,7 @@ class TestCondInd():  #unittest.TestCase):
                         cov=cov, size=250).T
         # array = numpy.random.randn(3, 10)
         val = numpy.corrcoef(array)[0,1]
-        # print val
+        # print(val)
         dim, T = array.shape
         xyz = numpy.array([0,1])
 
@@ -241,8 +242,8 @@ class TestCondInd():  #unittest.TestCase):
                                val)
         # Adjust p-value for two-sided measures
         
-        print pval_ana
-        print pval_shuffle
+        print(pval_ana)
+        print(pval_shuffle)
 
         numpy.testing.assert_allclose(numpy.array(pval_ana), 
                                    numpy.array(pval_shuffle),
@@ -261,8 +262,8 @@ class TestCondInd():  #unittest.TestCase):
         est_residual = self.ci_par_corr._get_single_residuals(array, target_var, 
                 standardize=False, return_means=False)
 
-        # print est_residual[:10]
-        # print true_residual[0, :10]
+        # print(est_residual[:10])
+        # print(true_residual[0,) :10]
         numpy.testing.assert_allclose(est_residual, true_residual[0], atol=0.01)
 
 
@@ -280,15 +281,15 @@ class TestCondInd():  #unittest.TestCase):
         array[0] += 0.5* array[2:].sum(axis=0)
         array[1] += 0.7* array[2:].sum(axis=0)
 
-        # print numpy.corrcoef(array)[0,1]
-        # print val
+        # print(numpy.corrcoef(array)[0,1])
+        # print(val)
         dim, T = array.shape
         xyz = numpy.array([0,1,2,2,2])
 
         val_est = self.ci_par_corr.get_dependence_measure(array, xyz)
         
-        print val_est
-        print val_ana
+        print(val_est)
+        print(val_ana)
 
         numpy.testing.assert_allclose(numpy.array(val_ana), 
                                    numpy.array(val_est),
@@ -327,8 +328,8 @@ class TestCondInd():  #unittest.TestCase):
 
         # Testing that in the center the fit is good
         center = numpy.where(numpy.abs(array_orig[2]) < .7)[0]
-        print (pred[center][:10]).round(2)
-        print (c_std*func(array_orig[2][center])[:10]).round(2)
+        print((pred[center][:10]).round(2))
+        print((c_std*func(array_orig[2][center])[:10]).round(2))
         numpy.testing.assert_allclose(pred[center], 
             c_std*func(array_orig[2][center]), atol=0.2)
 
@@ -370,7 +371,7 @@ class TestCondInd():  #unittest.TestCase):
         array[1] += c*func(array[2])   #.sum(axis=0)
         xyz = numpy.array([0,1] + [2 for i in range(array.shape[0]-2)])
 
-        print 'xyz ', xyz, numpy.where(xyz==1)
+        print('xyz ', xyz, numpy.where(xyz == 1))
         target_var = 1    
 
         dim, T = array.shape
@@ -417,8 +418,8 @@ class TestCondInd():  #unittest.TestCase):
         pval_shuffle = self.ci_gpdc.get_shuffle_significance(array, xyz,
                                val)
 
-        print pval_ana
-        print pval_shuffle
+        print(pval_ana)
+        print(pval_shuffle)
 
         numpy.testing.assert_allclose(numpy.array(pval_ana), 
                                    numpy.array(pval_shuffle),
@@ -441,8 +442,8 @@ class TestCondInd():  #unittest.TestCase):
 
         pval_shuffle = self.ci_gpdc.get_shuffle_significance(array, xyz,
                                val)
-        print pval_ana
-        print pval_shuffle
+        print(pval_ana)
+        print(pval_shuffle)
 
         numpy.testing.assert_allclose(numpy.array(pval_ana), 
                                    numpy.array(pval_shuffle),
@@ -483,15 +484,15 @@ class TestCondInd():  #unittest.TestCase):
             array[0] += 0.5* array[2:].sum(axis=0)
             array[1] += 0.7* array[2:].sum(axis=0)
 
-        # print numpy.corrcoef(array)[0,1]
-        # print val
+        # print(numpy.corrcoef(array)[0,1])
+        # print(val)
         dim, T = array.shape
         xyz = numpy.array([0,1,2,2,2])
 
         val_est = ci_cmi_knn.get_dependence_measure(array, xyz)
         
-        print val_est
-        print _par_corr_to_cmi(val_ana)
+        print(val_est)
+        print(_par_corr_to_cmi(val_ana))
 
         numpy.testing.assert_allclose(numpy.array(_par_corr_to_cmi(val_ana)), 
                                    numpy.array(val_est),
@@ -506,19 +507,19 @@ class TestCondInd():  #unittest.TestCase):
         bins = 10
 
         uniform = self.ci_gpdc._trafo2uniform(array)
-        # print uniform
+        # print(uniform)
 
         # import matplotlib
         # from matplotlib import pylab
         for i in range(array.shape[0]):
-            print uniform[i].shape
+            print(uniform[i].shape)
             hist, edges = numpy.histogram(uniform[i], bins=bins, 
                                       density=True)
             # pylab.figure()
             # pylab.hist(uniform[i], color='grey', alpha=0.3)
             # pylab.hist(array[i], alpha=0.3)
             # pylab.show()
-            print hist/float(bins)  #, edges
+            print(hist/float(bins))  #, edges
             numpy.testing.assert_allclose(numpy.ones(bins)/float(bins), 
                                           hist/float(bins),
                                            atol=0.01)
@@ -562,8 +563,8 @@ class TestCondInd():  #unittest.TestCase):
 
         val_est = ci_cmi_symb.get_dependence_measure(array, xyz)
         
-        print val_est
-        print _par_corr_to_cmi(val_ana)
+        print(val_est)
+        print(_par_corr_to_cmi(val_ana))
 
         numpy.testing.assert_allclose(numpy.array(_par_corr_to_cmi(val_ana)), 
                                    numpy.array(val_est),

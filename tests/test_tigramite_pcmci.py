@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy
 
 # Make Python see modules in parent package
@@ -102,8 +103,8 @@ class TestPCMCI():  #unittest.TestCase):
             val_matrix=results['val_matrix'],
             alpha_level=alpha_level)['parents']
 
-        # print parents
-        # print self.true_parents
+        # print(parents)
+        # print(self.true_parents)
         assert_graphs_equal(parents, self.true_parents)
 
     def test_pc_stable(self):
@@ -133,8 +134,8 @@ class TestPCMCI():  #unittest.TestCase):
                              )
 
         parents = pcmci.all_parents
-        # print parents
-        # print _get_parent_graph(true_parents)
+        # print(parents)
+        # print(_get_parent_graph(true_parents))
         assert_graphs_equal(parents, self.true_parents)
 
     def test_pc_stable_selected_links(self):
@@ -170,8 +171,8 @@ class TestPCMCI():  #unittest.TestCase):
                              )
 
         parents = pcmci.all_parents
-        # print parents
-        # print _get_parent_graph(true_parents)
+        # print(parents)
+        # print(_get_parent_graph(true_parents))
         assert_graphs_equal(parents, true_parents_here)
 
 
@@ -208,8 +209,8 @@ class TestPCMCI():  #unittest.TestCase):
                              )
 
         parents = pcmci.all_parents
-        # print parents
-        # print _get_parent_graph(true_parents)
+        # print(parents)
+        # print(_get_parent_graph(true_parents))
         assert_graphs_equal(parents, true_parents_here)
 
 
@@ -246,8 +247,8 @@ class TestPCMCI():  #unittest.TestCase):
                              )
 
         parents = pcmci.all_parents
-        # print parents
-        # print _get_parent_graph(true_parents)
+        # print(parents)
+        # print(_get_parent_graph(true_parents))
         assert_graphs_equal(parents, self.true_parents)
 
 
@@ -283,8 +284,8 @@ class TestPCMCI():  #unittest.TestCase):
                                   val_matrix=results['val_matrix'],
                                   alpha_level=alpha_level,
                                   )['parents']
-        # print parents
-        # print _get_parent_graph(true_parents)
+        # print(parents)
+        # print(_get_parent_graph(true_parents))
         assert_graphs_equal(parents, self.true_parents)
 
 
