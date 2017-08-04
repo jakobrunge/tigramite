@@ -18,7 +18,6 @@ class UseNumpyHeadersBuildExt(build_ext):
         self.include_dirs.append(numpy.get_include())
         # Call original build_ext command
         build_ext.run(self)
-CMDCLASS = {'build_ext': UseNumpyHeadersBuildExt}
 
 # Handle cythonizing code only in development mode
 def define_extension(extension_name, source_files=None):
@@ -49,7 +48,6 @@ def define_extension(extension_name, source_files=None):
 
 # Define the minimal classes needed to install and run tigramite
 INSTALL_REQUIRES = ["numpy", "scipy"]
-
 # Define the all the possible extras needed
 EXTRAS_REQUIRE = {
     'all' : ['scikit-learn>=0.18',#Gaussian Process (GP) Regression
@@ -61,10 +59,11 @@ EXTRAS_REQUIRE = {
     }
 # Define the extras needed for development
 EXTRAS_REQUIRE['dev'] = EXTRAS_REQUIRE['all'] + ['nose', 'cython']
-
 # Define the packages needed for testing
 TESTS_REQUIRE = ['nose']
 
+# Use a custom build to handle numpy.include_dirs() when building
+CMDCLASS = {'build_ext': UseNumpyHeadersBuildExt}
 # Define the external modules to build
 EXT_MODULES = []
 EXT_MODULES += define_extension("tigramite.tigramite_cython_code")
