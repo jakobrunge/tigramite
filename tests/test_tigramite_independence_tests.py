@@ -9,7 +9,6 @@ from tigramite.independence_tests import ParCorr, GPACE, GPDC, CMIknn, CMIsymb, 
 import tigramite.data_processing as pp
 
 import nose
-import nose.tools as nt
 # import unittest
 
 

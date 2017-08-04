@@ -1,26 +1,29 @@
 from __future__ import print_function
+import sys
 import numpy
-
-# Make Python see modules in parent package
-# import sys, os
-# sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import nose
 
 import tigramite
 from tigramite.pcmci import PCMCI
 from tigramite.independence_tests import ParCorr #, GPACE
 import tigramite.data_processing as pp
-# import tigramite_plotting 
 
-import nose
-import nose.tools as nt
 # import unittest
+
+# nose.tools assert_items_equal functions wrap unittests assertItemsEqual to
+# makes it PEP8 style compliant.
+# After python 3.2 these aliases were removed...
+if sys.version_info[0] >= 3: #Python 3
+    from nose.tools import assertItemsEqual as assert_items_equal
+else: #Python 2
+    from nose.tools import assert_items_equal as assert_items_equal
+
 
 
 def assert_graphs_equal(actual, expected):
     """Check whether lists in dict are equal"""
-
     for j in list(expected):
-        nt.assert_items_equal(actual[j], expected[j])
+        assert_items_equal(actual[j], expected[j])
 
 
 def _get_parent_graph(nodes, exclude=None):
