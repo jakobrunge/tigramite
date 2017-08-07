@@ -1,30 +1,21 @@
 from __future__ import print_function
-import sys
+from collections import Counter
 import numpy
 import nose
+from nose.tools import assert_equal
 
 import tigramite
 from tigramite.pcmci import PCMCI
 from tigramite.independence_tests import ParCorr #, GPACE
 import tigramite.data_processing as pp
 
-# import unittest
-
-# nose.tools assert_items_equal functions wrap unittests assertItemsEqual to
-# makes it PEP8 style compliant.
-# After python 3.2 these aliases were removed...
-if sys.version_info[0] >= 3: #Python 3
-    from nose.tools import assertItemsEqual as assert_items_equal
-else: #Python 2
-    from nose.tools import assert_items_equal as assert_items_equal
-
-
-
 def assert_graphs_equal(actual, expected):
-    """Check whether lists in dict are equal"""
+    """
+    Check whether lists in dict have the same elements.
+    This ignore the order of the elements in the list.
+    """
     for j in list(expected):
-        assert_items_equal(actual[j], expected[j])
-
+        assert_equal(Counter(iter(actual[j])), Counter(iter(expected[j])))
 
 def _get_parent_graph(nodes, exclude=None):
     """Returns parents"""
