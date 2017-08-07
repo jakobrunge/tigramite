@@ -2650,24 +2650,26 @@ class CMIsymb(CondIndTest):
 
 
 class RCOT(CondIndTest):
-    r"""Randomized conditional Correlation Test.
+    r"""Randomized Conditional Correlation Test.
 
-    Randomized conditional Correlation Test based on r-package ``rcit``. This 
-    test is described in [5]_.
+    Tests conditional independence in the fully non-parametric setting based on
+    Kernel measures. For not too small sample sizes, the test can utilize an
+    analytic approximation of the null distribution making it very fast. Based
+    on r-package ``rcit``. This test is described in [5]_.
 
     Notes
     -----
     
     RCOT is a fast variant of the Kernel Conditional Independence Test (KCIT)
     utilizing random Fourier features. Kernel tests measure conditional
-    independence in  the fully non-parametric setting. In practice, RCOT tests
+    independence in the fully non-parametric setting. In practice, RCOT tests
     scale linearly with sample size and return accurate p-values much faster
     than KCIT in the large sample size context. To use the analytical null
-    approximation the  sample size should be at least ~1000.
+    approximation, the sample size should be at least ~1000.
 
     The method is fully described in [5]_ and the r-package documentation. The
-    free parameters are the approximation of the partial cross-covariance matrix
-    and the number of random fourier features for the conditioning set.
+    free parameters are the approximation of the partial kernel cross-covariance
+    matrix and the number of random fourier features for the conditioning set.
 
     This class requires the rpy package and the prior installation of ``rcit``
     from https://github.com/ericstrobl/RCIT.
@@ -2683,7 +2685,7 @@ class RCOT(CondIndTest):
     ----------
     num_f : int, optional
         Number of random fourier features for conditioning set. More features
-        better approximate highly stuructured joint densities, but take more
+        better approximate highly structured joint densities, but take more
         computational time.
 
     approx : str, optional

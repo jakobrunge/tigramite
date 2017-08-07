@@ -128,7 +128,7 @@ Physical Review Letters, 108(25), 258701.
 <td>Conditional mutual information test based on discrete estimator.</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#tigramite.independence_tests.RCOT" title="tigramite.independence_tests.RCOT"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.independence_tests.RCOT</span></code></a>([num_f,&nbsp;...])</td>
-<td>Randomized conditional Correlation Test.</td>
+<td>Randomized Conditional Correlation Test.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#module-tigramite.data_processing" title="tigramite.data_processing"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.data_processing</span></code></a></td>
 <td>Tigramite data processing functions.</td>
@@ -1569,19 +1569,21 @@ in data_processing or use the CMIknn class.</p>
 <dl class="class">
 <dt id="tigramite.independence_tests.RCOT">
 <em class="property">class </em><code class="descclassname">tigramite.independence_tests.</code><code class="descname">RCOT</code><span class="sig-paren">(</span><em>num_f=25</em>, <em>approx='lpd4'</em>, <em>significance='analytic'</em>, <em>transform='standardize'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#RCOT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.RCOT" title="Permalink to this definition">¶</a></dt>
-<dd><p>Randomized conditional Correlation Test.</p>
-<p>Randomized conditional Correlation Test based on r-package <code class="docutils literal"><span class="pre">rcit</span></code>. This
-test is described in <a class="footnote-reference" href="#id23" id="id21">[5]</a>.</p>
+<dd><p>Randomized Conditional Correlation Test.</p>
+<p>Tests conditional independence in the fully non-parametric setting based on
+Kernel measures. For not too small sample sizes, the test can utilize an
+analytic approximation of the null distribution making it very fast. Based
+on r-package <code class="docutils literal"><span class="pre">rcit</span></code>. This test is described in <a class="footnote-reference" href="#id23" id="id21">[5]</a>.</p>
 <p class="rubric">Notes</p>
 <p>RCOT is a fast variant of the Kernel Conditional Independence Test (KCIT)
 utilizing random Fourier features. Kernel tests measure conditional
-independence in  the fully non-parametric setting. In practice, RCOT tests
+independence in the fully non-parametric setting. In practice, RCOT tests
 scale linearly with sample size and return accurate p-values much faster
 than KCIT in the large sample size context. To use the analytical null
-approximation the  sample size should be at least ~1000.</p>
+approximation, the sample size should be at least ~1000.</p>
 <p>The method is fully described in <a class="footnote-reference" href="#id23" id="id22">[5]</a> and the r-package documentation. The
-free parameters are the approximation of the partial cross-covariance matrix
-and the number of random fourier features for the conditioning set.</p>
+free parameters are the approximation of the partial kernel cross-covariance
+matrix and the number of random fourier features for the conditioning set.</p>
 <p>This class requires the rpy package and the prior installation of <code class="docutils literal"><span class="pre">rcit</span></code>
 from <a class="reference external" href="https://github.com/ericstrobl/RCIT">https://github.com/ericstrobl/RCIT</a>.</p>
 <p class="rubric">References</p>
@@ -1600,7 +1602,7 @@ Parametric Causal Discovery.
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>num_f</strong> (<em>int</em><em>, </em><em>optional</em>) &#8211; Number of random fourier features for conditioning set. More features
-better approximate highly stuructured joint densities, but take more
+better approximate highly structured joint densities, but take more
 computational time.</li>
 <li><strong>approx</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; Which approximation of the partial cross-covariance matrix, options:
 &#8216;lpd4&#8217; the Lindsay-Pilla-Basak method (default), &#8216;gamma&#8217; for the

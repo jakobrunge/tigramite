@@ -2714,24 +2714,26 @@
 
 
 <div class="viewcode-block" id="RCOT"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.RCOT">[docs]</a><span class="k">class</span> <span class="nc">RCOT</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Randomized conditional Correlation Test.</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Randomized Conditional Correlation Test.</span>
 
-<span class="sd">    Randomized conditional Correlation Test based on r-package ``rcit``. This </span>
-<span class="sd">    test is described in [5]_.</span>
+<span class="sd">    Tests conditional independence in the fully non-parametric setting based on</span>
+<span class="sd">    Kernel measures. For not too small sample sizes, the test can utilize an</span>
+<span class="sd">    analytic approximation of the null distribution making it very fast. Based</span>
+<span class="sd">    on r-package ``rcit``. This test is described in [5]_.</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
 <span class="sd">    </span>
 <span class="sd">    RCOT is a fast variant of the Kernel Conditional Independence Test (KCIT)</span>
 <span class="sd">    utilizing random Fourier features. Kernel tests measure conditional</span>
-<span class="sd">    independence in  the fully non-parametric setting. In practice, RCOT tests</span>
+<span class="sd">    independence in the fully non-parametric setting. In practice, RCOT tests</span>
 <span class="sd">    scale linearly with sample size and return accurate p-values much faster</span>
 <span class="sd">    than KCIT in the large sample size context. To use the analytical null</span>
-<span class="sd">    approximation the  sample size should be at least ~1000.</span>
+<span class="sd">    approximation, the sample size should be at least ~1000.</span>
 
 <span class="sd">    The method is fully described in [5]_ and the r-package documentation. The</span>
-<span class="sd">    free parameters are the approximation of the partial cross-covariance matrix</span>
-<span class="sd">    and the number of random fourier features for the conditioning set.</span>
+<span class="sd">    free parameters are the approximation of the partial kernel cross-covariance</span>
+<span class="sd">    matrix and the number of random fourier features for the conditioning set.</span>
 
 <span class="sd">    This class requires the rpy package and the prior installation of ``rcit``</span>
 <span class="sd">    from https://github.com/ericstrobl/RCIT.</span>
@@ -2747,7 +2749,7 @@
 <span class="sd">    ----------</span>
 <span class="sd">    num_f : int, optional</span>
 <span class="sd">        Number of random fourier features for conditioning set. More features</span>
-<span class="sd">        better approximate highly stuructured joint densities, but take more</span>
+<span class="sd">        better approximate highly structured joint densities, but take more</span>
 <span class="sd">        computational time.</span>
 
 <span class="sd">    approx : str, optional</span>
