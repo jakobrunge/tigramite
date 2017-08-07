@@ -23,6 +23,35 @@ except:
     print("Could not import packages for CMIknn and GPDC estimation")
 
 
+try:
+    import rpy2
+    import rpy2.robjects
+    rpy2.robjects.r['options'](warn=-1)
+
+    from rpy2.robjects.packages import importr
+    import rpy2.robjects.numpy2ri
+    rpy2.robjects.numpy2ri.activate()
+except:
+        print("Could not import rpy package")
+
+try:
+    importr('RCIT')
+except:
+    print("Could not import r-package RCIT")
+
+try:
+    importr('acepack')
+except:
+    print("Could not import r-package acepack for GPACE,"
+          " use python ACE package")
+
+try: 
+    import ace
+except:
+    print("Could not import python ACE package for GPACE")
+
+
+
 # @staticmethod
 def _construct_array(X, Y, Z, tau_max, data,
                      use_mask=False,
@@ -1594,27 +1623,6 @@ class GPACE(CondIndTest,GP):
                 ace_version='acepack',
                 **kwargs):
 
-        try:
-            import rpy2
-            import rpy2.robjects
-            rpy2.robjects.r['options'](warn=-1)
-
-            from rpy2.robjects.packages import importr
-            acepack = importr('acepack')
-            import rpy2.robjects.numpy2ri
-            rpy2.robjects.numpy2ri.activate()
-
-        except:
-            print("Could not import rpy acepack package for GPACE,"
-                  " use python ACE package")
-
-        try: 
-            import ace
-        except:
-            print("Could not import python ACE package for GPACE")
-
-
-
         GP.__init__(self, 
                     gp_version=gp_version,
                     gp_params=gp_params,
@@ -2640,6 +2648,130 @@ class CMIsymb(CondIndTest):
         raise ValueError("Model selection not implemented for %s"
                          "" % self.measure)
 
+
+class RCOT(CondIndTest):
+    r"""Randomized conditional Correlation Test.
+
+    Randomized conditional Correlation Test based on r-package ``rcit``. This 
+    test is described in [4]_.
+
+    Notes
+    -----
+    
+    RCOT is a fast variant of the Kernel Conditional Independence Test (KCIT)
+    utilizing random Fourier features. Kernel tests measure conditional
+    independence in  the fully non-parametric setting. In practice, RCOT tests
+    scale linearly with sample size and return accurate p-values much faster
+    than KCIT in the large sample size context. To use the analytical null
+    approximation the  sample size should be at least ~1000.
+
+    The method is fully described in [4]_ and the r-package documentation. The
+    free parameters are the approximation of the partial cross-covariance matrix
+    and the number of random fourier features for the conditioning set.
+
+    This class requires the rpy package and the prior installation of ``rcit``
+    from https://github.com/ericstrobl/RCIT.
+
+    References
+    ----------
+    .. [4] Eric V. Strobl, Kun Zhang, Shyam Visweswaran: 
+           Approximate Kernel-based Conditional Independence Tests for Fast Non-
+           Parametric Causal Discovery.  
+           https://arxiv.org/abs/1702.03877
+
+    Parameters
+    ----------
+    num_f : int, optional
+        Number of random fourier features for conditioning set. More features
+        better approximate highly stuructured joint densities, but take more
+        computational time.
+
+    approx : str, optional
+        Which approximation of the partial cross-covariance matrix, options:
+        'lpd4' the Lindsay-Pilla-Basak method (default), 'gamma' for the
+        Satterthwaite-Welch method, 'hbe' for the Hall-Buckley-Eagleson method,
+        'chi2' for a normalized chi-squared statistic, 'perm' for permutation
+        testing (warning: this one is slow)
+
+    significance : str, optional (default: 'analytic')
+        Type of significance test to use.
+
+    **kwargs : 
+        Arguments passed on to parent class CondIndTest. 
+    """
+    def __init__(self,
+                num_f=25,
+                approx="lpd4",
+                significance='analytic',
+                transform='standardize',
+                **kwargs):
+
+        self.num_f = num_f
+        self.approx = approx
+
+        self.measure = 'rcot'
+        self.two_sided = False
+        self.residual_based = False
+        self.recycle_residuals = False
+
+        CondIndTest.__init__(self, significance=significance, **kwargs)
+
+        if self.verbosity > 0:
+            print("num_f = %s" % self.num_f)
+            print("approx = %s" % self.approx)
+            print("")
+
+    def get_dependence_measure(self, array, xyz):
+        """Returns RCOT estimate.
+
+        Parameters
+        ----------
+        array : array-like
+            data array with X, Y, Z in rows and observations in columns
+
+        xyz : array of ints
+            XYZ identifier array of shape (dim,).
+        
+        Returns
+        -------
+        val : float
+            RCOT estimate.
+        """
+
+        dim, T = array.shape
+
+        x = array[0]
+        y = array[1]
+        z = numpy.fastCopyAndTranspose(array[2:])
+
+        rcot = numpy.asarray(rpy2.robjects.r['RCIT'](x, y, z, 
+            corr=True, num_f=self.num_f, approx=self.approx))
+        
+        val = float(rcot[1])
+        self.pval = float(rcot[0])
+
+        return val
+
+
+    def get_analytic_significance(self, **args): 
+        """Returns analytic p-value from RCIT test statistic.
+        
+        Returns
+        -------
+        pval : float or numpy.nan
+            P-value.
+        """
+
+        return self.pval
+
+    def get_model_selection_criterion(self, j,
+                                      parents,
+                                      tau_max=0):
+        """Placeholder function, not available."""
+        raise ValueError("Model selection not implemented for %s"
+                         "" % self.measure)
+
+
 if __name__ == '__main__':
 
     # Quick test
@@ -2715,22 +2847,22 @@ if __name__ == '__main__':
     #     null_dist_filename='/home/jakobrunge/test/test.npz')
     # cond_ind_test.null_dist_filename = '/home/jakobrunge/test/test.npz'
 
-    cond_ind_test = CMIknn(
-        significance='shuffle_test',
-        sig_samples=1000,
-        knn=100,
-        transform='ranks',
-        shuffle_neighbors=5,
-        confidence='bootstrap', #'bootstrap',
-        conf_lev=0.9,
-        conf_samples=100,
-        conf_blocklength=None,
+    # cond_ind_test = CMIknn(
+    #     significance='shuffle_test',
+    #     sig_samples=1000,
+    #     knn=100,
+    #     transform='ranks',
+    #     shuffle_neighbors=5,
+    #     confidence='bootstrap', #'bootstrap',
+    #     conf_lev=0.9,
+    #     conf_samples=100,
+    #     conf_blocklength=None,
 
-        use_mask=False,
-        mask_type='y',
-        recycle_residuals=False,
-        verbosity=3,
-        )
+    #     use_mask=False,
+    #     mask_type='y',
+    #     recycle_residuals=False,
+    #     verbosity=3,
+    #     )
 
     # cond_ind_test = CMIsymb()
     #     significance='shuffle_test',
@@ -2745,6 +2877,21 @@ if __name__ == '__main__':
     #     mask_type='y',
     #     recycle_residuals=False,
     #     verbosity=3)
+
+
+    cond_ind_test = RCIT(
+        significance='analytic',
+        num_f=25,
+        confidence='bootstrap', #'bootstrap',
+        conf_lev=0.9,
+        conf_samples=100,
+        conf_blocklength=None,
+
+        use_mask=False,
+        mask_type='y',
+        recycle_residuals=False,
+        verbosity=3,
+        )
 
     if cond_ind_test.measure == 'cmi_symb':
         data = pp.quantile_bin_array(data, bins=6)

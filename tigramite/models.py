@@ -17,7 +17,7 @@ try:
     import sklearn
     import sklearn.linear_model
 except:
-    print("Could not import sklearn")
+    print("Could not import sklearn...")
 
 try:
     import networkx
