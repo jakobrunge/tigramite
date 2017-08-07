@@ -1,22 +1,14 @@
 from __future__ import print_function
 import numpy
-
-# Make Python see modules in parent package
-# import sys, os
-# sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from tigramite.independence_tests import ParCorr, GPACE, GPDC, CMIknn, CMIsymb, _construct_array
+from tigramite.independence_tests import ParCorr, GPDC, CMIknn, CMIsymb
+from tigramite.independence_tests import _construct_array
 import tigramite.data_processing as pp
-
 import nose
-# import unittest
 
-
-verbosity = 0
+VERBOSITY = 0
 
 def _par_corr_to_cmi(par_corr):
     """Transformation of partial correlation to CMI scale."""
-
     return -0.5 * numpy.log(1. - par_corr**2)
 
 #
@@ -103,7 +95,7 @@ class TestCondInd():  #unittest.TestCase):
             data=data,
             mask=data_mask,
             missing_flag=None,
-            mask_type=None, verbosity=verbosity)
+            mask_type=None, verbosity=VERBOSITY)
         print(res[0])
         numpy.testing.assert_almost_equal(res[0],
                                           numpy.array([[13, 14, 15],
@@ -120,7 +112,7 @@ class TestCondInd():  #unittest.TestCase):
             use_mask=True,
             data=data,
             mask=data_mask,
-            mask_type=['y'], verbosity=verbosity)
+            mask_type=['y'], verbosity=VERBOSITY)
         print(res[0])
 
         numpy.testing.assert_almost_equal(res[0],
@@ -139,7 +131,7 @@ class TestCondInd():  #unittest.TestCase):
             use_mask=True,
             data=data,
             mask=data_mask,
-            mask_type=['x', 'y', 'z'], verbosity=verbosity)
+            mask_type=['x', 'y', 'z'], verbosity=VERBOSITY)
         print(res[0])
 
         numpy.testing.assert_almost_equal(res[0],
@@ -183,7 +175,7 @@ class TestCondInd():  #unittest.TestCase):
             data=data,
             mask=data_mask,
             missing_flag=999,
-            mask_type=['y'], verbosity=verbosity)
+            mask_type=['y'], verbosity=VERBOSITY)
 
         # print(res[0])
         numpy.testing.assert_almost_equal(res[0],
