@@ -2713,11 +2713,11 @@
                          <span class="s2">&quot;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span><span class="p">)</span></div></div>
 
 
-<span class="k">class</span> <span class="nc">RCOT</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
+<div class="viewcode-block" id="RCOT"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.RCOT">[docs]</a><span class="k">class</span> <span class="nc">RCOT</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Randomized conditional Correlation Test.</span>
 
 <span class="sd">    Randomized conditional Correlation Test based on r-package ``rcit``. This </span>
-<span class="sd">    test is described in [4]_.</span>
+<span class="sd">    test is described in [5]_.</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
@@ -2729,7 +2729,7 @@
 <span class="sd">    than KCIT in the large sample size context. To use the analytical null</span>
 <span class="sd">    approximation the  sample size should be at least ~1000.</span>
 
-<span class="sd">    The method is fully described in [4]_ and the r-package documentation. The</span>
+<span class="sd">    The method is fully described in [5]_ and the r-package documentation. The</span>
 <span class="sd">    free parameters are the approximation of the partial cross-covariance matrix</span>
 <span class="sd">    and the number of random fourier features for the conditioning set.</span>
 
@@ -2738,7 +2738,7 @@
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
-<span class="sd">    .. [4] Eric V. Strobl, Kun Zhang, Shyam Visweswaran: </span>
+<span class="sd">    .. [5] Eric V. Strobl, Kun Zhang, Shyam Visweswaran: </span>
 <span class="sd">           Approximate Kernel-based Conditional Independence Tests for Fast Non-</span>
 <span class="sd">           Parametric Causal Discovery.  </span>
 <span class="sd">           https://arxiv.org/abs/1702.03877</span>
@@ -2785,7 +2785,7 @@
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;approx = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">approx</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">):</span>
+<div class="viewcode-block" id="RCOT.get_dependence_measure"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.RCOT.get_dependence_measure">[docs]</a>    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns RCOT estimate.</span>
 
 <span class="sd">        Parameters</span>
@@ -2814,10 +2814,10 @@
         <span class="n">val</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">rcot</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pval</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">rcot</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 
-        <span class="k">return</span> <span class="n">val</span>
+        <span class="k">return</span> <span class="n">val</span></div>
 
 
-    <span class="k">def</span> <span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">):</span> 
+<div class="viewcode-block" id="RCOT.get_analytic_significance"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.RCOT.get_analytic_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">):</span> 
         <span class="sd">&quot;&quot;&quot;Returns analytic p-value from RCIT test statistic.</span>
 <span class="sd">        </span>
 <span class="sd">        Returns</span>
@@ -2826,14 +2826,14 @@
 <span class="sd">            P-value.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pval</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pval</span></div>
 
-    <span class="k">def</span> <span class="nf">get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span>
+<div class="viewcode-block" id="RCOT.get_model_selection_criterion"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.RCOT.get_model_selection_criterion">[docs]</a>    <span class="k">def</span> <span class="nf">get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span>
                                       <span class="n">parents</span><span class="p">,</span>
                                       <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Placeholder function, not available.&quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Model selection not implemented for </span><span class="si">%s</span><span class="s2">&quot;</span>
-                         <span class="s2">&quot;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span><span class="p">)</span>
+                         <span class="s2">&quot;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span><span class="p">)</span></div></div>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>

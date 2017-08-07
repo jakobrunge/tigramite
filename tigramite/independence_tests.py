@@ -2653,7 +2653,7 @@ class RCOT(CondIndTest):
     r"""Randomized conditional Correlation Test.
 
     Randomized conditional Correlation Test based on r-package ``rcit``. This 
-    test is described in [4]_.
+    test is described in [5]_.
 
     Notes
     -----
@@ -2665,7 +2665,7 @@ class RCOT(CondIndTest):
     than KCIT in the large sample size context. To use the analytical null
     approximation the  sample size should be at least ~1000.
 
-    The method is fully described in [4]_ and the r-package documentation. The
+    The method is fully described in [5]_ and the r-package documentation. The
     free parameters are the approximation of the partial cross-covariance matrix
     and the number of random fourier features for the conditioning set.
 
@@ -2674,7 +2674,7 @@ class RCOT(CondIndTest):
 
     References
     ----------
-    .. [4] Eric V. Strobl, Kun Zhang, Shyam Visweswaran: 
+    .. [5] Eric V. Strobl, Kun Zhang, Shyam Visweswaran: 
            Approximate Kernel-based Conditional Independence Tests for Fast Non-
            Parametric Causal Discovery.  
            https://arxiv.org/abs/1702.03877

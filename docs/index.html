@@ -127,19 +127,22 @@ Physical Review Letters, 108(25), 258701.
 <tr class="row-even"><td><a class="reference internal" href="#tigramite.independence_tests.CMIsymb" title="tigramite.independence_tests.CMIsymb"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.independence_tests.CMIsymb</span></code></a>([...])</td>
 <td>Conditional mutual information test based on discrete estimator.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="#module-tigramite.data_processing" title="tigramite.data_processing"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.data_processing</span></code></a></td>
+<tr class="row-odd"><td><a class="reference internal" href="#tigramite.independence_tests.RCOT" title="tigramite.independence_tests.RCOT"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.independence_tests.RCOT</span></code></a>([num_f,&nbsp;...])</td>
+<td>Randomized conditional Correlation Test.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#module-tigramite.data_processing" title="tigramite.data_processing"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.data_processing</span></code></a></td>
 <td>Tigramite data processing functions.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="#tigramite.models.Models" title="tigramite.models.Models"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.models.Models</span></code></a>(dataframe,&nbsp;model[,&nbsp;...])</td>
+<tr class="row-odd"><td><a class="reference internal" href="#tigramite.models.Models" title="tigramite.models.Models"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.models.Models</span></code></a>(dataframe,&nbsp;model[,&nbsp;...])</td>
 <td>Base class for time series models.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="#tigramite.models.LinearMediation" title="tigramite.models.LinearMediation"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.models.LinearMediation</span></code></a>(dataframe)</td>
+<tr class="row-even"><td><a class="reference internal" href="#tigramite.models.LinearMediation" title="tigramite.models.LinearMediation"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.models.LinearMediation</span></code></a>(dataframe)</td>
 <td>Linear mediation analysis for time series models.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="#tigramite.models.Prediction" title="tigramite.models.Prediction"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.models.Prediction</span></code></a>(dataframe,&nbsp;...)</td>
+<tr class="row-odd"><td><a class="reference internal" href="#tigramite.models.Prediction" title="tigramite.models.Prediction"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.models.Prediction</span></code></a>(dataframe,&nbsp;...)</td>
 <td>Prediction class for time series models.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="#module-tigramite.plotting" title="tigramite.plotting"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.plotting</span></code></a></td>
+<tr class="row-even"><td><a class="reference internal" href="#module-tigramite.plotting" title="tigramite.plotting"><code class="xref py py-obj docutils literal"><span class="pre">tigramite.plotting</span></code></a></td>
 <td>Tigramite plotting package.</td>
 </tr>
 </tbody>
@@ -226,7 +229,7 @@ criteria.</p>
 <table class="docutils footnote" frame="void" id="id5" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[1]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>, <a class="fn-backref" href="#id3">3</a>, <a class="fn-backref" href="#id4">4</a>, <a class="fn-backref" href="#id6">5</a>, <a class="fn-backref" href="#id7">6</a>, <a class="fn-backref" href="#id8">7</a>, <a class="fn-backref" href="#id9">8</a>, <a class="fn-backref" href="#id10">9</a>, <a class="fn-backref" href="#id11">10</a>, <a class="fn-backref" href="#id12">11</a>, <a class="fn-backref" href="#id13">12</a>, <a class="fn-backref" href="#id14">13</a>, <a class="fn-backref" href="#id18">14</a>, <a class="fn-backref" href="#id21">15</a>, <a class="fn-backref" href="#id22">16</a>, <a class="fn-backref" href="#id23">17</a>, <a class="fn-backref" href="#id27">18</a>, <a class="fn-backref" href="#id28">19</a>, <a class="fn-backref" href="#id30">20</a>, <a class="fn-backref" href="#id31">21</a>)</em> J. Runge, D. Sejdinovic, S. Flaxman (2017): Detecting causal
+<tr><td class="label">[1]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>, <a class="fn-backref" href="#id3">3</a>, <a class="fn-backref" href="#id4">4</a>, <a class="fn-backref" href="#id6">5</a>, <a class="fn-backref" href="#id7">6</a>, <a class="fn-backref" href="#id8">7</a>, <a class="fn-backref" href="#id9">8</a>, <a class="fn-backref" href="#id10">9</a>, <a class="fn-backref" href="#id11">10</a>, <a class="fn-backref" href="#id12">11</a>, <a class="fn-backref" href="#id13">12</a>, <a class="fn-backref" href="#id14">13</a>, <a class="fn-backref" href="#id18">14</a>, <a class="fn-backref" href="#id24">15</a>, <a class="fn-backref" href="#id25">16</a>, <a class="fn-backref" href="#id26">17</a>, <a class="fn-backref" href="#id30">18</a>, <a class="fn-backref" href="#id31">19</a>, <a class="fn-backref" href="#id33">20</a>, <a class="fn-backref" href="#id34">21</a>)</em> J. Runge, D. Sejdinovic, S. Flaxman (2017): Detecting causal
 associations in large nonlinear time series datasets,
 <a class="reference external" href="https://arxiv.org/abs/1702.07007">https://arxiv.org/abs/1702.07007</a></td></tr>
 </tbody>
@@ -1563,6 +1566,102 @@ in data_processing or use the CMIknn class.</p>
 
 </dd></dl>
 
+<dl class="class">
+<dt id="tigramite.independence_tests.RCOT">
+<em class="property">class </em><code class="descclassname">tigramite.independence_tests.</code><code class="descname">RCOT</code><span class="sig-paren">(</span><em>num_f=25</em>, <em>approx='lpd4'</em>, <em>significance='analytic'</em>, <em>transform='standardize'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#RCOT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.RCOT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Randomized conditional Correlation Test.</p>
+<p>Randomized conditional Correlation Test based on r-package <code class="docutils literal"><span class="pre">rcit</span></code>. This
+test is described in <a class="footnote-reference" href="#id23" id="id21">[5]</a>.</p>
+<p class="rubric">Notes</p>
+<p>RCOT is a fast variant of the Kernel Conditional Independence Test (KCIT)
+utilizing random Fourier features. Kernel tests measure conditional
+independence in  the fully non-parametric setting. In practice, RCOT tests
+scale linearly with sample size and return accurate p-values much faster
+than KCIT in the large sample size context. To use the analytical null
+approximation the  sample size should be at least ~1000.</p>
+<p>The method is fully described in <a class="footnote-reference" href="#id23" id="id22">[5]</a> and the r-package documentation. The
+free parameters are the approximation of the partial cross-covariance matrix
+and the number of random fourier features for the conditioning set.</p>
+<p>This class requires the rpy package and the prior installation of <code class="docutils literal"><span class="pre">rcit</span></code>
+from <a class="reference external" href="https://github.com/ericstrobl/RCIT">https://github.com/ericstrobl/RCIT</a>.</p>
+<p class="rubric">References</p>
+<table class="docutils footnote" frame="void" id="id23" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[5]</td><td><em>(<a class="fn-backref" href="#id21">1</a>, <a class="fn-backref" href="#id22">2</a>)</em> Eric V. Strobl, Kun Zhang, Shyam Visweswaran:
+Approximate Kernel-based Conditional Independence Tests for Fast Non-
+Parametric Causal Discovery.
+<a class="reference external" href="https://arxiv.org/abs/1702.03877">https://arxiv.org/abs/1702.03877</a></td></tr>
+</tbody>
+</table>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>num_f</strong> (<em>int</em><em>, </em><em>optional</em>) &#8211; Number of random fourier features for conditioning set. More features
+better approximate highly stuructured joint densities, but take more
+computational time.</li>
+<li><strong>approx</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; Which approximation of the partial cross-covariance matrix, options:
+&#8216;lpd4&#8217; the Lindsay-Pilla-Basak method (default), &#8216;gamma&#8217; for the
+Satterthwaite-Welch method, &#8216;hbe&#8217; for the Hall-Buckley-Eagleson method,
+&#8216;chi2&#8217; for a normalized chi-squared statistic, &#8216;perm&#8217; for permutation
+testing (warning: this one is slow)</li>
+<li><strong>significance</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'analytic'</em><em>)</em>) &#8211; Type of significance test to use.</li>
+<li><strong>**kwargs</strong> &#8211; Arguments passed on to parent class CondIndTest.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="tigramite.independence_tests.RCOT.get_analytic_significance">
+<code class="descname">get_analytic_significance</code><span class="sig-paren">(</span><em>**args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#RCOT.get_analytic_significance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.RCOT.get_analytic_significance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns analytic p-value from RCIT test statistic.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>pval</strong> &#8211; P-value.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">float or numpy.nan</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tigramite.independence_tests.RCOT.get_dependence_measure">
+<code class="descname">get_dependence_measure</code><span class="sig-paren">(</span><em>array</em>, <em>xyz</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#RCOT.get_dependence_measure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.RCOT.get_dependence_measure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns RCOT estimate.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>array</strong> (<em>array-like</em>) &#8211; data array with X, Y, Z in rows and observations in columns</li>
+<li><strong>xyz</strong> (<em>array of ints</em>) &#8211; XYZ identifier array of shape (dim,).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>val</strong> &#8211; RCOT estimate.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tigramite.independence_tests.RCOT.get_model_selection_criterion">
+<code class="descname">get_model_selection_criterion</code><span class="sig-paren">(</span><em>j</em>, <em>parents</em>, <em>tau_max=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#RCOT.get_model_selection_criterion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.RCOT.get_model_selection_criterion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Placeholder function, not available.</p>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 <div class="section" id="module-tigramite.data_processing">
 <span id="tigramite-data-processing-data-processing-functions"></span><h1><a class="reference internal" href="#module-tigramite.data_processing" title="tigramite.data_processing"><code class="xref py py-mod docutils literal"><span class="pre">tigramite.data_processing</span></code></a>: Data processing functions<a class="headerlink" href="#module-tigramite.data_processing" title="Permalink to this headline">¶</a></h1>
@@ -1602,7 +1701,7 @@ in data_processing or use the CMIknn class.</p>
 <dd><p><em>number, optional (default: None)</em> &#8211; Flag for missing values in dataframe. Dismisses all time slices of
 samples where missing values occur in any variable and also flags
 samples for all lags up to 2*tau_max. This avoids biases, see
-section on masking in Supplement of <a class="footnote-reference" href="#id5" id="id21">[1]</a>.</p>
+section on masking in Supplement of <a class="footnote-reference" href="#id5" id="id24">[1]</a>.</p>
 </dd></dl>
 
 </dd></dl>
@@ -1834,11 +1933,11 @@ fitted parameters are stored.</li>
 <li><strong>mask_type</strong> (<em>{'y'</em><em>,</em><em>'x'</em><em>,</em><em>'z'</em><em>,</em><em>'xy'</em><em>,</em><em>'xz'</em><em>,</em><em>'yz'</em><em>,</em><em>'xyz'}</em>) &#8211; Masking mode: Indicators for which variables in the dependence measure
 I(X; Y | Z) the samples should be masked. If None, &#8216;y&#8217; is used, which
 excludes all time slices containing masked samples in Y. Explained in
-<a class="footnote-reference" href="#id5" id="id22">[1]</a>.</li>
+<a class="footnote-reference" href="#id5" id="id25">[1]</a>.</li>
 <li><strong>missing_flag</strong> (<em>number</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Flag for missing values. Dismisses all time slices of samples where
 missing values occur in any variable and also flags samples for all lags
 up to 2*tau_max. This avoids biases, see section on masking in
-Supplement of <a class="footnote-reference" href="#id5" id="id23">[1]</a>.</li>
+Supplement of <a class="footnote-reference" href="#id5" id="id26">[1]</a>.</li>
 <li><strong>verbosity</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) &#8211; Level of verbosity.</li>
 </ul>
 </td>
@@ -1910,10 +2009,10 @@ transformation parameters.</p>
 <dd><p>Linear mediation analysis for time series models.</p>
 <p>Fits linear model to parents and provides functions to return measures such
 as causal effect, mediated causal effect, average causal effect, etc. as
-described in <a class="footnote-reference" href="#id26" id="id24">[4]</a>.</p>
+described in <a class="footnote-reference" href="#id29" id="id27">[4]</a>.</p>
 <p class="rubric">Notes</p>
 <p>This class implements the following causal mediation measures introduced in
-<a class="footnote-reference" href="#id26" id="id25">[4]</a>:</p>
+<a class="footnote-reference" href="#id29" id="id28">[4]</a>:</p>
 <blockquote>
 <div><ul class="simple">
 <li>causal effect (CE)</li>
@@ -1954,10 +2053,10 @@ has CE 0.5 on <img class="math" src="_images/math/0062c26909b3e07ee8f5a6285b2563
 </pre></div>
 </div>
 <p class="rubric">References</p>
-<table class="docutils footnote" frame="void" id="id26" rules="none">
+<table class="docutils footnote" frame="void" id="id29" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[4]</td><td><em>(<a class="fn-backref" href="#id24">1</a>, <a class="fn-backref" href="#id25">2</a>, <a class="fn-backref" href="#id29">3</a>)</em> J. Runge et al. (2015): Identifying causal gateways and mediators in
+<tr><td class="label">[4]</td><td><em>(<a class="fn-backref" href="#id27">1</a>, <a class="fn-backref" href="#id28">2</a>, <a class="fn-backref" href="#id32">3</a>)</em> J. Runge et al. (2015): Identifying causal gateways and mediators in
 complex spatio-temporal systems.
 Nature Communications, 6, 8502. <a class="reference external" href="http://doi.org/10.1038/ncomms9502">http://doi.org/10.1038/ncomms9502</a></td></tr>
 </tbody>
@@ -1978,11 +2077,11 @@ fitted parameters are stored.</li>
 <li><strong>mask_type</strong> (<em>{'y'</em><em>,</em><em>'x'</em><em>,</em><em>'z'</em><em>,</em><em>'xy'</em><em>,</em><em>'xz'</em><em>,</em><em>'yz'</em><em>,</em><em>'xyz'}</em>) &#8211; Masking mode: Indicators for which variables in the dependence measure
 I(X; Y | Z) the samples should be masked. If None, &#8216;y&#8217; is used, which
 excludes all time slices containing masked samples in Y. Explained in
-<a class="footnote-reference" href="#id5" id="id27">[1]</a>.</li>
+<a class="footnote-reference" href="#id5" id="id30">[1]</a>.</li>
 <li><strong>missing_flag</strong> (<em>number</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Flag for missing values. Dismisses all time slices of samples where
 missing values occur in any variable and also flags samples for all lags
 up to 2*tau_max. This avoids biases, see section on masking in
-Supplement of <a class="footnote-reference" href="#id5" id="id28">[1]</a>.</li>
+Supplement of <a class="footnote-reference" href="#id5" id="id31">[1]</a>.</li>
 <li><strong>verbosity</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) &#8211; Level of verbosity.</li>
 </ul>
 </td>
@@ -1995,7 +2094,7 @@ Supplement of <a class="footnote-reference" href="#id5" id="id28">[1]</a>.</li>
 <dd><p>Fit linear time series model.</p>
 <p>Fits a sklearn.linear_model.LinearRegression model to the parents of
 each variable and computes the coefficient matrices <img class="math" src="_images/math/e486de19dbb61c9a63584f6e4ddd6e92ef03d665.png" alt="\Phi"/> and
-<img class="math" src="_images/math/334b0728f25dd84a28e483181038a307ea6e483e.png" alt="\Psi"/> as described in <a class="footnote-reference" href="#id26" id="id29">[4]</a>.</p>
+<img class="math" src="_images/math/334b0728f25dd84a28e483181038a307ea6e483e.png" alt="\Psi"/> as described in <a class="footnote-reference" href="#id29" id="id32">[4]</a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -2416,7 +2515,7 @@ fitted parameters are stored.</li>
 <li><strong>missing_flag</strong> (<em>number</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Flag for missing values. Dismisses all time slices of samples where
 missing values occur in any variable and also flags samples for all lags
 up to 2*tau_max. This avoids biases, see section on masking in
-Supplement of <a class="footnote-reference" href="#id5" id="id30">[1]</a>.</li>
+Supplement of <a class="footnote-reference" href="#id5" id="id33">[1]</a>.</li>
 <li><strong>verbosity</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) &#8211; Level of verbosity.</li>
 </ul>
 </td>
@@ -2810,7 +2909,7 @@ is used.</li>
 <li><strong>missing_flag</strong> (<em>number</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) &#8211; Flag for missing values in dataframe. Dismisses all time slices of
 samples where missing values occur in any variable and also flags
 samples for all lags up to 2*tau_max. This avoids biases, see section on
-masking in Supplement of <a class="footnote-reference" href="#id5" id="id31">[1]</a>.</li>
+masking in Supplement of <a class="footnote-reference" href="#id5" id="id34">[1]</a>.</li>
 <li><strong>grey_masked_samples</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) &#8211; Whether to mark masked samples by grey fills (&#8216;fill&#8217;) or grey data (&#8216;data&#8217;).</li>
 <li><strong>data_linewidth</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1.</em><em>)</em>) &#8211; Linewidth.</li>
 <li><strong>skip_ticks_data_x</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) &#8211; Skip every other tickmark.</li>
