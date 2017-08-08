@@ -1,10 +1,9 @@
 from __future__ import print_function
+import unittest
 from collections import Counter
 import numpy
-import nose
 from nose.tools import assert_equal
 
-import tigramite
 from tigramite.pcmci import PCMCI
 from tigramite.independence_tests import ParCorr #, GPACE
 import tigramite.data_processing as pp
@@ -50,26 +49,25 @@ verbosity = 0
 #
 #  Start
 #
-class TestPCMCI():  #unittest.TestCase):
+class TestPCMCI(unittest.TestCase):
     # def __init__(self):
     #     pass
 
     def setUp(self):
-
-       auto = .5
-       coeff = 0.6
-       T = 1000
-       numpy.random.seed(42)
-       # True graph
-       links_coeffs = {0: [((0, -1), auto)],
+        auto = .5
+        coeff = 0.6
+        T = 1000
+        numpy.random.seed(42)
+        # True graph
+        links_coeffs = {0: [((0, -1), auto)],
                        1: [((1, -1), auto), ((0, -1), coeff)],
                        2: [((2, -1), auto), ((1, -1), coeff)]
                        }
 
-       self.data, self.true_parents_coeffs = pp.var_process(links_coeffs, T=T)
-       T, N = self.data.shape 
+        self.data, self.true_parents_coeffs = pp.var_process(links_coeffs, T=T)
+        T, N = self.data.shape 
 
-       self.true_parents = _get_parent_graph(self.true_parents_coeffs)
+        self.true_parents = _get_parent_graph(self.true_parents_coeffs)
 
     def test_pcmci(self):
         # Setting up strict test level
@@ -281,20 +279,3 @@ class TestPCMCI():  #unittest.TestCase):
         # print(parents)
         # print(_get_parent_graph(true_parents))
         assert_graphs_equal(parents, self.true_parents)
-
-
-
-if __name__ == "__main__":
-    # unittest.main()
-
-    ## Individual tests
-    # test_pcmci = TestPCMCI()
-    # test_pcmci.setUp()
-    # test_pcmci.test_pc_stable()
-    # test_pcmci.test_pcmci()
-    nose.main(module=TestPCMCI())
-    # nose.run()  #argv=[sys.argv[0],
-    #                         test_tigramite_pcmci,
-    #                         '-v'])
-
-    # unittest.main()

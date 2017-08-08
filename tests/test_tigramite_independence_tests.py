@@ -1,4 +1,5 @@
 from __future__ import print_function
+import unittest
 import numpy
 from tigramite.independence_tests import ParCorr, GPDC, CMIknn, CMIsymb
 from tigramite.independence_tests import _construct_array
@@ -14,7 +15,7 @@ def _par_corr_to_cmi(par_corr):
 #
 #  Start
 #
-class TestCondInd():  #unittest.TestCase):
+class TestCondInd(unittest.TestCase):
     # def __init__(self):
     #     pass
 
@@ -343,7 +344,7 @@ class TestCondInd():  #unittest.TestCase):
         numpy.random.seed(42)
         data, true_parents_neighbors = pp.var_process(
             links_coeffs,
-                                                                      use='inv_inno_cov', T=T)
+            use='inv_inno_cov', T=T)
         dataframe = pp.DataFrame(data)
         ci_test.set_dataframe(dataframe)
         # ci_test.set_tau_max(1)
