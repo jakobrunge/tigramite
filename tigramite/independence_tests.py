@@ -2670,6 +2670,8 @@ class RCOT(CondIndTest):
     The method is fully described in [5]_ and the r-package documentation. The
     free parameters are the approximation of the partial kernel cross-covariance
     matrix and the number of random fourier features for the conditioning set.
+    One caveat is that RCOT is, as the name suggests, based on random fourier
+    features. To get reproducable results, you should fix the seed (default).
 
     This class requires the rpy package and the prior installation of ``rcit``
     from https://github.com/ericstrobl/RCIT.
@@ -2693,7 +2695,11 @@ class RCOT(CondIndTest):
         'lpd4' the Lindsay-Pilla-Basak method (default), 'gamma' for the
         Satterthwaite-Welch method, 'hbe' for the Hall-Buckley-Eagleson method,
         'chi2' for a normalized chi-squared statistic, 'perm' for permutation
-        testing (warning: this one is slow)
+        testing (warning: this one is slow).
+
+    seed : int or None, optional
+        Which random fourier feature seed to use. If None, you won't get 
+        reproducable results.
 
     significance : str, optional (default: 'analytic')
         Type of significance test to use.
@@ -2704,12 +2710,13 @@ class RCOT(CondIndTest):
     def __init__(self,
                 num_f=25,
                 approx="lpd4",
+                seed=42,
                 significance='analytic',
-                transform='standardize',
                 **kwargs):
 
         self.num_f = num_f
         self.approx = approx
+        self.seed = seed
 
         self.measure = 'rcot'
         self.two_sided = False
@@ -2747,7 +2754,10 @@ class RCOT(CondIndTest):
         z = numpy.fastCopyAndTranspose(array[2:])
 
         rcot = numpy.asarray(rpy2.robjects.r['RCIT'](x, y, z, 
-            corr=True, num_f=self.num_f, approx=self.approx))
+            corr=True, 
+            num_f=self.num_f, 
+            approx=self.approx,
+            seed=self.seed))
         
         val = float(rcot[1])
         self.pval = float(rcot[0])
@@ -2765,6 +2775,47 @@ class RCOT(CondIndTest):
         """
 
         return self.pval
+
+    def get_shuffle_significance(self, array, xyz, value, 
+        return_null_dist=False):
+        """Returns p-value for shuffle significance test.
+
+        For residual-based test statistics only the residuals are shuffled.
+
+        Parameters
+        ----------
+        array : array-like
+            data array with X, Y, Z in rows and observations in columns
+
+        xyz : array of ints
+            XYZ identifier array of shape (dim,).
+
+        value : number
+            Value of test statistic for unshuffled estimate.
+        
+        Returns
+        -------
+        pval : float
+            p-value
+        """
+
+        null_dist = self._get_shuffle_dist(array, xyz,
+                               self.get_dependence_measure,
+                               sig_samples=self.sig_samples, 
+                               sig_blocklength=self.sig_blocklength,
+                               verbosity=self.verbosity)
+
+        pval = (null_dist >= value).mean()
+        
+        if return_null_dist:
+            return pval, null_dist
+        else:
+            return pval
+
+    def get_analytic_confidence(self, value, df, conf_lev):
+        """Placeholder function, not available."""
+        raise ValueError("Analytic confidence not implemented for %s"
+                         "" % self.measure)
 
     def get_model_selection_criterion(self, j,
                                       parents,
@@ -2881,10 +2932,10 @@ if __name__ == '__main__':
     #     verbosity=3)
 
 
-    cond_ind_test = RCIT(
+    cond_ind_test = RCOT(
         significance='analytic',
         num_f=25,
-        confidence='bootstrap', #'bootstrap',
+        confidence=False, #'bootstrap', #'bootstrap',
         conf_lev=0.9,
         conf_samples=100,
         conf_blocklength=None,

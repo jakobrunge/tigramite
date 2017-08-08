@@ -2734,6 +2734,8 @@
 <span class="sd">    The method is fully described in [5]_ and the r-package documentation. The</span>
 <span class="sd">    free parameters are the approximation of the partial kernel cross-covariance</span>
 <span class="sd">    matrix and the number of random fourier features for the conditioning set.</span>
+<span class="sd">    One caveat is that RCOT is, as the name suggests, based on random fourier</span>
+<span class="sd">    features. To get reproducable results, you should fix the seed (default).</span>
 
 <span class="sd">    This class requires the rpy package and the prior installation of ``rcit``</span>
 <span class="sd">    from https://github.com/ericstrobl/RCIT.</span>
@@ -2757,7 +2759,11 @@
 <span class="sd">        &#39;lpd4&#39; the Lindsay-Pilla-Basak method (default), &#39;gamma&#39; for the</span>
 <span class="sd">        Satterthwaite-Welch method, &#39;hbe&#39; for the Hall-Buckley-Eagleson method,</span>
 <span class="sd">        &#39;chi2&#39; for a normalized chi-squared statistic, &#39;perm&#39; for permutation</span>
-<span class="sd">        testing (warning: this one is slow)</span>
+<span class="sd">        testing (warning: this one is slow).</span>
+
+<span class="sd">    seed : int or None, optional</span>
+<span class="sd">        Which random fourier feature seed to use. If None, you won&#39;t get </span>
+<span class="sd">        reproducable results.</span>
 
 <span class="sd">    significance : str, optional (default: &#39;analytic&#39;)</span>
 <span class="sd">        Type of significance test to use.</span>
@@ -2768,12 +2774,13 @@
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                 <span class="n">num_f</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span>
                 <span class="n">approx</span><span class="o">=</span><span class="s2">&quot;lpd4&quot;</span><span class="p">,</span>
+                <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
                 <span class="n">significance</span><span class="o">=</span><span class="s1">&#39;analytic&#39;</span><span class="p">,</span>
-                <span class="n">transform</span><span class="o">=</span><span class="s1">&#39;standardize&#39;</span><span class="p">,</span>
                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">num_f</span> <span class="o">=</span> <span class="n">num_f</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">approx</span> <span class="o">=</span> <span class="n">approx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="n">seed</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">measure</span> <span class="o">=</span> <span class="s1">&#39;rcot&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">two_sided</span> <span class="o">=</span> <span class="kc">False</span>
@@ -2811,7 +2818,10 @@
         <span class="n">z</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">fastCopyAndTranspose</span><span class="p">(</span><span class="n">array</span><span class="p">[</span><span class="mi">2</span><span class="p">:])</span>
 
         <span class="n">rcot</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">rpy2</span><span class="o">.</span><span class="n">robjects</span><span class="o">.</span><span class="n">r</span><span class="p">[</span><span class="s1">&#39;RCIT&#39;</span><span class="p">](</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> 
-            <span class="n">corr</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">num_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_f</span><span class="p">,</span> <span class="n">approx</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">approx</span><span class="p">))</span>
+            <span class="n">corr</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+            <span class="n">num_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_f</span><span class="p">,</span> 
+            <span class="n">approx</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">approx</span><span class="p">,</span>
+            <span class="n">seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">))</span>
         
         <span class="n">val</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">rcot</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pval</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">rcot</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
@@ -2829,6 +2839,47 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pval</span></div>
+
+<div class="viewcode-block" id="RCOT.get_shuffle_significance"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.RCOT.get_shuffle_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_shuffle_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> 
+        <span class="n">return_null_dist</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns p-value for shuffle significance test.</span>
+
+<span class="sd">        For residual-based test statistics only the residuals are shuffled.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        array : array-like</span>
+<span class="sd">            data array with X, Y, Z in rows and observations in columns</span>
+
+<span class="sd">        xyz : array of ints</span>
+<span class="sd">            XYZ identifier array of shape (dim,).</span>
+
+<span class="sd">        value : number</span>
+<span class="sd">            Value of test statistic for unshuffled estimate.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pval : float</span>
+<span class="sd">            p-value</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">null_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_shuffle_dist</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">,</span>
+                               <span class="n">sig_samples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sig_samples</span><span class="p">,</span> 
+                               <span class="n">sig_blocklength</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sig_blocklength</span><span class="p">,</span>
+                               <span class="n">verbosity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
+
+        <span class="n">pval</span> <span class="o">=</span> <span class="p">(</span><span class="n">null_dist</span> <span class="o">&gt;=</span> <span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="n">return_null_dist</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pval</span><span class="p">,</span> <span class="n">null_dist</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pval</span></div>
+
+<div class="viewcode-block" id="RCOT.get_analytic_confidence"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.RCOT.get_analytic_confidence">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">conf_lev</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Placeholder function, not available.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Analytic confidence not implemented for </span><span class="si">%s</span><span class="s2">&quot;</span>
+                         <span class="s2">&quot;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="RCOT.get_model_selection_criterion"><a class="viewcode-back" href="../../index.html#tigramite.independence_tests.RCOT.get_model_selection_criterion">[docs]</a>    <span class="k">def</span> <span class="nf">get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span>
                                       <span class="n">parents</span><span class="p">,</span>
@@ -2945,10 +2996,10 @@
     <span class="c1">#     verbosity=3)</span>
 
 
-    <span class="n">cond_ind_test</span> <span class="o">=</span> <span class="n">RCIT</span><span class="p">(</span>
+    <span class="n">cond_ind_test</span> <span class="o">=</span> <span class="n">RCOT</span><span class="p">(</span>
         <span class="n">significance</span><span class="o">=</span><span class="s1">&#39;analytic&#39;</span><span class="p">,</span>
         <span class="n">num_f</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span>
-        <span class="n">confidence</span><span class="o">=</span><span class="s1">&#39;bootstrap&#39;</span><span class="p">,</span> <span class="c1">#&#39;bootstrap&#39;,</span>
+        <span class="n">confidence</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="c1">#&#39;bootstrap&#39;, #&#39;bootstrap&#39;,</span>
         <span class="n">conf_lev</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
         <span class="n">conf_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
         <span class="n">conf_blocklength</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>

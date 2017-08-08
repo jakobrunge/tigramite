@@ -1568,7 +1568,7 @@ in data_processing or use the CMIknn class.</p>
 
 <dl class="class">
 <dt id="tigramite.independence_tests.RCOT">
-<em class="property">class </em><code class="descclassname">tigramite.independence_tests.</code><code class="descname">RCOT</code><span class="sig-paren">(</span><em>num_f=25</em>, <em>approx='lpd4'</em>, <em>significance='analytic'</em>, <em>transform='standardize'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#RCOT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.RCOT" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">tigramite.independence_tests.</code><code class="descname">RCOT</code><span class="sig-paren">(</span><em>num_f=25</em>, <em>approx='lpd4'</em>, <em>seed=42</em>, <em>significance='analytic'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#RCOT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.RCOT" title="Permalink to this definition">¶</a></dt>
 <dd><p>Randomized Conditional Correlation Test.</p>
 <p>Tests conditional independence in the fully non-parametric setting based on
 Kernel measures. For not too small sample sizes, the test can utilize an
@@ -1583,7 +1583,9 @@ than KCIT in the large sample size context. To use the analytical null
 approximation, the sample size should be at least ~1000.</p>
 <p>The method is fully described in <a class="footnote-reference" href="#id23" id="id22">[5]</a> and the r-package documentation. The
 free parameters are the approximation of the partial kernel cross-covariance
-matrix and the number of random fourier features for the conditioning set.</p>
+matrix and the number of random fourier features for the conditioning set.
+One caveat is that RCOT is, as the name suggests, based on random fourier
+features. To get reproducable results, you should fix the seed (default).</p>
 <p>This class requires the rpy package and the prior installation of <code class="docutils literal"><span class="pre">rcit</span></code>
 from <a class="reference external" href="https://github.com/ericstrobl/RCIT">https://github.com/ericstrobl/RCIT</a>.</p>
 <p class="rubric">References</p>
@@ -1608,7 +1610,9 @@ computational time.</li>
 &#8216;lpd4&#8217; the Lindsay-Pilla-Basak method (default), &#8216;gamma&#8217; for the
 Satterthwaite-Welch method, &#8216;hbe&#8217; for the Hall-Buckley-Eagleson method,
 &#8216;chi2&#8217; for a normalized chi-squared statistic, &#8216;perm&#8217; for permutation
-testing (warning: this one is slow)</li>
+testing (warning: this one is slow).</li>
+<li><strong>seed</strong> (<em>int</em><em> or </em><em>None</em><em>, </em><em>optional</em>) &#8211; Which random fourier feature seed to use. If None, you won&#8217;t get
+reproducable results.</li>
 <li><strong>significance</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'analytic'</em><em>)</em>) &#8211; Type of significance test to use.</li>
 <li><strong>**kwargs</strong> &#8211; Arguments passed on to parent class CondIndTest.</li>
 </ul>
@@ -1616,6 +1620,12 @@ testing (warning: this one is slow)</li>
 </tr>
 </tbody>
 </table>
+<dl class="method">
+<dt id="tigramite.independence_tests.RCOT.get_analytic_confidence">
+<code class="descname">get_analytic_confidence</code><span class="sig-paren">(</span><em>value</em>, <em>df</em>, <em>conf_lev</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#RCOT.get_analytic_confidence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.RCOT.get_analytic_confidence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Placeholder function, not available.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="tigramite.independence_tests.RCOT.get_analytic_significance">
 <code class="descname">get_analytic_significance</code><span class="sig-paren">(</span><em>**args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#RCOT.get_analytic_significance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.RCOT.get_analytic_significance" title="Permalink to this definition">¶</a></dt>
@@ -1660,6 +1670,32 @@ testing (warning: this one is slow)</li>
 <dt id="tigramite.independence_tests.RCOT.get_model_selection_criterion">
 <code class="descname">get_model_selection_criterion</code><span class="sig-paren">(</span><em>j</em>, <em>parents</em>, <em>tau_max=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#RCOT.get_model_selection_criterion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.RCOT.get_model_selection_criterion" title="Permalink to this definition">¶</a></dt>
 <dd><p>Placeholder function, not available.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tigramite.independence_tests.RCOT.get_shuffle_significance">
+<code class="descname">get_shuffle_significance</code><span class="sig-paren">(</span><em>array</em>, <em>xyz</em>, <em>value</em>, <em>return_null_dist=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests.html#RCOT.get_shuffle_significance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.RCOT.get_shuffle_significance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns p-value for shuffle significance test.</p>
+<p>For residual-based test statistics only the residuals are shuffled.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>array</strong> (<em>array-like</em>) &#8211; data array with X, Y, Z in rows and observations in columns</li>
+<li><strong>xyz</strong> (<em>array of ints</em>) &#8211; XYZ identifier array of shape (dim,).</li>
+<li><strong>value</strong> (<em>number</em>) &#8211; Value of test statistic for unshuffled estimate.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>pval</strong> &#8211; p-value</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
