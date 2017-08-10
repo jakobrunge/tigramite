@@ -49,7 +49,7 @@ def coupled_exp_decay_process(decoupled_exp_decay_process):
     expect = np.hstack([expect, -expect])
     # Create reflected, decoupled nodes
     n_nodes = len(coefs)
-    for key in coefs.keys():
+    for key in iter(coefs.keys()):
         # Grab the delay and coefficient
         delay  = coefs[key][0][0][1]
         a_coef = coefs[key][0][1]
