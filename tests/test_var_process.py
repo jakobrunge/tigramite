@@ -1,6 +1,7 @@
 """
 Testing var_process using exponential decay examples.
 """
+#TODO add testing of random variables
 from __future__ import print_function
 import pytest
 import numpy as np
@@ -17,8 +18,8 @@ def gen_decay(init_val, decay_const, n_times, delay):
     return init_arr
 
 @pytest.fixture(params=[
-    #Generates <dim> decoupled exponential decays. Decay starts from initial 
-    # value <init> with decay constant <decay> appreciating every unit of time 
+    #Generates <dim> decoupled exponential decays. Decay starts from initial
+    # value <init> with decay constant <decay> appreciating every unit of time
     # for a total of <n_times>.  The value at time <t> is taken as the:
     #     [value at (<t> - <delay>)]*<decay>
     #Define parameters to use for exponential decay cases.
@@ -44,8 +45,8 @@ def decoupled_exp_decay_process(request):
     return name, init_vals, coefs, expect
 
 @pytest.fixture()
-# Couples all the decays by creating negative versions of each variable, then 
-# summing all variables to create a variable that is always zero.  
+# Couples all the decays by creating negative versions of each variable, then
+# summing all variables to create a variable that is always zero.
 def coupled_exp_decay_process(decoupled_exp_decay_process):
     # Get the decoupled version
     name, init_vals, coefs, expect = decoupled_exp_decay_process
@@ -70,7 +71,7 @@ def coupled_exp_decay_process(decoupled_exp_decay_process):
     init_vals = np.vstack([init_vals, np.sum(init_vals, axis=0)])
     # Sum all expected values to get the expected value for the last, coupled
     # node
-    expect = np.hstack([expect, np.sum(expect, axis=-1).reshape(-1,1)])
+    expect = np.hstack([expect, np.sum(expect, axis=-1).reshape(-1, 1)])
     return "Coupled "+name, init_vals, coefs, expect
 
 def gen_process(a_process):
@@ -78,12 +79,12 @@ def gen_process(a_process):
     Calls var_process for the process fixtures
     """
     # Get the initial values and setup for the decay process
-    name, init_vals, coefs, expect = a_process
+    _, init_vals, coefs, expect = a_process
     # Deducte the max time from the expected answer shape
     max_time = expect.shape[0]
     # Generate the data
     data, true_parents_neighbors = pp.var_process(coefs,
-                                                  T=expect.shape[0],
+                                                  T=max_time,
                                                   initial_values=init_vals,
                                                   use="no_inno")
     return data, true_parents_neighbors
