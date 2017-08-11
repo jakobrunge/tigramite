@@ -1,7 +1,6 @@
 """
-Testing var_process using exponential decay examples without random noise
+Testing var_process using exponential decay examples.
 """
-# TODO more documenting
 from __future__ import print_function
 import pytest
 import numpy as np
@@ -18,7 +17,11 @@ def gen_decay(init_val, decay_const, n_times, delay):
     return init_arr
 
 @pytest.fixture(params=[
-    #Define parameters to use for exponential decay cases
+    #Generates <dim> decoupled exponential decays. Decay starts from initial 
+    # value <init> with decay constant <decay> appreciating every unit of time 
+    # for a total of <n_times>.  The value at time <t> is taken as the:
+    #     [value at (<t> - <delay>)]*<decay>
+    #Define parameters to use for exponential decay cases.
     #init,  decay, n_times, delay, dim, name
     (100.,  0.99,  1000,    1,     1,   "Default Exp Decay"),
     (-100., 0.99,  1000,    1,     1,   "Negative Exp Decay"),
@@ -41,6 +44,8 @@ def decoupled_exp_decay_process(request):
     return name, init_vals, coefs, expect
 
 @pytest.fixture()
+# Couples all the decays by creating negative versions of each variable, then 
+# summing all variables to create a variable that is always zero.  
 def coupled_exp_decay_process(decoupled_exp_decay_process):
     # Get the decoupled version
     name, init_vals, coefs, expect = decoupled_exp_decay_process
@@ -69,6 +74,9 @@ def coupled_exp_decay_process(decoupled_exp_decay_process):
     return "Coupled "+name, init_vals, coefs, expect
 
 def gen_process(a_process):
+    """
+    Calls var_process for the process fixtures
+    """
     # Get the initial values and setup for the decay process
     name, init_vals, coefs, expect = a_process
     # Deducte the max time from the expected answer shape
@@ -81,6 +89,9 @@ def gen_process(a_process):
     return data, true_parents_neighbors
 
 def check_process_data(name, coefs, data, expect):
+    """
+    Checks the data is as expected
+    """
     # Strip the coefficients from the input parameters
     error_message = "PARAM SET: " + name + " FAILED\n"+\
                     "Bad parameter set for process\n"+\
@@ -98,6 +109,9 @@ def check_process_data(name, coefs, data, expect):
                                err_msg=error_message)
 
 def check_process_parent_neighbours(return_links, coefs):
+    """
+    Checks the returned process parent-neighbour graphs
+    """
     # Strip the coefficients from the input parameters
     true_node_links = dict()
     for node_id, all_node_links in coefs.items():
@@ -106,6 +120,9 @@ def check_process_parent_neighbours(return_links, coefs):
     assert return_links == true_node_links
 
 def check_process(a_process):
+    """
+    Checks var_process
+    """
     # Unpack the process
     name, _, coefs, expect = a_process
     # Generate the data
