@@ -471,19 +471,22 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
                 verbosity=0):
     """Returns a vector-autoregressive process with correlated innovations.
 
-    Wrapper around var_network with possibly more user-friendly input options.
+    Wrapper around var_network with more user-friendly input options.
 
     Parameters
     ----------
     parents_neighbors_coeffs : dict 
-
-        Dictionary of format {..., j:[(var1, lag1), (var2, lag2), ...], ...} for
-        all variables where vars must be in [0..N-1] and lags <= 0 with number
-        of variables N. If lag=0, a nonzero value in the covariance matrix (or
-        its inverse) is implied. These should be the same for (i, j) and (j, i).
+        Dictionary of format {..., j:[((var1, lag1), coeff), ...], ...} for all
+        variables where vars must be in [0..N-1] and lags <= 0 with number of
+        variables N. Coeff refers to the coefficient in the linear model. If
+        lag=0, a nonzero value in the covariance matrix (or its inverse) is
+        implied. These should be the same for (i, j) and (j, i).
 
     use : str, optional (default: 'inv_inno_cov') 
-        Specifier, either 'inno_cov' or 'inv_inno_cov'.
+        Specifier, either 'inno_cov' or 'inv_inno_cov'. If 'inno_cov', lag=0
+        entries in parents_neighbors_coeffs are interpreted as entries of the
+        innovation noise term's covariance matrix. I 'inv_inno_cov', they are
+        interpreted as entries in the inverse covariance matrix.
 
     T : int, optional (default: 1000) 
         Sample size.
@@ -495,7 +498,11 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
     -------
     X : array-like
         Array of realization.
+
+    true_parents_neighbors : dict
+        Dictionary of true parents and neighbors
     """
+
     max_lag = 0
     for j in list(parents_neighbors_coeffs):
         for node, coeff in parents_neighbors_coeffs[j]:
