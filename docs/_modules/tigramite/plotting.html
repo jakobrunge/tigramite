@@ -834,7 +834,7 @@
     <span class="n">label_fraction</span><span class="o">=.</span><span class="mi">5</span><span class="p">,</span> <span class="n">link_colorbar_label</span><span class="o">=</span><span class="s1">&#39;link&#39;</span><span class="p">,</span>
     <span class="n">link_edge_colorbar_label</span><span class="o">=</span><span class="s1">&#39;link_edge&#39;</span><span class="p">,</span>
     <span class="n">undirected_curved</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">undirected_style</span><span class="o">=</span><span class="s1">&#39;solid&#39;</span><span class="p">,</span>
-    <span class="n">network_lower_bound</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> 
+    <span class="n">network_lower_bound</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">show_colorbar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Function to draw a network from networkx graph instance.</span>
 
@@ -888,6 +888,10 @@
             <span class="n">link_edge</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;directed_edge&#39;</span><span class="p">]</span>
             <span class="n">linestyle</span> <span class="o">=</span> <span class="s1">&#39;solid&#39;</span>
             <span class="n">linewidth</span> <span class="o">=</span> <span class="mf">0.</span>
+            <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;directed_attribute&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;spurious&#39;</span><span class="p">:</span>
+                <span class="n">facecolor</span> <span class="o">=</span> <span class="s1">&#39;grey&#39;</span>
+            <span class="c1">#     linestyle = &#39;dashed&#39;</span>
+
         <span class="k">else</span><span class="p">:</span>
             <span class="n">rad</span> <span class="o">=</span> <span class="n">undirected_curved</span> <span class="o">*</span> <span class="n">curved_radius</span>
             <span class="k">if</span> <span class="n">cmap_links</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -910,8 +914,13 @@
             <span class="n">alpha</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;undirected_alpha&#39;</span><span class="p">]</span>
             <span class="n">arrowstyle</span> <span class="o">=</span> <span class="s1">&#39;simple,head_length=0.0001&#39;</span>
             <span class="n">link_edge</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;undirected_edge&#39;</span><span class="p">]</span>
-            <span class="n">linestyle</span> <span class="o">=</span> <span class="n">undirected_style</span>
+            <span class="n">linestyle</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;undirected_style&#39;</span><span class="p">]</span>
             <span class="n">linewidth</span> <span class="o">=</span> <span class="mf">0.</span>
+            <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;undirected_attribute&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;spurious&#39;</span><span class="p">:</span>
+                <span class="n">facecolor</span> <span class="o">=</span> <span class="s1">&#39;grey&#39;</span>
+                <span class="c1"># linestyle = &#39;dashed&#39;</span>
+
+            <span class="c1"># print d[&#39;undirected_attribute&#39;]</span>
 
         <span class="k">if</span> <span class="n">link_edge</span><span class="p">:</span>
             <span class="c1"># Outer arrow</span>
@@ -928,6 +937,7 @@
 
             <span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
         <span class="c1"># Inner arrow</span>
+        <span class="c1"># print linestyle</span>
         <span class="n">e</span> <span class="o">=</span> <span class="n">FancyArrowPatch</span><span class="p">(</span><span class="n">n1</span><span class="o">.</span><span class="n">center</span><span class="p">,</span> <span class="n">n2</span><span class="o">.</span><span class="n">center</span><span class="p">,</span>  <span class="c1"># patchA=n1,patchB=n2,</span>
                             <span class="n">arrowstyle</span><span class="o">=</span> <span class="n">arrowstyle</span><span class="p">,</span>   <span class="c1">#arrowstyle,</span>
                             <span class="n">connectionstyle</span><span class="o">=</span><span class="s1">&#39;arc3,rad=</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">rad</span><span class="p">,</span>
@@ -1117,24 +1127,25 @@
 <span class="c1"># cax_e = pyplot.axes([.8, ax.figbox.bounds[1]+0.5, 0.025, 0.35],</span>
 <span class="c1"># frameon=False) # setup colorbar axes.</span>
         <span class="c1"># setup colorbar axes.</span>
-        <span class="n">cax_e</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">axes</span><span class="p">([</span><span class="mf">0.55</span><span class="p">,</span> <span class="n">ax</span><span class="o">.</span><span class="n">figbox</span><span class="o">.</span><span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.025</span> <span class="o">+</span>
-                             <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">all_links_edge_weights</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.035</span><span class="p">],</span>
-                            <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">show_colorbar</span><span class="p">:</span>
+            <span class="n">cax_e</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">axes</span><span class="p">([</span><span class="mf">0.55</span><span class="p">,</span> <span class="n">ax</span><span class="o">.</span><span class="n">figbox</span><span class="o">.</span><span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.025</span> <span class="o">+</span>
+                                 <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">all_links_edge_weights</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.035</span><span class="p">],</span>
+                                <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-        <span class="n">cb_e</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span>
-            <span class="n">data_to_rgb_links</span><span class="p">,</span> <span class="n">cax</span><span class="o">=</span><span class="n">cax_e</span><span class="p">,</span> <span class="n">orientation</span><span class="o">=</span><span class="s1">&#39;horizontal&#39;</span><span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">cb_e</span><span class="o">.</span><span class="n">set_ticks</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">_myround</span><span class="p">(</span><span class="n">links_vmin</span><span class="p">,</span> <span class="n">links_ticks</span><span class="p">,</span>
-                                                <span class="s1">&#39;down&#39;</span><span class="p">),</span>
-                                     <span class="n">_myround</span><span class="p">(</span><span class="n">links_vmax</span><span class="p">,</span> <span class="n">links_ticks</span><span class="p">,</span> <span class="s1">&#39;up&#39;</span><span class="p">)</span> <span class="o">+</span>
-                                     <span class="n">links_ticks</span><span class="p">,</span> <span class="n">links_ticks</span><span class="p">))</span>
-        <span class="k">except</span><span class="p">:</span>
-            <span class="nb">print</span> <span class="p">(</span><span class="s1">&#39;no ticks given&#39;</span><span class="p">)</span>
+            <span class="n">cb_e</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span>
+                <span class="n">data_to_rgb_links</span><span class="p">,</span> <span class="n">cax</span><span class="o">=</span><span class="n">cax_e</span><span class="p">,</span> <span class="n">orientation</span><span class="o">=</span><span class="s1">&#39;horizontal&#39;</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">cb_e</span><span class="o">.</span><span class="n">set_ticks</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">_myround</span><span class="p">(</span><span class="n">links_vmin</span><span class="p">,</span> <span class="n">links_ticks</span><span class="p">,</span>
+                                                    <span class="s1">&#39;down&#39;</span><span class="p">),</span>
+                                         <span class="n">_myround</span><span class="p">(</span><span class="n">links_vmax</span><span class="p">,</span> <span class="n">links_ticks</span><span class="p">,</span> <span class="s1">&#39;up&#39;</span><span class="p">)</span> <span class="o">+</span>
+                                         <span class="n">links_ticks</span><span class="p">,</span> <span class="n">links_ticks</span><span class="p">))</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="nb">print</span> <span class="p">(</span><span class="s1">&#39;no ticks given&#39;</span><span class="p">)</span>
 
-        <span class="n">cb_e</span><span class="o">.</span><span class="n">outline</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
-        <span class="c1"># cb_n.set_ticks()</span>
-        <span class="n">cax_e</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span>
-            <span class="n">link_colorbar_label</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">)</span>
+            <span class="n">cb_e</span><span class="o">.</span><span class="n">outline</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+            <span class="c1"># cb_n.set_ticks()</span>
+            <span class="n">cax_e</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span>
+                <span class="n">link_colorbar_label</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">cmap_links_edges</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_links_edge_weights</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">links_edges_vmin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1164,7 +1175,7 @@
                                                 <span class="n">links_edges_ticks</span><span class="p">,</span> <span class="s1">&#39;up&#39;</span><span class="p">)</span> <span class="o">+</span>
                                         <span class="n">links_edges_ticks</span><span class="p">,</span>
                                         <span class="n">links_edges_ticks</span><span class="p">))</span>
-        <span class="k">except</span><span class="p">:</span>
+        <span class="k">except</span><span class="p">:</span> 
             <span class="nb">print</span> <span class="p">(</span><span class="s1">&#39;no ticks given&#39;</span><span class="p">)</span>
         <span class="n">cb_e</span><span class="o">.</span><span class="n">outline</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
         <span class="c1"># cb_n.set_ticks()</span>
@@ -1193,6 +1204,7 @@
                <span class="n">link_colorbar_label</span><span class="o">=</span><span class="s1">&#39;MCI&#39;</span><span class="p">,</span>
                <span class="n">node_colorbar_label</span><span class="o">=</span><span class="s1">&#39;auto-MCI&#39;</span><span class="p">,</span>
                <span class="n">link_width</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">link_attribute</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                <span class="n">node_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                <span class="n">arrow_linewidth</span><span class="o">=</span><span class="mf">30.</span><span class="p">,</span>
                <span class="n">vmin_edges</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
@@ -1212,6 +1224,7 @@
                <span class="n">link_label_fontsize</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
                <span class="n">lag_array</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                <span class="n">network_lower_bound</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+               <span class="n">show_colorbar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Creates a network plot.</span>
 
@@ -1259,6 +1272,9 @@
 <span class="sd">    link_width : array-like, optional (default: None)</span>
 <span class="sd">        Array of val_matrix.shape specifying relative link width with maximum</span>
 <span class="sd">        given by arrow_linewidth. If None, all links have same width.</span>
+
+<span class="sd">    link_attribute : array-like, optional (default: None)</span>
+<span class="sd">        String array of val_matrix.shape specifying link attributes.</span>
 
 <span class="sd">    node_pos : dictionary, optional (default: None)</span>
 <span class="sd">        Dictionary of node positions in axis coordinates of form </span>
@@ -1318,6 +1334,9 @@
 
 <span class="sd">    network_lower_bound : float, optional (default: 0.2)</span>
 <span class="sd">        Fraction of vertical space below graph plot.</span>
+
+<span class="sd">    show_colorbar : bool</span>
+<span class="sd">        Whether to show colorbars for links and nodes.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">import</span> <span class="nn">networkx</span>
 
@@ -1390,6 +1409,18 @@
                 <span class="n">dic</span><span class="p">[</span><span class="s1">&#39;undirected_width&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">link_width</span><span class="p">[</span>
                     <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">link_width</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">*</span> <span class="n">arrow_linewidth</span>
 
+            <span class="k">if</span> <span class="n">link_attribute</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">dic</span><span class="p">[</span><span class="s1">&#39;undirected_attribute&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">dic</span><span class="p">[</span><span class="s1">&#39;undirected_attribute&#39;</span><span class="p">]</span> <span class="o">=</span>  <span class="n">link_attribute</span><span class="p">[</span>
+                                                <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> 
+
+            <span class="c1">#     # fraction of nonzero values</span>
+            <span class="n">dic</span><span class="p">[</span><span class="s1">&#39;undirected_style&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;solid&#39;</span>
+            <span class="c1"># else:</span>
+            <span class="c1"># dic[&#39;undirected_style&#39;] = link_style[</span>
+            <span class="c1">#         u, v, 0] </span>
+
             <span class="n">all_strengths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dic</span><span class="p">[</span><span class="s1">&#39;undirected_color&#39;</span><span class="p">])</span>
 
             <span class="k">if</span> <span class="n">tau_max</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -1399,6 +1430,7 @@
                 <span class="n">dic</span><span class="p">[</span><span class="s1">&#39;directed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">link_matrix</span><span class="p">[</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="mi">1</span><span class="p">:])</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">dic</span><span class="p">[</span><span class="s1">&#39;directed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
             <span class="n">dic</span><span class="p">[</span><span class="s1">&#39;directed_alpha&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">alpha</span>
             <span class="k">if</span> <span class="n">link_width</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="c1"># fraction of nonzero values</span>
@@ -1406,6 +1438,13 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">dic</span><span class="p">[</span><span class="s1">&#39;directed_width&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">link_width</span><span class="p">[</span>
                     <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">argmax</span><span class="p">]</span> <span class="o">/</span> <span class="n">link_width</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">*</span> <span class="n">arrow_linewidth</span>
+
+            <span class="k">if</span> <span class="n">link_attribute</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># fraction of nonzero values</span>
+                <span class="n">dic</span><span class="p">[</span><span class="s1">&#39;directed_attribute&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">dic</span><span class="p">[</span><span class="s1">&#39;directed_attribute&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">link_attribute</span><span class="p">[</span>
+                    <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">argmax</span><span class="p">]</span> 
 
             <span class="c1"># value at argmax of average</span>
             <span class="n">dic</span><span class="p">[</span><span class="s1">&#39;directed_color&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">val_matrix</span><span class="p">[</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">][</span><span class="n">argmax</span><span class="p">]</span>
@@ -1443,10 +1482,13 @@
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
             <span class="n">pos</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">node_pos</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="n">node_pos</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">])</span>
 
+    <span class="k">if</span> <span class="n">cmap_nodes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">node_color</span> <span class="o">=</span> <span class="kc">None</span>
+
     <span class="n">node_rings</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;sizes&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;color_array&#39;</span><span class="p">:</span> <span class="n">node_color</span><span class="p">,</span>
                       <span class="s1">&#39;cmap&#39;</span><span class="p">:</span> <span class="n">cmap_nodes</span><span class="p">,</span> <span class="s1">&#39;vmin&#39;</span><span class="p">:</span> <span class="n">vmin_nodes</span><span class="p">,</span>
                       <span class="s1">&#39;vmax&#39;</span><span class="p">:</span> <span class="n">vmax_nodes</span><span class="p">,</span> <span class="s1">&#39;ticks&#39;</span><span class="p">:</span> <span class="n">node_ticks</span><span class="p">,</span>
-                      <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="n">node_colorbar_label</span><span class="p">,</span> <span class="s1">&#39;colorbar&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                      <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="n">node_colorbar_label</span><span class="p">,</span> <span class="s1">&#39;colorbar&#39;</span><span class="p">:</span> <span class="n">show_colorbar</span><span class="p">,</span>
                       <span class="p">}</span>
                   <span class="p">}</span>
 
@@ -1472,6 +1514,7 @@
         <span class="n">link_label_fontsize</span><span class="o">=</span><span class="n">link_label_fontsize</span><span class="p">,</span>
         <span class="n">link_colorbar_label</span><span class="o">=</span><span class="n">link_colorbar_label</span><span class="p">,</span>
         <span class="n">network_lower_bound</span><span class="o">=</span><span class="n">network_lower_bound</span><span class="p">,</span>
+        <span class="n">show_colorbar</span><span class="o">=</span><span class="n">show_colorbar</span><span class="p">,</span>
         <span class="c1"># label_fraction=label_fraction,</span>
         <span class="c1"># undirected_style=undirected_style</span>
         <span class="p">)</span>
