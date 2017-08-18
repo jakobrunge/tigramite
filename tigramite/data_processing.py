@@ -533,6 +533,32 @@ def _var_network(graph,
 
     return X.transpose()
 
+def _iter_parents_neighbours_coeffs(parents_neighbors_coeffs):
+    """
+    Iterator through the current parents_neighbours_coeffs structure.  Mainly to
+    save repeated code and make it easier to change this structure.
+
+    Parameters
+    ----------
+    parents_neighbors_coeffs : dict
+
+        Dictionary of format {..., j:[(var1, lag1), (var2, lag2), ...], ...} for
+        all variables where vars must be in [0..N-1] and lags <= 0 with number
+        of variables N. If lag=0, a nonzero value in the covariance matrix (or
+        its inverse) is implied. These should be the same for (i, j) and (j, i).
+
+    Yields
+    -------
+    (current_node_id, parent_node_id, time_lag, coeff) : tuple
+        Tuple defining the relationship between nodes across time
+    """
+    for j in list(parents_neighbors_coeffs):
+        # Iterate over parent nodes and unpack node and coeff
+        for (i, tau), coeff in parents_neighbors_coeffs[j]:
+            # 
+            yield j, i, tau, coeff
+
+
 def _find_max_time_lag_and_node_id(parents_neighbors_coeffs):
     """
     Function to find the maximum time lag in the parent-neighbours-coefficients
@@ -560,7 +586,7 @@ def _find_max_time_lag_and_node_id(parents_neighbors_coeffs):
         for node, _ in parents_neighbors_coeffs[j]:
             _, tau = node[0], node[1]
             # TODO is this correct?
-            assert tau >= 0, \
+            assert tau <= 0, \
                 "All time lags must be given as non-positive values"
             # Find max lag time
             max_time_lag = max(max_time_lag, abs(tau))
