@@ -561,7 +561,7 @@ def _find_max_time_lag_and_node_id(parents_neighbors_coeffs):
             _, tau = node[0], node[1]
             # TODO is this correct?
             assert tau >= 0, \
-                "All time lags must be given as non-negative values"
+                "All time lags must be given as non-positive values"
             # Find max lag time
             max_time_lag = max(max_time_lag, abs(tau))
     # Find largest node id
