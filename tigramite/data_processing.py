@@ -634,7 +634,7 @@ def _get_covariance_matrix(parents_neighbors_coeffs):
     Returns
     -------
     covar_matrix : numpy array
-        Covariance matrix implied by the parents_neighbors_coeffs.  Used to 
+        Covariance matrix implied by the parents_neighbors_coeffs.  Used to
         generate correlated innovations.
     """
     # Get the total number of nodes
@@ -649,6 +649,37 @@ def _get_covariance_matrix(parents_neighbors_coeffs):
         if tau == 0:
             covar_matrix[j, i] = covar_matrix[i, j] = coeff
     return covar_matrix
+
+def _get_lag_connect_matrix(parents_neighbors_coeffs):
+    """
+    Generates the lagged connectivity matrix from a parent-neighbour
+    connectivity dictionary.  Used to generate the input for _var_network
+
+    Parameters
+    ----------
+    parents_neighbors_coeffs : dict
+
+        Dictionary of format {..., j:[(var1, lag1), (var2, lag2), ...], ...} for
+        all variables where vars must be in [0..N-1] and lags <= 0 with number
+        of variables N.
+
+    Returns
+    -------
+    connect_matrix : numpy array
+        Lagged connectivity matrix. Shape is (n_nodes, n_nodes, max_delay+1)
+    """
+    # Get the total number of nodes and time lag
+    max_time_lag, max_node_id = \
+            _find_max_time_lag_and_node_id(parents_neighbors_coeffs)
+    n_nodes = max_node_id + 1
+    n_times = max_time_lag + 1
+    # Initialize full time graph
+    connect_matrix = numpy.zeros((n_nodes, n_nodes, n_times))
+    for j, i, tau, coeff in _iter_coeffs(parents_neighbors_coeffs):
+        # If there is a non-zero time lag, add the connection to the matrix
+        if tau != 0:
+            connect_matrix[j, i, -(tau+1)] = coeff
+    return connect_matrix
 
 def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
                 verbosity=0, initial_values=None):
@@ -689,28 +720,16 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
     X : array-like
         Array of realization.
     """
-    # Find the maximum node ID and time lag
-    max_time_lag, max_node_id = \
-            _find_max_time_lag_and_node_id(parents_neighbors_coeffs)
     # Generate the true parent neighbours graph
     true_parents_neighbors = \
             _get_true_parent_neighbour_dict(parents_neighbors_coeffs)
     # Generate the correlated innovations
     innos = _get_covariance_matrix(parents_neighbors_coeffs)
-
-
-    # Define the shape of the graph
-    n_nodes = max_node_id + 1
-    n_times = max_time_lag + 1
-    # Initialize full time graph
-    graph = numpy.zeros((n_nodes, n_nodes, n_times))
-    for j, i, tau, coeff in _iter_coeffs(parents_neighbors_coeffs):
-        # Otherwise add to graph
-        if tau != 0:
-            graph[j, i, -(tau+1)] = coeff
+    # Generate the lagged connectivity matrix for _var_network
+    connect_matrix = _get_lag_connect_matrix(parents_neighbors_coeffs)
 
     if verbosity > 0:
-        print("VAR graph =\n%s" % str(graph))
+        print("VAR graph =\n%s" % str(connect_matrix))
         if use == 'inno_cov':
             print("\nInnovation Cov =\n%s" % str(innos))
         elif use == 'inv_inno_cov':
@@ -718,13 +737,14 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
         elif use == 'no_inno':
             print("\nNo random noise will be applied!\n")
 
-    data = _var_network(graph=graph,
+    # Generate the data using _var_network
+    data = _var_network(graph=connect_matrix,
                         inv_inno_cov=innos,
                         inno_cov=innos,
                         use=use,
                         initial_values=initial_values,
                         T=T)
-
+    # Return the data
     return data, true_parents_neighbors
 
 
