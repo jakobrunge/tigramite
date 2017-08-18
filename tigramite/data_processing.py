@@ -592,7 +592,7 @@ def _check_parent_neighbor(parents_neighbors_coeffs):
         all_parents.add(i)
     # Check that all nodes are contiguous from zero
     all_nodes_list = sorted(list(all_nodes))
-    if all_nodes_list != range(len(all_nodes_list)):
+    if all_nodes_list != list(range(len(all_nodes_list))):
         raise ValueError("Node IDs in input dictionary must be contiguous"+\
                          " and start from zero!\n"+\
                          " Found IDs : [" +\
