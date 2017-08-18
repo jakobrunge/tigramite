@@ -548,15 +548,15 @@ def _iter_coeffs(parents_neighbors_coeffs):
 
     Yields
     -------
-    (current_id, parent_id, time_lag, coeff) : tuple
+    (node_id, parent_id, time_lag, coeff) : tuple
         Tuple defining the relationship between nodes across time
     """
     # Iterate through all defined nodes
-    for current_id in list(parents_neighbors_coeffs):
+    for node_id in list(parents_neighbors_coeffs):
         # Iterate over parent nodes and unpack node and coeff
-        for (parent_id, time_lag), coeff in parents_neighbors_coeffs[parent_id]:
+        for (parent_id, time_lag), coeff in parents_neighbors_coeffs[node_id]:
             # Yield the entry
-            yield current_id, parent_id, time_lag, coeff
+            yield node_id, parent_id, time_lag, coeff
 
 def _find_max_time_lag_and_node_id(parents_neighbors_coeffs):
     """
