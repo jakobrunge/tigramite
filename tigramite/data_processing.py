@@ -544,20 +544,19 @@ def _iter_parents_neighbours_coeffs(parents_neighbors_coeffs):
 
         Dictionary of format {..., j:[(var1, lag1), (var2, lag2), ...], ...} for
         all variables where vars must be in [0..N-1] and lags <= 0 with number
-        of variables N. If lag=0, a nonzero value in the covariance matrix (or
-        its inverse) is implied. These should be the same for (i, j) and (j, i).
+        of variables N. 
 
     Yields
     -------
-    (current_node_id, parent_node_id, time_lag, coeff) : tuple
+    (current_id, parent_id, time_lag, coeff) : tuple
         Tuple defining the relationship between nodes across time
     """
-    for j in list(parents_neighbors_coeffs):
+    # Iterate through all defined nodes
+    for current_id in list(parents_neighbors_coeffs):
         # Iterate over parent nodes and unpack node and coeff
-        for (i, tau), coeff in parents_neighbors_coeffs[j]:
-            # 
-            yield j, i, tau, coeff
-
+        for (parent_id, time_lag), coeff in parents_neighbors_coeffs[parent_id]:
+            # Yield the entry
+            yield current_id, parent_id, time_lag, coeff
 
 def _find_max_time_lag_and_node_id(parents_neighbors_coeffs):
     """
@@ -585,7 +584,7 @@ def _find_max_time_lag_and_node_id(parents_neighbors_coeffs):
         # Extract lag time from each node
         for node, _ in parents_neighbors_coeffs[j]:
             _, tau = node[0], node[1]
-            # TODO is this correct?
+            # TODO move this to the part about checking the input
             assert tau <= 0, \
                 "All time lags must be given as non-positive values"
             # Find max lag time
@@ -680,8 +679,6 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
     innos[range(N), range(N)] = 1.
     # print graph.shape
     for j in list(parents_neighbors_coeffs):
-        # Initialize the list of true parents for each node
-        true_parents_neighbors[j] = []
         # Iterate over parent nodes and unpack node and coeff
         for node, coeff in parents_neighbors_coeffs[j]:
             i, tau = node[0], -node[1]
