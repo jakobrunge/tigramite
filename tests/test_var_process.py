@@ -3,6 +3,7 @@ Testing var_process using exponential decay examples.
 """
 #TODO add testing of random variables
 from __future__ import print_function
+import copy
 import pytest
 import numpy as np
 
@@ -134,9 +135,56 @@ def check_process(a_process):
     check_process_data(name, coefs, data, expect)
 
 def test_decoupled_process_data(decoupled_exp_decay_process):
+    """
+    Test that the decoupled processes work
+    """
     # Generate and check the data
     check_process(decoupled_exp_decay_process)
 
 def test_coupled_process_data(coupled_exp_decay_process):
+    """
+    Test that the coupled process work
+    """
     # Generate and check the data
     check_process(coupled_exp_decay_process)
+
+@pytest.fixture(params=[
+    #Returns a good parameter set along with a modified, bad parameter set that 
+    #should raise an error in var_process
+    #Bad parameter sets are created by defining a link using:
+    #node,  parent, delay, error_message
+    (0,     0,      1,     "Positive time delay"),
+    (100,   0,      -1,    "Non-contiguous node ID"),
+    (-10,   0,      -1,    "Node IDs not starting from zero"),
+    (0,     100,    -1,    "Non-existant node as parent")])
+def bad_parameter_sets(request):
+    # Define a good parameter set
+    default_coef = 0.5
+    good_params = {}
+    good_params[0] = [((0, -1), default_coef)]
+    good_params[1] = [((1, -1), default_coef)] + good_params[0]
+    good_params[2] = [((2, -1), default_coef)] + good_params[1]
+    # Define a bad parameter set
+    node, parent, delay, message = request.param
+    bad_params = copy.deepcopy(good_params)
+    bad_params[node] = [((parent, delay), default_coef)]
+    return good_params, bad_params, message
+
+def test_bad_parameters(bad_parameter_sets):
+    """
+    Test that the correct exceptions are raised for bad input connectivity 
+    dictionaries
+    """
+    # Unpack the parameter set fixture
+    good_params, bad_params, message = bad_parameter_sets
+    error_message = message + " should trigger a value error for var_process "+\
+                              "parent-neighbour dictionary"
+    # Test the good parameter set
+    try:
+        pp._check_parent_neighbor(good_params)
+    # Ensure no exception is raised
+    except:
+        pytest.fail("Good parameter set triggers exception incorrectly!")
+    # Ensure an exception is raised for a bad parameter set
+    with pytest.raises(ValueError, message=error_message):
+        pp._check_parent_neighbor(bad_params)

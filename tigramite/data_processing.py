@@ -291,12 +291,11 @@ def ordinal_patt_array(array, array_mask=None, dim=2, step=1,
     patt, patt_mask [, patt_time] : tuple of arrays
         Tuple of converted pattern array and new length
     """
-    import scipy
     from scipy.misc import factorial
 
     # Import cython code
     try:
-        import tigramite_cython_code
+        import tigramite.tigramite_cython_code as tigramite_cython_code
     except ImportError:
         raise ImportError("Could not import tigramite_cython_code, please"
                           " compile cython code first as described in Readme.")
@@ -338,9 +337,11 @@ def ordinal_patt_array(array, array_mask=None, dim=2, step=1,
     # _get_patterns_cython assumes mask=0 to be a masked value
     array_mask = (array_mask == False).astype('int32')
 
-    (patt, patt_mask, weights_array) = tigramite_cython_code._get_patterns_cython(
-        array, array_mask, patt, patt_mask, weights_array, dim, step, fac, N,
-        T)
+    (patt, patt_mask, weights_array) = \
+            tigramite_cython_code._get_patterns_cython(array, array_mask,
+                                                       patt, patt_mask, 
+                                                       weights_array, dim,
+                                                       step, fac, N, T)
 
     weights_array = numpy.asarray(weights_array)
     patt = numpy.asarray(patt)
@@ -565,6 +566,7 @@ def _check_parent_neighbor(parents_neighbors_coeffs):
         * all time lags are non-positive
         * all parent nodes are included as nodes themselves
         * all node indexing is contiguous
+        * all node indexing starts from zero
     Raises a ValueError if any one of these conditions are not met.
 
     Parameters
