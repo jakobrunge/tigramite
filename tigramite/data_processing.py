@@ -593,16 +593,17 @@ def _check_parent_neighbor(parents_neighbors_coeffs):
     if all_nodes_list != range(len(all_nodes_list)):
         raise ValueError("Node IDs in input dictionary must be contiguous"+\
                          " and start from zero!\n"+\
-                         " Found IDs : [" + ",".join(all_nodes_list)+ "]")
+                         " Found IDs : [" +\
+                         ",".join(map(str, all_nodes_list))+ "]")
     # Check that all parent nodes are mentioned as a node ID
     if not all_parents.issubset(all_nodes):
         missing_nodes = sorted(list(all_parents - all_nodes))
         all_parents_list = sorted(list(all_parents))
         raise ValueError("Parent IDs in input dictionary must also be in set"+\
                          " of node IDs."+\
-                         "\n Parent IDs " + " ".join(all_parents_list) +\
-                         "\n Node IDs " + " ".join(all_nodes_list) +\
-                         "\n Missing IDs " + " ".join(missing_nodes))
+                         "\n Parent IDs "+" ".join(map(str, all_parents_list))+\
+                         "\n Node IDs "+" ".join(map(str, all_nodes_list)) +\
+                         "\n Missing IDs " + " ".join(map(str, missing_nodes)))
 
 def _find_max_time_lag_and_node_id(parents_neighbors_coeffs):
     """
