@@ -645,11 +645,9 @@ def _get_covariance_matrix(parents_neighbors_coeffs):
     covar_matrix = numpy.identity(n_nodes)
     # Iterate through all the node connections
     for j, i, tau, coeff in _iter_coeffs(parents_neighbors_coeffs):
-        # Add to innos  if zero lag
+        # Add to covar_matrix if node connection is instantaneous
         if tau == 0:
-            covar_matrix[j, i] = coeff
-    # Symmetrize the matrix and return it
-    covar_matrix = (covar_matrix.T + covar_matrix)/2.
+            covar_matrix[j, i] = covar_matrix[i, j] = coeff
     return covar_matrix
 
 def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
