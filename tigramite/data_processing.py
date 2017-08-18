@@ -6,6 +6,7 @@
 
 
 from __future__ import print_function
+from collections import defaultdict
 import numpy
 import sys, warnings
 
@@ -385,6 +386,39 @@ def quantile_bin_array(data, bins=6):
 
     return symb_array.astype('int32')
 
+def _generate_noise(covar_matrix, use_inverse=False):
+    """
+    Generate a multivariate normal distribution using correlated innovations.
+
+    Parameters
+    ----------
+    covar_matrix : array
+        Covariance matrix of the random variables
+
+    use_inverse : bool, optional
+        Invert the covarience matrix before use
+
+    Returns
+    -------
+    noise : array
+        Random noise generated according to covar_matrix
+    """
+    if use_inverse == 'inv_inno_cov' and inv_inno_cov is not None:
+        #TODO wrap in function
+        mult = -numpy.ones((N, N))
+        mult[numpy.diag_indices_from(mult)] = 1
+        inv_inno_cov *= mult
+        noise = numpy.random.multivariate_normal(
+            mean=numpy.zeros(N),
+            cov=numpy.linalg.inv(inv_inno_cov),
+            size=T)
+    elif use == 'inno_cov' and inno_cov is not None:
+        noise = numpy.random.multivariate_normal(
+            mean=numpy.zeros(N), cov=inno_cov, size=T)
+    else:
+        noise = numpy.random.randn(T, N)
+
+
 
 def _var_network(graph,
                  inv_inno_cov=None,
@@ -466,10 +500,10 @@ def _var_network(graph,
         assert isinstance(initial_values, numpy.ndarray),\
             "User must provide initial_values as a numpy.ndarray"
         # Check the shape is correct
-        print(X[:, :P].shape)
-        print(initial_values.shape)
         assert initial_values.shape == X[:, :P].shape,\
-            "Initial values must be of shape (n_nodes, max_delay+1)"
+            "Initial values must be of shape (n_nodes, max_delay+1)"+\
+            "\n current shape : " + str(initial_values.shape)+\
+            "\n desired shape : " + str(X[:, :P].shape)
         # Input the initial values
         X[:, :P] = initial_values
 
@@ -499,6 +533,71 @@ def _var_network(graph,
 
     return X.transpose()
 
+def _find_max_time_lag_and_node_id(parents_neighbors_coeffs):
+    """
+    Function to find the maximum time lag in the parent-neighbours-coefficients
+    object, as well as the largest node ID
+
+    Parameters
+    ----------
+    parents_neighbors_coeffs : dict
+
+        Dictionary of format {..., j:[(var1, lag1), (var2, lag2), ...], ...} for
+        all variables where vars must be in [0..N-1] and lags <= 0 with number
+        of variables N. If lag=0, a nonzero value in the covariance matrix (or
+        its inverse) is implied. These should be the same for (i, j) and (j, i).
+
+    Returns
+    -------
+    (max_time_lag, max_node_id) : tuple
+        Tuple of the maximum time lag and maximum node ID
+    """
+    # Default maximum lag
+    max_time_lag = 0
+    # Iterate through the keys in parents_neighbors_coeffs
+    for j in list(parents_neighbors_coeffs):
+        # Extract lag time from each node
+        for node, _ in parents_neighbors_coeffs[j]:
+            _, tau = node[0], node[1]
+            # TODO is this correct?
+            assert tau >= 0, \
+                "All time lags must be given as non-negative values"
+            # Find max lag time
+            max_time_lag = max(max_time_lag, abs(tau))
+    # Find largest node id
+    max_node_id = max(list(parents_neighbors_coeffs)) + 1
+    # Return these values
+    return max_time_lag, max_node_id
+
+def _get_true_parent_neighbour_dict(parents_neighbors_coeffs):
+    """
+    Function to return the dictionary of true parent neighbour causal 
+    connections in time.
+
+    Parameters
+    ----------
+    parents_neighbors_coeffs : dict
+
+        Dictionary of format {..., j:[(var1, lag1), (var2, lag2), ...], ...} for
+        all variables where vars must be in [0..N-1] and lags <= 0 with number
+        of variables N.
+
+    Returns
+    -------
+    true_parent_neighbour : dict
+        Dictionary of lists of tuples.  The dictionary is keyed by node ID, the 
+        list stores the tuple values (parent_node_id, time_lag)
+    """
+    # Initialize the returned dictionary
+    true_parents_neighbors = defaultdict(list)
+    for j in list(parents_neighbors_coeffs):
+        # Iterate over parent nodes and unpack node and coeff
+        for (i, tau), coeff in parents_neighbors_coeffs[j]:
+            # Add parent node id and lag if non-zero coeff
+            if coeff != 0.:
+                true_parents_neighbors[j].append((i, tau))
+    # Return the true relations
+    return true_parents_neighbors
 
 def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
                 verbosity=0, initial_values=None):
@@ -506,6 +605,7 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
     #TODO docstring is wrong about the output, optional output can be used
     #TODO j: [var1, lag1, coeff] is a better format
     #TODO sparse array of j->[var1, lag1, coeff]
+    #TODO normal array of j->[var1, lag1, coeff], forcing j to be contiguous from 0
     """Returns a vector-autoregressive process with correlated innovations.
 
     Wrapper around var_network with possibly more user-friendly input options.
@@ -520,7 +620,7 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
         its inverse) is implied. These should be the same for (i, j) and (j, i).
 
     use : str, optional (default: 'inv_inno_cov')
-        Specifier, either 'inno_cov' or 'inv_inno_cov'. 
+        Specifier, either 'inno_cov' or 'inv_inno_cov'.
         For debugging, 'no_inno' can also be specified, in which case random noise
         will be disabled.
 
@@ -538,29 +638,20 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
     X : array-like
         Array of realization.
     """
-    max_lag = 0
-    # TODO use dict.values
-    # Iterate through the keys in parents_neighbors_coeffs
-    for j in list(parents_neighbors_coeffs):
-        # Extract lag time from each node
-        # TODO remove unused coeff
-        for node, coeff in parents_neighbors_coeffs[j]:
-            i, tau = node[0], -node[1]
-            # TODO check lags are negative
-            # assert (node[1] <= 0), "..."
-            # Find max lag time
-            max_lag = max(max_lag, abs(tau))
-    # Find largest node id
-    N = max(list(parents_neighbors_coeffs)) + 1
+    # Find the maximum node ID and time lag
+    max_time_lag, max_node_id = \
+            _find_max_time_lag_and_node_id(parents_neighbors_coeffs)
+    N = max_node_id
+    # Generate the true parent neighbours graph
+    true_parents_neighbors = \
+            _get_true_parent_neighbour_dict(parents_neighbors_coeffs)
 
     # Initialize full time graph
     # TODO scipy sparse could be useful here
-    graph = numpy.zeros((N, N, max_lag + 1))
+    graph = numpy.zeros((N, N, max_time_lag + 1))
     # TODO use numpy identity
-    # TODO what is innos
     innos = numpy.zeros((N, N))
     innos[range(N), range(N)] = 1.
-    true_parents_neighbors = {}
     # print graph.shape
     for j in list(parents_neighbors_coeffs):
         # Initialize the list of true parents for each node
@@ -568,9 +659,6 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
         # Iterate over parent nodes and unpack node and coeff
         for node, coeff in parents_neighbors_coeffs[j]:
             i, tau = node[0], -node[1]
-            # Add parent node id and lag if non-zero coeff
-            if coeff != 0.:
-                true_parents_neighbors[j].append((i, -tau))
             # Add to innos  if zero lag
             if tau == 0:
                 innos[j, i] = innos[i, j] = coeff
