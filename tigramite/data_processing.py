@@ -533,7 +533,7 @@ def _var_network(graph,
 
     return X.transpose()
 
-def _iter_parents_neighbours_coeffs(parents_neighbors_coeffs):
+def _iter_coeffs(parents_neighbors_coeffs):
     """
     Iterator through the current parents_neighbours_coeffs structure.  Mainly to
     save repeated code and make it easier to change this structure.
@@ -544,7 +544,7 @@ def _iter_parents_neighbours_coeffs(parents_neighbors_coeffs):
 
         Dictionary of format {..., j:[(var1, lag1), (var2, lag2), ...], ...} for
         all variables where vars must be in [0..N-1] and lags <= 0 with number
-        of variables N. 
+        of variables N.
 
     Yields
     -------
@@ -569,34 +569,31 @@ def _find_max_time_lag_and_node_id(parents_neighbors_coeffs):
 
         Dictionary of format {..., j:[(var1, lag1), (var2, lag2), ...], ...} for
         all variables where vars must be in [0..N-1] and lags <= 0 with number
-        of variables N. If lag=0, a nonzero value in the covariance matrix (or
-        its inverse) is implied. These should be the same for (i, j) and (j, i).
+        of variables N.
 
     Returns
     -------
     (max_time_lag, max_node_id) : tuple
         Tuple of the maximum time lag and maximum node ID
     """
-    # Default maximum lag
+    # Default maximum lag and node ID
     max_time_lag = 0
+    max_node_id = 0
     # Iterate through the keys in parents_neighbors_coeffs
-    for j in list(parents_neighbors_coeffs):
-        # Extract lag time from each node
-        for node, _ in parents_neighbors_coeffs[j]:
-            _, tau = node[0], node[1]
-            # TODO move this to the part about checking the input
-            assert tau <= 0, \
-                "All time lags must be given as non-positive values"
-            # Find max lag time
-            max_time_lag = max(max_time_lag, abs(tau))
-    # Find largest node id
-    max_node_id = max(list(parents_neighbors_coeffs)) + 1
+    for j, _, tau, _ in _iter_coeffs(parents_neighbors_coeffs):
+        # TODO move this to the part about checking the input
+        assert tau <= 0, \
+            "All time lags must be given as non-positive values"
+        # Find max lag time
+        max_time_lag = max(max_time_lag, abs(tau))
+        # Find the max node ID
+        max_node_id = max(max_node_id, j)
     # Return these values
     return max_time_lag, max_node_id
 
 def _get_true_parent_neighbour_dict(parents_neighbors_coeffs):
     """
-    Function to return the dictionary of true parent neighbour causal 
+    Function to return the dictionary of true parent neighbour causal
     connections in time.
 
     Parameters
@@ -610,19 +607,50 @@ def _get_true_parent_neighbour_dict(parents_neighbors_coeffs):
     Returns
     -------
     true_parent_neighbour : dict
-        Dictionary of lists of tuples.  The dictionary is keyed by node ID, the 
+        Dictionary of lists of tuples.  The dictionary is keyed by node ID, the
         list stores the tuple values (parent_node_id, time_lag)
     """
-    # Initialize the returned dictionary
+    # Initialize the returned dictionary of lists
     true_parents_neighbors = defaultdict(list)
-    for j in list(parents_neighbors_coeffs):
-        # Iterate over parent nodes and unpack node and coeff
-        for (i, tau), coeff in parents_neighbors_coeffs[j]:
-            # Add parent node id and lag if non-zero coeff
-            if coeff != 0.:
-                true_parents_neighbors[j].append((i, tau))
+    for j, i, tau, coeff in _iter_coeffs(parents_neighbors_coeffs):
+        # Add parent node id and lag if non-zero coeff
+        if coeff != 0.:
+            true_parents_neighbors[j].append((i, tau))
     # Return the true relations
     return true_parents_neighbors
+
+def _get_covariance_matrix(parents_neighbors_coeffs):
+    """
+    Determines the covariance matrix for correlated innovations
+
+    Parameters
+    ----------
+    parents_neighbors_coeffs : dict
+
+        Dictionary of format {..., j:[(var1, lag1), (var2, lag2), ...], ...} for
+        all variables where vars must be in [0..N-1] and lags <= 0 with number
+        of variables N.
+
+    Returns
+    -------
+    covar_matrix : numpy array
+        Covariance matrix implied by the parents_neighbors_coeffs.  Used to 
+        generate correlated innovations.
+    """
+    # Get the total number of nodes
+    _, max_node_id = \
+            _find_max_time_lag_and_node_id(parents_neighbors_coeffs)
+    n_nodes = max_node_id + 1
+    # Initialize the covariance matrix
+    covar_matrix = numpy.identity(n_nodes)
+    # Iterate through all the node connections
+    for j, i, tau, coeff in _iter_coeffs(parents_neighbors_coeffs):
+        # Add to innos  if zero lag
+        if tau == 0:
+            covar_matrix[j, i] = coeff
+    # Symmetrize the matrix and return it
+    covar_matrix = (covar_matrix.T + covar_matrix)/2.
+    return covar_matrix
 
 def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
                 verbosity=0, initial_values=None):
@@ -666,28 +694,22 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
     # Find the maximum node ID and time lag
     max_time_lag, max_node_id = \
             _find_max_time_lag_and_node_id(parents_neighbors_coeffs)
-    N = max_node_id
     # Generate the true parent neighbours graph
     true_parents_neighbors = \
             _get_true_parent_neighbour_dict(parents_neighbors_coeffs)
+    # Generate the correlated innovations
+    innos = _get_covariance_matrix(parents_neighbors_coeffs)
 
+
+    # Define the shape of the graph
+    n_nodes = max_node_id + 1
+    n_times = max_time_lag + 1
     # Initialize full time graph
-    # TODO scipy sparse could be useful here
-    graph = numpy.zeros((N, N, max_time_lag + 1))
-    # TODO use numpy identity
-    innos = numpy.zeros((N, N))
-    innos[range(N), range(N)] = 1.
-    # print graph.shape
-    for j in list(parents_neighbors_coeffs):
-        # Iterate over parent nodes and unpack node and coeff
-        for node, coeff in parents_neighbors_coeffs[j]:
-            i, tau = node[0], -node[1]
-            # Add to innos  if zero lag
-            if tau == 0:
-                innos[j, i] = innos[i, j] = coeff
-            # Otherwise add to graph
-            else:
-                graph[j, i, tau - 1] = coeff
+    graph = numpy.zeros((n_nodes, n_nodes, n_times))
+    for j, i, tau, coeff in _iter_coeffs(parents_neighbors_coeffs):
+        # Otherwise add to graph
+        if tau != 0:
+            graph[j, i, -(tau+1)] = coeff
 
     if verbosity > 0:
         print("VAR graph =\n%s" % str(graph))
