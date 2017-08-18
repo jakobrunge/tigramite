@@ -7,8 +7,9 @@
 
 from __future__ import print_function
 from collections import defaultdict
+import sys
+import warnings
 import numpy
-import sys, warnings
 
 
 # TODO force usage of pandas DF, do not support own data frame...
@@ -40,8 +41,7 @@ class DataFrame():
         section on masking in Supplement of [1]_.
 
     """
-    def __init__(self, data,
-                 mask = None, missing_flag=None):
+    def __init__(self, data, mask=None, missing_flag=None):
 
         self.values = data
         self.mask = mask
@@ -535,7 +535,7 @@ def _var_network(graph,
 
 def _iter_coeffs(parents_neighbors_coeffs):
     """
-    Iterator through the current parents_neighbours_coeffs structure.  Mainly to
+    Iterator through the current parents_neighbors_coeffs structure.  Mainly to
     save repeated code and make it easier to change this structure.
 
     Parameters
@@ -558,9 +558,55 @@ def _iter_coeffs(parents_neighbors_coeffs):
             # Yield the entry
             yield node_id, parent_id, time_lag, coeff
 
+def _check_parent_neighbor(parents_neighbors_coeffs):
+    """
+    Checks to insure input parent-neighbor connectivity input is sane.  This
+    means that:
+        * all time lags are non-positive
+        * all parent nodes are included as nodes themselves
+        * all node indexing is contiguous
+    Raises a ValueError if any one of these conditions are not met.
+
+    Parameters
+    ----------
+    parents_neighbors_coeffs : dict
+
+        Dictionary of format {..., j:[(var1, lag1), (var2, lag2), ...], ...} for
+        all variables where vars must be in [0..N-1] and lags <= 0 with number
+        of variables N.
+    """
+    # Initialize some lists for checking later
+    all_nodes = set()
+    all_parents = set()
+    # Iterate through all nodes
+    for j, i, tau, _ in _iter_coeffs(parents_neighbors_coeffs):
+        # Check all time lags are equal to or less than zero
+        if tau > 0:
+            raise ValueError("Lag between parent {} and node {}".format(i, j)+\
+                             " is {} > 0, must be <= 0!".format(tau))
+        # Cache all node ids to ensure they are contiguous
+        all_nodes.add(j)
+        # Cache all parent ids to ensure they are mentioned as node ids
+        all_parents.add(i)
+    # Check that all nodes are contiguous from zero
+    all_nodes_list = sorted(list(all_nodes))
+    if all_nodes_list != range(len(all_nodes_list)):
+        raise ValueError("Node IDs in input dictionary must be contiguous"+\
+                         " and start from zero!\n"+\
+                         " Found IDs : [" + ",".join(all_nodes_list)+ "]")
+    # Check that all parent nodes are mentioned as a node ID
+    if not all_parents.issubset(all_nodes):
+        missing_nodes = sorted(list(all_parents - all_nodes))
+        all_parents_list = sorted(list(all_parents))
+        raise ValueError("Parent IDs in input dictionary must also be in set"+\
+                         " of node IDs."+\
+                         "\n Parent IDs " + " ".join(all_parents_list) +\
+                         "\n Node IDs " + " ".join(all_nodes_list) +\
+                         "\n Missing IDs " + " ".join(missing_nodes))
+
 def _find_max_time_lag_and_node_id(parents_neighbors_coeffs):
     """
-    Function to find the maximum time lag in the parent-neighbours-coefficients
+    Function to find the maximum time lag in the parent-neighbors-coefficients
     object, as well as the largest node ID
 
     Parameters
@@ -581,9 +627,6 @@ def _find_max_time_lag_and_node_id(parents_neighbors_coeffs):
     max_node_id = 0
     # Iterate through the keys in parents_neighbors_coeffs
     for j, _, tau, _ in _iter_coeffs(parents_neighbors_coeffs):
-        # TODO move this to the part about checking the input
-        assert tau <= 0, \
-            "All time lags must be given as non-positive values"
         # Find max lag time
         max_time_lag = max(max_time_lag, abs(tau))
         # Find the max node ID
@@ -591,9 +634,9 @@ def _find_max_time_lag_and_node_id(parents_neighbors_coeffs):
     # Return these values
     return max_time_lag, max_node_id
 
-def _get_true_parent_neighbour_dict(parents_neighbors_coeffs):
+def _get_true_parent_neighbor_dict(parents_neighbors_coeffs):
     """
-    Function to return the dictionary of true parent neighbour causal
+    Function to return the dictionary of true parent neighbor causal
     connections in time.
 
     Parameters
@@ -606,7 +649,7 @@ def _get_true_parent_neighbour_dict(parents_neighbors_coeffs):
 
     Returns
     -------
-    true_parent_neighbour : dict
+    true_parent_neighbor : dict
         Dictionary of lists of tuples.  The dictionary is keyed by node ID, the
         list stores the tuple values (parent_node_id, time_lag)
     """
@@ -652,7 +695,7 @@ def _get_covariance_matrix(parents_neighbors_coeffs):
 
 def _get_lag_connect_matrix(parents_neighbors_coeffs):
     """
-    Generates the lagged connectivity matrix from a parent-neighbour
+    Generates the lagged connectivity matrix from a parent-neighbor
     connectivity dictionary.  Used to generate the input for _var_network
 
     Parameters
@@ -679,6 +722,7 @@ def _get_lag_connect_matrix(parents_neighbors_coeffs):
         # If there is a non-zero time lag, add the connection to the matrix
         if tau != 0:
             connect_matrix[j, i, -(tau+1)] = coeff
+    # Return the connectivity matrix
     return connect_matrix
 
 def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
@@ -695,7 +739,6 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
     Parameters
     ----------
     parents_neighbors_coeffs : dict
-
         Dictionary of format {..., j:[(var1, lag1), (var2, lag2), ...], ...} for
         all variables where vars must be in [0..N-1] and lags <= 0 with number
         of variables N. If lag=0, a nonzero value in the covariance matrix (or
@@ -703,8 +746,8 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
 
     use : str, optional (default: 'inv_inno_cov')
         Specifier, either 'inno_cov' or 'inv_inno_cov'.
-        For debugging, 'no_inno' can also be specified, in which case random noise
-        will be disabled.
+        For debugging, 'no_inno' can also be specified, in which case random
+        noise will be disabled.
 
     T : int, optional (default: 1000)
         Sample size.
@@ -720,9 +763,11 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
     X : array-like
         Array of realization.
     """
-    # Generate the true parent neighbours graph
+    # Check the input parents_neighbors_coeffs dictionary for sanity
+    _check_parent_neighbor(parents_neighbors_coeffs)
+    # Generate the true parent neighbors graph
     true_parents_neighbors = \
-            _get_true_parent_neighbour_dict(parents_neighbors_coeffs)
+            _get_true_parent_neighbor_dict(parents_neighbors_coeffs)
     # Generate the correlated innovations
     innos = _get_covariance_matrix(parents_neighbors_coeffs)
     # Generate the lagged connectivity matrix for _var_network
@@ -746,7 +791,6 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
                         T=T)
     # Return the data
     return data, true_parents_neighbors
-
 
 class _Logger(object):
     """Class to append print output to a string which can be saved"""
