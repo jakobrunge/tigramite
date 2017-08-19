@@ -423,12 +423,12 @@ def _generate_noise(covar_matrix, time=1000, use_inverse=False):
                                             size=time)
 
 def _var_network(graph,
-                 inv_inno_cov=None,
+                 add_noise=True,
                  inno_cov=None,
-                 #TODO inconsistent default values with var_process
-                 use='inno_cov',
+                 invert_inno=False,
                  T=100,
                  initial_values=None):
+    # TODO update doc string
     """Returns a vector-autoregressive process with correlated innovations.
 
     Useful for testing.
@@ -460,7 +460,7 @@ def _var_network(graph,
 
     use : str, optional (default: 'inno_cov')
         Specifier, either 'inno_cov' or 'inv_inno_cov'.
-        For debugging, 'no_inno' can also be specified, in which case random noise
+        For debugging, 'no_noise' can also be specified, in which case random noise
         will be disabled.
 
     T : int, optional (default: 100)
@@ -509,22 +509,15 @@ def _var_network(graph,
         # Input the initial values
         X[:, :P] = initial_values
 
-    if use == 'inv_inno_cov' and inv_inno_cov is not None:
-        #TODO wrap in function
-        mult = -numpy.ones((N, N))
-        mult[numpy.diag_indices_from(mult)] = 1
-        inv_inno_cov *= mult
-        noise = numpy.random.multivariate_normal(
-            mean=numpy.zeros(N),
-            cov=numpy.linalg.inv(inv_inno_cov),
-            size=T)
-    elif use == 'inno_cov' and inno_cov is not None:
-        noise = numpy.random.multivariate_normal(
-            mean=numpy.zeros(N), cov=inno_cov, size=T)
-    elif use == 'no_inno':
-        noise = numpy.zeros((T, N))
-    else:
-        noise = numpy.random.randn(T, N)
+    # Check if we are adding noise
+    noise = numpy.zeros((T, N))
+    if add_noise:
+        # Use inno_cov if it was provided
+        if inno_cov is not None:
+            noise = _generate_noise(inno_cov, time=T, use_inverse=invert_inno)
+        # Otherwise just use uncorrelated random noise
+        else:
+            noise = numpy.random.randn(T, N)
 
     # TODO what is this
     # TODO further numpy usage may simplify this
@@ -750,7 +743,7 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
 
     use : str, optional (default: 'inv_inno_cov')
         Specifier, either 'inno_cov' or 'inv_inno_cov'.
-        For debugging, 'no_inno' can also be specified, in which case random
+        For debugging, 'no_noise' can also be specified, in which case random
         noise will be disabled.
 
     T : int, optional (default: 1000)
@@ -776,23 +769,33 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
     innos = _get_covariance_matrix(parents_neighbors_coeffs)
     # Generate the lagged connectivity matrix for _var_network
     connect_matrix = _get_lag_connect_matrix(parents_neighbors_coeffs)
-
-    if verbosity > 0:
-        print("VAR graph =\n%s" % str(connect_matrix))
-        if use == 'inno_cov':
+    # Default values as per 'inno_cov'
+    add_noise = True
+    invert_inno = False
+    # Use the correlated innovations
+    if use == 'inno_cov':
+        if verbosity > 0:
             print("\nInnovation Cov =\n%s" % str(innos))
-        elif use == 'inv_inno_cov':
+    # Use the inverted correlated innovations
+    elif use == 'inv_inno_cov':
+        invert_inno = True
+        if verbosity > 0:
             print("\nInverse Innovation Cov =\n%s" % str(innos))
-        elif use == 'no_inno':
-            print("\nNo random noise will be applied!\n")
-
+    # Do not use any noise
+    elif use == 'no_noise':
+        add_noise = False
+        if verbosity > 0:
+            print("\nInverse Innovation Cov =\n%s" % str(innos))
+    # Use decorrelated noise
+    else:
+        innos = None
     # Generate the data using _var_network
     data = _var_network(graph=connect_matrix,
-                        inv_inno_cov=innos,
+                        add_noise=add_noise,
                         inno_cov=innos,
-                        use=use,
-                        initial_values=initial_values,
-                        T=T)
+                        invert_inno=invert_inno,
+                        T=T,
+                        initial_values=initial_values)
     # Return the data
     return data, true_parents_neighbors
 
