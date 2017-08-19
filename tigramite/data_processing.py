@@ -422,28 +422,6 @@ def _generate_noise(covar_matrix, time=1000, use_inverse=False):
                                             cov=this_covar,
                                             size=time)
 
-def _check_stability_old(graph):
-    """
-    Raises a ValueError if the input graph corresponds to a non-stationary
-    process.
-
-    Parameters
-    ----------
-    graph : array
-        Lagged connectivity matrices. Shape is (n_nodes, n_nodes, max_delay+1)
-    """
-    n_nodes, _, period = graph.shape
-    stabmat = numpy.zeros((n_nodes * period, n_nodes * period))
-    index = 0
-    for i in range(0, n_nodes * period, n_nodes):
-        stabmat[:n_nodes, i:i + n_nodes] = graph[:, :, index]
-        if index < period - 1:
-            stabmat[i + n_nodes:i + 2 * n_nodes, i:i + n_nodes] = \
-                    numpy.identity(n_nodes)
-        index += 1
-    eig = numpy.linalg.eig(stabmat)[0]
-    assert numpy.all(numpy.abs(eig) < 1.), "Nonstationary process!"
-
 def _check_stability(graph):
     """
     Raises a ValueError if the input graph corresponds to a non-stationary
