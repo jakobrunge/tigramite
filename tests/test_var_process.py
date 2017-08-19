@@ -6,9 +6,9 @@ from __future__ import print_function
 import copy
 import pytest
 import numpy as np
-
 import tigramite.data_processing as pp
 
+# TEST DATA GENERATION #########################################################
 def gen_decay(init_val, decay_const, n_times, delay):
     """
     Generate the initial values for the exponential decay test cases
@@ -87,7 +87,7 @@ def gen_process(a_process):
     data, true_parents_neighbors = pp.var_process(coefs,
                                                   T=max_time,
                                                   initial_values=init_vals,
-                                                  use="no_inno")
+                                                  use="no_noise")
     return data, true_parents_neighbors
 
 def check_process_data(name, coefs, data, expect):
@@ -148,8 +148,9 @@ def test_coupled_process_data(coupled_exp_decay_process):
     # Generate and check the data
     check_process(coupled_exp_decay_process)
 
+# TEST PARAMETER CHECKING ######################################################
 @pytest.fixture(params=[
-    #Returns a good parameter set along with a modified, bad parameter set that 
+    #Returns a good parameter set along with a modified, bad parameter set that
     #should raise an error in var_process
     #Bad parameter sets are created by defining a link using:
     #node,  parent, delay, error_message
@@ -172,7 +173,7 @@ def bad_parameter_sets(request):
 
 def test_bad_parameters(bad_parameter_sets):
     """
-    Test that the correct exceptions are raised for bad input connectivity 
+    Test that the correct exceptions are raised for bad input connectivity
     dictionaries
     """
     # Unpack the parameter set fixture
@@ -188,3 +189,28 @@ def test_bad_parameters(bad_parameter_sets):
     # Ensure an exception is raised for a bad parameter set
     with pytest.raises(ValueError, message=error_message):
         pp._check_parent_neighbor(bad_params)
+
+# TEST NOISE GENERATION ########################################################
+
+def test_noise_generation():
+    """
+    Test the random noise generation in var_process
+    """
+    # Define a good parameter set with no time delays at all
+    default_coef = 0.3
+    good_params = {}
+    good_params[0] = [((1, 0), default_coef)]
+    good_params[1] = [((2, 0), default_coef)]
+    good_params[2] = [((0, 0), default_coef)]
+    # Get the innovation matrixt
+    innos = pp._get_covariance_matrix(good_params)
+    # Check that the innovation correlation matrix is identity
+    print(innos)
+    assert 0
+
+# Check construction of innos
+# Check manipulation of innos for inv
+# Check generation of noise
+#  * no_noise
+#  * inv_innos
+#  * innos
