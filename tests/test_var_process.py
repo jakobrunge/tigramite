@@ -192,25 +192,65 @@ def test_bad_parameters(bad_parameter_sets):
 
 # TEST NOISE GENERATION ########################################################
 
-def test_noise_generation():
+@pytest.fixture()
+def covariance_parameters(request):
+    """
+    Define a good parameter set with no time delays at all to induce
+    a noise-only sample and return the resulting covariance matrix
+    """
+    default_coef = 0.1
+    good_params = {}
+    good_params[0] = [((1, 0), default_coef * 1.)]
+    good_params[1] = [((2, 0), default_coef * 2.)]
+    good_params[2] = [((0, 0), default_coef * 3.)]
+    good_params[3] = [((3, 0), default_coef * 4.)]
+    # Get the innovation matrix
+    covar_matrix = pp._get_covariance_matrix(good_params)
+    return good_params, covar_matrix
+
+def test_symmetric_covariance(covariance_parameters):
     """
     Test the random noise generation in var_process
     """
-    # Define a good parameter set with no time delays at all
-    default_coef = 0.3
-    good_params = {}
-    good_params[0] = [((1, 0), default_coef)]
-    good_params[1] = [((2, 0), default_coef)]
-    good_params[2] = [((0, 0), default_coef)]
-    # Get the innovation matrixt
-    innos = pp._get_covariance_matrix(good_params)
-    # Check that the innovation correlation matrix is identity
-    print(innos)
-    assert 0
+    # Unpack the covariance matrix
+    _, covar_matrix = covariance_parameters
+    # Test the matrix is symmetric
+    err_message = "Covariance matrix must be symmetric!"
+    np.testing.assert_allclose(covar_matrix,
+                               covar_matrix.T,
+                               rtol=1e-10,
+                               verbose=True,
+                               err_msg=err_message)
 
-# Check construction of innos
-# Check manipulation of innos for inv
-# Check generation of noise
-#  * no_noise
-#  * inv_innos
-#  * innos
+def test_covariance_construction(covariance_parameters):
+    """
+    Test the random noise covariance matrix construction from a set of
+    parameters
+    """
+    # Unpack the covariance matrix and parameters
+    good_params, covar_matrix = covariance_parameters
+    # Check the values are passed correctly
+    for j, i, _, coeff in pp._iter_coeffs(good_params):
+        covar_coeff = covar_matrix[j, i]
+        err_message = "Node {} and parent node {} have".format(j, i)+\
+                        " coefficient {} for tau == 0,\nbut the".format(coeff)+\
+                        " coefficient in the covariance matrix"+\
+                        " is {} ".format(covar_coeff)
+        np.testing.assert_approx_equal(coeff, covar_coeff, err_msg=err_message)
+
+def test_noise_generation(covariance_parameters):
+    """
+    Ensure the covariance parameters are respected when the noise is generated
+    """
+    # Unpack the parameters and covariance matrix
+    good_params, covar_matrix = covariance_parameters
+    # Generate noise-only from this parameter set
+    data, _ = pp.var_process(good_params, T=10000, use='inno_cov',
+                             verbosity=0, initial_values=None)
+    # Get the covariance of the data set
+    covar_result = np.cov(data.T)
+    err_message = "Covariance of data does not match covariance implied by "+\
+                  " parameter set"
+    np.testing.assert_allclose(covar_matrix, covar_result,
+                               rtol=1e-1, atol=0.01,
+                               verbose=True, err_msg=err_message)
