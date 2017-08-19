@@ -475,58 +475,64 @@ def _var_network(graph,
     X : array
         Array of realization.
     """
-    # TODO remove one N value..
-    N, N, P = graph.shape
+    n_nodes, _, period = graph.shape
+    # TODO enforce usage of time instead of bad naming T
+    time = T
 
     # Test stability
     # TODO Sparse matrix...  this goes as (N*P)^2
-    stabmat = numpy.zeros((N * P, N * P))
+    stabmat = numpy.zeros((n_nodes * period, n_nodes * period))
     index = 0
     # TODO Use enum instead of index..
     # TODO what is this
     # TODO wrap in function
-    for i in range(0, N * P, N):
-        stabmat[:N, i:i + N] = graph[:, :, index]
-        if index < P - 1:
-            stabmat[i + N:i + 2 * N, i:i + N] = numpy.identity(N)
+    for i in range(0, n_nodes * period, n_nodes):
+        stabmat[:n_nodes, i:i + n_nodes] = graph[:, :, index]
+        if index < period - 1:
+            stabmat[i + n_nodes:i + 2 * n_nodes, i:i + n_nodes] = \
+                    numpy.identity(n_nodes)
         index += 1
 
     eig = numpy.linalg.eig(stabmat)[0]
     assert numpy.all(numpy.abs(eig) < 1.), "Nonstationary process!"
 
     # Generate the returned data
-    X = numpy.random.randn(N, T)
+    data = numpy.random.randn(n_nodes, time)
     # Load the initial values
     if initial_values is not None:
         # Ensure it is a numpy array
         assert isinstance(initial_values, numpy.ndarray),\
             "User must provide initial_values as a numpy.ndarray"
         # Check the shape is correct
-        assert initial_values.shape == X[:, :P].shape,\
+        assert initial_values.shape == data[:, :period].shape,\
             "Initial values must be of shape (n_nodes, max_delay+1)"+\
             "\n current shape : " + str(initial_values.shape)+\
-            "\n desired shape : " + str(X[:, :P].shape)
+            "\n desired shape : " + str(data[:, :period].shape)
         # Input the initial values
-        X[:, :P] = initial_values
+        data[:, :period] = initial_values
 
     # Check if we are adding noise
-    noise = numpy.zeros((T, N))
+    noise = numpy.zeros((time, n_nodes))
     if add_noise:
         # Use inno_cov if it was provided
         if inno_cov is not None:
-            noise = _generate_noise(inno_cov, time=T, use_inverse=invert_inno)
+            noise = _generate_noise(inno_cov,
+                                    time=time,
+                                    use_inverse=invert_inno)
         # Otherwise just use uncorrelated random noise
         else:
-            noise = numpy.random.randn(T, N)
+            noise = numpy.random.randn(time, n_nodes)
 
     # TODO what is this
     # TODO further numpy usage may simplify this
-    for t in range(P, T):
-        Xpast = numpy.repeat(
-            X[:, t - P:t][:, ::-1].reshape(1, N, P), N, axis=0)
-        X[:, t] = (Xpast * graph).sum(axis=2).sum(axis=1) + noise[t]
+    for a_time in range(period, time):
+        data_past = numpy.repeat(
+            data[:, a_time-period:a_time][:, ::-1].reshape(1, n_nodes, period),
+            n_nodes, axis=0)
+        data[:, a_time] = (data_past*graph).sum(axis=2).sum(axis=1)
+        data[:, a_time] += noise[a_time]
 
-    return X.transpose()
+    return data.transpose()
 
 def _iter_coeffs(parents_neighbors_coeffs):
     """
@@ -687,6 +693,7 @@ def _get_covariance_matrix(parents_neighbors_coeffs):
     for j, i, tau, coeff in _iter_coeffs(parents_neighbors_coeffs):
         # Add to covar_matrix if node connection is instantaneous
         if tau == 0:
+            # TODO should there be a j != i catch?
             covar_matrix[j, i] = covar_matrix[i, j] = coeff
     return covar_matrix
 
