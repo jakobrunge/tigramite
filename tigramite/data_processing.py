@@ -3,12 +3,11 @@
 # Author: Jakob Runge <jakobrunge@posteo.de>
 #
 # License: GNU General Public License v3.0
-
-
 from __future__ import print_function
 from collections import defaultdict
 import sys
 import warnings
+import copy
 import numpy
 
 
@@ -339,7 +338,7 @@ def ordinal_patt_array(array, array_mask=None, dim=2, step=1,
 
     (patt, patt_mask, weights_array) = \
             tigramite_cython_code._get_patterns_cython(array, array_mask,
-                                                       patt, patt_mask, 
+                                                       patt, patt_mask,
                                                        weights_array, dim,
                                                        step, fac, N, T)
 
@@ -387,7 +386,7 @@ def quantile_bin_array(data, bins=6):
 
     return symb_array.astype('int32')
 
-def _generate_noise(covar_matrix, use_inverse=False):
+def _generate_noise(covar_matrix, time=1000, use_inverse=False):
     """
     Generate a multivariate normal distribution using correlated innovations.
 
@@ -396,30 +395,32 @@ def _generate_noise(covar_matrix, use_inverse=False):
     covar_matrix : array
         Covariance matrix of the random variables
 
+    time : int
+        Sample size
+
     use_inverse : bool, optional
-        Invert the covarience matrix before use
+        Negate the off-diagonal elements and invert the covariance matrix
+        before use
 
     Returns
     -------
     noise : array
         Random noise generated according to covar_matrix
     """
-    if use_inverse == 'inv_inno_cov' and inv_inno_cov is not None:
-        #TODO wrap in function
-        mult = -numpy.ones((N, N))
-        mult[numpy.diag_indices_from(mult)] = 1
-        inv_inno_cov *= mult
-        noise = numpy.random.multivariate_normal(
-            mean=numpy.zeros(N),
-            cov=numpy.linalg.inv(inv_inno_cov),
-            size=T)
-    elif use == 'inno_cov' and inno_cov is not None:
-        noise = numpy.random.multivariate_normal(
-            mean=numpy.zeros(N), cov=inno_cov, size=T)
-    else:
-        noise = numpy.random.randn(T, N)
-
-
+    # Pull out the number of nodes from the shape of the covar_matrix
+    n_nodes = covar_matrix.shape[0]
+    # Make a deep copy for use in the inverse case
+    this_covar = covar_matrix
+    # Take the negative inverse if needed
+    if use_inverse:
+        this_covar = copy.deepcopy(covar_matrix)
+        this_covar *= -1
+        this_covar[numpy.diag_indices_from(this_covar)] *= -1
+        this_covar = numpy.linalg.inv(this_covar)
+    # Return the noise distribution
+    return numpy.random.multivariate_normal(mean=numpy.zeros(n_nodes),
+                                            cov=this_covar,
+                                            size=time)
 
 def _var_network(graph,
                  inv_inno_cov=None,
