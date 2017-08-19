@@ -9,7 +9,7 @@ import sys
 import warnings
 import copy
 import numpy
-
+import scipy.sparse
 
 # TODO force usage of pandas DF, do not support own data frame...
 class DataFrame():
@@ -422,6 +422,65 @@ def _generate_noise(covar_matrix, time=1000, use_inverse=False):
                                             cov=this_covar,
                                             size=time)
 
+def _check_stability_old(graph):
+    """
+    Raises a ValueError if the input graph corresponds to a non-stationary
+    process.
+
+    Parameters
+    ----------
+    graph : array
+        Lagged connectivity matrices. Shape is (n_nodes, n_nodes, max_delay+1)
+    """
+    n_nodes, _, period = graph.shape
+    stabmat = numpy.zeros((n_nodes * period, n_nodes * period))
+    index = 0
+    for i in range(0, n_nodes * period, n_nodes):
+        stabmat[:n_nodes, i:i + n_nodes] = graph[:, :, index]
+        if index < period - 1:
+            stabmat[i + n_nodes:i + 2 * n_nodes, i:i + n_nodes] = \
+                    numpy.identity(n_nodes)
+        index += 1
+    eig = numpy.linalg.eig(stabmat)[0]
+    assert numpy.all(numpy.abs(eig) < 1.), "Nonstationary process!"
+
+def _check_stability(graph):
+    """
+    Raises a ValueError if the input graph corresponds to a non-stationary
+    process.
+
+    Parameters
+    ----------
+    graph : array
+        Lagged connectivity matrices. Shape is (n_nodes, n_nodes, max_delay+1)
+    """
+    # Get the shape from the input graph
+    n_nodes, _, period = graph.shape
+    # Set the top section as the horizontally stacked matrix of
+    # shape (n_nodes, n_nodes * period)
+    stability_matrix = \
+        scipy.sparse.hstack([scipy.sparse.lil_matrix(graph[:, :, t_slice])
+                             for t_slice in range(period)])
+    # Extend an identity matrix of shape
+    # (n_nodes * (period - 1), n_nodes * (period - 1) to shape
+    # (n_nodes * (period - 1), n_nodes * period) and stack the top section on
+    # top to make the stability matrix of shape
+    # (n_nodes * period, n_nodes * period)
+    stability_matrix = \
+        scipy.sparse.vstack([stability_matrix,
+                             scipy.sparse.eye(n_nodes * (period - 1),
+                                              n_nodes * period)])
+    # Convert to a compressed row sorted matrix, as it may be easier for the
+    # linear algebra package
+    stability_matrix = stability_matrix.to_csr()
+    # Get the eigen values of the stability matrix
+    eigen_values = scipy.sparse.linalg.eigs(stability_matrix,
+                                            return_eigenvectors=False)
+    # Ensure they all have less than one magnitude
+    assert numpy.all(numpy.abs(eigen_values) < 1.), \
+        "Values given by time lagged connectivity matrix corresponds to a "+\
+        " non-stationary process!"
+
 def _var_network(graph,
                  add_noise=True,
                  inno_cov=None,
@@ -476,29 +535,15 @@ def _var_network(graph,
         Array of realization.
     """
     n_nodes, _, period = graph.shape
-    # TODO enforce usage of time instead of bad naming T
+    # TODO enforce usage of time instead of bad parameter name T
     time = T
-
     # Test stability
-    # TODO Sparse matrix...  this goes as (N*P)^2
-    stabmat = numpy.zeros((n_nodes * period, n_nodes * period))
-    index = 0
-    # TODO Use enum instead of index..
-    # TODO what is this
-    # TODO wrap in function
-    for i in range(0, n_nodes * period, n_nodes):
-        stabmat[:n_nodes, i:i + n_nodes] = graph[:, :, index]
-        if index < period - 1:
-            stabmat[i + n_nodes:i + 2 * n_nodes, i:i + n_nodes] = \
-                    numpy.identity(n_nodes)
-        index += 1
-
-    eig = numpy.linalg.eig(stabmat)[0]
-    assert numpy.all(numpy.abs(eig) < 1.), "Nonstationary process!"
+    _check_stability(graph)
 
     # Generate the returned data
     data = numpy.random.randn(n_nodes, time)
     # Load the initial values
+    # TODO wrap this in a function
     if initial_values is not None:
         # Ensure it is a numpy array
         assert isinstance(initial_values, numpy.ndarray),\
@@ -512,7 +557,7 @@ def _var_network(graph,
         data[:, :period] = initial_values
 
     # Check if we are adding noise
-    noise = numpy.zeros((time, n_nodes))
+    noise = None
     if add_noise:
         # Use inno_cov if it was provided
         if inno_cov is not None:
@@ -530,7 +575,8 @@ def _var_network(graph,
             data[:, a_time-period:a_time][:, ::-1].reshape(1, n_nodes, period),
             n_nodes, axis=0)
         data[:, a_time] = (data_past*graph).sum(axis=2).sum(axis=1)
-        data[:, a_time] += noise[a_time]
+        if add_noise:
+            data[:, a_time] += noise[a_time]
 
     return data.transpose()
 
