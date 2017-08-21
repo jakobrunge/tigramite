@@ -450,7 +450,7 @@ def _check_stability(graph):
                                               n_nodes * period)])
     # Convert to a compressed row sorted matrix, as it may be easier for the
     # linear algebra package
-    stability_matrix = stability_matrix.to_csr()
+    stability_matrix = stability_matrix.tocsr()
     # Get the eigen values of the stability matrix
     eigen_values = scipy.sparse.linalg.eigs(stability_matrix,
                                             return_eigenvectors=False)
