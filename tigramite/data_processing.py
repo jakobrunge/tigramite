@@ -440,7 +440,7 @@ def _check_stability(graph):
         scipy.sparse.hstack([scipy.sparse.lil_matrix(graph[:, :, t_slice])
                              for t_slice in range(period)])
     # Extend an identity matrix of shape
-    # (n_nodes * (period - 1), n_nodes * (period - 1) to shape
+    # (n_nodes * (period - 1), n_nodes * (period - 1)) to shape
     # (n_nodes * (period - 1), n_nodes * period) and stack the top section on
     # top to make the stability matrix of shape
     # (n_nodes * period, n_nodes * period)
@@ -451,8 +451,12 @@ def _check_stability(graph):
     # Convert to a compressed row sorted matrix, as it may be easier for the
     # linear algebra package
     stability_matrix = stability_matrix.tocsr()
+    # Find the eigen values of the matrix.  Note the maximum that can be found 
+    # is the dimension of the square stability matrix - 1
+    n_eigs = (n_nodes * period) - 1
     # Get the eigen values of the stability matrix
     eigen_values = scipy.sparse.linalg.eigs(stability_matrix,
+                                            k=n_eigs,
                                             return_eigenvectors=False)
     # Ensure they all have less than one magnitude
     assert numpy.all(numpy.abs(eigen_values) < 1.), \
