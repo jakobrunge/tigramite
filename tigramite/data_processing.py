@@ -829,6 +829,7 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
     add_noise = True
     invert_inno = False
     # Use the correlated innovations
+    # TODO tell the user if uncorrelated noise will be used
     if use == 'inno_cov':
         if verbosity > 0:
             print("\nInnovation Cov =\n%s" % str(innos))
