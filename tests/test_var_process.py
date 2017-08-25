@@ -1,7 +1,6 @@
 """
 Testing var_process using exponential decay examples.
 """
-#TODO add testing of random variables
 from __future__ import print_function
 import copy
 import pytest
@@ -252,5 +251,5 @@ def test_noise_generation(covariance_parameters):
     err_message = "Covariance of data does not match covariance implied by "+\
                   " parameter set"
     np.testing.assert_allclose(covar_matrix, covar_result,
-                               rtol=1e-1, atol=0.01,
+                               rtol=1e-1, atol=0.025,
                                verbose=True, err_msg=err_message)

@@ -10,6 +10,7 @@ import warnings
 import copy
 import numpy
 import scipy.sparse
+import scipy.sparse.linalg
 
 # TODO force usage of pandas DF, do not support own data frame...
 class DataFrame():
@@ -448,16 +449,22 @@ def _check_stability(graph):
         scipy.sparse.vstack([stability_matrix,
                              scipy.sparse.eye(n_nodes * (period - 1),
                                               n_nodes * period)])
-    # Convert to a compressed row sorted matrix, as it may be easier for the
-    # linear algebra package
-    stability_matrix = stability_matrix.tocsr()
-    # Find the eigen values of the matrix.  Note the maximum that can be found 
-    # is the dimension of the square stability matrix - 1
-    n_eigs = (n_nodes * period) - 1
-    # Get the eigen values of the stability matrix
-    eigen_values = scipy.sparse.linalg.eigs(stability_matrix,
-                                            k=n_eigs,
-                                            return_eigenvectors=False)
+    # Check the number of dimensions to see if we can afford to use a dense
+    # matrix
+    n_eigs = stability_matrix.shape[0]
+    # TODO clarify what number to use here
+    if n_eigs <= 25:
+        # If it is relatively low in dimensionality, use a dense array
+        stability_matrix = stability_matrix.todense()
+        eigen_values, _ = scipy.linalg.eig(stability_matrix)
+    else:
+        # If it is a large dimensionality, convert to a compressed row sorted
+        # matrix, as it may be easier for the linear algebra package
+        stability_matrix = stability_matrix.tocsr()
+        # Get the eigen values of the stability matrix
+        eigen_values = scipy.sparse.linalg.eigs(stability_matrix,
+                                                k=(n_eigs - 2),
+                                                return_eigenvectors=False)
     # Ensure they all have less than one magnitude
     assert numpy.all(numpy.abs(eigen_values) < 1.), \
         "Values given by time lagged connectivity matrix corresponds to a "+\
