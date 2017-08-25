@@ -570,7 +570,6 @@ def _var_network(graph,
         else:
             noise = numpy.random.randn(time, n_nodes)
 
-    # TODO what is this
     # TODO further numpy usage may simplify this
     for a_time in range(period, time):
         data_past = numpy.repeat(
@@ -590,8 +589,8 @@ def _iter_coeffs(parents_neighbors_coeffs):
     Parameters
     ----------
     parents_neighbors_coeffs : dict
-
-        Dictionary of format {..., j:[(var1, lag1), (var2, lag2), ...], ...} for
+        Dictionary of format:
+        {..., j:[((var1, lag1), coef1), ((var2, lag2), coef2), ...], ...} for
         all variables where vars must be in [0..N-1] and lags <= 0 with number
         of variables N.
 
@@ -620,8 +619,8 @@ def _check_parent_neighbor(parents_neighbors_coeffs):
     Parameters
     ----------
     parents_neighbors_coeffs : dict
-
-        Dictionary of format {..., j:[(var1, lag1), (var2, lag2), ...], ...} for
+        Dictionary of format:
+        {..., j:[((var1, lag1), coef1), ((var2, lag2), coef2), ...], ...} for
         all variables where vars must be in [0..N-1] and lags <= 0 with number
         of variables N.
     """
@@ -663,8 +662,8 @@ def _find_max_time_lag_and_node_id(parents_neighbors_coeffs):
     Parameters
     ----------
     parents_neighbors_coeffs : dict
-
-        Dictionary of format {..., j:[(var1, lag1), (var2, lag2), ...], ...} for
+        Dictionary of format:
+        {..., j:[((var1, lag1), coef1), ((var2, lag2), coef2), ...], ...} for
         all variables where vars must be in [0..N-1] and lags <= 0 with number
         of variables N.
 
@@ -693,8 +692,8 @@ def _get_true_parent_neighbor_dict(parents_neighbors_coeffs):
     Parameters
     ----------
     parents_neighbors_coeffs : dict
-
-        Dictionary of format {..., j:[(var1, lag1), (var2, lag2), ...], ...} for
+        Dictionary of format:
+        {..., j:[((var1, lag1), coef1), ((var2, lag2), coef2), ...], ...} for
         all variables where vars must be in [0..N-1] and lags <= 0 with number
         of variables N.
 
@@ -720,8 +719,8 @@ def _get_covariance_matrix(parents_neighbors_coeffs):
     Parameters
     ----------
     parents_neighbors_coeffs : dict
-
-        Dictionary of format {..., j:[(var1, lag1), (var2, lag2), ...], ...} for
+        Dictionary of format:
+        {..., j:[((var1, lag1), coef1), ((var2, lag2), coef2), ...], ...} for
         all variables where vars must be in [0..N-1] and lags <= 0 with number
         of variables N.
 
@@ -753,8 +752,8 @@ def _get_lag_connect_matrix(parents_neighbors_coeffs):
     Parameters
     ----------
     parents_neighbors_coeffs : dict
-
-        Dictionary of format {..., j:[(var1, lag1), (var2, lag2), ...], ...} for
+        Dictionary of format:
+        {..., j:[((var1, lag1), coef1), ((var2, lag2), coef2), ...], ...} for
         all variables where vars must be in [0..N-1] and lags <= 0 with number
         of variables N.
 
@@ -779,8 +778,6 @@ def _get_lag_connect_matrix(parents_neighbors_coeffs):
 
 def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
                 verbosity=0, initial_values=None):
-    #TODO docstring looks wrong about dict input format
-    #TODO docstring is wrong about the output, optional output can be used
     #TODO j: [var1, lag1, coeff] is a better format
     #TODO sparse array of j->[var1, lag1, coeff]
     #TODO normal array of j->[var1, lag1, coeff], forcing j to be contiguous from 0
@@ -791,13 +788,16 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
     Parameters
     ----------
     parents_neighbors_coeffs : dict
-        Dictionary of format {..., j:[(var1, lag1), (var2, lag2), ...], ...} for
-        all variables where vars must be in [0..N-1] and lags <= 0 with number
-        of variables N. If lag=0, a nonzero value in the covariance matrix (or
-        its inverse) is implied. These should be the same for (i, j) and (j, i).
+        Dictionary of format:
+            {..., j:[((var1, lag1), coef1), ((var2, lag2), coef2), ...], ...}
+        for all variables where vars must be in [0..N-1] and lags <= 0 with
+        number of variables N. If lag=0, a nonzero value in the covariance
+        matrix (or its inverse) is implied. These should be the same for (i, j)
+        and (j, i).
 
     use : str, optional (default: 'inv_inno_cov')
         Specifier, either 'inno_cov' or 'inv_inno_cov'.
+        Any other specifier will result in non-correlated noise.
         For debugging, 'no_noise' can also be specified, in which case random
         noise will be disabled.
 
@@ -812,8 +812,11 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
 
     Returns
     -------
-    X : array-like
-        Array of realization.
+    data : array-like
+        Data generated from this process
+    true_parent_neighbor : dict
+        Dictionary of lists of tuples.  The dictionary is keyed by node ID, the
+        list stores the tuple values (parent_node_id, time_lag)
     """
     # Check the input parents_neighbors_coeffs dictionary for sanity
     _check_parent_neighbor(parents_neighbors_coeffs)
