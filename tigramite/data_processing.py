@@ -496,7 +496,6 @@ def _var_network(graph,
                  invert_inno=False,
                  T=100,
                  initial_values=None):
-    # TODO update doc string
     """Returns a vector-autoregressive process with correlated innovations.
 
     Useful for testing.
@@ -520,16 +519,15 @@ def _var_network(graph,
     graph : array
         Lagged connectivity matrices. Shape is (n_nodes, n_nodes, max_delay+1)
 
-    inv_inno_cov : array, optional (default: None)
-        Inverse covariance matrix of innovations.
+    add_noise : bool, optional (default: True)
+        Flag to add random noise or not
 
     inno_cov : array, optional (default: None)
         Covariance matrix of innovations.
 
-    use : str, optional (default: 'inno_cov')
-        Specifier, either 'inno_cov' or 'inv_inno_cov'.
-        For debugging, 'no_noise' can also be specified, in which case random noise
-        will be disabled.
+    invert_inno : bool, optional (defualt : False)
+        Flag to negate off-diagonal elements of inno_cov and invert it before
+        using it as the covariance matrix of innovations
 
     T : int, optional (default: 100)
         Sample size.
