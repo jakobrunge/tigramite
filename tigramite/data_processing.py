@@ -552,7 +552,7 @@ def _var_network(graph,
     # Load the initial values
     if initial_values is not None:
         # Check the shape of the initial values
-        _check_initial_values(initial_values, data[:, :period.shape])
+        _check_initial_values(initial_values, data[:, :period].shape)
         # Input the initial values
         data[:, :period] = initial_values
 
