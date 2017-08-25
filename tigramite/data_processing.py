@@ -425,7 +425,7 @@ def _generate_noise(covar_matrix, time=1000, use_inverse=False):
 
 def _check_stability(graph):
     """
-    Raises a ValueError if the input graph corresponds to a non-stationary
+    Raises an AssertionError if the input graph corresponds to a non-stationary
     process.
 
     Parameters
@@ -469,6 +469,26 @@ def _check_stability(graph):
     assert numpy.all(numpy.abs(eigen_values) < 1.), \
         "Values given by time lagged connectivity matrix corresponds to a "+\
         " non-stationary process!"
+
+def _check_initial_values(initial_values, shape):
+    """
+    Raises a AssertionError if the input initial values:
+        * Are not a numpy array OR
+        * Do not have the shape (n_nodes, max_delay+1)
+
+    Parameters
+    ----------
+    graph : array
+        Lagged connectivity matrices. Shape is (n_nodes, n_nodes, max_delay+1)
+    """
+    # Ensure it is a numpy array
+    assert isinstance(initial_values, numpy.ndarray),\
+        "User must provide initial_values as a numpy.ndarray"
+    # Check the shape is correct
+    assert initial_values.shape == shape,\
+        "Initial values must be of shape (n_nodes, max_delay+1)"+\
+        "\n current shape : " + str(initial_values.shape)+\
+        "\n desired shape : " + str(shape)
 
 def _var_network(graph,
                  add_noise=True,
@@ -532,16 +552,9 @@ def _var_network(graph,
     # Generate the returned data
     data = numpy.random.randn(n_nodes, time)
     # Load the initial values
-    # TODO wrap this in a function
     if initial_values is not None:
-        # Ensure it is a numpy array
-        assert isinstance(initial_values, numpy.ndarray),\
-            "User must provide initial_values as a numpy.ndarray"
-        # Check the shape is correct
-        assert initial_values.shape == data[:, :period].shape,\
-            "Initial values must be of shape (n_nodes, max_delay+1)"+\
-            "\n current shape : " + str(initial_values.shape)+\
-            "\n desired shape : " + str(data[:, :period].shape)
+        # Check the shape of the initial values
+        _check_initial_values(initial_values, data[:, :period.shape])
         # Input the initial values
         data[:, :period] = initial_values
 
