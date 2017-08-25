@@ -770,7 +770,7 @@ def _draw_network_with_curved_edges(
     label_fraction=.5, link_colorbar_label='link',
     link_edge_colorbar_label='link_edge',
     undirected_curved=False, undirected_style='solid',
-    network_lower_bound=0.2, 
+    network_lower_bound=0.2, show_colorbar=True,
     ):
     """Function to draw a network from networkx graph instance.
 
@@ -824,6 +824,10 @@ def _draw_network_with_curved_edges(
             link_edge = d['directed_edge']
             linestyle = 'solid'
             linewidth = 0.
+            if d['directed_attribute'] == 'spurious':
+                facecolor = 'grey'
+            #     linestyle = 'dashed'
+
         else:
             rad = undirected_curved * curved_radius
             if cmap_links is not None:
@@ -846,8 +850,13 @@ def _draw_network_with_curved_edges(
             alpha = d['undirected_alpha']
             arrowstyle = 'simple,head_length=0.0001'
             link_edge = d['undirected_edge']
-            linestyle = undirected_style
+            linestyle = d['undirected_style']
             linewidth = 0.
+            if d['undirected_attribute'] == 'spurious':
+                facecolor = 'grey'
+                # linestyle = 'dashed'
+
+            # print d['undirected_attribute']
 
         if link_edge:
             # Outer arrow
@@ -864,6 +873,7 @@ def _draw_network_with_curved_edges(
 
             ax.add_patch(e)
         # Inner arrow
+        # print linestyle
         e = FancyArrowPatch(n1.center, n2.center,  # patchA=n1,patchB=n2,
                             arrowstyle= arrowstyle,   #arrowstyle,
                             connectionstyle='arc3,rad=%s' % rad,
@@ -1053,24 +1063,25 @@ def _draw_network_with_curved_edges(
 # cax_e = pyplot.axes([.8, ax.figbox.bounds[1]+0.5, 0.025, 0.35],
 # frameon=False) # setup colorbar axes.
         # setup colorbar axes.
-        cax_e = pyplot.axes([0.55, ax.figbox.bounds[1] + 0.02, 0.4, 0.025 +
-                             (len(all_links_edge_weights) == 0) * 0.035],
-                            frameon=False)
+        if show_colorbar:
+            cax_e = pyplot.axes([0.55, ax.figbox.bounds[1] + 0.02, 0.4, 0.025 +
+                                 (len(all_links_edge_weights) == 0) * 0.035],
+                                frameon=False)
 
-        cb_e = pyplot.colorbar(
-            data_to_rgb_links, cax=cax_e, orientation='horizontal')
-        try:
-            cb_e.set_ticks(numpy.arange(_myround(links_vmin, links_ticks,
-                                                'down'),
-                                     _myround(links_vmax, links_ticks, 'up') +
-                                     links_ticks, links_ticks))
-        except:
-            print ('no ticks given')
+            cb_e = pyplot.colorbar(
+                data_to_rgb_links, cax=cax_e, orientation='horizontal')
+            try:
+                cb_e.set_ticks(numpy.arange(_myround(links_vmin, links_ticks,
+                                                    'down'),
+                                         _myround(links_vmax, links_ticks, 'up') +
+                                         links_ticks, links_ticks))
+            except:
+                print ('no ticks given')
 
-        cb_e.outline.remove()
-        # cb_n.set_ticks()
-        cax_e.set_xlabel(
-            link_colorbar_label, labelpad=1, fontsize=label_fontsize)
+            cb_e.outline.remove()
+            # cb_n.set_ticks()
+            cax_e.set_xlabel(
+                link_colorbar_label, labelpad=1, fontsize=label_fontsize)
 
     if cmap_links_edges is not None and len(all_links_edge_weights) > 0:
         if links_edges_vmin is None:
@@ -1100,7 +1111,7 @@ def _draw_network_with_curved_edges(
                                                 links_edges_ticks, 'up') +
                                         links_edges_ticks,
                                         links_edges_ticks))
-        except:
+        except: 
             print ('no ticks given')
         cb_e.outline.remove()
         # cb_n.set_ticks()
@@ -1129,6 +1140,7 @@ def plot_graph(val_matrix,
                link_colorbar_label='MCI',
                node_colorbar_label='auto-MCI',
                link_width=None,
+               link_attribute=None,
                node_pos=None,
                arrow_linewidth=30.,
                vmin_edges=-1,
@@ -1148,6 +1160,7 @@ def plot_graph(val_matrix,
                link_label_fontsize=6,
                lag_array=None,
                network_lower_bound=0.2,
+               show_colorbar=True,
                ):
     """Creates a network plot.
 
@@ -1195,6 +1208,9 @@ def plot_graph(val_matrix,
     link_width : array-like, optional (default: None)
         Array of val_matrix.shape specifying relative link width with maximum
         given by arrow_linewidth. If None, all links have same width.
+
+    link_attribute : array-like, optional (default: None)
+        String array of val_matrix.shape specifying link attributes.
 
     node_pos : dictionary, optional (default: None)
         Dictionary of node positions in axis coordinates of form 
@@ -1254,6 +1270,9 @@ def plot_graph(val_matrix,
 
     network_lower_bound : float, optional (default: 0.2)
         Fraction of vertical space below graph plot.
+
+    show_colorbar : bool
+        Whether to show colorbars for links and nodes.
     """
     import networkx
 
@@ -1326,6 +1345,18 @@ def plot_graph(val_matrix,
                 dic['undirected_width'] = link_width[
                     u, v, 0] / link_width.max() * arrow_linewidth
 
+            if link_attribute is None:
+                dic['undirected_attribute'] = None
+            else:
+                dic['undirected_attribute'] =  link_attribute[
+                                                u, v, 0] 
+
+            #     # fraction of nonzero values
+            dic['undirected_style'] = 'solid'
+            # else:
+            # dic['undirected_style'] = link_style[
+            #         u, v, 0] 
+
             all_strengths.append(dic['undirected_color'])
 
             if tau_max > 0:
@@ -1335,6 +1366,7 @@ def plot_graph(val_matrix,
                 dic['directed'] = numpy.any(link_matrix[u,v,1:])
             else:
                 dic['directed'] = False
+
             dic['directed_alpha'] = alpha
             if link_width is None:
                 # fraction of nonzero values
@@ -1342,6 +1374,13 @@ def plot_graph(val_matrix,
             else:
                 dic['directed_width'] = link_width[
                     u, v, argmax] / link_width.max() * arrow_linewidth
+
+            if link_attribute is None:
+                # fraction of nonzero values
+                dic['directed_attribute'] = None
+            else:
+                dic['directed_attribute'] = link_attribute[
+                    u, v, argmax] 
 
             # value at argmax of average
             dic['directed_color'] = val_matrix[u, v][argmax]
@@ -1379,10 +1418,13 @@ def plot_graph(val_matrix,
         for i in range(N):
             pos[i] = (node_pos['x'][i], node_pos['y'][i])
 
+    if cmap_nodes is None:
+        node_color = None
+
     node_rings = {0: {'sizes': None, 'color_array': node_color,
                       'cmap': cmap_nodes, 'vmin': vmin_nodes,
                       'vmax': vmax_nodes, 'ticks': node_ticks,
-                      'label': node_colorbar_label, 'colorbar': True,
+                      'label': node_colorbar_label, 'colorbar': show_colorbar,
                       }
                   }
 
@@ -1408,6 +1450,7 @@ def plot_graph(val_matrix,
         link_label_fontsize=link_label_fontsize,
         link_colorbar_label=link_colorbar_label,
         network_lower_bound=network_lower_bound,
+        show_colorbar=show_colorbar,
         # label_fraction=label_fraction,
         # undirected_style=undirected_style
         )

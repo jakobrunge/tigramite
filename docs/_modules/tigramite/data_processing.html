@@ -535,19 +535,22 @@
                 <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns a vector-autoregressive process with correlated innovations.</span>
 
-<span class="sd">    Wrapper around var_network with possibly more user-friendly input options.</span>
+<span class="sd">    Wrapper around var_network with more user-friendly input options.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    parents_neighbors_coeffs : dict </span>
-
-<span class="sd">        Dictionary of format {..., j:[(var1, lag1), (var2, lag2), ...], ...} for</span>
-<span class="sd">        all variables where vars must be in [0..N-1] and lags &lt;= 0 with number</span>
-<span class="sd">        of variables N. If lag=0, a nonzero value in the covariance matrix (or</span>
-<span class="sd">        its inverse) is implied. These should be the same for (i, j) and (j, i).</span>
+<span class="sd">        Dictionary of format {..., j:[((var1, lag1), coeff), ...], ...} for all</span>
+<span class="sd">        variables where vars must be in [0..N-1] and lags &lt;= 0 with number of</span>
+<span class="sd">        variables N. Coeff refers to the coefficient in the linear model. If</span>
+<span class="sd">        lag=0, a nonzero value in the covariance matrix (or its inverse) is</span>
+<span class="sd">        implied. These should be the same for (i, j) and (j, i).</span>
 
 <span class="sd">    use : str, optional (default: &#39;inv_inno_cov&#39;) </span>
-<span class="sd">        Specifier, either &#39;inno_cov&#39; or &#39;inv_inno_cov&#39;.</span>
+<span class="sd">        Specifier, either &#39;inno_cov&#39; or &#39;inv_inno_cov&#39;. If &#39;inno_cov&#39;, lag=0</span>
+<span class="sd">        entries in parents_neighbors_coeffs are interpreted as entries of the</span>
+<span class="sd">        innovation noise term&#39;s covariance matrix. I &#39;inv_inno_cov&#39;, they are</span>
+<span class="sd">        interpreted as entries in the inverse covariance matrix.</span>
 
 <span class="sd">    T : int, optional (default: 1000) </span>
 <span class="sd">        Sample size.</span>
@@ -559,7 +562,11 @@
 <span class="sd">    -------</span>
 <span class="sd">    X : array-like</span>
 <span class="sd">        Array of realization.</span>
+
+<span class="sd">    true_parents_neighbors : dict</span>
+<span class="sd">        Dictionary of true parents and neighbors</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">max_lag</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">parents_neighbors_coeffs</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>

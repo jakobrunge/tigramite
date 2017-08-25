@@ -653,6 +653,8 @@ class PCMCI():
             containing estimated parents.
         """
 
+
+
         if pc_alpha is None:
             pc_alpha = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
             self.alpha_selection = True
@@ -682,7 +684,7 @@ class PCMCI():
             if len(self.selected_variables) < self.N:
                 print("selected_variables = %s" % self.selected_variables)
             if selected_links is not None:
-                print("selected_links = %s" % self.selected_links)
+                print("selected_links = %s" % selected_links)
             print("independence test = %s" % self.cond_ind_test.measure
                   + "\ntau_min = %d" % tau_min
                   + "\ntau_max = %d" % tau_max
@@ -1072,6 +1074,10 @@ class PCMCI():
             parents = {}
             for j in range(self.N):
                 parents[j] = []
+        else:
+          for j in range(self.N):
+                if j not in list(parents):
+                    parents[j] = []      
 
         val_matrix = numpy.zeros((self.N, self.N, tau_max + 1))
         p_matrix = numpy.ones((self.N, self.N, tau_max + 1))
