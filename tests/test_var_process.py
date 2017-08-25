@@ -189,8 +189,57 @@ def test_bad_parameters(bad_parameter_sets):
     with pytest.raises(ValueError, message=error_message):
         pp._check_parent_neighbor(bad_params)
 
-# TEST NOISE GENERATION ########################################################
+# TEST STABILITY CHECKING ######################################################
+@pytest.fixture(params=[
+    #Returns a stable parameter set along with a modified, unstable parameter 
+    #set that should raise an error in var_process
+    #Parameter sets are created by autocorrelated nodes, with the node ID equal
+    #to the time delay:
+    #max_delay,  coefficient,  error_message
+    (4,          10.0,         "Low-dimensionality, non-stationary process"),
+    (10,         10.0,         "High-dimensionality, non-stationary process")])
+def unstable_parameter_sets(request):
+    # Define a stable parameter set
+    stab_coef = 0.1
+    stab_params = dict()
+    # Define the unstable parameter set
+    unst_params = dict()
+    # Get the dimensionality and coefficient
+    max_delay, unst_coef, message = request.param
+    # Loop over all possible delays from this max delay
+    for delay in range(max_delay):
+        for a_params, a_coef in zip([stab_params, unst_params],
+                                    [stab_coef, unst_coef]):
+            node_id = delay
+            # Correlate each node with the 0th node, using a stable coefficient
+            a_params[node_id] = [((0, -delay), stab_coef)]
+            # Autocorrelate each node N with delay N and the given coefficient
+            a_params[node_id] = [((node_id, -delay), a_coef)]
+    # Return the stable and unstable coefficients
+    return pp._get_lag_connect_matrix(stab_params),\
+           pp._get_lag_connect_matrix(unst_params),\
+           message
 
+def test_stability_parameters(unstable_parameter_sets):
+    """
+    Test that the correct exceptions are raised for unstable lagged connectivity 
+    matricies
+    """
+    # Unpack the parameter set fixture
+    stab_matrix, unst_matrix, message = unstable_parameter_sets
+    error_message = message + " should trigger an assertion error for "+\
+                              "_var_network graph."
+    # Test the good parameter set
+    try:
+        pp._check_stability(stab_matrix)
+    # Ensure no exception is raised
+    except:
+        pytest.fail("Stable matrix set triggers exception incorrectly!")
+    # Ensure an exception is raised for a bad parameter set
+    with pytest.raises(AssertionError, message=error_message):
+        pp._check_stability(unst_matrix)
+
+# TEST NOISE GENERATION ########################################################
 @pytest.fixture()
 def covariance_parameters(request):
     """
