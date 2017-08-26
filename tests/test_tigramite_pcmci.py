@@ -25,22 +25,7 @@ def _get_parent_graph(parents_neighbors_coeffs, exclude=None):
     for j, i, tau, _ in pp._iter_coeffs(parents_neighbors_coeffs):
         if tau != 0 and (i, tau) != exclude:
             graph[j].append((i, tau))
-    return graph
-
-def _get_neighbor_graph(nodes, exclude=None):
-
-    graph = {}
-    for j in list(nodes):
-        graph[j] = []
-        for var, lag in nodes[j]:
-            if lag == 0 and (var, lag) != exclude:
-                graph[j].append((var, lag))
-
-    return graph
-
-
-def cmi2parcorr_trafo(cmi):
-    return numpy.sqrt(1.-numpy.exp(-2.*cmi))
+    return dict(graph)
 
 VERBOSITY = 0
 
@@ -49,6 +34,7 @@ VERBOSITY = 0
     # Parameterize the sample by setting the autocorrelation value, coefficient
     # value, total time length, and random seed to different numbers
     # auto_corr, coeff, time, seed_val
+    (0.5,        0.6,   1000, 11),
     (0.5,        0.6,   1000, 42)])
 def a_sample(request):
     # Set the parameters
@@ -71,26 +57,41 @@ def a_sample(request):
 def a_test(request):
     return ParCorr(verbosity=VERBOSITY)
 
-@pytest.fixture()
-    # Fixture to build and return a parameterized PCMCI
-def a_pcmci(a_sample, a_test):
+@pytest.fixture(params=[
+    # Fixture to build and return a parameterized PCMCI.  Different selected
+    # variables can be defined here.
+    # select_vars
+    (None),
+    ([1])])
+def a_pcmci(a_sample, a_test, request):
     # Unpack the test data and true parent graph
     dataframe, true_parents = a_sample
+    # Get the parameters from this request
+    select_vars = request.param
     # Build the PCMCI instance
-    pcmci = PCMCI(dataframe=dataframe,
+    pcmci = PCMCI(selected_variables=select_vars,
+                  dataframe=dataframe,
                   cond_ind_test=a_test,
                   verbosity=VERBOSITY)
+    # If there are selected variables, edit the true parents to reflect this
+    if select_vars is not None:
+        true_parents = {sel_v : true_parents[sel_v] for sel_v in select_vars}
     # Return the instance and the parents
     return pcmci, true_parents
 
-def test_pcmci(a_pcmci):
+@pytest.fixture(params=[
+    # Keep parameters common for all the run schemes
+    # pc_alpha,  tau_max,  alpha_level
+     (0.05,      2,        0.01)])
+def a_run_params(request):
+    return request.param
+
+
+def test_pcmci(a_pcmci, a_run_params):
     # Unpack the pcmci and the true parents
     pcmci, true_parents = a_pcmci
-    # Setting up strict test level
-    pc_alpha = 0.05  #[0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
-    tau_max = 2
-    alpha_level = 0.01
-
+    # Unpack the run parameters
+    pc_alpha, tau_max, alpha_level = a_run_params
 
     results = pcmci.run_pcmci(
         tau_max=tau_max,
@@ -105,18 +106,11 @@ def test_pcmci(a_pcmci):
     assert_graphs_equal(parents, true_parents)
 
 
-def test_pc_stable(a_sample, a_test):
-    # Unpack the test data and true parent graph
-    dataframe, true_parents = a_sample
-    # Setting up strict test level
-    pc_alpha = 0.05  #[0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
-    tau_max = 2
-    alpha_level = 0.01
-
-    pcmci = PCMCI(
-        dataframe=dataframe,
-        cond_ind_test=a_test,
-        verbosity=VERBOSITY)
+def test_pc_stable(a_pcmci, a_run_params):
+    # Unpack the pcmci and the true parents
+    pcmci, true_parents = a_pcmci
+    # Unpack the run parameters
+    pc_alpha, tau_max, _ = a_run_params
 
     pcmci.run_pc_stable(selected_links=None,
                         tau_min=1,
@@ -129,26 +123,18 @@ def test_pc_stable(a_sample, a_test):
     parents = pcmci.all_parents
     assert_graphs_equal(parents, true_parents)
 
-def test_pc_stable_selected_links(a_sample, a_test):
-    # Unpack the test data and true parent graph
-    dataframe, true_parents = a_sample
-    # Setting up strict test level
-    pc_alpha = 0.05  #[0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
-    tau_max = 2
-    alpha_level = 0.01
+def test_pc_stable_selected_links(a_pcmci, a_run_params):
+    # Unpack the pcmci and the true parents
+    pcmci, true_parents = a_pcmci
+    # Unpack the run parameters
+    pc_alpha, tau_max, _ = a_run_params
 
-    true_parents_here = {0: [(0, -1)],
-                   1: [(1, -1), (0, -1)],
-                   2: []
-                   }
-
-    pcmci = PCMCI(
-        selected_variables=None,
-        dataframe=dataframe,
-        cond_ind_test=a_test,
-        verbosity=VERBOSITY)
-
-    pcmci.run_pc_stable(selected_links=true_parents_here,
+    # TODO parameterize this
+    sel_link = 0
+    true_parents = {par : [true_parents[par][sel_link]] for par in true_parents}
+    # TODO change pc_stable to not require each node to have a selected link
+    # list
+    pcmci.run_pc_stable(selected_links=true_parents,
                         tau_min=1,
                         tau_max=tau_max,
                         save_iterations=False,
@@ -157,56 +143,13 @@ def test_pc_stable_selected_links(a_sample, a_test):
                         max_combinations=1)
 
     parents = pcmci.all_parents
-    # print(parents)
-    # print(_get_parent_graph(true_parents))
-    assert_graphs_equal(parents, true_parents_here)
+    assert_graphs_equal(parents, true_parents)
 
-
-def test_pc_stable_selected_variables(a_sample, a_test):
-    # Unpack the test data and true parent graph
-    dataframe, true_parents = a_sample
-    # Setting up strict test level
-    pc_alpha = 0.05  #[0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
-    tau_max = 2
-    alpha_level = 0.01
-
-    true_parents_here = {0: [],
-                   1: [(1, -1), (0, -1)],
-                   2: []
-                   }
-
-    pcmci = PCMCI(
-        selected_variables=[1],
-        dataframe=dataframe,
-        cond_ind_test=a_test,
-        verbosity=VERBOSITY)
-
-    pcmci.run_pc_stable(selected_links=None,
-                        tau_min=1,
-                        tau_max=tau_max,
-                        save_iterations=False,
-                        pc_alpha=pc_alpha,
-                        max_conds_dim=None,
-                        max_combinations=1)
-
-    parents = pcmci.all_parents
-    # print(parents)
-    # print(_get_parent_graph(true_parents))
-    assert_graphs_equal(parents, true_parents_here)
-
-def test_pc_stable_max_conds_dim(a_sample, a_test):
-    # Unpack the test data and true parent graph
-    dataframe, true_parents = a_sample
-    # Setting up strict test level
-    pc_alpha = 0.05  #[0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
-    tau_max = 2
-    alpha_level = 0.01
-
-    pcmci = PCMCI(
-        selected_variables=None,
-        dataframe=dataframe,
-        cond_ind_test=a_test,
-        verbosity=VERBOSITY)
+def test_pc_stable_max_conds_dim(a_pcmci, a_run_params):
+    # Unpack the pcmci and the true parents
+    pcmci, true_parents = a_pcmci
+    # Unpack the run parameters
+    pc_alpha, tau_max, _ = a_run_params
 
     pcmci.run_pc_stable(selected_links=None,
                         tau_min=1,
@@ -217,23 +160,13 @@ def test_pc_stable_max_conds_dim(a_sample, a_test):
                         max_combinations=1)
 
     parents = pcmci.all_parents
-    # print(parents)
-    # print(_get_parent_graph(true_parents))
     assert_graphs_equal(parents, true_parents)
 
-def test_mci(a_sample, a_test):
-    # Unpack the test data and true parent graph
-    dataframe, true_parents = a_sample
-    # Setting up strict test level
-    pc_alpha = 0.05  #[0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
-    tau_max = 2
-    alpha_level = 0.01
-
-    pcmci = PCMCI(
-        selected_variables=None,
-        dataframe=dataframe,
-        cond_ind_test=a_test,
-        verbosity=VERBOSITY)
+def test_mci(a_pcmci, a_run_params):
+    # Unpack the pcmci and the true parents
+    pcmci, true_parents = a_pcmci
+    # Unpack the run parameters
+    _, tau_max, alpha_level = a_run_params
 
     results = pcmci.run_mci(selected_links=None,
                             tau_min=1,
