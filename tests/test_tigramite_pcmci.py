@@ -1,5 +1,4 @@
 from __future__ import print_function
-import unittest
 from collections import Counter
 import numpy
 from nose.tools import assert_equal
@@ -19,7 +18,6 @@ def assert_graphs_equal(actual, expected):
 
 def _get_parent_graph(nodes, exclude=None):
     """Returns parents"""
-
     graph = {}
     for j in list(nodes):
         graph[j] = []
@@ -28,7 +26,6 @@ def _get_parent_graph(nodes, exclude=None):
                 graph[j].append((var, lag))
 
     return graph
-
 
 def _get_neighbor_graph(nodes, exclude=None):
 
@@ -47,20 +44,22 @@ def cmi2parcorr_trafo(cmi):
 
 verbosity = 0
 
-@pytest.fixture()
+@pytest.fixture(params=[
+    # Parameterize the sample by setting the autocorrelation value, coefficient
+    # value, total time length, and random seed to different numbers
+    # auto_corr, coeff, time, seed_val
+    (0.5,        0.6,   1000, 42)])
 def a_sample(request):
     # Set the parameters
-    auto = 0.5
-    coeff = 0.6
-    T = 1000
+    auto_corr, coeff, time, seed_val = request.param
     # Set the random seed
-    numpy.random.seed(42)
+    numpy.random.seed(seed_val)
     # Define the parent-neighghbour relations
-    links_coeffs = {0: [((0, -1), auto)],
-                    1: [((1, -1), auto), ((0, -1), coeff)],
-                    2: [((2, -1), auto), ((1, -1), coeff)]}
+    links_coeffs = {0: [((0, -1), auto_corr)],
+                    1: [((1, -1), auto_corr), ((0, -1), coeff)],
+                    2: [((2, -1), auto_corr), ((1, -1), coeff)]}
     # Generate the data
-    data, true_parents_coeffs = pp.var_process(links_coeffs, T=T)
+    data, true_parents_coeffs = pp.var_process(links_coeffs, T=time)
     # Get the true parents
     true_parents = _get_parent_graph(true_parents_coeffs)
     return data, true_parents
@@ -114,14 +113,13 @@ def test_pc_stable(a_sample):
         cond_ind_test=cond_ind_test,
         verbosity=verbosity)
 
-    pcmci.run_pc_stable( selected_links=None,
-                         tau_min=1,
-                         tau_max=tau_max,
-                         save_iterations=False,
-                         pc_alpha=pc_alpha,
-                         max_conds_dim=None,
-                         max_combinations=1,
-                         )
+    pcmci.run_pc_stable(selected_links=None,
+                        tau_min=1,
+                        tau_max=tau_max,
+                        save_iterations=False,
+                        pc_alpha=pc_alpha,
+                        max_conds_dim=None,
+                        max_combinations=1)
 
     parents = pcmci.all_parents
     assert_graphs_equal(parents, true_parents)
@@ -150,14 +148,13 @@ def test_pc_stable_selected_links(a_sample):
         cond_ind_test=cond_ind_test,
         verbosity=verbosity)
 
-    pcmci.run_pc_stable( selected_links=true_parents_here,
-                         tau_min=1,
-                         tau_max=tau_max,
-                         save_iterations=False,
-                         pc_alpha=pc_alpha,
-                         max_conds_dim=None,
-                         max_combinations=1,
-                         )
+    pcmci.run_pc_stable(selected_links=true_parents_here,
+                        tau_min=1,
+                        tau_max=tau_max,
+                        save_iterations=False,
+                        pc_alpha=pc_alpha,
+                        max_conds_dim=None,
+                        max_combinations=1)
 
     parents = pcmci.all_parents
     # print(parents)
