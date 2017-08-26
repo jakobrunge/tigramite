@@ -66,22 +66,31 @@ def a_sample(request):
     return pp.DataFrame(data), true_parents
 
 @pytest.fixture()
+    # Parameterize and return the independence test.
+    # Currently just a warpper for ParCorr, but is extentable
 def a_test(request):
-    # Return an independence test
     return ParCorr(verbosity=VERBOSITY)
 
-def test_pcmci(a_sample, a_test):
+@pytest.fixture()
+    # Fixture to build and return a parameterized PCMCI
+def a_pcmci(a_sample, a_test):
     # Unpack the test data and true parent graph
     dataframe, true_parents = a_sample
+    # Build the PCMCI instance
+    pcmci = PCMCI(dataframe=dataframe,
+                  cond_ind_test=a_test,
+                  verbosity=VERBOSITY)
+    # Return the instance and the parents
+    return pcmci, true_parents
+
+def test_pcmci(a_pcmci):
+    # Unpack the pcmci and the true parents
+    pcmci, true_parents = a_pcmci
     # Setting up strict test level
     pc_alpha = 0.05  #[0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
     tau_max = 2
     alpha_level = 0.01
 
-    pcmci = PCMCI(
-        dataframe=dataframe,
-        cond_ind_test=a_test,
-        verbosity=VERBOSITY)
 
     results = pcmci.run_pcmci(
         tau_max=tau_max,
@@ -172,14 +181,13 @@ def test_pc_stable_selected_variables(a_sample, a_test):
         cond_ind_test=a_test,
         verbosity=VERBOSITY)
 
-    pcmci.run_pc_stable( selected_links=None,
-                         tau_min=1,
-                         tau_max=tau_max,
-                         save_iterations=False,
-                         pc_alpha=pc_alpha,
-                         max_conds_dim=None,
-                         max_combinations=1,
-                         )
+    pcmci.run_pc_stable(selected_links=None,
+                        tau_min=1,
+                        tau_max=tau_max,
+                        save_iterations=False,
+                        pc_alpha=pc_alpha,
+                        max_conds_dim=None,
+                        max_combinations=1)
 
     parents = pcmci.all_parents
     # print(parents)
