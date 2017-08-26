@@ -1,5 +1,5 @@
 from __future__ import print_function
-from collections import Counter
+from collections import Counter, defaultdict
 import numpy
 from nose.tools import assert_equal
 import pytest
@@ -16,15 +16,15 @@ def assert_graphs_equal(actual, expected):
     for j in list(expected):
         assert_equal(Counter(iter(actual[j])), Counter(iter(expected[j])))
 
-def _get_parent_graph(nodes, exclude=None):
-    """Returns parents"""
-    graph = {}
-    for j in list(nodes):
-        graph[j] = []
-        for var, lag in nodes[j]:
-            if lag != 0 and (var, lag) != exclude:
-                graph[j].append((var, lag))
-
+def _get_parent_graph(parents_neighbors_coeffs, exclude=None):
+    """
+    Iterates through the input parent-neighghbour coefficient dictionary to
+    return only parent relations (i.e. where tau != 0)
+    """
+    graph = defaultdict(list)
+    for j, i, tau, _ in pp._iter_coeffs(parents_neighbors_coeffs):
+        if tau != 0 and (i, tau) != exclude:
+            graph[j].append((i, tau))
     return graph
 
 def _get_neighbor_graph(nodes, exclude=None):
@@ -42,9 +42,10 @@ def _get_neighbor_graph(nodes, exclude=None):
 def cmi2parcorr_trafo(cmi):
     return numpy.sqrt(1.-numpy.exp(-2.*cmi))
 
-verbosity = 0
+VERBOSITY = 0
 
 @pytest.fixture(params=[
+    # Generate a test data sample
     # Parameterize the sample by setting the autocorrelation value, coefficient
     # value, total time length, and random seed to different numbers
     # auto_corr, coeff, time, seed_val
@@ -59,12 +60,17 @@ def a_sample(request):
                     1: [((1, -1), auto_corr), ((0, -1), coeff)],
                     2: [((2, -1), auto_corr), ((1, -1), coeff)]}
     # Generate the data
-    data, true_parents_coeffs = pp.var_process(links_coeffs, T=time)
+    data, _ = pp.var_process(links_coeffs, T=time)
     # Get the true parents
-    true_parents = _get_parent_graph(true_parents_coeffs)
+    true_parents = _get_parent_graph(links_coeffs)
     return pp.DataFrame(data), true_parents
 
-def test_pcmci(a_sample):
+@pytest.fixture()
+def a_test(request):
+    # Return an independence test
+    return ParCorr(verbosity=VERBOSITY)
+
+def test_pcmci(a_sample, a_test):
     # Unpack the test data and true parent graph
     dataframe, true_parents = a_sample
     # Setting up strict test level
@@ -72,13 +78,10 @@ def test_pcmci(a_sample):
     tau_max = 2
     alpha_level = 0.01
 
-    cond_ind_test = ParCorr(
-        verbosity=verbosity)
-
     pcmci = PCMCI(
         dataframe=dataframe,
-        cond_ind_test=cond_ind_test,
-        verbosity=verbosity)
+        cond_ind_test=a_test,
+        verbosity=VERBOSITY)
 
     results = pcmci.run_pcmci(
         tau_max=tau_max,
@@ -93,7 +96,7 @@ def test_pcmci(a_sample):
     assert_graphs_equal(parents, true_parents)
 
 
-def test_pc_stable(a_sample):
+def test_pc_stable(a_sample, a_test):
     # Unpack the test data and true parent graph
     dataframe, true_parents = a_sample
     # Setting up strict test level
@@ -101,13 +104,10 @@ def test_pc_stable(a_sample):
     tau_max = 2
     alpha_level = 0.01
 
-    cond_ind_test = ParCorr(
-        verbosity=verbosity)
-
     pcmci = PCMCI(
         dataframe=dataframe,
-        cond_ind_test=cond_ind_test,
-        verbosity=verbosity)
+        cond_ind_test=a_test,
+        verbosity=VERBOSITY)
 
     pcmci.run_pc_stable(selected_links=None,
                         tau_min=1,
@@ -120,7 +120,7 @@ def test_pc_stable(a_sample):
     parents = pcmci.all_parents
     assert_graphs_equal(parents, true_parents)
 
-def test_pc_stable_selected_links(a_sample):
+def test_pc_stable_selected_links(a_sample, a_test):
     # Unpack the test data and true parent graph
     dataframe, true_parents = a_sample
     # Setting up strict test level
@@ -133,14 +133,11 @@ def test_pc_stable_selected_links(a_sample):
                    2: []
                    }
 
-    cond_ind_test = ParCorr(
-        verbosity=verbosity)
-
     pcmci = PCMCI(
         selected_variables=None,
         dataframe=dataframe,
-        cond_ind_test=cond_ind_test,
-        verbosity=verbosity)
+        cond_ind_test=a_test,
+        verbosity=VERBOSITY)
 
     pcmci.run_pc_stable(selected_links=true_parents_here,
                         tau_min=1,
@@ -156,7 +153,7 @@ def test_pc_stable_selected_links(a_sample):
     assert_graphs_equal(parents, true_parents_here)
 
 
-def test_pc_stable_selected_variables(a_sample):
+def test_pc_stable_selected_variables(a_sample, a_test):
     # Unpack the test data and true parent graph
     dataframe, true_parents = a_sample
     # Setting up strict test level
@@ -169,14 +166,11 @@ def test_pc_stable_selected_variables(a_sample):
                    2: []
                    }
 
-    cond_ind_test = ParCorr(
-        verbosity=verbosity)
-
     pcmci = PCMCI(
         selected_variables=[1],
         dataframe=dataframe,
-        cond_ind_test=cond_ind_test,
-        verbosity=verbosity)
+        cond_ind_test=a_test,
+        verbosity=VERBOSITY)
 
     pcmci.run_pc_stable( selected_links=None,
                          tau_min=1,
@@ -192,7 +186,7 @@ def test_pc_stable_selected_variables(a_sample):
     # print(_get_parent_graph(true_parents))
     assert_graphs_equal(parents, true_parents_here)
 
-def test_pc_stable_max_conds_dim(a_sample):
+def test_pc_stable_max_conds_dim(a_sample, a_test):
     # Unpack the test data and true parent graph
     dataframe, true_parents = a_sample
     # Setting up strict test level
@@ -200,30 +194,26 @@ def test_pc_stable_max_conds_dim(a_sample):
     tau_max = 2
     alpha_level = 0.01
 
-    cond_ind_test = ParCorr(
-        verbosity=verbosity)
-
     pcmci = PCMCI(
         selected_variables=None,
         dataframe=dataframe,
-        cond_ind_test=cond_ind_test,
-        verbosity=verbosity)
+        cond_ind_test=a_test,
+        verbosity=VERBOSITY)
 
-    pcmci.run_pc_stable( selected_links=None,
-                         tau_min=1,
-                         tau_max=tau_max,
-                         save_iterations=False,
-                         pc_alpha=pc_alpha,
-                         max_conds_dim=2,
-                         max_combinations=1,
-                         )
+    pcmci.run_pc_stable(selected_links=None,
+                        tau_min=1,
+                        tau_max=tau_max,
+                        save_iterations=False,
+                        pc_alpha=pc_alpha,
+                        max_conds_dim=2,
+                        max_combinations=1)
 
     parents = pcmci.all_parents
     # print(parents)
     # print(_get_parent_graph(true_parents))
     assert_graphs_equal(parents, true_parents)
 
-def test_mci(a_sample):
+def test_mci(a_sample, a_test):
     # Unpack the test data and true parent graph
     dataframe, true_parents = a_sample
     # Setting up strict test level
@@ -231,27 +221,21 @@ def test_mci(a_sample):
     tau_max = 2
     alpha_level = 0.01
 
-    cond_ind_test = ParCorr(
-        verbosity=verbosity)
-
     pcmci = PCMCI(
         selected_variables=None,
         dataframe=dataframe,
-        cond_ind_test=cond_ind_test,
-        verbosity=verbosity)
+        cond_ind_test=a_test,
+        verbosity=VERBOSITY)
 
-    results = pcmci.run_mci(
-                selected_links=None,
-                tau_min=1,
-                tau_max=tau_max,
-                parents=true_parents,
-                max_conds_py=None,
-                max_conds_px=None,
-                )
+    results = pcmci.run_mci(selected_links=None,
+                            tau_min=1,
+                            tau_max=tau_max,
+                            parents=true_parents,
+                            max_conds_py=None,
+                            max_conds_px=None)
 
     parents = pcmci._return_significant_parents(
-                                pq_matrix=results['p_matrix'],
-                              val_matrix=results['val_matrix'],
-                              alpha_level=alpha_level,
-                              )['parents']
+        pq_matrix=results['p_matrix'],
+        val_matrix=results['val_matrix'],
+        alpha_level=alpha_level)['parents']
     assert_graphs_equal(parents, true_parents)
