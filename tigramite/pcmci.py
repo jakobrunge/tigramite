@@ -1070,14 +1070,17 @@ class PCMCI():
         if max_conds_px is None:
             max_conds_px = self.N * tau_max
 
-        if parents is None:
-            parents = {}
+        # Define an internal copy of parents so that the contents of the
+        # argument parents is unchanged
+        _int_parents = copy.deepcopy(parents)
+        if _int_parents is None:
+            _int_parents = {}
             for j in range(self.N):
-                parents[j] = []
+                _int_parents[j] = []
         else:
-          for j in range(self.N):
-                if j not in list(parents):
-                    parents[j] = []
+            for j in range(self.N):
+                if j not in list(_int_parents):
+                    _int_parents[j] = []
 
         val_matrix = numpy.zeros((self.N, self.N, tau_max + 1))
         p_matrix = numpy.ones((self.N, self.N, tau_max + 1))
@@ -1091,7 +1094,7 @@ class PCMCI():
             if self.verbosity > 0:
                 print("\n\tVariable %s" % self.var_names[j])
 
-            conds_y = parents[j][:max_conds_py]
+            conds_y = _int_parents[j][:max_conds_py]
 
             parent_list = [parent for parent in selected_links[j]
                          if (parent[1] != 0 or parent[0] != j)]
@@ -1099,7 +1102,7 @@ class PCMCI():
             # Iterate through parents (except those in conditions)
             for cnt, (i, tau) in enumerate(parent_list):
 
-                conds_x = parents[i][:max_conds_px]
+                conds_x = _int_parents[i][:max_conds_px]
                 # lag = [-tau]
 
                 if self.verbosity > 1:
