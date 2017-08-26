@@ -4,11 +4,10 @@
 #
 # License: GNU General Public License v3.0
 
-
-import numpy
 import itertools
 from copy import deepcopy
 import pickle
+import numpy
 
 try:
     import statsmodels
@@ -1072,7 +1071,7 @@ class PCMCI():
 
         # Define an internal copy of parents so that the contents of the
         # argument parents is unchanged
-        _int_parents = copy.deepcopy(parents)
+        _int_parents = deepcopy(parents)
         if _int_parents is None:
             _int_parents = {}
             for j in range(self.N):
