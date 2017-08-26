@@ -62,17 +62,15 @@ def a_sample(request):
     data, true_parents_coeffs = pp.var_process(links_coeffs, T=time)
     # Get the true parents
     true_parents = _get_parent_graph(true_parents_coeffs)
-    return data, true_parents
+    return pp.DataFrame(data), true_parents
 
 def test_pcmci(a_sample):
     # Unpack the test data and true parent graph
-    data, true_parents = a_sample
+    dataframe, true_parents = a_sample
     # Setting up strict test level
     pc_alpha = 0.05  #[0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
     tau_max = 2
     alpha_level = 0.01
-
-    dataframe = pp.DataFrame(data)
 
     cond_ind_test = ParCorr(
         verbosity=verbosity)
@@ -97,13 +95,11 @@ def test_pcmci(a_sample):
 
 def test_pc_stable(a_sample):
     # Unpack the test data and true parent graph
-    data, true_parents = a_sample
+    dataframe, true_parents = a_sample
     # Setting up strict test level
     pc_alpha = 0.05  #[0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
     tau_max = 2
     alpha_level = 0.01
-
-    dataframe = pp.DataFrame(data)
 
     cond_ind_test = ParCorr(
         verbosity=verbosity)
@@ -126,7 +122,7 @@ def test_pc_stable(a_sample):
 
 def test_pc_stable_selected_links(a_sample):
     # Unpack the test data and true parent graph
-    data, true_parents = a_sample
+    dataframe, true_parents = a_sample
     # Setting up strict test level
     pc_alpha = 0.05  #[0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
     tau_max = 2
@@ -136,8 +132,6 @@ def test_pc_stable_selected_links(a_sample):
                    1: [(1, -1), (0, -1)],
                    2: []
                    }
-
-    dataframe = pp.DataFrame(data)
 
     cond_ind_test = ParCorr(
         verbosity=verbosity)
@@ -164,7 +158,7 @@ def test_pc_stable_selected_links(a_sample):
 
 def test_pc_stable_selected_variables(a_sample):
     # Unpack the test data and true parent graph
-    data, true_parents = a_sample
+    dataframe, true_parents = a_sample
     # Setting up strict test level
     pc_alpha = 0.05  #[0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
     tau_max = 2
@@ -174,8 +168,6 @@ def test_pc_stable_selected_variables(a_sample):
                    1: [(1, -1), (0, -1)],
                    2: []
                    }
-
-    dataframe = pp.DataFrame(data)
 
     cond_ind_test = ParCorr(
         verbosity=verbosity)
@@ -202,18 +194,11 @@ def test_pc_stable_selected_variables(a_sample):
 
 def test_pc_stable_max_conds_dim(a_sample):
     # Unpack the test data and true parent graph
-    data, true_parents = a_sample
+    dataframe, true_parents = a_sample
     # Setting up strict test level
     pc_alpha = 0.05  #[0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
     tau_max = 2
     alpha_level = 0.01
-
-    # true_parents_here = {0: [],
-    #                1: [(1, -1), (0, -1)],
-    #                2: []
-    #                }
-
-    dataframe = pp.DataFrame(data)
 
     cond_ind_test = ParCorr(
         verbosity=verbosity)
@@ -240,13 +225,11 @@ def test_pc_stable_max_conds_dim(a_sample):
 
 def test_mci(a_sample):
     # Unpack the test data and true parent graph
-    data, true_parents = a_sample
+    dataframe, true_parents = a_sample
     # Setting up strict test level
     pc_alpha = 0.05  #[0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
     tau_max = 2
     alpha_level = 0.01
-
-    dataframe = pp.DataFrame(data)
 
     cond_ind_test = ParCorr(
         verbosity=verbosity)
