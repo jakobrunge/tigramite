@@ -237,39 +237,27 @@ class PCMCI():
         self.selected_variables = \
             self._set_selected_variables(selected_variables)
 
-        if cond_ind_test.use_mask:
-            if dataframe.mask is None:
-                raise ValueError("dataframe.mask must be array of same shape"
-                                 " as fulldata.")
-            if type(dataframe.mask) != numpy.ndarray:
-                raise TypeError("dataframe.mask is of type %s, " %
-                                type(dataframe.mask) +
-                                "must be numpy.ndarray")
-            if numpy.isnan(dataframe.mask).sum() != 0:
-                raise ValueError("NaNs in the sample_selector")
-
-            if self.data.shape != dataframe.mask.shape:
-                raise ValueError("shape mismatch: data.shape = %s"
-                                 % str(self.data.shape) +
-                                 " but data_mask.shape = %s, must identical"
-                                 % str(dataframe.mask.shape))
-
     def _set_selected_variables(self, selected_variables):
         """Helper function to set and check the selected variables argument
 
         Parameters
         ----------
-        selected_variables : list
+        selected_variables : list or None
             List of variable ID's from the input data set
+
+        Returns
+        -------
+        selected_variables : list
+            Defaults to a list of all given variable IDs [0..N-1]
         """
         # Set the default selected variables if none are set
         if selected_variables is None:
             selected_variables = range(self.N)
         # Some checks
-        if selected_variables is not None:
-            if (numpy.any(numpy.array(selected_variables) < 0) or
-                    numpy.any(numpy.array(selected_variables) >= self.N)):
-                raise ValueError("selected_variables must be within 0..N-1")
+        if selected_variables is not None and \
+          (numpy.any(numpy.array(selected_variables) < 0) or
+           numpy.any(numpy.array(selected_variables) >= self.N)):
+            raise ValueError("selected_variables must be within 0..N-1")
         # Return the selected variables
         return selected_variables
 

@@ -56,10 +56,39 @@ class DataFrame():
                           " is it of shape (observations, variables) ?")
         # if numpy.isnan(data).sum() != 0:
         #     raise ValueError("NaNs in the data")
+        self._check_mask()
 
+    def _check_mask(self, require_mask=False):
+        """Checks that the mask is:
+            * The same shape as the data
+            * Is an numpy ndarray (or subtype)
+            * Does not contain any NaN entrie
+
+        Parameters
+        ----------
+        require_mask : bool (default : False)
+        """
+        # Check that there is a mask if required
+        if require_mask and self.mask is None:
+            raise ValueError("dataframe.mask must be array of same shape"
+                             " as fulldata.")
+        # If we have a mask, check it
         if self.mask is not None:
-            if self.mask.shape != self.values.shape:
-                raise ValueError("Mask array must of same shape as data array")
+            # Check the mask inherets from an ndarray
+            if not isinstance(self.mask, numpy.ndarray):
+                raise TypeError("dataframe.mask is of type %s, " %
+                                type(self.mask) +
+                                "must be numpy.ndarray")
+            # Check if there is an nan-value in the mask
+            if numpy.isnan(numpy.sum(self.mask)):
+                raise ValueError("NaNs in the dataframe mask")
+            # Check the mask and the values have the same shape
+            if self.values.shape != self.mask.shape:
+                raise ValueError("shape mismatch: dataframe.values.shape = %s"
+                                 % str(self.values.shape) + \
+                                 " but dataframe.mask.shape = %s,"
+                                 % str(self.mask.shape)) + \
+                                 "must identical"
 
 def lowhighpass_filter(data, cutperiod, pass_periods='low'):
     """Butterworth low- or high pass filter.

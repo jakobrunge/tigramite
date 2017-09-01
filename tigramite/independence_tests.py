@@ -24,6 +24,7 @@ except:
     print("Could not import packages for CMIknn and GPDC estimation")
 
 
+# TODO why is this commented out
 # try:
 #     import rpy2
 #     import rpy2.robjects
@@ -381,7 +382,7 @@ class CondIndTest(object):
         #                          "combination")
 
     def set_dataframe(self, dataframe):
-        """Initialize dataframe.
+        """Initialize and check the dataframe.
 
         Parameters
         ----------
@@ -392,9 +393,13 @@ class CondIndTest(object):
             values flag.
 
         """
+        # TODO this violates OOP.  Why not just set a variable like
+        # self.dataframe?
         self.data = dataframe.values
         self.mask = dataframe.mask
         self.missing_flag = dataframe.missing_flag
+        if self.use_mask:
+            dataframe.check_mask(require_mask=True)
 
     def _keyfy(self, x, z):
         """Helper function to make lists unique."""
