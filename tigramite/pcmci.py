@@ -219,6 +219,7 @@ class PCMCI():
                  var_names=None,
                  verbosity=0):
         # Set the data for this iteration of the algorithm
+        # TODO remove one (or preferably both) of these
         self.dataframe = dataframe
         self.data = dataframe.values
         # Set the conditional independence test to be used
@@ -316,7 +317,7 @@ class PCMCI():
                 return False
 
             for cond in itertools.combinations(self.parents_j_excl_current,
-                                                self.conds_dim):
+                                               self.conds_dim):
 
                 if set(list(cond)) not in self.checked_conds:
                     if check_only is False:
@@ -486,15 +487,13 @@ class PCMCI():
                 print("\nTesting condition sets of dimension"
                       " %d:" % conds_dim)
 
-            parents_here = parents
-
             # Iterate through all possible pairs (that have not converged yet)
-            for ip, parent in enumerate(parents_here):
+            for ip, parent in enumerate(parents):
 
                 if self.verbosity > 1:
                     print("\n    Link (%s %d) --> %s (%d/%d):" % (
                         self.var_names[parent[0]], parent[1], self.var_names[j],
-                        ip + 1, len(parents_here)))
+                        ip + 1, len(parents)))
 
                 if save_iterations:
                     iterations['iterations'][conds_dim][parent] = {}
