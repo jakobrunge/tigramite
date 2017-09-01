@@ -1,3 +1,6 @@
+"""
+Tests for pcmci.py, including tests for run_pc_stable, run_mci, and run_pcmci.
+"""
 from __future__ import print_function
 from collections import Counter, defaultdict
 import numpy
