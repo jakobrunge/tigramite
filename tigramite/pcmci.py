@@ -263,6 +263,7 @@ class PCMCI():
         return selected_variables
 
     class _Conditions():
+        # TODO reduce this to a yield function
         """Helper class to keep track of conditions.
 
         Tracks conditions already used for link (i, -tau) --> j
@@ -458,6 +459,7 @@ class PCMCI():
         parents_values = {}
         parents = selected_links
 
+        # TODO use lamdba, nested default dict
         iterations = {'iterations': {}}
 
         tau_min = max(1, tau_min)
@@ -466,10 +468,10 @@ class PCMCI():
         #
         converged = False
 
-        conds_dim = -1
-        while (conds_dim < max_conds_dim):
-
-            conds_dim += 1
+        # Loop over all possible condition dimentions
+        # TODO translated from a while loop to a for loop verbatum.  Is this the
+        # intended limit of the function?
+        for conds_dim in range(max_conds_dim + 1):
 
             if save_iterations:
                 iterations['iterations'][conds_dim] = {}
@@ -479,8 +481,6 @@ class PCMCI():
 
             if len(parents) - 1 < conds_dim:
                 converged = True
-
-            # if converged:
                 break
 
             if self.verbosity > 1:
