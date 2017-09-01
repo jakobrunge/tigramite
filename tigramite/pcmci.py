@@ -234,16 +234,8 @@ class PCMCI():
         # Store the shape of the data in the T and N variables
         self.T, self.N = self.data.shape
         # Set the selected variables
-        self.selected_variables = selected_variables
-        # Set the default selected variables if none are set
-        if self.selected_variables is None:
-            self.selected_variables = range(self.N)
-
-        # Some checks
-        if selected_variables is not None:
-            if (numpy.any(numpy.array(selected_variables) < 0) or
-                    numpy.any(numpy.array(selected_variables) >= self.N)):
-                raise ValueError("selected_variables must be within 0..N-1")
+        self.selected_variables = \
+            self._set_selected_variables(selected_variables)
 
         if cond_ind_test.use_mask:
             if dataframe.mask is None:
@@ -261,6 +253,25 @@ class PCMCI():
                                  % str(self.data.shape) +
                                  " but data_mask.shape = %s, must identical"
                                  % str(dataframe.mask.shape))
+
+    def _set_selected_variables(self, selected_variables):
+        """Helper function to set and check the selected variables argument
+
+        Parameters
+        ----------
+        selected_variables : list
+            List of variable ID's from the input data set
+        """
+        # Set the default selected variables if none are set
+        if selected_variables is None:
+            selected_variables = range(self.N)
+        # Some checks
+        if selected_variables is not None:
+            if (numpy.any(numpy.array(selected_variables) < 0) or
+                    numpy.any(numpy.array(selected_variables) >= self.N)):
+                raise ValueError("selected_variables must be within 0..N-1")
+        # Return the selected variables
+        return selected_variables
 
     class _Conditions():
         """Helper class to keep track of conditions.
@@ -651,9 +662,6 @@ class PCMCI():
             Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}
             containing estimated parents.
         """
-
-
-
         if pc_alpha is None:
             pc_alpha = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
             self.alpha_selection = True
@@ -1416,163 +1424,163 @@ class PCMCI():
                 'conf_matrix':conf_matrix}
 
 # TODO can this be moved to an examples directory or a testing package?
-if __name__ == '__main__':
-
-    import data_processing as pp
-    from independence_tests import ParCorr, GPACE, GPDC, CMIknn, CMIsymb
-
-    numpy.random.seed(42)
-    # Example process to play around with
-    a = 0.8
-    c1 = .8
-    c2 = -.8
-    c3 = .8
-    T = 500
-
-    # Each key refers to a variable and the incoming links are supplied as a
-    # list of format [((driver, lag), coeff), ...]
-    links_coeffs = {0: [((0, -1), a), ((1, -1), c1)],
-                    1: [((1, -1), a), ((3, -1), c1)],
-                    2: [((2, -1), a), ((1, -2), c2), ((3, -3), c3)],
-                    3: [((3, -1), a)],
-                    }
-
-    data, true_parents_neighbors = pp.var_process(links_coeffs,
-                                                  use='inv_inno_cov', T=T)
-
-    data_mask = numpy.zeros(data.shape)
-
-    T, N = data.shape
-
-    var_names = range(N)  # ['X', 'Y', 'Z', 'W']
-
-    pc_alpha = 0.2  # [0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
-    selected_variables = None  #[2] # [2]  # [2]
-
-    tau_max = 3
-    alpha_level = 0.01
-
-    dataframe = pp.DataFrame(data,
-        mask=data_mask,
-        )
-    verbosity = 2
-
-    cond_ind_test = ParCorr(
-        significance='analytic',
-        fixed_thres=0.05,
-        sig_samples=100,
-
-        use_mask=False,
-        mask_type=['x','y', 'z'],  #  ['x','y','z'],
-
-        confidence='analytic',
-        conf_lev=0.9,
-        conf_samples=200,
-        conf_blocklength=10,
-
-        recycle_residuals=False,
-        verbosity=verbosity)
-
-    # cond_ind_test = GPACE(
-    #     significance='analytic',
-    #     fixed_thres=0.05,
-    #     sig_samples=2000,
-
-    #     use_mask=False,
-    #     mask_type=['y'],
-
-    #     confidence=False,
-    #     conf_lev=0.9,
-    #     conf_samples=200,
-    #     conf_blocklength=None,
-
-    #     gp_version='new',
-    #     gp_alpha=None,
-    #     ace_version='acepack',
-    #     recycle_residuals=False,
-    #     verbosity=verbosity)
-
-    # cond_ind_test = GPDC(
-    #     significance='analytic',
-    #     fixed_thres=0.05,
-    #     sig_samples=2000,
-
-    #     use_mask=False,
-    #     mask_type=['y'],
-
-    #     confidence=False,
-    #     conf_lev=0.9,
-    #     conf_samples=200,
-    #     conf_blocklength=None,
-
-    #     gp_version='new',
-    #     gp_alpha=1.,
-    #     recycle_residuals=False,
-    #     verbosity=verbosity)
-
-    # cond_ind_test = CMIsymb(
-    #     significance='shuffle_test',
-    #     sig_samples=1000,
-    #     sig_blocklength=10,
-
-    #     confidence='bootstrap', #'bootstrap',
-    #     conf_lev=0.9,
-    #     conf_samples=100,
-    #     conf_blocklength=10,
-
-    #     use_mask=False,
-    #     mask_type=['y'],
-    #     recycle_residuals=False,
-    #     verbosity=3)
-
-    if cond_ind_test.measure == 'cmi_symb':
-        dataframe.values = pp.quantile_bin_array(dataframe.values, bins=3)
-
-    pcmci = PCMCI(
-        dataframe=dataframe,
-        cond_ind_test=cond_ind_test,
-        selected_variables=selected_variables,
-        var_names=var_names,
-        verbosity=verbosity)
-
-    # results = pcmci.run_pcmci(
-    #     selected_links=None,
-    #     tau_min=1,
-    #     tau_max=tau_max,
-    #     save_iterations=False,
-
-    #     pc_alpha=pc_alpha,
-    #     max_conds_dim=None,
-    #     max_combinations=1,
-
-    #     max_conds_py=None,
-    #     max_conds_px=None,
-
-    #     fdr_method='fdr_bh',
-    # )
-    results = pcmci.run_pc_stable(
-                      tau_max=tau_max,
-                      save_iterations=True,
-                      pc_alpha=0.2,
-                      max_conds_dim=None,
-                      max_combinations=1000,
-                      )
-
-    # pcmci._print_significant_links(
-    #                p_matrix=results['p_matrix'],
-    #                q_matrix=results['q_matrix'],
-    #                val_matrix=results['val_matrix'],
-    #                alpha_level=alpha_level,
-    #                conf_matrix=results['conf_matrix'])
-
-    # pcmci.run_mci(
-    #     selected_links=None,
-    #     tau_min=1,
-    #     tau_max=tau_max,
-    #     parents = None,
-
-    #     max_conds_py=None,
-    #     max_conds_px=None,
-    # )
-
-
+#if __name__ == '__main__':
+#
+#    import data_processing as pp
+#    from independence_tests import ParCorr, GPACE, GPDC, CMIknn, CMIsymb
+#
+#    numpy.random.seed(42)
+#    # Example process to play around with
+#    a = 0.8
+#    c1 = .8
+#    c2 = -.8
+#    c3 = .8
+#    T = 500
+#
+#    # Each key refers to a variable and the incoming links are supplied as a
+#    # list of format [((driver, lag), coeff), ...]
+#    links_coeffs = {0: [((0, -1), a), ((1, -1), c1)],
+#                    1: [((1, -1), a), ((3, -1), c1)],
+#                    2: [((2, -1), a), ((1, -2), c2), ((3, -3), c3)],
+#                    3: [((3, -1), a)],
+#                    }
+#
+#    data, true_parents_neighbors = pp.var_process(links_coeffs,
+#                                                  use='inv_inno_cov', T=T)
+#
+#    data_mask = numpy.zeros(data.shape)
+#
+#    T, N = data.shape
+#
+#    var_names = range(N)  # ['X', 'Y', 'Z', 'W']
+#
+#    pc_alpha = 0.2  # [0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
+#    selected_variables = None  #[2] # [2]  # [2]
+#
+#    tau_max = 3
+#    alpha_level = 0.01
+#
+#    dataframe = pp.DataFrame(data,
+#        mask=data_mask,
+#        )
+#    verbosity = 2
+#
+#    cond_ind_test = ParCorr(
+#        significance='analytic',
+#        fixed_thres=0.05,
+#        sig_samples=100,
+#
+#        use_mask=False,
+#        mask_type=['x','y', 'z'],  #  ['x','y','z'],
+#
+#        confidence='analytic',
+#        conf_lev=0.9,
+#        conf_samples=200,
+#        conf_blocklength=10,
+#
+#        recycle_residuals=False,
+#        verbosity=verbosity)
+#
+#    # cond_ind_test = GPACE(
+#    #     significance='analytic',
+#    #     fixed_thres=0.05,
+#    #     sig_samples=2000,
+#
+#    #     use_mask=False,
+#    #     mask_type=['y'],
+#
+#    #     confidence=False,
+#    #     conf_lev=0.9,
+#    #     conf_samples=200,
+#    #     conf_blocklength=None,
+#
+#    #     gp_version='new',
+#    #     gp_alpha=None,
+#    #     ace_version='acepack',
+#    #     recycle_residuals=False,
+#    #     verbosity=verbosity)
+#
+#    # cond_ind_test = GPDC(
+#    #     significance='analytic',
+#    #     fixed_thres=0.05,
+#    #     sig_samples=2000,
+#
+#    #     use_mask=False,
+#    #     mask_type=['y'],
+#
+#    #     confidence=False,
+#    #     conf_lev=0.9,
+#    #     conf_samples=200,
+#    #     conf_blocklength=None,
+#
+#    #     gp_version='new',
+#    #     gp_alpha=1.,
+#    #     recycle_residuals=False,
+#    #     verbosity=verbosity)
+#
+#    # cond_ind_test = CMIsymb(
+#    #     significance='shuffle_test',
+#    #     sig_samples=1000,
+#    #     sig_blocklength=10,
+#
+#    #     confidence='bootstrap', #'bootstrap',
+#    #     conf_lev=0.9,
+#    #     conf_samples=100,
+#    #     conf_blocklength=10,
+#
+#    #     use_mask=False,
+#    #     mask_type=['y'],
+#    #     recycle_residuals=False,
+#    #     verbosity=3)
+#
+#    if cond_ind_test.measure == 'cmi_symb':
+#        dataframe.values = pp.quantile_bin_array(dataframe.values, bins=3)
+#
+#    pcmci = PCMCI(
+#        dataframe=dataframe,
+#        cond_ind_test=cond_ind_test,
+#        selected_variables=selected_variables,
+#        var_names=var_names,
+#        verbosity=verbosity)
+#
+#    # results = pcmci.run_pcmci(
+#    #     selected_links=None,
+#    #     tau_min=1,
+#    #     tau_max=tau_max,
+#    #     save_iterations=False,
+#
+#    #     pc_alpha=pc_alpha,
+#    #     max_conds_dim=None,
+#    #     max_combinations=1,
+#
+#    #     max_conds_py=None,
+#    #     max_conds_px=None,
+#
+#    #     fdr_method='fdr_bh',
+#    # )
+#    results = pcmci.run_pc_stable(
+#                      tau_max=tau_max,
+#                      save_iterations=True,
+#                      pc_alpha=0.2,
+#                      max_conds_dim=None,
+#                      max_combinations=1000,
+#                      )
+#
+#    # pcmci._print_significant_links(
+#    #                p_matrix=results['p_matrix'],
+#    #                q_matrix=results['q_matrix'],
+#    #                val_matrix=results['val_matrix'],
+#    #                alpha_level=alpha_level,
+#    #                conf_matrix=results['conf_matrix'])
+#
+#    # pcmci.run_mci(
+#    #     selected_links=None,
+#    #     tau_min=1,
+#    #     tau_max=tau_max,
+#    #     parents = None,
+#
+#    #     max_conds_py=None,
+#    #     max_conds_px=None,
+#    # )
+#
+#
