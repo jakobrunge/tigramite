@@ -407,35 +407,35 @@ class PCMCI():
         print("    Combination %d: %s --> pval = %.5f / val = %.3f" %
               (comb_index, var_name_z, pval, val))
 
-        def _print_result(self, pval, pc_alpha, conds_dim, max_combinations):
-            """
-            Print the results from the current iteration of conditions.
+    def _print_result(self, pval, pc_alpha, conds_dim, max_combinations):
+        """
+        Print the results from the current iteration of conditions.
 
-            Parameters
-            ----------
-            pval : float
-                pval to check signficance
-            pc_alpha : float
-                lower bound on what is considered significant
-            conds_dim : int
-                Cardinality of the current step
-            max_combinations : int
-                Maximum number of combinations of conditions of current
-                cardinality to test.
-            """
-            # Start with an indent
-            print_str = "    "
-            # Determine the body of the text
-            if pval > pc_alpha:
-                print_str += "Non-significance detected."
-            elif conds_dim > max_combinations:
-                print_str += "Still conditions of dimension"+\
-                        " %d left," % (conds_dim) +\
-                        " but q_max = %d reached." % (max_combinations)
-            else:
-                print_str += "No conditions of dimension %d left." % (conds_dim)
-            # Print the message
-            print(print_str)
+        Parameters
+        ----------
+        pval : float
+            pval to check signficance
+        pc_alpha : float
+            lower bound on what is considered significant
+        conds_dim : int
+            Cardinality of the current step
+        max_combinations : int
+            Maximum number of combinations of conditions of current cardinality
+            to test.
+        """
+        # Start with an indent
+        print_str = "    "
+        # Determine the body of the text
+        if pval > pc_alpha:
+            print_str += "Non-significance detected."
+        elif conds_dim > max_combinations:
+            print_str += "Still conditions of dimension"+\
+                    " %d left," % (conds_dim) +\
+                    " but q_max = %d reached." % (max_combinations)
+        else:
+            print_str += "No conditions of dimension %d left." % (conds_dim)
+        # Print the message
+        print(print_str)
 
     # @profile
     def _run_pc_stable_single(self, j,
@@ -574,24 +574,13 @@ class PCMCI():
                         nonsig_parents.append((j, parent))
                         break
 
+                # Print the results if needed
                 if self.verbosity > 1:
                     self._print_result(pval, pc_alpha,
                                        conds_dim, max_combinations)
-                    if pval > pc_alpha:
-                        print("    Non-significance detected.")
-                    elif conds_dim > max_combinations:
-                        print("    Still conditions of dimension %d left,"
-                              " but q_max = %d reached." % (
-                            conds_dim, max_combinations))
-                    else:
-                        print("    No conditions of dimension %d left." %
-                              conds_dim)
 
             # Remove non-significant links
-            for j_parent in nonsig_parents:
-                j, parent = j_parent
-
-                # del parents[parents.index(parent)]
+            for _, parent in nonsig_parents:
                 del parents_values[parent]
 
             parents = self._sort_parents(parents_values)
