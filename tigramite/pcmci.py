@@ -5,6 +5,7 @@
 # License: GNU General Public License v3.0
 
 import itertools
+from collections import defaultdict
 from copy import deepcopy
 import pickle
 import numpy
@@ -15,6 +16,32 @@ try:
 except:
     print("Could not import statsmodels, p-value corrections not available.")
 
+def _create_nested_dictionary(depth):
+    """Create a series of nested dictionaries to a maximum depth.  The first 
+    depth - 1 nested dictionaries are defaultdicts, the last is a normal
+    dictionary.
+
+    Parameters
+    ----------
+    depth : int
+        Maximum depth argument.
+    """
+    new_depth = depth - 1
+    if new_depth <= 0:
+        return defaultdict(dict)
+    return defaultdict(lambda: _create_nested_dictionary(new_depth))
+
+def _nested_to_normal(nested_dict):
+    """Transforms the nested default dictionary into a standard dictionaries
+
+    Parameters
+    ----------
+    nested_dict : default dictionary of default dictionaries of ... etc.
+    """
+    if isinstance(nested_dict, defaultdict):
+        nested_dict = {k: _nested_to_normal(v) \
+            for k, v in nested_dict.iteritems()}
+    return nested_dict
 
 class PCMCI():
     r"""PCMCI causal discovery for time series datasets.
@@ -413,8 +440,8 @@ class PCMCI():
         parents_values = {}
         parents = selected_links
 
-        # TODO use lamdba, nested default dict
-        iterations = {'iterations': {}}
+        # Define a nested defaultdict of depth 4
+        iterations = _create_nested_dictionary(4)
 
         tau_min = max(1, tau_min)
         #
@@ -426,9 +453,6 @@ class PCMCI():
         # TODO translated from a while loop to a for loop verbatum.  Is this the
         # intended limit of the function?
         for conds_dim in range(max_conds_dim + 1):
-
-            if save_iterations:
-                iterations['iterations'][conds_dim] = {}
 
             # Re-initiate list of non-significant links
             nonsig_parents = []
@@ -448,9 +472,6 @@ class PCMCI():
                     print("\n    Link (%s %d) --> %s (%d/%d):" % (
                         self.var_names[parent[0]], parent[1], self.var_names[j],
                         ip + 1, len(parents)))
-
-                if save_iterations:
-                    iterations['iterations'][conds_dim][parent] = {}
 
                 # Iterate through all possible combinations
                 for comb_index, Z in \
@@ -483,7 +504,7 @@ class PCMCI():
                     # for each pair (across any condition)
                     if (i, tau) in list(parents_values):
                         parents_values[(i, tau)] = min(numpy.abs(val),
-                                                parents_values[(i, tau)])
+                                                       parents_values[(i, tau)])
                     else:
                         parents_values[(i, tau)] = numpy.abs(val)
 
@@ -497,9 +518,10 @@ class PCMCI():
                         val_min[(i, tau)] = numpy.abs(val)
 
                     if save_iterations:
-                        iterations['iterations'][conds_dim][parent][
-                                comb_index]={'conds': deepcopy(Z),
-                                             'val': val, 'pval': pval}
+                        a_iter = iterations['iterations'][conds_dim][parent]
+                        a_iter[comb_index]['conds'] = deepcopy(Z)
+                        a_iter[comb_index]['val'] = val
+                        a_iter[comb_index]['pval'] = pval
 
                     # Delete link later and break while-loop if non-significant
                     if pval > pc_alpha:
@@ -531,9 +553,6 @@ class PCMCI():
                 self._print_parents_single(
                     j, parents, parents_values, p_max)
 
-        # if save_iterations:
-        #     iterations['p_max'] = p_max
-
         if self.verbosity > 1:
             if converged:
                 print("\nAlgorithm converged for variable %s" %
@@ -546,7 +565,7 @@ class PCMCI():
         return {'parents':parents,
                 'val_min':val_min,
                 'p_max':p_max,
-                'iterations':iterations}
+                'iterations': dict(iterations)}
 
     def run_pc_stable(self,
                       selected_links=None,
