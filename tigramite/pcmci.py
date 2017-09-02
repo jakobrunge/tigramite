@@ -388,6 +388,29 @@ class PCMCI():
             self.var_names[parent[0]], parent[1], self.var_names[j],
             index_parent + 1, num_parents))
 
+    def _print_cond_info(self, Z, comb_index, pval, val):
+        """Print info about the condition
+        
+        Parameters
+        ----------
+        Z : list
+            The current condition being tested
+
+        comb_index : int
+            Index of the combination yielding this condition
+
+        pval : float
+            p-value from this condition
+
+        val : float
+            value from this condition
+        """
+        var_name_z = ""
+        for i, tau in Z:
+            var_name_z += "(%s %d) " % (self.var_names[i], tau)
+        print("    Combination %d: %s --> pval = %.5f / val = %.3f" %
+              (comb_index, var_name_z, pval, val))
+
     # @profile
     def _run_pc_stable_single(self, j,
                              selected_links=None,
@@ -504,16 +527,9 @@ class PCMCI():
                                                             Y=[(j, 0)],
                                                             Z=Z,
                                                             tau_max=tau_max)
-
+                    # Print some information if needed
                     if self.verbosity > 1:
-                        var_name_Z = ""
-                        for Zi in Z:
-                            var_name_Z += "(%s %d) " % (
-                                self.var_names[Zi[0]], Zi[1])
-                        print("    Combination %d: %s --> pval = %.5f /"
-                              " val = %.3f" %
-                              (comb_index, var_name_Z, pval, val))
-
+                        self._print_cond_info(Z, comb_index, pval, val)
                     # Keep track of maximum p-value and minimum estimated value
                     # for each pair (across any condition)
                     if parent in list(parents_values):
