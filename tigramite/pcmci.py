@@ -565,7 +565,7 @@ class PCMCI():
         return {'parents':parents,
                 'val_min':val_min,
                 'p_max':p_max,
-                'iterations': dict(iterations)}
+                'iterations': _nested_to_normal(iterations)}
 
     def run_pc_stable(self,
                       selected_links=None,
