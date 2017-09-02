@@ -554,7 +554,7 @@ class PCMCI():
         """
         # Set the default values for pc_alpha
         if pc_alpha is None:
-            pc_alpha = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
+            pc_alpha = 0.2
         # Initialize the dictionaries for the p_max, val_minm parents_values
         # results
         p_max = dict()
@@ -703,11 +703,8 @@ class PCMCI():
         """
         if pc_alpha is None:
             pc_alpha = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
-            self.alpha_selection = True
-        elif type(pc_alpha) == list:
-            self.alpha_selection = True
-        else:
-            self.alpha_selection = False
+        elif not isinstance(pc_alpha, (list, tuple, np.ndarray)):
+            pc_alpha = [pc_alpha]
 
         if tau_min > tau_max or min(tau_min, tau_max) < 0:
             raise ValueError("tau_max = %d, tau_min = %d, " % (
@@ -754,71 +751,52 @@ class PCMCI():
 
             if self.verbosity > 0:
                 print("\n## Variable %s" % self.var_names[j])
+            if self.verbosity > 1:
+                print("\nIterating through pc_alpha = %s:" % pc_alpha)
 
-            if self.alpha_selection == False:
-                result = self._run_pc_stable_single(j,
-                                            selected_links=selected_links[j],
-                                            tau_min=tau_min,
-                                            tau_max=tau_max,
-                                            save_iterations=save_iterations,
-                                            pc_alpha=pc_alpha,
-                                            max_conds_dim=max_conds_dim,
-                                            max_combinations=max_combinations,
-                                            )
-                all_parents[j] = result['parents']
-                val_min[j] = result['val_min']
-                p_max[j] = result['p_max']
-                iterations[j] = result['iterations']
-
-            else:
+            score = np.zeros_like(pc_alpha)
+            results = {}
+            for iscore, pc_alpha_here in enumerate(pc_alpha):
                 if self.verbosity > 1:
-                    print("\nIterating through pc_alpha = %s:" % pc_alpha)
+                    print("\n# pc_alpha = %s (%d/%d):" % (pc_alpha_here,
+                                        iscore+1, len(pc_alpha)))
 
-                score = np.zeros(len(pc_alpha))
-                results = {}
+                results[pc_alpha_here] = self._run_pc_stable_single(j,
+                                   selected_links=selected_links[j],
+                                   tau_min=tau_min,
+                                   tau_max=tau_max,
+                                   save_iterations=save_iterations,
+                                   pc_alpha=pc_alpha_here,
+                                   max_conds_dim=max_conds_dim,
+                                   max_combinations=max_combinations,
+                                   )
+                # Score
+                parents_here = results[pc_alpha_here]['parents']
+                score[iscore] = \
+                    self.cond_ind_test.get_model_selection_criterion(j, 
+                                                                     parents_here, 
+                                                                     tau_max)
+            optimal_alpha = pc_alpha[score.argmin()]
+
+            if self.verbosity > 1:
+                print("\n# Condition selection results:")
                 for iscore, pc_alpha_here in enumerate(pc_alpha):
-                    if self.verbosity > 1:
-                        print("\n# pc_alpha = %s (%d/%d):" % (pc_alpha_here,
-                                            iscore+1, len(pc_alpha)))
+                    names_parents = "[ "
+                    for pari in results[pc_alpha_here]['parents']:
+                        names_parents += "(%s %d) " % (
+                            self.var_names[pari[0]], pari[1])
+                    names_parents += "]"
+                    print("    pc_alpha=%s got score %.4f with parents %s" %
+                          (pc_alpha_here, score[iscore], names_parents))
+                print("\n--> optimal pc_alpha for variable %s is %s" %
+                      (self.var_names[j], optimal_alpha))
 
-                    results[pc_alpha_here] = self._run_pc_stable_single(j,
-                                       selected_links=selected_links[j],
-                                       tau_min=tau_min,
-                                       tau_max=tau_max,
-                                       save_iterations=save_iterations,
-                                       pc_alpha=pc_alpha_here,
-                                       max_conds_dim=max_conds_dim,
-                                       max_combinations=max_combinations,
-                                       )
+            all_parents[j] = results[optimal_alpha]['parents']
+            val_min[j] = results[optimal_alpha]['val_min']
+            p_max[j] = results[optimal_alpha]['p_max']
+            iterations[j] = results[optimal_alpha]['iterations']
 
-                    # Score
-                    parents_here = results[pc_alpha_here]['parents']
-
-                    mscore = self.cond_ind_test.get_model_selection_criterion(j,
-                                                     parents_here, tau_max)
-                    score[iscore] = mscore
-
-                optimal_alpha = pc_alpha[score.argmin()]
-
-                if self.verbosity > 1:
-                    print("\n# Condition selection results:")
-                    for iscore, pc_alpha_here in enumerate(pc_alpha):
-                        names_parents = "[ "
-                        for pari in results[pc_alpha_here]['parents']:
-                            names_parents += "(%s %d) " % (
-                                self.var_names[pari[0]], pari[1])
-                        names_parents += "]"
-                        print("    pc_alpha=%s got score %.4f with parents %s" %
-                              (pc_alpha_here, score[iscore], names_parents))
-                    print("\n--> optimal pc_alpha for variable %s is %s" %
-                          (self.var_names[j], optimal_alpha))
-
-                all_parents[j] = results[optimal_alpha]['parents']
-                val_min[j] = results[optimal_alpha]['val_min']
-                p_max[j] = results[optimal_alpha]['p_max']
-                iterations[j] = results[optimal_alpha]['iterations']
-
-                iterations[j]['optimal_pc_alpha'] = optimal_alpha
+            iterations[j]['optimal_pc_alpha'] = optimal_alpha
 
         self.all_parents = all_parents
         self.val_matrix = self._dict_to_matrix(val_min, tau_max)
