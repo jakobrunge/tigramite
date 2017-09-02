@@ -753,9 +753,13 @@ class PCMCI():
 
         # Impliment defaultdict(dict) behaviour for all p_max, val_max, and
         # iterations
-        p_max = _create_nested_dictionary()
-        val_min = _create_nested_dictionary()
-        iterations = _create_nested_dictionary()
+        #p_max = defaultdict(dict)
+        #val_min = defaultdict(dict)
+        #iterations = defaultdict(dict)
+        # TODO fix this so default dict works
+        p_max = dict([(j, {}) for j in range(self.N)])
+        val_min = dict([(j, {}) for j in range(self.N)])
+        iterations = dict([(j, {}) for j in range(self.N)])
 
         if self.verbosity > 0:
             self._print_pc_params(selected_links, tau_min, tau_max, pc_alpha,
@@ -824,9 +828,9 @@ class PCMCI():
             iterations[j]['optimal_pc_alpha'] = optimal_alpha
 
         # Revert to normal dictionaries for p_max, val_min, iterations
-        p_max = _nested_to_normal(p_max)
-        val_min = _nested_to_normal(val_min)
-        iterations = _nested_to_normal(iterations)
+        #p_max = _nested_to_normal(p_max)
+        #val_min = _nested_to_normal(val_min)
+        #iterations = _nested_to_normal(iterations)
         # Save the results in the current status of the algorithm
         self.all_parents = all_parents
         self.val_matrix = self._dict_to_matrix(val_min, tau_max)
