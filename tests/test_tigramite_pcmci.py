@@ -124,6 +124,7 @@ def a_pcmci(a_sample, a_test, a_common_params, request):
 @pytest.fixture(params=[
     # Keep parameters for the pc_stable algorithm here
     # pc_alpha,  max_conds_dim,  max_comb, save_iterations
+     (None,      None,           2,        False),
      (0.05,      None,           1,        False),
      (0.05,      None,           10,       False),
      (0.05,      None,           1,        True),

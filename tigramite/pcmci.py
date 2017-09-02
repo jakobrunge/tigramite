@@ -601,9 +601,9 @@ class PCMCI():
             # Remove non-significant links
             for _, parent in nonsig_parents:
                 del parents_values[parent]
-
+            # Return the parents list sorted by the test metric
             parents = self._sort_parents(parents_values)
-
+            # Print information about the change in possible parents
             if self.verbosity > 1:
                 print("\nUpdating parents:")
                 self._print_parents_single(j, parents, parents_values, p_max)
