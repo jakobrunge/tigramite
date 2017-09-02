@@ -758,7 +758,7 @@ class PCMCI():
         iterations = _create_nested_dictionary()
 
         if self.verbosity > 0:
-            self._print_pc_params(selected_links, tau_min, tau_max, pc_alpha
+            self._print_pc_params(selected_links, tau_min, tau_max, pc_alpha,
                                   max_conds_dim, max_combinations)
 
         # Set the selected links
