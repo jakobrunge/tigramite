@@ -367,6 +367,27 @@ class PCMCI():
 
         return matrix
 
+    def _print_link_info(self, j, index_parent, parent, num_parents):
+        """Print info about the current link being tested
+        
+        Parameters
+        ----------
+        j : int
+            Index of current node being tested
+
+        index_parent : int
+            Index of the current parent
+
+        parent : tuple 
+            Standard (i, tau) tuple of parent node id and time delay
+
+        num_parents : int
+            Total number of parents
+        """
+        print("\n    Link (%s %d) --> %s (%d/%d):" % (
+            self.var_names[parent[0]], parent[1], self.var_names[j],
+            index_parent + 1, num_parents))
+
     # @profile
     def _run_pc_stable_single(self, j,
                              selected_links=None,
@@ -444,11 +465,9 @@ class PCMCI():
         iterations = _create_nested_dictionary(4)
 
         tau_min = max(1, tau_min)
-        #
-        # Iteration through increasing number of conditions
-        #
-        converged = False
 
+        # Iteration through increasing number of conditions
+        converged = False
         # Loop over all possible condition dimentions
         # TODO translated from a while loop to a for loop verbatum.  Is this the
         # intended limit of the function?
@@ -466,13 +485,10 @@ class PCMCI():
                       " %d:" % conds_dim)
 
             # Iterate through all possible pairs (that have not converged yet)
-            for ip, parent in enumerate(parents):
-
+            for index_parent, parent in enumerate(parents):
+                # Print info about this link
                 if self.verbosity > 1:
-                    print("\n    Link (%s %d) --> %s (%d/%d):" % (
-                        self.var_names[parent[0]], parent[1], self.var_names[j],
-                        ip + 1, len(parents)))
-
+                    self._print_link_info(j, index_parent, parent, len(parents))
                 # Iterate through all possible combinations
                 for comb_index, Z in \
                         enumerate(self._iter_condtions(parent, j,
@@ -484,9 +500,7 @@ class PCMCI():
                     comb_index += 1
 
                     # Perform independence test
-                    i, tau = parent
-
-                    val, pval = self.cond_ind_test.run_test(X=[(i, tau)],
+                    val, pval = self.cond_ind_test.run_test(X=[parent],
                                                             Y=[(j, 0)],
                                                             Z=Z,
                                                             tau_max=tau_max)
@@ -502,20 +516,20 @@ class PCMCI():
 
                     # Keep track of maximum p-value and minimum estimated value
                     # for each pair (across any condition)
-                    if (i, tau) in list(parents_values):
-                        parents_values[(i, tau)] = min(numpy.abs(val),
-                                                       parents_values[(i, tau)])
+                    if parent in list(parents_values):
+                        parents_values[parent] = min(numpy.abs(val),
+                                                       parents_values[parent])
                     else:
-                        parents_values[(i, tau)] = numpy.abs(val)
+                        parents_values[parent] = numpy.abs(val)
 
-                    if (i, tau) in list(p_max):
-                        p_max[(i, tau)] = max(numpy.abs(pval),
-                                              p_max[(i, tau)])
-                        val_min[(i, tau)] = min(numpy.abs(val),
-                                              val_min[(i, tau)])
+                    if parent in list(p_max):
+                        p_max[parent] = max(numpy.abs(pval),
+                                              p_max[parent])
+                        val_min[parent] = min(numpy.abs(val),
+                                              val_min[parent])
                     else:
-                        p_max[(i, tau)] = pval
-                        val_min[(i, tau)] = numpy.abs(val)
+                        p_max[parent] = pval
+                        val_min[parent] = numpy.abs(val)
 
                     if save_iterations:
                         a_iter = iterations['iterations'][conds_dim][parent]
