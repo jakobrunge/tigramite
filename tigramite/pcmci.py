@@ -264,6 +264,7 @@ class PCMCI():
             self._set_selected_variables(selected_variables)
 
     def _set_selected_variables(self, selected_variables):
+        # TODO test this function
         """Helper function to set and check the selected variables argument
 
         Parameters
@@ -276,7 +277,6 @@ class PCMCI():
         selected_variables : list
             Defaults to a list of all given variable IDs [0..N-1]
         """
-        # TODO test this function
         # Set the default selected variables if none are set
         if selected_variables is None:
             selected_variables = range(self.N)
@@ -287,6 +287,39 @@ class PCMCI():
             raise ValueError("selected_variables must be within 0..N-1")
         # Return the selected variables
         return selected_variables
+
+    def _set_sel_links(self, selected_links, tau_min, tau_max):
+        # TODO test this function
+        """Helper function to set and check the selected links argument
+
+        Parameters
+        ----------
+        selected_links : dict or None
+            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}
+            specifying whether only selected links should be tested. If None is
+            passed, all links are returned
+        tau_mix : int
+            Minimum time delay to test
+        tau_max : int
+            Maximum time delay to test
+
+        Returns
+        -------
+        selected_variables : list
+            Defaults to a list of all given variable IDs [0..N-1]
+        """
+        # Set the default selected variables if none are set
+        if selected_links is None:
+            selected_links = {}
+            for j in range(self.N):
+                if j in self.selected_variables:
+                    selected_links[j] = [(var, -lag) for var in range(self.N)
+                                         for lag in range(tau_min, tau_max + 1)]
+                else:
+                    selected_links[j] = []
+        # Return the selected variables
+        return selected_links
+
 
     def _iter_condtions(self, parent, j, conds_dim, all_parents):
         # TODO test this function
@@ -608,9 +641,10 @@ class PCMCI():
                 print("\nUpdating parents:")
                 self._print_parents_single(j, parents, parents_values, p_max)
 
+        # Print information about if convergence was reached
         if self.verbosity > 1:
             self._print_converged_pc_single(converged, j, max_conds_dim)
-
+        # Return the results
         return {'parents':parents,
                 'val_min':val_min,
                 'p_max':p_max,
@@ -705,18 +739,10 @@ class PCMCI():
                   + "\nmax_combinations = %d" % max_combinations)
             print("\n")
 
-        if selected_links is None:
-            selected_links = {}
-            for j in range(self.N):
-                if j in self.selected_variables:
-                    selected_links[j] = [(var, -lag)
-                                         for var in range(self.N)
-                                         for lag in range(tau_min, tau_max + 1)
-                                         ]
-                else:
-                    selected_links[j] = []
-
-        all_parents = selected_links
+        # Set the selected links
+        selected_links = self._set_sel_links(selected_links, tau_min, tau_max)
+        # TODO remove this line!!!
+        all_parents = deepcopy(selected_links)
 
         if max_conds_dim is None:
             max_conds_dim = self.N * tau_max
@@ -900,17 +926,8 @@ class PCMCI():
                           tau_max, tau_min)
                           + "but 0 <= tau_min <= tau_max")
 
-        if selected_links is None:
-            selected_links = {}
-
-            for j in range(self.N):
-                if j in self.selected_variables:
-                    selected_links[j] = [(var, -lag)
-                                      for var in range(self.N)
-                                      for lag in range(tau_min, tau_max + 1)
-                                      ]
-                else:
-                    selected_links[j] = []
+        # Set the selected links
+        selected_links = self._set_sel_links(selected_links, tau_min, tau_max)
 
         if self.verbosity > 0:
          print("\n## Estimating lagged dependencies")
@@ -1031,16 +1048,8 @@ class PCMCI():
                              tau_max, tau_min)
                              + "but 0 <= tau_min <= tau_max")
 
-        if selected_links is None:
-            selected_links = {}
-            for j in range(self.N):
-                if j in self.selected_variables:
-                    selected_links[j] = [(var, -lag)
-                                         for var in range(self.N)
-                                         for lag in range(tau_min, tau_max + 1)
-                                         ]
-                else:
-                    selected_links[j] = []
+        # Set the selected links
+        selected_links = self._set_sel_links(selected_links, tau_min, tau_max)
 
         if self.verbosity > 0:
             print("\n##\n## Running Tigramite MCI algorithm\n##"

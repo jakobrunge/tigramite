@@ -12,7 +12,7 @@ from tigramite.independence_tests import ParCorr #, GPACE
 import tigramite.data_processing as pp
 
 # Define the verbosity at the global scope
-VERBOSITY = 1
+VERBOSITY = 10
 
 # CONVENIENCE FUNCTIONS ########################################################
 def assert_graphs_equal(actual, expected):
