@@ -15,7 +15,8 @@ try:
 except:
     print("Could not import statsmodels, p-value corrections not available.")
 
-def _create_nested_dictionary(depth):
+# TODO check pc_alpha default docstrings
+def _create_nested_dictionary(depth=0):
     """Create a series of nested dictionaries to a maximum depth.  The first
     depth - 1 nested dictionaries are defaultdicts, the last is a normal
     dictionary.
@@ -650,6 +651,40 @@ class PCMCI():
                 'p_max':p_max,
                 'iterations': _nested_to_normal(iterations)}
 
+    def _print_pc_params(self, selected_links, tau_min, tau_max, pc_alpha,
+                         max_conds_dim, max_combinations):
+        """
+        Print the setup of the current pc_stable run
+
+        Parameters
+        ----------
+        selected_links : dict or None
+            Dictionary of form specifying which links should be tested.
+        tau_min : int, default: 1
+            Minimum time lag to test.
+        tau_max : int, default: 1
+            Maximum time lag to test
+        pc_alpha : float or list of floats
+            Significance level in algorithm.
+        max_conds_dim : int
+            Maximum number of conditions to test.
+        max_combinations : int
+            Maximum number of combinations of conditions to test.
+        """
+        print("\n##\n## Running Tigramite PC algorithm\n##"
+              "\n\nParameters:")
+        if len(self.selected_variables) < self.N:
+            print("selected_variables = %s" % self.selected_variables)
+        if selected_links is not None:
+            print("selected_links = %s" % selected_links)
+        print("independence test = %s" % self.cond_ind_test.measure
+              + "\ntau_min = %d" % tau_min
+              + "\ntau_max = %d" % tau_max
+              + "\npc_alpha = %s" % pc_alpha
+              + "\nmax_conds_dim = %s" % max_conds_dim
+              + "\nmax_combinations = %d" % max_combinations)
+        print("\n")
+
     def run_pc_stable(self,
                       selected_links=None,
                       tau_min=1,
@@ -716,25 +751,15 @@ class PCMCI():
         if max_combinations <= 0:
             raise ValueError("max_combinations must be > 0")
 
-        p_max = dict([(j, {}) for j in range(self.N)])
-        val_min = dict([(j, {}) for j in range(self.N)])
-
-        iterations = dict([(j, {}) for j in range(self.N)])
+        # Impliment defaultdict(dict) behaviour for all p_max, val_max, and
+        # iterations
+        p_max = _create_nested_dictionary()
+        val_min = _create_nested_dictionary()
+        iterations = _create_nested_dictionary()
 
         if self.verbosity > 0:
-            print("\n##\n## Running Tigramite PC algorithm\n##"
-                  "\n\nParameters:")
-            if len(self.selected_variables) < self.N:
-                print("selected_variables = %s" % self.selected_variables)
-            if selected_links is not None:
-                print("selected_links = %s" % selected_links)
-            print("independence test = %s" % self.cond_ind_test.measure
-                  + "\ntau_min = %d" % tau_min
-                  + "\ntau_max = %d" % tau_max
-                  + "\npc_alpha = %s" % pc_alpha
-                  + "\nmax_conds_dim = %s" % max_conds_dim
-                  + "\nmax_combinations = %d" % max_combinations)
-            print("\n")
+            self._print_pc_params(selected_links, tau_min, tau_max, pc_alpha
+                                  max_conds_dim, max_combinations)
 
         # Set the selected links
         selected_links = self._set_sel_links(selected_links, tau_min, tau_max)
@@ -773,8 +798,8 @@ class PCMCI():
                 # Score
                 parents_here = results[pc_alpha_here]['parents']
                 score[iscore] = \
-                    self.cond_ind_test.get_model_selection_criterion(j, 
-                                                                     parents_here, 
+                    self.cond_ind_test.get_model_selection_criterion(j,
+                                                                     parents_here,
                                                                      tau_max)
             optimal_alpha = pc_alpha[score.argmin()]
 
@@ -798,6 +823,11 @@ class PCMCI():
 
             iterations[j]['optimal_pc_alpha'] = optimal_alpha
 
+        # Revert to normal dictionaries for p_max, val_min, iterations
+        p_max = _nested_to_normal(p_max)
+        val_min = _nested_to_normal(val_min)
+        iterations = _nested_to_normal(iterations)
+        # Save the results in the current status of the algorithm
         self.all_parents = all_parents
         self.val_matrix = self._dict_to_matrix(val_min, tau_max)
         self.p_matrix = self._dict_to_matrix(p_max, tau_max)
