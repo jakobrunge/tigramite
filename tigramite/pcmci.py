@@ -329,6 +329,27 @@ class PCMCI():
 
             return False
 
+    def _iter_condtions(self, parent, j, conds_dim, all_parents):
+        """Yield next condition.
+
+        Returns next condition from lexicographically ordered conditions.
+        Returns False if all possible conditions have been tested.
+
+        Parameters
+        ----------
+        check_only : bool, default: False
+            Return only True instead of next condition.
+
+        Returns
+        -------
+        cond :  list
+            List of form [(0, -1), (3, -2), ...] yielding next condition.
+        """
+        parents_j_excl_current = [p for p in all_parents if p != parent]
+        for cond in itertools.combinations(parents_j_excl_current,
+                                           conds_dim):
+            yield list(cond)
+
     def _sort_parents(self, parents_values):
         """Sort current parents according to test statistic values.
 
