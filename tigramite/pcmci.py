@@ -8,7 +8,7 @@ import itertools
 from collections import defaultdict
 from copy import deepcopy
 import pickle
-import numpy
+import numpy as np
 
 try:
     import statsmodels
@@ -17,7 +17,7 @@ except:
     print("Could not import statsmodels, p-value corrections not available.")
 
 def _create_nested_dictionary(depth):
-    """Create a series of nested dictionaries to a maximum depth.  The first 
+    """Create a series of nested dictionaries to a maximum depth.  The first
     depth - 1 nested dictionaries are defaultdicts, the last is a normal
     dictionary.
 
@@ -283,8 +283,8 @@ class PCMCI():
             selected_variables = range(self.N)
         # Some checks
         if selected_variables is not None and \
-          (numpy.any(numpy.array(selected_variables) < 0) or
-           numpy.any(numpy.array(selected_variables) >= self.N)):
+          (np.any(np.array(selected_variables) < 0) or
+           np.any(np.array(selected_variables) >= self.N)):
             raise ValueError("selected_variables must be within 0..N-1")
         # Return the selected variables
         return selected_variables
@@ -331,7 +331,7 @@ class PCMCI():
             print("\n    Sorting parents in decreasing order with "
                   "\n    weight(i-tau->j) = min_{iterations} |I_{ij}(tau)| ")
 
-        abs_values = dict([(key, numpy.abs(parents_values[key]))
+        abs_values = dict([(key, np.abs(parents_values[key]))
                            for key in list(parents_values)])
 
         parents = sorted(abs_values,
@@ -359,7 +359,7 @@ class PCMCI():
 
         N = len(val_dict)
 
-        matrix = numpy.ones((N, N, tau_max + 1))
+        matrix = np.ones((N, N, tau_max + 1))
         for j in val_dict.keys():
             for link in val_dict[j].keys():
                 k, tau = link
@@ -369,7 +369,7 @@ class PCMCI():
 
     def _print_link_info(self, j, index_parent, parent, num_parents):
         """Print info about the current link being tested
-        
+
         Parameters
         ----------
         j : int
@@ -378,7 +378,7 @@ class PCMCI():
         index_parent : int
             Index of the current parent
 
-        parent : tuple 
+        parent : tuple
             Standard (i, tau) tuple of parent node id and time delay
 
         num_parents : int
@@ -390,7 +390,7 @@ class PCMCI():
 
     def _print_cond_info(self, Z, comb_index, pval, val):
         """Print info about the condition
-        
+
         Parameters
         ----------
         Z : list
@@ -474,19 +474,21 @@ class PCMCI():
         iterations : dict
             Dictionary containing further information on algorithm steps.
         """
-
+        # Set the default values for pc_alpha
         if pc_alpha is None:
             pc_alpha = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
-
-        p_max = {}
-        val_min = {}
-
-        parents_values = {}
-        parents = selected_links
-
-        # Define a nested defaultdict of depth 4
+        # Initialize the dictionaries for the p_max, val_minm parent_values
+        # results
+        p_max = dict()
+        val_min = dict()
+        parents_values = dict()
+        # Initialize the parents values from the selected links, copying to
+        # ensure this initial argument is unchagned.
+        parents = deepcopy(selected_links)
+        # Define a nested defaultdict of depth 4 to save all information about
+        # iterations
         iterations = _create_nested_dictionary(4)
-
+        # Ensure tau_min is atleast 1
         tau_min = max(1, tau_min)
 
         # Iteration through increasing number of conditions
@@ -495,17 +497,15 @@ class PCMCI():
         # TODO translated from a while loop to a for loop verbatum.  Is this the
         # intended limit of the function?
         for conds_dim in range(max_conds_dim + 1):
-
-            # Re-initiate list of non-significant links
-            nonsig_parents = []
+            # (Re)initialize the list of non-significant links
+            nonsig_parents = list()
 
             if len(parents) - 1 < conds_dim:
                 converged = True
                 break
 
             if self.verbosity > 1:
-                print("\nTesting condition sets of dimension"
-                      " %d:" % conds_dim)
+                print("\nTesting condition sets of dimension %d:" % conds_dim)
 
             # Iterate through all possible pairs (that have not converged yet)
             for index_parent, parent in enumerate(parents):
@@ -521,7 +521,6 @@ class PCMCI():
                         break
                     # TODO start this index from zero
                     comb_index += 1
-
                     # Perform independence test
                     val, pval = self.cond_ind_test.run_test(X=[parent],
                                                             Y=[(j, 0)],
@@ -532,21 +531,14 @@ class PCMCI():
                         self._print_cond_info(Z, comb_index, pval, val)
                     # Keep track of maximum p-value and minimum estimated value
                     # for each pair (across any condition)
-                    if parent in list(parents_values):
-                        parents_values[parent] = min(numpy.abs(val),
-                                                       parents_values[parent])
-                    else:
-                        parents_values[parent] = numpy.abs(val)
+                    parents_values[parent] = \
+                        min(np.abs(val), parents_values.get(parent,float("inf")))
+                    p_max[parent] = \
+                        max(np.abs(pval), p_max.get(parent, -float("inf")))
+                    val_min[parent] = \
+                        min(np.abs(val), val_min.get(parent, float("inf")))
 
-                    if parent in list(p_max):
-                        p_max[parent] = max(numpy.abs(pval),
-                                              p_max[parent])
-                        val_min[parent] = min(numpy.abs(val),
-                                              val_min[parent])
-                    else:
-                        p_max[parent] = pval
-                        val_min[parent] = numpy.abs(val)
-
+                    # Save the iteration if we need to
                     if save_iterations:
                         a_iter = iterations['iterations'][conds_dim][parent]
                         a_iter[comb_index]['conds'] = deepcopy(Z)
@@ -729,7 +721,7 @@ class PCMCI():
                 if self.verbosity > 1:
                     print("\nIterating through pc_alpha = %s:" % pc_alpha)
 
-                score = numpy.zeros(len(pc_alpha))
+                score = np.zeros(len(pc_alpha))
                 results = {}
                 for iscore, pc_alpha_here in enumerate(pc_alpha):
                     if self.verbosity > 1:
@@ -931,7 +923,7 @@ class PCMCI():
             for j in range(self.N):
                 parents[j] = []
 
-        val_matrix = numpy.zeros((self.N, self.N, tau_max + 1))
+        val_matrix = np.zeros((self.N, self.N, tau_max + 1))
 
         for j in self.selected_variables:
 
@@ -1075,10 +1067,10 @@ class PCMCI():
                 if j not in list(_int_parents):
                     _int_parents[j] = []
 
-        val_matrix = numpy.zeros((self.N, self.N, tau_max + 1))
-        p_matrix = numpy.ones((self.N, self.N, tau_max + 1))
+        val_matrix = np.zeros((self.N, self.N, tau_max + 1))
+        p_matrix = np.ones((self.N, self.N, tau_max + 1))
         if self.cond_ind_test.confidence is not False:
-            conf_matrix = numpy.zeros((self.N, self.N, tau_max + 1, 2))
+            conf_matrix = np.zeros((self.N, self.N, tau_max + 1, 2))
         else:
             conf_matrix = None
 
@@ -1177,17 +1169,17 @@ class PCMCI():
         tau_max = tau_max_plusone - 1
 
         if exclude_contemporaneous:
-            mask = numpy.ones((self.N, self.N, tau_max + 1), dtype='bool')
+            mask = np.ones((self.N, self.N, tau_max + 1), dtype='bool')
             mask[:, :, 0] = False
         else:
-            mask = numpy.ones((self.N, self.N, tau_max + 1), dtype='bool')
+            mask = np.ones((self.N, self.N, tau_max + 1), dtype='bool')
             mask[range(self.N), range(self.N), 0] = False
 
-        q_matrix = numpy.array(p_matrix)
+        q_matrix = np.array(p_matrix)
 
         if fdr_method != 'none':
-            pvals = p_matrix[numpy.where(mask)]
-            q_matrix[numpy.where(mask)] = multicomp.multipletests(
+            pvals = p_matrix[np.where(mask)]
+            q_matrix[np.where(mask)] = multicomp.multipletests(
                 pvals, method=fdr_method)[1]  # .reshape(N,N,tau_max)
 
         return q_matrix
@@ -1229,9 +1221,9 @@ class PCMCI():
         all_parents = {}
         for j in self.selected_variables:
 
-            links = dict([((p[0], -p[1] - 1), numpy.abs(val_matrix[p[0],
+            links = dict([((p[0], -p[1] - 1), np.abs(val_matrix[p[0],
                             j, abs(p[1]) + 1]))
-                          for p in zip(*numpy.where(link_matrix[:, j, 1:]))])
+                          for p in zip(*np.where(link_matrix[:, j, 1:]))])
 
             # Sort by value
             all_parents[j] = sorted(links, key=links.get,
@@ -1275,9 +1267,9 @@ class PCMCI():
         print("\n## Significant links at alpha = %s:" % alpha_level)
         for j in self.selected_variables:
 
-            links = dict([((p[0], -p[1] ), numpy.abs(val_matrix[p[0],
+            links = dict([((p[0], -p[1] ), np.abs(val_matrix[p[0],
                             j, abs(p[1])]))
-                          for p in zip(*numpy.where(sig_links[:, j, :]))])
+                          for p in zip(*np.where(sig_links[:, j, :]))])
 
             # Sort by value
             sorted_links = sorted(links, key=links.get, reverse=True)
@@ -1415,7 +1407,7 @@ class PCMCI():
 #    import data_processing as pp
 #    from independence_tests import ParCorr, GPACE, GPDC, CMIknn, CMIsymb
 #
-#    numpy.random.seed(42)
+#    np.random.seed(42)
 #    # Example process to play around with
 #    a = 0.8
 #    c1 = .8
@@ -1434,7 +1426,7 @@ class PCMCI():
 #    data, true_parents_neighbors = pp.var_process(links_coeffs,
 #                                                  use='inv_inno_cov', T=T)
 #
-#    data_mask = numpy.zeros(data.shape)
+#    data_mask = np.zeros(data.shape)
 #
 #    T, N = data.shape
 #
