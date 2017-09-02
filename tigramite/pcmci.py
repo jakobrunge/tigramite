@@ -39,8 +39,7 @@ def _nested_to_normal(nested_dict):
     nested_dict : default dictionary of default dictionaries of ... etc.
     """
     if isinstance(nested_dict, defaultdict):
-        nested_dict = {k: _nested_to_normal(v) \
-            for k, v in nested_dict.iteritems()}
+        nested_dict = {k: _nested_to_normal(v) for k, v in nested_dict.items()}
     return nested_dict
 
 class PCMCI():
@@ -331,6 +330,7 @@ class PCMCI():
             print("\n    Sorting parents in decreasing order with "
                   "\n    weight(i-tau->j) = min_{iterations} |I_{ij}(tau)| ")
 
+        # TODO dict comprehension here
         abs_values = dict([(key, np.abs(parents_values[key]))
                            for key in list(parents_values)])
 
@@ -499,11 +499,11 @@ class PCMCI():
         for conds_dim in range(max_conds_dim + 1):
             # (Re)initialize the list of non-significant links
             nonsig_parents = list()
-
+            # Check if the algorithm has converged
             if len(parents) - 1 < conds_dim:
                 converged = True
                 break
-
+            # Print information about 
             if self.verbosity > 1:
                 print("\nTesting condition sets of dimension %d:" % conds_dim)
 
@@ -537,14 +537,12 @@ class PCMCI():
                         max(np.abs(pval), p_max.get(parent, -float("inf")))
                     val_min[parent] = \
                         min(np.abs(val), val_min.get(parent, float("inf")))
-
                     # Save the iteration if we need to
                     if save_iterations:
                         a_iter = iterations['iterations'][conds_dim][parent]
                         a_iter[comb_index]['conds'] = deepcopy(Z)
                         a_iter[comb_index]['val'] = val
                         a_iter[comb_index]['pval'] = pval
-
                     # Delete link later and break while-loop if non-significant
                     if pval > pc_alpha:
                         nonsig_parents.append((j, parent))
