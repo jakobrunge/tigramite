@@ -123,9 +123,11 @@ def a_pcmci(a_sample, a_test, a_common_params, request):
 # PC_STABLE TESTING ############################################################
 @pytest.fixture(params=[
     # Keep parameters for the pc_stable algorithm here
-    # pc_alpha,  max_conds_dim,  max_comb
-     (0.05,      None,          1),
-     (0.05,      2,             1)])
+    # pc_alpha,  max_conds_dim,  max_comb, save_iterations
+     (0.05,      None,           1,        False),
+     (0.05,      None,           10,       False),
+     (0.05,      None,           1,        True),
+     (0.05,      2,              1,        False)])
 def a_pc_stable_params(request):
     # Return the parameters for the pc_stable test
     return request.param
@@ -135,11 +137,12 @@ def a_run_pc_stable(a_pcmci, a_pc_stable_params):
     # Unpack the pcmci, true parents, and common parameters
     pcmci, true_parents, tau_min, tau_max, select_links = a_pcmci
     # Unpack the pc_stable parameters
-    pc_alpha, max_conds_dim, max_combinations = a_pc_stable_params
+    pc_alpha, max_conds_dim, max_combinations, save_iter = a_pc_stable_params
     # Run PC stable
     pcmci.run_pc_stable(selected_links=select_links,
                         tau_min=tau_min,
                         tau_max=tau_max,
+                        save_iterations=save_iter,
                         pc_alpha=pc_alpha,
                         max_conds_dim=max_conds_dim,
                         max_combinations=max_combinations)
@@ -189,13 +192,14 @@ def a_run_pcmci(a_pcmci, a_pc_stable_params, a_mci_params):
     # Unpack the pcmci and the true parents, and common parameters
     pcmci, true_parents, tau_min, tau_max, select_links = a_pcmci
     # Unpack the pc_stable parameters
-    pc_alpha, max_conds_dim, max_combinations = a_pc_stable_params
+    pc_alpha, max_conds_dim, max_combinations, save_iter = a_pc_stable_params
     # Unpack the MCI parameters
     alpha_level, max_conds_px, max_conds_py = a_mci_params
     # Run the PCMCI algorithm with the given parameters
     results = pcmci.run_pcmci(selected_links=select_links,
                               tau_min=tau_min,
                               tau_max=tau_max,
+                              save_iterations=save_iter,
                               pc_alpha=pc_alpha,
                               max_conds_dim=max_conds_dim,
                               max_combinations=max_combinations,

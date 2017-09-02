@@ -456,18 +456,19 @@ class PCMCI():
                 for comb_index, Z in \
                         enumerate(self._iter_condtions(parent, j,
                                                        conds_dim, parents)):
+                    # Break if we try too many combinations
+                    if comb_index > max_combinations:
+                        break
                     # TODO start this index from zero
                     comb_index += 1
 
                     # Perform independence test
                     i, tau = parent
 
-                    val, pval = self.cond_ind_test.run_test(
-                        X=[(i, tau)],
-                        Y=[(j, 0)],
-                        Z=Z,
-                        tau_max=tau_max,
-                    )
+                    val, pval = self.cond_ind_test.run_test(X=[(i, tau)],
+                                                            Y=[(j, 0)],
+                                                            Z=Z,
+                                                            tau_max=tau_max)
 
                     if self.verbosity > 1:
                         var_name_Z = ""
@@ -508,13 +509,13 @@ class PCMCI():
                 if self.verbosity > 1:
                     if pval > pc_alpha:
                         print("    Non-significance detected.")
-                    elif conditions.next_cond(check_only=True) == False:
-                        print("    No conditions of dimension %d left." %
-                              conds_dim)
-                    else:
+                    elif conds_dim > max_combinations:
                         print("    Still conditions of dimension %d left,"
                               " but q_max = %d reached." % (
                             conds_dim, max_combinations))
+                    else:
+                        print("    No conditions of dimension %d left." %
+                              conds_dim)
 
             # Remove non-significant links
             for j_parent in nonsig_parents:
