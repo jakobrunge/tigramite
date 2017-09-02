@@ -262,73 +262,6 @@ class PCMCI():
         # Return the selected variables
         return selected_variables
 
-    class _Conditions():
-        # TODO reduce this to a yield function
-        """Helper class to keep track of conditions.
-
-        Tracks conditions already used for link (i, -tau) --> j
-
-        Parameters
-        ----------
-        j : int
-            Index of current variable.
-
-        parent : tuple
-            Tuple of form (i, -tau).
-
-        conds_dim : int
-            Cardinality in current step.
-
-        parents_j : list
-            List of form [(0, -1), (3, -2), ...]
-
-        Attributes
-        ----------
-        parents_j_excl_current : list
-            List of current parents excluding parent being tested.
-        checked_conds : list
-            List of already checked condition sets.
-
-         """
-        def __init__(self, parent, j, conds_dim, parents_j):
-
-            self.j = j
-            self.parent = parent
-            self.conds_dim = conds_dim
-            self.parents_j_excl_current = [p for p in parents_j if p != parent]
-            self.checked_conds = []
-
-        def next_cond(self, check_only=False):
-            """Yield next condition.
-
-            Returns next condition from lexicographically ordered conditions.
-            Returns False if all possible conditions have been tested.
-
-            Parameters
-            ----------
-            check_only : bool, default: False
-                Return only True instead of next condition.
-
-            Returns
-            -------
-            cond :  list or bool
-                List of form [(0, -1), (3, -2), ...] yielding next condition.
-            """
-            if len(self.parents_j_excl_current) < self.conds_dim:
-                return False
-
-            for cond in itertools.combinations(self.parents_j_excl_current,
-                                               self.conds_dim):
-
-                if set(list(cond)) not in self.checked_conds:
-                    if check_only is False:
-                        self.checked_conds.append(set(list(cond)))
-                        return list(cond)
-                    else:
-                        return True
-
-            return False
-
     def _iter_condtions(self, parent, j, conds_dim, all_parents):
         """Yield next condition.
 
@@ -519,17 +452,12 @@ class PCMCI():
                 if save_iterations:
                     iterations['iterations'][conds_dim][parent] = {}
 
-                # Initiate conditions class
-                conditions = self._Conditions(parent, j, conds_dim, parents)
-
-                comb_index = 0
-                while comb_index < max_combinations and conditions.next_cond(
-                                                        check_only=True):
-
+                # Iterate through all possible combinations
+                for comb_index, Z in \
+                        enumerate(self._iter_condtions(parent, j,
+                                                       conds_dim, parents)):
+                    # TODO start this index from zero
                     comb_index += 1
-
-                    # Choose next condition
-                    Z = conditions.next_cond()
 
                     # Perform independence test
                     i, tau = parent
