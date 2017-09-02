@@ -4,14 +4,13 @@
 #
 # License: GNU General Public License v3.0
 
+from __future__ import print_function
 import itertools
 from collections import defaultdict
 from copy import deepcopy
-import pickle
 import numpy as np
 
 try:
-    import statsmodels
     from statsmodels.sandbox.stats import multicomp
 except:
     print("Could not import statsmodels, p-value corrections not available.")
@@ -277,6 +276,7 @@ class PCMCI():
         selected_variables : list
             Defaults to a list of all given variable IDs [0..N-1]
         """
+        # TODO test this function
         # Set the default selected variables if none are set
         if selected_variables is None:
             selected_variables = range(self.N)
@@ -289,6 +289,7 @@ class PCMCI():
         return selected_variables
 
     def _iter_condtions(self, parent, j, conds_dim, all_parents):
+        # TODO test this function
         """Yield next condition.
 
         Returns next condition from lexicographically ordered conditions.
@@ -296,27 +297,33 @@ class PCMCI():
 
         Parameters
         ----------
-        check_only : bool, default: False
-            Return only True instead of next condition.
+        j : int
+            Index of current variable.
+        parent : tuple
+            Tuple of form (i, -tau).
+        conds_dim : int
+            Cardinality in current step.
+        parents_j : list
+            List of form [(0, -1), (3, -2), ...]
 
-        Returns
+        Yields
         -------
         cond :  list
-            List of form [(0, -1), (3, -2), ...] yielding next condition.
+            List of form [(0, -1), (3, -2), ...] for the next condition.
         """
         parents_j_excl_current = [p for p in all_parents if p != parent]
-        for cond in itertools.combinations(parents_j_excl_current,
-                                           conds_dim):
+        for cond in itertools.combinations(parents_j_excl_current, conds_dim):
             yield list(cond)
 
-    def _sort_parents(self, parents_values):
+    def _sort_parents(self, parents_vals):
+        # TODO test this function
         """Sort current parents according to test statistic values.
 
         Sorting is from strongest to weakest absolute values.
 
         Parameters
         ---------
-        parents_values : dict
+        parents_vals : dict
             Dictionary of form {(0, -1):float, ...} containing the minimum test
             statistic value of a link
 
@@ -325,29 +332,24 @@ class PCMCI():
         parents : list
             List of form [(0, -1), (3, -2), ...] containing sorted parents.
         """
-
+        # TODO test function
         if self.verbosity > 1:
             print("\n    Sorting parents in decreasing order with "
                   "\n    weight(i-tau->j) = min_{iterations} |I_{ij}(tau)| ")
-
-        # TODO dict comprehension here
-        abs_values = dict([(key, np.abs(parents_values[key]))
-                           for key in list(parents_values)])
-
-        parents = sorted(abs_values,
-                         key=abs_values.get,
-                         reverse=True)
-
-        return parents
+        # Get the absoute value for all the test statistics
+        # TODO aren't these already absolute valued?
+        abs_values = {k : np.abs(parents_vals[k]) for k in list(parents_vals)}
+        return sorted(abs_values, key=abs_values.get, reverse=True)
 
     def _dict_to_matrix(self, val_dict, tau_max):
+        # TODO use _get_lagged_connect_matrix instead
+        # TODO _get_lagged_connect_matrix *almost* works, but not quite..
         """Helper function to convert dictionary to matrix formart.
 
         Parameters
         ---------
         val_dict : dict
             Dictionary of form {0:{(0, -1):float, ...}, 1:{...}, ...}
-
         tau_max : int
             Maximum lag.
 
@@ -374,13 +376,10 @@ class PCMCI():
         ----------
         j : int
             Index of current node being tested
-
         index_parent : int
             Index of the current parent
-
         parent : tuple
             Standard (i, tau) tuple of parent node id and time delay
-
         num_parents : int
             Total number of parents
         """
@@ -395,13 +394,10 @@ class PCMCI():
         ----------
         Z : list
             The current condition being tested
-
         comb_index : int
             Index of the combination yielding this condition
-
         pval : float
             p-value from this condition
-
         val : float
             value from this condition
         """
@@ -410,6 +406,36 @@ class PCMCI():
             var_name_z += "(%s %d) " % (self.var_names[i], tau)
         print("    Combination %d: %s --> pval = %.5f / val = %.3f" %
               (comb_index, var_name_z, pval, val))
+
+        def _print_result(self, pval, pc_alpha, conds_dim, max_combinations):
+            """
+            Print the results from the current iteration of conditions.
+
+            Parameters
+            ----------
+            pval : float
+                pval to check signficance
+            pc_alpha : float
+                lower bound on what is considered significant
+            conds_dim : int
+                Cardinality of the current step
+            max_combinations : int
+                Maximum number of combinations of conditions of current
+                cardinality to test.
+            """
+            # Start with an indent
+            print_str = "    "
+            # Determine the body of the text
+            if pval > pc_alpha:
+                print_str += "Non-significance detected."
+            elif conds_dim > max_combinations:
+                print_str += "Still conditions of dimension"+\
+                        " %d left," % (conds_dim) +\
+                        " but q_max = %d reached." % (max_combinations)
+            else:
+                print_str += "No conditions of dimension %d left." % (conds_dim)
+            # Print the message
+            print(print_str)
 
     # @profile
     def _run_pc_stable_single(self, j,
@@ -503,7 +529,7 @@ class PCMCI():
             if len(parents) - 1 < conds_dim:
                 converged = True
                 break
-            # Print information about 
+            # Print information about
             if self.verbosity > 1:
                 print("\nTesting condition sets of dimension %d:" % conds_dim)
 
@@ -549,6 +575,8 @@ class PCMCI():
                         break
 
                 if self.verbosity > 1:
+                    self._print_result(pval, pc_alpha,
+                                       conds_dim, max_combinations)
                     if pval > pc_alpha:
                         print("    Non-significance detected.")
                     elif conds_dim > max_combinations:
