@@ -407,7 +407,7 @@ class PCMCI():
         print("    Combination %d: %s --> pval = %.5f / val = %.3f" %
               (comb_index, var_name_z, pval, val))
 
-    def _print_result(self, pval, pc_alpha, conds_dim, max_combinations):
+    def _print_a_pc_result(self, pval, pc_alpha, conds_dim, max_combinations):
         """
         Print the results from the current iteration of conditions.
 
@@ -437,16 +437,35 @@ class PCMCI():
         # Print the message
         print(print_str)
 
-    # @profile
+    def _print_converged_pc_single(self, converged, j, max_conds_dim):
+        """
+        Print statement about the convergence of the pc_stable_single algorithm.
+
+        Parameters
+        ----------
+        convergence : bool
+            true if convergence was reacjed
+        j : int
+            Variable index.
+        max_conds_dim : int
+            Maximum number of conditions to test
+        """
+        if converged:
+            print("\nAlgorithm converged for variable %s" %
+                  self.var_names[j])
+        else:
+            print(
+                "\nAlgorithm not yet converged, but max_conds_dim = %d"
+                " reached." % max_conds_dim)
+
     def _run_pc_stable_single(self, j,
-                             selected_links=None,
-                             tau_min=1,
-                             tau_max=1,
-                             save_iterations=False,
-                             pc_alpha=0.2,
-                             max_conds_dim=None,
-                             max_combinations=1,
-                             ):
+                              selected_links=None,
+                              tau_min=1,
+                              tau_max=1,
+                              save_iterations=False,
+                              pc_alpha=0.2,
+                              max_conds_dim=None,
+                              max_combinations=1):
         """PC algorithm for estimating parents of single variable.
 
         Parameters
@@ -503,7 +522,7 @@ class PCMCI():
         # Set the default values for pc_alpha
         if pc_alpha is None:
             pc_alpha = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
-        # Initialize the dictionaries for the p_max, val_minm parent_values
+        # Initialize the dictionaries for the p_max, val_minm parents_values
         # results
         p_max = dict()
         val_min = dict()
@@ -576,8 +595,8 @@ class PCMCI():
 
                 # Print the results if needed
                 if self.verbosity > 1:
-                    self._print_result(pval, pc_alpha,
-                                       conds_dim, max_combinations)
+                    self._print_a_pc_result(pval, pc_alpha,
+                                            conds_dim, max_combinations)
 
             # Remove non-significant links
             for _, parent in nonsig_parents:
@@ -587,17 +606,10 @@ class PCMCI():
 
             if self.verbosity > 1:
                 print("\nUpdating parents:")
-                self._print_parents_single(
-                    j, parents, parents_values, p_max)
+                self._print_parents_single(j, parents, parents_values, p_max)
 
         if self.verbosity > 1:
-            if converged:
-                print("\nAlgorithm converged for variable %s" %
-                      self.var_names[j])
-            else:
-                print(
-                    "\nAlgorithm not yet converged, but max_conds_dim = %d"
-                    " reached." % max_conds_dim)
+            self._print_converged_pc_single(converged, j, max_conds_dim)
 
         return {'parents':parents,
                 'val_min':val_min,
@@ -800,24 +812,15 @@ class PCMCI():
         ----------
         j : int
             Index of current variable.
-
         parents : list
             List of form [(0, -1), (3, -2), ...]
-
         val_min : dict
             Dictionary of form {(0, -1):float, ...} containing the minimum test
             statistic value of a link
-
         p_max : dict
             Dictionary of form {(0, -1):float, ...} containing the maximum
             p-value of a link across different conditions.
-
-        Returns
-        -------
-        self : returns an instance of self.
         """
-
-
         if len(parents) < 20 or hasattr(self, 'iterations'):
             print("\n    Variable %s has %d parent(s):" % (
                             self.var_names[j], len(parents)))
@@ -835,8 +838,6 @@ class PCMCI():
             print("\n    Variable %s has %d parent(s):" % (
                 self.var_names[j], len(parents)))
 
-        return self
-
     def _print_parents(self, all_parents, val_min, p_max):
         """Print current parents.
 
@@ -845,32 +846,24 @@ class PCMCI():
         all_parents : dictionary
             Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing
             the conditioning-parents estimated with PC algorithm.
-
         val_min : dict
             Dictionary of form {0:{(0, -1):float, ...}} containing the minimum
             test statistic value of a link
-
         p_max : dict
             Dictionary of form {0:{(0, -1):float, ...}} containing the maximum
             p-value of a link across different conditions.
-
-        Returns
-        -------
-        self : returns an instance of self.
         """
         for j in [var for var in list(all_parents)]:
             self._print_parents_single(j, all_parents[j],
                                        val_min[j], p_max[j])
-        return self
 
     def get_lagged_dependencies(self,
-            selected_links=None,
-            tau_min=0,
-            tau_max=1,
-            parents=None,
-            max_conds_py=None,
-            max_conds_px=None,
-            ):
+                                selected_links=None,
+                                tau_min=0,
+                                tau_max=1,
+                                parents=None,
+                                max_conds_py=None,
+                                max_conds_px=None):
 
         """Returns matrix of lagged dependence measure values.
 
@@ -880,22 +873,17 @@ class PCMCI():
             Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}
             specifying whether only selected links should be tested. If None is
             passed, all links are tested
-
         tau_min : int, default: 0
             Minimum time lag.
-
         tau_max : int, default: 1
             Maximum time lag. Must be larger or equal to tau_min.
-
         parents : dict or None
             Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}
             specifying the conditions for each variable. If None is
             passed, no conditions are used.
-
         max_conds_py : int or None
             Maximum number of conditions of Y to use. If None is passed, this
             number is unrestricted.
-
         max_conds_px : int or None
             Maximum number of conditions of Z to use. If None is passed, this
             number is unrestricted.
