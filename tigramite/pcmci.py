@@ -980,7 +980,7 @@ class PCMCI():
         if self.verbosity > 0:
          print("\n## Estimating lagged dependencies")
 
-        # Set the maximum condition dimension for Y
+        # Set the maximum condition dimension for Y and Z
         max_conds_py = self._set_max_condition_dim(max_conds_py, tau_max)
         max_conds_px = self._set_max_condition_dim(max_conds_px, tau_max)
 
@@ -1103,11 +1103,9 @@ class PCMCI():
                   + "\nmax_conds_py = %s" % max_conds_py
                   + "\nmax_conds_px = %s" % max_conds_px)
 
-        if max_conds_py is None:
-            max_conds_py = self.N * tau_max
-
-        if max_conds_px is None:
-            max_conds_px = self.N * tau_max
+        # Set the maximum condition dimension for Y and Z
+        max_conds_py = self._set_max_condition_dim(max_conds_py, tau_max)
+        max_conds_px = self._set_max_condition_dim(max_conds_px, tau_max)
 
         # Define an internal copy of parents so that the contents of the
         # argument parents is unchanged
