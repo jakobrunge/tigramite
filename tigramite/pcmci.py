@@ -549,10 +549,7 @@ class PCMCI():
         iterations : dict
             Dictionary containing further information on algorithm steps.
         """
-        # Set the default values for pc_alpha
-        if pc_alpha is None:
-            pc_alpha = 0.2
-        # Initialize the dictionaries for the p_max, val_minm parents_values
+        # Initialize the dictionaries for the p_max, val_min parents_values
         # results
         p_max = dict()
         val_min = dict()
@@ -681,6 +678,52 @@ class PCMCI():
               + "\nmax_combinations = %d" % max_combinations)
         print("\n")
 
+    def _print_pc_sel_results(self, pc_alpha, results, j, score, optimal_alpha):
+        """
+        Print the results from the pc_alpha selection
+
+        Parameters
+        ----------
+        pc_alpha : list
+            Tested significance levels in algorithm.
+        results : dict
+            Results from the tested pc_alphas
+        score : array of floats
+            scores from each pc_alpha
+        j : int
+            Index of current variable.
+        optimal_alpha : float
+            Optimal value of pc_alpha
+        """
+        print("\n# Condition selection results:")
+        for iscore, pc_alpha_here in enumerate(pc_alpha):
+            names_parents = "[ "
+            for pari in results[pc_alpha_here]['parents']:
+                names_parents += "(%s %d) " % (
+                    self.var_names[pari[0]], pari[1])
+            names_parents += "]"
+            print("    pc_alpha=%s got score %.4f with parents %s" %
+                  (pc_alpha_here, score[iscore], names_parents))
+        print("\n--> optimal pc_alpha for variable %s is %s" %
+              (self.var_names[j], optimal_alpha))
+
+    def _check_tau_limits(self, tau_min, tau_max):
+        # TODO test this function
+        """
+        Check the tau limits adhere to 0 <= tau_min <= tau_max
+
+        Parameters
+        ----------
+        tau_min : float
+            Minimum tau value.
+        tau_max : float
+            Maximum tau value.
+        """
+        if not 0 <= tau_min <= tau_max:
+            raise ValueError("tau_max = %d, " % (tau_max) +\
+                             "tau_min = %d, " % (tau_min) +\
+                             "but 0 <= tau_min <= tau_max")
+
     def run_pc_stable(self,
                       selected_links=None,
                       tau_min=1,
@@ -732,15 +775,13 @@ class PCMCI():
             Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}
             containing estimated parents.
         """
+        # Set the default values for pc_alpha
         if pc_alpha is None:
             pc_alpha = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
         elif not isinstance(pc_alpha, (list, tuple, np.ndarray)):
             pc_alpha = [pc_alpha]
 
-        if tau_min > tau_max or min(tau_min, tau_max) < 0:
-            raise ValueError("tau_max = %d, tau_min = %d, " % (
-                             tau_max, tau_min)
-                             + "but 0 <= tau_min <= tau_max")
+        self._check_tau_limits(tau_min, tau_max)
 
         tau_min = max(1, tau_min)
 
@@ -799,17 +840,8 @@ class PCMCI():
             optimal_alpha = pc_alpha[score.argmin()]
 
             if self.verbosity > 1:
-                print("\n# Condition selection results:")
-                for iscore, pc_alpha_here in enumerate(pc_alpha):
-                    names_parents = "[ "
-                    for pari in results[pc_alpha_here]['parents']:
-                        names_parents += "(%s %d) " % (
-                            self.var_names[pari[0]], pari[1])
-                    names_parents += "]"
-                    print("    pc_alpha=%s got score %.4f with parents %s" %
-                          (pc_alpha_here, score[iscore], names_parents))
-                print("\n--> optimal pc_alpha for variable %s is %s" %
-                      (self.var_names[j], optimal_alpha))
+                self._print_pc_sel_results(pc_alpha, results, j, 
+                                           score, optimal_alpha)
 
             all_parents[j] = results[optimal_alpha]['parents']
             val_min[j] = results[optimal_alpha]['val_min']
@@ -818,11 +850,8 @@ class PCMCI():
 
             iterations[j]['optimal_pc_alpha'] = optimal_alpha
 
-        # Revert to normal dictionaries for p_max, val_min, iterations
-        #p_max = _nested_to_normal(p_max)
-        #val_min = _nested_to_normal(val_min)
-        #iterations = _nested_to_normal(iterations)
         # Save the results in the current status of the algorithm
+        # TODO consider using return values instead of attributes
         self.all_parents = all_parents
         self.val_matrix = self._dict_to_matrix(val_min, tau_max, self.N)
         self.p_matrix = self._dict_to_matrix(p_max, tau_max, self.N)
@@ -923,11 +952,8 @@ class PCMCI():
             The matrix of shape (N, N, tau_max+1) containing the lagged
             dependencies.
         """
-
-        if tau_min > tau_max or min(tau_min, tau_max) < 0:
-         raise ValueError("tau_max = %d, tau_min = %d, " % (
-                          tau_max, tau_min)
-                          + "but 0 <= tau_min <= tau_max")
+        # Check the limits on tau
+        self._check_tau_limits(tau_min, tau_max)
 
         # Set the selected links
         selected_links = self._set_sel_links(selected_links, tau_min, tau_max)
@@ -1045,12 +1071,8 @@ class PCMCI():
             {'val_matrix':val_matrix, 'p_matrix':p_matrix} are always returned
             and optionally conf_matrix which is of shape [N, N, tau_max+1,2]
         """
-
-        if tau_min > tau_max or min(tau_min, tau_max) < 0:
-            raise ValueError("tau_max = %d, tau_min = %d, " % (
-                             tau_max, tau_min)
-                             + "but 0 <= tau_min <= tau_max")
-
+        # Check the limits on tau
+        self._check_tau_limits(tau_min, tau_max)
         # Set the selected links
         selected_links = self._set_sel_links(selected_links, tau_min, tau_max)
 
