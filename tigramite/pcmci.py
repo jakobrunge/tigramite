@@ -375,7 +375,7 @@ class PCMCI():
         abs_values = {k : np.abs(parents_vals[k]) for k in list(parents_vals)}
         return sorted(abs_values, key=abs_values.get, reverse=True)
 
-    def _dict_to_matrix(self, val_dict, tau_max):
+    def _dict_to_matrix(self, val_dict, tau_max, n_vars):
         # TODO use _get_lagged_connect_matrix instead
         # TODO _get_lagged_connect_matrix *almost* works, but not quite..
         """Helper function to convert dictionary to matrix formart.
@@ -392,15 +392,11 @@ class PCMCI():
         matrix : array of shape (N, N, tau_max+1)
             Matrix format of p-values and test statistic values.
         """
-
-        N = len(val_dict)
-
-        matrix = np.ones((N, N, tau_max + 1))
+        matrix = np.ones((n_vars, n_vars, tau_max + 1))
         for j in val_dict.keys():
             for link in val_dict[j].keys():
                 k, tau = link
                 matrix[k, j, abs(tau)] = val_dict[j][link]
-
         return matrix
 
     def _print_link_info(self, j, index_parent, parent, num_parents):
@@ -751,15 +747,10 @@ class PCMCI():
         if max_combinations <= 0:
             raise ValueError("max_combinations must be > 0")
 
-        # Impliment defaultdict(dict) behaviour for all p_max, val_max, and
-        # iterations
-        #p_max = defaultdict(dict)
-        #val_min = defaultdict(dict)
-        #iterations = defaultdict(dict)
-        # TODO fix this so default dict works
-        p_max = dict([(j, {}) for j in range(self.N)])
-        val_min = dict([(j, {}) for j in range(self.N)])
-        iterations = dict([(j, {}) for j in range(self.N)])
+        # Impliment defaultdict for all p_max, val_max, and iterations
+        p_max = defaultdict(dict)
+        val_min = defaultdict(dict)
+        iterations = defaultdict(dict)
 
         if self.verbosity > 0:
             self._print_pc_params(selected_links, tau_min, tau_max, pc_alpha,
@@ -833,8 +824,8 @@ class PCMCI():
         #iterations = _nested_to_normal(iterations)
         # Save the results in the current status of the algorithm
         self.all_parents = all_parents
-        self.val_matrix = self._dict_to_matrix(val_min, tau_max)
-        self.p_matrix = self._dict_to_matrix(p_max, tau_max)
+        self.val_matrix = self._dict_to_matrix(val_min, tau_max, self.N)
+        self.p_matrix = self._dict_to_matrix(p_max, tau_max, self.N)
         self.iterations = iterations
 
         if self.verbosity > 0:
