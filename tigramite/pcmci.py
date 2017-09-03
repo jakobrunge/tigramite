@@ -724,6 +724,30 @@ class PCMCI():
                              "tau_min = %d, " % (tau_min) +\
                              "but 0 <= tau_min <= tau_max")
 
+    def _set_max_condition_dim(self, max_conds_dim, tau_max):
+        """
+        Set the maximum dimension of the conditions. Defaults to self.N*tau_max
+
+        Parameters
+        ----------
+        max_conds_dim : int
+            Input maximum condition dimension
+        tau_max : int
+            Maximum tau.
+
+        Returns
+        -------
+        max_cond_dim : int
+            Input maximum condition dimension or default
+        """
+        # Check if an input was given
+        if max_conds_dim is None:
+            max_conds_dim = self.N * tau_max
+        # Check this is a valid
+        if max_conds_dim < 0:
+            raise ValueError("maximum condition dimension must be >= 0")
+        return max_conds_dim
+
     def run_pc_stable(self,
                       selected_links=None,
                       tau_min=1,
@@ -780,34 +804,29 @@ class PCMCI():
             pc_alpha = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
         elif not isinstance(pc_alpha, (list, tuple, np.ndarray)):
             pc_alpha = [pc_alpha]
-
+        # Check the limits on tau_min
         self._check_tau_limits(tau_min, tau_max)
-
+        # TODO why is this imposed here??
         tau_min = max(1, tau_min)
-
+        # Check that the maximum combinatiosn variable is correct
         if max_combinations <= 0:
             raise ValueError("max_combinations must be > 0")
-
-        # Impliment defaultdict for all p_max, val_max, and iterations
+        # Implement defaultdict for all p_max, val_max, and iterations
         p_max = defaultdict(dict)
         val_min = defaultdict(dict)
         iterations = defaultdict(dict)
-
+        # Print information about the selected parameters
         if self.verbosity > 0:
             self._print_pc_params(selected_links, tau_min, tau_max, pc_alpha,
                                   max_conds_dim, max_combinations)
-
         # Set the selected links
         selected_links = self._set_sel_links(selected_links, tau_min, tau_max)
         # TODO remove this line!!!
         all_parents = deepcopy(selected_links)
+        # Set the maximum condition dimension
+        max_conds_dim = self._set_max_condition_dim(max_conds_dim, tau_max)
 
-        if max_conds_dim is None:
-            max_conds_dim = self.N * tau_max
-
-        if max_conds_dim < 0:
-            raise ValueError("max_conds_dim must be >= 0")
-
+        # Loop through the selected variables
         for j in self.selected_variables:
 
             if self.verbosity > 0:
@@ -822,15 +841,15 @@ class PCMCI():
                     print("\n# pc_alpha = %s (%d/%d):" % (pc_alpha_here,
                                         iscore+1, len(pc_alpha)))
 
-                results[pc_alpha_here] = self._run_pc_stable_single(j,
-                                   selected_links=selected_links[j],
-                                   tau_min=tau_min,
-                                   tau_max=tau_max,
-                                   save_iterations=save_iterations,
-                                   pc_alpha=pc_alpha_here,
-                                   max_conds_dim=max_conds_dim,
-                                   max_combinations=max_combinations,
-                                   )
+                results[pc_alpha_here] = \
+                    self._run_pc_stable_single(j,
+                                               selected_links=selected_links[j],
+                                               tau_min=tau_min,
+                                               tau_max=tau_max,
+                                               save_iterations=save_iterations,
+                                               pc_alpha=pc_alpha_here,
+                                               max_conds_dim=max_conds_dim,
+                                               max_combinations=max_combinations)
                 # Score
                 parents_here = results[pc_alpha_here]['parents']
                 score[iscore] = \
@@ -840,7 +859,7 @@ class PCMCI():
             optimal_alpha = pc_alpha[score.argmin()]
 
             if self.verbosity > 1:
-                self._print_pc_sel_results(pc_alpha, results, j, 
+                self._print_pc_sel_results(pc_alpha, results, j,
                                            score, optimal_alpha)
 
             all_parents[j] = results[optimal_alpha]['parents']
@@ -922,7 +941,7 @@ class PCMCI():
                                 parents=None,
                                 max_conds_py=None,
                                 max_conds_px=None):
-
+        # TODO check docstring for max_conds_py
         """Returns matrix of lagged dependence measure values.
 
         Parameters
@@ -961,11 +980,9 @@ class PCMCI():
         if self.verbosity > 0:
          print("\n## Estimating lagged dependencies")
 
-        if max_conds_py is None:
-            max_conds_py = self.N * tau_max
-
-        if max_conds_px is None:
-            max_conds_px = self.N * tau_max
+        # Set the maximum condition dimension for Y
+        max_conds_py = self._set_max_condition_dim(max_conds_py, tau_max)
+        max_conds_px = self._set_max_condition_dim(max_conds_px, tau_max)
 
         if parents is None:
             parents = {}
