@@ -16,7 +16,7 @@ except:
     print("Could not import statsmodels, p-value corrections not available.")
 
 # TODO check pc_alpha default docstrings
-def _create_nested_dictionary(depth=0):
+def _create_nested_dictionary(depth=0, lowest_type=dict):
     """Create a series of nested dictionaries to a maximum depth.  The first
     depth - 1 nested dictionaries are defaultdicts, the last is a normal
     dictionary.
@@ -25,10 +25,12 @@ def _create_nested_dictionary(depth=0):
     ----------
     depth : int
         Maximum depth argument.
+    lowest_type: callable (optional)
+        Type contained in leaves of tree.  Ex: list, dict, tuple, int, float ...
     """
     new_depth = depth - 1
     if new_depth <= 0:
-        return defaultdict(dict)
+        return defaultdict(lowest_type)
     return defaultdict(lambda: _create_nested_dictionary(new_depth))
 
 def _nested_to_normal(nested_dict):
@@ -893,6 +895,7 @@ class PCMCI():
         return all_parents
 
     def _print_parents_single(self, j, parents, val_min, p_max):
+        # TODO fix this for reformed, OOP style
         """Print current parents for variable j.
 
         Parameters
@@ -911,8 +914,6 @@ class PCMCI():
         if len(parents) < 20 or hasattr(self, 'iterations'):
             print("\n    Variable %s has %d parent(s):" % (
                             self.var_names[j], len(parents)))
-            # if hasattr(self, 'iterations'):
-            #     print self.iterations
             if (hasattr(self, 'iterations')
                 and 'optimal_pc_alpha' in list(self.iterations[j])):
                     print("    [pc_alpha = %s]" % (
@@ -943,6 +944,57 @@ class PCMCI():
         for j in [var for var in list(all_parents)]:
             self._print_parents_single(j, all_parents[j],
                                        val_min[j], p_max[j])
+
+
+    def _mci_condition_to_string(self, conds):
+        """Convert the list of conditions into a string
+
+        Parameters
+        ----------
+        conds : list
+            List of conditions
+        """
+        cond_string = "[ "
+        for k, tau_k in conds:
+            cond_string += "(%s %d) " % (self.var_names[k], tau_k)
+        cond_string += "]"
+        return cond_string
+
+
+    def _print_mci_conditions(self, conds_y, conds_x, j, i,
+                              tau, count, n_parents):
+        """Print information about the conditions for the MCI algorithm
+
+        Parameters
+        ----------
+        conds_y : list
+            Conditions on node
+        conds_x : list
+            Conditions on parent
+        j : int
+            Current node
+        i : int
+            Parent node
+        tau : int
+            Parent time delay
+        count : int
+            Index of current parent
+        n_parents : int
+            Total number of parents
+        """
+        # Remove the current parent from the conditions
+        conds_y_no_i = [node for node in conds_y if node != (i, tau)]
+        # Get the condition string for parent
+        condx_str = self._mci_condition_to_string(conds_y_no_i)
+        # Get the condition string for node
+        condy_str = self._mci_condition_to_string(conds_x)
+        # Formate and print the information
+        indent = "\n        "
+        print_str = indent + "link (%s %d) " % (self.var_names[i], tau)
+        print_str += "--> %s (%d/%d):" % (self.var_names[j], count+1, n_parents)
+        print_str += indent + "with conds_y = %s" % (condy_str)
+        print_str += indent + "with conds_x = %s" % (condx_str)
+        print(print_str)
 
     def get_lagged_dependencies(self,
                                 selected_links=None,
@@ -983,63 +1035,43 @@ class PCMCI():
         """
         # Check the limits on tau
         self._check_tau_limits(tau_min, tau_max)
-
         # Set the selected links
         selected_links = self._set_sel_links(selected_links, tau_min, tau_max)
-
+        # Print status message
         if self.verbosity > 0:
-         print("\n## Estimating lagged dependencies")
-
+            print("\n## Estimating lagged dependencies")
         # Set the maximum condition dimension for Y and Z
         max_conds_py = self._set_max_condition_dim(max_conds_py, tau_max)
         max_conds_px = self._set_max_condition_dim(max_conds_px, tau_max)
-
-        if parents is None:
-            parents = {}
-            for j in range(self.N):
-                parents[j] = []
-
+        # Create the default parents value
+        _int_parents = deepcopy(parents)
+        if _int_parents is None:
+            _int_parents = _create_nested_dictionary(list)
+        # Initialize the returned val_matrix
         val_matrix = np.zeros((self.N, self.N, tau_max + 1))
 
+        # Loop over the selected variables
         for j in self.selected_variables:
-
-            conds_y = parents[j][:max_conds_py]
-
-            parent_list = [parent for parent in selected_links[j]
-                             if (parent[1] != 0 or parent[0] != j)]
-
+            # Get the conditions for node j
+            conds_y = _int_parents[j][:max_conds_py]
+            # Create a parent list from links seperated in time and by node
+            parent_list = [(i, tau) for i, tau in selected_links[j]
+                           if tau != 0 or i != j]
             # Iterate through parents (except those in conditions)
             for cnt, (i, tau) in enumerate(parent_list):
-
-                conds_x = parents[i][:max_conds_px]
-                # lag = [-tau]
-
+                # Get the conditions for node i
+                conds_x = _int_parents[i][:max_conds_px]
+                # Print information about the mci conditions if requested
                 if self.verbosity > 1:
-                    var_names_condy = "[ "
-                    for conds_yi in [node for node in conds_y
-                                     if node != (i, tau)]:
-                        var_names_condy += "(%s %d) " % (
-                         self.var_names[conds_yi[0]], conds_yi[1])
-                    var_names_condy += "]"
-                    var_names_condx = "[ "
-                    for conds_xi in conds_x:
-                        var_names_condx += "(%s %d) " % (
-                         self.var_names[conds_xi[0]], conds_xi[1] + tau)
-                    var_names_condx += "]"
-
-                    print("\n        link (%s %d) --> %s (%d/%d):" % (
-                        self.var_names[i], tau, self.var_names[j],
-                        cnt + 1, len(parent_list)) +
-                        "\n        with conds_y = %s" % (var_names_condy) +
-                        "\n        with conds_x = %s" % (var_names_condx))
-
+                    self._print_mci_conditions(conds_y, conds_x, j, i, tau,
+                                               cnt, len(parent_list))
                 # Construct lists of tuples for estimating
                 # I(X_t-tau; Y_t | Z^Y_t, Z^X_t-tau)
                 # with conditions for X shifted by tau
                 X = [(i, tau)]
                 Y = [(j, 0)]
-                Z = [node for node in conds_y if node != (i, tau)] + [
-                     (node[0], tau + node[1]) for node in conds_x]
+                Z = [node for node in conds_y if node != (i, tau)]
+                Z += [(k, tau + k_tau) for k, k_tau in conds_x]
 
                 val = self.cond_ind_test.get_measure(X=X, Y=Y, Z=Z,
                                                      tau_max=tau_max)
@@ -1153,23 +1185,8 @@ class PCMCI():
                 # lag = [-tau]
 
                 if self.verbosity > 1:
-                    var_names_condy = "[ "
-                    for conds_yi in [node for node in conds_y
-                                     if node != (i, tau)]:
-                        var_names_condy += "(%s %d) " % (
-                            self.var_names[conds_yi[0]], conds_yi[1])
-                    var_names_condy += "]"
-                    var_names_condx = "[ "
-                    for conds_xi in conds_x:
-                        var_names_condx += "(%s %d) " % (
-                            self.var_names[conds_xi[0]], conds_xi[1] + tau)
-                    var_names_condx += "]"
-
-                    print("\n        link (%s %d) --> %s (%d/%d):" % (
-                        self.var_names[i], tau, self.var_names[j],
-                        cnt + 1, len(parent_list)) +
-                          "\n        with conds_y = %s" % (var_names_condy) +
-                          "\n        with conds_x = %s" % (var_names_condx))
+                    self._print_mci_conditions(conds_y, conds_x, j, i, tau,
+                                               cnt, len(parent_list))
 
                 # Construct lists of tuples for estimating
                 # I(X_t-tau; Y_t | Z^Y_t, Z^X_t-tau)
