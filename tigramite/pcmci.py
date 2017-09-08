@@ -1166,33 +1166,28 @@ class PCMCI():
         else:
             conf_matrix = None
 
+        # Loop over the selected variables
         for j in self.selected_variables:
-
-            if self.verbosity > 0:
-                print("\n\tVariable %s" % self.var_names[j])
-
+            # Get the conditions for node j
             conds_y = _int_parents[j][:max_conds_py]
-
-            parent_list = [parent for parent in selected_links[j]
-                         if (parent[1] != 0 or parent[0] != j)]
-
+            # Create a parent list from links seperated in time and by node
+            parent_list = [(i, tau) for i, tau in selected_links[j]
+                           if tau != 0 or i != j]
             # Iterate through parents (except those in conditions)
             for cnt, (i, tau) in enumerate(parent_list):
-
+                # Get the conditions for node i
                 conds_x = _int_parents[i][:max_conds_px]
-                # lag = [-tau]
-
+                # Print information about the mci conditions if requested
                 if self.verbosity > 1:
                     self._print_mci_conditions(conds_y, conds_x, j, i, tau,
                                                cnt, len(parent_list))
-
                 # Construct lists of tuples for estimating
                 # I(X_t-tau; Y_t | Z^Y_t, Z^X_t-tau)
                 # with conditions for X shifted by tau
                 X = [(i, tau)]
                 Y = [(j, 0)]
-                Z = [node for node in conds_y if node != (i, tau)] + [
-                     (node[0], tau + node[1]) for node in conds_x]
+                Z = [node for node in conds_y if node != (i, tau)]
+                Z += [(k, tau + k_tau) for k, k_tau in conds_x]
 
                 val, pval = self.cond_ind_test.run_test(X=X, Y=Y, Z=Z,
                                                         tau_max=tau_max)
