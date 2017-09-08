@@ -833,20 +833,22 @@ class PCMCI():
 
         # Loop through the selected variables
         for j in self.selected_variables:
-
+            # Print the status of this variable
             if self.verbosity > 0:
                 print("\n## Variable %s" % self.var_names[j])
                 if self.verbosity > 1:
                     print("\nIterating through pc_alpha = %s:" % _int_pc_alpha)
-
+            # Initialize the scores for selecting the optimal alpha
             score = np.zeros_like(_int_pc_alpha)
+            # Initialize the result
             results = {}
             for iscore, pc_alpha_here in enumerate(_int_pc_alpha):
+                # Print statement about the pc_alpha being tested
                 if self.verbosity > 1:
                     print("\n# pc_alpha = %s (%d/%d):" % (pc_alpha_here,
                                                           iscore+1,
                                                           score.shape[0]))
-
+                # Get the results for this alpha value
                 results[pc_alpha_here] = \
                     self._run_pc_stable_single(j,
                                                selected_links=selected_links[j],
@@ -856,14 +858,12 @@ class PCMCI():
                                                pc_alpha=pc_alpha_here,
                                                max_conds_dim=max_conds_dim,
                                                max_combinations=max_combinations)
-                # Score
-                parents_here = results[pc_alpha_here]['parents']
                 # Figure out the best score if there is more than one pc_alpha
                 # value
                 if select_optimal_alpha:
                     score[iscore] = \
                         self.cond_ind_test.get_model_selection_criterion(
-                            j, parents_here, tau_max)
+                            j, results[pc_alpha_here]['parents'], tau_max)
             # Record the optimal alpha value
             optimal_alpha = _int_pc_alpha[score.argmin()]
             # Only print the selection results if there is more than one
@@ -871,7 +871,7 @@ class PCMCI():
             if self.verbosity > 1 and select_optimal_alpha:
                 self._print_pc_sel_results(_int_pc_alpha, results, j,
                                            score, optimal_alpha)
-
+            # Record the results for this variable
             all_parents[j] = results[optimal_alpha]['parents']
             val_min[j] = results[optimal_alpha]['val_min']
             p_max[j] = results[optimal_alpha]['p_max']
@@ -879,18 +879,17 @@ class PCMCI():
             # Only save the optimal alpha if there is more than one pc_alpha
             if select_optimal_alpha:
                 iterations[j]['optimal_pc_alpha'] = optimal_alpha
-
         # Save the results in the current status of the algorithm
         # TODO consider using return values instead of attributes
         self.all_parents = all_parents
         self.val_matrix = self._dict_to_matrix(val_min, tau_max, self.N)
         self.p_matrix = self._dict_to_matrix(p_max, tau_max, self.N)
         self.iterations = iterations
-
+        # Print the results
         if self.verbosity > 0:
             print("\n## Resulting condition sets:")
             self._print_parents(all_parents, val_min, p_max)
-
+        # Return the parents
         return all_parents
 
     def _print_parents_single(self, j, parents, val_min, p_max):
@@ -1296,12 +1295,11 @@ class PCMCI():
                 'link_matrix':link_matrix}
 
     def _print_significant_links(self,
-                                  p_matrix,
-                                  val_matrix,
-                                  conf_matrix=None,
-                                  q_matrix=None,
-                                  alpha_level=0.05,
-                                  ):
+                                 p_matrix,
+                                 val_matrix,
+                                 conf_matrix=None,
+                                 q_matrix=None,
+                                 alpha_level=0.05):
         """Prints significant parents.
 
         Parameters
@@ -1463,165 +1461,3 @@ class PCMCI():
                 'p_matrix':p_matrix,
                 'q_matrix':q_matrix,
                 'conf_matrix':conf_matrix}
-
-# TODO can this be moved to an examples directory or a testing package?
-#if __name__ == '__main__':
-#
-#    import data_processing as pp
-#    from independence_tests import ParCorr, GPACE, GPDC, CMIknn, CMIsymb
-#
-#    np.random.seed(42)
-#    # Example process to play around with
-#    a = 0.8
-#    c1 = .8
-#    c2 = -.8
-#    c3 = .8
-#    T = 500
-#
-#    # Each key refers to a variable and the incoming links are supplied as a
-#    # list of format [((driver, lag), coeff), ...]
-#    links_coeffs = {0: [((0, -1), a), ((1, -1), c1)],
-#                    1: [((1, -1), a), ((3, -1), c1)],
-#                    2: [((2, -1), a), ((1, -2), c2), ((3, -3), c3)],
-#                    3: [((3, -1), a)],
-#                    }
-#
-#    data, true_parents_neighbors = pp.var_process(links_coeffs,
-#                                                  use='inv_inno_cov', T=T)
-#
-#    data_mask = np.zeros(data.shape)
-#
-#    T, N = data.shape
-#
-#    var_names = range(N)  # ['X', 'Y', 'Z', 'W']
-#
-#    pc_alpha = 0.2  # [0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
-#    selected_variables = None  #[2] # [2]  # [2]
-#
-#    tau_max = 3
-#    alpha_level = 0.01
-#
-#    dataframe = pp.DataFrame(data,
-#        mask=data_mask,
-#        )
-#    verbosity = 2
-#
-#    cond_ind_test = ParCorr(
-#        significance='analytic',
-#        fixed_thres=0.05,
-#        sig_samples=100,
-#
-#        use_mask=False,
-#        mask_type=['x','y', 'z'],  #  ['x','y','z'],
-#
-#        confidence='analytic',
-#        conf_lev=0.9,
-#        conf_samples=200,
-#        conf_blocklength=10,
-#
-#        recycle_residuals=False,
-#        verbosity=verbosity)
-#
-#    # cond_ind_test = GPACE(
-#    #     significance='analytic',
-#    #     fixed_thres=0.05,
-#    #     sig_samples=2000,
-#
-#    #     use_mask=False,
-#    #     mask_type=['y'],
-#
-#    #     confidence=False,
-#    #     conf_lev=0.9,
-#    #     conf_samples=200,
-#    #     conf_blocklength=None,
-#
-#    #     gp_version='new',
-#    #     gp_alpha=None,
-#    #     ace_version='acepack',
-#    #     recycle_residuals=False,
-#    #     verbosity=verbosity)
-#
-#    # cond_ind_test = GPDC(
-#    #     significance='analytic',
-#    #     fixed_thres=0.05,
-#    #     sig_samples=2000,
-#
-#    #     use_mask=False,
-#    #     mask_type=['y'],
-#
-#    #     confidence=False,
-#    #     conf_lev=0.9,
-#    #     conf_samples=200,
-#    #     conf_blocklength=None,
-#
-#    #     gp_version='new',
-#    #     gp_alpha=1.,
-#    #     recycle_residuals=False,
-#    #     verbosity=verbosity)
-#
-#    # cond_ind_test = CMIsymb(
-#    #     significance='shuffle_test',
-#    #     sig_samples=1000,
-#    #     sig_blocklength=10,
-#
-#    #     confidence='bootstrap', #'bootstrap',
-#    #     conf_lev=0.9,
-#    #     conf_samples=100,
-#    #     conf_blocklength=10,
-#
-#    #     use_mask=False,
-#    #     mask_type=['y'],
-#    #     recycle_residuals=False,
-#    #     verbosity=3)
-#
-#    if cond_ind_test.measure == 'cmi_symb':
-#        dataframe.values = pp.quantile_bin_array(dataframe.values, bins=3)
-#
-#    pcmci = PCMCI(
-#        dataframe=dataframe,
-#        cond_ind_test=cond_ind_test,
-#        selected_variables=selected_variables,
-#        var_names=var_names,
-#        verbosity=verbosity)
-#
-#    # results = pcmci.run_pcmci(
-#    #     selected_links=None,
-#    #     tau_min=1,
-#    #     tau_max=tau_max,
-#    #     save_iterations=False,
-#
-#    #     pc_alpha=pc_alpha,
-#    #     max_conds_dim=None,
-#    #     max_combinations=1,
-#
-#    #     max_conds_py=None,
-#    #     max_conds_px=None,
-#
-#    #     fdr_method='fdr_bh',
-#    # )
-#    results = pcmci.run_pc_stable(
-#                      tau_max=tau_max,
-#                      save_iterations=True,
-#                      pc_alpha=0.2,
-#                      max_conds_dim=None,
-#                      max_combinations=1000,
-#                      )
-#
-#    # pcmci._print_significant_links(
-#    #                p_matrix=results['p_matrix'],
-#    #                q_matrix=results['q_matrix'],
-#    #                val_matrix=results['val_matrix'],
-#    #                alpha_level=alpha_level,
-#    #                conf_matrix=results['conf_matrix'])
-#
-#    # pcmci.run_mci(
-#    #     selected_links=None,
-#    #     tau_min=1,
-#    #     tau_max=tau_max,
-#    #     parents = None,
-#
-#    #     max_conds_py=None,
-#    #     max_conds_px=None,
-#    # )
-#
-#
