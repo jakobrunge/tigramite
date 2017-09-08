@@ -799,11 +799,16 @@ class PCMCI():
             Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}
             containing estimated parents.
         """
+        # Create an internal copy of pc_alpha
+        _int_pc_alpha = deepcopy(pc_alpha)
+        # Check if we are selecting an optimal alpha value
+        select_optimal_alpha = False
         # Set the default values for pc_alpha
-        if pc_alpha is None:
-            pc_alpha = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
-        elif not isinstance(pc_alpha, (list, tuple, np.ndarray)):
-            pc_alpha = [pc_alpha]
+        if _int_pc_alpha is None:
+            _int_pc_alpha = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
+        elif not isinstance(_int_pc_alpha, (list, tuple, np.ndarray)):
+            _int_pc_alpha = [_int_pc_alpha]
+            select_optimal_alpha = True
         # Check the limits on tau_min
         self._check_tau_limits(tau_min, tau_max)
         # TODO why is this imposed here??
@@ -817,12 +822,12 @@ class PCMCI():
         iterations = defaultdict(dict)
         # Print information about the selected parameters
         if self.verbosity > 0:
-            self._print_pc_params(selected_links, tau_min, tau_max, pc_alpha,
+            self._print_pc_params(selected_links, tau_min, tau_max, _int_pc_alpha,
                                   max_conds_dim, max_combinations)
         # Set the selected links
         selected_links = self._set_sel_links(selected_links, tau_min, tau_max)
-        # TODO remove this line!!!
-        all_parents = deepcopy(selected_links)
+        # Initialize all parents
+        all_parents = dict()
         # Set the maximum condition dimension
         max_conds_dim = self._set_max_condition_dim(max_conds_dim, tau_max)
 
@@ -831,15 +836,16 @@ class PCMCI():
 
             if self.verbosity > 0:
                 print("\n## Variable %s" % self.var_names[j])
-            if self.verbosity > 1:
-                print("\nIterating through pc_alpha = %s:" % pc_alpha)
+                if self.verbosity > 1:
+                    print("\nIterating through pc_alpha = %s:" % _int_pc_alpha)
 
-            score = np.zeros_like(pc_alpha)
+            score = np.zeros_like(_int_pc_alpha)
             results = {}
-            for iscore, pc_alpha_here in enumerate(pc_alpha):
+            for iscore, pc_alpha_here in enumerate(_int_pc_alpha):
                 if self.verbosity > 1:
                     print("\n# pc_alpha = %s (%d/%d):" % (pc_alpha_here,
-                                        iscore+1, len(pc_alpha)))
+                                                          iscore+1,
+                                                          score.shape[0]))
 
                 results[pc_alpha_here] = \
                     self._run_pc_stable_single(j,
@@ -852,22 +858,27 @@ class PCMCI():
                                                max_combinations=max_combinations)
                 # Score
                 parents_here = results[pc_alpha_here]['parents']
-                score[iscore] = \
-                    self.cond_ind_test.get_model_selection_criterion(j,
-                                                                     parents_here,
-                                                                     tau_max)
-            optimal_alpha = pc_alpha[score.argmin()]
-
-            if self.verbosity > 1:
-                self._print_pc_sel_results(pc_alpha, results, j,
+                # Figure out the best score if there is more than one pc_alpha
+                # value
+                if select_optimal_alpha:
+                    score[iscore] = \
+                        self.cond_ind_test.get_model_selection_criterion(
+                            j, parents_here, tau_max)
+            # Record the optimal alpha value
+            optimal_alpha = _int_pc_alpha[score.argmin()]
+            # Only print the selection results if there is more than one
+            # pc_alpha
+            if self.verbosity > 1 and select_optimal_alpha:
+                self._print_pc_sel_results(_int_pc_alpha, results, j,
                                            score, optimal_alpha)
 
             all_parents[j] = results[optimal_alpha]['parents']
             val_min[j] = results[optimal_alpha]['val_min']
             p_max[j] = results[optimal_alpha]['p_max']
             iterations[j] = results[optimal_alpha]['iterations']
-
-            iterations[j]['optimal_pc_alpha'] = optimal_alpha
+            # Only save the optimal alpha if there is more than one pc_alpha
+            if select_optimal_alpha:
+                iterations[j]['optimal_pc_alpha'] = optimal_alpha
 
         # Save the results in the current status of the algorithm
         # TODO consider using return values instead of attributes
