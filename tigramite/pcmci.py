@@ -994,6 +994,83 @@ class PCMCI():
         print_str += indent + "with conds_x = %s" % (condx_str)
         print(print_str)
 
+    def _get_int_parents(self, parents):
+        """Get the input parents dictionary
+
+        Parameters
+        ----------
+        parents : dict or None
+            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}
+            specifying the conditions for each variable. If None is
+            passed, no conditions are used.
+
+        Returns
+        -------
+        int_parents : defaultdict of lists
+            Internal copy of parents, respecting default options
+        """
+        int_parents = deepcopy(parents)
+        if int_parents is None:
+            int_parents = defaultdict(list)
+        else:
+            int_parents = defaultdict(list, int_parents)
+        return int_parents
+
+
+
+    def _iter_indep_conds(self,
+                          parents,
+                          selected_variables,
+                          selected_links,
+                          max_conds_py,
+                          max_conds_px):
+        """Iterate through the conditions dictated by the arguments, yielding
+        the needed arguments for conditional independence functions.
+
+        Parameters
+        ----------
+        parents : dict
+            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}
+            specifying the conditions for each variable.
+        selected_variables : list of integers, optional (default: range(N))
+            Specify to estimate parents only for selected variables.
+        selected_links : dict
+            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}
+            specifying whether only selected links should be tested.
+        max_conds_py : int
+            Maximum number of conditions of Y to use.
+        max_conds_px : int
+            Maximum number of conditions of Z to use.
+
+        Yields
+        ------
+        X, Y [, Z] : list of tuples
+            X,Y,Z are of the form [(var, -tau)], where var specifies the
+            variable index and tau the time lag.
+        """
+        # Loop over the selected variables
+        for j in selected_variables:
+            # Get the conditions for node j
+            conds_y = parents[j][:max_conds_py]
+            # Create a parent list from links seperated in time and by node
+            parent_list = [(i, tau) for i, tau in selected_links[j]
+                           if tau != 0 or i != j]
+            # Iterate through parents (except those in conditions)
+            for cnt, (i, tau) in enumerate(parent_list):
+                # Get the conditions for node i
+                conds_x = parents[i][:max_conds_px]
+                # Print information about the mci conditions if requested
+                if self.verbosity > 1:
+                    self._print_mci_conditions(conds_y, conds_x, j, i, tau,
+                                               cnt, len(parent_list))
+                # Construct lists of tuples for estimating
+                # I(X_t-tau; Y_t | Z^Y_t, Z^X_t-tau)
+                # with conditions for X shifted by tau
+                Z = [node for node in conds_y if node != (i, tau)]
+                Z += [(k, tau + k_tau) for k, k_tau in conds_x]
+                # Yield these list
+                yield j, i, tau, Z
+
     def get_lagged_dependencies(self,
                                 selected_links=None,
                                 tau_min=0,
@@ -1041,46 +1118,51 @@ class PCMCI():
         # Set the maximum condition dimension for Y and Z
         max_conds_py = self._set_max_condition_dim(max_conds_py, tau_max)
         max_conds_px = self._set_max_condition_dim(max_conds_px, tau_max)
-        # Create the default parents value
-        _int_parents = deepcopy(parents)
-        if _int_parents is None:
-            _int_parents = _create_nested_dictionary(list)
+        # Get the parents that will be checked
+        _int_parents = self._get_int_parents(parents)
         # Initialize the returned val_matrix
         val_matrix = np.zeros((self.N, self.N, tau_max + 1))
-
-        # Loop over the selected variables
-        for j in self.selected_variables:
-            # Get the conditions for node j
-            conds_y = _int_parents[j][:max_conds_py]
-            # Create a parent list from links seperated in time and by node
-            parent_list = [(i, tau) for i, tau in selected_links[j]
-                           if tau != 0 or i != j]
-            # Iterate through parents (except those in conditions)
-            for cnt, (i, tau) in enumerate(parent_list):
-                # Get the conditions for node i
-                conds_x = _int_parents[i][:max_conds_px]
-                # Print information about the mci conditions if requested
-                if self.verbosity > 1:
-                    self._print_mci_conditions(conds_y, conds_x, j, i, tau,
-                                               cnt, len(parent_list))
-                # Construct lists of tuples for estimating
-                # I(X_t-tau; Y_t | Z^Y_t, Z^X_t-tau)
-                # with conditions for X shifted by tau
-                X = [(i, tau)]
-                Y = [(j, 0)]
-                Z = [node for node in conds_y if node != (i, tau)]
-                Z += [(k, tau + k_tau) for k, k_tau in conds_x]
-
-                val = self.cond_ind_test.get_measure(X=X, Y=Y, Z=Z,
-                                                     tau_max=tau_max)
-
-                val_matrix[i, j, abs(tau)] = val
-
-                if self.verbosity > 1:
-                    self.cond_ind_test._print_cond_ind_results(val=val)
-
+        # Get the conditions as implied by the input arguments
+        for j, i, tau, Z in self._iter_indep_conds(_int_parents,
+                                                   self.selected_variables,
+                                                   selected_links,
+                                                   max_conds_py,
+                                                   max_conds_px):
+            # Set X and Y (for clarity of code)
+            X = [(i, tau)]
+            Y = [(j, 0)]
+            # Run the independence test
+            val = self.cond_ind_test.get_measure(X, Y, Z=Z, tau_max=tau_max)
+            # Record the value
+            val_matrix[i, j, abs(tau)] = val
+            # Print the results
+            if self.verbosity > 1:
+                self.cond_ind_test._print_cond_ind_results(val=val)
+        # Return the value matrix
         return val_matrix
 
+    def _print_mci_parameters(self, tau_min, tau_max,
+                              max_conds_py, max_conds_px):
+        """Print the parameters for this MCI algorithm
+
+        Parameters
+        ----------
+        tau_min : int
+            Minimum time delay
+        tau_max : int
+            Maximum time delay
+        max_conds_py : int
+            Maximum number of conditions of Y to use.
+        max_conds_px : int
+            Maximum number of conditions of Z to use.
+        """
+        print("\n##\n## Running Tigramite MCI algorithm\n##"
+              "\n\nParameters:")
+        print("\nindependence test = %s" % self.cond_ind_test.measure
+              + "\ntau_min = %d" % tau_min
+              + "\ntau_max = %d" % tau_max
+              + "\nmax_conds_py = %s" % max_conds_py
+              + "\nmax_conds_px = %s" % max_conds_px)
 
     def run_mci(self,
                 selected_links=None,
@@ -1088,9 +1170,7 @@ class PCMCI():
                 tau_max=1,
                 parents=None,
                 max_conds_py=None,
-                max_conds_px=None,
-                ):
-
+                max_conds_px=None):
         """MCI conditional independence tests.
 
         Implements the MCI test (Algorithm 2 in [1]_). Returns the matrices of
@@ -1102,22 +1182,17 @@ class PCMCI():
             Dictionary of form {0:all_parents (3, -2), ...], 1:[], ...}
             specifying whether only selected links should be tested. If None is
             passed, all links are tested
-
         tau_min : int, default: 1
             Minimum time lag to test. Note that zero-lags are undirected.
-
         tau_max : int, default: 1
             Maximum time lag. Must be larger or equal to tau_min.
-
         parents : dict or None
             Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}
             specifying the conditions for each variable. If None is
             passed, no conditions are used.
-
         max_conds_py : int or None
             Maximum number of conditions of Y to use. If None is passed, this
             number is unrestricted.
-
         max_conds_px : int or None
             Maximum number of conditions of Z to use. If None is passed, this
             number is unrestricted.
@@ -1132,82 +1207,54 @@ class PCMCI():
         self._check_tau_limits(tau_min, tau_max)
         # Set the selected links
         selected_links = self._set_sel_links(selected_links, tau_min, tau_max)
-
+        # Print information about the input parameters
         if self.verbosity > 0:
-            print("\n##\n## Running Tigramite MCI algorithm\n##"
-                  "\n\nParameters:")
-
-            print("\nindependence test = %s" % self.cond_ind_test.measure
-                  + "\ntau_min = %d" % tau_min
-                  + "\ntau_max = %d" % tau_max
-                  + "\nmax_conds_py = %s" % max_conds_py
-                  + "\nmax_conds_px = %s" % max_conds_px)
-
+            self._print_mci_parameters(tau_min, tau_max,
+                                       max_conds_py, max_conds_px)
+            
         # Set the maximum condition dimension for Y and Z
         max_conds_py = self._set_max_condition_dim(max_conds_py, tau_max)
         max_conds_px = self._set_max_condition_dim(max_conds_px, tau_max)
-
-        # Define an internal copy of parents so that the contents of the
-        # argument parents is unchanged
-        _int_parents = deepcopy(parents)
-        if _int_parents is None:
-            _int_parents = {}
-            for j in range(self.N):
-                _int_parents[j] = []
-        else:
-            for j in range(self.N):
-                if j not in list(_int_parents):
-                    _int_parents[j] = []
-
+        # Get the parents that will be checked
+        _int_parents = self._get_int_parents(parents)
+        # Initialize the return values
         val_matrix = np.zeros((self.N, self.N, tau_max + 1))
         p_matrix = np.ones((self.N, self.N, tau_max + 1))
+        # Initialize the optional return of the confidance matrix
+        conf_matrix = None
         if self.cond_ind_test.confidence is not False:
             conf_matrix = np.zeros((self.N, self.N, tau_max + 1, 2))
-        else:
-            conf_matrix = None
 
-        # Loop over the selected variables
-        for j in self.selected_variables:
-            # Get the conditions for node j
-            conds_y = _int_parents[j][:max_conds_py]
-            # Create a parent list from links seperated in time and by node
-            parent_list = [(i, tau) for i, tau in selected_links[j]
-                           if tau != 0 or i != j]
-            # Iterate through parents (except those in conditions)
-            for cnt, (i, tau) in enumerate(parent_list):
-                # Get the conditions for node i
-                conds_x = _int_parents[i][:max_conds_px]
-                # Print information about the mci conditions if requested
-                if self.verbosity > 1:
-                    self._print_mci_conditions(conds_y, conds_x, j, i, tau,
-                                               cnt, len(parent_list))
-                # Construct lists of tuples for estimating
-                # I(X_t-tau; Y_t | Z^Y_t, Z^X_t-tau)
-                # with conditions for X shifted by tau
-                X = [(i, tau)]
-                Y = [(j, 0)]
-                Z = [node for node in conds_y if node != (i, tau)]
-                Z += [(k, tau + k_tau) for k, k_tau in conds_x]
-
-                val, pval = self.cond_ind_test.run_test(X=X, Y=Y, Z=Z,
-                                                        tau_max=tau_max)
-
-                val_matrix[i, j, abs(tau)] = val
-                p_matrix[i, j, abs(tau)] = pval
-
-                conf = self.cond_ind_test.get_confidence(X=X, Y=Y, Z=Z,
-                                                        tau_max=tau_max)
-                if self.cond_ind_test.confidence is not False:
-                    conf_matrix[i, j, abs(tau)] = conf
-
-                if self.verbosity > 1:
-                    self.cond_ind_test._print_cond_ind_results(val=val,
-                            pval=pval, conf=conf)
-
+        # Get the conditions as implied by the input arguments
+        for j, i, tau, Z in self._iter_indep_conds(_int_parents,
+                                                   self.selected_variables,
+                                                   selected_links,
+                                                   max_conds_py,
+                                                   max_conds_px):
+            # Set X and Y (for clarity of code)
+            X = [(i, tau)]
+            Y = [(j, 0)]
+            # Run the independence tests and record the results
+            val, pval = self.cond_ind_test.run_test(X, Y, Z=Z, tau_max=tau_max)
+            val_matrix[i, j, abs(tau)] = val
+            p_matrix[i, j, abs(tau)] = pval
+            # Get the confidance value
+            # TODO move this underneath the if statement
+            conf = self.cond_ind_test.get_confidence(X, Y, Z=Z, tau_max=tau_max)
+            # Record the value if the conditional independence requires it
+            # TODO this break OOP, this should be a feature of PCMCI
+            if self.cond_ind_test.confidence is not False:
+                conf_matrix[i, j, abs(tau)] = conf
+            # Print the results if needed
+            if self.verbosity > 1:
+                self.cond_ind_test._print_cond_ind_results(val,
+                                                           pval=pval,
+                                                           conf=conf)
+        # Return the values as a dictionary
+        # TODO only return conf_matrix key if we make conf matrix
         return {'val_matrix':val_matrix,
                 'p_matrix':p_matrix,
                 'conf_matrix':conf_matrix}
-
 
     def get_corrected_pvalues(self, p_matrix,
                               fdr_method='fdr_bh',
@@ -1236,8 +1283,7 @@ class PCMCI():
         q_matrix : array-like
             Matrix of shape (N, N, tau_max + 1) containing corrected p-values.
         """
-
-        N, N, tau_max_plusone = p_matrix.shape
+        _, N, tau_max_plusone = p_matrix.shape
         tau_max = tau_max_plusone - 1
 
         if exclude_contemporaneous:
@@ -1257,10 +1303,9 @@ class PCMCI():
         return q_matrix
 
     def _return_significant_parents(self,
-                                  pq_matrix,
-                                  val_matrix,
-                                  alpha_level=0.05,
-                                  ):
+                                    pq_matrix,
+                                    val_matrix,
+                                    alpha_level=0.05):
         """Returns list of significant parents as well as a boolean matrix.
 
         Significance based on p-matrix, or q-value matrix with corrected
