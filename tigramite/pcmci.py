@@ -1211,7 +1211,7 @@ class PCMCI():
         if self.verbosity > 0:
             self._print_mci_parameters(tau_min, tau_max,
                                        max_conds_py, max_conds_px)
-            
+
         # Set the maximum condition dimension for Y and Z
         max_conds_py = self._set_max_condition_dim(max_conds_py, tau_max)
         max_conds_px = self._set_max_condition_dim(max_conds_px, tau_max)
@@ -1258,8 +1258,8 @@ class PCMCI():
 
     def get_corrected_pvalues(self, p_matrix,
                               fdr_method='fdr_bh',
-                              exclude_contemporaneous=True,
-                              ):
+                              exclude_contemporaneous=True):
+        # TODO test this function
         """Returns p-values corrected for multiple testing.
 
         Wrapper around statsmodels.sandbox.stats.multicomp.multipletests.
@@ -1270,11 +1270,9 @@ class PCMCI():
         ----------
         p_matrix : array-like
             Matrix of p-values. Must be of shape (N, N, tau_max + 1).
-
         fdr_method : str, optional (default: 'fdr_bh')
             Correction method, default is Benjamini-Hochberg False Discovery
             Rate method.
-
         exclude_contemporaneous : bool, optional (default: True)
             Whether to include contemporaneous links in correction.
 
@@ -1283,23 +1281,22 @@ class PCMCI():
         q_matrix : array-like
             Matrix of shape (N, N, tau_max + 1) containing corrected p-values.
         """
+        # Get the shape paramters from the p_matrix
         _, N, tau_max_plusone = p_matrix.shape
-        tau_max = tau_max_plusone - 1
-
+        # Create a mask for these values
+        mask = np.ones((N, N, tau_max_plusone), dtype='bool')
+        # Ignore values from autocorrelation indices
+        mask[range(N), range(N), 0] = False
+        # Exclude all contemporaneous values if requested
         if exclude_contemporaneous:
-            mask = np.ones((self.N, self.N, tau_max + 1), dtype='bool')
             mask[:, :, 0] = False
-        else:
-            mask = np.ones((self.N, self.N, tau_max + 1), dtype='bool')
-            mask[range(self.N), range(self.N), 0] = False
-
+        # Create the return value
         q_matrix = np.array(p_matrix)
-
+        # Use the multiple tests function
         if fdr_method != 'none':
-            pvals = p_matrix[np.where(mask)]
-            q_matrix[np.where(mask)] = multicomp.multipletests(
-                pvals, method=fdr_method)[1]  # .reshape(N,N,tau_max)
-
+            pvs = p_matrix[mask]
+            q_matrix[mask] = multicomp.multipletests(pvs, method=fdr_method)[1]
+        # Return the new matrix
         return q_matrix
 
     def _return_significant_parents(self,
@@ -1315,11 +1312,9 @@ class PCMCI():
         ----------
         alpha_level : float, optional (default: 0.05)
             Significance level.
-
         pq_matrix : array-like
             p-matrix, or q-value matrix with corrected p-values. Must be of
             shape (N, N, tau_max + 1).
-
         val_matrix : array-like
             Matrix of test statistic values. Must be of shape (N, N, tau_max +
             1).
@@ -1333,21 +1328,20 @@ class PCMCI():
         link_matrix : array, shape [N, N, tau_max+1]
             Boolean array with True entries for significant links at alpha_level
         """
-
-        link_matrix = (pq_matrix <= alpha_level)
-        all_parents = {}
+        # Initialize the return value
+        all_parents = dict()
+        # TODO put good_link before the for loop, open look over good links
         for j in self.selected_variables:
-
-            links = dict([((p[0], -p[1] - 1), np.abs(val_matrix[p[0],
-                            j, abs(p[1]) + 1]))
-                          for p in zip(*np.where(link_matrix[:, j, 1:]))])
-
+            # Get the good links
+            good_links = np.argwhere(pq_matrix[:, j, 1:] <= alpha_level)
+            # Build a dictionary from these links to their values
+            links = {(i, -tau-1): np.abs(val_matrix[i, j, abs(tau) + 1])
+                     for i, tau in good_links}
             # Sort by value
-            all_parents[j] = sorted(links, key=links.get,
-                                                    reverse=True)
-
+            all_parents[j] = sorted(links, key=links.get, reverse=True)
+        # Return the significant parents
         return {'parents':all_parents,
-                'link_matrix':link_matrix}
+                'link_matrix': pq_matrix <= alpha_level}
 
     def _print_significant_links(self,
                                  p_matrix,
@@ -1479,37 +1473,29 @@ class PCMCI():
             [N, N, tau_max+1,2]
         """
 
-        all_parents = self.run_pc_stable(
-            selected_links=selected_links,
-            tau_min=tau_min,
-            tau_max=tau_max,
-            save_iterations=save_iterations,
-            pc_alpha=pc_alpha,
-            max_conds_dim=max_conds_dim,
-            max_combinations=max_combinations,
-            )
+        all_parents = self.run_pc_stable(selected_links=selected_links,
+                                         tau_min=tau_min,
+                                         tau_max=tau_max,
+                                         save_iterations=save_iterations,
+                                         pc_alpha=pc_alpha,
+                                         max_conds_dim=max_conds_dim,
+                                         max_combinations=max_combinations)
 
-        results = self.run_mci(
-            selected_links=selected_links,
-            tau_min=tau_min,
-            tau_max=tau_max,
-            parents=all_parents,
-            max_conds_py=max_conds_py,
-            max_conds_px=max_conds_px,
-            )
+        results = self.run_mci(selected_links=selected_links,
+                               tau_min=tau_min,
+                               tau_max=tau_max,
+                               parents=all_parents,
+                               max_conds_py=max_conds_py,
+                               max_conds_px=max_conds_px)
 
         val_matrix = results['val_matrix']
         p_matrix = results['p_matrix']
+        conf_matrix = None
         if self.cond_ind_test.confidence is not False:
             conf_matrix = results['conf_matrix']
-        else:
-            conf_matrix = None
-
+        q_matrix = None
         if fdr_method != 'none':
-            q_matrix = self.get_corrected_pvalues(p_matrix=p_matrix,
-                                                  fdr_method=fdr_method)
-        else:
-            q_matrix = None
+            q_matrix = self.get_corrected_pvalues(p_matrix, fdr_method=fdr_method)
 
         self.all_parents = all_parents
         return {'val_matrix':val_matrix,
