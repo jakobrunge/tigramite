@@ -945,7 +945,6 @@ class PCMCI():
             self._print_parents_single(j, all_parents[j],
                                        val_min[j], p_max[j])
 
-
     def _mci_condition_to_string(self, conds):
         """Convert the list of conditions into a string
 
@@ -959,7 +958,6 @@ class PCMCI():
             cond_string += "(%s %d) " % (self.var_names[k], tau_k)
         cond_string += "]"
         return cond_string
-
 
     def _print_mci_conditions(self, conds_y, conds_x, j, i,
                               tau, count, n_parents):
