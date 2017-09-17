@@ -824,8 +824,9 @@ class PCMCI():
         iterations = defaultdict(dict)
         # Print information about the selected parameters
         if self.verbosity > 0:
-            self._print_pc_params(selected_links, tau_min, tau_max, _int_pc_alpha,
-                                  max_conds_dim, max_combinations)
+            self._print_pc_params(selected_links, tau_min, tau_max, 
+                                  _int_pc_alpha, max_conds_dim, 
+                                  max_combinations)
         # Set the selected links
         selected_links = self._set_sel_links(selected_links, tau_min, tau_max)
         # Initialize all parents
