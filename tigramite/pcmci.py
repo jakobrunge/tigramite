@@ -1330,7 +1330,7 @@ class PCMCI():
         """
         # Initialize the return value
         all_parents = dict()
-        # TODO put good_link before the for loop, open look over good links
+        # TODO put good_link before the for loop, open loop over good links
         for j in self.selected_variables:
             # Get the good links
             good_links = np.argwhere(pq_matrix[:, j, 1:] <= alpha_level)
@@ -1340,7 +1340,7 @@ class PCMCI():
             # Sort by value
             all_parents[j] = sorted(links, key=links.get, reverse=True)
         # Return the significant parents
-        return {'parents':all_parents,
+        return {'parents': all_parents,
                 'link_matrix': pq_matrix <= alpha_level}
 
     def _print_significant_links(self,
@@ -1418,9 +1418,7 @@ class PCMCI():
                   max_combinations=1,
                   max_conds_py=None,
                   max_conds_px=None,
-                  fdr_method='none',
-                  ):
-
+                  fdr_method='none'):
         """Run full PCMCI causal discovery for time series datasets.
 
         Wrapper around PC-algorithm function and MCI function.
@@ -1472,7 +1470,7 @@ class PCMCI():
             and optionally q_matrix and conf_matrix which is of shape
             [N, N, tau_max+1,2]
         """
-
+        # Get the parents from run_pc_stable
         all_parents = self.run_pc_stable(selected_links=selected_links,
                                          tau_min=tau_min,
                                          tau_max=tau_max,
@@ -1480,25 +1478,33 @@ class PCMCI():
                                          pc_alpha=pc_alpha,
                                          max_conds_dim=max_conds_dim,
                                          max_combinations=max_combinations)
-
+        # Get the results from run_mci, using the parents as the input
         results = self.run_mci(selected_links=selected_links,
                                tau_min=tau_min,
                                tau_max=tau_max,
                                parents=all_parents,
                                max_conds_py=max_conds_py,
                                max_conds_px=max_conds_px)
-
+        # Get the values and p-values
         val_matrix = results['val_matrix']
         p_matrix = results['p_matrix']
+        # Initialize and fill the the confidance matrix if the confidance test
+        # says it should be returned
+        ## TODO this violates object orientation.  Detect the conf_matrix
+        ## directly from the results dictionary from run_mci
         conf_matrix = None
         if self.cond_ind_test.confidence is not False:
             conf_matrix = results['conf_matrix']
+        # Initialize and fill the q_matrix if there is a fdr_method
         q_matrix = None
         if fdr_method != 'none':
-            q_matrix = self.get_corrected_pvalues(p_matrix, fdr_method=fdr_method)
-
+            q_matrix = self.get_corrected_pvalues(p_matrix,
+                                                  fdr_method=fdr_method)
+        # Store the parents in the pcmci member
+        ## TODO this violates object orientation.  Parents should be returned, if
+        ## need be
         self.all_parents = all_parents
-        return {'val_matrix':val_matrix,
-                'p_matrix':p_matrix,
-                'q_matrix':q_matrix,
-                'conf_matrix':conf_matrix}
+        return {'val_matrix': val_matrix,
+                'p_matrix': p_matrix,
+                'q_matrix': q_matrix,
+                'conf_matrix': conf_matrix}
