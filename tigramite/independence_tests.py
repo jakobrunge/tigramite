@@ -329,6 +329,7 @@ class CondIndTest(object):
         self.sig_blocklength = sig_blocklength
         self.fixed_thres = fixed_thres
 
+        # TODO this should be of string type or of None type
         self.confidence = confidence
         self.conf_lev = conf_lev
         self.conf_samples = conf_samples
@@ -399,7 +400,7 @@ class CondIndTest(object):
         self.mask = dataframe.mask
         self.missing_flag = dataframe.missing_flag
         if self.use_mask:
-            dataframe.check_mask(require_mask=True)
+            dataframe._check_mask(require_mask=True)
 
     def _keyfy(self, x, z):
         """Helper function to make lists unique."""
