@@ -1042,9 +1042,9 @@ class PCMCI():
 
         Yields
         ------
-        X, Y [, Z] : list of tuples
-            X,Y,Z are of the form [(var, -tau)], where var specifies the
-            variable index and tau the time lag.
+        i, j, tau, Z : list of tuples
+            (i, tau) is the parent node, (j, 0) is the current node, and Z is of
+            the form [(var, tau + tau')] and specifies the condition to test
         """
         # Loop over the selected variables
         for j in selected_variables:
