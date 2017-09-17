@@ -641,7 +641,6 @@ def _check_parent_neighbor(parents_neighbors_coeffs):
         * all parent nodes are included as nodes themselves
         * all node indexing is contiguous
         * all node indexing starts from zero
-        * all nodes with zero-time relations are given equal strength
     Raises a ValueError if any one of these conditions are not met.
 
     Parameters
@@ -681,15 +680,6 @@ def _check_parent_neighbor(parents_neighbors_coeffs):
                          "\n Parent IDs "+" ".join(map(str, all_parents_list))+\
                          "\n Node IDs "+" ".join(map(str, all_nodes_list)) +\
                          "\n Missing IDs " + " ".join(map(str, missing_nodes)))
-    # Check that nodes relations defined with tau = 0 are symmetric
-    n_nodes = len(all_nodes)
-    instant_rels = np.zeros((n_nodes, n_nodes))
-    # Iterate through all nodes
-    for j, i, tau, coef in _iter_coeffs(parents_neighbors_coeffs):
-        # Cache all the instantaneous relationships
-        if tau == 0:
-            instant_rels[i, j] = coef
-    _check_symmetric_relations(instant_rels)
 
 def _check_symmetric_relations(a_matrix):
     """
@@ -700,7 +690,9 @@ def _check_symmetric_relations(a_matrix):
     Parameters
     ----------
     a_matrix : 2D numpy array
-        Relationships between nodes at tau = 0.
+        Relationships between nodes at tau = 0. Indexed such that first index is
+        node and second is parent, i.e. node j with parent i has strength
+        a_matrix[j,i]
     """
     # Check it is symmetric
     if not np.allclose(a_matrix, a_matrix.T, rtol=1e-10, atol=1e-10):
@@ -808,8 +800,7 @@ def _get_covariance_matrix(parents_neighbors_coeffs):
     for j, i, tau, coeff in _iter_coeffs(parents_neighbors_coeffs):
         # Add to covar_matrix if node connection is instantaneous
         if tau == 0:
-            # TODO should there be a j != i catch?
-            covar_matrix[j, i] = covar_matrix[i, j] = coeff
+            covar_matrix[j, i] = coeff
     return covar_matrix
 
 def _get_lag_connect_matrix(parents_neighbors_coeffs):
@@ -916,6 +907,9 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
     # Use decorrelated noise
     else:
         innos = None
+    # Ensure the innovation matrix is symmetric if it is used
+    if (innos is not None) and add_noise:
+        _check_symmetric_relations(innos)
     # Generate the data using _var_network
     data = _var_network(graph=connect_matrix,
                         add_noise=add_noise,

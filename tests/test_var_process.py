@@ -183,12 +183,16 @@ def test_bad_parameters(bad_parameter_sets):
     # Test the good parameter set
     try:
         pp._check_parent_neighbor(good_params)
+        covar = pp._get_covariance_matrix(good_params)
+        pp._check_symmetric_relations(covar)
     # Ensure no exception is raised
     except:
         pytest.fail("Good parameter set triggers exception incorrectly!")
     # Ensure an exception is raised for a bad parameter set
     with pytest.raises(ValueError, message=error_message):
         pp._check_parent_neighbor(bad_params)
+        covar = pp._get_covariance_matrix(bad_params)
+        pp._check_symmetric_relations(covar)
 
 # TEST STABILITY CHECKING ######################################################
 @pytest.fixture(params=[
