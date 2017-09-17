@@ -804,13 +804,13 @@ class PCMCI():
         # Create an internal copy of pc_alpha
         _int_pc_alpha = deepcopy(pc_alpha)
         # Check if we are selecting an optimal alpha value
-        select_optimal_alpha = False
+        select_optimal_alpha = True
         # Set the default values for pc_alpha
         if _int_pc_alpha is None:
             _int_pc_alpha = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
         elif not isinstance(_int_pc_alpha, (list, tuple, np.ndarray)):
             _int_pc_alpha = [_int_pc_alpha]
-            select_optimal_alpha = True
+            select_optimal_alpha = False
         # Check the limits on tau_min
         self._check_tau_limits(tau_min, tau_max)
         # TODO why is this imposed here??
