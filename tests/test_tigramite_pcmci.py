@@ -54,24 +54,42 @@ def _get_parents_from_results(pcmci, results, alpha_level):
                                           alpha_level=alpha_level)
     return significant_parents['parents']
 
+# TEST LINK GENERATION #########################################################
+def a_chain(auto_corr, coeff, length=3):
+    """
+    Generate a simple chain process with the given auto-correlations and
+    parents with the given coefficient strength.  A length can also be defined
+    to get a longer chain.
+
+    Parameters
+    ----------
+    auto_corr: float
+        Autocorrelation strength for all nodes
+    coeff : float
+        Parent strength for all relations
+    length : int
+        Length of the chain
+    """
+    return_links = dict()
+    return_links[0] = [((0, -1), auto_corr)]
+    for lnk in range(1, length):
+        return_links[lnk] = [((lnk, -1), auto_corr), ((lnk-1, -1), coeff)]
+    return return_links
+
 # TEST DATA GENERATION #########################################################
 @pytest.fixture(params=[
     # Generate a test data sample
     # Parameterize the sample by setting the autocorrelation value, coefficient
     # value, total time length, and random seed to different numbers
-    # auto_corr, coeff, time, seed_val
-    (0.1,        0.9,   1000, 2),
-    (0.5,        0.6,   1000, 11),
-    (0.5,        0.6,   1000, 42)])
+    # links_coeffs,     time, seed_val
+    (a_chain(0.1, 0.9), 1000, 2),
+    (a_chain(0.5, 0.6), 1000, 11),
+    (a_chain(0.5, 0.6), 1000, 42)])
 def a_sample(request):
     # Set the parameters
-    auto_corr, coeff, time, seed_val = request.param
+    links_coeffs, time, seed_val = request.param
     # Set the random seed
     numpy.random.seed(seed_val)
-    # Define the parent-neighghbour relations
-    links_coeffs = {0: [((0, -1), auto_corr)],
-                    1: [((1, -1), auto_corr), ((0, -1), coeff)],
-                    2: [((2, -1), auto_corr), ((1, -1), coeff)]}
     # Generate the data
     data, _ = pp.var_process(links_coeffs, T=time)
     # Get the true parents
