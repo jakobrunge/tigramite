@@ -323,7 +323,6 @@ class PCMCI():
         # Return the selected variables
         return selected_links
 
-
     def _iter_condtions(self, parent, j, conds_dim, all_parents):
         # TODO test this function
         """Yield next condition.
@@ -1017,8 +1016,6 @@ class PCMCI():
             int_parents = defaultdict(list, int_parents)
         return int_parents
 
-
-
     def _iter_indep_conds(self,
                           parents,
                           selected_variables,
@@ -1407,7 +1404,6 @@ class PCMCI():
                         conf_matrix[p[0], j, abs(p[1])][1])
 
             print(string)
-
 
     def run_pcmci(self,
                   selected_links=None,
