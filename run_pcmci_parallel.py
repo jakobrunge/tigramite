@@ -217,8 +217,8 @@ if COMM.rank == 0:
         print("\n\n## Resulting condition sets:")
         for j in [var for var in all_parents.keys()]:
             pcmci_objects[j]._print_parents_single(j, all_parents[j],
-                                    pcmci_objects[j].test_statistic_values[j], 
-                                    pcmci_objects[j].p_max[j])
+                                    pcmci_objects[j].val_matrix[j], 
+                                    pcmci_objects[j].p_matrix[j])
 
     if verbosity > -1:
         print("\n##\n## Running Parallelized Tigramite MCI algorithm\n##"
