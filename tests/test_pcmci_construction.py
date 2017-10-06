@@ -69,37 +69,51 @@ def a_pcmci(a_sample, request):
     # Return the constructed PCMCI, expected results, and common parameters
     return pcmci, true_parents
 
-# PCMCI CONSTRUCTION TESTING ###################################################
-@pytest.fixture(params=[
-    # Create a list of selected variables and testing for these variables
-    ()])
-def a_select_vars_params(request):
-    # Return the requested parameters
-    return request.param
+# TEST VARIABLE SELECTION ######################################################
+def get_select_vars(some_vars):
+    #Yield some subset of the input vars
+    for subset in [some_vars[0::2], some_vars[1::2]]:
+        yield subset
 
-def test_select_vars(a_pcmci):
+def test_select_vars_default(a_pcmci):
     # Unpack the pcmci instance
     pcmci, _ = a_pcmci
     # Test the default selected variables are correct
-    err_msg = "Default option for _select_variables should return all variables"
     all_vars = pcmci._set_selected_variables(None)
-    np.testing.assert_array_equal(all_vars, range(pcmci.N), err_msg=err_msg)
+    err_msg = "Default option for _select_variables should return all variables"
+    np.testing.assert_array_equal(list(all_vars),
+                                  list(range(pcmci.N)),
+                                  err_msg=err_msg)
+
+def test_select_vars_setting(a_pcmci):
+    # Unpack the pcmci instance
+    pcmci, _ = a_pcmci
+    all_vars = pcmci._set_selected_variables(None)
     # Test that both out of range and negative numbers throw an error while
     # good sets ones do not
-    for sel_vars in [all_vars[::2], all_vars[1::2]]:
+    for sel_vars in get_select_vars(pcmci._set_selected_variables(None)):
+        # Initialize the list
+        new_vars = pcmci._set_selected_variables(sel_vars)
+        err_msg = "Variables incorrectly selected in _select_variables"
+        # Ensure the correct values are returned
+        np.testing.assert_array_equal(new_vars,
+                                      sorted(list(set(sel_vars))),
+                                      err_msg=err_msg)
+def test_select_vars_errors(a_pcmci):
+    # Unpack the pcmci instance
+    pcmci, _ = a_pcmci
+    all_vars = pcmci._set_selected_variables(None)
+    # Test that both out of range and negative numbers throw an error while
+    # good sets ones do not
+    for sel_vars in get_select_vars(pcmci._set_selected_variables(None)):
         # Initialize the list
         new_vars = []
-        err_msg = "Variables incorrectly selected in _select_variables"
         # Test the good parameter set
         try:
             new_vars = pcmci._set_selected_variables(sel_vars)
         # Ensure no exception is raised
         except:
             pytest.fail("Selected variables fail incorrectly!")
-        # Ensure the correct values are returned
-        np.testing.assert_array_equal(new_vars,
-                                      list(set(sel_vars)),
-                                      err_msg=err_msg)
         # Ensure an exception is raised for a bad parameter set
         for bad_val, message in [(-1, "Negative"),
                                  (pcmci.N + 1, "Out of range")]:

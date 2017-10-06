@@ -267,7 +267,6 @@ class PCMCI():
             self._set_selected_variables(selected_variables)
 
     def _set_selected_variables(self, selected_variables):
-        # TODO test this function
         """Helper function to set and check the selected variables argument
 
         Parameters
@@ -281,15 +280,19 @@ class PCMCI():
             Defaults to a list of all given variable IDs [0..N-1]
         """
         # Set the default selected variables if none are set
-        if selected_variables is None:
-            selected_variables = range(self.N)
+        _int_selected_variables = deepcopy(selected_variables)
+        if _int_selected_variables is None:
+            _int_selected_variables = range(self.N)
         # Some checks
-        if selected_variables is not None and \
-          (np.any(np.array(selected_variables) < 0) or
-           np.any(np.array(selected_variables) >= self.N)):
+        if _int_selected_variables is not None and \
+          (np.any(np.array(_int_selected_variables) < 0) or
+           np.any(np.array(_int_selected_variables) >= self.N)):
             raise ValueError("selected_variables must be within 0..N-1")
+        # Ensure there are only unique values
+        # TODO check with jakob
+        _int_selected_variables = sorted(list(set(_int_selected_variables)))
         # Return the selected variables
-        return selected_variables
+        return _int_selected_variables
 
     def _set_sel_links(self, selected_links, tau_min, tau_max):
         # TODO test this function
@@ -311,17 +314,19 @@ class PCMCI():
         selected_variables : list
             Defaults to a list of all given variable IDs [0..N-1]
         """
-        # Set the default selected variables if none are set
-        if selected_links is None:
-            selected_links = {}
+        # Copy and pass into the function
+        _int_sel_links = deepcopy(selected_links)
+        # Set the default selected links if none are set
+        if _int_sel_links is None:
+            _int_sel_links = {}
             for j in range(self.N):
                 if j in self.selected_variables:
-                    selected_links[j] = [(var, -lag) for var in range(self.N)
+                    _int_sel_links[j] = [(var, -lag) for var in range(self.N)
                                          for lag in range(tau_min, tau_max + 1)]
                 else:
-                    selected_links[j] = []
-        # Return the selected variables
-        return selected_links
+                    _int_sel_links[j] = []
+        # Return the selected links
+        return _int_sel_links
 
     def _iter_condtions(self, parent, j, conds_dim, all_parents):
         # TODO test this function
@@ -367,7 +372,6 @@ class PCMCI():
         parents : list
             List of form [(0, -1), (3, -2), ...] containing sorted parents.
         """
-        # TODO test function
         if self.verbosity > 1:
             print("\n    Sorting parents in decreasing order with "
                   "\n    weight(i-tau->j) = min_{iterations} |I_{ij}(tau)| ")
@@ -567,8 +571,6 @@ class PCMCI():
         # Iteration through increasing number of conditions
         converged = False
         # Loop over all possible condition dimentions
-        # TODO translated from a while loop to a for loop verbatum.  Is this the
-        # intended limit of the function?
         for conds_dim in range(max_conds_dim + 1):
             # (Re)initialize the list of non-significant links
             nonsig_parents = list()
@@ -827,7 +829,7 @@ class PCMCI():
                                   _int_pc_alpha, max_conds_dim, 
                                   max_combinations)
         # Set the selected links
-        selected_links = self._set_sel_links(selected_links, tau_min, tau_max)
+        _int_sel_links = self._set_sel_links(selected_links, tau_min, tau_max)
         # Initialize all parents
         all_parents = dict()
         # Set the maximum condition dimension
@@ -853,7 +855,7 @@ class PCMCI():
                 # Get the results for this alpha value
                 results[pc_alpha_here] = \
                     self._run_pc_stable_single(j,
-                                               selected_links=selected_links[j],
+                                               selected_links=_int_sel_links[j],
                                                tau_min=tau_min,
                                                tau_max=tau_max,
                                                save_iterations=save_iterations,
@@ -1109,7 +1111,7 @@ class PCMCI():
         # Check the limits on tau
         self._check_tau_limits(tau_min, tau_max)
         # Set the selected links
-        selected_links = self._set_sel_links(selected_links, tau_min, tau_max)
+        _int_sel_links = self._set_sel_links(selected_links, tau_min, tau_max)
         # Print status message
         if self.verbosity > 0:
             print("\n## Estimating lagged dependencies")
@@ -1123,7 +1125,7 @@ class PCMCI():
         # Get the conditions as implied by the input arguments
         for j, i, tau, Z in self._iter_indep_conds(_int_parents,
                                                    self.selected_variables,
-                                                   selected_links,
+                                                   _int_sel_links,
                                                    max_conds_py,
                                                    max_conds_px):
             # Set X and Y (for clarity of code)
@@ -1204,7 +1206,7 @@ class PCMCI():
         # Check the limits on tau
         self._check_tau_limits(tau_min, tau_max)
         # Set the selected links
-        selected_links = self._set_sel_links(selected_links, tau_min, tau_max)
+        _int_sel_links = self._set_sel_links(selected_links, tau_min, tau_max)
         # Print information about the input parameters
         if self.verbosity > 0:
             self._print_mci_parameters(tau_min, tau_max,
@@ -1226,7 +1228,7 @@ class PCMCI():
         # Get the conditions as implied by the input arguments
         for j, i, tau, Z in self._iter_indep_conds(_int_parents,
                                                    self.selected_variables,
-                                                   selected_links,
+                                                   _int_sel_links,
                                                    max_conds_py,
                                                    max_conds_px):
             # Set X and Y (for clarity of code)
