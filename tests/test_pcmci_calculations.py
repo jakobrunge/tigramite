@@ -3,7 +3,7 @@ Tests for pcmci.py, including tests for run_pc_stable, run_mci, and run_pcmci.
 """
 from __future__ import print_function
 from collections import Counter, defaultdict
-import numpy
+import numpy as np
 from nose.tools import assert_equal
 import pytest
 
@@ -89,7 +89,7 @@ def a_sample(request):
     # Set the parameters
     links_coeffs, time, seed_val = request.param
     # Set the random seed
-    numpy.random.seed(seed_val)
+    np.random.seed(seed_val)
     # Generate the data
     data, _ = pp.var_process(links_coeffs, T=time)
     # Get the true parents
@@ -103,7 +103,7 @@ def a_sample(request):
      (1,       2,        None),
      (1,       2,        [0])])
 def a_common_params(request):
-    # Unpack the parameters to return them in a common tuple
+    # Return the requested parameters
     return request.param
 
 @pytest.fixture()
