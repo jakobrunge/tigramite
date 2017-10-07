@@ -259,7 +259,7 @@ class PCMCI():
         self.var_names = var_names
         # Set the default variable names if none are set
         if self.var_names is None:
-            self.var_names = dict([(i, i) for i in range(len(self.data))])
+            self.var_names = {i: i for i in range(len(self.data))}
         # Store the shape of the data in the T and N variables
         self.T, self.N = self.data.shape
         # Set the selected variables
@@ -284,18 +284,18 @@ class PCMCI():
         if _int_selected_variables is None:
             _int_selected_variables = range(self.N)
         # Some checks
+        # TODO move checks into dataframe object?
         if _int_selected_variables is not None and \
           (np.any(np.array(_int_selected_variables) < 0) or
            np.any(np.array(_int_selected_variables) >= self.N)):
             raise ValueError("selected_variables must be within 0..N-1")
         # Ensure there are only unique values
-        # TODO check with jakob
+        # TODO check sorting with jakob
         _int_selected_variables = sorted(list(set(_int_selected_variables)))
         # Return the selected variables
         return _int_selected_variables
 
     def _set_sel_links(self, selected_links, tau_min, tau_max):
-        # TODO test this function
         """Helper function to set and check the selected links argument
 
         Parameters
@@ -317,14 +317,34 @@ class PCMCI():
         # Copy and pass into the function
         _int_sel_links = deepcopy(selected_links)
         # Set the default selected links if none are set
+        _vars = list(range(self.N))
         if _int_sel_links is None:
             _int_sel_links = {}
-            for j in range(self.N):
+            # Set the default as all combinations of the selected variables
+            for j in _vars:
+                # If it is in selected variables, select all possible links
                 if j in self.selected_variables:
-                    _int_sel_links[j] = [(var, -lag) for var in range(self.N)
+                    _int_sel_links[j] = [(var, -lag) for var in _vars
                                          for lag in range(tau_min, tau_max + 1)]
+                # If it is not, make it an empty list
+                # TODO I think we can remove the lines below
                 else:
                     _int_sel_links[j] = []
+        # Otherwise, check that our selection is sane
+        # TODO move checks to dataframe object?
+        # Check that the selected links refer to links that are inside the
+        # data range
+        valid_entries = set(_int_sel_links.keys()).issubset(_vars)
+        valid_entries = valid_entries and \
+            set(var for parents in _int_sel_links.values()
+                    for var, _ in parents).issubset(_vars)
+        if not valid_entries:
+            raise ValueError("Out of range variable defined in \n",
+                             _int_sel_links,
+                             "\nMust be in range [0, ", self.N-1, "]")
+        # TODO checks that selected links are subset of selected_variables?
+        ## Note: variables are scoped by selected_variables first, and then
+        ## by selected links.  Add to docstring?
         # Return the selected links
         return _int_sel_links
 
@@ -594,7 +614,7 @@ class PCMCI():
                     # Break if we try too many combinations
                     if comb_index > max_combinations:
                         break
-                    # TODO start this index from zero
+                    # Incriment the combinations
                     comb_index += 1
                     # Perform independence test
                     val, pval = self.cond_ind_test.run_test(X=[parent],
@@ -814,7 +834,7 @@ class PCMCI():
             select_optimal_alpha = False
         # Check the limits on tau_min
         self._check_tau_limits(tau_min, tau_max)
-        # TODO why is this imposed here??
+        # TODO warning here if tau_min < 1?
         tau_min = max(1, tau_min)
         # Check that the maximum combinatiosn variable is correct
         if max_combinations <= 0:
@@ -825,8 +845,8 @@ class PCMCI():
         iterations = defaultdict(dict)
         # Print information about the selected parameters
         if self.verbosity > 0:
-            self._print_pc_params(selected_links, tau_min, tau_max, 
-                                  _int_pc_alpha, max_conds_dim, 
+            self._print_pc_params(selected_links, tau_min, tau_max,
+                                  _int_pc_alpha, max_conds_dim,
                                   max_combinations)
         # Set the selected links
         _int_sel_links = self._set_sel_links(selected_links, tau_min, tau_max)
@@ -1377,9 +1397,8 @@ class PCMCI():
         print("\n## Significant links at alpha = %s:" % alpha_level)
         for j in self.selected_variables:
 
-            links = dict([((p[0], -p[1] ), np.abs(val_matrix[p[0],
-                            j, abs(p[1])]))
-                          for p in zip(*np.where(sig_links[:, j, :]))])
+            links = {(p[0], -p[1]): np.abs(val_matrix[p[0], j, abs(p[1])])
+                     for p in zip(*np.where(sig_links[:, j, :]))}
 
             # Sort by value
             sorted_links = sorted(links, key=links.get, reverse=True)

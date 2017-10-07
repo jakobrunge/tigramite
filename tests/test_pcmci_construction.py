@@ -12,6 +12,9 @@ import tigramite.data_processing as pp
 
 from test_pcmci_calculations import a_chain
 
+# Pylint settings
+# pylint: disable=redefined-outer-name
+
 # Define the verbosity at the global scope
 VERBOSITY = 10
 
@@ -37,12 +40,13 @@ def _select_links(link_ids, true_parents):
                                             for link in link_ids}
 
 # TEST LINK GENERATION #########################################################
+N_NODES = 5
 @pytest.fixture(params=[
     # Generate a test data sample
     # Parameterize the sample by setting the autocorrelation value, coefficient
     # value, total time length, and random seed to different numbers
     # links_coeffs,     time, seed_val
-    (a_chain(0.5, 0.6, length=10), 1000, 42)])
+    (a_chain(0.5, 0.6, length=N_NODES), 1000, 42)])
 def a_sample(request):
     # Set the parameters
     links_coeffs, time, seed_val = request.param
@@ -88,10 +92,9 @@ def test_select_vars_default(a_pcmci):
 def test_select_vars_setting(a_pcmci):
     # Unpack the pcmci instance
     pcmci, _ = a_pcmci
-    all_vars = pcmci._set_selected_variables(None)
     # Test that both out of range and negative numbers throw an error while
     # good sets ones do not
-    for sel_vars in get_select_vars(pcmci._set_selected_variables(None)):
+    for sel_vars in get_select_vars(range(pcmci.N)):
         # Initialize the list
         new_vars = pcmci._set_selected_variables(sel_vars)
         err_msg = "Variables incorrectly selected in _select_variables"
@@ -99,13 +102,13 @@ def test_select_vars_setting(a_pcmci):
         np.testing.assert_array_equal(new_vars,
                                       sorted(list(set(sel_vars))),
                                       err_msg=err_msg)
+
 def test_select_vars_errors(a_pcmci):
     # Unpack the pcmci instance
     pcmci, _ = a_pcmci
-    all_vars = pcmci._set_selected_variables(None)
     # Test that both out of range and negative numbers throw an error while
     # good sets ones do not
-    for sel_vars in get_select_vars(pcmci._set_selected_variables(None)):
+    for sel_vars in get_select_vars(range(pcmci.N)):
         # Initialize the list
         new_vars = []
         # Test the good parameter set
@@ -121,3 +124,67 @@ def test_select_vars_errors(a_pcmci):
             with pytest.raises(ValueError, message=err_msg):
                 bad_vars = np.array(new_vars) * bad_val
                 _ = pcmci._set_selected_variables(bad_vars)
+
+# TEST LINK SELECTION ##########################################################
+TAU_MIN = 1
+TAU_MAX = 5
+def get_expected_links(a_range, b_range, t_range):
+    """
+    Helper function to generate the expected links
+    """
+    return {a_var : [(b_var, -lag) for b_var in b_range for lag in t_range]
+            for a_var in a_range}
+
+def test_select_links_default(a_pcmci):
+    # Unpack the pcmci instance
+    pcmci, _ = a_pcmci
+    # Test the default selected variables are correct
+    sel_links = pcmci._set_sel_links(None, TAU_MIN, TAU_MAX)
+    err_msg = "Default option for _set_sel_links should return all possible "+\
+              "combinations"
+    good_links = get_expected_links(range(pcmci.N),
+                                    range(pcmci.N),
+                                    range(TAU_MIN, TAU_MAX + 1))
+    np.testing.assert_equal(sel_links, good_links, err_msg=err_msg)
+
+def test_select_links_setting(a_pcmci):
+    # Unpack the pcmci instance
+    pcmci, _ = a_pcmci
+    # Seleect some of the variables
+    for sel_vars in get_select_vars(range(pcmci.N)):
+        # Initialize the list
+        pcmci.selected_variables = pcmci._set_selected_variables(sel_vars)
+        # Ensure the correct values are returned
+        sel_links = pcmci._set_sel_links(None, TAU_MIN, TAU_MAX)
+        good_links = get_expected_links(sel_vars,
+                                        range(pcmci.N),
+                                        range(TAU_MIN, TAU_MAX + 1))
+        # TODO remove when we remove the empty lists from the code
+        for idx in range(pcmci.N):
+            if idx not in sel_vars:
+                good_links[idx] = []
+        err_msg = "Links incorrectly set in _set_sel_links"
+        np.testing.assert_equal(sel_links, good_links, err_msg=err_msg)
+
+def test_select_links_errors(a_pcmci):
+    pcmci, _ = a_pcmci
+    # Seleect some of the variables
+    for sel_vars in get_select_vars(range(pcmci.N)):
+        # Initialize the list
+        pcmci.selected_variables = pcmci._set_selected_variables(sel_vars)
+        # Ensure the correct values are returned
+        test_links = get_expected_links(sel_vars,
+                                        range(pcmci.N),
+                                        range(TAU_MIN, TAU_MAX + 1))
+        # Test the good parameter set
+        try:
+            _ = pcmci._set_sel_links(test_links, TAU_MIN, TAU_MAX)
+        # Ensure no exception is raised
+        except:
+            pytest.fail("Selected links fail incorrectly!")
+        # Ensure an exception is raised for a bad parameter set
+        for bad_val, message in [(pcmci.N + 1, "Out of range")]:
+            err_msg = message + " selected links do not fail!"
+            with pytest.raises(ValueError, message=err_msg):
+                test_links[bad_val] = [(bad_val, TAU_MAX)]
+                _ = pcmci._set_sel_links(test_links, TAU_MIN, TAU_MAX)
