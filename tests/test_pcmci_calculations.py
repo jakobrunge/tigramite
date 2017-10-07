@@ -12,7 +12,7 @@ from tigramite.independence_tests import ParCorr #, GPACE
 import tigramite.data_processing as pp
 
 # Define the verbosity at the global scope
-VERBOSITY = 10
+VERBOSITY = 1
 
 # CONVENIENCE FUNCTIONS ########################################################
 def assert_graphs_equal(actual, expected):
@@ -84,7 +84,7 @@ def a_chain(auto_corr, coeff, length=3):
     # links_coeffs,     time, seed_val
     (a_chain(0.1, 0.9), 1000, 2),
     (a_chain(0.5, 0.6), 1000, 11),
-    (a_chain(0.5, 0.6), 1000, 42)])
+    (a_chain(0.5, 0.6, length=5), 10000, 42)])
 def a_sample(request):
     # Set the parameters
     links_coeffs, time, seed_val = request.param
