@@ -11,6 +11,9 @@ from tigramite.pcmci import PCMCI
 from tigramite.independence_tests import ParCorr #, GPACE
 import tigramite.data_processing as pp
 
+# Pylint settings
+# pylint: disable=redefined-outer-name
+
 # Define the verbosity at the global scope
 VERBOSITY = 1
 

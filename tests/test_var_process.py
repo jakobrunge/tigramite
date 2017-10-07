@@ -7,6 +7,9 @@ import pytest
 import numpy as np
 import tigramite.data_processing as pp
 
+# Pylint settings
+# pylint: disable=redefined-outer-name
+
 # TEST DATA GENERATION #########################################################
 def gen_decay(init_val, decay_const, n_times, delay):
     """
