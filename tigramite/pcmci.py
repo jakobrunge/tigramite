@@ -348,12 +348,10 @@ class PCMCI():
         # Return the selected links
         return _int_sel_links
 
-    def _iter_condtions(self, parent, j, conds_dim, all_parents):
-        # TODO test this function
+    def _iter_conditions(self, parent, j, conds_dim, all_parents):
         """Yield next condition.
 
-        Returns next condition from lexicographically ordered conditions.
-        Returns False if all possible conditions have been tested.
+        Yields next condition from lexicographically ordered conditions.
 
         Parameters
         ----------
@@ -591,6 +589,13 @@ class PCMCI():
         # Iteration through increasing number of conditions
         converged = False
         # Loop over all possible condition dimentions
+        max_conds_dim = self._set_max_condition_dim(max_conds_dim, tau_max)
+        # TODO ask jakob:
+        # should this be to max_conds_dim or max_conds_dim + 1
+        # * fed in limit to conds_dim
+        # * conds_dim can then be tau_max * N
+        # * but maximum pool to "choose" from in combinations is (tau_max*N - 1)
+        # i.e. all_parents minus current parent
         for conds_dim in range(max_conds_dim + 1):
             # (Re)initialize the list of non-significant links
             nonsig_parents = list()
@@ -608,9 +613,16 @@ class PCMCI():
                 if self.verbosity > 1:
                     self._print_link_info(j, index_parent, parent, len(parents))
                 # Iterate through all possible combinations
+                # TODO ask jakob:
+                #  * parent is in parents
+                #  * parents is deepcopy of selected links
+                #  * -> only parents from selected links tested for casual
+                #  relations
+                #  * -> BUT only parents from selected links used as conditions
+                #  on independence as well?
                 for comb_index, Z in \
-                        enumerate(self._iter_condtions(parent, j,
-                                                       conds_dim, parents)):
+                        enumerate(self._iter_conditions(parent, j,
+                                                        conds_dim, parents)):
                     # Break if we try too many combinations
                     if comb_index > max_combinations:
                         break
@@ -627,7 +639,8 @@ class PCMCI():
                     # Keep track of maximum p-value and minimum estimated value
                     # for each pair (across any condition)
                     parents_values[parent] = \
-                        min(np.abs(val), parents_values.get(parent,float("inf")))
+                        min(np.abs(val), parents_values.get(parent,
+                                                            float("inf")))
                     p_max[parent] = \
                         max(np.abs(pval), p_max.get(parent, -float("inf")))
                     val_min[parent] = \
