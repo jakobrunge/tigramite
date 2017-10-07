@@ -172,6 +172,9 @@ def a_run_pc_stable(a_pcmci, a_pc_stable_params):
     return pcmci.all_parents, true_parents
 
 def test_pc_stable(a_run_pc_stable):
+    """
+    Test the pc_stable algorithm and check it calculates the correct parents.
+    """
     # Unpack the calculated and true parents
     parents, true_parents = a_run_pc_stable
     # Ensure they are the same
@@ -203,6 +206,9 @@ def a_run_mci(a_pcmci, a_mci_params):
     return _get_parents_from_results(pcmci, results, alpha_level), true_parents
 
 def test_mci(a_run_mci):
+    """
+    Test the mci algorithm and check it calculates the correct parents.
+    """
     # Unpack the calculated and true parents
     parents, true_parents = a_run_mci
     # Ensure they are the same
@@ -231,6 +237,9 @@ def a_run_pcmci(a_pcmci, a_pc_stable_params, a_mci_params):
     return _get_parents_from_results(pcmci, results, alpha_level), true_parents
 
 def test_pcmci(a_run_pcmci):
+    """
+    Test the pcmci algorithm and check it calculates the correct parents.
+    """
     # Unpack the calculated and true parents
     parents, true_parents = a_run_pcmci
     # Ensure they are the same
