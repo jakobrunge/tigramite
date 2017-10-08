@@ -374,7 +374,6 @@ class PCMCI():
             yield list(cond)
 
     def _sort_parents(self, parents_vals):
-        # TODO test this function
         """Sort current parents according to test statistic values.
 
         Sorting is from strongest to weakest absolute values.
@@ -668,6 +667,8 @@ class PCMCI():
             for _, parent in nonsig_parents:
                 del parents_values[parent]
             # Return the parents list sorted by the test metric
+            # TODO this redefines parents from a dictionary to a list.  perhaps 
+            # we can use something like sorted_parents?
             parents = self._sort_parents(parents_values)
             # Print information about the change in possible parents
             if self.verbosity > 1:

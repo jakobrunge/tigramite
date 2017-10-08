@@ -362,4 +362,24 @@ def test_sort_parents(a_pcmci):
     Test that the function that sorts parents returns the sorted values as
     desired
     """
-
+    # Unpack the pcmci instance
+    pcmci, _ = a_pcmci
+    # Create some parents to sort
+    orig_parents = []
+    n_parents = 10
+    for i in range(n_parents):
+        orig_parents.append((i, i))
+    # Put them into a dictionary
+    parent_vals = {}
+    sign = 1
+    for val, par in enumerate(orig_parents):
+        # Alternate the sign to ensure sorting is done on abolute value
+        sign *= -1
+        # Use greater values of the test metric for greater values of the parent
+        # indexes
+        parent_vals[par] = val * sign
+    # Sort them
+    sorted_parents = pcmci._sort_parents(parent_vals)
+    # Ensure the sorting works as expected
+    assert sorted_parents == orig_parents[::-1],\
+        "Parents must be sorted by abolute value of the test metric"
