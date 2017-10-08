@@ -6,7 +6,7 @@ from collections import defaultdict
 import numpy as np
 import pytest
 from scipy.misc import comb
-from pprint import pprint
+from distutils.version import LooseVersion
 
 from tigramite.pcmci import PCMCI
 from tigramite.independence_tests import ParCorr #, GPACE
@@ -287,7 +287,7 @@ def test_condition_iterator(a_pcmci, a_iter_cond_param):
                 par_conds = np.array(par_conds)
                 # Check that all condition, parent pairs are unique
                 # TODO fix this for 3.4 support
-                if np.version.version >= 1.13:
+                if LooseVersion(np.version.version) >= LooseVersion(1.13):
                     assert np.unique(par_conds, axis=0).shape == par_conds.shape
         # Check that the right number of conditions are found
         assert total_n_conds == expected_total_n_conds, \
@@ -354,3 +354,12 @@ def test_iter_indep_conds(a_pcmci, a_iter_indep_cond_param):
     # Get the total number of tested links
     assert expect_links == n_links,\
         "Recoved the expected number of links to test"
+
+# TEST UTILITY FUNCTIONS #######################################################
+
+def test_sort_parents(a_pcmci):
+    """
+    Test that the function that sorts parents returns the sorted values as
+    desired
+    """
+
