@@ -748,7 +748,6 @@ class PCMCI():
               (self.var_names[j], optimal_alpha))
 
     def _check_tau_limits(self, tau_min, tau_max):
-        # TODO test this function
         """
         Check the tau limits adhere to 0 <= tau_min <= tau_max
 
@@ -1092,7 +1091,7 @@ class PCMCI():
             conds_y = parents[j][:max_conds_py]
             # Create a parent list from links seperated in time and by node
             parent_list = [(i, tau) for i, tau in selected_links[j]
-                           if not (tau == 0 and i == j)]
+                           if (i, tau) != (j, 0)]
             # Iterate through parents (except those in conditions)
             for cnt, (i, tau) in enumerate(parent_list):
                 # Get the conditions for node i
@@ -1299,7 +1298,6 @@ class PCMCI():
     def get_corrected_pvalues(self, p_matrix,
                               fdr_method='fdr_bh',
                               exclude_contemporaneous=True):
-        # TODO test this function
         """Returns p-values corrected for multiple testing.
 
         Wrapper around statsmodels.sandbox.stats.multicomp.multipletests.
@@ -1312,7 +1310,9 @@ class PCMCI():
             Matrix of p-values. Must be of shape (N, N, tau_max + 1).
         fdr_method : str, optional (default: 'fdr_bh')
             Correction method, default is Benjamini-Hochberg False Discovery
-            Rate method.
+            Rate method. See statsmodels.sandbox.stats.multicomp.multipletests
+            for other valid modes.  Additionally, 'none' is a valid mode that
+            does nothing to the input p_matrix.
         exclude_contemporaneous : bool, optional (default: True)
             Whether to include contemporaneous links in correction.
 
@@ -1343,6 +1343,7 @@ class PCMCI():
                                     pq_matrix,
                                     val_matrix,
                                     alpha_level=0.05):
+        # TODO test this function
         """Returns list of significant parents as well as a boolean matrix.
 
         Significance based on p-matrix, or q-value matrix with corrected
