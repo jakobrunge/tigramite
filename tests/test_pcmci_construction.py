@@ -17,7 +17,7 @@ from test_pcmci_calculations import a_chain
 # pylint: disable=redefined-outer-name
 
 # Define the verbosity at the global scope
-VERBOSITY = 10
+VERBOSITY = 1
 
 # CONVENIENCE FUNCTIONS ########################################################
 def _get_parent_graph(parents_neighbors_coeffs, exclude=None):
@@ -41,7 +41,7 @@ def _select_links(link_ids, true_parents):
                                             for link in link_ids}
 
 # TEST LINK GENERATION #########################################################
-N_NODES = 5
+N_NODES = 4
 @pytest.fixture(params=[
     # Generate a test data sample
     # Parameterize the sample by setting the autocorrelation value, coefficient
@@ -216,32 +216,48 @@ def test_select_links_errors(a_pcmci):
                 _ = pcmci._set_sel_links(test_links, TAU_MIN, TAU_MAX)
 
 # TEST ITERATORS ###############################################################
-def test_condition_iterator(a_pcmci):
+@pytest.fixture(params=[
+    # Store some parameters for setting maximum conditions
+    #max_cond_dim, tau_min, tau_max
+    (None,         1,       3),
+    (10,           1,       3)])
+    #(1,            2,       4)]) TODO address this failing case
+def a_iter_cond_param(request):
+    return request.param
+
+def test_condition_iterator(a_pcmci, a_iter_cond_param):
     """
-    Test if the correct conditions are returned from the iterator.
+    Test if the correct conditions are returned from the iterator.  Checks that:
+        * Parent node never included in yielded conditions
+        * Yielded conditions of the same dimension are unique
+        * The expected total number of conditions are given
     """
     # Unpack the pcmci algorithm
     pcmci, _ = a_pcmci
+    # Unpack the iterator conditions parameters
+    max_cond_dim, tau_min, tau_max = a_iter_cond_param
     # Get all possible links
-    sel_links = pcmci._set_sel_links(None, TAU_MIN, TAU_MAX)
+    sel_links = pcmci._set_sel_links(None, tau_min, tau_max)
     # Loop over all possible condition dimentions
-    max_cond_dim = pcmci._set_max_condition_dim(None, TAU_MAX)
+    # TODO ask jakob about max_conds_dim in source and maybe change this
+    # limit to max_cond_dim + 1
+    max_cond_dim = pcmci._set_max_condition_dim(None, tau_max)
+    if max_cond_dim == pcmci._set_max_condition_dim(max_cond_dim, tau_max):
+        max_cond_dim -= 1
     # Loop over all nodes
     for j in range(pcmci.N):
         # Initialise the list of conditions for this node
-        node_conds = list()
-        expected_n_conds = 0
+        total_n_conds = 0
+        expected_total_n_conds = 0
         # Parents for this node
         parents = sel_links[j]
         # Loop over all possible dimentionality of conditions
-        # TODO ask jakob about max_conds_dim in source and maybe change this 
-        # limit to max_cond_dim + 1
-        for cond_dim in range(max_cond_dim):
+        for cond_dim in range(max_cond_dim + 1):
             # Iterate through all possible pairs (that have not converged yet)
             for par in parents:
                 # Number of conditions for this dimension
-                n_conds = comb(len(parents) - 1, cond_dim, exact=True)
-                expected_n_conds += n_conds
+                expected_n_conds = comb(len(parents) - 1, cond_dim, exact=True)
+                expected_total_n_conds += expected_n_conds
                 # Create an array for these conditions
                 par_conds = list()
                 # Iterate through all possible combinations
@@ -249,14 +265,27 @@ def test_condition_iterator(a_pcmci):
                     # Ensure the condition does not contain the parent
                     assert par not in cond, "Parent should not be in condition"
                     # Keep this condition in list of conditions
-                    node_conds += [cond]
                     par_conds.append([par] + cond)
                     assert len(cond) == cond_dim,\
                         "Number of conditions should match requested dimension"
+                # Check that at least one condition is found
+                assert len(par_conds) != 0,\
+                    "Expected number of conditions for condition "+\
+                    " dimension {}".format(cond_dim)+\
+                    " and total n_nodes {}".format(len(parents)-1)+\
+                    " is zero!"
+                # Check that this iterations has the expected number of
+                # conditions
+                assert len(par_conds) == expected_n_conds,\
+                    "Expected number of conditions for condition "+\
+                    " dimension {}".format(cond_dim)+\
+                    " and total n_nodes {}".format(len(parents)-1)+\
+                    " does not match"
+                # Record the total number found
+                total_n_conds += len(par_conds)
                 # Check that all condition, parent pairs are unique
                 par_conds = np.array(par_conds)
-                print(cond_dim, expected_n_conds)
                 assert np.unique(par_conds, axis=0).shape == par_conds.shape
         # Check that the right number of conditions are found
-        assert len(node_conds) == expected_n_conds, \
+        assert total_n_conds == expected_total_n_conds, \
             "Expected number of combinations found"

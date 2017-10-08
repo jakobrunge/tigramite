@@ -586,16 +586,19 @@ class PCMCI():
         # Ensure tau_min is atleast 1
         tau_min = max(1, tau_min)
 
-        # Iteration through increasing number of conditions
-        converged = False
-        # Loop over all possible condition dimentions
-        max_conds_dim = self._set_max_condition_dim(max_conds_dim, tau_max)
         # TODO ask jakob:
         # should this be to max_conds_dim or max_conds_dim + 1
         # * fed in limit to conds_dim
         # * conds_dim can then be tau_max * N
         # * but maximum pool to "choose" from in combinations is (tau_max*N - 1)
         # i.e. all_parents minus current parent
+        # * Hence, _set_max_condition_dim should return tau_max*N - 1 so that
+        # selecting max_cond_dim < tau_max*N - 1 still gives desired results,
+        # but default only loops over possible tau_max*N - 1
+        # Loop over all possible condition dimentions
+        max_conds_dim = self._set_max_condition_dim(max_conds_dim, tau_max)
+        # Iteration through increasing number of conditions
+        converged = False
         for conds_dim in range(max_conds_dim + 1):
             # (Re)initialize the list of non-significant links
             nonsig_parents = list()
@@ -761,6 +764,7 @@ class PCMCI():
                              "but 0 <= tau_min <= tau_max")
 
     def _set_max_condition_dim(self, max_conds_dim, tau_max):
+        # TODO ask jakob: should this not be self.N * (tau_max - tau_min) ??
         """
         Set the maximum dimension of the conditions. Defaults to self.N*tau_max
 
