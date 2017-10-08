@@ -422,7 +422,16 @@ def test_check_tau_limits(a_pcmci, a_tau_values):
                            message="Bad tau limits should fail"+err_msg):
             pcmci._check_tau_limits(tau_min, tau_max)
 
-def test_corrected_pvalues(a_pcmci):
+@pytest.fixture(params=[
+    # Store some parameters for correcting the pvalues
+    #fdr_method, excl,  slice_N,        slice_T,     message
+    ('fdr_bh',   False, range(N_NODES), 0,           "default"),
+    ('fdr_bh',   True,  slice(None),    0,           "exclude contemporaneous"),
+    ('none',     True,  slice(None),    slice(None), "none")])
+def a_correct_pvals_params(request):
+    return request.param
+
+def test_corrected_pvalues(a_pcmci, a_correct_pvals_params):
     """
     Test the wrapper functions of the corrected pvalue function.  This means:
         * check 'none' is a valid mode that does nothing to the input
@@ -431,38 +440,18 @@ def test_corrected_pvalues(a_pcmci):
     """
     # Unpack the pcmci instance
     pcmci, _ = a_pcmci
-    # Create the fake p-values
+    # Unpack the parameters
+    fdr_method, excl, slice_N, slice_T, message = a_correct_pvals_params 
+    # Create the p-values
     pvals = np.linspace(0, 1, num=N_NODES*N_NODES*(TAU_MAX+1))
     pvals = pvals.reshape(N_NODES, N_NODES, TAU_MAX+1)
-    # Ensure 'none' mode does nothing
+    # Create the corrected p-values
     qvals = pcmci.get_corrected_pvalues(pvals,
-                                        fdr_method='none',
-                                        exclude_contemporaneous=False)
-    err_msg = "get_corrected_pvalues should do nothing on \'none\' mode."
-    np.testing.assert_allclose(pvals,
-                               qvals,
-                               rtol=1e-10,
-                               atol=1e-10,
-                               verbose=True,
-                               err_msg=err_msg)
-    # Ensure that exclude contemporaneous works
-    qvals = pcmci.get_corrected_pvalues(pvals,
-                                        exclude_contemporaneous=True)
-    err_msg = "get_corrected_pvalues should exclude tau=0 elements for"+\
-              " exclude_contemporaneous == True."
-    np.testing.assert_allclose(pvals[:, :, 0],
-                               qvals[:, :, 0],
-                               rtol=1e-10,
-                               atol=1e-10,
-                               verbose=True,
-                               err_msg=err_msg)
-    # Ensure that autocorrelated elements are always ignored
-    qvals = pcmci.get_corrected_pvalues(pvals,
-                                        exclude_contemporaneous=False)
-    err_msg = "get_corrected_pvalues should exclude autocorrelation elements"+\
-              " always."
-    np.testing.assert_allclose(pvals[range(N_NODES), range(N_NODES), 0],
-                               qvals[range(N_NODES), range(N_NODES), 0],
+                                        fdr_method=fdr_method,
+                                        exclude_contemporaneous=excl)
+    err_msg = "get_corrected_pvalues failed on "+message+" mode"
+    np.testing.assert_allclose(pvals[slice_N, slice_N, slice_T],
+                               qvals[slice_N, slice_N, slice_T],
                                rtol=1e-10,
                                atol=1e-10,
                                verbose=True,
