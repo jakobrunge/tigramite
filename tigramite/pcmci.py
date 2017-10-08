@@ -1091,7 +1091,7 @@ class PCMCI():
             conds_y = parents[j][:max_conds_py]
             # Create a parent list from links seperated in time and by node
             parent_list = [(i, tau) for i, tau in selected_links[j]
-                           if tau != 0 or i != j]
+                           if not (tau == 0 and i == j)]
             # Iterate through parents (except those in conditions)
             for cnt, (i, tau) in enumerate(parent_list):
                 # Get the conditions for node i
@@ -1104,9 +1104,11 @@ class PCMCI():
                 # I(X_t-tau; Y_t | Z^Y_t, Z^X_t-tau)
                 # with conditions for X shifted by tau
                 Z = [node for node in conds_y if node != (i, tau)]
+                # Shift the conditions for X by tau
                 Z += [(k, tau + k_tau) for k, k_tau in conds_x]
                 # Yield these list
-                yield j, i, tau, Z
+                # TODO ask jakob if Z values should be unique
+                yield j, i, tau, list(set(Z))
 
     def get_lagged_dependencies(self,
                                 selected_links=None,
@@ -1152,7 +1154,7 @@ class PCMCI():
         # Print status message
         if self.verbosity > 0:
             print("\n## Estimating lagged dependencies")
-        # Set the maximum condition dimension for Y and Z
+        # Set the maximum condition dimension for Y and X
         max_conds_py = self._set_max_condition_dim(max_conds_py, tau_max)
         max_conds_px = self._set_max_condition_dim(max_conds_px, tau_max)
         # Get the parents that will be checked
@@ -1249,7 +1251,7 @@ class PCMCI():
             self._print_mci_parameters(tau_min, tau_max,
                                        max_conds_py, max_conds_px)
 
-        # Set the maximum condition dimension for Y and Z
+        # Set the maximum condition dimension for Y and X
         max_conds_py = self._set_max_condition_dim(max_conds_py, tau_max)
         max_conds_px = self._set_max_condition_dim(max_conds_px, tau_max)
         # Get the parents that will be checked

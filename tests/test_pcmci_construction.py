@@ -6,6 +6,7 @@ from collections import defaultdict
 import numpy as np
 import pytest
 from scipy.misc import comb
+from pprint import pprint
 
 from tigramite.pcmci import PCMCI
 from tigramite.independence_tests import ParCorr #, GPACE
@@ -283,9 +284,72 @@ def test_condition_iterator(a_pcmci, a_iter_cond_param):
                     " does not match"
                 # Record the total number found
                 total_n_conds += len(par_conds)
-                # Check that all condition, parent pairs are unique
                 par_conds = np.array(par_conds)
+                # Check that all condition, parent pairs are unique
+                # TODO fix this for 3.4 support?
                 assert np.unique(par_conds, axis=0).shape == par_conds.shape
         # Check that the right number of conditions are found
         assert total_n_conds == expected_total_n_conds, \
             "Expected number of combinations found"
+
+@pytest.fixture(params=[
+    # Store some parameters for iterating over conditions during the MCI
+    # algorithm
+    #max_cond_dim_X, max_cond_dim_Y, tau_min, tau_max
+    (None,           None,           0,       3), # Default
+    (1,              None,           0,       3), # Maximum conds on X
+    (None,           1,              0,       3), # Maximum conds on Y
+    (None,           None,           1,       3), # Non-trivial tau-min
+    (None,           None,           0,       1)])# Non-trivial tau-max
+def a_iter_indep_cond_param(request):
+    return request.param
+
+def test_iter_indep_conds(a_pcmci, a_iter_indep_cond_param):
+    """
+    Checks that the iteration for the MCI-like part of the algorithm works.
+    This tests that:
+        * The correct number of link-parent pairs are tested
+        * The parent node is not in the condition
+        * The number of conditions is less than the implied maximum
+    """
+    # Unpack the pcmci algorithm
+    pcmci, parents = a_pcmci
+    # Unpack the parameters
+    max_cx, max_cy, tau_min, tau_max = a_iter_indep_cond_param
+    # Set the selected links
+    _int_sel_links = pcmci._set_sel_links(None, tau_min, tau_max)
+    # Set the maximum condition dimension for Y and Z
+    max_conds_py = pcmci._set_max_condition_dim(max_cx, tau_max)
+    max_conds_px = pcmci._set_max_condition_dim(max_cy, tau_max)
+    # Get the parents that will be checked
+    _int_parents = pcmci._get_int_parents(parents)
+    # Get the conditions as implied by the input arguments
+    n_links = 0
+    # Calculated the expected number of links to test.
+    expect_links = 0
+    # Since a link is never checked as a parent of itself, remove all
+    # (i, tau) == (j, 0) entries from expected testing
+    for j, node_list in _int_sel_links.items():
+        for i, tau in node_list:
+            if not (i == j and  tau == 0):
+                expect_links += 1
+    # Iterate over all the returned conditions
+    for j, i, tau, Z in pcmci._iter_indep_conds(_int_parents,
+                                                pcmci.selected_variables,
+                                                _int_sel_links,
+                                                max_conds_py,
+                                                max_conds_px):
+        # Incriment the link count
+        n_links += 1
+        # Ensure the parent link is not in the conditions
+        assert (i, tau) not in Z,\
+            "Parent node must not be in the conditions"
+        # Check that the conditions length are shorter than the maximum
+        # condition length for X and Y
+        total_max_conds = max_conds_px + max_conds_py
+        assert len(Z) <= total_max_conds,\
+            "The number of conditions must be less than the sum of the"+\
+            " maximum number of conditions on X and Y"
+    # Get the total number of tested links
+    assert expect_links == n_links,\
+        "Recoved the expected number of links to test"
