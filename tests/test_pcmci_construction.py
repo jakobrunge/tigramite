@@ -287,7 +287,7 @@ def test_condition_iterator(a_pcmci, a_iter_cond_param):
                 par_conds = np.array(par_conds)
                 # Check that all condition, parent pairs are unique
                 # TODO fix this for 3.4 support
-                if LooseVersion(np.version.version) >= LooseVersion(1.13):
+                if LooseVersion(np.version.version) >= LooseVersion("1.13"):
                     assert np.unique(par_conds, axis=0).shape == par_conds.shape
         # Check that the right number of conditions are found
         assert total_n_conds == expected_total_n_conds, \
