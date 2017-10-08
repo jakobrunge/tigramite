@@ -356,7 +356,6 @@ def test_iter_indep_conds(a_pcmci, a_iter_indep_cond_param):
         "Recoved the expected number of links to test"
 
 # TEST UTILITY FUNCTIONS #######################################################
-
 def test_sort_parents(a_pcmci):
     """
     Test that the function that sorts parents returns the sorted values as
@@ -383,3 +382,42 @@ def test_sort_parents(a_pcmci):
     # Ensure the sorting works as expected
     assert sorted_parents == orig_parents[::-1],\
         "Parents must be sorted by abolute value of the test metric"
+
+@pytest.fixture(params=[
+    # Store some parameters for iterating over conditions during the MCI
+    # algorithm
+    #tau_min, tau_max, should_pass
+    (0,       3,       True),  # 0 = tau_min < tau_max, should pass
+    (2,       3,       True),  # 0 < tau_min < tau_max, should pass
+    (3,       3,       True),  # 0 < tau_min = tau_max, should pass
+    (3,       2,       False), # 0 < tau_max < tau_min, should fail
+    (-1,      3,       False), # tau_min < 0 < tau_min, should fail
+    (0,      -2,       False), # tau_max < 0 < tau_min, should fail
+    (-1,     -2,       False)])# tau_min < tau_max < 0, should fail
+def a_tau_values(request):
+    return request.param
+
+def test_check_tau_limits(a_pcmci, a_tau_values):
+    """
+    Test the tau limit checker fails correctly on:
+        * Negative values
+        * Values where tau_min > tau_max
+    And passes otherwise
+    """
+    # Unpack the pcmci instance
+    pcmci, _ = a_pcmci
+    # Unpack the tau parameters
+    tau_min, tau_max, should_pass = a_tau_values
+    err_msg = "\ntau_min : {}\ntau_max : {}".format(tau_min, tau_max)
+    # If it should pass, try it
+    if should_pass:
+        try:
+            pcmci._check_tau_limits(tau_min, tau_max)
+        # Ensure no exception is raised
+        except:
+            pytest.fail("Good tau limits failed incorrectly:"+err_msg)
+    # If it should fail, make sure it does
+    else:
+        with pytest.raises(ValueError,
+                           message="Bad tau limits should fail"+err_msg):
+            pcmci._check_tau_limits(tau_min, tau_max)
