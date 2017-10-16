@@ -1,26 +1,21 @@
+from __future__ import print_function
+from collections import Counter
 import numpy
-
-# Make Python see modules in parent package
-# import sys, os
-# sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import nose
+from nose.tools import assert_equal
 
 import tigramite
 from tigramite.pcmci import PCMCI
 from tigramite.independence_tests import ParCorr #, GPACE
 import tigramite.data_processing as pp
-# import tigramite_plotting 
-
-import nose
-import nose.tools as nt
-# import unittest
-
 
 def assert_graphs_equal(actual, expected):
-    """Check whether lists in dict are equal"""
-
+    """
+    Check whether lists in dict have the same elements.
+    This ignore the order of the elements in the list.
+    """
     for j in list(expected):
-        nt.assert_items_equal(actual[j], expected[j])
-
+        assert_equal(Counter(iter(actual[j])), Counter(iter(expected[j])))
 
 def _get_parent_graph(nodes, exclude=None):
     """Returns parents"""
@@ -102,8 +97,8 @@ class TestPCMCI():  #unittest.TestCase):
             val_matrix=results['val_matrix'],
             alpha_level=alpha_level)['parents']
 
-        # print parents
-        # print self.true_parents
+        # print(parents)
+        # print(self.true_parents)
         assert_graphs_equal(parents, self.true_parents)
 
     def test_pc_stable(self):
@@ -133,8 +128,8 @@ class TestPCMCI():  #unittest.TestCase):
                              )
 
         parents = pcmci.all_parents
-        # print parents
-        # print _get_parent_graph(true_parents)
+        # print(parents)
+        # print(_get_parent_graph(true_parents))
         assert_graphs_equal(parents, self.true_parents)
 
     def test_pc_stable_selected_links(self):
@@ -170,8 +165,8 @@ class TestPCMCI():  #unittest.TestCase):
                              )
 
         parents = pcmci.all_parents
-        # print parents
-        # print _get_parent_graph(true_parents)
+        # print(parents)
+        # print(_get_parent_graph(true_parents))
         assert_graphs_equal(parents, true_parents_here)
 
 
@@ -208,8 +203,8 @@ class TestPCMCI():  #unittest.TestCase):
                              )
 
         parents = pcmci.all_parents
-        # print parents
-        # print _get_parent_graph(true_parents)
+        # print(parents)
+        # print(_get_parent_graph(true_parents))
         assert_graphs_equal(parents, true_parents_here)
 
 
@@ -246,8 +241,8 @@ class TestPCMCI():  #unittest.TestCase):
                              )
 
         parents = pcmci.all_parents
-        # print parents
-        # print _get_parent_graph(true_parents)
+        # print(parents)
+        # print(_get_parent_graph(true_parents))
         assert_graphs_equal(parents, self.true_parents)
 
 
@@ -283,8 +278,8 @@ class TestPCMCI():  #unittest.TestCase):
                                   val_matrix=results['val_matrix'],
                                   alpha_level=alpha_level,
                                   )['parents']
-        # print parents
-        # print _get_parent_graph(true_parents)
+        # print(parents)
+        # print(_get_parent_graph(true_parents))
         assert_graphs_equal(parents, self.true_parents)
 
 
