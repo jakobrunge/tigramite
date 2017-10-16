@@ -1,0 +1,15 @@
+name: tigramite2_conda_tst
+dependencies:
+    - python=2
+    - numpy>=1.10.0
+    - scipy>=0.17.0
+    - scikit-learn>=0.18.1
+    - matplotlib>=1.5.1
+    - networkx=1.10.0
+    - cython>=0.26
+    - basemap>=1.0.0
+    - mpi4py>=2.0.0
+    - pip
+    - pip:
+        - statsmodels >= 0.6.0
+        - ace>=0.3.0
