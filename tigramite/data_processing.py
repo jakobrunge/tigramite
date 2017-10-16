@@ -3,12 +3,14 @@
 # Author: Jakob Runge <jakobrunge@posteo.de>
 #
 # License: GNU General Public License v3.0
-
-
 from __future__ import print_function
+from collections import defaultdict
+import sys
+import warnings
+import copy
 import numpy
-import sys, warnings
-
+import scipy.sparse
+import scipy.sparse.linalg
 
 # TODO force usage of pandas DF, do not support own data frame...
 class DataFrame():
@@ -39,8 +41,7 @@ class DataFrame():
         section on masking in Supplement of [1]_.
 
     """
-    def __init__(self, data,
-                 mask = None, missing_flag=None):
+    def __init__(self, data, mask=None, missing_flag=None):
 
         self.values = data
         self.mask = mask
@@ -290,12 +291,11 @@ def ordinal_patt_array(array, array_mask=None, dim=2, step=1,
     patt, patt_mask [, patt_time] : tuple of arrays
         Tuple of converted pattern array and new length
     """
-    import scipy
     from scipy.misc import factorial
 
     # Import cython code
     try:
-        import tigramite_cython_code
+        import tigramite.tigramite_cython_code as tigramite_cython_code
     except ImportError:
         raise ImportError("Could not import tigramite_cython_code, please"
                           " compile cython code first as described in Readme.")
@@ -337,9 +337,11 @@ def ordinal_patt_array(array, array_mask=None, dim=2, step=1,
     # _get_patterns_cython assumes mask=0 to be a masked value
     array_mask = (array_mask == False).astype('int32')
 
-    (patt, patt_mask, weights_array) = tigramite_cython_code._get_patterns_cython(
-        array, array_mask, patt, patt_mask, weights_array, dim, step, fac, N,
-        T)
+    (patt, patt_mask, weights_array) = \
+            tigramite_cython_code._get_patterns_cython(array, array_mask,
+                                                       patt, patt_mask,
+                                                       weights_array, dim,
+                                                       step, fac, N, T)
 
     weights_array = numpy.asarray(weights_array)
     patt = numpy.asarray(patt)
@@ -385,12 +387,113 @@ def quantile_bin_array(data, bins=6):
 
     return symb_array.astype('int32')
 
+def _generate_noise(covar_matrix, time=1000, use_inverse=False):
+    """
+    Generate a multivariate normal distribution using correlated innovations.
+
+    Parameters
+    ----------
+    covar_matrix : array
+        Covariance matrix of the random variables
+
+    time : int
+        Sample size
+
+    use_inverse : bool, optional
+        Negate the off-diagonal elements and invert the covariance matrix
+        before use
+
+    Returns
+    -------
+    noise : array
+        Random noise generated according to covar_matrix
+    """
+    # Pull out the number of nodes from the shape of the covar_matrix
+    n_nodes = covar_matrix.shape[0]
+    # Make a deep copy for use in the inverse case
+    this_covar = covar_matrix
+    # Take the negative inverse if needed
+    if use_inverse:
+        this_covar = copy.deepcopy(covar_matrix)
+        this_covar *= -1
+        this_covar[numpy.diag_indices_from(this_covar)] *= -1
+        this_covar = numpy.linalg.inv(this_covar)
+    # Return the noise distribution
+    return numpy.random.multivariate_normal(mean=numpy.zeros(n_nodes),
+                                            cov=this_covar,
+                                            size=time)
+
+def _check_stability(graph):
+    """
+    Raises an AssertionError if the input graph corresponds to a non-stationary
+    process.
+
+    Parameters
+    ----------
+    graph : array
+        Lagged connectivity matrices. Shape is (n_nodes, n_nodes, max_delay+1)
+    """
+    # Get the shape from the input graph
+    n_nodes, _, period = graph.shape
+    # Set the top section as the horizontally stacked matrix of
+    # shape (n_nodes, n_nodes * period)
+    stability_matrix = \
+        scipy.sparse.hstack([scipy.sparse.lil_matrix(graph[:, :, t_slice])
+                             for t_slice in range(period)])
+    # Extend an identity matrix of shape
+    # (n_nodes * (period - 1), n_nodes * (period - 1)) to shape
+    # (n_nodes * (period - 1), n_nodes * period) and stack the top section on
+    # top to make the stability matrix of shape
+    # (n_nodes * period, n_nodes * period)
+    stability_matrix = \
+        scipy.sparse.vstack([stability_matrix,
+                             scipy.sparse.eye(n_nodes * (period - 1),
+                                              n_nodes * period)])
+    # Check the number of dimensions to see if we can afford to use a dense
+    # matrix
+    n_eigs = stability_matrix.shape[0]
+    # TODO clarify what number to use here
+    if n_eigs <= 25:
+        # If it is relatively low in dimensionality, use a dense array
+        stability_matrix = stability_matrix.todense()
+        eigen_values, _ = scipy.linalg.eig(stability_matrix)
+    else:
+        # If it is a large dimensionality, convert to a compressed row sorted
+        # matrix, as it may be easier for the linear algebra package
+        stability_matrix = stability_matrix.tocsr()
+        # Get the eigen values of the stability matrix
+        eigen_values = scipy.sparse.linalg.eigs(stability_matrix,
+                                                k=(n_eigs - 2),
+                                                return_eigenvectors=False)
+    # Ensure they all have less than one magnitude
+    assert numpy.all(numpy.abs(eigen_values) < 1.), \
+        "Values given by time lagged connectivity matrix corresponds to a "+\
+        " non-stationary process!"
+
+def _check_initial_values(initial_values, shape):
+    """
+    Raises a AssertionError if the input initial values:
+        * Are not a numpy array OR
+        * Do not have the shape (n_nodes, max_delay+1)
+
+    Parameters
+    ----------
+    graph : array
+        Lagged connectivity matrices. Shape is (n_nodes, n_nodes, max_delay+1)
+    """
+    # Ensure it is a numpy array
+    assert isinstance(initial_values, numpy.ndarray),\
+        "User must provide initial_values as a numpy.ndarray"
+    # Check the shape is correct
+    assert initial_values.shape == shape,\
+        "Initial values must be of shape (n_nodes, max_delay+1)"+\
+        "\n current shape : " + str(initial_values.shape)+\
+        "\n desired shape : " + str(shape)
 
 def _var_network(graph,
-                 inv_inno_cov=None,
+                 add_noise=True,
                  inno_cov=None,
-                 #TODO inconsistent default values with var_process
-                 use='inno_cov',
+                 invert_inno=False,
                  T=100,
                  initial_values=None):
     """Returns a vector-autoregressive process with correlated innovations.
@@ -416,16 +519,15 @@ def _var_network(graph,
     graph : array
         Lagged connectivity matrices. Shape is (n_nodes, n_nodes, max_delay+1)
 
-    inv_inno_cov : array, optional (default: None)
-        Inverse covariance matrix of innovations.
+    add_noise : bool, optional (default: True)
+        Flag to add random noise or not
 
     inno_cov : array, optional (default: None)
         Covariance matrix of innovations.
 
-    use : str, optional (default: 'inno_cov')
-        Specifier, either 'inno_cov' or 'inv_inno_cov'.
-        For debugging, 'no_inno' can also be specified, in which case random noise
-        will be disabled.
+    invert_inno : bool, optional (defualt : False)
+        Flag to negate off-diagonal elements of inno_cov and invert it before
+        using it as the covariance matrix of innovations
 
     T : int, optional (default: 100)
         Sample size.
@@ -439,73 +541,244 @@ def _var_network(graph,
     X : array
         Array of realization.
     """
-    # TODO remove one N value..
-    N, N, P = graph.shape
-
+    n_nodes, _, period = graph.shape
+    # TODO enforce usage of time instead of bad parameter name T
+    time = T
     # Test stability
-    # TODO Sparse matrix...  this goes as (N*P)^2
-    stabmat = numpy.zeros((N * P, N * P))
-    index = 0
-    # TODO Use enum instead of index..
-    # TODO what is this
-    # TODO wrap in function
-    for i in range(0, N * P, N):
-        stabmat[:N, i:i + N] = graph[:, :, index]
-        if index < P - 1:
-            stabmat[i + N:i + 2 * N, i:i + N] = numpy.identity(N)
-        index += 1
-
-    eig = numpy.linalg.eig(stabmat)[0]
-    assert numpy.all(numpy.abs(eig) < 1.), "Nonstationary process!"
+    _check_stability(graph)
 
     # Generate the returned data
-    X = numpy.random.randn(N, T)
+    data = numpy.random.randn(n_nodes, time)
     # Load the initial values
     if initial_values is not None:
-        # Ensure it is a numpy array
-        assert isinstance(initial_values, numpy.ndarray),\
-            "User must provide initial_values as a numpy.ndarray"
-        # Check the shape is correct
-        print(X[:, :P].shape)
-        print(initial_values.shape)
-        assert initial_values.shape == X[:, :P].shape,\
-            "Initial values must be of shape (n_nodes, max_delay+1)"
+        # Check the shape of the initial values
+        _check_initial_values(initial_values, data[:, :period].shape)
         # Input the initial values
-        X[:, :P] = initial_values
+        data[:, :period] = initial_values
 
-    if use == 'inv_inno_cov' and inv_inno_cov is not None:
-        #TODO wrap in function
-        mult = -numpy.ones((N, N))
-        mult[numpy.diag_indices_from(mult)] = 1
-        inv_inno_cov *= mult
-        noise = numpy.random.multivariate_normal(
-            mean=numpy.zeros(N),
-            cov=numpy.linalg.inv(inv_inno_cov),
-            size=T)
-    elif use == 'inno_cov' and inno_cov is not None:
-        noise = numpy.random.multivariate_normal(
-            mean=numpy.zeros(N), cov=inno_cov, size=T)
-    elif use == 'no_inno':
-        noise = numpy.zeros((T, N))
-    else:
-        noise = numpy.random.randn(T, N)
+    # Check if we are adding noise
+    noise = None
+    if add_noise:
+        # Use inno_cov if it was provided
+        if inno_cov is not None:
+            noise = _generate_noise(inno_cov,
+                                    time=time,
+                                    use_inverse=invert_inno)
+        # Otherwise just use uncorrelated random noise
+        else:
+            noise = numpy.random.randn(time, n_nodes)
 
-    # TODO what is this
     # TODO further numpy usage may simplify this
-    for t in range(P, T):
-        Xpast = numpy.repeat(
-            X[:, t - P:t][:, ::-1].reshape(1, N, P), N, axis=0)
-        X[:, t] = (Xpast * graph).sum(axis=2).sum(axis=1) + noise[t]
+    for a_time in range(period, time):
+        data_past = numpy.repeat(
+            data[:, a_time-period:a_time][:, ::-1].reshape(1, n_nodes, period),
+            n_nodes, axis=0)
+        data[:, a_time] = (data_past*graph).sum(axis=2).sum(axis=1)
+        if add_noise:
+            data[:, a_time] += noise[a_time]
 
-    return X.transpose()
+    return data.transpose()
 
+def _iter_coeffs(parents_neighbors_coeffs):
+    """
+    Iterator through the current parents_neighbors_coeffs structure.  Mainly to
+    save repeated code and make it easier to change this structure.
+
+    Parameters
+    ----------
+    parents_neighbors_coeffs : dict
+        Dictionary of format:
+        {..., j:[((var1, lag1), coef1), ((var2, lag2), coef2), ...], ...} for
+        all variables where vars must be in [0..N-1] and lags <= 0 with number
+        of variables N.
+
+    Yields
+    -------
+    (node_id, parent_id, time_lag, coeff) : tuple
+        Tuple defining the relationship between nodes across time
+    """
+    # Iterate through all defined nodes
+    for node_id in list(parents_neighbors_coeffs):
+        # Iterate over parent nodes and unpack node and coeff
+        for (parent_id, time_lag), coeff in parents_neighbors_coeffs[node_id]:
+            # Yield the entry
+            yield node_id, parent_id, time_lag, coeff
+
+def _check_parent_neighbor(parents_neighbors_coeffs):
+    """
+    Checks to insure input parent-neighbor connectivity input is sane.  This
+    means that:
+        * all time lags are non-positive
+        * all parent nodes are included as nodes themselves
+        * all node indexing is contiguous
+        * all node indexing starts from zero
+    Raises a ValueError if any one of these conditions are not met.
+
+    Parameters
+    ----------
+    parents_neighbors_coeffs : dict
+        Dictionary of format:
+        {..., j:[((var1, lag1), coef1), ((var2, lag2), coef2), ...], ...} for
+        all variables where vars must be in [0..N-1] and lags <= 0 with number
+        of variables N.
+    """
+    # Initialize some lists for checking later
+    all_nodes = set()
+    all_parents = set()
+    # Iterate through all nodes
+    for j, i, tau, _ in _iter_coeffs(parents_neighbors_coeffs):
+        # Check all time lags are equal to or less than zero
+        if tau > 0:
+            raise ValueError("Lag between parent {} and node {}".format(i, j)+\
+                             " is {} > 0, must be <= 0!".format(tau))
+        # Cache all node ids to ensure they are contiguous
+        all_nodes.add(j)
+        # Cache all parent ids to ensure they are mentioned as node ids
+        all_parents.add(i)
+    # Check that all nodes are contiguous from zero
+    all_nodes_list = sorted(list(all_nodes))
+    if all_nodes_list != list(range(len(all_nodes_list))):
+        raise ValueError("Node IDs in input dictionary must be contiguous"+\
+                         " and start from zero!\n"+\
+                         " Found IDs : [" +\
+                         ",".join(map(str, all_nodes_list))+ "]")
+    # Check that all parent nodes are mentioned as a node ID
+    if not all_parents.issubset(all_nodes):
+        missing_nodes = sorted(list(all_parents - all_nodes))
+        all_parents_list = sorted(list(all_parents))
+        raise ValueError("Parent IDs in input dictionary must also be in set"+\
+                         " of node IDs."+\
+                         "\n Parent IDs "+" ".join(map(str, all_parents_list))+\
+                         "\n Node IDs "+" ".join(map(str, all_nodes_list)) +\
+                         "\n Missing IDs " + " ".join(map(str, missing_nodes)))
+
+def _find_max_time_lag_and_node_id(parents_neighbors_coeffs):
+    """
+    Function to find the maximum time lag in the parent-neighbors-coefficients
+    object, as well as the largest node ID
+
+    Parameters
+    ----------
+    parents_neighbors_coeffs : dict
+        Dictionary of format:
+        {..., j:[((var1, lag1), coef1), ((var2, lag2), coef2), ...], ...} for
+        all variables where vars must be in [0..N-1] and lags <= 0 with number
+        of variables N.
+
+    Returns
+    -------
+    (max_time_lag, max_node_id) : tuple
+        Tuple of the maximum time lag and maximum node ID
+    """
+    # Default maximum lag and node ID
+    max_time_lag = 0
+    max_node_id = 0
+    # Iterate through the keys in parents_neighbors_coeffs
+    for j, _, tau, _ in _iter_coeffs(parents_neighbors_coeffs):
+        # Find max lag time
+        max_time_lag = max(max_time_lag, abs(tau))
+        # Find the max node ID
+        max_node_id = max(max_node_id, j)
+    # Return these values
+    return max_time_lag, max_node_id
+
+def _get_true_parent_neighbor_dict(parents_neighbors_coeffs):
+    """
+    Function to return the dictionary of true parent neighbor causal
+    connections in time.
+
+    Parameters
+    ----------
+    parents_neighbors_coeffs : dict
+        Dictionary of format:
+        {..., j:[((var1, lag1), coef1), ((var2, lag2), coef2), ...], ...} for
+        all variables where vars must be in [0..N-1] and lags <= 0 with number
+        of variables N.
+
+    Returns
+    -------
+    true_parent_neighbor : dict
+        Dictionary of lists of tuples.  The dictionary is keyed by node ID, the
+        list stores the tuple values (parent_node_id, time_lag)
+    """
+    # Initialize the returned dictionary of lists
+    true_parents_neighbors = defaultdict(list)
+    for j, i, tau, coeff in _iter_coeffs(parents_neighbors_coeffs):
+        # Add parent node id and lag if non-zero coeff
+        if coeff != 0.:
+            true_parents_neighbors[j].append((i, tau))
+    # Return the true relations
+    return true_parents_neighbors
+
+def _get_covariance_matrix(parents_neighbors_coeffs):
+    """
+    Determines the covariance matrix for correlated innovations
+
+    Parameters
+    ----------
+    parents_neighbors_coeffs : dict
+        Dictionary of format:
+        {..., j:[((var1, lag1), coef1), ((var2, lag2), coef2), ...], ...} for
+        all variables where vars must be in [0..N-1] and lags <= 0 with number
+        of variables N.
+
+    Returns
+    -------
+    covar_matrix : numpy array
+        Covariance matrix implied by the parents_neighbors_coeffs.  Used to
+        generate correlated innovations.
+    """
+    # Get the total number of nodes
+    _, max_node_id = \
+            _find_max_time_lag_and_node_id(parents_neighbors_coeffs)
+    n_nodes = max_node_id + 1
+    # Initialize the covariance matrix
+    covar_matrix = numpy.identity(n_nodes)
+    # Iterate through all the node connections
+    for j, i, tau, coeff in _iter_coeffs(parents_neighbors_coeffs):
+        # Add to covar_matrix if node connection is instantaneous
+        if tau == 0:
+            # TODO should there be a j != i catch?
+            covar_matrix[j, i] = covar_matrix[i, j] = coeff
+    return covar_matrix
+
+def _get_lag_connect_matrix(parents_neighbors_coeffs):
+    """
+    Generates the lagged connectivity matrix from a parent-neighbor
+    connectivity dictionary.  Used to generate the input for _var_network
+
+    Parameters
+    ----------
+    parents_neighbors_coeffs : dict
+        Dictionary of format:
+        {..., j:[((var1, lag1), coef1), ((var2, lag2), coef2), ...], ...} for
+        all variables where vars must be in [0..N-1] and lags <= 0 with number
+        of variables N.
+
+    Returns
+    -------
+    connect_matrix : numpy array
+        Lagged connectivity matrix. Shape is (n_nodes, n_nodes, max_delay+1)
+    """
+    # Get the total number of nodes and time lag
+    max_time_lag, max_node_id = \
+            _find_max_time_lag_and_node_id(parents_neighbors_coeffs)
+    n_nodes = max_node_id + 1
+    n_times = max_time_lag + 1
+    # Initialize full time graph
+    connect_matrix = numpy.zeros((n_nodes, n_nodes, n_times))
+    for j, i, tau, coeff in _iter_coeffs(parents_neighbors_coeffs):
+        # If there is a non-zero time lag, add the connection to the matrix
+        if tau != 0:
+            connect_matrix[j, i, -(tau+1)] = coeff
+    # Return the connectivity matrix
+    return connect_matrix
 
 def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
                 verbosity=0, initial_values=None):
-    #TODO docstring looks wrong about dict input format
-    #TODO docstring is wrong about the output, optional output can be used
     #TODO j: [var1, lag1, coeff] is a better format
     #TODO sparse array of j->[var1, lag1, coeff]
+    #TODO normal array of j->[var1, lag1, coeff], forcing j to be contiguous from 0
     """Returns a vector-autoregressive process with correlated innovations.
 
     Wrapper around var_network with possibly more user-friendly input options.
@@ -513,16 +786,18 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
     Parameters
     ----------
     parents_neighbors_coeffs : dict
-
-        Dictionary of format {..., j:[(var1, lag1), (var2, lag2), ...], ...} for
-        all variables where vars must be in [0..N-1] and lags <= 0 with number
-        of variables N. If lag=0, a nonzero value in the covariance matrix (or
-        its inverse) is implied. These should be the same for (i, j) and (j, i).
+        Dictionary of format:
+            {..., j:[((var1, lag1), coef1), ((var2, lag2), coef2), ...], ...}
+        for all variables where vars must be in [0..N-1] and lags <= 0 with
+        number of variables N. If lag=0, a nonzero value in the covariance
+        matrix (or its inverse) is implied. These should be the same for (i, j)
+        and (j, i).
 
     use : str, optional (default: 'inv_inno_cov')
-        Specifier, either 'inno_cov' or 'inv_inno_cov'. 
-        For debugging, 'no_inno' can also be specified, in which case random noise
-        will be disabled.
+        Specifier, either 'inno_cov' or 'inv_inno_cov'.
+        Any other specifier will result in non-correlated noise.
+        For debugging, 'no_noise' can also be specified, in which case random
+        noise will be disabled.
 
     T : int, optional (default: 1000)
         Sample size.
@@ -535,67 +810,51 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
 
     Returns
     -------
-    X : array-like
-        Array of realization.
+    data : array-like
+        Data generated from this process
+    true_parent_neighbor : dict
+        Dictionary of lists of tuples.  The dictionary is keyed by node ID, the
+        list stores the tuple values (parent_node_id, time_lag)
     """
-    max_lag = 0
-    # TODO use dict.values
-    # Iterate through the keys in parents_neighbors_coeffs
-    for j in list(parents_neighbors_coeffs):
-        # Extract lag time from each node
-        # TODO remove unused coeff
-        for node, coeff in parents_neighbors_coeffs[j]:
-            i, tau = node[0], -node[1]
-            # TODO check lags are negative
-            # assert (node[1] <= 0), "..."
-            # Find max lag time
-            max_lag = max(max_lag, abs(tau))
-    # Find largest node id
-    N = max(list(parents_neighbors_coeffs)) + 1
-
-    # Initialize full time graph
-    # TODO scipy sparse could be useful here
-    graph = numpy.zeros((N, N, max_lag + 1))
-    # TODO use numpy identity
-    # TODO what is innos
-    innos = numpy.zeros((N, N))
-    innos[range(N), range(N)] = 1.
-    true_parents_neighbors = {}
-    # print graph.shape
-    for j in list(parents_neighbors_coeffs):
-        # Initialize the list of true parents for each node
-        true_parents_neighbors[j] = []
-        # Iterate over parent nodes and unpack node and coeff
-        for node, coeff in parents_neighbors_coeffs[j]:
-            i, tau = node[0], -node[1]
-            # Add parent node id and lag if non-zero coeff
-            if coeff != 0.:
-                true_parents_neighbors[j].append((i, -tau))
-            # Add to innos  if zero lag
-            if tau == 0:
-                innos[j, i] = innos[i, j] = coeff
-            # Otherwise add to graph
-            else:
-                graph[j, i, tau - 1] = coeff
-
-    if verbosity > 0:
-        print("VAR graph =\n%s" % str(graph))
-        if use == 'inno_cov':
+    # Check the input parents_neighbors_coeffs dictionary for sanity
+    _check_parent_neighbor(parents_neighbors_coeffs)
+    # Generate the true parent neighbors graph
+    true_parents_neighbors = \
+            _get_true_parent_neighbor_dict(parents_neighbors_coeffs)
+    # Generate the correlated innovations
+    innos = _get_covariance_matrix(parents_neighbors_coeffs)
+    # Generate the lagged connectivity matrix for _var_network
+    connect_matrix = _get_lag_connect_matrix(parents_neighbors_coeffs)
+    # Default values as per 'inno_cov'
+    add_noise = True
+    invert_inno = False
+    # Use the correlated innovations
+    # TODO tell the user if uncorrelated noise will be used
+    if use == 'inno_cov':
+        if verbosity > 0:
             print("\nInnovation Cov =\n%s" % str(innos))
-        elif use == 'inv_inno_cov':
+    # Use the inverted correlated innovations
+    elif use == 'inv_inno_cov':
+        invert_inno = True
+        if verbosity > 0:
             print("\nInverse Innovation Cov =\n%s" % str(innos))
-        elif use == 'no_inno':
-            print("\nNo random noise will be applied!\n")
-
-    data = _var_network(graph=graph,
-                        inv_inno_cov=innos,
+    # Do not use any noise
+    elif use == 'no_noise':
+        add_noise = False
+        if verbosity > 0:
+            print("\nInverse Innovation Cov =\n%s" % str(innos))
+    # Use decorrelated noise
+    else:
+        innos = None
+    # Generate the data using _var_network
+    data = _var_network(graph=connect_matrix,
+                        add_noise=add_noise,
                         inno_cov=innos,
-                        use=use,
-                        initial_values=initial_values,
-                        T=T)
-
+                        invert_inno=invert_inno,
+                        T=T,
+                        initial_values=initial_values)
+    # Return the data
     return data, true_parents_neighbors
-
 
 class _Logger(object):
     """Class to append print output to a string which can be saved"""
