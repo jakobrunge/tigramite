@@ -5,10 +5,12 @@
 # License: GNU General Public License v3.0
 
 
+from __future__ import print_function
 import numpy
 import sys, warnings
 
 
+# TODO force usage of pandas DF, do not support own data frame...
 class DataFrame():
     """Data object containing time series array and optional mask.
 
@@ -26,7 +28,7 @@ class DataFrame():
     ----------
     data : array-like
         Numpy array of shape (observations T, variables N)
-    
+
     mask : array-like, optional (default: None)
         Optional mask array, must be of same shape as data
 
@@ -58,8 +60,6 @@ class DataFrame():
             if self.mask.shape != self.values.shape:
                 raise ValueError("Mask array must of same shape as data array")
 
-
-
 def lowhighpass_filter(data, cutperiod, pass_periods='low'):
     """Butterworth low- or high pass filter.
 
@@ -71,7 +71,7 @@ def lowhighpass_filter(data, cutperiod, pass_periods='low'):
     data : array
         Data array of shape (time, variables).
 
-    cutperiod : int 
+    cutperiod : int
         Period of cutoff.
 
     pass_periods : str, optional (default: 'low')
@@ -122,7 +122,7 @@ def smooth(data, smooth_width, kernel='gaussian',
 
     kernel : str, optional (default: 'gaussian')
         Smoothing kernel, 'gaussian' or 'heaviside' for a running mean.
-        
+
     mask : bool array, optional (default: None)
         Data mask where True labels masked samples.
 
@@ -131,7 +131,7 @@ def smooth(data, smooth_width, kernel='gaussian',
 
     Returns
     -------
-    data : array-like    
+    data : array-like
         Smoothed/residual data.
     """
 
@@ -251,7 +251,7 @@ def time_bin_with_mask(data, time_bin_length, sample_selector=None):
     return (bindata.squeeze(), T)
 
 
-def ordinal_patt_array(array, array_mask=None, dim=2, step=1, 
+def ordinal_patt_array(array, array_mask=None, dim=2, step=1,
                         weights=False, verbosity=0):
     """Returns symbolified array of ordinal patterns.
 
@@ -281,7 +281,7 @@ def ordinal_patt_array(array, array_mask=None, dim=2, step=1,
 
     weights : bool, optional (default: False)
         Whether to return array of variances of embedding vectors as weights.
-        
+
     verbosity : int, optional (default: 0)
         Level of verbosity.
 
@@ -330,7 +330,7 @@ def ordinal_patt_array(array, array_mask=None, dim=2, step=1,
 
     patt_mask = numpy.zeros((patt_time, N), dtype='int32')
 
-    # Precompute factorial for c-code... patterns of dimension 
+    # Precompute factorial for c-code... patterns of dimension
     # larger than 10 are not supported
     fac = factorial(numpy.arange(10)).astype('int32')
 
@@ -338,7 +338,7 @@ def ordinal_patt_array(array, array_mask=None, dim=2, step=1,
     array_mask = (array_mask == False).astype('int32')
 
     (patt, patt_mask, weights_array) = tigramite_cython_code._get_patterns_cython(
-        array, array_mask, patt, patt_mask, weights_array, dim, step, fac, N, 
+        array, array_mask, patt, patt_mask, weights_array, dim, step, fac, N,
         T)
 
     weights_array = numpy.asarray(weights_array)
@@ -387,8 +387,12 @@ def quantile_bin_array(data, bins=6):
 
 
 def _var_network(graph,
-                inv_inno_cov=None, inno_cov=None, use='inno_cov',
-                T=100):
+                 inv_inno_cov=None,
+                 inno_cov=None,
+                 #TODO inconsistent default values with var_process
+                 use='inno_cov',
+                 T=100,
+                 initial_values=None):
     """Returns a vector-autoregressive process with correlated innovations.
 
     Useful for testing.
@@ -404,12 +408,13 @@ def _var_network(graph,
 
         with inv_inno_cov being the negative (except for diagonal) inverse
         covariance matrix of (eps_1(t), eps_2(t)) OR inno_cov being
-        the covariance.
+        the covariance. Initial values can also be provided.
+
 
     Parameters
     ----------
     graph : array
-        Lagged connectivity matrices.
+        Lagged connectivity matrices. Shape is (n_nodes, n_nodes, max_delay+1)
 
     inv_inno_cov : array, optional (default: None)
         Inverse covariance matrix of innovations.
@@ -419,33 +424,57 @@ def _var_network(graph,
 
     use : str, optional (default: 'inno_cov')
         Specifier, either 'inno_cov' or 'inv_inno_cov'.
+        For debugging, 'no_inno' can also be specified, in which case random noise
+        will be disabled.
 
     T : int, optional (default: 100)
         Sample size.
+
+    initial_values : array, optional (defult: None)
+        Initial values for each node. Shape is (n_nodes, max_delay+1), i.e. must
+        be of shape (graph.shape[1], graph.shape[2]).
 
     Returns
     -------
     X : array
         Array of realization.
     """
+    # TODO remove one N value..
     N, N, P = graph.shape
 
     # Test stability
+    # TODO Sparse matrix...  this goes as (N*P)^2
     stabmat = numpy.zeros((N * P, N * P))
     index = 0
+    # TODO Use enum instead of index..
+    # TODO what is this
+    # TODO wrap in function
     for i in range(0, N * P, N):
         stabmat[:N, i:i + N] = graph[:, :, index]
         if index < P - 1:
             stabmat[i + N:i + 2 * N, i:i + N] = numpy.identity(N)
-
         index += 1
 
     eig = numpy.linalg.eig(stabmat)[0]
     assert numpy.all(numpy.abs(eig) < 1.), "Nonstationary process!"
 
+    # Generate the returned data
     X = numpy.random.randn(N, T)
+    # Load the initial values
+    if initial_values is not None:
+        # Ensure it is a numpy array
+        assert isinstance(initial_values, numpy.ndarray),\
+            "User must provide initial_values as a numpy.ndarray"
+        # Check the shape is correct
+        print(X[:, :P].shape)
+        print(initial_values.shape)
+        assert initial_values.shape == X[:, :P].shape,\
+            "Initial values must be of shape (n_nodes, max_delay+1)"
+        # Input the initial values
+        X[:, :P] = initial_values
 
     if use == 'inv_inno_cov' and inv_inno_cov is not None:
+        #TODO wrap in function
         mult = -numpy.ones((N, N))
         mult[numpy.diag_indices_from(mult)] = 1
         inv_inno_cov *= mult
@@ -456,9 +485,13 @@ def _var_network(graph,
     elif use == 'inno_cov' and inno_cov is not None:
         noise = numpy.random.multivariate_normal(
             mean=numpy.zeros(N), cov=inno_cov, size=T)
+    elif use == 'no_inno':
+        noise = numpy.zeros((T, N))
     else:
         noise = numpy.random.randn(T, N)
 
+    # TODO what is this
+    # TODO further numpy usage may simplify this
     for t in range(P, T):
         Xpast = numpy.repeat(
             X[:, t - P:t][:, ::-1].reshape(1, N, P), N, axis=0)
@@ -468,28 +501,37 @@ def _var_network(graph,
 
 
 def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
-                verbosity=0):
+                verbosity=0, initial_values=None):
+    #TODO docstring looks wrong about dict input format
+    #TODO docstring is wrong about the output, optional output can be used
+    #TODO j: [var1, lag1, coeff] is a better format
+    #TODO sparse array of j->[var1, lag1, coeff]
     """Returns a vector-autoregressive process with correlated innovations.
 
     Wrapper around var_network with possibly more user-friendly input options.
 
     Parameters
     ----------
-    parents_neighbors_coeffs : dict 
+    parents_neighbors_coeffs : dict
 
         Dictionary of format {..., j:[(var1, lag1), (var2, lag2), ...], ...} for
         all variables where vars must be in [0..N-1] and lags <= 0 with number
         of variables N. If lag=0, a nonzero value in the covariance matrix (or
         its inverse) is implied. These should be the same for (i, j) and (j, i).
 
-    use : str, optional (default: 'inv_inno_cov') 
-        Specifier, either 'inno_cov' or 'inv_inno_cov'.
+    use : str, optional (default: 'inv_inno_cov')
+        Specifier, either 'inno_cov' or 'inv_inno_cov'. 
+        For debugging, 'no_inno' can also be specified, in which case random noise
+        will be disabled.
 
-    T : int, optional (default: 1000) 
+    T : int, optional (default: 1000)
         Sample size.
 
     verbosity : int, optional (default: 0)
         Level of verbosity.
+
+    initial_values : array, optional (default: None)
+        Initial values for each node. Shape must be (N, max_delay+1)
 
     Returns
     -------
@@ -497,25 +539,42 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
         Array of realization.
     """
     max_lag = 0
+    # TODO use dict.values
+    # Iterate through the keys in parents_neighbors_coeffs
     for j in list(parents_neighbors_coeffs):
+        # Extract lag time from each node
+        # TODO remove unused coeff
         for node, coeff in parents_neighbors_coeffs[j]:
             i, tau = node[0], -node[1]
+            # TODO check lags are negative
+            # assert (node[1] <= 0), "..."
+            # Find max lag time
             max_lag = max(max_lag, abs(tau))
+    # Find largest node id
     N = max(list(parents_neighbors_coeffs)) + 1
-    graph = numpy.zeros((N, N, max_lag + 1))
 
+    # Initialize full time graph
+    # TODO scipy sparse could be useful here
+    graph = numpy.zeros((N, N, max_lag + 1))
+    # TODO use numpy identity
+    # TODO what is innos
     innos = numpy.zeros((N, N))
     innos[range(N), range(N)] = 1.
     true_parents_neighbors = {}
     # print graph.shape
     for j in list(parents_neighbors_coeffs):
+        # Initialize the list of true parents for each node
         true_parents_neighbors[j] = []
+        # Iterate over parent nodes and unpack node and coeff
         for node, coeff in parents_neighbors_coeffs[j]:
             i, tau = node[0], -node[1]
+            # Add parent node id and lag if non-zero coeff
             if coeff != 0.:
                 true_parents_neighbors[j].append((i, -tau))
+            # Add to innos  if zero lag
             if tau == 0:
                 innos[j, i] = innos[i, j] = coeff
+            # Otherwise add to graph
             else:
                 graph[j, i, tau - 1] = coeff
 
@@ -525,10 +584,15 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
             print("\nInnovation Cov =\n%s" % str(innos))
         elif use == 'inv_inno_cov':
             print("\nInverse Innovation Cov =\n%s" % str(innos))
+        elif use == 'no_inno':
+            print("\nNo random noise will be applied!\n")
 
-    data = _var_network(graph=graph, inv_inno_cov=innos,
-                       inno_cov=innos,
-                       use=use, T=T)
+    data = _var_network(graph=graph,
+                        inv_inno_cov=innos,
+                        inno_cov=innos,
+                        use=use,
+                        initial_values=initial_values,
+                        T=T)
 
     return data, true_parents_neighbors
 
