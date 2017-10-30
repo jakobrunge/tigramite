@@ -3,10 +3,10 @@ Tests for pcmci.py, including tests for run_pc_stable, run_mci, and run_pcmci.
 """
 from __future__ import print_function
 from collections import defaultdict
+from distutils.version import LooseVersion
 import numpy as np
 import pytest
 from scipy.misc import comb
-from distutils.version import LooseVersion
 
 from tigramite.pcmci import PCMCI
 from tigramite.independence_tests import ParCorr #, GPACE
@@ -459,10 +459,51 @@ def test_sig_parents(a_pcmci):
     """
     # Unpack the pcmci instance
     pcmci, _ = a_pcmci
+    # Define the dimensionality
+    dim = N_NODES
     # Build a p_matrix for 10 x 10 x 10
-    p_matrix = np.arange(10*10*10).reshape(10, 10, -1) 
+    p_matrix = np.arange(dim*dim*dim).reshape(dim, dim, dim) + 1
     # Build a val matrix as the negative version of this matrix
     val_matrix = -p_matrix
+    # Define the alpha value
+    alpha = dim*dim*dim/2
     # Get the significant parents
-    parents, ret_q_matrix = pcmci.return_significant_parents(p_matrix, 
-                                                             val_matrix, 10)
+    sig_parents = pcmci.return_significant_parents(p_matrix,
+                                                   val_matrix,
+                                                   alpha_level=alpha)
+    # Ensure the link matrix has the correct sum
+    link_matrix = sig_parents['link_matrix']
+    num_links = np.count_nonzero(link_matrix)
+    assert num_links == alpha,\
+        "The correct number of significant parents are found in the returned"+\
+        " link matrix"
+    # Ensure all the parents are in the second half of the returned p_matrix
+    num_links = np.count_nonzero(link_matrix[:5, :, :])
+    assert num_links == alpha,\
+        "The correct links from significant parents are found in the returned"+\
+        " link matrix"
+    # Ensure the correct number of links are returned in the dictionary of
+    # parents
+    parents_dict = sig_parents['parents']
+    all_links = [lnk for links in parents_dict.values() for lnk in links]
+    assert len(all_links) == (dim*dim*(dim - 1))/2.,\
+            "The correct number of links are returned in the dictionary of"+\
+            " parents"
+    # Ensure the correct links are returned:
+    # Expect j to cycle through [0, dim]
+    expect_j = set(range(dim))
+    # Expect i to cycle through [0, dim/2]
+    expect_i = set(range(dim/2))
+    # Expect tau to cycle through [-3, -1]
+    expect_t = set(range(-dim + 1, 0))
+    for key, links in parents_dict.items():
+        # Ensure the returned keys are correct
+        assert key in expect_j, "Incorrect node/key found in returned parent"+\
+                " dictionary"
+        for (i, tau) in links:
+            # Ensure the returned node values are correct
+            assert i in expect_i, "Incorrect parent found in returned parent"+\
+                    " dictionary"
+            # Ensure the returned tau values are correct
+            assert tau in expect_t, "Incorrect tau found in returned parent"+\
+                    " dictionary"
