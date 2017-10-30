@@ -9,14 +9,12 @@ import itertools
 from collections import defaultdict
 from copy import deepcopy
 import numpy as np
-import warnings
 
 try:
     from statsmodels.sandbox.stats import multicomp
 except:
     print("Could not import statsmodels, p-value corrections not available.")
 
-# TODO check pc_alpha default docstrings
 def _create_nested_dictionary(depth=0, lowest_type=dict):
     """Create a series of nested dictionaries to a maximum depth.  The first
     depth - 1 nested dictionaries are defaultdicts, the last is a normal
@@ -398,13 +396,10 @@ class PCMCI():
             print("\n    Sorting parents in decreasing order with "
                   "\n    weight(i-tau->j) = min_{iterations} |I_{ij}(tau)| ")
         # Get the absoute value for all the test statistics
-        # TODO aren't these already absolute valued?
         abs_values = {k : np.abs(parents_vals[k]) for k in list(parents_vals)}
         return sorted(abs_values, key=abs_values.get, reverse=True)
 
     def _dict_to_matrix(self, val_dict, tau_max, n_vars):
-        # TODO use _get_lagged_connect_matrix instead
-        # TODO _get_lagged_connect_matrix *almost* works, but not quite..
         """Helper function to convert dictionary to matrix formart.
 
         Parameters
@@ -806,7 +801,7 @@ class PCMCI():
         save_iterations : bool, default: False
             Whether to save iteration step results such as conditions used.
 
-        pc_alpha : float or list of floats, default: 0.3
+        pc_alpha : float or list of floats, default: 0.2
             Significance level in algorithm. If a list or None is passed, the
             pc_alpha level is optimized for every variable across the given
             pc_alpha values using the score computed in
@@ -1361,7 +1356,6 @@ class PCMCI():
         """
         # Initialize the return value
         all_parents = dict()
-        # TODO put good_link before the for loop, open loop over good links
         for j in self.selected_variables:
             # Get the good links
             good_links = np.argwhere(pq_matrix[:, j, 1:] <= alpha_level)
@@ -1487,7 +1481,7 @@ class PCMCI():
         save_iterations : bool, optional (default: False)
           Whether to save iteration step results such as conditions used.
 
-        pc_alpha : float, optional (default: 0.1)
+        pc_alpha : float, optional (default: 0.05)
           Significance level in algorithm.
 
         max_conds_dim : int, optional (default: None)
