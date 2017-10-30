@@ -1396,8 +1396,6 @@ class PCMCI():
         if q_matrix is not None:
             sig_links = (q_matrix <= alpha_level)
         else:
-            print("P_MATRIX ", p_matrix)
-            print("ALPHA_LEVEL", alpha_level)
             sig_links = (p_matrix <= alpha_level)
         print("\n## Significant links at alpha = %s:" % alpha_level)
         for j in self.selected_variables:
