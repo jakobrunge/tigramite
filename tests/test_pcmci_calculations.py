@@ -79,6 +79,13 @@ def a_chain(auto_corr, coeff, length=3):
         return_links[lnk] = [((lnk, -1), auto_corr), ((lnk-1, -1), coeff)]
     return return_links
 
+# TODO implement common_driver: return two variables commonly driven by N common
+# drivers which are random noise, autocorrelation as parameter
+# TODO implement independent drivers, autocorrelated noise
+# TODO check common_driver, independent driver cases for current variable sets
+# TODO implement USER_INPUT dictionary,
+# USER_INPUT = dict()
+
 # TEST DATA GENERATION #########################################################
 @pytest.fixture(params=[
     # Generate a test data sample
