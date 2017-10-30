@@ -1557,6 +1557,12 @@ class PCMCI():
                        'conf_matrix': conf_matrix}
         # Print the information
         if self.verbosity > 0:
-            self.print_results(return_dict, alpha_level=pc_alpha)
+            self.print_significant_links(return_dict['p_matrix'],
+                                         return_dict['val_matrix'],
+                                         conf_matrix=return_dict['conf_matrix'],
+                                         q_matrix=return_dict['q_matrix'],
+                                         alpha_level=pc_alpha)
+        #if self.verbosity > 0:
+        #    self.print_results(return_dict, alpha_level=pc_alpha)
         # Return the dictionary
         return return_dict
