@@ -52,9 +52,9 @@ def _get_parents_from_results(pcmci, results, alpha_level):
     alpha_level
     """
     significant_parents = \
-        pcmci._return_significant_parents(pq_matrix=results['p_matrix'],
-                                          val_matrix=results['val_matrix'],
-                                          alpha_level=alpha_level)
+        pcmci.return_significant_parents(pq_matrix=results['p_matrix'],
+                                         val_matrix=results['val_matrix'],
+                                         alpha_level=alpha_level)
     return significant_parents['parents']
 
 # TEST LINK GENERATION #########################################################
