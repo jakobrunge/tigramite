@@ -221,8 +221,8 @@ def test_select_links_errors(a_pcmci):
     # Store some parameters for setting maximum conditions
     #max_cond_dim, tau_min, tau_max
     (None,         1,       3),
-    (10,           1,       3)])
-    #(1,            2,       4)]) TODO address this failing case
+    (10,           1,       3),
+    (1,            2,       4)]) TODO address this failing case
 def a_iter_cond_param(request):
     return request.param
 
@@ -240,11 +240,7 @@ def test_condition_iterator(a_pcmci, a_iter_cond_param):
     # Get all possible links
     sel_links = pcmci._set_sel_links(None, tau_min, tau_max)
     # Loop over all possible condition dimentions
-    # TODO ask jakob about max_conds_dim in source and maybe change this
-    # limit to max_cond_dim + 1
-    max_cond_dim = pcmci._set_max_condition_dim(None, tau_max)
-    if max_cond_dim == pcmci._set_max_condition_dim(max_cond_dim, tau_max):
-        max_cond_dim -= 1
+    max_cond_dim = pcmci._set_max_condition_dim(None, tau_min, tau_max)
     # Loop over all nodes
     for j in range(pcmci.N):
         # Initialise the list of conditions for this node
@@ -253,7 +249,7 @@ def test_condition_iterator(a_pcmci, a_iter_cond_param):
         # Parents for this node
         parents = sel_links[j]
         # Loop over all possible dimentionality of conditions
-        for cond_dim in range(max_cond_dim + 1):
+        for cond_dim in range(max_cond_dim):
             # Iterate through all possible pairs (that have not converged yet)
             for par in parents:
                 # Number of conditions for this dimension
@@ -320,8 +316,8 @@ def test_iter_indep_conds(a_pcmci, a_iter_indep_cond_param):
     # Set the selected links
     _int_sel_links = pcmci._set_sel_links(None, tau_min, tau_max)
     # Set the maximum condition dimension for Y and Z
-    max_conds_py = pcmci._set_max_condition_dim(max_cx, tau_max)
-    max_conds_px = pcmci._set_max_condition_dim(max_cy, tau_max)
+    max_conds_py = pcmci._set_max_condition_dim(max_cx, tau_min, tau_max)
+    max_conds_px = pcmci._set_max_condition_dim(max_cy, tau_min, tau_max)
     # Get the parents that will be checked
     _int_parents = pcmci._get_int_parents(parents)
     # Get the conditions as implied by the input arguments
@@ -424,7 +420,7 @@ def test_check_tau_limits(a_pcmci, a_tau_values):
 
 @pytest.fixture(params=[
     # Store some parameters for correcting the pvalues
-    #fdr_method, excl,  slice_N,        slice_T,     message
+    #fdr_method, excl,  slice_n,        slice_t,     message
     ('fdr_bh',   False, range(N_NODES), 0,           "default"),
     ('fdr_bh',   True,  slice(None),    0,           "exclude contemporaneous"),
     ('none',     True,  slice(None),    slice(None), "none")])
@@ -441,7 +437,7 @@ def test_corrected_pvalues(a_pcmci, a_correct_pvals_params):
     # Unpack the pcmci instance
     pcmci, _ = a_pcmci
     # Unpack the parameters
-    fdr_method, excl, slice_N, slice_T, message = a_correct_pvals_params 
+    fdr_method, excl, slice_n, slice_t, message = a_correct_pvals_params
     # Create the p-values
     pvals = np.linspace(0, 1, num=N_NODES*N_NODES*(TAU_MAX+1))
     pvals = pvals.reshape(N_NODES, N_NODES, TAU_MAX+1)
@@ -450,9 +446,23 @@ def test_corrected_pvalues(a_pcmci, a_correct_pvals_params):
                                         fdr_method=fdr_method,
                                         exclude_contemporaneous=excl)
     err_msg = "get_corrected_pvalues failed on "+message+" mode"
-    np.testing.assert_allclose(pvals[slice_N, slice_N, slice_T],
-                               qvals[slice_N, slice_N, slice_T],
+    np.testing.assert_allclose(pvals[slice_n, slice_n, slice_t],
+                               qvals[slice_n, slice_n, slice_t],
                                rtol=1e-10,
                                atol=1e-10,
                                verbose=True,
                                err_msg=err_msg)
+
+def test_sig_parents(a_pcmci):
+    """
+    Test that the correct significant parents are returned.
+    """
+    # Unpack the pcmci instance
+    pcmci, _ = a_pcmci
+    # Build a p_matrix for 10 x 10 x 10
+    p_matrix = np.arange(10*10*10).reshape(10, 10, -1) 
+    # Build a val matrix as the negative version of this matrix
+    val_matrix = -p_matrix
+    # Get the significant parents
+    parents, ret_q_matrix = pcmci.return_significant_parents(p_matrix, 
+                                                             val_matrix, 10)

@@ -156,7 +156,7 @@ def a_pcmci(a_sample, a_test, a_common_params, request):
      (0.05,      None,           1,        False),
      (0.05,      None,           10,       False),
      (0.05,      None,           1,        True),
-     (0.05,      2,              1,        False)])
+     (0.05,      3,              1,        False)])
 def a_pc_stable_params(request):
     # Return the parameters for the pc_stable test
     return request.param
