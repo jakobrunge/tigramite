@@ -222,7 +222,7 @@ def test_select_links_errors(a_pcmci):
     #max_cond_dim, tau_min, tau_max
     (None,         1,       3),
     (10,           1,       3),
-    (1,            2,       4)]) TODO address this failing case
+    (1,            2,       4)])
 def a_iter_cond_param(request):
     return request.param
 
