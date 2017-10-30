@@ -493,7 +493,7 @@ def test_sig_parents(a_pcmci):
     # Expect j to cycle through [0, dim]
     expect_j = set(range(dim))
     # Expect i to cycle through [0, dim/2]
-    expect_i = set(range(dim/2))
+    expect_i = set(range((int)(dim/2)))
     # Expect tau to cycle through [-3, -1]
     expect_t = set(range(-dim + 1, 0))
     for key, links in parents_dict.items():
