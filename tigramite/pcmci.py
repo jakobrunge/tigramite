@@ -1402,6 +1402,8 @@ class PCMCI():
         if q_matrix is not None:
             sig_links = (q_matrix <= alpha_level)
         else:
+            print("P_MATRIX ", p_matrix)
+            print("ALPHA_LEVEL", alpha_level)
             sig_links = (p_matrix <= alpha_level)
         print("\n## Significant links at alpha = %s:" % alpha_level)
         for j in self.selected_variables:
@@ -1557,12 +1559,6 @@ class PCMCI():
                        'conf_matrix': conf_matrix}
         # Print the information
         if self.verbosity > 0:
-            self.print_significant_links(return_dict['p_matrix'],
-                                         return_dict['val_matrix'],
-                                         conf_matrix=return_dict['conf_matrix'],
-                                         q_matrix=return_dict['q_matrix'],
-                                         alpha_level=pc_alpha)
-        #if self.verbosity > 0:
-        #    self.print_results(return_dict, alpha_level=pc_alpha)
+            self.print_results(return_dict)
         # Return the dictionary
         return return_dict
