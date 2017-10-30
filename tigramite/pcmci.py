@@ -1334,7 +1334,6 @@ class PCMCI():
                                    pq_matrix,
                                    val_matrix,
                                    alpha_level=0.05):
-        # TODO test this function
         """Returns list of significant parents as well as a boolean matrix.
 
         Significance based on p-matrix, or q-value matrix with corrected
@@ -1342,14 +1341,14 @@ class PCMCI():
 
         Parameters
         ----------
-        alpha_level : float, optional (default: 0.05)
-            Significance level.
         pq_matrix : array-like
             p-matrix, or q-value matrix with corrected p-values. Must be of
             shape (N, N, tau_max + 1).
         val_matrix : array-like
             Matrix of test statistic values. Must be of shape (N, N, tau_max +
             1).
+        alpha_level : float, optional (default: 0.05)
+            Significance level.
 
         Returns
         -------
@@ -1451,7 +1450,7 @@ class PCMCI():
         # Wrap the already defined function
         self.print_significant_links(return_dict['p_matrix'],
                                      return_dict['val_matrix'],
-                                     return_dict['conf_matrix'],
+                                     conf_matrix=return_dict['conf_matrix'],
                                      q_matrix=q_matrix,
                                      alpha_level=alpha_level)
 
