@@ -402,12 +402,12 @@ def test_gpdc_get_single_residuals_2():
                     standardize=False,
                     return_means=True)
 
-    fig = pyplot.figure()
-    ax = fig.add_subplot(111)
-    ax.scatter(array_orig[2], array_orig[1])
-    ax.scatter(array_orig[2], pred, color='red')
-    ax.scatter(array_orig[2], pred_parcorr, color='green')
-    ax.plot(np.sort(array_orig[2]), c_std*func(np.sort(array_orig[2])), color='black')
+    #fig = pyplot.figure()
+    #ax = fig.add_subplot(111)
+    #ax.scatter(array_orig[2], array_orig[1])
+    #ax.scatter(array_orig[2], pred, color='red')
+    #ax.scatter(array_orig[2], pred_parcorr, color='green')
+    #ax.plot(np.sort(array_orig[2]), c_std*func(np.sort(array_orig[2])), color='black')
     #pyplot.savefig('.')
 
 def test_shuffle_vs_analytic_significance_gpdc_2():
