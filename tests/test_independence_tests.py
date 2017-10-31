@@ -43,21 +43,15 @@ def a_test(request):
 def test_construct_array():
     # Make some fake data
     np.random.seed(42)
-    data = np.array([[0, 10, 20, 30],
-                        [1, 11, 21, 31],
-                        [2, 12, 22, 32],
-                        [3, 13, 23, 33],
-                        [4, 14, 24, 34],
-                        [5, 15, 25, 35],
-                        [6, 16, 26, 36]])
+    data = np.arange(100).reshape(10,10).T
     # Make a fake mask
-    data_mask = np.array([[0, 1, 1, 0],
-                             [0, 0, 0, 0],
-                             [1, 0, 0, 0],
-                             [0, 0, 1, 1],
-                             [0, 0, 0, 0],
-                             [0, 0, 0, 0],
-                             [0, 0, 0, 0]], dtype='bool')
+    data_mask = np.array([[0, 1, 1, 0, 0, 0, 0, 0, 0, 0],
+                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                          [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                          [0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
+                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype='bool')
     # Set the node values
     X = [(1, -1)]
     Y = [(0, 0)]
@@ -66,58 +60,51 @@ def test_construct_array():
     tau_max = 2
 
     # Test with no masking
-    res = _construct_array(X=X, Y=Y, Z=Z,
-                           tau_max=tau_max,
-                           use_mask=False,
-                           data=data,
-                           mask=data_mask,
-                           missing_flag=None,
-                           mask_type=None,
-                           verbosity=VERBOSITY)
-    print(res[0])
-    np.testing.assert_almost_equal(res[0], np.array([[13, 14, 15],
-                                                           [4,  5,  6],
-                                                           [3,  4,  5],
-                                                           [12, 13, 14],
-                                                           [24, 25, 26]]))
-    np.testing.assert_almost_equal(res[1], np.array([0, 1, 2, 2, 2]))
+    array, xyz = _construct_array(X=X, Y=Y, Z=Z,
+                                  tau_max=tau_max,
+                                  use_mask=False,
+                                  data=data,
+                                  mask=data_mask,
+                                  missing_flag=None,
+                                  mask_type=None,
+                                  verbosity=VERBOSITY)
+    # Get the expected results
+    n_times = T - (2 * tau_max)
+    # Ensure that this is respected
+    # TODO pick up things here
+    expect_array = np.array([list(range(13,19)),
+                            list(range(4,10)),
+                            list(range(3,9)),
+                            list(range(12, 18)),
+                            list(range(24, 30)))
+    expect_xyz = np.array([0, 1, 2, 2, 2,])
+    # Test the results
+    np.testing.assert_almost_equal(array, expect_array)
+    np.testing.assert_almost_equal(xyz, expect_xyz)
 
     # masking y
-    res = _construct_array(X=X, Y=Y, Z=Z,
-                           tau_max=tau_max,
-                           use_mask=True,
-                           data=data,
-                           mask=data_mask,
-                           mask_type=['y'],
-                           verbosity=VERBOSITY)
-    print(res[0])
-
-    np.testing.assert_almost_equal(res[0], np.array([[13, 14, 15],
-                                                           [ 4,  5,  6],
-                                                           [ 3,  4,  5],
-                                                           [12, 13, 14],
-                                                           [24, 25, 26]]))
-
-    np.testing.assert_almost_equal(res[1], np.array([0, 1, 2, 2, 2]))
+    array, xyz = _construct_array(X=X, Y=Y, Z=Z,
+                                  tau_max=tau_max,
+                                  use_mask=True,
+                                  data=data,
+                                  mask=data_mask,
+                                  mask_type=['y'],
+                                  verbosity=VERBOSITY)
+    # Test the results
+    np.testing.assert_almost_equal(array, expect_array)
+    np.testing.assert_almost_equal(xyz, expect_xyz)
 
     # masking all
-    res = _construct_array(
-            X=X, Y=Y, Z=Z,
-            tau_max=tau_max,
-            use_mask=True,
-            data=data,
-            mask=data_mask,
-            mask_type=['x', 'y', 'z'], verbosity=VERBOSITY)
-    print(res[0])
-
-    np.testing.assert_almost_equal(res[0],
-            np.array([[13, 14, 15],
-                [ 4,  5,  6],
-                [ 3,  4,  5],
-                [12, 13, 14],
-                [24, 25, 26]]))
-
-    np.testing.assert_almost_equal(res[1], np.array([0, 1, 2, 2, 2]))
+    array, xyz = _construct_array(X=X, Y=Y, Z=Z,
+                                  tau_max=tau_max,
+                                  use_mask=True,
+                                  data=data,
+                                  mask=data_mask,
+                                  mask_type=['x', 'y', 'z'],
+                                  verbosity=VERBOSITY)
+    # Test the results
+    np.testing.assert_almost_equal(array, expect_array)
+    np.testing.assert_almost_equal(xyz, expect_xyz)
 
 def test_missing_values():
     np.random.seed(42)
@@ -378,27 +365,15 @@ def test_shuffle_vs_analytic_significance_gpdc_2():
                    verbosity=0)
 
     cov = np.array([[1., 0.2], [0.2, 1.]])
-    array = np.random.multivariate_normal(mean=np.zeros(2),
-                    cov=cov, size=245).T
+    array = np.random.multivariate_normal(mean=np.zeros(2), cov=cov, size=245).T
 
     dim, T = array.shape
     xyz = np.array([0,1])
 
     val = ci_gpdc.get_dependence_measure(array, xyz)
-
-    pval_ana = ci_gpdc.get_analytic_significance(value=val,
-                                                         T=T, dim=dim)
-
-    pval_shuffle = ci_gpdc.get_shuffle_significance(array, xyz,
-                           val)
-
-    print(pval_ana)
-    print(pval_shuffle)
-
-    np.testing.assert_allclose(np.array(pval_ana),
-                               np.array(pval_shuffle),
-                               atol=0.05)
-
+    pval_ana = ci_gpdc.get_analytic_significance(value=val, T=T, dim=dim)
+    pval_shf = ci_gpdc.get_shuffle_significance(array, xyz, val)
+    np.testing.assert_allclose(np.array(pval_ana), np.array(pval_shf), atol=0.05)
 
 def test_shuffle_vs_analytic_significance_gpdc():
     np.random.seed(42)
@@ -422,18 +397,9 @@ def test_shuffle_vs_analytic_significance_gpdc():
     xyz = np.array([0,1])
 
     val = ci_gpdc.get_dependence_measure(array, xyz)
-
-    pval_ana = ci_gpdc.get_analytic_significance(value=val,
-                                                         T=T, dim=dim)
-
-    pval_shuffle = ci_gpdc.get_shuffle_significance(array, xyz,
-                           val)
-    print(pval_ana)
-    print(pval_shuffle)
-
-    np.testing.assert_allclose(np.array(pval_ana),
-                               np.array(pval_shuffle),
-                               atol=0.05)
+    pval_ana = ci_gpdc.get_analytic_significance(value=val, T=T, dim=dim)
+    pval_shf = ci_gpdc.get_shuffle_significance(array, xyz, val)
+    np.testing.assert_allclose(np.array(pval_ana), np.array(pval_shf), atol=0.05)
 
 def test_cmi_knn():
 

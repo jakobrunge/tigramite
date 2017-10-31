@@ -57,7 +57,8 @@ except:
 # @staticmethod
 def _construct_array(X, Y, Z, tau_max, data,
                      use_mask=False,
-                     mask=None, mask_type=None,
+                     mask=None,
+                     mask_type=None,
                      missing_flag=None,
                      return_cleaned_xyz=False,
                      do_checks=True,
@@ -129,7 +130,6 @@ def _construct_array(X, Y, Z, tau_max, data,
             yields an array of shape (5, T) and xyz is
             xyz = numpy.array([0,1,2,2])
         If return_cleaned_xyz is True, also outputs the cleaned XYZ lists.
-
     """
 
     def uniq(input):
@@ -144,6 +144,7 @@ def _construct_array(X, Y, Z, tau_max, data,
     T, N = data.shape
 
     # Remove duplicates in X, Y, Z
+    # TODO use internal copies of X, Y, Z here
     X = uniq(X)
     Y = uniq(Y)
     Z = uniq(Z)
@@ -190,8 +191,7 @@ def _construct_array(X, Y, Z, tau_max, data,
 
     # Setup and fill array with lagged time series
     array = numpy.zeros((dim, T - max_lag), dtype=data_type)
-    for i, node in enumerate(XYZ):
-        var, lag = node
+    for i, (var, lag) in enumerate(XYZ):
         array[i, :] = data[max_lag + lag: T + lag, var]
 
     if missing_flag is not None or use_mask:
@@ -210,19 +210,15 @@ def _construct_array(X, Y, Z, tau_max, data,
         array_selector = numpy.zeros((dim, T - max_lag), dtype='int32')
         for i, node in enumerate(XYZ):
             var, lag = node
-            array_selector[i, :] = (
-                mask[max_lag + lag: T + lag, var] == False)
+            array_selector[i, :] = (mask[max_lag + lag: T + lag, var] == False)
 
         # use_indices = numpy.ones(T - max_lag, dtype='int')
         if 'x' in mask_type:
-            use_indices *= numpy.prod(array_selector[xyz == 0, :],
-                                      axis=0)
+            use_indices *= numpy.prod(array_selector[xyz == 0, :], axis=0)
         if 'y' in mask_type:
-            use_indices *= numpy.prod(array_selector[xyz == 1, :],
-                                      axis=0)
+            use_indices *= numpy.prod(array_selector[xyz == 1, :], axis=0)
         if 'z' in mask_type:
-            use_indices *= numpy.prod(array_selector[xyz == 2, :],
-                                      axis=0)
+            use_indices *= numpy.prod(array_selector[xyz == 2, :], axis=0)
 
     if missing_flag is not None or use_mask:
         if use_indices.sum() == 0:
