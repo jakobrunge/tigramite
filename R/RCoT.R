@@ -7,7 +7,7 @@
 #' "gamma" for the Satterthwaite-Welch method,
 #' "hbe" for the Hall-Buckley-Eagleson method,
 #' "chi2" for a normalized chi-squared statistic,
-#' "perm" for permutation testing (warning: this one is slow)
+#' "perm" for permutation testing (warning: this one is slow but recommended for small samples generally <500 )
 #' @param num_f Number of features for conditioning set. Default is 25.
 #' @param seed The seed for controlling random number generation. Use if you want to replicate results exactly. Default is NULL.
 #' @return A list containing the p-value \code{p} and statistic \code{Sta}
@@ -33,10 +33,9 @@ RCoT <- function(x,y,z=NULL,approx="lpd4",num_f=25,seed=NULL){
     y=matrix2(y);
     z=matrix2(z);
 
-    d=ncol(z);
-
     z=z[,apply(z,2,sd)>0];
     z=matrix2(z);
+    d=ncol(z);
 
     if (length(z)==0){
       out=RIT(x,y,approx=approx, seed=seed);
