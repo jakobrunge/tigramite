@@ -51,6 +51,9 @@ def test_construct_array():
                           [0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
                           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype='bool')
     # Set the node values
     X = [(1, -1)]
@@ -69,14 +72,15 @@ def test_construct_array():
                                   mask_type=None,
                                   verbosity=VERBOSITY)
     # Get the expected results
+    N, T = data.shape
     n_times = T - (2 * tau_max)
     # Ensure that this is respected
     # TODO pick up things here
-    expect_array = np.array([list(range(13,19)),
-                            list(range(4,10)),
-                            list(range(3,9)),
-                            list(range(12, 18)),
-                            list(range(24, 30)))
+    expect_array = np.array([list(range(13, 19)),
+                             list(range(4, 10)),
+                             list(range(3, 9)),
+                             list(range(12, 18)),
+                             list(range(24, 30))])
     expect_xyz = np.array([0, 1, 2, 2, 2,])
     # Test the results
     np.testing.assert_almost_equal(array, expect_array)
