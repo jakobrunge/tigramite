@@ -196,7 +196,6 @@ def _construct_array(X, Y, Z, tau_max, data,
 
     # Choose which indecies to use
     use_indices = numpy.ones(time_length, dtype='int')
-    print(use_indices)
 
     if missing_flag is not None:
         # Dismiss all samples where missing values occur in any variable
@@ -205,27 +204,19 @@ def _construct_array(X, Y, Z, tau_max, data,
         for tau in range(max_lag+1):
             use_indices[missing_anywhere[tau:time_length + tau]] = 0
 
-    print(use_indices)
     if use_mask:
         # Remove samples with mask == 1
         # conditional on which mask_type is used
         array_selector = numpy.zeros((dim, time_length), dtype='int32')
         for i, (var, lag) in enumerate(XYZ):
-            if (var, lag) in X:
-                print(var, lag)
-                print(mask[:, var])
-                print(max_lag + lag, T + lag)
-                print(mask[max_lag + lag: T + lag, var] == False)
             array_selector[i, :] = mask[max_lag + lag: T + lag, var] == False
-        print(array_selector)
-        print(xyz)
+
         if 'x' in mask_type:
             use_indices *= numpy.prod(array_selector[xyz == 0, :], axis=0)
         if 'y' in mask_type:
             use_indices *= numpy.prod(array_selector[xyz == 1, :], axis=0)
         if 'z' in mask_type:
             use_indices *= numpy.prod(array_selector[xyz == 2, :], axis=0)
-    print(use_indices)
 
     if missing_flag is not None or use_mask:
         if use_indices.sum() == 0:
