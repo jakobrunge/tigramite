@@ -2,7 +2,7 @@
 Tests for independence_tests.py.
 """
 from __future__ import print_function
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, OrderedDict
 import numpy as np
 from nose.tools import assert_equal
 import pytest
@@ -40,72 +40,92 @@ def a_test(request):
                    recycle_residuals=False,
                    verbosity=0)
 
-def test_construct_array():
+# TEST NODES
+TST_X = [(1, -1)]
+TST_Y = [(0, 0)]
+TST_Z = [(0, -1), (1, -2), (2, 0)]
+
+def rand_node(t_min, n_max, t_max=0, n_min=0):
+    """
+    Generate a random node to test
+    """
+    rand_node = np.random.randint(n_min, n_max)
+    rand_time = np.random.randint(t_min, t_max)
+    return (rand_node, rand_time)
+
+def gen_nodes(n_nodes, seed, t_min=-2, n_max=2):
+    """
+    Generate some random nodes to tests
+    """
+    # Set the seed if needed
+    np.random.seed(seed)
+    # Y nodes are always at (0, 0)
+    y_nds = [(0, 0)]
+    # X nodes is only one node
+    x_nds = [rand_node(t_min, n_max)]
+    # Z nodes are multiple nodes
+    z_nds = [rand_node(t_min, n_max) for _ in range(n_nodes)]
+    return x_nds, y_nds, z_nds
+
+
+@pytest.fixture(params=[
+    # Generate the independence test
+    #(X, Y, Z) nodes,                    t_max, m_flag, mask_type
+    (gen_nodes(3, 0, t_min=-3, n_max=9), 3,     None,   None),  # Few nodes
+    (gen_nodes(7, 1, t_min=-3, n_max=9), 3,     None,   None),  # More nodes
+    (gen_nodes(7, 2, t_min=-3, n_max=3), 3,     None,   None),  # Repeated nodes
+    (gen_nodes(3, 4, t_min=-4, n_max=9), 2,     None,   ['x']), # masked x
+    (gen_nodes(3, 5, t_min=-4, n_max=9), 2,     None,   ['y']), # masked y
+    (gen_nodes(3, 6, t_min=-4, n_max=9), 2,     None,   ['z'])])# masked z
+def cstrct_array_params(request):
+    return request.param
+
+def test_construct_array(cstrct_array_params):
+    # Unpack the parameters
+    (x_nds, y_nds, z_nds), tau_max, missing_flag, mask_type =\
+        cstrct_array_params
     # Make some fake data
-    np.random.seed(42)
-    data = np.arange(100).reshape(10,10).T
-    # Make a fake mask
-    data_mask = np.array([[0, 1, 1, 0, 0, 0, 0, 0, 0, 0],
-                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                          [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                          [0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
-                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype='bool')
-    # Set the node values
-    X = [(1, -1)]
-    Y = [(0, 0)]
-    Z = [(0, -1), (1, -2), (2, 0)]
-    # Set tau_max
-    tau_max = 2
-
-    # Test with no masking
-    array, xyz = _construct_array(X=X, Y=Y, Z=Z,
-                                  tau_max=tau_max,
-                                  use_mask=False,
-                                  data=data,
-                                  mask=data_mask,
-                                  missing_flag=None,
-                                  mask_type=None,
-                                  verbosity=VERBOSITY)
-    # Get the expected results
-    N, T = data.shape
+    data = np.arange(150).reshape(10, 15).T
+    # Get the needed parameters from the data
+    T, N = data.shape
     n_times = T - (2 * tau_max)
-    # Ensure that this is respected
-    # TODO pick up things here
-    expect_array = np.array([list(range(13, 19)),
-                             list(range(4, 10)),
-                             list(range(3, 9)),
-                             list(range(12, 18)),
-                             list(range(24, 30))])
-    expect_xyz = np.array([0, 1, 2, 2, 2,])
-    # Test the results
-    np.testing.assert_almost_equal(array, expect_array)
-    np.testing.assert_almost_equal(xyz, expect_xyz)
+    
+    # Make a fake mask
+    use_mask = False
+    data_mask = np.zeros_like(data, dtype='bool')
+    if mask_type is not None:
+        use_mask = True
+        for var, nodes in zip(['x', 'y', 'z'], [x_nds, y_nds, z_nds]):
+            if var in mask_type:
+                a_nd, a_tau = nodes[0]
+                data_mask[a_tau-n_times, a_nd] = True
 
-    # masking y
-    array, xyz = _construct_array(X=X, Y=Y, Z=Z,
+    # Construct the array
+    array, xyz = _construct_array(x_nds, y_nds, z_nds,
                                   tau_max=tau_max,
-                                  use_mask=True,
+                                  use_mask=use_mask,
                                   data=data,
                                   mask=data_mask,
-                                  mask_type=['y'],
+                                  missing_flag=missing_flag,
+                                  mask_type=mask_type,
                                   verbosity=VERBOSITY)
-    # Test the results
-    np.testing.assert_almost_equal(array, expect_array)
-    np.testing.assert_almost_equal(xyz, expect_xyz)
-
-    # masking all
-    array, xyz = _construct_array(X=X, Y=Y, Z=Z,
-                                  tau_max=tau_max,
-                                  use_mask=True,
-                                  data=data,
-                                  mask=data_mask,
-                                  mask_type=['x', 'y', 'z'],
-                                  verbosity=VERBOSITY)
+    # Ensure x_nds, y_nds, z_ndes are unique
+    x_nds = list(OrderedDict.fromkeys(x_nds))
+    y_nds = list(OrderedDict.fromkeys(y_nds))
+    z_nds = list(OrderedDict.fromkeys(z_nds))
+    z_nds = [node for node in z_nds
+             if (node not in x_nds) and (node not in y_nds)]
+    # Get the expected results
+    expect_array = np.array([list(range(data[time-n_times, node],
+                                        data[time-n_times,node]+n_times))
+                             for node, time in x_nds + y_nds + z_nds])
+    expect_xyz = np.array([0 for _ in x_nds] +\
+                          [1 for _ in y_nds] +\
+                          [2 for _ in z_nds])
+    # Apply the mask, which always blocks the latest time of the 0th node of the 
+    # masked variable, which removes the first time slice in the returned array
+    if use_mask:
+        expect_array = expect_array[:,1:]
     # Test the results
     np.testing.assert_almost_equal(array, expect_array)
     np.testing.assert_almost_equal(xyz, expect_xyz)
@@ -294,7 +314,7 @@ def test_gpdc_get_single_residuals_2(a_test):
                    recycle_residuals=False,
                    verbosity=0)
 
-    ci_par_corr = a_test 
+    ci_par_corr = a_test
     a = 0.
     c = .3
     T = 500

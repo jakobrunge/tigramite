@@ -64,6 +64,8 @@ def _construct_array(X, Y, Z, tau_max, data,
                      do_checks=True,
                      cut_off='2xtau_max',
                      verbosity=0):
+    # TODO having both missing_flag and mask is redundent.
+    # TODO what is this cutoff parameter? how does it interplay with tau_max?
     """Constructs array from variables X, Y, Z from data.
 
     Data is of shape (T, N), where T is the time series length and N the
@@ -144,16 +146,11 @@ def _construct_array(X, Y, Z, tau_max, data,
     T, N = data.shape
 
     # Remove duplicates in X, Y, Z
-    # TODO use internal copies of X, Y, Z here
+    # TODO go straight to XYZ here
+    # TODO are X and Y always only one node?
     X = uniq(X)
     Y = uniq(Y)
     Z = uniq(Z)
-
-    if do_checks:
-        if len(X) == 0:
-            raise ValueError("X must be non-zero")
-        if len(Y) == 0:
-            raise ValueError("Y must be non-zero")
 
     # If a node in Z occurs already in X or Y, remove it from Z
     Z = [node for node in Z if (node not in X) and (node not in Y)]
@@ -185,40 +182,50 @@ def _construct_array(X, Y, Z, tau_max, data,
         max_lag = max(abs(numpy.array(XYZ)[:, 1].min()), tau_max)
 
     # Setup XYZ identifier
+    # TODO make more efficient
     xyz = numpy.array([0 for i in range(len(X))] +
                       [1 for i in range(len(Y))] +
                       [2 for i in range(len(Z))])
 
     # Setup and fill array with lagged time series
-    array = numpy.zeros((dim, T - max_lag), dtype=data_type)
+    time_length = T - max_lag
+    array = numpy.zeros((dim, time_length), dtype=data_type)
+    # Note, lags are negative here
     for i, (var, lag) in enumerate(XYZ):
-        array[i, :] = data[max_lag + lag: T + lag, var]
+        array[i, :] = data[max_lag + lag:T + lag, var]
 
-    if missing_flag is not None or use_mask:
-        use_indices = numpy.ones(T - max_lag, dtype='int')
+    # Choose which indecies to use
+    use_indices = numpy.ones(time_length, dtype='int')
+    print(use_indices)
 
     if missing_flag is not None:
         # Dismiss all samples where missing values occur in any variable
         # and for any lag up to max_lag
         missing_anywhere = numpy.any(data==missing_flag, axis=1)
         for tau in range(max_lag+1):
-            use_indices[missing_anywhere[tau:T-max_lag+tau]] = 0
+            use_indices[missing_anywhere[tau:time_length + tau]] = 0
 
+    print(use_indices)
     if use_mask:
         # Remove samples with mask == 1
         # conditional on which mask_type is used
-        array_selector = numpy.zeros((dim, T - max_lag), dtype='int32')
-        for i, node in enumerate(XYZ):
-            var, lag = node
-            array_selector[i, :] = (mask[max_lag + lag: T + lag, var] == False)
-
-        # use_indices = numpy.ones(T - max_lag, dtype='int')
+        array_selector = numpy.zeros((dim, time_length), dtype='int32')
+        for i, (var, lag) in enumerate(XYZ):
+            if (var, lag) in X:
+                print(var, lag)
+                print(mask[:, var])
+                print(max_lag + lag, T + lag)
+                print(mask[max_lag + lag: T + lag, var] == False)
+            array_selector[i, :] = mask[max_lag + lag: T + lag, var] == False
+        print(array_selector)
+        print(xyz)
         if 'x' in mask_type:
             use_indices *= numpy.prod(array_selector[xyz == 0, :], axis=0)
         if 'y' in mask_type:
             use_indices *= numpy.prod(array_selector[xyz == 1, :], axis=0)
         if 'z' in mask_type:
             use_indices *= numpy.prod(array_selector[xyz == 2, :], axis=0)
+    print(use_indices)
 
     if missing_flag is not None or use_mask:
         if use_indices.sum() == 0:
