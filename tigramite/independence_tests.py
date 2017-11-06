@@ -4,11 +4,12 @@
 #
 # License: GNU General Public License v3.0
 
+from __future__ import print_function
 import warnings
 import numpy
-import sys, os
+import sys
+import os
 import math
-
 from scipy import linalg, special, stats
 
 try:
@@ -21,6 +22,35 @@ try:
     from tigramite import tigramite_cython_code
 except:
     print("Could not import packages for CMIknn and GPDC estimation")
+
+
+# try:
+#     import rpy2
+#     import rpy2.robjects
+#     rpy2.robjects.r['options'](warn=-1)
+
+#     from rpy2.robjects.packages import importr
+#     import rpy2.robjects.numpy2ri
+#     rpy2.robjects.numpy2ri.activate()
+# except:
+#         print("Could not import rpy package")
+
+try:
+    importr('RCIT')
+except:
+    print("Could not import r-package RCIT")
+
+try:
+    importr('acepack')
+except:
+    print("Could not import r-package acepack for GPACE,"
+          " use python ACE package")
+
+try:
+    import ace
+except:
+    print("Could not import python ACE package for GPACE")
+
 
 
 # @staticmethod
@@ -49,7 +79,7 @@ def _construct_array(X, Y, Z, tau_max, data,
         Maximum time lag. This may be used to make sure that estimates for
         different lags in X and Z all have the same sample size.
 
-    data : array-like, 
+    data : array-like,
         This is the data input array of shape = (T, N)
 
     use_mask : bool, optional (default: False)
@@ -72,7 +102,7 @@ def _construct_array(X, Y, Z, tau_max, data,
         Explained in [1]_.
 
     return_cleaned_xyz : bool, optional (default: False)
-        Whether to return cleaned X,Y,Z, where possible duplicates are 
+        Whether to return cleaned X,Y,Z, where possible duplicates are
         removed.
 
     do_checks : bool, optional (default: True)
@@ -80,7 +110,7 @@ def _construct_array(X, Y, Z, tau_max, data,
 
     cut_off : {'2xtau_max', 'max_lag', 'max_lag_or_tau_max'}
         How many samples to cutoff at the beginning. The default is '2xtau_max',
-        which guarantees that MCI tests are all conducted on the same samples. 
+        which guarantees that MCI tests are all conducted on the same samples.
         For modeling, 'max_lag_or_tau_max' can be used, which uses the maximum
         of tau_max and the conditions, which is useful to compare multiple
         models on the same sample. Last, 'max_lag' uses as much samples as
@@ -91,14 +121,14 @@ def _construct_array(X, Y, Z, tau_max, data,
 
     Returns
     -------
-    array, xyz [,XYZ] : Tuple of data array of shape (dim, T) and xyz 
+    array, xyz [,XYZ] : Tuple of data array of shape (dim, T) and xyz
         identifier array of shape (dim,) identifying which row in array
         corresponds to X, Y, and Z. For example::
             X = [(0, -1)], Y = [(1, 0)], Z = [(1, -1), (0, -2)]
-            yields an array of shape (5, T) and xyz is  
-            xyz = numpy.array([0,1,2,2])          
+            yields an array of shape (5, T) and xyz is
+            xyz = numpy.array([0,1,2,2])
         If return_cleaned_xyz is True, also outputs the cleaned XYZ lists.
-     
+
     """
 
     def uniq(input):
@@ -165,14 +195,14 @@ def _construct_array(X, Y, Z, tau_max, data,
 
     if missing_flag is not None or use_mask:
         use_indices = numpy.ones(T - max_lag, dtype='int')
-    
+
     if missing_flag is not None:
         # Dismiss all samples where missing values occur in any variable
         # and for any lag up to max_lag
         missing_anywhere = numpy.any(data==missing_flag, axis=1)
         for tau in range(max_lag+1):
             use_indices[missing_anywhere[tau:T-max_lag+tau]] = 0
-   
+
     if use_mask:
         # Remove samples with mask == 1
         # conditional on which mask_type is used
@@ -192,7 +222,7 @@ def _construct_array(X, Y, Z, tau_max, data,
         if 'z' in mask_type:
             use_indices *= numpy.prod(array_selector[xyz == 2, :],
                                       axis=0)
-    
+
     if missing_flag is not None or use_mask:
         if use_indices.sum() == 0:
             raise ValueError("No unmasked samples")
@@ -209,7 +239,7 @@ def _construct_array(X, Y, Z, tau_max, data,
                   "%s removed" % mask_type)
         if missing_flag is not None:
             print("            with missing values labeled "
-                  "%s removed" % missing_flag)    
+                  "%s removed" % missing_flag)
 
     if return_cleaned_xyz:
         return array, xyz, (X, Y, Z)
@@ -235,19 +265,19 @@ class CondIndTest(object):
         [1]_.
 
     significance : str, optional (default: 'analytic')
-        Type of significance test to use. In this package 'analytic', 
+        Type of significance test to use. In this package 'analytic',
         'fixed_thres' and 'shuffle_test' are available.
 
     fixed_thres : float, optional (default: 0.1)
-        If significance is 'fixed_thres', this specifies the threshold for the 
+        If significance is 'fixed_thres', this specifies the threshold for the
         absolute value of the dependence measure.
 
     sig_samples : int, optional (default: 1000)
-        Number of samples for shuffle significance test. 
+        Number of samples for shuffle significance test.
 
     sig_blocklength : int, optional (default: None)
         Block length for block-shuffle significance test. If None, the
-        block length is determined from the decay of the autocovariance as 
+        block length is determined from the decay of the autocovariance as
         explained in [1]_.
 
     confidence : False or str, optional (default: False)
@@ -273,7 +303,7 @@ class CondIndTest(object):
         Level of verbosity.
     """
 
-    def __init__(self, 
+    def __init__(self,
         use_mask=False,
         mask_type=None,
 
@@ -372,7 +402,7 @@ class CondIndTest(object):
 
     def _get_array(self, X, Y, Z, tau_max=0, verbosity=None):
         """Convencience wrapper around _construct_array."""
-        
+
         if verbosity is None:
             verbosity=self.verbosity
 
@@ -401,7 +431,7 @@ class CondIndTest(object):
         Parameters
         ----------
         X, Y, Z : list of tuples
-            X,Y,Z are of the form [(var, -tau)], where var specifies the 
+            X,Y,Z are of the form [(var, -tau)], where var specifies the
             variable index and tau the time lag.
 
         tau_max : int, optional (default: 0)
@@ -411,10 +441,10 @@ class CondIndTest(object):
         Returns
         -------
         val, pval : Tuple of floats
-        
+
             The test statistic value and the p-value. These are also made in the
             class as self.val and self.pval.
-        
+
         """
 
         array, xyz, XYZ = self._get_array(X, Y, Z, tau_max)
@@ -456,7 +486,7 @@ class CondIndTest(object):
                                                  xyz=xyz,
                                                  value=val)
         elif self.significance == 'fixed_thres':
-            pval = self.get_fixed_thres_significance(value=val, 
+            pval = self.get_fixed_thres_significance(value=val,
                                                 fixed_thres=self.fixed_thres)
         else:
             raise ValueError("%s not known." % self.significance)
@@ -478,7 +508,7 @@ class CondIndTest(object):
         Parameters
         ----------
         X, Y [, Z] : list of tuples
-            X,Y,Z are of the form [(var, -tau)], where var specifies the 
+            X,Y,Z are of the form [(var, -tau)], where var specifies the
             variable index and tau the time lag.
 
         tau_max : int, optional (default: 0)
@@ -489,7 +519,7 @@ class CondIndTest(object):
         -------
         val : float
             The test statistic value.
-        
+
         """
 
         array, xyz, XYZ = self._get_array(X, Y, Z, tau_max)
@@ -536,7 +566,7 @@ class CondIndTest(object):
         Parameters
         ----------
         X, Y, Z : list of tuples
-            X,Y,Z are of the form [(var, -tau)], where var specifies the 
+            X,Y,Z are of the form [(var, -tau)], where var specifies the
             variable index and tau the time lag.
 
         tau_max : int, optional (default: 0)
@@ -569,21 +599,21 @@ class CondIndTest(object):
         if self.confidence == 'analytic':
             val = self.get_dependence_measure(array, xyz)
 
-            (conf_lower, conf_upper) = self.get_analytic_confidence(df=T-dim, 
+            (conf_lower, conf_upper) = self.get_analytic_confidence(df=T-dim,
                                     value=val, conf_lev=self.conf_lev)
 
         elif self.confidence == 'bootstrap':
             # Overwrite analytic values
             (conf_lower, conf_upper) = self.get_bootstrap_confidence(array, xyz,
                              dependence_measure=self.get_dependence_measure,
-                             conf_samples=self.conf_samples, 
+                             conf_samples=self.conf_samples,
                              conf_blocklength=self.conf_blocklength,
                              conf_lev=self.conf_lev, verbosity=self.verbosity)
         elif self.confidence == False:
             return None
 
         else:
-            raise ValueError("%s confidence estimation not implemented" 
+            raise ValueError("%s confidence estimation not implemented"
                              % self.confidence)
 
         self.conf = (conf_lower, conf_upper)
@@ -637,7 +667,7 @@ class CondIndTest(object):
             XYZ identifier array of shape (dim,).
 
         dependence_measure : object
-            Dependence measure function must be of form 
+            Dependence measure function must be of form
             dependence_measure(array, xyz) and return a numeric value
 
         conf_lev : float, optional (default: 0.9)
@@ -678,12 +708,12 @@ class CondIndTest(object):
         for sam in range(conf_samples):
             rand_block_starts = numpy.random.randint(0,
                          T - conf_blocklength + 1, n_blocks)
-            array_bootstrap = numpy.zeros((dim, n_blocks*conf_blocklength), 
+            array_bootstrap = numpy.zeros((dim, n_blocks*conf_blocklength),
                                           dtype = array.dtype)
 
             # array_bootstrap = array[:, rand_block_starts]
             for b in range(conf_blocklength):
-                array_bootstrap[:, b::conf_blocklength] = array[:, 
+                array_bootstrap[:, b::conf_blocklength] = array[:,
                                                           rand_block_starts + b]
 
             # Cut to proper length
@@ -699,7 +729,7 @@ class CondIndTest(object):
 
     def _get_acf(self, series, max_lag=None):
         """Returns autocorrelation function.
-        
+
         Parameters
         ----------
         series : 1D-array
@@ -708,10 +738,10 @@ class CondIndTest(object):
         max_lag : int, optional (default: None)
             maximum lag for autocorrelation function. If None is passed, 10% of
             the data series length are used.
-        
+
         Returns
         -------
-        autocorr : array of shape (max_lag + 1,) 
+        autocorr : array of shape (max_lag + 1,)
             Autocorrelation function.
         """
         if max_lag is None:
@@ -746,10 +776,10 @@ class CondIndTest(object):
 
         xyz : array of ints
             XYZ identifier array of shape (dim,).
-        
+
         mode : str
             Which mode to use.
-        
+
         Returns
         -------
         block_len : int
@@ -821,24 +851,24 @@ class CondIndTest(object):
             XYZ identifier array of shape (dim,).
 
        dependence_measure : object
-           Dependence measure function must be of form 
+           Dependence measure function must be of form
            dependence_measure(array, xyz) and return a numeric value
- 
+
         sig_samples : int, optional (default: 100)
-            Number of samples for shuffle significance test. 
+            Number of samples for shuffle significance test.
 
         sig_blocklength : int, optional (default: None)
             Block length for block-shuffle significance test. If None, the
-            block length is determined from the decay of the autocovariance as 
+            block length is determined from the decay of the autocovariance as
             explained in [1]_.
 
         verbosity : int, optional (default: 0)
             Level of verbosity.
-        
+
         Returns
         -------
         null_dist : array of shape (sig_samples,)
-            Contains the sorted test statistic values estimated from the 
+            Contains the sorted test statistic values estimated from the
             shuffled arrays.
         """
 
@@ -869,18 +899,18 @@ class CondIndTest(object):
 
             rand_block_starts = numpy.random.permutation(block_starts)[:n_blocks]
 
-            x_shuffled = numpy.zeros((dim_x, n_blocks*sig_blocklength), 
+            x_shuffled = numpy.zeros((dim_x, n_blocks*sig_blocklength),
                                           dtype = array.dtype)
 
             for i, index in enumerate(x_indices):
                 for b in range(sig_blocklength):
-                    x_shuffled[i, b::sig_blocklength] = array[index, 
+                    x_shuffled[i, b::sig_blocklength] = array[index,
                                             rand_block_starts + b]
 
             # Insert tail randomly somewhere
             if tail.shape[1] > 0:
                 insert_tail_at = numpy.random.choice(block_starts)
-                x_shuffled = numpy.insert(x_shuffled, insert_tail_at, 
+                x_shuffled = numpy.insert(x_shuffled, insert_tail_at,
                                           tail.T, axis=1)
 
             for i, index in enumerate(x_indices):
@@ -921,7 +951,7 @@ class CondIndTest(object):
         return pval
 
     def _trafo2uniform(self, x):
-        """Transforms input array to uniform marginals. 
+        """Transforms input array to uniform marginals.
 
         Assumes x.shape = (dim, T)
 
@@ -971,7 +1001,7 @@ class CondIndTest(object):
         null_dist : array of shape [df,]
             Only returned,if add_to_null_dists is False.
         """
-        
+
         if self.verbosity > 0:
             print("Generating null distribution for df = %d. " % df)
 
@@ -988,17 +1018,17 @@ class CondIndTest(object):
 
             null_dist[i] = self.get_dependence_measure(array, xyz)
 
-        null_dist.sort()    
+        null_dist.sort()
         if add_to_null_dists:
             self.null_dists[df] = null_dist
         else:
             return null_dist
 
     def generate_and_save_nulldists(self, sample_sizes, null_dist_filename):
-        """Generates and saves null distribution for pairwise independence 
+        """Generates and saves null distribution for pairwise independence
         tests.
 
-        Generates the null distribution for different sample sizes. Calls 
+        Generates the null distribution for different sample sizes. Calls
         generate_nulldist. Null dists are saved to disk as
         self.null_dist_filename.npz. Also adds the null distributions to
         self.null_dists.
@@ -1006,21 +1036,21 @@ class CondIndTest(object):
         Parameters
         ----------
         sample_sizes : list
-            List of sample sizes.    
+            List of sample sizes.
 
         null_dist_filename : str
             Name to save file containing null distributions.
         """
-        
+
         self.null_dist_filename = null_dist_filename
 
         null_dists = numpy.zeros((len(sample_sizes), self.sig_samples))
-        
+
         for iT, T in enumerate(sample_sizes):
             null_dists[iT] = self.generate_nulldist(T, add_to_null_dists=False)
             self.null_dists[T] = null_dists[iT]
-        
-        numpy.savez("%s" % null_dist_filename, exact_dist=null_dists, 
+
+        numpy.savez("%s" % null_dist_filename, exact_dist=null_dists,
                             T=numpy.array(sample_sizes))
 
 
@@ -1037,7 +1067,7 @@ class ParCorr(CondIndTest):
     :math:`X` and :math:`Y` assuming the  model
 
     .. math::  X & =  Z \beta_X + \epsilon_{X} \\
-        Y & =  Z \beta_Y + \epsilon_{Y}  
+        Y & =  Z \beta_Y + \epsilon_{Y}
 
     using OLS regression. Then the dependency of the residuals is tested with
     the Pearson correlation test.
@@ -1049,7 +1079,7 @@ class ParCorr(CondIndTest):
 
     Parameters
     ----------
-    **kwargs : 
+    **kwargs :
         Arguments passed on to Parent class CondIndTest.
     """
 
@@ -1066,7 +1096,7 @@ class ParCorr(CondIndTest):
             print("")
 
     # @profile
-    def _get_single_residuals(self, array, target_var, 
+    def _get_single_residuals(self, array, target_var,
                 standardize = True,
                 return_means=False):
         """Returns residuals of linear multiple regression.
@@ -1085,7 +1115,7 @@ class ParCorr(CondIndTest):
             Variable to regress out conditions from.
 
         standardize : bool, optional (default: True)
-            Whether to standardize the array beforehand. Must be used for 
+            Whether to standardize the array beforehand. Must be used for
             partial correlation.
 
         return_means : bool, optional (default: False)
@@ -1142,7 +1172,7 @@ class ParCorr(CondIndTest):
         Returns
         -------
         val : float
-            Partial correlation coefficient.    
+            Partial correlation coefficient.
         """
 
         x = self._get_single_residuals(array, target_var = 0)
@@ -1152,7 +1182,7 @@ class ParCorr(CondIndTest):
 
         return val
 
-    def get_shuffle_significance(self, array, xyz, value, 
+    def get_shuffle_significance(self, array, xyz, value,
         return_null_dist=False):
         """Returns p-value for shuffle significance test.
 
@@ -1168,7 +1198,7 @@ class ParCorr(CondIndTest):
 
         value : number
             Value of test statistic for unshuffled estimate.
-        
+
         Returns
         -------
         pval : float
@@ -1182,12 +1212,12 @@ class ParCorr(CondIndTest):
 
         null_dist = self._get_shuffle_dist(array_resid, xyz_resid,
                                self.get_dependence_measure,
-                               sig_samples=self.sig_samples, 
+                               sig_samples=self.sig_samples,
                                sig_blocklength=self.sig_blocklength,
                                verbosity=self.verbosity)
 
         pval = (null_dist >= numpy.abs(value)).mean()
-        
+
         # Adjust p-value for two-sided measures
         if pval < 1.: pval *= 2.
 
@@ -1196,13 +1226,13 @@ class ParCorr(CondIndTest):
         else:
             return pval
 
-    def get_analytic_significance(self, value, T, dim): 
+    def get_analytic_significance(self, value, T, dim):
         """Returns analytic p-value from Student's t-test for the Pearson
         correlation coefficient.
-        
+
         Assumes two-sided correlation. If the degrees of freedom are less than
         1, numpy.nan is returned.
-        
+
         Parameters
         ----------
         value : float
@@ -1233,7 +1263,7 @@ class ParCorr(CondIndTest):
 
     def get_analytic_confidence(self, value, df, conf_lev):
         """Returns analytic confidence interval for correlation coefficient.
-        
+
         Based on Student's t-distribution.
 
         Parameters
@@ -1268,11 +1298,11 @@ class ParCorr(CondIndTest):
 
     def get_model_selection_criterion(self, j, parents, tau_max=0):
         """Returns Akaike's Information criterion modulo constants.
-        
+
         Fits a linear model of the parents to variable j and returns the score.
-        I used to determine optimal hyperparameters in PCMCI, in particular 
+        I used to determine optimal hyperparameters in PCMCI, in particular
         the pc_alpha value.
-        
+
         Parameters
         ----------
         j : int
@@ -1284,7 +1314,7 @@ class ParCorr(CondIndTest):
         tau_max : int, optional (default: 0)
             Maximum time lag. This may be used to make sure that estimates for
             different lags in X, Z, all have the same sample size.
-        
+
         Returns:
         score : float
             Model score.
@@ -1337,7 +1367,7 @@ class GP():
 
     gp_params : dictionary, optional (default: None)
         Dictionary with parameters for ``GaussianProcessRegressor``.
-    
+
     """
     def __init__(self,
                 gp_version='new',
@@ -1347,10 +1377,10 @@ class GP():
 
         self.gp_version = gp_version
         self.gp_params = gp_params
-    
+
     # @profile
     def _get_single_residuals(self, array, target_var,
-                              return_means=False, 
+                              return_means=False,
                               standardize=True,
                               return_likelihood=False):
         """Returns residuals of Gaussian process regression.
@@ -1420,7 +1450,7 @@ class GP():
 
             z = remove_ties(z)  #z += 1E-3 * numpy.random.rand(*z.shape)
             target_series = remove_ties(target_series)  #target_series += 1E-3 * numpy.random.rand(*target_series.shape)
-            
+
             gp = gaussian_process.GaussianProcess(
                 nugget=1E-1,
                 thetaL=1E-16,
@@ -1432,7 +1462,7 @@ class GP():
                 storage_mode='light')
 
         elif self.gp_version == 'new':
-            # Overwrite default kernel and alpha values 
+            # Overwrite default kernel and alpha values
             params = self.gp_params.copy()
             if 'kernel' not in list(self.gp_params):
                 kernel = gaussian_process.kernels.RBF() +\
@@ -1456,7 +1486,7 @@ class GP():
 
         if self.verbosity > 3 and self.gp_version == 'new':
             print(kernel, alpha, gp.kernel_, gp.alpha)
-        
+
         if self.verbosity > 3 and self.gp_version == 'old':
             print(gp.get_params)
 
@@ -1480,11 +1510,11 @@ class GP():
                                       parents,
                                       tau_max=0):
         """Returns log marginal likelihood for GP regression.
-        
+
         Fits a GP model of the parents to variable j and returns the negative
         log marginal likelihood as a model selection score. Is used to determine
         optimal hyperparameters in PCMCI, in particular the pc_alpha value.
-        
+
         Parameters
         ----------
         j : int
@@ -1496,7 +1526,7 @@ class GP():
         tau_max : int, optional (default: 0)
             Maximum time lag. This may be used to make sure that estimates for
             different lags in X, Z, all have the same sample size.
-        
+
         Returns:
         score : float
             Model score.
@@ -1573,7 +1603,7 @@ class GPACE(CondIndTest,GP):
 
     gp_params : dictionary, optional (default: None)
         Dictionary with parameters for ``GaussianProcessRegressor``.
-    
+
     ace_version : {'python', 'acepack'}
         Estimator for ACE estimator of maximal correlation to use. 'python'
         loads the very slow pure python version available from
@@ -1583,7 +1613,7 @@ class GPACE(CondIndTest,GP):
         Note that both versions 'python' and 'acepack' may result in different
         results. In [1]_ the acepack version was used.
 
-    **kwargs : 
+    **kwargs :
         Arguments passed on to parent class CondIndTest.
 
     """
@@ -1594,28 +1624,7 @@ class GPACE(CondIndTest,GP):
                 ace_version='acepack',
                 **kwargs):
 
-        try:
-            import rpy2
-            import rpy2.robjects
-            rpy2.robjects.r['options'](warn=-1)
-
-            from rpy2.robjects.packages import importr
-            acepack = importr('acepack')
-            import rpy2.robjects.numpy2ri
-            rpy2.robjects.numpy2ri.activate()
-
-        except:
-            print("Could not import rpy acepack package for GPACE,"
-                  " use python ACE package")
-
-        try: 
-            import ace
-        except:
-            print("Could not import python ACE package for GPACE")
-
-
-
-        GP.__init__(self, 
+        GP.__init__(self,
                     gp_version=gp_version,
                     gp_params=gp_params,
                     )
@@ -1646,7 +1655,7 @@ class GPACE(CondIndTest,GP):
         else:
             null_dist_file = numpy.load(null_dist_filename)
             # self.sample_sizes = null_dist_file['T']
-            self.null_dists = dict(zip(null_dist_file['T'], 
+            self.null_dists = dict(zip(null_dist_file['T'],
                                       null_dist_file['exact_dist']))
             # print self.null_dist
             self.null_samples = len(null_dist_file['exact_dist'][0])
@@ -1668,7 +1677,7 @@ class GPACE(CondIndTest,GP):
         Returns
         -------
         val : float
-            GPACE test statistic.    
+            GPACE test statistic.
         """
 
         D, T = array.shape
@@ -1694,9 +1703,9 @@ class GPACE(CondIndTest,GP):
         null distribution for different sample sizes. This file can then be
         supplied as null_dist_filename.
 
-        Parameters 
-        ---------- 
-        array_resid : array-like     
+        Parameters
+        ----------
+        array_resid : array-like
             data array must be of shape (2, T)
 
         Returns
@@ -1718,25 +1727,25 @@ class GPACE(CondIndTest,GP):
                     sys.stdout = self
                 def __exit__(self, type, value, traceback):
                     sys.stdout = self.stdout
-                def write(self, x): 
+                def write(self, x):
                     pass
             myace = ace.ace.ACESolver()
             myace.specify_data_set([x], y)
             with Suppressor():
                 myace.solve()
             val = numpy.corrcoef(myace.x_transforms[0], myace.y_transform)[0,1]
-        
+
         elif self.ace_version == 'acepack':
             ace_rpy = rpy2.robjects.r['ace'](x, y)
-            val = numpy.corrcoef(numpy.asarray(ace_rpy[8]).flatten(), 
+            val = numpy.corrcoef(numpy.asarray(ace_rpy[8]).flatten(),
                                  numpy.asarray(ace_rpy[9]))[0, 1]
         else:
             raise ValueError("ace_version must be 'python' or 'acepack'")
-        
+
         return val
 
 
-    def get_shuffle_significance(self, array, xyz, value, 
+    def get_shuffle_significance(self, array, xyz, value,
         return_null_dist=False):
         """Returns p-value for shuffle significance test.
 
@@ -1752,7 +1761,7 @@ class GPACE(CondIndTest,GP):
 
         value : number
             Value of test statistic for unshuffled estimate.
-        
+
         Returns
         -------
         pval : float
@@ -1766,12 +1775,12 @@ class GPACE(CondIndTest,GP):
 
         null_dist = self._get_shuffle_dist(array_resid, xyz_resid,
                                self.get_dependence_measure,
-                               sig_samples=self.sig_samples, 
+                               sig_samples=self.sig_samples,
                                sig_blocklength=self.sig_blocklength,
                                verbosity=self.verbosity)
 
         pval = (null_dist >= value).mean()
-        
+
         if return_null_dist:
             return pval, null_dist
         else:
@@ -1779,7 +1788,7 @@ class GPACE(CondIndTest,GP):
 
     def get_analytic_significance(self, value, T, dim):
         """Returns p-value for the maximal correlation coefficient.
-        
+
         The null distribution for necessary degrees of freedom (df) is loaded.
         If not available, the null distribution is generated with the function
         generate_nulldist(). It can be precomputed with the function
@@ -1788,7 +1797,7 @@ class GPACE(CondIndTest,GP):
         supplied as null_dist_filename. The maximal correlation coefficient is
         one-sided. If the degrees of freedom are less than 1, numpy.nan is
         returned.
-        
+
         Parameters
         ----------
         value : float
@@ -1819,7 +1828,7 @@ class GPACE(CondIndTest,GP):
                 if self.verbosity > 0:
                     print("Null distribution for GPACE not available "
                              "for deg. of freed. = %d."
-                             "" % df) 
+                             "" % df)
                 self.generate_nulldist(df)
 
             null_dist_here = self.null_dists[df]
@@ -1847,7 +1856,7 @@ class GPDC(CondIndTest,GP):
 
     Notes
     -----
-    
+
     GPDC is based on a Gaussian process (GP) regression and a distance
     correlation test on the residuals. Distance correlation is described in
     [2]_. To test :math:`X \perp Y | Z`, first :math:`Z` is regressed out from
@@ -1871,7 +1880,7 @@ class GPDC(CondIndTest,GP):
 
     References
     ----------
-    .. [2] Gabor J. Szekely, Maria L. Rizzo, and Nail K. Bakirov: Measuring and 
+    .. [2] Gabor J. Szekely, Maria L. Rizzo, and Nail K. Bakirov: Measuring and
            testing dependence by correlation of distances,
            https://arxiv.org/abs/0803.4101
 
@@ -1888,7 +1897,7 @@ class GPDC(CondIndTest,GP):
     gp_params : dictionary, optional (default: None)
         Dictionary with parameters for ``GaussianProcessRegressor``.
 
-    **kwargs : 
+    **kwargs :
         Arguments passed on to parent class CondIndTest.
 
     """
@@ -1898,7 +1907,7 @@ class GPDC(CondIndTest,GP):
                 gp_params=None,
                 **kwargs):
 
-        GP.__init__(self, 
+        GP.__init__(self,
                     gp_version=gp_version,
                     gp_params=gp_params,
                     )
@@ -1926,12 +1935,12 @@ class GPDC(CondIndTest,GP):
         else:
             null_dist_file = numpy.load(null_dist_filename)
             # self.sample_sizes = null_dist_file['T']
-            self.null_dists = dict(zip(null_dist_file['T'], 
+            self.null_dists = dict(zip(null_dist_file['T'],
                                       null_dist_file['exact_dist']))
             # print self.null_dist
             self.null_samples = len(null_dist_file['exact_dist'][0])
 
-    
+
     def get_dependence_measure(self, array, xyz):
         """Return GPDC measure.
 
@@ -1949,7 +1958,7 @@ class GPDC(CondIndTest,GP):
         Returns
         -------
         val : float
-            GPDC test statistic.    
+            GPDC test statistic.
         """
 
         D, T = array.shape
@@ -1965,7 +1974,7 @@ class GPDC(CondIndTest,GP):
     # @profile
     def _get_dcorr(self, array_resid):
         """Return distance correlation coefficient.
-        
+
         The variables are transformed to uniform marginals using the empirical
         cumulative distribution function beforehand. Here the null distribution
         is not analytically available, but can be precomputed with the function
@@ -1973,9 +1982,9 @@ class GPDC(CondIndTest,GP):
         null distribution for different sample sizes. This file can then be
         supplied as null_dist_filename.
 
-        Parameters 
-        ---------- 
-        array_resid : array-like     
+        Parameters
+        ----------
+        array_resid : array-like
             data array must be of shape (2, T)
 
         Returns
@@ -1990,11 +1999,11 @@ class GPDC(CondIndTest,GP):
         x, y = self._trafo2uniform(array_resid)
 
         dc, val, dvx, dvy = tigramite_cython_code.dcov_all(x, y)
-        
+
         return val
 
 
-    def get_shuffle_significance(self, array, xyz, value, 
+    def get_shuffle_significance(self, array, xyz, value,
         return_null_dist=False):
         """Returns p-value for shuffle significance test.
 
@@ -2010,7 +2019,7 @@ class GPDC(CondIndTest,GP):
 
         value : number
             Value of test statistic for unshuffled estimate.
-        
+
         Returns
         -------
         pval : float
@@ -2024,12 +2033,12 @@ class GPDC(CondIndTest,GP):
 
         null_dist = self._get_shuffle_dist(array_resid, xyz_resid,
                                self.get_dependence_measure,
-                               sig_samples=self.sig_samples, 
+                               sig_samples=self.sig_samples,
                                sig_blocklength=self.sig_blocklength,
                                verbosity=self.verbosity)
 
         pval = (null_dist >= value).mean()
-        
+
         if return_null_dist:
             return pval, null_dist
         else:
@@ -2037,7 +2046,7 @@ class GPDC(CondIndTest,GP):
 
     def get_analytic_significance(self, value, T, dim):
         """Returns p-value for the distance correlation coefficient.
-        
+
         The null distribution for necessary degrees of freedom (df) is loaded.
         If not available, the null distribution is generated with the function
         generate_nulldist(). It is recommended to generate the nulldists for a
@@ -2045,7 +2054,7 @@ class GPDC(CondIndTest,GP):
         generate_and_save_nulldists(...). The distance correlation coefficient
         is one-sided. If the degrees of freedom are less than 1, numpy.nan is
         returned.
-        
+
         Parameters
         ----------
         value : float
@@ -2075,8 +2084,8 @@ class GPDC(CondIndTest,GP):
                 if self.verbosity > 0:
                     print("Null distribution for GPDC not available "
                              "for deg. of freed. = %d."
-                             "" % df) 
-                    
+                             "" % df)
+
                 self.generate_nulldist(df)
 
             null_dist_here = self.null_dists[int(df)]
@@ -2105,12 +2114,12 @@ class CMIknn(CondIndTest):
     -----
     CMI is given by
 
-    .. math:: I(X;Y|Z) &= \int p(z)  \iint  p(x,y|z) \log 
+    .. math:: I(X;Y|Z) &= \int p(z)  \iint  p(x,y|z) \log
                 \frac{ p(x,y |z)}{p(x|z)\cdot p(y |z)} \,dx dy dz
 
-    Its knn-estimator is given by 
+    Its knn-estimator is given by
 
-    .. math:: \widehat{I}(X;Y|Z)  &=   \psi (k) + \frac{1}{T} \sum_{t=1}^T 
+    .. math:: \widehat{I}(X;Y|Z)  &=   \psi (k) + \frac{1}{T} \sum_{t=1}^T
             \left[ \psi(k_{Z,t}) - \psi(k_{XZ,t}) - \psi(k_{YZ,t}) \right]
 
     where :math:`\psi` is the Digamma function.  This estimator has as a
@@ -2131,9 +2140,9 @@ class CMIknn(CondIndTest):
 
     References
     ----------
-    .. [3] J. Runge, J. Heitzig, V. Petoukhov, and J. Kurths: 
-           Escaping the Curse of Dimensionality in Estimating Multivariate 
-           Transfer Entropy. Physical Review Letters, 108(25), 258701. 
+    .. [3] J. Runge, J. Heitzig, V. Petoukhov, and J. Kurths:
+           Escaping the Curse of Dimensionality in Estimating Multivariate
+           Transfer Entropy. Physical Review Letters, 108(25), 258701.
            http://doi.org/10.1103/PhysRevLett.108.258701
 
     Parameters
@@ -2149,17 +2158,17 @@ class CMIknn(CondIndTest):
         determines the size of hyper-cubes around each (high-dimensional) sample
         point.
 
-    transform : {'standardize', 'ranks',  'uniform', False}, optional 
+    transform : {'standardize', 'ranks',  'uniform', False}, optional
         (default: 'standardize')
         Whether to transform the array beforehand by standardizing
         or transforming to uniform marginals.
 
     significance : str, optional (default: 'shuffle_test')
-        Type of significance test to use. For CMIknn only 'fixed_thres' and 
+        Type of significance test to use. For CMIknn only 'fixed_thres' and
         'shuffle_test' are available.
 
-    **kwargs : 
-        Arguments passed on to parent class CondIndTest. 
+    **kwargs :
+        Arguments passed on to parent class CondIndTest.
     """
     def __init__(self,
                 knn=0.2,
@@ -2195,14 +2204,14 @@ class CMIknn(CondIndTest):
         sample in joint space XYZ and returns the numbers of nearest neighbors
         within eps in subspaces Z, XZ, YZ.
 
-        Parameters 
-        ---------- 
+        Parameters
+        ----------
         array : array-like
             data array with X, Y, Z in rows and observations in columns
 
         xyz : array of ints
             XYZ identifier array of shape (dim,).
-       
+
         knn : int or float
             Number of nearest-neighbors which determines the size of hyper-cubes
             around each (high-dimensional) sample point. If smaller than 1, this
@@ -2217,7 +2226,7 @@ class CMIknn(CondIndTest):
 
         dim, T = array.shape
         array = array.astype('float')
-        
+
         # Add noise to destroy ties...
         array += (1E-6 * array.std(axis=1).reshape(dim, 1)
                   * numpy.random.rand(array.shape[0], array.shape[1]))
@@ -2264,7 +2273,7 @@ class CMIknn(CondIndTest):
 
         xyz : array of ints
             XYZ identifier array of shape (dim,).
-        
+
         Returns
         -------
         val : float
@@ -2288,7 +2297,7 @@ class CMIknn(CondIndTest):
         return val
 
 
-    def get_shuffle_significance(self, array, xyz, value, 
+    def get_shuffle_significance(self, array, xyz, value,
         return_null_dist=False):
         """Returns p-value for nearest-neighbor shuffle significance test.
 
@@ -2309,13 +2318,20 @@ class CMIknn(CondIndTest):
 
         value : number
             Value of test statistic for unshuffled estimate.
-        
+
         Returns
         -------
         pval : float
             p-value
         """
         dim, T = array.shape
+
+        # Skip shuffle test if value is above threshold
+        # if value > self.minimum threshold:
+        #     if return_null_dist:
+        #         return 0., None
+        #     else:
+        #         return 0.
 
         # max_neighbors = max(1, int(max_neighbor_ratio*T))
         x_indices = numpy.where(xyz == 0)[0]
@@ -2330,10 +2346,10 @@ class CMIknn(CondIndTest):
             # Get nearest neighbors around each sample point in Z
             z_array = numpy.fastCopyAndTranspose(array[z_indices,:])
             tree_xyz = spatial.cKDTree(z_array)
-            neighbors = tree_xyz.query(z_array, 
-                        k=self.shuffle_neighbors, 
-                        p=numpy.inf, 
-                        eps=0.)[1].astype('int32')  
+            neighbors = tree_xyz.query(z_array,
+                        k=self.shuffle_neighbors,
+                        p=numpy.inf,
+                        eps=0.)[1].astype('int32')
             # print neighbors
 
             null_dist = numpy.zeros(self.sig_samples)
@@ -2347,22 +2363,22 @@ class CMIknn(CondIndTest):
                 # possible duplicates
                 restricted_permutation = \
                     tigramite_cython_code._get_restricted_permutation_cython(
-                                T=T, 
-                                shuffle_neighbors=self.shuffle_neighbors, 
-                                neighbors=neighbors, 
+                                T=T,
+                                shuffle_neighbors=self.shuffle_neighbors,
+                                neighbors=neighbors,
                                 order = order)
 
                 array_shuffled = numpy.copy(array)
                 for i in x_indices:
                     array_shuffled[i] = array[i, restricted_permutation]
 
-                null_dist[sam] = self.get_dependence_measure(array_shuffled, 
+                null_dist[sam] = self.get_dependence_measure(array_shuffled,
                                                              xyz)
-        
+
         else:
             null_dist = self._get_shuffle_dist(array, xyz,
                                self.get_dependence_measure,
-                               sig_samples=self.sig_samples, 
+                               sig_samples=self.sig_samples,
                                sig_blocklength=self.sig_blocklength,
                                verbosity=self.verbosity)
 
@@ -2410,7 +2426,7 @@ class CMIsymb(CondIndTest):
     -----
     CMI and its estimator are given by
 
-    .. math:: I(X;Y|Z) &= \sum p(z)  \sum \sum  p(x,y|z) \log 
+    .. math:: I(X;Y|Z) &= \sum p(z)  \sum \sum  p(x,y|z) \log
                 \frac{ p(x,y |z)}{p(x|z)\cdot p(y |z)} \,dx dy dz
 
     Parameters
@@ -2419,7 +2435,7 @@ class CMIsymb(CondIndTest):
         Number of symbols in input data. If None, n_symbs=data.max()+1
 
     significance : str, optional (default: 'shuffle_test')
-        Type of significance test to use. For CMIsymb only 'fixed_thres' and 
+        Type of significance test to use. For CMIsymb only 'fixed_thres' and
         'shuffle_test' are available.
 
     sig_blocklength : int, optional (default: 1)
@@ -2428,7 +2444,7 @@ class CMIsymb(CondIndTest):
     conf_blocklength : int, optional (default: 1)
         Block length for block-bootstrap.
 
-    **kwargs : 
+    **kwargs :
         Arguments passed on to parent class CondIndTest.
     """
     def __init__(self,
@@ -2446,8 +2462,8 @@ class CMIsymb(CondIndTest):
 
         self.n_symbs = n_symbs
 
-        CondIndTest.__init__(self, 
-                             significance=significance, 
+        CondIndTest.__init__(self,
+                             significance=significance,
                              sig_blocklength=sig_blocklength,
                              conf_blocklength=conf_blocklength,
                              **kwargs)
@@ -2471,7 +2487,7 @@ class CMIsymb(CondIndTest):
         ----------
         symb_array : integer array
             Data array of shape (dim, T).
-            
+
         weights : float array, optional (default: None)
             Optional weights array of shape (dim, T).
 
@@ -2540,7 +2556,7 @@ class CMIsymb(CondIndTest):
 
         xyz : array of ints
             XYZ identifier array of shape (dim,).
-        
+
         Returns
         -------
         val : float
@@ -2561,9 +2577,9 @@ class CMIsymb(CondIndTest):
             def plogp_func(t):
                 return gfunc[t]
             return numpy.vectorize(plogp_func)
-        
+
         plogp = _plogp_vector(T)
-        
+
         hxyz = (-(plogp(hist)).sum() + plogp(T)) / float(T)
         hxz = (-(plogp(hist.sum(axis=1))).sum() + plogp(T)) / \
             float(T)
@@ -2587,7 +2603,7 @@ class CMIsymb(CondIndTest):
 
         return val
 
-    def get_shuffle_significance(self, array, xyz, value, 
+    def get_shuffle_significance(self, array, xyz, value,
         return_null_dist=False):
         """Returns p-value for shuffle significance test.
 
@@ -2603,7 +2619,7 @@ class CMIsymb(CondIndTest):
 
         value : number
             Value of test statistic for unshuffled estimate.
-        
+
         Returns
         -------
         pval : float
@@ -2612,12 +2628,12 @@ class CMIsymb(CondIndTest):
 
         null_dist = self._get_shuffle_dist(array, xyz,
                                self.get_dependence_measure,
-                               sig_samples=self.sig_samples, 
+                               sig_samples=self.sig_samples,
                                sig_blocklength=self.sig_blocklength,
                                verbosity=self.verbosity)
 
         pval = (null_dist >= value).mean()
-        
+
         if return_null_dist:
             return pval, null_dist
         else:
@@ -2640,6 +2656,183 @@ class CMIsymb(CondIndTest):
         raise ValueError("Model selection not implemented for %s"
                          "" % self.measure)
 
+
+class RCOT(CondIndTest):
+    r"""Randomized Conditional Correlation Test.
+
+    Tests conditional independence in the fully non-parametric setting based on
+    Kernel measures. For not too small sample sizes, the test can utilize an
+    analytic approximation of the null distribution making it very fast. Based
+    on r-package ``rcit``. This test is described in [5]_.
+
+    Notes
+    -----
+
+    RCOT is a fast variant of the Kernel Conditional Independence Test (KCIT)
+    utilizing random Fourier features. Kernel tests measure conditional
+    independence in the fully non-parametric setting. In practice, RCOT tests
+    scale linearly with sample size and return accurate p-values much faster
+    than KCIT in the large sample size context. To use the analytical null
+    approximation, the sample size should be at least ~1000.
+
+    The method is fully described in [5]_ and the r-package documentation. The
+    free parameters are the approximation of the partial kernel cross-covariance
+    matrix and the number of random fourier features for the conditioning set.
+    One caveat is that RCOT is, as the name suggests, based on random fourier
+    features. To get reproducable results, you should fix the seed (default).
+
+    This class requires the rpy package and the prior installation of ``rcit``
+    from https://github.com/ericstrobl/RCIT.
+
+    References
+    ----------
+    .. [5] Eric V. Strobl, Kun Zhang, Shyam Visweswaran:
+           Approximate Kernel-based Conditional Independence Tests for Fast Non-
+           Parametric Causal Discovery.
+           https://arxiv.org/abs/1702.03877
+
+    Parameters
+    ----------
+    num_f : int, optional
+        Number of random fourier features for conditioning set. More features
+        better approximate highly structured joint densities, but take more
+        computational time.
+
+    approx : str, optional
+        Which approximation of the partial cross-covariance matrix, options:
+        'lpd4' the Lindsay-Pilla-Basak method (default), 'gamma' for the
+        Satterthwaite-Welch method, 'hbe' for the Hall-Buckley-Eagleson method,
+        'chi2' for a normalized chi-squared statistic, 'perm' for permutation
+        testing (warning: this one is slow).
+
+    seed : int or None, optional
+        Which random fourier feature seed to use. If None, you won't get
+        reproducable results.
+
+    significance : str, optional (default: 'analytic')
+        Type of significance test to use.
+
+    **kwargs :
+        Arguments passed on to parent class CondIndTest.
+    """
+    def __init__(self,
+                num_f=25,
+                approx="lpd4",
+                seed=42,
+                significance='analytic',
+                **kwargs):
+
+        self.num_f = num_f
+        self.approx = approx
+        self.seed = seed
+
+        self.measure = 'rcot'
+        self.two_sided = False
+        self.residual_based = False
+        self.recycle_residuals = False
+
+        CondIndTest.__init__(self, significance=significance, **kwargs)
+
+        if self.verbosity > 0:
+            print("num_f = %s" % self.num_f)
+            print("approx = %s" % self.approx)
+            print("")
+
+    def get_dependence_measure(self, array, xyz):
+        """Returns RCOT estimate.
+
+        Parameters
+        ----------
+        array : array-like
+            data array with X, Y, Z in rows and observations in columns
+
+        xyz : array of ints
+            XYZ identifier array of shape (dim,).
+
+        Returns
+        -------
+        val : float
+            RCOT estimate.
+        """
+
+        dim, T = array.shape
+
+        x = array[0]
+        y = array[1]
+        z = numpy.fastCopyAndTranspose(array[2:])
+
+        rcot = numpy.asarray(rpy2.robjects.r['RCIT'](x, y, z,
+            corr=True,
+            num_f=self.num_f,
+            approx=self.approx,
+            seed=self.seed))
+
+        val = float(rcot[1])
+        self.pval = float(rcot[0])
+
+        return val
+
+
+    def get_analytic_significance(self, **args):
+        """Returns analytic p-value from RCIT test statistic.
+
+        Returns
+        -------
+        pval : float or numpy.nan
+            P-value.
+        """
+
+        return self.pval
+
+    def get_shuffle_significance(self, array, xyz, value,
+        return_null_dist=False):
+        """Returns p-value for shuffle significance test.
+
+        For residual-based test statistics only the residuals are shuffled.
+
+        Parameters
+        ----------
+        array : array-like
+            data array with X, Y, Z in rows and observations in columns
+
+        xyz : array of ints
+            XYZ identifier array of shape (dim,).
+
+        value : number
+            Value of test statistic for unshuffled estimate.
+
+        Returns
+        -------
+        pval : float
+            p-value
+        """
+
+        null_dist = self._get_shuffle_dist(array, xyz,
+                               self.get_dependence_measure,
+                               sig_samples=self.sig_samples,
+                               sig_blocklength=self.sig_blocklength,
+                               verbosity=self.verbosity)
+
+        pval = (null_dist >= value).mean()
+
+        if return_null_dist:
+            return pval, null_dist
+        else:
+            return pval
+
+    def get_analytic_confidence(self, value, df, conf_lev):
+        """Placeholder function, not available."""
+        raise ValueError("Analytic confidence not implemented for %s"
+                         "" % self.measure)
+
+    def get_model_selection_criterion(self, j,
+                                      parents,
+                                      tau_max=0):
+        """Placeholder function, not available."""
+        raise ValueError("Model selection not implemented for %s"
+                         "" % self.measure)
+
+
 if __name__ == '__main__':
 
     # Quick test
@@ -2647,7 +2840,7 @@ if __name__ == '__main__':
     numpy.random.seed(44)
     a = 0.
     c = 0.6
-    T = 260
+    T = 4000
     # Each key refers to a variable and the incoming links are supplied as a
     # list of format [((driver, lag), coeff), ...]
     links_coeffs = {0: [((0, -1), a)],
@@ -2718,10 +2911,10 @@ if __name__ == '__main__':
     cond_ind_test = CMIknn(
         significance='shuffle_test',
         sig_samples=1000,
-        knn=100,
+        knn=.1,
         transform='ranks',
         shuffle_neighbors=5,
-        confidence='bootstrap', #'bootstrap',
+        confidence=False, #'bootstrap',
         conf_lev=0.9,
         conf_samples=100,
         conf_blocklength=None,
@@ -2746,6 +2939,21 @@ if __name__ == '__main__':
     #     recycle_residuals=False,
     #     verbosity=3)
 
+
+    # cond_ind_test = RCOT(
+    #     significance='analytic',
+    #     num_f=25,
+    #     confidence=False, #'bootstrap', #'bootstrap',
+    #     conf_lev=0.9,
+    #     conf_samples=100,
+    #     conf_blocklength=None,
+
+    #     use_mask=False,
+    #     mask_type='y',
+    #     recycle_residuals=False,
+    #     verbosity=3,
+    #     )
+
     if cond_ind_test.measure == 'cmi_symb':
         data = pp.quantile_bin_array(data, bins=6)
 
@@ -2756,6 +2964,9 @@ if __name__ == '__main__':
     X = [(0, -2)]
     Y = [(2, 0)]
     Z = [(1, -1)]  #(2, -1), (1, -1), (0, -3)]  #[(1, -1)]  #[(2, -1), (1, -1), (0, -3)] # [(2, -1), (1, -1), (2, -3)]   [(1, -1)]
+
+    print(cond_ind_test._get_shuffle_dist)
+
     val, pval = cond_ind_test.run_test(X, Y, Z, tau_max=tau_max)
     conf_interval = cond_ind_test.get_confidence(X, Y, Z, tau_max=tau_max)
 
