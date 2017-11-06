@@ -89,7 +89,7 @@ def test_construct_array(cstrct_array_params):
     # Get the needed parameters from the data
     T, N = data.shape
     n_times = T - (2 * tau_max)
-    
+
     # Make a fake mask
     use_mask = False
     data_mask = np.zeros_like(data, dtype='bool')
@@ -122,7 +122,7 @@ def test_construct_array(cstrct_array_params):
     expect_xyz = np.array([0 for _ in x_nds] +\
                           [1 for _ in y_nds] +\
                           [2 for _ in z_nds])
-    # Apply the mask, which always blocks the latest time of the 0th node of the 
+    # Apply the mask, which always blocks the latest time of the 0th node of the
     # masked variable, which removes the first time slice in the returned array
     if use_mask:
         expect_array = expect_array[:,1:]

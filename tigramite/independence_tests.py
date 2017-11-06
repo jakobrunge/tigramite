@@ -64,8 +64,6 @@ def _construct_array(X, Y, Z, tau_max, data,
                      do_checks=True,
                      cut_off='2xtau_max',
                      verbosity=0):
-    # TODO having both missing_flag and mask is redundent.
-    # TODO what is this cutoff parameter? how does it interplay with tau_max?
     """Constructs array from variables X, Y, Z from data.
 
     Data is of shape (T, N), where T is the time series length and N the
