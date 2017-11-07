@@ -113,7 +113,7 @@ RCoT <- function(x,y,z=NULL,approx="lpd4",num_f=25,seed=NULL){
         p = 1-pchisq(Sta, length(c(Cxy_z)));
       } else{
 
-        eig_d = eigen(Cov);
+        eig_d = eigen(Cov, symmetric=TRUE);
         eig_d$values=eig_d$values[eig_d$values>0];
 
         if (approx == "gamma"){
