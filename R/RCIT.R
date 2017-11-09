@@ -128,7 +128,7 @@ RCIT <- function(x,y,z=NULL,approx="lpd4",num_f=25,seed=NULL){
       } else if (approx == "lpd4"){
         eig_d_values=eig_d$values;
         p=try(1-lpb4(eig_d_values,Sta),silent=TRUE);
-        if (!is.numeric(p)){
+        if (!is.numeric(p) | is.nan(p)){
           p=1-hbe(eig_d$values,Sta);
         }
       }

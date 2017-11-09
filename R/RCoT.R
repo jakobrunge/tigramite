@@ -54,7 +54,6 @@ RCoT <- function(x,y,z=NULL,approx="lpd4",num_f=25,seed=NULL){
     y=normalize(y);
     z=normalize(z);
 
-
     four_z = random_fourier_features(z[,1:d],num_f=num_f,sigma=median(c(t(dist(z[1:r1,])))), seed = seed );
     four_x = random_fourier_features(x,num_f=5,sigma=median(c(t(dist(x[1:r1,])))), seed = seed );
     four_y = random_fourier_features(y,num_f=5,sigma=median(c(t(dist(y[1:r1,])))), seed = seed );
@@ -126,7 +125,7 @@ RCoT <- function(x,y,z=NULL,approx="lpd4",num_f=25,seed=NULL){
         } else if (approx == "lpd4"){
           eig_d_values=eig_d$values;
           p=try(1-lpb4(eig_d_values,Sta),silent=TRUE);
-          if (!is.numeric(p)){
+          if (!is.numeric(p) | is.nan(p)){
             p=1-hbe(eig_d$values,Sta);
           }
         }
