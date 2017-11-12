@@ -67,28 +67,36 @@ def gen_nodes(n_nodes, seed, t_min=-2, n_max=2):
     z_nds = [rand_node(t_min, n_max) for _ in range(n_nodes)]
     return x_nds, y_nds, z_nds
 
-
 @pytest.fixture(params=[
     # Generate the independence test
-    #(X, Y, Z) nodes,                    t_max, m_flag, mask_type
-    (gen_nodes(3, 0, t_min=-3, n_max=9), 3,     None,   None),  # Few nodes
-    (gen_nodes(7, 1, t_min=-3, n_max=9), 3,     None,   None),  # More nodes
-    (gen_nodes(7, 2, t_min=-3, n_max=3), 3,     None,   None),  # Repeated nodes
-    (gen_nodes(3, 4, t_min=-4, n_max=9), 2,     None,   ['x']), # masked x
-    (gen_nodes(3, 5, t_min=-4, n_max=9), 2,     None,   ['y']), # masked y
-    (gen_nodes(3, 6, t_min=-4, n_max=9), 2,     None,   ['z'])])# masked z
+    #(X, Y, Z) nodes,                    t_max, m_val, mask_type
+    (gen_nodes(3, 0, t_min=-3, n_max=9), 3,     False, None), # Few nodes
+    (gen_nodes(7, 1, t_min=-3, n_max=9), 3,     False, None), # More nodes
+    (gen_nodes(7, 2, t_min=-3, n_max=3), 3,     False, None), # Repeated nodes
+    (gen_nodes(7, 3, t_min=-3, n_max=9), 3,     True,  None), # Missing vals
+    (gen_nodes(7, 4, t_min=-3, n_max=9), 3,     True,  ['x']), # M-val + mask
+    (gen_nodes(3, 5, t_min=-4, n_max=9), 2,     False, ['x']), # masked x
+    (gen_nodes(3, 6, t_min=-4, n_max=9), 2,     False, ['y']), # masked y
+    (gen_nodes(3, 7, t_min=-4, n_max=9), 2,     False, ['z']), # masked z
+    (gen_nodes(3, 7, t_min=-4, n_max=9), 2,     False, ['x','y','z'])])#mask xyz
 def cstrct_array_params(request):
     return request.param
 
 def test_construct_array(cstrct_array_params):
     # Unpack the parameters
-    (x_nds, y_nds, z_nds), tau_max, missing_flag, mask_type =\
+    (x_nds, y_nds, z_nds), tau_max, missing_vals, mask_type =\
         cstrct_array_params
     # Make some fake data
     data = np.arange(150).reshape(10, 15).T
     # Get the needed parameters from the data
     T, N = data.shape
-    n_times = T - (2 * tau_max)
+    max_lag = 2*tau_max
+    n_times = T - max_lag
+
+    # When testing masking and missing value flags, we will remove time slices,
+    # starting with the earliest slice.  This counter keeps track of how many
+    # rows have been masked.
+    n_rows_masked = 0
 
     # Make a fake mask
     use_mask = False
@@ -97,8 +105,21 @@ def test_construct_array(cstrct_array_params):
         use_mask = True
         for var, nodes in zip(['x', 'y', 'z'], [x_nds, y_nds, z_nds]):
             if var in mask_type:
+                # Get the first node
                 a_nd, a_tau = nodes[0]
-                data_mask[a_tau-n_times, a_nd] = True
+                # Mask the first value of this node
+                data_mask[a_tau - n_times + n_rows_masked, a_nd] = True
+                n_rows_masked += 1
+
+    # Choose fake missing value as the first entry from the value that would be
+    # returned from the first z-node
+    missing_flag = None
+    if missing_vals:
+        # Take a value that would appear in from the z-node selection and make
+        # it the missing value flag
+        a_nd, a_tau = z_nds[0]
+        missing_flag = data[a_tau - n_times + n_rows_masked, a_nd]
+        n_rows_masked += max_lag + 1
 
     # Construct the array
     array, xyz = _construct_array(x_nds, y_nds, z_nds,
@@ -117,15 +138,15 @@ def test_construct_array(cstrct_array_params):
              if (node not in x_nds) and (node not in y_nds)]
     # Get the expected results
     expect_array = np.array([list(range(data[time-n_times, node],
-                                        data[time-n_times,node]+n_times))
+                                        data[time-n_times, node]+n_times))
                              for node, time in x_nds + y_nds + z_nds])
     expect_xyz = np.array([0 for _ in x_nds] +\
                           [1 for _ in y_nds] +\
                           [2 for _ in z_nds])
     # Apply the mask, which always blocks the latest time of the 0th node of the
-    # masked variable, which removes the first time slice in the returned array
-    if use_mask:
-        expect_array = expect_array[:,1:]
+    # masked variable, which removes the first n time slices in the returned
+    # array
+    expect_array = expect_array[:, n_rows_masked:]
     # Test the results
     np.testing.assert_almost_equal(array, expect_array)
     np.testing.assert_almost_equal(xyz, expect_xyz)
