@@ -195,20 +195,23 @@ def _construct_array(X, Y, Z, tau_max, data,
     # Choose which indecies to use
     use_indices = numpy.ones(time_length, dtype='int')
 
+    # Remove all values that have missing value flag, as well as the time slices
+    # that occur up to max_lag after
     if missing_flag is not None:
-        # Dismiss all samples where missing values occur in any variable
-        # and for any lag up to max_lag
-        missing_anywhere = numpy.any(data==missing_flag, axis=1)
+        # Find all samples where the missing value occurs in one atleast
+        # variable
+        missing_anywhere = numpy.any(array == missing_flag, axis=0)
         for tau in range(max_lag+1):
-            use_indices[missing_anywhere[tau:time_length + tau]] = 0
+            # Mask all times where the missing value was found (tau = 0) and
+            # all times after (0 < tau <= max_lag)
+            use_indices[numpy.roll(missing_anywhere, tau)] = 0
 
     if use_mask:
         # Remove samples with mask == 1
         # conditional on which mask_type is used
         array_selector = numpy.zeros((dim, time_length), dtype='int32')
         for i, (var, lag) in enumerate(XYZ):
-            array_selector[i, :] = mask[max_lag + lag: T + lag, var] == False
-
+            array_selector[i, :] = ~mask[max_lag + lag: T + lag, var]
         if 'x' in mask_type:
             use_indices *= numpy.prod(array_selector[xyz == 0, :], axis=0)
         if 'y' in mask_type:
