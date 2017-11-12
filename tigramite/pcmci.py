@@ -1441,10 +1441,15 @@ class PCMCI():
         q_key = 'q_matrix'
         if q_key in return_dict:
             q_matrix = return_dict[q_key]
+        # Check if conf_matrix is defined
+        conf_matrix = None
+        conf_key = 'conf_matrix'
+        if conf_key in return_dict:
+            conf_matrix = return_dict[conf_key]
         # Wrap the already defined function
         self.print_significant_links(return_dict['p_matrix'],
                                      return_dict['val_matrix'],
-                                     conf_matrix=return_dict['conf_matrix'],
+                                     conf_matrix=conf_matrix,
                                      q_matrix=q_matrix,
                                      alpha_level=alpha_level)
 
