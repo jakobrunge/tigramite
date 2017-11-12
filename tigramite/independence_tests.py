@@ -201,10 +201,17 @@ def _construct_array(X, Y, Z, tau_max, data,
         # Find all samples where the missing value occurs in one atleast
         # variable
         missing_anywhere = numpy.any(array == missing_flag, axis=0)
+        # Add on some dummy indecies so we can permute the values across all
+        # alllowed lags using np.roll
+        missing_anywhere = numpy.append(missing_anywhere,
+                                        numpy.zeros((max_lag), dtype=bool))
+        # TODO check with jakob: 
+        #   * Before, only lags up to tau were included.
         for tau in range(max_lag+1):
             # Mask all times where the missing value was found (tau = 0) and
             # all times after (0 < tau <= max_lag)
-            use_indices[numpy.roll(missing_anywhere, tau)] = 0
+            permuted_indexes = numpy.roll(missing_anywhere, tau)[:-max_lag]
+            use_indices[permuted_indexes] = 0
 
     if use_mask:
         # Remove samples with mask == 1
