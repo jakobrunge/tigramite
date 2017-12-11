@@ -132,11 +132,11 @@ def _construct_array(X, Y, Z, tau_max, data,
         If return_cleaned_xyz is True, also outputs the cleaned XYZ lists.
     """
 
-    def uniq(input):
+    def uniq(a_input):
         output = []
-        for x in input:
-            if x not in output:
-                output.append(x)
+        for i in a_input:
+            if i not in output:
+                output.append(i)
         return output
 
     data_type = data.dtype
@@ -181,9 +181,12 @@ def _construct_array(X, Y, Z, tau_max, data,
 
     # Setup XYZ identifier
     # TODO make more efficient
-    xyz = numpy.array([0 for i in range(len(X))] +
-                      [1 for i in range(len(Y))] +
-                      [2 for i in range(len(Z))])
+    index_code = {'x' : 0, 
+                  'y' : 1,
+                  'z' : 2}
+    xyz = numpy.array([index_code['x'] for i in range(len(X))] +
+                      [index_code['y'] for i in range(len(Y))] +
+                      [index_code['z'] for i in range(len(Z))])
 
     # Setup and fill array with lagged time series
     time_length = T - max_lag
@@ -198,11 +201,12 @@ def _construct_array(X, Y, Z, tau_max, data,
     # Remove all values that have missing value flag, as well as the time slices
     # that occur up to max_lag after
     if missing_flag is not None:
-        # Find all samples where the missing value occurs in one atleast
+        # Find all samples where the missing value occurs in one at least
         # variable
         missing_anywhere = numpy.any(data == missing_flag, axis=0)
-        # Add on some dummy indecies so we can permute the values across all
-        # alllowed lags using np.roll
+        # Add on some dummy indices so we can permute the values across all
+        # allowed lags using np.roll without np.roll causing late-values to 
+        # interfere with early values
         missing_anywhere = numpy.append(missing_anywhere,
                                         numpy.zeros((max_lag), dtype=bool))
         # TODO check with jakob: 
@@ -213,24 +217,17 @@ def _construct_array(X, Y, Z, tau_max, data,
             permuted_indexes = numpy.roll(missing_anywhere, tau)[:-max_lag]
             use_indices[permuted_indexes] = 0
 
-        # Dismiss all samples where missing values occur in any variable
-        # and for any lag up to max_lag
-        missing_anywhere = numpy.any(data==missing_flag, axis=1)
-        for tau in range(max_lag+1):
-            use_indices[missing_anywhere[tau:time_length + tau]] = 0
-
     if use_mask:
-        # Remove samples with mask == 1
-        # conditional on which mask_type is used
+        # Remove samples with mask == 1 conditional on which mask_type is used
+        # Create an array selector that is the same shape as the data
         array_selector = numpy.zeros((dim, time_length), dtype='int32')
+        # Iterate over all nodes named in X, Y, or Z
         for i, (var, lag) in enumerate(XYZ):
+            # Mark all values that
             array_selector[i, :] = ~mask[max_lag + lag: T + lag, var]
-        if 'x' in mask_type:
-            use_indices *= numpy.prod(array_selector[xyz == 0, :], axis=0)
-        if 'y' in mask_type:
-            use_indices *= numpy.prod(array_selector[xyz == 1, :], axis=0)
-        if 'z' in mask_type:
-            use_indices *= numpy.prod(array_selector[xyz == 2, :], axis=0)
+        for idx, cde in index_code.items():
+            if idx in mask_type:
+                use_indices *= numpy.prod(array_selector[xyz == cde, :], axis=0)
 
     if missing_flag is not None or use_mask:
         if use_indices.sum() == 0:

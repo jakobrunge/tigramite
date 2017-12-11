@@ -2,12 +2,10 @@
 Tests for independence_tests.py.
 """
 from __future__ import print_function
-from collections import Counter, defaultdict, OrderedDict
+from collections import OrderedDict
 import numpy as np
-from nose.tools import assert_equal
 import pytest
 
-from tigramite.pcmci import PCMCI
 from tigramite.independence_tests import ParCorr, GPDC, CMIsymb, CMIknn #, GPACE
 from tigramite.independence_tests import _construct_array
 import tigramite.data_processing as pp
