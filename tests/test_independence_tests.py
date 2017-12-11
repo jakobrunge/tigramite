@@ -154,12 +154,12 @@ def test_construct_array(cstrct_array_params):
 def test_missing_values():
     np.random.seed(42)
     data = np.array([[0, 10, 20, 30],
-                        [1, 11, 21, 31],
-                        [2, 12, 22, 32],
-                        [3, 13, 999, 33],
-                        [4, 14, 24, 34],
-                        [5, 15, 25, 35],
-                        [6, 16, 26, 36]])
+                     [1, 11, 21, 31],
+                     [2, 12, 22, 32],
+                     [3, 13, 999, 33],
+                     [4, 14, 24, 34],
+                     [5, 15, 25, 35],
+                     [6, 16, 26, 36]])
     data_mask = np.array([[0, 0, 0, 0],
                              [0, 0, 0, 0],
                              [0, 0, 0, 0],
@@ -184,7 +184,6 @@ def test_missing_values():
         missing_flag=999,
         mask_type=['y'], verbosity=VERBOSITY)
 
-    # print(res[0])
     np.testing.assert_almost_equal(res[0], np.array([[10, 14],
                                                      [ 2,  6],
                                                      [21, 25]]))
