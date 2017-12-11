@@ -63,6 +63,8 @@ def _construct_array(X, Y, Z, tau_max, data,
                      verbosity=0):
     # TODO input array is (T,N) but output array is like (N,T)?
     # TODO are the input and output arrays the same length in time?
+    # TODO remove mask and use_mask, mask should just be None if not used
+    # TODO test cutoff
     """Constructs array from variables X, Y, Z from data.
 
     Data is of shape (T, N), where T is the time series length and N the
@@ -193,10 +195,12 @@ def _construct_array(X, Y, Z, tau_max, data,
     # Note, lags are negative here
     for i, (var, lag) in enumerate(XYZ):
         array[i, :] = data[max_lag + lag:T + lag, var]
-    print(array.shape)
-    print(data.shape)
+    print("data: ", data.shape)
+    print("array: ", array.shape)
+    print("array[0]: ", array[0, :].shape)
 
     # Choose which indices to use
+    # TODO should masking
     use_indices = numpy.ones(time_length, dtype='int')
 
     # Remove all values that have missing value flag, as well as the time slices
@@ -204,7 +208,9 @@ def _construct_array(X, Y, Z, tau_max, data,
     if missing_flag is not None:
         # Find all samples where the missing value occurs in one at least
         # variable
-        missing_anywhere = numpy.any(data == missing_flag, axis=0)
+        missing_anywhere = numpy.any(array == missing_flag, axis=0)
+        print(missing_anywhere)
+        print(use_indices)
         # Add on some dummy indices so we can permute the values across all
         # allowed lags using np.roll without np.roll causing late-values to
         # interfere with early values
@@ -220,15 +226,24 @@ def _construct_array(X, Y, Z, tau_max, data,
 
     if use_mask:
         # Remove samples with mask == 1 conditional on which mask_type is used
-        # Create an array selector that is the same shape as the data
-        array_selector = numpy.zeros((dim, time_length), dtype='int32')
+        # Create an array selector that is the same shape as the output array
+        array_mask = numpy.zeros((dim, time_length), dtype='int32')
         # Iterate over all nodes named in X, Y, or Z
         for i, (var, lag) in enumerate(XYZ):
-            # Mark all values that
-            array_selector[i, :] = ~mask[max_lag + lag: T + lag, var]
+            # Transform the mask into the output array shape, i.e. from data
+            # mask to array mask
+            array_mask[i, :] = ~mask[max_lag + lag: T + lag, var]
+        # Iterate over defined mapping from letter index to number index,
+        # i.e. 'x' -> 0, 'y' -> 1, 'z'-> 2
         for idx, cde in index_code.items():
+            # Check if the letter index is in the mask type
             if idx in mask_type:
-                use_indices *= numpy.prod(array_selector[xyz == cde, :], axis=0)
+                # If so, check if any of the data that correspond to the 
+                # letter index is masked by taking the product along the
+                # node-data to return a time slice selection, where 0 means the 
+                # time slice will not be used
+                slice_select = numpy.prod(array_mask[xyz == cde, :], axis=0)
+                use_indices *= slice_select
 
     if (missing_flag is not None) or use_mask:
         if use_indices.sum() == 0:

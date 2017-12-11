@@ -65,6 +65,7 @@ def gen_nodes(n_nodes, seed, t_min=-2, n_max=2):
     z_nds = [rand_node(t_min, n_max) for _ in range(n_nodes)]
     return x_nds, y_nds, z_nds
 
+# CONSTRUCT ARRAY TESTING ######################################################
 @pytest.fixture(params=[
     # Generate the independence test
     #(X, Y, Z) nodes,                    t_max, m_val, mask_type
@@ -113,7 +114,7 @@ def test_construct_array(cstrct_array_params):
     # returned from the first z-node
     missing_flag = None
     if missing_vals:
-        # Take a value that would appear in from the z-node selection and make
+        # Take a value that would appear in the z-node selection and make
         # it the missing value flag
         a_nd, a_tau = z_nds[0]
         missing_flag = data[a_tau - n_times + n_rows_masked, a_nd]
@@ -148,43 +149,6 @@ def test_construct_array(cstrct_array_params):
     # Test the results
     np.testing.assert_almost_equal(array, expect_array)
     np.testing.assert_almost_equal(xyz, expect_xyz)
-
-def test_missing_values():
-    np.random.seed(42)
-    data = np.array([[0, 10, 20, 30],
-                     [1, 11, 21, 31],
-                     [2, 12, 22, 32],
-                     [3, 13, 999, 33],
-                     [4, 14, 24, 34],
-                     [5, 15, 25, 35],
-                     [6, 16, 26, 36]])
-    data_mask = np.array([[0, 0, 0, 0],
-                             [0, 0, 0, 0],
-                             [0, 0, 0, 0],
-                             [0, 0, 0, 0],
-                             [0, 0, 0, 0],
-                             [0, 0, 0, 0],
-                             [0, 0, 0, 0]], dtype='bool')
-
-    X = [(1, -2)]
-    Y = [(0, 0)]
-    Z = [(2, -1)]
-
-    tau_max = 1
-
-    # Missing values
-    res = _construct_array(
-        X=X, Y=Y, Z=Z,
-        tau_max=tau_max,
-        use_mask=False,
-        data=data,
-        mask=data_mask,
-        missing_flag=999,
-        mask_type=['y'], verbosity=VERBOSITY)
-
-    np.testing.assert_almost_equal(res[0], np.array([[10, 14],
-                                                     [ 2,  6],
-                                                     [21, 25]]))
 
 def test_bootstrap_vs_analytic_confidence_parcorr(a_test):
 
