@@ -52,9 +52,6 @@ try:
 except:
     print("Could not import python ACE package for GPACE")
 
-
-
-# @staticmethod
 def _construct_array(X, Y, Z, tau_max, data,
                      use_mask=False,
                      mask=None,
@@ -64,6 +61,8 @@ def _construct_array(X, Y, Z, tau_max, data,
                      do_checks=True,
                      cut_off='2xtau_max',
                      verbosity=0):
+    # TODO input array is (T,N) but output array is like (N,T)?
+    # TODO are the input and output arrays the same length in time?
     """Constructs array from variables X, Y, Z from data.
 
     Data is of shape (T, N), where T is the time series length and N the
@@ -168,7 +167,7 @@ def _construct_array(X, Y, Z, tau_max, data,
                 or numpy.any(numpy.array(XYZ)[:, 0] < 0)):
             raise ValueError("var indices %s," % str(numpy.array(XYZ)[:, 0]) +
                              " but must be in [0, %d]" % (N - 1))
-        if numpy.all(numpy.array(Y)[:, 1] < 0):
+        if numpy.all(numpy.array(Y)[:, 1] != 0):
             raise ValueError("Y-nodes are %s, " % str(Y) +
                              "but one of the Y-nodes must have zero lag")
 
@@ -181,7 +180,7 @@ def _construct_array(X, Y, Z, tau_max, data,
 
     # Setup XYZ identifier
     # TODO make more efficient
-    index_code = {'x' : 0, 
+    index_code = {'x' : 0,
                   'y' : 1,
                   'z' : 2}
     xyz = numpy.array([index_code['x'] for i in range(len(X))] +
@@ -194,8 +193,10 @@ def _construct_array(X, Y, Z, tau_max, data,
     # Note, lags are negative here
     for i, (var, lag) in enumerate(XYZ):
         array[i, :] = data[max_lag + lag:T + lag, var]
+    print(array.shape)
+    print(data.shape)
 
-    # Choose which indecies to use
+    # Choose which indices to use
     use_indices = numpy.ones(time_length, dtype='int')
 
     # Remove all values that have missing value flag, as well as the time slices
@@ -205,11 +206,11 @@ def _construct_array(X, Y, Z, tau_max, data,
         # variable
         missing_anywhere = numpy.any(data == missing_flag, axis=0)
         # Add on some dummy indices so we can permute the values across all
-        # allowed lags using np.roll without np.roll causing late-values to 
+        # allowed lags using np.roll without np.roll causing late-values to
         # interfere with early values
         missing_anywhere = numpy.append(missing_anywhere,
                                         numpy.zeros((max_lag), dtype=bool))
-        # TODO check with jakob: 
+        # TODO check with jakob:
         #   * Before, only lags up to tau were included.
         for tau in range(max_lag+1):
             # Mask all times where the missing value was found (tau = 0) and
@@ -229,7 +230,7 @@ def _construct_array(X, Y, Z, tau_max, data,
             if idx in mask_type:
                 use_indices *= numpy.prod(array_selector[xyz == cde, :], axis=0)
 
-    if missing_flag is not None or use_mask:
+    if (missing_flag is not None) or use_mask:
         if use_indices.sum() == 0:
             raise ValueError("No unmasked samples")
         array = array[:, use_indices == 1]
@@ -249,8 +250,7 @@ def _construct_array(X, Y, Z, tau_max, data,
 
     if return_cleaned_xyz:
         return array, xyz, (X, Y, Z)
-    else:
-        return array, xyz
+    return array, xyz
 
 class CondIndTest(object):
     """Base class of conditional independence tests.
@@ -2842,149 +2842,3 @@ class RCOT(CondIndTest):
         """Placeholder function, not available."""
         raise ValueError("Model selection not implemented for %s"
                          "" % self.measure)
-
-
-if __name__ == '__main__':
-
-    # Quick test
-    import data_processing as pp
-    numpy.random.seed(44)
-    a = 0.
-    c = 0.6
-    T = 4000
-    # Each key refers to a variable and the incoming links are supplied as a
-    # list of format [((driver, lag), coeff), ...]
-    links_coeffs = {0: [((0, -1), a)],
-                    1: [((1, -1), a), ((0, -1), c)],
-                    2: [((2, -1), a), ((1, -1), c)],
-                    }
-
-    data, true_parents_neighbors = pp.var_process(links_coeffs, T=T)
-
-    data_mask = numpy.zeros(data.shape)
-
-    # cond_ind_test = ParCorr(
-    #     significance='analytic',
-    #     sig_samples=100,
-
-    #     confidence='bootstrap', #'bootstrap',
-    #     conf_lev=0.9,
-    #     conf_samples=100,
-    #     conf_blocklength=1,
-
-    #     use_mask=False,
-    #     mask_type='y',
-    #     recycle_residuals=False,
-    #     verbosity=3)
-
-
-    # cond_ind_test = GPACE(
-    #     significance='analytic',
-    #     sig_samples=100,
-
-    #     confidence=False, # False  'bootstrap',
-    #     conf_lev=0.9,
-    #     conf_samples=100,
-    #     conf_blocklength=None,
-
-    #     use_mask=False,
-    #     mask_type='y',
-
-    #     null_dist_filename=None,
-    #     gp_version='new',
-    #     ace_version='acepack',
-    #     recycle_residuals=False,
-    #     verbosity=4)
-
-    # cond_ind_test = GPDC(
-    #     significance='analytic',
-    #     sig_samples=1000,
-    #     sig_blocklength=1,
-
-    #     confidence=False, # False  'bootstrap',
-    #     conf_lev=0.9,
-    #     conf_samples=100,
-    #     conf_blocklength=1,
-
-    #     use_mask=False,
-    #     mask_type='y',
-
-    #     null_dist_filename='/home/jakobrunge/test/test.npz', #'/home/tests/test.npz',
-    #     gp_version='new',
-
-    #     recycle_residuals=False,
-    #     verbosity=4)
-
-    # cond_ind_test.generate_and_save_nulldists( sample_sizes=[100, 250],
-    #     null_dist_filename='/home/jakobrunge/test/test.npz')
-    # cond_ind_test.null_dist_filename = '/home/jakobrunge/test/test.npz'
-
-    cond_ind_test = CMIknn(
-        significance='shuffle_test',
-        sig_samples=1000,
-        knn=.1,
-        transform='ranks',
-        shuffle_neighbors=5,
-        confidence=False, #'bootstrap',
-        conf_lev=0.9,
-        conf_samples=100,
-        conf_blocklength=None,
-
-        use_mask=False,
-        mask_type='y',
-        recycle_residuals=False,
-        verbosity=3,
-        )
-
-    # cond_ind_test = CMIsymb()
-    #     significance='shuffle_test',
-    #     sig_samples=1000,
-
-    #     confidence='bootstrap', #'bootstrap',
-    #     conf_lev=0.9,
-    #     conf_samples=100,
-    #     conf_blocklength=None,
-
-    #     use_mask=False,
-    #     mask_type='y',
-    #     recycle_residuals=False,
-    #     verbosity=3)
-
-
-    # cond_ind_test = RCOT(
-    #     significance='analytic',
-    #     num_f=25,
-    #     confidence=False, #'bootstrap', #'bootstrap',
-    #     conf_lev=0.9,
-    #     conf_samples=100,
-    #     conf_blocklength=None,
-
-    #     use_mask=False,
-    #     mask_type='y',
-    #     recycle_residuals=False,
-    #     verbosity=3,
-    #     )
-
-    if cond_ind_test.measure == 'cmi_symb':
-        data = pp.quantile_bin_array(data, bins=6)
-
-    dataframe = pp.DataFrame(data)
-    cond_ind_test.set_dataframe(dataframe)
-
-    tau_max = 5
-    X = [(0, -2)]
-    Y = [(2, 0)]
-    Z = [(1, -1)]  #(2, -1), (1, -1), (0, -3)]  #[(1, -1)]  #[(2, -1), (1, -1), (0, -3)] # [(2, -1), (1, -1), (2, -3)]   [(1, -1)]
-
-    print(cond_ind_test._get_shuffle_dist)
-
-    val, pval = cond_ind_test.run_test(X, Y, Z, tau_max=tau_max)
-    conf_interval = cond_ind_test.get_confidence(X, Y, Z, tau_max=tau_max)
-
-    # print cond_ind_test.get_model_selection_criterion(2,
-    #                                   [(0, -2)],
-    #                                   tau_max=tau_max)
-
-    print ("I(X,Y|Z) = %.2f | p-value = %.3f " % (val, pval))
-    if conf_interval is not None:
-        print ("[%.2f, %.2f]" % conf_interval)
