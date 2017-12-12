@@ -6,7 +6,7 @@
 
 from __future__ import print_function
 import warnings
-import numpy
+import numpy as np
 import sys
 import os
 import math
@@ -159,39 +159,39 @@ def _construct_array(X, Y, Z, tau_max, data,
     dim = len(XYZ)
 
     if do_checks:
-        if numpy.array(XYZ).shape != (dim, 2):
+        if np.array(XYZ).shape != (dim, 2):
             raise ValueError("X, Y, Z must be lists of tuples in format"
                              " [(var, -lag),...], eg., [(2, -2), (1, 0), ...]")
-        if numpy.any(numpy.array(XYZ)[:, 1] > 0):
+        if np.any(np.array(XYZ)[:, 1] > 0):
             raise ValueError("nodes are %s, " % str(XYZ) +
                              "but all lags must be non-positive")
-        if (numpy.any(numpy.array(XYZ)[:, 0] >= N)
-                or numpy.any(numpy.array(XYZ)[:, 0] < 0)):
-            raise ValueError("var indices %s," % str(numpy.array(XYZ)[:, 0]) +
+        if (np.any(np.array(XYZ)[:, 0] >= N)
+                or np.any(np.array(XYZ)[:, 0] < 0)):
+            raise ValueError("var indices %s," % str(np.array(XYZ)[:, 0]) +
                              " but must be in [0, %d]" % (N - 1))
-        if numpy.all(numpy.array(Y)[:, 1] != 0):
+        if np.all(np.array(Y)[:, 1] != 0):
             raise ValueError("Y-nodes are %s, " % str(Y) +
                              "but one of the Y-nodes must have zero lag")
 
     if cut_off == '2xtau_max':
         max_lag = 2*tau_max
     elif cut_off == 'max_lag':
-        max_lag = abs(numpy.array(XYZ)[:, 1].min())
+        max_lag = abs(np.array(XYZ)[:, 1].min())
     elif cut_off == 'max_lag_or_tau_max':
-        max_lag = max(abs(numpy.array(XYZ)[:, 1].min()), tau_max)
+        max_lag = max(abs(np.array(XYZ)[:, 1].min()), tau_max)
 
     # Setup XYZ identifier
     # TODO make more efficient
     index_code = {'x' : 0,
                   'y' : 1,
                   'z' : 2}
-    xyz = numpy.array([index_code['x'] for i in range(len(X))] +
+    xyz = np.array([index_code['x'] for i in range(len(X))] +
                       [index_code['y'] for i in range(len(Y))] +
                       [index_code['z'] for i in range(len(Z))])
 
     # Setup and fill array with lagged time series
     time_length = T - max_lag
-    array = numpy.zeros((dim, time_length), dtype=data_type)
+    array = np.zeros((dim, time_length), dtype=data_type)
     # Note, lags are negative here
     for i, (var, lag) in enumerate(XYZ):
         array[i, :] = data[max_lag + lag:T + lag, var]
@@ -201,33 +201,33 @@ def _construct_array(X, Y, Z, tau_max, data,
 
     # Choose which indices to use
     # TODO should masking
-    use_indices = numpy.ones(time_length, dtype='int')
+    use_indices = np.ones(time_length, dtype='int')
 
     # Remove all values that have missing value flag, as well as the time slices
     # that occur up to max_lag after
     if missing_flag is not None:
         # Find all samples where the missing value occurs in one at least
         # variable
-        missing_anywhere = numpy.any(array == missing_flag, axis=0)
+        missing_anywhere = np.any(array == missing_flag, axis=0)
         print(missing_anywhere)
         print(use_indices)
         # Add on some dummy indices so we can permute the values across all
         # allowed lags using np.roll without np.roll causing late-values to
         # interfere with early values
-        missing_anywhere = numpy.append(missing_anywhere,
-                                        numpy.zeros((max_lag), dtype=bool))
+        missing_anywhere = np.append(missing_anywhere,
+                                        np.zeros((max_lag), dtype=bool))
         # TODO check with jakob:
         #   * Before, only lags up to tau were included.
         for tau in range(max_lag+1):
             # Mask all times where the missing value was found (tau = 0) and
             # all times after (0 < tau <= max_lag)
-            permuted_indexes = numpy.roll(missing_anywhere, tau)[:-max_lag]
+            permuted_indexes = np.roll(missing_anywhere, tau)[:-max_lag]
             use_indices[permuted_indexes] = 0
 
     if use_mask:
         # Remove samples with mask == 1 conditional on which mask_type is used
         # Create an array selector that is the same shape as the output array
-        array_mask = numpy.zeros((dim, time_length), dtype='int32')
+        array_mask = np.zeros((dim, time_length), dtype='int32')
         # Iterate over all nodes named in X, Y, or Z
         for i, (var, lag) in enumerate(XYZ):
             # Transform the mask into the output array shape, i.e. from data
@@ -238,11 +238,11 @@ def _construct_array(X, Y, Z, tau_max, data,
         for idx, cde in index_code.items():
             # Check if the letter index is in the mask type
             if idx in mask_type:
-                # If so, check if any of the data that correspond to the 
+                # If so, check if any of the data that correspond to the
                 # letter index is masked by taking the product along the
-                # node-data to return a time slice selection, where 0 means the 
+                # node-data to return a time slice selection, where 0 means the
                 # time slice will not be used
-                slice_select = numpy.prod(array_mask[xyz == cde, :], axis=0)
+                slice_select = np.prod(array_mask[xyz == cde, :], axis=0)
                 use_indices *= slice_select
 
     if (missing_flag is not None) or use_mask:
@@ -351,8 +351,14 @@ class CondIndTest(object):
 
         # TODO this should be of string type or of None type
         self.confidence = confidence
+        # TODO this should not be a member function, it should be an argument of
+        # the functions that need it
         self.conf_lev = conf_lev
+        # TODO this should not be a member function, it should be an argument of
+        # the functions that need it
         self.conf_samples = conf_samples
+        # TODO this should not be a member function, it should be an argument of
+        # the functions that need it
         self.conf_blocklength = conf_blocklength
 
         self.verbosity = verbosity
@@ -444,7 +450,6 @@ class CondIndTest(object):
             do_checks=False,
             verbosity=verbosity)
 
-    # @profile
     def run_test(self, X, Y, Z=None, tau_max=0):
         """Perform conditional independence test.
 
@@ -478,7 +483,7 @@ class CondIndTest(object):
 
         dim, T = array.shape
 
-        if numpy.isnan(array).sum() != 0:
+        if np.isnan(array).sum() != 0:
             raise ValueError("nans in the array!")
 
         if self.recycle_residuals:
@@ -496,8 +501,8 @@ class CondIndTest(object):
                 if len(Z) > 0:
                     self.residuals[self._keyfy(Y, Z)] = y_resid
 
-            array_resid = numpy.array([x_resid, y_resid])
-            xyz_resid = numpy.array([0, 1])
+            array_resid = np.array([x_resid, y_resid])
+            xyz_resid = np.array([0, 1])
 
             val = self.get_dependence_measure(array_resid, xyz_resid)
 
@@ -553,7 +558,7 @@ class CondIndTest(object):
 
         D, T = array.shape
 
-        if numpy.isnan(array).sum() != 0:
+        if np.isnan(array).sum() != 0:
             raise ValueError("nans in the array!")
 
         if self.recycle_residuals:
@@ -571,8 +576,8 @@ class CondIndTest(object):
                 if len(Z) > 0:
                     self.residuals[self._keyfy(Y, Z)] = y_resid
 
-            array_resid = numpy.array([x_resid, y_resid])
-            xyz_resid = numpy.array([0, 1])
+            array_resid = np.array([x_resid, y_resid])
+            xyz_resid = np.array([0, 1])
 
             val = self.get_dependence_measure(array_resid, xyz_resid)
 
@@ -619,7 +624,7 @@ class CondIndTest(object):
 
         dim, T = array.shape
 
-        if numpy.isnan(array).sum() != 0:
+        if np.isnan(array).sum() != 0:
             raise ValueError("nans in the array!")
 
         if self.confidence == 'analytic':
@@ -676,10 +681,12 @@ class CondIndTest(object):
 
         print(printstr)
 
-    # @profile
     def get_bootstrap_confidence(self, array, xyz, dependence_measure,
-                             conf_samples=100, conf_blocklength=None,
-                             conf_lev=.95, verbosity=0):
+                                 conf_samples=100, conf_blocklength=None,
+                                 conf_lev=.95, verbosity=0):
+        # TODO Shouldn't default number of conf_samples be the same number of
+        # samples in the original emperical distribution? i.e. bootstrap from
+        # 1,000 measurements => bootstrap sample is 1,000
         """Perform bootstrap confidence interval estimation.
 
         With conf_blocklength > 1 or None a block-bootstrap is performed.
@@ -692,7 +699,7 @@ class CondIndTest(object):
         xyz : array of ints
             XYZ identifier array of shape (dim,).
 
-        dependence_measure : object
+        dependence_measure : function
             Dependence measure function must be of form
             dependence_measure(array, xyz) and return a numeric value
 
@@ -708,7 +715,7 @@ class CondIndTest(object):
             [1]_.
 
         verbosity : int, optional (default: 0)
-            Level of verbosity.
+            Levelof verbosity.
 
         Returns
         -------
@@ -717,40 +724,50 @@ class CondIndTest(object):
         """
 
         # confidence interval is two-sided
-        c_int = (1. - (1. - conf_lev) / 2.)
+        c_int = 1. - (1. - conf_lev)/2.
         dim, T = array.shape
 
+        # If not block length is given, determine the optimal block length.
+        # This has a maximum of 10% of the time sample length
         if conf_blocklength is None:
-            conf_blocklength = self._get_block_length(array, xyz,
-                                                     mode='confidence')
+            conf_blocklength = \
+                    self._get_block_length(array, xyz, mode='confidence')
+        # Determine the number of blocks total, rounding up for non-integer
+        # amounts
+        n_blks = int(math.ceil(float(T)/conf_blocklength))
 
-        n_blocks = int(math.ceil(float(T) / float(conf_blocklength)))
-
+        # Print some information
         if verbosity > 2:
             print("            block_bootstrap confidence intervals"
                   " with block-length = %d ..." % conf_blocklength)
 
-        bootdist = numpy.zeros(conf_samples)
-        for sam in range(conf_samples):
-            rand_block_starts = numpy.random.randint(0,
-                         T - conf_blocklength + 1, n_blocks)
-            array_bootstrap = numpy.zeros((dim, n_blocks*conf_blocklength),
-                                          dtype = array.dtype)
-
-            # array_bootstrap = array[:, rand_block_starts]
-            for b in range(conf_blocklength):
-                array_bootstrap[:, b::conf_blocklength] = array[:,
-                                                          rand_block_starts + b]
-
+        # Generate the block bootstrapped distribution
+        bootdist = np.zeros(conf_samples)
+        for smpl in range(conf_samples):
+            # Get the starting indecies for the blocks
+            blk_strt = np.random.randint(0, T - conf_blocklength + 1, n_blks)
+            # Get the empty array of block resampled values
+            array_bootstrap = \
+                    np.zeros((dim, n_blks*conf_blocklength), dtype=array.dtype)
+            # Fill the array of block resamples
+            # TODO find more numpy way of doing this:
+            #   * currently fills non-sequentially, i.e. 1st element of each
+            #     block, second element of each block, etc.
+            #   * Try to fill 1st block, second block, third block, etc
+            for i in range(conf_blocklength):
+                array_bootstrap[:, i::conf_blocklength] = array[:, blk_strt + i]
             # Cut to proper length
             array_bootstrap = array_bootstrap[:, :T]
-            bootdist[sam] = dependence_measure(array_bootstrap, xyz)
+            # TODO add a default for this as self.get_dependence_measure.  This
+            # leads to better OOP standards, because without this default, this
+            # function has little difference between each test.
+            bootdist[smpl] = dependence_measure(array_bootstrap, xyz)
 
         # Sort and get quantile
         bootdist.sort()
         conf_lower = bootdist[int((1. - c_int) * conf_samples)]
         conf_upper = bootdist[int(c_int * conf_samples)]
-
+        # Return the confidance limits as a tuple
         return (conf_lower, conf_upper)
 
     def _get_acf(self, series, max_lag=None):
@@ -773,13 +790,13 @@ class CondIndTest(object):
         if max_lag is None:
             max_lag = int(max(5, 0.1*len(series)))
 
-        autocorr = numpy.ones(max_lag + 1)
+        autocorr = np.ones(max_lag + 1)
         for lag in range(1, max_lag + 1):
 
             y1 = series[lag:]
             y2 = series[:len(series) - lag]
 
-            autocorr[lag] = numpy.corrcoef(y1, y2, ddof=0)[0, 1]
+            autocorr[lag] = np.corrcoef(y1, y2, ddof=0)[0, 1]
 
         return autocorr
 
@@ -790,7 +807,7 @@ class CondIndTest(object):
         improves the method of Pfeifer (2005) with non-overlapping blocks In
         case of multidimensional X, the max is used. Further details in [1]_.
         Two modes are available. For mode='significance', only the indices
-        corresponding to X are shuffled in array. For  mode='confidence' all
+        corresponding to X are shuffled in array. For mode='confidence' all
         variables are jointly shuffled. If the autocorrelation curve fit fails,
         a block length of 5% of T is used. The block length is limited to a
         maximum of 10% of T.
@@ -816,10 +833,9 @@ class CondIndTest(object):
 
         dim, T = array.shape
 
+        indices = range(dim)
         if mode == 'significance':
-            indices = numpy.where(xyz == 0)[0]
-        else:
-            indices = range(dim)
+            indices = np.where(xyz == 0)[0]
 
         # Maximum lag for autocov estimation
         max_lag = int(0.1*T)
@@ -835,7 +851,7 @@ class CondIndTest(object):
             autocov = self._get_acf(series=array[i], max_lag=max_lag)
 
             autocov[0] = 1.
-            hilbert = numpy.abs(signal.hilbert(autocov))
+            hilbert = np.abs(signal.hilbert(autocov))
 
             try:
                 popt, pcov = optimize.curve_fit(
@@ -900,43 +916,43 @@ class CondIndTest(object):
 
         dim, T = array.shape
 
-        x_indices = numpy.where(xyz == 0)[0]
+        x_indices = np.where(xyz == 0)[0]
         dim_x = len(x_indices)
 
         if sig_blocklength is None:
             sig_blocklength = self._get_block_length(array, xyz,
                                                      mode='significance')
 
-        n_blocks = int(math.floor(float(T) / float(sig_blocklength)))
-        # print 'n_blocks ', n_blocks
+        n_blks = int(math.floor(float(T)/sig_blocklength))
+        # print 'n_blks ', n_blks
         if verbosity > 2:
             print("            Significance test with block-length = %d "
                   "..." % (sig_blocklength))
 
-        array_shuffled = numpy.copy(array)
-        block_starts = numpy.arange(0, T - sig_blocklength + 1, sig_blocklength)
+        array_shuffled = np.copy(array)
+        block_starts = np.arange(0, T - sig_blocklength + 1, sig_blocklength)
 
-        # Dividing the array up into n_blocks of length sig_blocklength may
+        # Dividing the array up into n_blks of length sig_blocklength may
         # leave a tail. This tail is later randomly inserted
-        tail = array[x_indices, n_blocks*sig_blocklength:]
+        tail = array[x_indices, n_blks*sig_blocklength:]
 
-        null_dist = numpy.zeros(sig_samples)
+        null_dist = np.zeros(sig_samples)
         for sam in range(sig_samples):
 
-            rand_block_starts = numpy.random.permutation(block_starts)[:n_blocks]
+            blk_starts = np.random.permutation(block_starts)[:n_blks]
 
-            x_shuffled = numpy.zeros((dim_x, n_blocks*sig_blocklength),
+            x_shuffled = np.zeros((dim_x, n_blks*sig_blocklength),
                                           dtype = array.dtype)
 
             for i, index in enumerate(x_indices):
                 for b in range(sig_blocklength):
                     x_shuffled[i, b::sig_blocklength] = array[index,
-                                            rand_block_starts + b]
+                                            blk_starts + b]
 
             # Insert tail randomly somewhere
             if tail.shape[1] > 0:
-                insert_tail_at = numpy.random.choice(block_starts)
-                x_shuffled = numpy.insert(x_shuffled, insert_tail_at,
+                insert_tail_at = np.random.choice(block_starts)
+                x_shuffled = np.insert(x_shuffled, insert_tail_at,
                                           tail.T, axis=1)
 
             for i, index in enumerate(x_indices):
@@ -969,7 +985,7 @@ class CondIndTest(object):
             else.
 
         """
-        if numpy.abs(value) < numpy.abs(fixed_thres):
+        if np.abs(value) < np.abs(fixed_thres):
             pval = 1.
         else:
             pval = 0.
@@ -993,14 +1009,14 @@ class CondIndTest(object):
         """
 
         def trafo(xi):
-            xisorted = numpy.sort(xi)
-            yi = numpy.linspace(1. / len(xi), 1, len(xi))
-            return numpy.interp(xi, xisorted, yi)
+            xisorted = np.sort(xi)
+            yi = np.linspace(1. / len(xi), 1, len(xi))
+            return np.interp(xi, xisorted, yi)
 
-        if numpy.ndim(x) == 1:
+        if np.ndim(x) == 1:
             u = trafo(x)
         else:
-            u = numpy.empty(x.shape)
+            u = np.empty(x.shape)
             for i in range(x.shape[0]):
                 u[i] = trafo(x[i])
         return u
@@ -1037,10 +1053,10 @@ class CondIndTest(object):
                       "precompute null distribution and load *.npz file with "
                       "argument null_dist_filename")
 
-        xyz = numpy.array([0,1])
-        null_dist = numpy.zeros(self.null_samples)
+        xyz = np.array([0,1])
+        null_dist = np.zeros(self.null_samples)
         for i in range(self.null_samples):
-            array = numpy.random.rand(2, df)
+            array = np.random.rand(2, df)
 
             null_dist[i] = self.get_dependence_measure(array, xyz)
 
@@ -1070,14 +1086,14 @@ class CondIndTest(object):
 
         self.null_dist_filename = null_dist_filename
 
-        null_dists = numpy.zeros((len(sample_sizes), self.sig_samples))
+        null_dists = np.zeros((len(sample_sizes), self.sig_samples))
 
         for iT, T in enumerate(sample_sizes):
             null_dists[iT] = self.generate_nulldist(T, add_to_null_dists=False)
             self.null_dists[T] = null_dists[iT]
 
-        numpy.savez("%s" % null_dist_filename, exact_dist=null_dists,
-                            T=numpy.array(sample_sizes))
+        np.savez("%s" % null_dist_filename, exact_dist=null_dists,
+                            T=np.array(sample_sizes))
 
 
 class ParCorr(CondIndTest):
@@ -1160,16 +1176,16 @@ class ParCorr(CondIndTest):
         if standardize:
             array -= array.mean(axis=1).reshape(dim, 1)
             array /= array.std(axis=1).reshape(dim, 1)
-            if numpy.isnan(array).sum() != 0:
+            if np.isnan(array).sum() != 0:
                 raise ValueError("nans after standardizing, "
                                  "possibly constant array!")
 
         y = array[target_var, :]
 
         if dim_z > 0:
-            z = numpy.fastCopyAndTranspose(array[2:, :])
-            beta_hat = numpy.linalg.lstsq(z, y)[0]
-            mean = numpy.dot(z, beta_hat)
+            z = np.fastCopyAndTranspose(array[2:, :])
+            beta_hat = np.linalg.lstsq(z, y)[0]
+            mean = np.dot(z, beta_hat)
             resid = y - mean
         else:
             resid = y
@@ -1180,7 +1196,6 @@ class ParCorr(CondIndTest):
         else:
             return resid
 
-    # @profile
     def get_dependence_measure(self, array, xyz):
         """Return partial correlation.
 
@@ -1233,8 +1248,8 @@ class ParCorr(CondIndTest):
 
         x = self._get_single_residuals(array, target_var = 0)
         y = self._get_single_residuals(array, target_var = 1)
-        array_resid = numpy.array([x, y])
-        xyz_resid = numpy.array([0,1])
+        array_resid = np.array([x, y])
+        xyz_resid = np.array([0,1])
 
         null_dist = self._get_shuffle_dist(array_resid, xyz_resid,
                                self.get_dependence_measure,
@@ -1242,7 +1257,7 @@ class ParCorr(CondIndTest):
                                sig_blocklength=self.sig_blocklength,
                                verbosity=self.verbosity)
 
-        pval = (null_dist >= numpy.abs(value)).mean()
+        pval = (null_dist >= np.abs(value)).mean()
 
         # Adjust p-value for two-sided measures
         if pval < 1.: pval *= 2.
@@ -1279,15 +1294,16 @@ class ParCorr(CondIndTest):
         df = T - dim
 
         if df < 1:
-            pval = numpy.nan
+            pval = np.nan
         else:
-            trafo_val = value * numpy.sqrt(df / (1. - value**2))
+            trafo_val = value * np.sqrt(df / (1. - value**2))
             # Two sided significance level
-            pval = stats.t.sf(numpy.abs(trafo_val), df) * 2
+            pval = stats.t.sf(np.abs(trafo_val), df) * 2
 
         return pval
 
     def get_analytic_confidence(self, value, df, conf_lev):
+        # TODO citation?
         """Returns analytic confidence interval for correlation coefficient.
 
         Based on Student's t-distribution.
@@ -1308,16 +1324,15 @@ class ParCorr(CondIndTest):
         (conf_lower, conf_upper) : Tuple of floats
             Upper and lower confidence bound of confidence interval.
         """
-
         # Confidence interval is two-sided
         c_int = (1. - (1. - conf_lev) / 2.)
 
-        value_tdist = value * numpy.sqrt(df) / numpy.sqrt(1. - value**2)
+        value_tdist = value * np.sqrt(df) / np.sqrt(1. - value**2)
         conf_lower = (stats.t.ppf(q=1. - c_int, df=df, loc=value_tdist)
-                      / numpy.sqrt(df + stats.t.ppf(q=1. - c_int, df=df,
+                      / np.sqrt(df + stats.t.ppf(q=1. - c_int, df=df,
                                                        loc=value_tdist)**2))
         conf_upper = (stats.t.ppf(q=c_int, df=df, loc=value_tdist)
-                      / numpy.sqrt(df + stats.t.ppf(q=c_int, df=df,
+                      / np.sqrt(df + stats.t.ppf(q=c_int, df=df,
                                                        loc=value_tdist)**2))
         return (conf_lower, conf_upper)
 
@@ -1369,7 +1384,7 @@ class ParCorr(CondIndTest):
         # Number of parameters
         p = dim - 1
         # Get AIC
-        score = T * numpy.log(rss) + 2. * p
+        score = T * np.log(rss) + 2. * p
 
         return score
 
@@ -1446,7 +1461,7 @@ class GP():
 
         if dim <= 2:
             if return_likelihood:
-                return array[target_var, :], -numpy.inf
+                return array[target_var, :], -np.inf
             else:
                 return array[target_var, :]
 
@@ -1454,13 +1469,13 @@ class GP():
         if standardize:
             array -= array.mean(axis=1).reshape(dim, 1)
             array /= array.std(axis=1).reshape(dim, 1)
-            if numpy.isnan(array).sum() != 0:
+            if np.isnan(array).sum() != 0:
                 raise ValueError("nans after standardizing, "
                                  "possibly constant array!")
 
         target_series = array[target_var, :]
-        z = numpy.fastCopyAndTranspose(array[2:])
-        if numpy.ndim(z) == 1:
+        z = np.fastCopyAndTranspose(array[2:])
+        if np.ndim(z) == 1:
             z = z.reshape(-1, 1)
 
         if self.gp_version == 'old':
@@ -1468,19 +1483,19 @@ class GP():
             def remove_ties(series, verbosity=0):
                 # Test whether ties exist and add noise to destroy ties...
                 cnt = 0
-                while len(numpy.unique(series)) < numpy.size(series):
-                    series += 1E-6 * numpy.random.rand(*series.shape)
+                while len(np.unique(series)) < np.size(series):
+                    series += 1E-6 * np.random.rand(*series.shape)
                     cnt += 1
                     if cnt > 100: break
                 return series
 
-            z = remove_ties(z)  #z += 1E-3 * numpy.random.rand(*z.shape)
-            target_series = remove_ties(target_series)  #target_series += 1E-3 * numpy.random.rand(*target_series.shape)
+            z = remove_ties(z)  #z += 1E-3 * np.random.rand(*z.shape)
+            target_series = remove_ties(target_series)  #target_series += 1E-3 * np.random.rand(*target_series.shape)
 
             gp = gaussian_process.GaussianProcess(
                 nugget=1E-1,
                 thetaL=1E-16,
-                thetaU=numpy.inf,
+                thetaU=np.inf,
                 corr='squared_exponential',
                 optimizer='fmin_cobyla',
                 regr='constant',
@@ -1679,7 +1694,7 @@ class GPACE(CondIndTest,GP):
             self.null_samples = self.sig_samples
             self.null_dists = {}
         else:
-            null_dist_file = numpy.load(null_dist_filename)
+            null_dist_file = np.load(null_dist_filename)
             # self.sample_sizes = null_dist_file['T']
             self.null_dists = dict(zip(null_dist_file['T'],
                                       null_dist_file['exact_dist']))
@@ -1711,7 +1726,7 @@ class GPACE(CondIndTest,GP):
         x = self._get_single_residuals(array, target_var=0)
         y = self._get_single_residuals(array, target_var=1)
 
-        val = self._get_maxcorr(numpy.array([x, y]))
+        val = self._get_maxcorr(np.array([x, y]))
 
         return val
 
@@ -1759,12 +1774,12 @@ class GPACE(CondIndTest,GP):
             myace.specify_data_set([x], y)
             with Suppressor():
                 myace.solve()
-            val = numpy.corrcoef(myace.x_transforms[0], myace.y_transform)[0,1]
+            val = np.corrcoef(myace.x_transforms[0], myace.y_transform)[0,1]
 
         elif self.ace_version == 'acepack':
             ace_rpy = rpy2.robjects.r['ace'](x, y)
-            val = numpy.corrcoef(numpy.asarray(ace_rpy[8]).flatten(),
-                                 numpy.asarray(ace_rpy[9]))[0, 1]
+            val = np.corrcoef(np.asarray(ace_rpy[8]).flatten(),
+                                 np.asarray(ace_rpy[9]))[0, 1]
         else:
             raise ValueError("ace_version must be 'python' or 'acepack'")
 
@@ -1796,8 +1811,8 @@ class GPACE(CondIndTest,GP):
 
         x = self._get_single_residuals(array, target_var = 0)
         y = self._get_single_residuals(array, target_var = 1)
-        array_resid = numpy.array([x, y])
-        xyz_resid = numpy.array([0,1])
+        array_resid = np.array([x, y])
+        xyz_resid = np.array([0,1])
 
         null_dist = self._get_shuffle_dist(array_resid, xyz_resid,
                                self.get_dependence_measure,
@@ -1845,12 +1860,12 @@ class GPACE(CondIndTest,GP):
         df = T
 
         if df < 1:
-            pval = numpy.nan
+            pval = np.nan
         else:
-            # idx_near = (numpy.abs(self.sample_sizes - df)).argmin()
+            # idx_near = (np.abs(self.sample_sizes - df)).argmin()
 
             if int(df) not in list(self.null_dists):
-            # numpy.abs(self.sample_sizes[idx_near] - df) / float(df) > 0.01:
+            # np.abs(self.sample_sizes[idx_near] - df) / float(df) > 0.01:
                 if self.verbosity > 0:
                     print("Null distribution for GPACE not available "
                              "for deg. of freed. = %d."
@@ -1858,7 +1873,7 @@ class GPACE(CondIndTest,GP):
                 self.generate_nulldist(df)
 
             null_dist_here = self.null_dists[df]
-            pval = numpy.mean(null_dist_here > numpy.abs(value))
+            pval = np.mean(null_dist_here > np.abs(value))
 
         return pval
 
@@ -1959,7 +1974,7 @@ class GPDC(CondIndTest,GP):
             self.null_samples = self.sig_samples
             self.null_dists = {}
         else:
-            null_dist_file = numpy.load(null_dist_filename)
+            null_dist_file = np.load(null_dist_filename)
             # self.sample_sizes = null_dist_file['T']
             self.null_dists = dict(zip(null_dist_file['T'],
                                       null_dist_file['exact_dist']))
@@ -1992,7 +2007,7 @@ class GPDC(CondIndTest,GP):
         x = self._get_single_residuals(array, target_var=0)
         y = self._get_single_residuals(array, target_var=1)
 
-        val = self._get_dcorr(numpy.array([x, y]))
+        val = self._get_dcorr(np.array([x, y]))
 
         return val
 
@@ -2054,8 +2069,8 @@ class GPDC(CondIndTest,GP):
 
         x = self._get_single_residuals(array, target_var = 0)
         y = self._get_single_residuals(array, target_var = 1)
-        array_resid = numpy.array([x, y])
-        xyz_resid = numpy.array([0,1])
+        array_resid = np.array([x, y])
+        xyz_resid = np.array([0,1])
 
         null_dist = self._get_shuffle_dist(array_resid, xyz_resid,
                                self.get_dependence_measure,
@@ -2102,11 +2117,11 @@ class GPDC(CondIndTest,GP):
         df = T
 
         if df < 1:
-            pval = numpy.nan
+            pval = np.nan
         else:
-            # idx_near = (numpy.abs(self.sample_sizes - df)).argmin()
+            # idx_near = (np.abs(self.sample_sizes - df)).argmin()
             if int(df) not in list(self.null_dists):
-            # if numpy.abs(self.sample_sizes[idx_near] - df) / float(df) > 0.01:
+            # if np.abs(self.sample_sizes[idx_near] - df) / float(df) > 0.01:
                 if self.verbosity > 0:
                     print("Null distribution for GPDC not available "
                              "for deg. of freed. = %d."
@@ -2115,7 +2130,7 @@ class GPDC(CondIndTest,GP):
                 self.generate_nulldist(df)
 
             null_dist_here = self.null_dists[int(df)]
-            pval = numpy.mean(null_dist_here > numpy.abs(value))
+            pval = np.mean(null_dist_here > np.abs(value))
 
         return pval
 
@@ -2255,7 +2270,7 @@ class CMIknn(CondIndTest):
 
         # Add noise to destroy ties...
         array += (1E-6 * array.std(axis=1).reshape(dim, 1)
-                  * numpy.random.rand(array.shape[0], array.shape[1]))
+                  * np.random.rand(array.shape[0], array.shape[1]))
 
         if self.transform == 'standardize':
             # Standardize
@@ -2264,7 +2279,7 @@ class CMIknn(CondIndTest):
             array /= array.std(axis=1).reshape(dim, 1)
             # FIXME: If the time series is constant, return nan rather than
             # raising Exception
-            if numpy.isnan(array).sum() != 0:
+            if np.isnan(array).sum() != 0:
                 raise ValueError("nans after standardizing, "
                                  "possibly constant array!")
         elif self.transform == 'uniform':
@@ -2276,12 +2291,12 @@ class CMIknn(CondIndTest):
         # Use cKDTree to get distances eps to the k-th nearest neighbors for
         # every sample in joint space XYZ with maximum norm
         tree_xyz = spatial.cKDTree(array.T)
-        epsarray = tree_xyz.query(array.T, k=knn+1, p=numpy.inf,
+        epsarray = tree_xyz.query(array.T, k=knn+1, p=np.inf,
                                   eps=0.)[0][:,knn].astype('float')
 
         # Prepare for fast cython access
-        dim_x = int(numpy.where(xyz == 0)[0][-1] + 1)
-        dim_y = int(numpy.where(xyz == 1)[0][-1] + 1 - dim_x)
+        dim_x = int(np.where(xyz == 0)[0][-1] + 1)
+        dim_y = int(np.where(xyz == 1)[0][-1] + 1 - dim_x)
 
         k_xz, k_yz, k_z = \
          tigramite_cython_code._get_neighbors_within_eps_cython(array, T, dim_x,
@@ -2360,8 +2375,8 @@ class CMIknn(CondIndTest):
         #         return 0.
 
         # max_neighbors = max(1, int(max_neighbor_ratio*T))
-        x_indices = numpy.where(xyz == 0)[0]
-        z_indices = numpy.where(xyz == 2)[0]
+        x_indices = np.where(xyz == 0)[0]
+        z_indices = np.where(xyz == 2)[0]
 
         if len(z_indices) > 0 and self.shuffle_neighbors < T:
             if self.verbosity > 2:
@@ -2370,20 +2385,20 @@ class CMIknn(CondIndTest):
                         self.shuffle_neighbors,  self.sig_samples))
 
             # Get nearest neighbors around each sample point in Z
-            z_array = numpy.fastCopyAndTranspose(array[z_indices,:])
+            z_array = np.fastCopyAndTranspose(array[z_indices,:])
             tree_xyz = spatial.cKDTree(z_array)
             neighbors = tree_xyz.query(z_array,
                         k=self.shuffle_neighbors,
-                        p=numpy.inf,
+                        p=np.inf,
                         eps=0.)[1].astype('int32')
             # print neighbors
 
-            null_dist = numpy.zeros(self.sig_samples)
+            null_dist = np.zeros(self.sig_samples)
             for sam in range(self.sig_samples):
 
                 # Generate random order in which to go through indices loop in
                 # next step
-                order = numpy.random.permutation(T).astype('int32')
+                order = np.random.permutation(T).astype('int32')
 
                 # Select a series of neighbor indices that contains as few as
                 # possible duplicates
@@ -2394,7 +2409,7 @@ class CMIknn(CondIndTest):
                                 neighbors=neighbors,
                                 order = order)
 
-                array_shuffled = numpy.copy(array)
+                array_shuffled = np.copy(array)
                 for i in x_indices:
                     array_shuffled[i] = array[i, restricted_permutation]
 
@@ -2533,7 +2548,7 @@ class CMIsymb(CondIndTest):
 
         dim, T = symb_array.shape
 
-        # Needed because numpy.bincount cannot process longs
+        # Needed because np.bincount cannot process longs
         if type(self.n_symbs ** dim) != int:
             raise ValueError("Too many n_symbs and/or dimensions, "
                              "numpy.bincount cannot process longs")
@@ -2545,13 +2560,13 @@ class CMIsymb(CondIndTest):
                              "dimension D*base**D exceeds int64 data type"
                              % (self.n_symbs, dim))
 
-        flathist = numpy.zeros((self.n_symbs ** dim), dtype='int16')
-        multisymb = numpy.zeros(T, dtype='int64')
+        flathist = np.zeros((self.n_symbs ** dim), dtype='int16')
+        multisymb = np.zeros(T, dtype='int64')
         if weights is not None:
-            flathist = numpy.zeros((self.n_symbs ** dim), dtype='float32')
-            multiweights = numpy.ones(T, dtype='float32')
+            flathist = np.zeros((self.n_symbs ** dim), dtype='float32')
+            multiweights = np.ones(T, dtype='float32')
 
-        # print numpy.prod(weights, axis=0)
+        # print np.prod(weights, axis=0)
         for i in range(dim):
             multisymb += symb_array[i, :] * self.n_symbs ** i
             if weights is not None:
@@ -2559,10 +2574,10 @@ class CMIsymb(CondIndTest):
                 # print i, multiweights
 
         if weights is None:
-            result = numpy.bincount(multisymb)
+            result = np.bincount(multisymb)
             # print result
         else:
-            result = (numpy.bincount(multisymb, weights=multiweights)
+            result = (np.bincount(multisymb, weights=multiweights)
                       / multiweights.sum())
 
         flathist[:len(result)] += result
@@ -2596,13 +2611,13 @@ class CMIsymb(CondIndTest):
 
         def _plogp_vector(T):
             """Precalculation of p*log(p) needed for entropies."""
-            gfunc = numpy.zeros(T + 1, dtype='float')
-            gfunc = numpy.zeros(T + 1)
-            gfunc[1:] = numpy.arange(
-                1, T + 1, 1) * numpy.log(numpy.arange(1, T + 1, 1))
+            gfunc = np.zeros(T + 1, dtype='float')
+            gfunc = np.zeros(T + 1)
+            gfunc[1:] = np.arange(
+                1, T + 1, 1) * np.log(np.arange(1, T + 1, 1))
             def plogp_func(t):
                 return gfunc[t]
-            return numpy.vectorize(plogp_func)
+            return np.vectorize(plogp_func)
 
         plogp = _plogp_vector(T)
 
@@ -2617,8 +2632,8 @@ class CMIsymb(CondIndTest):
         # else:
         #     def plogp_func(p):
         #         if p == 0.: return 0.
-        #         else: return p*numpy.log(p)
-        #     plogp = numpy.vectorize(plogp_func)
+        #         else: return p*np.log(p)
+        #     plogp = np.vectorize(plogp_func)
 
         #     hxyz = -plogp(hist).sum()
         #     hxz = -plogp(hist.sum(axis=1)).sum()
@@ -2785,9 +2800,9 @@ class RCOT(CondIndTest):
 
         x = array[0]
         y = array[1]
-        z = numpy.fastCopyAndTranspose(array[2:])
+        z = np.fastCopyAndTranspose(array[2:])
 
-        rcot = numpy.asarray(rpy2.robjects.r['RCIT'](x, y, z,
+        rcot = np.asarray(rpy2.robjects.r['RCIT'](x, y, z,
             corr=True,
             num_f=self.num_f,
             approx=self.approx,
