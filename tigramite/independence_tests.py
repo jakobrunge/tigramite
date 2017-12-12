@@ -1304,6 +1304,7 @@ class ParCorr(CondIndTest):
 
     def get_analytic_confidence(self, value, df, conf_lev):
         # TODO citation?
+        # TODO test this function on its own, not just against bootstrap
         """Returns analytic confidence interval for correlation coefficient.
 
         Based on Student's t-distribution.
