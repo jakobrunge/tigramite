@@ -1829,6 +1829,7 @@ class GPACE(CondIndTest,GP):
             return pval
 
     def get_analytic_significance(self, value, T, dim):
+        # TODO test this function as well
         """Returns p-value for the maximal correlation coefficient.
 
         The null distribution for necessary degrees of freedom (df) is loaded.

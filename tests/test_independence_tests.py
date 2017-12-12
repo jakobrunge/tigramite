@@ -150,13 +150,13 @@ def test_construct_array(cstrct_array_params):
     np.testing.assert_almost_equal(array, expect_array)
     np.testing.assert_almost_equal(xyz, expect_xyz)
 
-# CONFIDANCE INTERVAL TESTING ##################################################
+# PARTIAL CORRELATION TESTING ##################################################
 @pytest.fixture(params=[
     # Generate the sample to be used for confidance interval comparison
     #seed, corr_val, T
-    (5,    0.3,      500),  # Default
-    (6,    0.3,      500),  # New Seed
-    (7,    0.9,      500)]) # Strong Correlation
+    (5,    0.3,      1000),  # Default
+    (6,    0.3,      1000),  # New Seed
+    (7,    0.9,      1000)]) # Strong Correlation
 def data_sample(request):
     # Unpack the parameters
     seed, corr_val, T = request.param
@@ -173,17 +173,17 @@ def data_sample(request):
     # Get a value from the array
     xyz = np.array([0, 1])
     # Return the array, the value, and the xyz array
-    return array, val, xyz, dim, T
+    return array, val, corr_val, xyz, dim, T
 
-def test_bootstrap_confidence_par_corr(par_corr, data_sample):
+def test_bootstrap_conf_parcorr(par_corr, data_sample):
     # Get the data sample values
-    array, val, xyz, dim, T = data_sample
-    # Get the analytic confidance interval
-    conf_ana = par_corr.get_analytic_confidence(df=T-dim,
-                                                value=val,
-                                                conf_lev=par_corr.conf_lev)
-    # Bootstrap the confidance interval
-    conf_boots = par_corr.get_bootstrap_confidence(
+    array, val, _, xyz, dim, T = data_sample
+    # Get the analytic confidence interval
+    conf_a = par_corr.get_analytic_confidence(df=T-dim,
+                                              value=val,
+                                              conf_lev=par_corr.conf_lev)
+    # Bootstrap the confidence interval
+    conf_b = par_corr.get_bootstrap_confidence(
         array,
         xyz,
         dependence_measure=par_corr.get_dependence_measure,
@@ -191,71 +191,55 @@ def test_bootstrap_confidence_par_corr(par_corr, data_sample):
         conf_blocklength=par_corr.conf_blocklength,
         conf_lev=par_corr.conf_lev)
     # Ensure the two intervals are the same
-    np.testing.assert_allclose(np.array(conf_ana),
-                               np.array(conf_boots),
-                               atol=0.01)
+    np.testing.assert_allclose(np.array(conf_a), np.array(conf_b), atol=0.01)
 
-def test_shuffle_vs_analytic_significance_parcorr(par_corr):
-    np.random.seed(3)
-
-    cov = np.array([[1., 0.04],
-                    [0.04, 1.]])
-    array = np.random.multivariate_normal(mean=np.zeros(2),
-                    cov=cov, size=250).T
-    # array = np.random.randn(3, 10)
-    val = np.corrcoef(array)[0,1]
-    # print(val)
-    dim, T = array.shape
-    xyz = np.array([0,1])
-
-    pval_ana = par_corr.get_analytic_significance(value=val, T=T, dim=dim)
-
-    pval_shuffle = par_corr.get_shuffle_significance(array, xyz, val)
+def test_shuffle_sig_parcorr(par_corr, data_sample):
+    # Get the data sample values
+    array, val, _, xyz, dim, T = data_sample
+    # Get the analytic significance
+    pval_a = par_corr.get_analytic_significance(value=val, T=T, dim=dim)
+    # Get the shuffle significance
+    pval_s = par_corr.get_shuffle_significance(array, xyz, val)
     # Adjust p-value for two-sided measures
+    np.testing.assert_allclose(np.array(pval_a), np.array(pval_s), atol=0.01)
 
-    np.testing.assert_allclose(np.array(pval_ana),
-                               np.array(pval_shuffle),
-                               atol=0.01)
-
-def test_parcorr_get_single_residuals(par_corr):
-    np.random.seed(5)
-    target_var = 0  #np.array([True, False, False, False])
-    true_residual = np.random.randn(4, 1000)
-
-    array = np.copy(true_residual)
-
+# TODO how does this test work?
+@pytest.mark.parametrize("sd", [5, 29, 135, 170, 174, 284, 342, 363, 425, 492])
+def test_parcorr_residuals(par_corr, sd):
+    # Set the random seed
+    np.random.seed(sd)
+    # Set the target value and the true residuals
+    target_var = 0
+    true_res = np.random.randn(4, 1000)
+    # Copy the true residuals to a new array
+    array = np.copy(true_res)
+    # Manipulate the array
     array[0] += 0.5*array[2:].sum(axis=0)
+    # Estimate the residuals
+    est_res = par_corr._get_single_residuals(array, target_var,
+                                             standardize=False,
+                                             return_means=False)
+    np.testing.assert_allclose(est_res, true_res[0], rtol=1e-5, atol=0.02)
 
-    est_residual = par_corr._get_single_residuals(array, target_var,
-            standardize=False, return_means=False)
-    np.testing.assert_allclose(est_residual, true_residual[0],
-                               rtol=1e-5, atol=0.02)
-
-def test_par_corr(par_corr):
-    np.random.seed(42)
-    val_ana = 0.6
-    T = 1000
-    array = np.random.randn(5, T)
-
-    cov = np.array([[1., val_ana],
-                    [val_ana, 1.]])
-    array[:2, :] = np.random.multivariate_normal(mean=np.zeros(2),
-                    cov=cov, size=T).T
-
+# TODO how does this test work?
+def test_parcorr(par_corr, data_sample):
+    # Get the data sample values
+    small_array, _, corr_val, xyz, dim, T = data_sample
+    # Generate the full array
+    dim = 5
+    array = np.random.randn(dim, T)
+    array[:2, :] = small_array
     # Generate some confounding
     array[0] += 0.5* array[2:].sum(axis=0)
     array[1] += 0.7* array[2:].sum(axis=0)
-
-    dim, T = array.shape
-    xyz = np.array([0,1,2,2,2])
-
+    # Reset the dimension
+    xyz = np.array([0, 1, 2, 2, 2])
+    # Get the estimated value
     val_est = par_corr.get_dependence_measure(array, xyz)
+    # Compare to the true value
+    np.testing.assert_allclose(np.array(corr_val), np.array(val_est), atol=0.02)
 
-    np.testing.assert_allclose(np.array(val_ana),
-                               np.array(val_est),
-                               atol=0.02)
-
-def test_gpdc_get_single_residuals():
+def test_gpdc_residuals():
 
     np.random.seed(42)
     ci_test = GPDC(significance='analytic',
