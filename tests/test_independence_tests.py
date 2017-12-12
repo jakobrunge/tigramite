@@ -22,22 +22,6 @@ def _par_corr_to_cmi(par_corr):
 
 
 # INDEPENDENCE TEST GENERATION #################################################
-@pytest.fixture()
-    # Generate the independence test
-def par_corr(request):
-    return ParCorr(use_mask=False,
-                   mask_type=None,
-                   significance='analytic',
-                   fixed_thres=None,
-                   sig_samples=10000,
-                   sig_blocklength=3,
-                   confidence='analytic',
-                   conf_lev=0.9,
-                   conf_samples=10000,
-                   conf_blocklength=1,
-                   recycle_residuals=False,
-                   verbosity=0)
-
 # TEST NODES
 TST_X = [(1, -1)]
 TST_Y = [(0, 0)]
@@ -64,6 +48,22 @@ def gen_nodes(n_nodes, seed, t_min=-2, n_max=2):
     # Z nodes are multiple nodes
     z_nds = [rand_node(t_min, n_max) for _ in range(n_nodes)]
     return x_nds, y_nds, z_nds
+
+def gen_data_sample(seed, corr_val, T):
+    # Set the random seed
+    np.random.seed(seed)
+    # Define a symmetric covariance matrix
+    cov = np.array([[1., corr_val],
+                    [corr_val, 1.]])
+    # Generate some random data using the above covariance relation
+    dim = cov.shape[0]
+    array = np.random.multivariate_normal(mean=np.zeros(dim), cov=cov, size=T).T
+    # Get the correlation coefficient
+    val = np.corrcoef(array)[0, 1]
+    # Get a value from the array
+    xyz = np.array([0, 1])
+    # Return the array, the value, and the xyz array
+    return array, val, corr_val, xyz, dim, T
 
 # CONSTRUCT ARRAY TESTING ######################################################
 @pytest.fixture(params=[
@@ -151,33 +151,37 @@ def test_construct_array(cstrct_array_params):
     np.testing.assert_almost_equal(xyz, expect_xyz)
 
 # PARTIAL CORRELATION TESTING ##################################################
+@pytest.fixture()
+def par_corr(request):
+    # Generate the par_corr independence test
+    return ParCorr(use_mask=False,
+                   mask_type=None,
+                   significance='analytic',
+                   fixed_thres=0.1,
+                   sig_samples=10000,
+                   sig_blocklength=3,
+                   confidence='analytic',
+                   conf_lev=0.9,
+                   conf_samples=10000,
+                   conf_blocklength=1,
+                   recycle_residuals=False,
+                   verbosity=0)
+
 @pytest.fixture(params=[
     # Generate the sample to be used for confidance interval comparison
     #seed, corr_val, T
     (5,    0.3,      1000),  # Default
     (6,    0.3,      1000),  # New Seed
-    (7,    0.9,      1000)]) # Strong Correlation
-def data_sample(request):
+    (1,    0.9,      1000)]) # Strong Correlation
+def data_sample_a(request):
     # Unpack the parameters
     seed, corr_val, T = request.param
-    # Set the random seed
-    np.random.seed(seed)
-    # Define a symmetric covariance matrix
-    cov = np.array([[1., corr_val],
-                    [corr_val, 1.]])
-    # Generate some random data using the above covariance relation
-    dim = cov.shape[0]
-    array = np.random.multivariate_normal(mean=np.zeros(dim), cov=cov, size=T).T
-    # Get the correlation coefficient
-    val = np.corrcoef(array)[0, 1]
-    # Get a value from the array
-    xyz = np.array([0, 1])
-    # Return the array, the value, and the xyz array
-    return array, val, corr_val, xyz, dim, T
+    # Return the data sample
+    return gen_data_sample(seed, corr_val, T)
 
-def test_bootstrap_conf_parcorr(par_corr, data_sample):
+def test_bootstrap_conf_parcorr(par_corr, data_sample_a):
     # Get the data sample values
-    array, val, _, xyz, dim, T = data_sample
+    array, val, _, xyz, dim, T = data_sample_a
     # Get the analytic confidence interval
     conf_a = par_corr.get_analytic_confidence(df=T-dim,
                                               value=val,
@@ -193,9 +197,10 @@ def test_bootstrap_conf_parcorr(par_corr, data_sample):
     # Ensure the two intervals are the same
     np.testing.assert_allclose(np.array(conf_a), np.array(conf_b), atol=0.01)
 
-def test_shuffle_sig_parcorr(par_corr, data_sample):
+# TODO should val here be get_dependence_measure?
+def test_shuffle_sig_parcorr(par_corr, data_sample_a):
     # Get the data sample values
-    array, val, _, xyz, dim, T = data_sample
+    array, val, _, xyz, dim, T = data_sample_a
     # Get the analytic significance
     pval_a = par_corr.get_analytic_significance(value=val, T=T, dim=dim)
     # Get the shuffle significance
@@ -204,10 +209,10 @@ def test_shuffle_sig_parcorr(par_corr, data_sample):
     np.testing.assert_allclose(np.array(pval_a), np.array(pval_s), atol=0.01)
 
 # TODO how does this test work?
-@pytest.mark.parametrize("sd", [5, 29, 135, 170, 174, 284, 342, 363, 425, 492])
-def test_parcorr_residuals(par_corr, sd):
+@pytest.mark.parametrize("seed", [5, 29, 135, 170, 174, 284, 342, 363, 425])
+def test_parcorr_residuals(par_corr, seed):
     # Set the random seed
-    np.random.seed(sd)
+    np.random.seed(seed)
     # Set the target value and the true residuals
     target_var = 0
     true_res = np.random.randn(4, 1000)
@@ -222,9 +227,9 @@ def test_parcorr_residuals(par_corr, sd):
     np.testing.assert_allclose(est_res, true_res[0], rtol=1e-5, atol=0.02)
 
 # TODO how does this test work?
-def test_parcorr(par_corr, data_sample):
+def test_parcorr(par_corr, data_sample_a):
     # Get the data sample values
-    small_array, _, corr_val, xyz, dim, T = data_sample
+    small_array, _, corr_val, xyz, dim, T = data_sample_a
     # Generate the full array
     dim = 5
     array = np.random.randn(dim, T)
@@ -239,306 +244,182 @@ def test_parcorr(par_corr, data_sample):
     # Compare to the true value
     np.testing.assert_allclose(np.array(corr_val), np.array(val_est), atol=0.02)
 
-def test_gpdc_residuals():
+# GPDC TESTING #################################################################
+# TODO need test for GPDC get_dependence_measure
+@pytest.fixture()
+def gpdc(request):
+    return GPDC(use_mask=False,
+                mask_type='y',
+                significance='analytic',
+                fixed_thres=0.1,
+                sig_samples=1000,
+                sig_blocklength=1,
+                confidence='bootstrap',
+                conf_lev=0.9,
+                conf_samples=100,
+                conf_blocklength=None,
+                recycle_residuals=False,
+                verbosity=0)
 
-    np.random.seed(42)
-    ci_test = GPDC(significance='analytic',
-                   sig_samples=1000,
-                   sig_blocklength=1,
-                   confidence='bootstrap',
-                   conf_lev=0.9,
-                   conf_samples=100,
-                   conf_blocklength=None,
-                   use_mask=False,
-                   mask_type='y',
-                   recycle_residuals=False,
-                   verbosity=0)
+@pytest.fixture(params=[
+    # Generate the sample to be used for confidence interval comparison
+    #seed, corr_val, T
+    (5,    0.3,      250),  # Default
+    (6,    0.3,      250),  # New Seed
+    (1,    0.9,      250)]) # Strong Correlation
+def data_sample_b(request):
+    # Unpack the parameters
+    seed, corr_val, T = request.param
+    # Return the data sample
+    return gen_data_sample(seed, corr_val, T)
 
-    c = .3
+@pytest.mark.parametrize("seed", list(range(10)))
+def test_gpdc_residuals(gpdc, seed):
+    # Set the random seed
+    np.random.seed(seed)
+    c_val = .3
     T = 1000
-
-    np.random.seed(42)
-
-    def func(x):
-        return x * (1. - 4. * x**0 * np.exp(-x**2 / 2.))
-
+    # Define the function to check against
+    def func(x_arr, c_val=1.):
+        # TODO check x**0
+        # return x * (1. - 4. * x**0 * np.exp(-x**2 / 2.))
+        return c_val*x_arr*(1. - 4.*np.exp(-x_arr*x_arr/2.))
+    # Generate the array
     array = np.random.randn(3, T)
-    array[1] += c*func(array[2])   #.sum(axis=0)
-    xyz = np.array([0,1] + [2 for i in range(array.shape[0]-2)])
-
+    # Manipulate the array
+    array[1] += func(array[2], c_val)
+    # Set the target value and the target results
     target_var = 1
+    target_res = np.copy(array[2])
+    # Calculate the residuals
+    (_, pred) = gpdc._get_single_residuals(array, target_var,
+                                           standardize=False,
+                                           return_means=True)
+    # Testing that the fit matches in the centre
+    cntr = np.where(np.abs(target_res) < .7)[0]
+    np.testing.assert_allclose(pred[cntr],
+                               func(target_res[cntr], c_val),
+                               atol=0.2)
 
-    dim, T = array.shape
-    # array -= array.mean(axis=1).reshape(dim, 1)
-    c_std = c  #/array[1].std()
-    # array /= array.std(axis=1).reshape(dim, 1)
-    array_orig = np.copy(array)
+# TODO should val here be the val given by the data_sample fixture?
+def test_shuffle_sig_gpdc(gpdc, data_sample_b):
+    # Get the data sample
+    array, _, _, xyz, dim, T = data_sample_b
+    # Trim the data sample down, time goes as T^2
+    T = int(T/4.)
+    array = array[:, :T]
+    # Get the value of the dependence measurement
+    val = gpdc.get_dependence_measure(array, xyz)
+    pval_a = gpdc.get_analytic_significance(value=val, T=T, dim=dim)
+    pval_s = gpdc.get_shuffle_significance(array, xyz, val)
+    np.testing.assert_allclose(np.array(pval_a), np.array(pval_s), atol=0.05)
 
-    (est_residual, pred) = ci_test._get_single_residuals(
-                    array, target_var,
-                    standardize=False,
-                    return_means=True)
+# TODO how does this test work?
+def test_trafo2uniform(gpdc, data_sample_a):
+    # Get the data sample
+    array, _, _, _, _, T = data_sample_a
+    # Make the transformation
+    uniform = gpdc._trafo2uniform(array)
+    # Set the number of bins
+    bins = 10
+    for i in range(array.shape[0]):
+        hist, _ = np.histogram(uniform[i], bins=bins, density=True)
+        np.testing.assert_allclose(np.ones(bins)/float(bins),
+                                   hist/float(bins),
+                                   atol=0.01)
 
-    # Testing that in the center the fit is good
-    center = np.where(np.abs(array_orig[2]) < .7)[0]
+# CMIknn TESTING ###############################################################
+@pytest.fixture()
+def cmi_knn(request):
+    return CMIknn(use_mask=False,
+                  mask_type=None,
+                  significance='shuffle_test',
+                  fixed_thres=None,
+                  sig_samples=10000,
+                  sig_blocklength=3,
+                  knn=10,
+                  confidence='bootstrap',
+                  conf_lev=0.9,
+                  conf_samples=10000,
+                  conf_blocklength=1,
+                  verbosity=0)
 
-    np.testing.assert_allclose(pred[center],
-        c_std*func(array_orig[2][center]), atol=0.2)
+@pytest.fixture(params=[
+    # Generate the sample to be used for confidence interval comparison
+    #seed, corr_val, T
+    (5,    0.3,      10000),  # Default
+    (6,    0.3,      10000),  # New Seed
+    (1,    0.6,      10000)]) # Strong Correlation
+def data_sample_c(request):
+    # Unpack the parameters
+    seed, corr_val, T = request.param
+    print(seed)
+    # Return the data sample
+    return gen_data_sample(seed, corr_val, T)
 
-def test_gpdc_get_single_residuals_2(par_corr):
-    np.random.seed(42)
-    ci_test = GPDC(significance='analytic',
-                   sig_samples=1000,
-                   sig_blocklength=1,
-                   confidence='bootstrap',
-                   conf_lev=0.9,
-                   conf_samples=100,
-                   conf_blocklength=None,
-                   use_mask=False,
-                   mask_type='y',
-                   recycle_residuals=False,
-                   verbosity=0)
-
-    a = 0.
-    c = .3
-    T = 500
-    # Each key refers to a variable and the incoming links are supplied as a
-    # list of format [((driver, lag), coeff), ...]
-    links_coeffs = {0: [((0, -1), a)],
-                    1: [((1, -1), a), ((0, -1), c)],
-                    }
-
-    np.random.seed(42)
-    data, true_parents_neighbors = pp.var_process(
-        links_coeffs,
-        use='inv_inno_cov', T=T)
-    dataframe = pp.DataFrame(data)
-    ci_test.set_dataframe(dataframe)
-    # ci_test.set_tau_max(1)
-
-    # X=[(1, -1)]
-    # Y=[(1, 0)]
-    # Z=[(0, -1)] + [(1, -tau) for tau in range(1, 2)]
-    # array, xyz, XYZ = ci_test.get_array(X, Y, Z,
-    #     verbosity=0)]
-    # ci_test.run_test(X, Y, Z,)
-    def func(x):
-        return x * (1. - 4. * x**0 * np.exp(-x**2 / 2.))
-
-    true_residual = np.random.randn(3, T)
-    array = np.copy(true_residual)
-    array[1] += c*func(array[2])   #.sum(axis=0)
-    xyz = np.array([0,1] + [2 for i in range(array.shape[0]-2)])
-
-    print('xyz ', xyz, np.where(xyz == 1))
-    target_var = 1
-
-    dim, T = array.shape
-    # array -= array.mean(axis=1).reshape(dim, 1)
-    c_std = c  #/array[1].std()
-    # array /= array.std(axis=1).reshape(dim, 1)
-    array_orig = np.copy(array)
-
-    import matplotlib
-    from matplotlib import pyplot
-    (est_residual, pred) = ci_test._get_single_residuals(
-                    array, target_var,
-                    standardize=False,
-                    return_means=True)
-    (resid_, pred_parcorr) = par_corr._get_single_residuals(
-                    array, target_var,
-                    standardize=False,
-                    return_means=True)
-
-    #fig = pyplot.figure()
-    #ax = fig.add_subplot(111)
-    #ax.scatter(array_orig[2], array_orig[1])
-    #ax.scatter(array_orig[2], pred, color='red')
-    #ax.scatter(array_orig[2], pred_parcorr, color='green')
-    #ax.plot(np.sort(array_orig[2]), c_std*func(np.sort(array_orig[2])), color='black')
-    #pyplot.savefig('.')
-
-def test_shuffle_vs_analytic_significance_gpdc_2():
-    np.random.seed(42)
-    ci_gpdc = GPDC(significance='analytic',
-                   sig_samples=1000,
-                   sig_blocklength=1,
-                   confidence='bootstrap',
-                   conf_lev=0.9,
-                   conf_samples=100,
-                   conf_blocklength=None,
-                   use_mask=False,
-                   mask_type='y',
-                   recycle_residuals=False,
-                   verbosity=0)
-
-    cov = np.array([[1., 0.2], [0.2, 1.]])
-    array = np.random.multivariate_normal(mean=np.zeros(2), cov=cov, size=245).T
-
-    dim, T = array.shape
-    xyz = np.array([0,1])
-
-    val = ci_gpdc.get_dependence_measure(array, xyz)
-    pval_ana = ci_gpdc.get_analytic_significance(value=val, T=T, dim=dim)
-    pval_shf = ci_gpdc.get_shuffle_significance(array, xyz, val)
-    np.testing.assert_allclose(np.array(pval_ana), np.array(pval_shf), atol=0.05)
-
-def test_shuffle_vs_analytic_significance_gpdc():
-    np.random.seed(42)
-    ci_gpdc = GPDC(significance='analytic',
-                   sig_samples=1000,
-                   sig_blocklength=1,
-                   confidence='bootstrap',
-                   conf_lev=0.9,
-                   conf_samples=100,
-                   conf_blocklength=None,
-                   use_mask=False,
-                   mask_type='y',
-                   recycle_residuals=False,
-                   verbosity=0)
-
-    cov = np.array([[1., 0.01], [0.01, 1.]])
-    array = np.random.multivariate_normal(mean=np.zeros(2),
-                    cov=cov, size=300).T
-
-    dim, T = array.shape
-    xyz = np.array([0,1])
-
-    val = ci_gpdc.get_dependence_measure(array, xyz)
-    pval_ana = ci_gpdc.get_analytic_significance(value=val, T=T, dim=dim)
-    pval_shf = ci_gpdc.get_shuffle_significance(array, xyz, val)
-    np.testing.assert_allclose(np.array(pval_ana), np.array(pval_shf), atol=0.05)
-
-def test_cmi_knn():
-
-    np.random.seed(42)
-    ci_cmi_knn = CMIknn(use_mask=False,
-                        mask_type=None,
-                        significance='shuffle_test',
-                        fixed_thres=None,
-                        sig_samples=10000,
-                        sig_blocklength=3,
-                        knn=10,
-                        confidence='bootstrap',
-                        conf_lev=0.9,
-                        conf_samples=10000,
-                        conf_blocklength=1,
-                        verbosity=0)
-
-
-    # ci_cmi_knn._trafo2uniform(self, x)
-
-    val_ana = 0.6
-    T = 10000
-    np.random.seed(42)
-    array = np.random.randn(5, T)
-
-    cov = np.array([[1., val_ana],[val_ana, 1.]])
-    array[:2, :] = np.random.multivariate_normal(
-                    mean=np.zeros(2),
-                    cov=cov, size=T).T
-
+# TODO how does this test work?
+def test_cmi_knn(cmi_knn, data_sample_c):
+    # Get the data sample values
+    small_array, _, corr_val, xyz, dim, T = data_sample_c
+    # Generate the full array
+    dim = 5
+    array = np.random.randn(dim, T)
+    array[:2, :] = small_array
     # Generate some confounding
-    if len(array) > 2:
-        array[0] += 0.5* array[2:].sum(axis=0)
-        array[1] += 0.7* array[2:].sum(axis=0)
-
-    # print(np.corrcoef(array)[0,1])
-    # print(val)
-    dim, T = array.shape
-    xyz = np.array([0,1,2,2,2])
-
-    val_est = ci_cmi_knn.get_dependence_measure(array, xyz)
-
-    print(val_est)
-    print(_par_corr_to_cmi(val_ana))
-
-    np.testing.assert_allclose(np.array(_par_corr_to_cmi(val_ana)),
+    array[0] += 0.5* array[2:].sum(axis=0)
+    array[1] += 0.7* array[2:].sum(axis=0)
+    # Reset the dimension
+    xyz = np.array([0, 1, 2, 2, 2])
+    # Get the estimated value
+    val_est = cmi_knn.get_dependence_measure(array, xyz)
+    np.testing.assert_allclose(np.array(_par_corr_to_cmi(corr_val)),
                                np.array(val_est),
                                atol=0.02)
 
-def test_trafo2uniform():
-
-    T = 1000
-    # np.random.seed(None)
-    np.random.seed(42)
-    array = np.random.randn(2, T)
-
-    bins = 10
-    ci_gpdc = GPDC(significance='analytic',
-                   sig_samples=1000,
-                   sig_blocklength=1,
+# CMIsymb TESTING ##############################################################
+@pytest.fixture()
+def cmi_symb(request):
+    return CMIsymb(use_mask=False,
+                   mask_type=None,
+                   significance='shuffle_test',
+                   fixed_thres=0.1,
+                   sig_samples=10000,
+                   sig_blocklength=3,
                    confidence='bootstrap',
                    conf_lev=0.9,
-                   conf_samples=100,
-                   conf_blocklength=None,
-                   use_mask=False,
-                   mask_type='y',
-                   recycle_residuals=False,
+                   conf_samples=10000,
+                   conf_blocklength=1,
                    verbosity=0)
 
+@pytest.fixture(params=[
+    # Generate the sample to be used for confidence interval comparison
+    #seed, corr_val, T
+    (5,    0.3,      100000),  # Default
+    (6,    0.3,      100000),  # New Seed
+    (7,    0.6,      100000)]) # Strong Correlation
+def data_sample_d(request):
+    # Unpack the parameters
+    seed, corr_val, T = request.param
+    print(seed)
+    # Return the data sample
+    return gen_data_sample(seed, corr_val, T)
 
-    uniform = ci_gpdc._trafo2uniform(array)
-    # print(uniform)
-
-    # import matplotlib
-    # from matplotlib import pylab
-    for i in range(array.shape[0]):
-        print(uniform[i].shape)
-        hist, edges = np.histogram(uniform[i], bins=bins,
-                                  density=True)
-        # pylab.figure()
-        # pylab.hist(uniform[i], color='grey', alpha=0.3)
-        # pylab.hist(array[i], alpha=0.3)
-        # pylab.show()
-        print(hist/float(bins))  #, edges
-        np.testing.assert_allclose(np.ones(bins)/float(bins),
-                                      hist/float(bins),
-                                       atol=0.01)
-
-def test_cmi_symb():
-
-    np.random.seed(42)
-    ci_cmi_symb = CMIsymb(use_mask=False,
-                        mask_type=None,
-                        significance='shuffle_test',
-                        fixed_thres=None,
-                        sig_samples=10000,
-                        sig_blocklength=3,
-
-                        confidence='bootstrap',
-                        conf_lev=0.9,
-                        conf_samples=10000,
-                        conf_blocklength=1,
-
-                        verbosity=0)
-
-    val_ana = 0.6
-    T = 100000
-    np.random.seed(None)
-    array = np.random.randn(3, T)
-
-    cov = np.array([[1., val_ana],[val_ana, 1.]])
-    array[:2, :] = np.random.multivariate_normal(
-                    mean=np.zeros(2),
-                    cov=cov, size=T).T
-
+def test_cmi_symb(cmi_symb, data_sample_d):
+    # Get the data sample values
+    small_array, _, corr_val, xyz, dim, T = data_sample_d
+    # Generate the full array
+    dim = 3
+    array = np.random.randn(dim, T)
+    array[:2, :] = small_array
     # Generate some confounding
-    if len(array) > 2:
-        array[0] += 0.5* array[2:].sum(axis=0)
-        array[1] += 0.7* array[2:].sum(axis=0)
-
+    array[0] += 0.5* array[2:].sum(axis=0)
+    array[1] += 0.7* array[2:].sum(axis=0)
     # Transform to symbolic data
     array = pp.quantile_bin_array(array.T, bins=16).T
-
-    dim, T = array.shape
-    xyz = np.array([0,1,2,2,2])
-
-    val_est = ci_cmi_symb.get_dependence_measure(array, xyz)
-
-    print(val_est)
-    print(_par_corr_to_cmi(val_ana))
-
-    np.testing.assert_allclose(np.array(_par_corr_to_cmi(val_ana)),
+    # Reset the dimension
+    xyz = np.array([0, 1, 2, 2, 2])
+    # Get the estimated value
+    val_est = cmi_symb.get_dependence_measure(array, xyz)
+    np.testing.assert_allclose(np.array(_par_corr_to_cmi(corr_val)),
                                np.array(val_est),
                                atol=0.02)
