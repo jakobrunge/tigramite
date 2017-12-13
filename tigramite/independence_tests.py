@@ -188,8 +188,8 @@ def _construct_array(X, Y, Z, tau_max, data,
                   'y' : 1,
                   'z' : 2}
     xyz = np.array([index_code['x'] for i in range(len(X))] +
-                      [index_code['y'] for i in range(len(Y))] +
-                      [index_code['z'] for i in range(len(Z))])
+                   [index_code['y'] for i in range(len(Y))] +
+                   [index_code['z'] for i in range(len(Z))])
 
     # Setup and fill array with lagged time series
     time_length = T - max_lag
@@ -389,12 +389,10 @@ class CondIndTest(object):
                   "\nParameters:")
             # TODO REFACTOR self.measure does not exist in ABC
             print("independence test = %s" % self.measure
-                  + "\nsignificance = %s" % self.significance
-                  )
+                  + "\nsignificance = %s" % self.significance)
             if self.significance == 'shuffle_test':
-                print(""
-                + "sig_samples = %s" % self.sig_samples
-                + "\nsig_blocklength = %s" % self.sig_blocklength)
+                print("sig_samples = %s" % self.sig_samples +
+                      "\nsig_blocklength = %s" % self.sig_blocklength)
             elif self.significance == 'fixed_thres':
                 print(""
                 + "fixed_thres = %s" % self.fixed_thres)
@@ -402,13 +400,11 @@ class CondIndTest(object):
                 print("confidence = %s" % self.confidence
                 + "\nconf_lev = %s" % self.conf_lev)
                 if self.confidence == 'bootstrap':
-                    print(""
-                    + "conf_samples = %s" % self.conf_samples
-                    + "\nconf_blocklength = %s" % self.conf_blocklength)
+                    print("conf_samples = %s" % self.conf_samples +
+                          "\nconf_blocklength = %s" % self.conf_blocklength)
             if self.use_mask:
-                print(""
-                  + "use_mask = %s" % self.use_mask
-                  + "\nmask_type = %s" % self.mask_type)
+                print("use_mask = %s" % self.use_mask +
+                      "\nmask_type = %s" % self.mask_type)
             if self.recycle_residuals:
                 print("recycle_residuals = %s" % self.recycle_residuals)
 
@@ -453,17 +449,16 @@ class CondIndTest(object):
         if verbosity is None:
             verbosity=self.verbosity
 
-        return _construct_array(
-            X=X, Y=Y, Z=Z,
-            tau_max=tau_max,
-            data=self.data,
-            use_mask=self.use_mask,
-            mask=self.mask,
-            mask_type=self.mask_type,
-            missing_flag=self.missing_flag,
-            return_cleaned_xyz=True,
-            do_checks=False,
-            verbosity=verbosity)
+        return _construct_array(X=X, Y=Y, Z=Z,
+                                tau_max=tau_max,
+                                data=self.data,
+                                use_mask=self.use_mask,
+                                mask=self.mask,
+                                mask_type=self.mask_type,
+                                missing_flag=self.missing_flag,
+                                return_cleaned_xyz=True,
+                                do_checks=False,
+                                verbosity=verbosity)
 
     def run_test(self, X, Y, Z=None, tau_max=0):
         # TODO test this function
@@ -508,15 +503,15 @@ class CondIndTest(object):
             if self._keyfy(X, Z) in list(self.residuals):
                 x_resid = self.residuals[self._keyfy(X, Z)]
             else:
-                x_resid = self._get_single_residuals(array, target_var = 0)
-                if len(Z) > 0:
+                x_resid = self._get_single_residuals(array, target_var=0)
+                if Z:
                     self.residuals[self._keyfy(X, Z)] = x_resid
 
             if self._keyfy(Y, Z) in list(self.residuals):
                 y_resid = self.residuals[self._keyfy(Y, Z)]
             else:
-                y_resid = self._get_single_residuals(array, target_var = 1)
-                if len(Z) > 0:
+                y_resid = self._get_single_residuals(array, target_var=1)
+                if Z:
                     self.residuals[self._keyfy(Y, Z)] = y_resid
 
             array_resid = np.array([x_resid, y_resid])
@@ -535,8 +530,9 @@ class CondIndTest(object):
                                                  xyz=xyz,
                                                  value=val)
         elif self.significance == 'fixed_thres':
-            pval = self.get_fixed_thres_significance(value=val,
-                                                fixed_thres=self.fixed_thres)
+            pval = self.get_fixed_thres_significance(
+                    value=val,
+                    fixed_thres=self.fixed_thres)
         else:
             raise ValueError("%s not known." % self.significance)
 
@@ -585,14 +581,14 @@ class CondIndTest(object):
                 x_resid = self.residuals[self._keyfy(X, Z)]
             else:
                 x_resid = self._get_single_residuals(array, target_var = 0)
-                if len(Z) > 0:
+                if Z:
                     self.residuals[self._keyfy(X, Z)] = x_resid
 
             if self._keyfy(Y, Z) in list(self.residuals):
                 y_resid = self.residuals[self._keyfy(Y, Z)]
             else:
                 y_resid = self._get_single_residuals(array,target_var = 1)
-                if len(Z) > 0:
+                if Z:
                     self.residuals[self._keyfy(Y, Z)] = y_resid
 
             array_resid = np.array([x_resid, y_resid])
@@ -631,16 +627,15 @@ class CondIndTest(object):
         """
 
         if self.confidence:
-            if (self.conf_lev < .5 or self.conf_lev >= 1.):
+            if self.conf_lev < .5 or self.conf_lev >= 1.:
                 raise ValueError("conf_lev = %.2f, " % self.conf_lev +
                                  "but must be between 0.5 and 1")
-            if (self.confidence == 'bootstrap'
-                    and self.conf_samples * (1. - self.conf_lev) / 2. < 1.):
+            half_conf = self.confidence*(1. - self.conf_lev) / 2.
+            if self.confidence == 'bootstrap' and  half_conf < 1.:
                 raise ValueError("conf_samples*(1.-conf_lev)/2 is %.2f"
-                                 % (self.conf_samples * (1. - self.conf_lev) / 2.) +
-                                 ", must be >> 1")
+                                 % half_conf + ", must be >> 1")
 
-        array, xyz, XYZ = self._get_array(X, Y, Z, tau_max, verbosity=0)
+        array, xyz, _ = self._get_array(X, Y, Z, tau_max, verbosity=0)
 
         dim, T = array.shape
 
@@ -657,20 +652,22 @@ class CondIndTest(object):
         elif self.confidence == 'bootstrap':
             # Overwrite analytic values
             # TODO remove dependence_measure from bootstrap arguments
-            (conf_lower, conf_upper) = self.get_bootstrap_confidence(array, xyz,
-                             dependence_measure=self.get_dependence_measure,
-                             conf_samples=self.conf_samples,
-                             conf_blocklength=self.conf_blocklength,
-                             conf_lev=self.conf_lev, verbosity=self.verbosity)
-        elif self.confidence == False:
+            (conf_lower, conf_upper) = \
+                    self.get_bootstrap_confidence(
+                        array, xyz,
+                        dependence_measure=self.get_dependence_measure,
+                        conf_samples=self.conf_samples,
+                        conf_blocklength=self.conf_blocklength,
+                        conf_lev=self.conf_lev, verbosity=self.verbosity)
+        elif not self.confidence:
             return None
 
         else:
             raise ValueError("%s confidence estimation not implemented"
                              % self.confidence)
 
+        # TODO do not use self.conf
         self.conf = (conf_lower, conf_upper)
-
         return (conf_lower, conf_upper)
 
     def _print_cond_ind_results(self, val, pval=None, conf=None):
@@ -699,8 +696,6 @@ class CondIndTest(object):
             if conf is not None:
                 printstr += " | conf bounds = (%.3f, %.3f)" % (
                     conf[0], conf[1])
-
-
         print(printstr)
 
     def get_bootstrap_confidence(self, array, xyz, dependence_measure,
@@ -817,10 +812,10 @@ class CondIndTest(object):
         autocorr = np.ones(max_lag + 1)
         for lag in range(1, max_lag + 1):
 
-            y1 = series[lag:]
-            y2 = series[:len(series) - lag]
+            y1_vals = series[lag:]
+            y2_vals = series[:len(series) - lag]
 
-            autocorr[lag] = np.corrcoef(y1, y2, ddof=0)[0, 1]
+            autocorr[lag] = np.corrcoef(y1_vals, y2_vals, ddof=0)[0, 1]
 
         return autocorr
 
@@ -865,8 +860,8 @@ class CondIndTest(object):
         # Maximum lag for autocov estimation
         max_lag = int(0.1*T)
 
-        def func(x, a, decay):
-            return a * decay**x
+        def func(x_vals, a_const, decay):
+            return a_const * decay**x_vals
 
         block_len = 1
         for i in indices:
@@ -879,8 +874,8 @@ class CondIndTest(object):
             hilbert = np.abs(signal.hilbert(autocov))
 
             try:
-                popt, pcov = optimize.curve_fit(
-                    func, range(0, max_lag + 1), hilbert)
+                popt, pcov = \
+                        optimize.curve_fit(func, range(0, max_lag + 1), hilbert)
                 phi = popt[1]
 
                 # Formula of Pfeifer (2005) assuming non-overlapping blocks
@@ -968,24 +963,24 @@ class CondIndTest(object):
             blk_starts = np.random.permutation(block_starts)[:n_blks]
 
             x_shuffled = np.zeros((dim_x, n_blks*sig_blocklength),
-                                          dtype = array.dtype)
+                                  dtype=array.dtype)
 
             for i, index in enumerate(x_indices):
-                for b in range(sig_blocklength):
-                    x_shuffled[i, b::sig_blocklength] = array[index,
-                                            blk_starts + b]
+                for blk in range(sig_blocklength):
+                    x_shuffled[i, blk::sig_blocklength] = \
+                            array[index, blk_starts + blk]
 
             # Insert tail randomly somewhere
             if tail.shape[1] > 0:
                 insert_tail_at = np.random.choice(block_starts)
                 x_shuffled = np.insert(x_shuffled, insert_tail_at,
-                                          tail.T, axis=1)
+                                       tail.T, axis=1)
 
             for i, index in enumerate(x_indices):
                 array_shuffled[index] = x_shuffled[i]
 
             null_dist[sam] = dependence_measure(array=array_shuffled,
-                                           xyz=xyz)
+                                                xyz=xyz)
 
         null_dist.sort()
 
@@ -1082,13 +1077,16 @@ class CondIndTest(object):
                       "argument null_dist_filename")
 
         xyz = np.array([0,1])
+        # TODO no null_samples member
         null_dist = np.zeros(self.null_samples)
         for i in range(self.null_samples):
             array = np.random.rand(2, df)
 
+            # TODO no get_dependence_measure
             null_dist[i] = self.get_dependence_measure(array, xyz)
 
         null_dist.sort()
+        # TODO only return if not add_to_null_dists??
         if add_to_null_dists:
             self.null_dists[df] = null_dist
         else:
@@ -1119,10 +1117,12 @@ class CondIndTest(object):
 
         for iT, T in enumerate(sample_sizes):
             null_dists[iT] = self.generate_nulldist(T, add_to_null_dists=False)
+            # TODO no null_samples member
             self.null_dists[T] = null_dists[iT]
 
-        np.savez("%s" % null_dist_filename, exact_dist=null_dists,
-                            T=np.array(sample_sizes))
+        np.savez("%s" % null_dist_filename,
+                 exact_dist=null_dists,
+                 T=np.array(sample_sizes))
 
 
 class ParCorr(CondIndTest):
@@ -1222,8 +1222,7 @@ class ParCorr(CondIndTest):
 
         if return_means:
             return (resid, mean)
-        else:
-            return resid
+        return resid
 
     def get_dependence_measure(self, array, xyz):
         """Return partial correlation.
@@ -1245,11 +1244,9 @@ class ParCorr(CondIndTest):
             Partial correlation coefficient.
         """
 
-        x = self._get_single_residuals(array, target_var = 0)
-        y = self._get_single_residuals(array, target_var = 1)
-
-        val, dummy = stats.pearsonr(x, y)
-
+        x_vals = self._get_single_residuals(array, target_var=0)
+        y_vals = self._get_single_residuals(array, target_var=1)
+        val, _ = stats.pearsonr(x_vals, y_vals)
         return val
 
     def get_shuffle_significance(self, array, xyz, value,
@@ -1275,9 +1272,9 @@ class ParCorr(CondIndTest):
             p-value
         """
 
-        x = self._get_single_residuals(array, target_var = 0)
-        y = self._get_single_residuals(array, target_var = 1)
-        array_resid = np.array([x, y])
+        x_vals = self._get_single_residuals(array, target_var=0)
+        y_vals = self._get_single_residuals(array, target_var=1)
+        array_resid = np.array([x_vals, y_vals])
         xyz_resid = np.array([0, 1])
 
         null_dist = self._get_shuffle_dist(array_resid, xyz_resid,
@@ -1362,10 +1359,10 @@ class ParCorr(CondIndTest):
         value_tdist = value * np.sqrt(df) / np.sqrt(1. - value**2)
         conf_lower = (stats.t.ppf(q=1. - c_int, df=df, loc=value_tdist)
                       / np.sqrt(df + stats.t.ppf(q=1. - c_int, df=df,
-                                                       loc=value_tdist)**2))
+                                                 loc=value_tdist)**2))
         conf_upper = (stats.t.ppf(q=c_int, df=df, loc=value_tdist)
                       / np.sqrt(df + stats.t.ppf(q=c_int, df=df,
-                                                       loc=value_tdist)**2))
+                                                 loc=value_tdist)**2))
         return (conf_lower, conf_upper)
 
 
@@ -1410,15 +1407,13 @@ class ParCorr(CondIndTest):
 
         dim, T = array.shape
 
-        y = self._get_single_residuals(
-            array, target_var=1, return_means=False)
+        y = self._get_single_residuals(array, target_var=1, return_means=False)
         # Get RSS
         rss = (y**2).sum()
         # Number of parameters
         p = dim - 1
         # Get AIC
         score = T * np.log(rss) + 2. * p
-
         return score
 
 class GP():
@@ -1444,12 +1439,8 @@ class GP():
         Dictionary with parameters for ``GaussianProcessRegressor``.
 
     """
-    def __init__(self,
-                gp_version='new',
-                gp_params=None):
-
-        # CondIndTest.__inits__(self,)
-
+    def __init__(self, gp_version='new', gp_params=None):
+        # Set member variables
         self.gp_version = gp_version
         self.gp_params = gp_params
 
@@ -1496,8 +1487,7 @@ class GP():
         if dim <= 2:
             if return_likelihood:
                 return array[target_var, :], -np.inf
-            else:
-                return array[target_var, :]
+            return array[target_var, :]
 
         # Standardize
         if standardize:
@@ -1521,7 +1511,8 @@ class GP():
                 while len(np.unique(series)) < np.size(series):
                     series += 1E-6 * np.random.rand(*series.shape)
                     cnt += 1
-                    if cnt > 100: break
+                    if cnt > 100:
+                        break
                 return series
 
             z = remove_ties(z)
@@ -1553,10 +1544,9 @@ class GP():
                 alpha = self.gp_params['alpha']
                 del params['alpha']
 
-            gp = gaussian_process.GaussianProcessRegressor(
-                kernel=kernel,
-                alpha=alpha,
-                 **params)
+            gp = gaussian_process.GaussianProcessRegressor(kernel=kernel,
+                                                           alpha=alpha,
+                                                           **params)
 
         gp.fit(z, target_series.reshape(-1, 1))
 
@@ -1574,14 +1564,13 @@ class GP():
 
         resid = target_series - mean
 
-        if return_means and return_likelihood==False:
+        if return_means and not return_likelihood:
             return (resid, mean)
-        elif return_means==False and return_likelihood:
+        elif return_likelihood and not return_means:
             return (resid, likelihood)
         elif return_means and return_likelihood:
             return resid, mean, likelihood
-        else:
-            return resid
+        return resid
 
     def get_model_selection_criterion(self, j,
                                       parents,
@@ -1613,6 +1602,7 @@ class GP():
         Y = [(j, 0)]
         X = [(j, 0)]   # dummy variable here
         Z = parents
+        # TODO GP is missing many of these members
         array, xyz = _construct_array(
             X=X, Y=Y, Z=Z,
             tau_max=tau_max,
@@ -1627,10 +1617,10 @@ class GP():
         dim, T = array.shape
 
         y, logli = self._get_single_residuals(array,
-                            target_var=1, return_likelihood=True)
-
+                                              target_var=1,
+                                              return_likelihood=True)
+        # TODO this has a bad operand type...
         score = -logli
-
         return score
 
 class GPACE(CondIndTest,GP):
@@ -1696,16 +1686,13 @@ class GPACE(CondIndTest,GP):
 
     """
     def __init__(self,
-                null_dist_filename=None,
-                gp_version='new',
-                gp_params=None,
-                ace_version='acepack',
-                **kwargs):
+                 null_dist_filename=None,
+                 gp_version='new',
+                 gp_params=None,
+                 ace_version='acepack',
+                 **kwargs):
 
-        GP.__init__(self,
-                    gp_version=gp_version,
-                    gp_params=gp_params,
-                    )
+        GP.__init__(self, gp_version=gp_version, gp_params=gp_params)
 
         self.ace_version = ace_version
 
@@ -1734,7 +1721,7 @@ class GPACE(CondIndTest,GP):
             null_dist_file = np.load(null_dist_filename)
             # self.sample_sizes = null_dist_file['T']
             self.null_dists = dict(zip(null_dist_file['T'],
-                                      null_dist_file['exact_dist']))
+                                       null_dist_file['exact_dist']))
             # print self.null_dist
             self.null_samples = len(null_dist_file['exact_dist'][0])
 
@@ -1758,14 +1745,12 @@ class GPACE(CondIndTest,GP):
         val : float
             GPACE test statistic.
         """
-
+        # TODO abstract this function
         D, T = array.shape
 
-        x = self._get_single_residuals(array, target_var=0)
-        y = self._get_single_residuals(array, target_var=1)
-
-        val = self._get_maxcorr(np.array([x, y]))
-
+        x_vals = self._get_single_residuals(array, target_var=0)
+        y_vals = self._get_single_residuals(array, target_var=1)
+        val = self._get_maxcorr(np.array([x_vals, y_vals]))
         return val
 
     def _get_maxcorr(self, array_resid):
@@ -1778,8 +1763,8 @@ class GPACE(CondIndTest,GP):
         are transformed to uniform marginals using the empirical cumulative
         distribution function beforehand. Here the null distribution is not
         analytically available, but can be precomputed with the function
-        generate_and_save_nulldists(...) which saves a \*.npz file containing the
-        null distribution for different sample sizes. This file can then be
+        generate_and_save_nulldists(...) which saves a \*.npz file containing
+        the null distribution for different sample sizes. This file can then be
         supplied as null_dist_filename.
 
         Parameters
@@ -1799,6 +1784,7 @@ class GPACE(CondIndTest,GP):
         x, y = self._trafo2uniform(array_resid)
 
         if self.ace_version == 'python':
+            # TODO clean this up
             class Suppressor(object):
                 """Wrapper class to prevent output from ACESolver."""
                 def __enter__(self):
@@ -1812,13 +1798,13 @@ class GPACE(CondIndTest,GP):
             myace.specify_data_set([x], y)
             with Suppressor():
                 myace.solve()
-            val = np.corrcoef(myace.x_transforms[0], myace.y_transform)[0,1]
+            val = np.corrcoef(myace.x_transforms[0], myace.y_transform)[0, 1]
 
         elif self.ace_version == 'acepack':
             # TODO undefined import used here
             ace_rpy = rpy2.robjects.r['ace'](x, y)
             val = np.corrcoef(np.asarray(ace_rpy[8]).flatten(),
-                                 np.asarray(ace_rpy[9]))[0, 1]
+                              np.asarray(ace_rpy[9]))[0, 1]
         else:
             raise ValueError("ace_version must be 'python' or 'acepack'")
 
@@ -1849,23 +1835,22 @@ class GPACE(CondIndTest,GP):
             p-value
         """
 
-        x = self._get_single_residuals(array, target_var = 0)
-        y = self._get_single_residuals(array, target_var = 1)
-        array_resid = np.array([x, y])
-        xyz_resid = np.array([0,1])
+        x_val = self._get_single_residuals(array, target_var=0)
+        y_val = self._get_single_residuals(array, target_var=1)
+        array_resid = np.array([x_val, y_val])
+        xyz_resid = np.array([0, 1])
 
         null_dist = self._get_shuffle_dist(array_resid, xyz_resid,
-                               self.get_dependence_measure,
-                               sig_samples=self.sig_samples,
-                               sig_blocklength=self.sig_blocklength,
-                               verbosity=self.verbosity)
+                                           self.get_dependence_measure,
+                                           sig_samples=self.sig_samples,
+                                           sig_blocklength=self.sig_blocklength,
+                                           verbosity=self.verbosity)
 
         pval = (null_dist >= value).mean()
 
         if return_null_dist:
             return pval, null_dist
-        else:
-            return pval
+        return pval
 
     def get_analytic_significance(self, value, T, dim):
         # TODO test this function as well
@@ -1909,8 +1894,7 @@ class GPACE(CondIndTest,GP):
             # np.abs(self.sample_sizes[idx_near] - df) / float(df) > 0.01:
                 if self.verbosity > 0:
                     print("Null distribution for GPACE not available "
-                             "for deg. of freed. = %d."
-                             "" % df)
+                          "for deg. of freed. = %d." % df)
                 self.generate_nulldist(df)
 
             null_dist_here = self.null_dists[df]
@@ -1919,6 +1903,7 @@ class GPACE(CondIndTest,GP):
         return pval
 
     def get_analytic_confidence(self, value, df, conf_lev):
+        # TODO abstract this function
         """Placeholder function, not available."""
         raise ValueError("Analytic confidence not implemented for %s"
                          "" % self.measure)
@@ -1933,8 +1918,8 @@ class GPDC(CondIndTest,GP):
     optimized automatically. The distance correlation test is implemented with
     cython. Here the null distribution is not analytically available, but can be
     precomputed with the function generate_and_save_nulldists(...) which saves a
-    \*.npz file containing the null distribution for different sample sizes. This
-    file can then be supplied as null_dist_filename.
+    \*.npz file containing the null distribution for different sample sizes.
+    This file can then be supplied as null_dist_filename.
 
     Notes
     -----
@@ -1984,15 +1969,12 @@ class GPDC(CondIndTest,GP):
 
     """
     def __init__(self,
-                null_dist_filename=None,
-                gp_version='new',
-                gp_params=None,
-                **kwargs):
+                 null_dist_filename=None,
+                 gp_version='new',
+                 gp_params=None,
+                 **kwargs):
 
-        GP.__init__(self,
-                    gp_version=gp_version,
-                    gp_params=gp_params,
-                    )
+        GP.__init__(self, gp_version=gp_version, gp_params=gp_params)
 
         self.measure = 'gp_dc'
         self.two_sided = False
@@ -2018,7 +2000,7 @@ class GPDC(CondIndTest,GP):
             null_dist_file = np.load(null_dist_filename)
             # self.sample_sizes = null_dist_file['T']
             self.null_dists = dict(zip(null_dist_file['T'],
-                                      null_dist_file['exact_dist']))
+                                       null_dist_file['exact_dist']))
             # print self.null_dist
             self.null_samples = len(null_dist_file['exact_dist'][0])
 
@@ -2043,14 +2025,12 @@ class GPDC(CondIndTest,GP):
         val : float
             GPDC test statistic.
         """
-
+        # TODO abstract this function
         D, T = array.shape
 
-        x = self._get_single_residuals(array, target_var=0)
-        y = self._get_single_residuals(array, target_var=1)
-
-        val = self._get_dcorr(np.array([x, y]))
-
+        x_vals = self._get_single_residuals(array, target_var=0)
+        y_vals = self._get_single_residuals(array, target_var=1)
+        val = self._get_dcorr(np.array([x_vals, y_vals]))
         return val
 
 
@@ -2079,11 +2059,9 @@ class GPDC(CondIndTest,GP):
         # Remove ties before applying transformation to uniform marginals
         # array_resid = self._remove_ties(array_resid, verbosity=4)
 
-        x, y = self._trafo2uniform(array_resid)
-
+        x_vals, y_vals = self._trafo2uniform(array_resid)
         # TODO pylint cannot find dcov_all, check it exists and works
-        dc, val, dvx, dvy = tigramite_cython_code.dcov_all(x, y)
-
+        _, val, _, _ = tigramite_cython_code.dcov_all(x_vals, y_vals)
         return val
 
 
@@ -2111,23 +2089,22 @@ class GPDC(CondIndTest,GP):
             p-value
         """
 
-        x = self._get_single_residuals(array, target_var = 0)
-        y = self._get_single_residuals(array, target_var = 1)
-        array_resid = np.array([x, y])
-        xyz_resid = np.array([0,1])
+        x_vals = self._get_single_residuals(array, target_var=0)
+        y_vals = self._get_single_residuals(array, target_var=1)
+        array_resid = np.array([x_vals, y_vals])
+        xyz_resid = np.array([0, 1])
 
         null_dist = self._get_shuffle_dist(array_resid, xyz_resid,
-                               self.get_dependence_measure,
-                               sig_samples=self.sig_samples,
-                               sig_blocklength=self.sig_blocklength,
-                               verbosity=self.verbosity)
+                                           self.get_dependence_measure,
+                                           sig_samples=self.sig_samples,
+                                           sig_blocklength=self.sig_blocklength,
+                                           verbosity=self.verbosity)
 
         pval = (null_dist >= value).mean()
 
         if return_null_dist:
             return pval, null_dist
-        else:
-            return pval
+        return pval
 
     def get_analytic_significance(self, value, T, dim):
         # TODO test this function
@@ -2169,15 +2146,12 @@ class GPDC(CondIndTest,GP):
             if int(df) not in list(self.null_dists):
             # if np.abs(self.sample_sizes[idx_near] - df) / float(df) > 0.01:
                 if self.verbosity > 0:
+                    # TODO abstract this message
                     print("Null distribution for GPDC not available "
-                             "for deg. of freed. = %d."
-                             "" % df)
-
+                          "for deg. of freed. = %d." % df)
                 self.generate_nulldist(df)
-
             null_dist_here = self.null_dists[int(df)]
             pval = np.mean(null_dist_here > np.abs(value))
-
         return pval
 
     def get_analytic_confidence(self, value, df, conf_lev):
@@ -2337,7 +2311,7 @@ class CMIknn(CondIndTest):
         # every sample in joint space XYZ with maximum norm
         tree_xyz = spatial.cKDTree(array.T)
         epsarray = tree_xyz.query(array.T, k=knn+1, p=np.inf,
-                                  eps=0.)[0][:,knn].astype('float')
+                                  eps=0.)[0][:, knn].astype('float')
 
         # Prepare for fast cython access
         dim_x = int(np.where(xyz == 0)[0][-1] + 1)
@@ -2345,9 +2319,9 @@ class CMIknn(CondIndTest):
 
         k_xz, k_yz, k_z = \
                 tigramite_cython_code._get_neighbors_within_eps_cython(array,
-                                                                       T, 
-                                                                       dim_x, 
-                                                                       dim_y, 
+                                                                       T,
+                                                                       dim_x,
+                                                                       dim_y,
                                                                        epsarray,
                                                                        knn,
                                                                        dim)
@@ -2378,12 +2352,13 @@ class CMIknn(CondIndTest):
         else:
             knn_here = max(1, int(self.knn))
 
-        k_xz, k_yz, k_z = self._get_nearest_neighbors(array=array, xyz=xyz,
-                                                 knn=knn_here)
+        k_xz, k_yz, k_z = self._get_nearest_neighbors(array=array,
+                                                      xyz=xyz,
+                                                      knn=knn_here)
 
         val = special.digamma(knn_here) - (special.digamma(k_xz) +
-                                      special.digamma(k_yz) -
-                                      special.digamma(k_z)).mean()
+                                           special.digamma(k_yz) -
+                                           special.digamma(k_z)).mean()
 
         return val
 
@@ -2429,19 +2404,19 @@ class CMIknn(CondIndTest):
         x_indices = np.where(xyz == 0)[0]
         z_indices = np.where(xyz == 2)[0]
 
-        if len(z_indices) > 0 and self.shuffle_neighbors < T:
+        if z_indices and self.shuffle_neighbors < T:
             if self.verbosity > 2:
                 print("            nearest-neighbor shuffle significance "
                       "test with n = %d and %d surrogates" % (
-                        self.shuffle_neighbors,  self.sig_samples))
+                      self.shuffle_neighbors, self.sig_samples))
 
             # Get nearest neighbors around each sample point in Z
-            z_array = np.fastCopyAndTranspose(array[z_indices,:])
+            z_array = np.fastCopyAndTranspose(array[z_indices, :])
             tree_xyz = spatial.cKDTree(z_array)
             neighbors = tree_xyz.query(z_array,
-                        k=self.shuffle_neighbors,
-                        p=np.inf,
-                        eps=0.)[1].astype('int32')
+                                       k=self.shuffle_neighbors,
+                                       p=np.inf,
+                                       eps=0.)[1].astype('int32')
             # print neighbors
 
             null_dist = np.zeros(self.sig_samples)
@@ -2455,10 +2430,10 @@ class CMIknn(CondIndTest):
                 # possible duplicates
                 restricted_permutation = \
                     tigramite_cython_code._get_restricted_permutation_cython(
-                                T=T,
-                                shuffle_neighbors=self.shuffle_neighbors,
-                                neighbors=neighbors,
-                                order = order)
+                        T=T,
+                        shuffle_neighbors=self.shuffle_neighbors,
+                        neighbors=neighbors,
+                        order=order)
 
                 array_shuffled = np.copy(array)
                 for i in x_indices:
@@ -2468,11 +2443,12 @@ class CMIknn(CondIndTest):
                                                              xyz)
 
         else:
-            null_dist = self._get_shuffle_dist(array, xyz,
-                               self.get_dependence_measure,
-                               sig_samples=self.sig_samples,
-                               sig_blocklength=self.sig_blocklength,
-                               verbosity=self.verbosity)
+            null_dist = \
+                    self._get_shuffle_dist(array, xyz,
+                                           self.get_dependence_measure,
+                                           sig_samples=self.sig_samples,
+                                           sig_blocklength=self.sig_blocklength,
+                                           verbosity=self.verbosity)
 
         # Sort
         null_dist.sort()
@@ -2480,16 +2456,17 @@ class CMIknn(CondIndTest):
 
         if return_null_dist:
             return pval, null_dist
-        else:
-            return pval
+        return pval
 
 
     def get_analytic_significance(self, value, T, dim):
+        # TODO abstract this function
         """Placeholder function, not available."""
         raise ValueError("Analytic significance not implemented for %s"
                          "" % self.measure)
 
     def get_analytic_confidence(self, value, df, conf_lev):
+        # TODO abstract this function
         """Placeholder function, not available."""
         raise ValueError("Analytic confidence not implemented for %s"
                          "" % self.measure)
@@ -2497,6 +2474,7 @@ class CMIknn(CondIndTest):
     def get_model_selection_criterion(self, j,
                                       parents,
                                       tau_max=0):
+        # TODO abstract this function
         """Placeholder function, not available."""
         raise ValueError("Model selection not implemented for %s"
                          "" % self.measure)
@@ -2599,7 +2577,7 @@ class CMIsymb(CondIndTest):
         dim, T = symb_array.shape
 
         # Needed because np.bincount cannot process longs
-        if type(self.n_symbs ** dim) != int:
+        if isinstance(self.n_symbs ** dim, int):
             raise ValueError("Too many n_symbs and/or dimensions, "
                              "numpy.bincount cannot process longs")
         if self.n_symbs ** dim * 16. / 8. / 1024. ** 3 > 3.:
@@ -2667,19 +2645,16 @@ class CMIsymb(CondIndTest):
             gfunc = np.zeros(T + 1)
             gfunc[1:] = np.arange(
                 1, T + 1, 1) * np.log(np.arange(1, T + 1, 1))
-            def plogp_func(t):
-                return gfunc[t]
+            def plogp_func(time):
+                return gfunc[time]
             return np.vectorize(plogp_func)
 
         plogp = _plogp_vector(T)
 
         hxyz = (-(plogp(hist)).sum() + plogp(T)) / float(T)
-        hxz = (-(plogp(hist.sum(axis=1))).sum() + plogp(T)) / \
-            float(T)
-        hyz = (-(plogp(hist.sum(axis=0))).sum() + plogp(T)) / \
-            float(T)
-        hz = (-(plogp(hist.sum(axis=0).sum(axis=0))).sum() +
-              plogp(T)) / float(T)
+        hxz = (-(plogp(hist.sum(axis=1))).sum() + plogp(T)) / float(T)
+        hyz = (-(plogp(hist.sum(axis=0))).sum() + plogp(T)) / float(T)
+        hz = (-(plogp(hist.sum(axis=0).sum(axis=0))).sum()+plogp(T)) / float(T)
 
         # TODO remove this
         # else:
@@ -2722,24 +2697,25 @@ class CMIsymb(CondIndTest):
         """
 
         null_dist = self._get_shuffle_dist(array, xyz,
-                               self.get_dependence_measure,
-                               sig_samples=self.sig_samples,
-                               sig_blocklength=self.sig_blocklength,
-                               verbosity=self.verbosity)
+                                           self.get_dependence_measure,
+                                           sig_samples=self.sig_samples,
+                                           sig_blocklength=self.sig_blocklength,
+                                           verbosity=self.verbosity)
 
         pval = (null_dist >= value).mean()
 
         if return_null_dist:
             return pval, null_dist
-        else:
-            return pval
+        return pval
 
     def get_analytic_significance(self, value, T, dim):
+        # TODO abstract this
         """Placeholder function, not available."""
-        raise ValueError("Analytic confidence not implemented for %s"
+        raise ValueError("Analytic significance not implemented for %s"
                          "" % self.measure)
 
     def get_analytic_confidence(self, value, df, conf_lev):
+        # TODO abstract this
         """Placeholder function, not available."""
         raise ValueError("Analytic confidence not implemented for %s"
                          "" % self.measure)
@@ -2747,6 +2723,7 @@ class CMIsymb(CondIndTest):
     def get_model_selection_criterion(self, j,
                                       parents,
                                       tau_max=0):
+        # TODO abstract this
         """Placeholder function, not available."""
         raise ValueError("Model selection not implemented for %s"
                          "" % self.measure)
@@ -2811,11 +2788,11 @@ class RCOT(CondIndTest):
         Arguments passed on to parent class CondIndTest.
     """
     def __init__(self,
-                num_f=25,
-                approx="lpd4",
-                seed=42,
-                significance='analytic',
-                **kwargs):
+                 num_f=25,
+                 approx="lpd4",
+                 seed=42,
+                 significance='analytic',
+                 **kwargs):
         # Set the members
         self.num_f = num_f
         self.approx = approx
@@ -2823,7 +2800,7 @@ class RCOT(CondIndTest):
         self.measure = 'rcot'
         self.two_sided = False
         self.residual_based = False
-        # TODO if resetting defaults of CondIndTest, must call CondIndTest 
+        # TODO if resetting defaults of CondIndTest, must call CondIndTest
         # constructor first
         self.recycle_residuals = False
 
@@ -2852,24 +2829,19 @@ class RCOT(CondIndTest):
         val : float
             RCOT estimate.
         """
-
         dim, T = array.shape
-
-        x = array[0]
-        y = array[1]
-        z = np.fastCopyAndTranspose(array[2:])
-
-        rcot = np.asarray(rpy2.robjects.r['RCIT'](x, y, z,
-            corr=True,
-            num_f=self.num_f,
-            approx=self.approx,
-            seed=self.seed))
-
+        x_vals = array[0]
+        y_vals = array[1]
+        z_vals = np.fastCopyAndTranspose(array[2:])
+        rcot = np.asarray(rpy2.robjects.r['RCIT'](x_vals, y_vals, z_vals,
+                                                  corr=True,
+                                                  num_f=self.num_f,
+                                                  approx=self.approx,
+                                                  seed=self.seed))
         val = float(rcot[1])
+        # TODO do not use self.pval
         self.pval = float(rcot[0])
-
         return val
-
 
     def get_analytic_significance(self, **args):
         # TODO test this function
@@ -2882,7 +2854,6 @@ class RCOT(CondIndTest):
         pval : float or numpy.nan
             P-value.
         """
-
         return self.pval
 
     def get_shuffle_significance(self, array, xyz, value,
@@ -2910,19 +2881,19 @@ class RCOT(CondIndTest):
         """
 
         null_dist = self._get_shuffle_dist(array, xyz,
-                               self.get_dependence_measure,
-                               sig_samples=self.sig_samples,
-                               sig_blocklength=self.sig_blocklength,
-                               verbosity=self.verbosity)
+                                           self.get_dependence_measure,
+                                           sig_samples=self.sig_samples,
+                                           sig_blocklength=self.sig_blocklength,
+                                           verbosity=self.verbosity)
 
         pval = (null_dist >= value).mean()
 
         if return_null_dist:
             return pval, null_dist
-        else:
-            return pval
+        return pval
 
     def get_analytic_confidence(self, value, df, conf_lev):
+        # TODO abstract this
         """Placeholder function, not available."""
         raise ValueError("Analytic confidence not implemented for %s"
                          "" % self.measure)
@@ -2930,6 +2901,7 @@ class RCOT(CondIndTest):
     def get_model_selection_criterion(self, j,
                                       parents,
                                       tau_max=0):
+        # TODO abstract this
         """Placeholder function, not available."""
         raise ValueError("Model selection not implemented for %s"
                          "" % self.measure)
