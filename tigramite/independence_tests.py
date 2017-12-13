@@ -6,11 +6,12 @@
 
 from __future__ import print_function
 import warnings
-import numpy as np
 import sys
-import os
 import math
-from scipy import linalg, special, stats
+import abc
+from scipy import special, stats
+import numpy as np
+import six
 
 try:
     from sklearn import gaussian_process
@@ -270,8 +271,10 @@ def _construct_array(X, Y, Z, tau_max, data,
         return array, xyz, (X, Y, Z)
     return array, xyz
 
-# TODO make this an abtract base class and not an instatiatable class
-class CondIndTest(object):
+# TODO make this an abstract base class and not an instatiatable class
+
+@six.add_metaclass(abc.ABCMeta)
+class CondIndTest():
     """Base class of conditional independence tests.
 
     Provides useful general functions for different independence tests such as
@@ -327,6 +330,19 @@ class CondIndTest(object):
     verbosity : int, optional (default: 0)
         Level of verbosity.
     """
+    @abc.abstractmethod
+    def get_dependence_measure(self, array, xyz):
+        """
+        Abstract function that all concrete classes must instantiate.
+        """
+        pass
+
+    @abc.abstractproperty
+    def measure(self):
+        """
+        Abstract property to store the type of independence test.
+        """
+        pass
 
     def __init__(self,
                  use_mask=False,
@@ -416,6 +432,39 @@ class CondIndTest(object):
         #         raise ValueError("mask_type = %s, but must be list containing"
         #                          % mask_type + " 'x','y','z', or any "
         #                          "combination")
+
+    def get_analytic_confidence(self, value, df, conf_lev):
+        """
+        Base class assumption that this is not implemented.  Concrete classes
+        should override when possible.
+        """
+        raise NotImplementedError("Analytic confidence not"+\
+                                  " implemented for %s" % self.measure)
+
+    def get_model_selection_criterion(self, j, parents, tau_max=0):
+        """
+        Base class assumption that this is not implemented.  Concrete classes
+        should override when possible.
+        """
+        raise NotImplementedError("Model selection not"+\
+                                  " implemented for %s" % self.measure)
+
+    def get_analytic_significance(self, value, T, dim):
+        """
+        Base class assumption that this is not implemented.  Concrete classes
+        should override when possible.
+        """
+        raise NotImplementedError("Analytic significance not"+\
+                                  " implemented for %s" % self.measure)
+
+# TODO continue here
+#    def _get_single_residuals(self, value, T, dim):
+#        """
+#        Base class assumption that this is not implemented.  Concrete classes
+#        should override when possible.
+#        """
+#        raise NotImplementedError("Analytic significance not"+\
+#                                  " implemented for %s" % self.measure)
 
     def set_dataframe(self, dataframe):
         # TODO REFACTOR this violates OOP.  Why not just set a variable like
@@ -580,14 +629,14 @@ class CondIndTest(object):
             if self._keyfy(X, Z) in list(self.residuals):
                 x_resid = self.residuals[self._keyfy(X, Z)]
             else:
-                x_resid = self._get_single_residuals(array, target_var = 0)
+                x_resid = self._get_single_residuals(array, target_var=0)
                 if Z:
                     self.residuals[self._keyfy(X, Z)] = x_resid
 
             if self._keyfy(Y, Z) in list(self.residuals):
                 y_resid = self.residuals[self._keyfy(Y, Z)]
             else:
-                y_resid = self._get_single_residuals(array,target_var = 1)
+                y_resid = self._get_single_residuals(array, target_var=1)
                 if Z:
                     self.residuals[self._keyfy(Y, Z)] = y_resid
 
@@ -1155,17 +1204,19 @@ class ParCorr(CondIndTest):
     """
     # TODO check that CondIndTest correctly linked in the resulting
     # documentation
+    @property
+    def measure(self):
+        """
+        Concrete property to return the measure of the independence test
+        """
+        return self._measure
+
     def __init__(self, **kwargs):
-
-        # super(ParCorr, self).__init__(
-
-        self.measure = 'par_corr'
+        self._measure = 'par_corr'
         self.two_sided = True
         self.residual_based = True
 
         CondIndTest.__init__(self, **kwargs)
-        if self.verbosity > 0:
-            print("")
 
     def _get_single_residuals(self, array, target_var,
                               standardize=True,
@@ -1418,6 +1469,8 @@ class ParCorr(CondIndTest):
 
 class GP():
     # TODO use abstract base class here
+    # TODO this should inherit from CondIndTest, or tests needing it can use 
+    # composition to instantiate its methods
     r"""Gaussian processes base class.
 
     GP is estimated with scikit-learn and allows to flexibly specify kernels and
@@ -1572,9 +1625,7 @@ class GP():
             return resid, mean, likelihood
         return resid
 
-    def get_model_selection_criterion(self, j,
-                                      parents,
-                                      tau_max=0):
+    def get_model_selection_criterion(self, j, parents, tau_max=0):
         # TODO test this function
         """Returns log marginal likelihood for GP regression.
 
@@ -1685,6 +1736,13 @@ class GPACE(CondIndTest,GP):
         Arguments passed on to parent class CondIndTest.
 
     """
+    @property
+    def measure(self):
+        """
+        Concrete property to return the measure of the independence test
+        """
+        return self._measure
+
     def __init__(self,
                  null_dist_filename=None,
                  gp_version='new',
@@ -1696,7 +1754,7 @@ class GPACE(CondIndTest,GP):
 
         self.ace_version = ace_version
 
-        self.measure = 'gp_ace'
+        self._measure = 'gp_ace'
         self.two_sided = False
         self.residual_based = True
 
@@ -1902,12 +1960,6 @@ class GPACE(CondIndTest,GP):
 
         return pval
 
-    def get_analytic_confidence(self, value, df, conf_lev):
-        # TODO abstract this function
-        """Placeholder function, not available."""
-        raise ValueError("Analytic confidence not implemented for %s"
-                         "" % self.measure)
-
 class GPDC(CondIndTest,GP):
     r"""GPDC conditional independence test based on Gaussian processes and
         distance correlation.
@@ -1968,6 +2020,13 @@ class GPDC(CondIndTest,GP):
         Arguments passed on to parent class CondIndTest.
 
     """
+    @property
+    def measure(self):
+        """
+        Concrete property to return the measure of the independence test
+        """
+        return self._measure
+
     def __init__(self,
                  null_dist_filename=None,
                  gp_version='new',
@@ -1976,7 +2035,7 @@ class GPDC(CondIndTest,GP):
 
         GP.__init__(self, gp_version=gp_version, gp_params=gp_params)
 
-        self.measure = 'gp_dc'
+        self._measure = 'gp_dc'
         self.two_sided = False
         self.residual_based = True
 
@@ -2154,11 +2213,6 @@ class GPDC(CondIndTest,GP):
             pval = np.mean(null_dist_here > np.abs(value))
         return pval
 
-    def get_analytic_confidence(self, value, df, conf_lev):
-        """Placeholder function, not available."""
-        raise ValueError("Analytic confidence not implemented for %s"
-                         "" % self.measure)
-
 class CMIknn(CondIndTest):
     r"""Conditional mutual information test based on nearest-neighbor estimator.
 
@@ -2231,6 +2285,13 @@ class CMIknn(CondIndTest):
     **kwargs :
         Arguments passed on to parent class CondIndTest.
     """
+    @property
+    def measure(self):
+        """
+        Concrete property to return the measure of the independence test
+        """
+        return self._measure
+
     def __init__(self,
                  knn=0.2,
                  shuffle_neighbors=5,
@@ -2241,7 +2302,7 @@ class CMIknn(CondIndTest):
         self.knn = knn
         self.shuffle_neighbors = shuffle_neighbors
         self.transform = transform
-        self.measure = 'cmi_knn'
+        self._measure = 'cmi_knn'
         self.two_sided = False
         self.residual_based = False
         self.recycle_residuals = False
@@ -2459,26 +2520,6 @@ class CMIknn(CondIndTest):
         return pval
 
 
-    def get_analytic_significance(self, value, T, dim):
-        # TODO abstract this function
-        """Placeholder function, not available."""
-        raise ValueError("Analytic significance not implemented for %s"
-                         "" % self.measure)
-
-    def get_analytic_confidence(self, value, df, conf_lev):
-        # TODO abstract this function
-        """Placeholder function, not available."""
-        raise ValueError("Analytic confidence not implemented for %s"
-                         "" % self.measure)
-
-    def get_model_selection_criterion(self, j,
-                                      parents,
-                                      tau_max=0):
-        # TODO abstract this function
-        """Placeholder function, not available."""
-        raise ValueError("Model selection not implemented for %s"
-                         "" % self.measure)
-
 class CMIsymb(CondIndTest):
     r"""Conditional mutual information test based on discrete estimator.
 
@@ -2517,6 +2558,13 @@ class CMIsymb(CondIndTest):
     **kwargs :
         Arguments passed on to parent class CondIndTest.
     """
+    @property
+    def measure(self):
+        """
+        Concrete property to return the measure of the independence test
+        """
+        return self._measure
+
     def __init__(self,
                  n_symbs=None,
                  significance='shuffle_test',
@@ -2524,7 +2572,7 @@ class CMIsymb(CondIndTest):
                  conf_blocklength=1,
                  **kwargs):
         # Setup the member variables
-        self.measure = 'cmi_symb'
+        self._measure = 'cmi_symb'
         self.two_sided = False
         self.residual_based = False
         self.recycle_residuals = False
@@ -2708,27 +2756,6 @@ class CMIsymb(CondIndTest):
             return pval, null_dist
         return pval
 
-    def get_analytic_significance(self, value, T, dim):
-        # TODO abstract this
-        """Placeholder function, not available."""
-        raise ValueError("Analytic significance not implemented for %s"
-                         "" % self.measure)
-
-    def get_analytic_confidence(self, value, df, conf_lev):
-        # TODO abstract this
-        """Placeholder function, not available."""
-        raise ValueError("Analytic confidence not implemented for %s"
-                         "" % self.measure)
-
-    def get_model_selection_criterion(self, j,
-                                      parents,
-                                      tau_max=0):
-        # TODO abstract this
-        """Placeholder function, not available."""
-        raise ValueError("Model selection not implemented for %s"
-                         "" % self.measure)
-
-
 class RCOT(CondIndTest):
     r"""Randomized Conditional Correlation Test.
 
@@ -2787,6 +2814,13 @@ class RCOT(CondIndTest):
     **kwargs :
         Arguments passed on to parent class CondIndTest.
     """
+    @property
+    def measure(self):
+        """
+        Concrete property to return the measure of the independence test
+        """
+        return self._measure
+
     def __init__(self,
                  num_f=25,
                  approx="lpd4",
@@ -2797,7 +2831,7 @@ class RCOT(CondIndTest):
         self.num_f = num_f
         self.approx = approx
         self.seed = seed
-        self.measure = 'rcot'
+        self._measure = 'rcot'
         self.two_sided = False
         self.residual_based = False
         # TODO if resetting defaults of CondIndTest, must call CondIndTest
@@ -2892,16 +2926,4 @@ class RCOT(CondIndTest):
             return pval, null_dist
         return pval
 
-    def get_analytic_confidence(self, value, df, conf_lev):
-        # TODO abstract this
-        """Placeholder function, not available."""
-        raise ValueError("Analytic confidence not implemented for %s"
-                         "" % self.measure)
 
-    def get_model_selection_criterion(self, j,
-                                      parents,
-                                      tau_max=0):
-        # TODO abstract this
-        """Placeholder function, not available."""
-        raise ValueError("Model selection not implemented for %s"
-                         "" % self.measure)

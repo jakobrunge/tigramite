@@ -47,7 +47,7 @@ def define_extension(extension_name, source_files=None):
         return [Extension(extension_name, source_files)]
 
 # Define the minimal classes needed to install and run tigramite
-INSTALL_REQUIRES = ["numpy", "scipy"]
+INSTALL_REQUIRES = ["numpy", "scipy", "six"]
 # Define the all the possible extras needed
 EXTRAS_REQUIRE = {
     'all' : ['scikit-learn>=0.18',#Gaussian Process (GP) Regression
@@ -58,9 +58,9 @@ EXTRAS_REQUIRE = {
     'R'   : ['rpy2']              #R-based ACE, requires acepack installed in R
     }
 # Define the extras needed for development
-EXTRAS_REQUIRE['dev'] = EXTRAS_REQUIRE['all'] + ['nose', 'cython']
+EXTRAS_REQUIRE['dev'] = EXTRAS_REQUIRE['all'] + ['nose', 'cython', 'pytest']
 # Define the packages needed for testing
-TESTS_REQUIRE = ['nose']
+TESTS_REQUIRE = ['nose', 'pytest']
 
 # Use a custom build to handle numpy.include_dirs() when building
 CMDCLASS = {'build_ext': UseNumpyHeadersBuildExt}
