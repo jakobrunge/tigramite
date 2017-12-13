@@ -22,11 +22,6 @@ def _par_corr_to_cmi(par_corr):
 
 
 # INDEPENDENCE TEST GENERATION #################################################
-# TEST NODES
-TST_X = [(1, -1)]
-TST_Y = [(0, 0)]
-TST_Z = [(0, -1), (1, -2), (2, 0)]
-
 def rand_node(t_min, n_max, t_max=0, n_min=0):
     """
     Generate a random node to test
@@ -356,7 +351,6 @@ def cmi_knn(request):
 def data_sample_c(request):
     # Unpack the parameters
     seed, corr_val, T = request.param
-    print(seed)
     # Return the data sample
     return gen_data_sample(seed, corr_val, T)
 
@@ -403,7 +397,6 @@ def cmi_symb(request):
 def data_sample_d(request):
     # Unpack the parameters
     seed, corr_val, T = request.param
-    print(seed)
     # Return the data sample
     return gen_data_sample(seed, corr_val, T)
 
