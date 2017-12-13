@@ -198,6 +198,7 @@ def test_bootstrap_conf_parcorr(par_corr, data_sample_a):
     np.testing.assert_allclose(np.array(conf_a), np.array(conf_b), atol=0.01)
 
 # TODO should val here be get_dependence_measure?
+# TODO test null distribution
 def test_shuffle_sig_parcorr(par_corr, data_sample_a):
     # Get the data sample values
     array, val, _, xyz, dim, T = data_sample_a
@@ -209,6 +210,7 @@ def test_shuffle_sig_parcorr(par_corr, data_sample_a):
     np.testing.assert_allclose(np.array(pval_a), np.array(pval_s), atol=0.01)
 
 # TODO how does this test work?
+# TODO test standardize, return_means as well
 @pytest.mark.parametrize("seed", [5, 29, 135, 170, 174, 284, 342, 363, 425])
 def test_parcorr_residuals(par_corr, seed):
     # Set the random seed
