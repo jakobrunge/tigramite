@@ -2577,7 +2577,7 @@ class CMIsymb(CondIndTest):
         dim, T = symb_array.shape
 
         # Needed because np.bincount cannot process longs
-        if isinstance(self.n_symbs ** dim, int):
+        if not isinstance(self.n_symbs ** dim, int):
             raise ValueError("Too many n_symbs and/or dimensions, "
                              "numpy.bincount cannot process longs")
         if self.n_symbs ** dim * 16. / 8. / 1024. ** 3 > 3.:
