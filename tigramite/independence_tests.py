@@ -457,14 +457,15 @@ class CondIndTest():
         raise NotImplementedError("Analytic significance not"+\
                                   " implemented for %s" % self.measure)
 
-# TODO continue here
-#    def _get_single_residuals(self, value, T, dim):
-#        """
-#        Base class assumption that this is not implemented.  Concrete classes
-#        should override when possible.
-#        """
-#        raise NotImplementedError("Analytic significance not"+\
-#                                  " implemented for %s" % self.measure)
+    def _get_single_residuals(self, array, target_var,
+                              standardize=True, return_means=False):
+        # TODO not great that GP has different signature here
+        """
+        Base class assumption that this is not implemented.  Concrete classes
+        should override when possible.
+        """
+        raise NotImplementedError("Residual calculation not"+\
+                                  " implemented for %s" % self.measure)
 
     def set_dataframe(self, dataframe):
         # TODO REFACTOR this violates OOP.  Why not just set a variable like
@@ -1467,11 +1468,8 @@ class ParCorr(CondIndTest):
         score = T * np.log(rss) + 2. * p
         return score
 
-class GP():
-    # TODO use abstract base class here
-    # TODO this should inherit from CondIndTest, or tests needing it can use 
-    # composition to instantiate its methods
-    r"""Gaussian processes base class.
+class GaussProcTest(CondIndTest):
+    r"""Gaussian processes abstract base class.
 
     GP is estimated with scikit-learn and allows to flexibly specify kernels and
     hyperparameters or let them be optimized automatically. The kernel specifies
@@ -1491,11 +1489,15 @@ class GP():
     gp_params : dictionary, optional (default: None)
         Dictionary with parameters for ``GaussianProcessRegressor``.
 
+    **kwargs :
+        Arguments passed on to parent class CondIndTest.
     """
-    def __init__(self, gp_version='new', gp_params=None):
+    def __init__(self, gp_version='new', gp_params=None, **kwargs):
         # Set member variables
         self.gp_version = gp_version
         self.gp_params = gp_params
+        # Call the parent constructor
+        CondIndTest.__init__(self, **kwargs)
 
     def _get_single_residuals(self, array, target_var,
                               return_means=False,
@@ -1674,7 +1676,7 @@ class GP():
         score = -logli
         return score
 
-class GPACE(CondIndTest,GP):
+class GPACE(GaussProcTest):
     r"""GPACE conditional independence test based on Gaussian processes and
         maximal correlation.
 
@@ -1733,7 +1735,7 @@ class GPACE(CondIndTest,GP):
         results. In [1]_ the acepack version was used.
 
     **kwargs :
-        Arguments passed on to parent class CondIndTest.
+        Arguments passed on to parent class GaussProcTest.
 
     """
     @property
@@ -1749,19 +1751,18 @@ class GPACE(CondIndTest,GP):
                  gp_params=None,
                  ace_version='acepack',
                  **kwargs):
-
-        GP.__init__(self, gp_version=gp_version, gp_params=gp_params)
-
+        # Load the member variables
         self.ace_version = ace_version
-
         self._measure = 'gp_ace'
         self.two_sided = False
         self.residual_based = True
-
         # Load null-dist file, adapt if necessary
         self.null_dist_filename = null_dist_filename
-
-        CondIndTest.__init__(self, **kwargs)
+        # Call the parent constructor
+        GaussProcTest.__init__(self,
+                               gp_version=gp_version,
+                               gp_params=gp_params,
+                               **kwargs)
 
         if self.verbosity > 0:
             print("null_dist_filename = %s" % self.null_dist_filename)
@@ -1960,7 +1961,7 @@ class GPACE(CondIndTest,GP):
 
         return pval
 
-class GPDC(CondIndTest,GP):
+class GPDC(GaussProcTest):
     r"""GPDC conditional independence test based on Gaussian processes and
         distance correlation.
 
@@ -2017,7 +2018,7 @@ class GPDC(CondIndTest,GP):
         Dictionary with parameters for ``GaussianProcessRegressor``.
 
     **kwargs :
-        Arguments passed on to parent class CondIndTest.
+        Arguments passed on to parent class GaussProcTest.
 
     """
     @property
@@ -2032,17 +2033,16 @@ class GPDC(CondIndTest,GP):
                  gp_version='new',
                  gp_params=None,
                  **kwargs):
-
-        GP.__init__(self, gp_version=gp_version, gp_params=gp_params)
-
         self._measure = 'gp_dc'
         self.two_sided = False
         self.residual_based = True
-
         # Load null-dist file, adapt if necessary
         self.null_dist_filename = null_dist_filename
-
-        CondIndTest.__init__(self, **kwargs)
+        # Call the parent constructor
+        GaussProcTest.__init__(self,
+                               gp_version=gp_version,
+                               gp_params=gp_params,
+                               **kwargs)
 
         if self.verbosity > 0:
             print("null_dist_filename = %s" % self.null_dist_filename)
