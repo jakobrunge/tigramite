@@ -575,6 +575,7 @@ class CondIndTest():
         if self.significance == 'analytic':
             pval = self.get_analytic_significance(value=val, T=T, dim=dim)
 
+        # TODO continue here, abstract shuffle significance
         elif self.significance == 'shuffle_test':
             pval = self.get_shuffle_significance(array=array,
                                                  xyz=xyz,
@@ -1093,87 +1094,6 @@ class CondIndTest():
                 u[i] = trafo(x[i])
         return u
 
-    def generate_nulldist(self, df, add_to_null_dists=True):
-        # TODO test this function
-        """Generates null distribution for pairwise independence tests.
-
-        Generates the null distribution for sample size df. Assumes pairwise
-        samples transformed to uniform marginals. Uses get_dependence_measure
-        available in class and generates self.sig_samples random samples. Adds
-        the null distributions to self.null_dists.
-
-        Parameters
-        ----------
-        df : int
-            Degrees of freedom / sample size to generate null distribution for.
-
-        add_to_null_dists : bool, optional (default: True)
-            Whether to add the null dist to the dictionary of null dists or
-            just return it.
-
-        Returns
-        -------
-        null_dist : array of shape [df,]
-            Only returned,if add_to_null_dists is False.
-        """
-
-        if self.verbosity > 0:
-            print("Generating null distribution for df = %d. " % df)
-
-            if add_to_null_dists:
-                print("For faster computations, run function "
-                      "generate_and_save_nulldists(...) to "
-                      "precompute null distribution and load *.npz file with "
-                      "argument null_dist_filename")
-
-        xyz = np.array([0,1])
-        # TODO no null_samples member
-        null_dist = np.zeros(self.null_samples)
-        for i in range(self.null_samples):
-            array = np.random.rand(2, df)
-
-            # TODO no get_dependence_measure
-            null_dist[i] = self.get_dependence_measure(array, xyz)
-
-        null_dist.sort()
-        # TODO only return if not add_to_null_dists??
-        if add_to_null_dists:
-            self.null_dists[df] = null_dist
-        else:
-            return null_dist
-
-    def generate_and_save_nulldists(self, sample_sizes, null_dist_filename):
-        # TODO test this function
-        """Generates and saves null distribution for pairwise independence
-        tests.
-
-        Generates the null distribution for different sample sizes. Calls
-        generate_nulldist. Null dists are saved to disk as
-        self.null_dist_filename.npz. Also adds the null distributions to
-        self.null_dists.
-
-        Parameters
-        ----------
-        sample_sizes : list
-            List of sample sizes.
-
-        null_dist_filename : str
-            Name to save file containing null distributions.
-        """
-
-        self.null_dist_filename = null_dist_filename
-
-        null_dists = np.zeros((len(sample_sizes), self.sig_samples))
-
-        for iT, T in enumerate(sample_sizes):
-            null_dists[iT] = self.generate_nulldist(T, add_to_null_dists=False)
-            # TODO no null_samples member
-            self.null_dists[T] = null_dists[iT]
-
-        np.savez("%s" % null_dist_filename,
-                 exact_dist=null_dists,
-                 T=np.array(sample_sizes))
-
 
 class ParCorr(CondIndTest):
     r"""Partial correlation test.
@@ -1479,6 +1399,11 @@ class GaussProcTest(CondIndTest):
     default. Note that the kernel's hyperparameters are optimized during
     fitting.
 
+    When the null distribution is not analytically available, but can be
+    precomputed with the function generate_and_save_nulldists(...) which saves
+    a \*.npz file containing the null distribution for different sample sizes.
+    This file can then be supplied as null_dist_filename.
+
     Parameters
     ----------
     gp_version : {'new', 'old'}, optional (default: 'new')
@@ -1489,15 +1414,136 @@ class GaussProcTest(CondIndTest):
     gp_params : dictionary, optional (default: None)
         Dictionary with parameters for ``GaussianProcessRegressor``.
 
+    null_dist_filename : str, otional (default: None)
+        Path to file containing null distribution.
+
     **kwargs :
         Arguments passed on to parent class CondIndTest.
     """
-    def __init__(self, gp_version='new', gp_params=None, **kwargs):
+    def __init__(self,
+                 gp_version='new',
+                 gp_params=None,
+                 null_dist_filename=None,
+                 **kwargs):
+        # Call the parent constructor
+        CondIndTest.__init__(self, **kwargs)
         # Set member variables
         self.gp_version = gp_version
         self.gp_params = gp_params
-        # Call the parent constructor
-        CondIndTest.__init__(self, **kwargs)
+        # Set the null distribution defaults
+        self.null_samples = self.sig_samples
+        self.null_dists = {}
+        self.null_dist_filename = null_dist_filename
+        # Check if we are loading a null distrubtion from a cached file
+        if self.null_dist_filename is not None:
+            self.null_dists, self.null_samples = \
+                    self._load_nulldist(self.null_dist_filename)
+
+    def _load_nulldist(self, filename):
+        # TODO check docstring with jakob
+        """
+        Load a precomputed null distribution from a \*.npz file.  This 
+        distribution can be calculated using generate_and_save_nulldists(...).
+
+        Parameters
+        ----------
+        filename : strng
+            Path to the \*.npz file
+        
+        Returns
+        -------
+        null_dists, null_samples : dict, int
+            The null distirbution as a dictionary of distributions keyed by 
+            sample size, the number of null samples in total.
+        """
+        null_dist_file = np.load(filename)
+        null_dists = dict(zip(null_dist_file['T'],
+                              null_dist_file['exact_dist']))
+        null_samples = len(null_dist_file['exact_dist'][0])
+        return null_dists, null_samples
+
+    def generate_nulldist(self, df, add_to_null_dists=True):
+        # TODO test this function
+        """Generates null distribution for pairwise independence tests.
+
+        Generates the null distribution for sample size df. Assumes pairwise
+        samples transformed to uniform marginals. Uses get_dependence_measure
+        available in class and generates self.sig_samples random samples. Adds
+        the null distributions to self.null_dists.
+
+        Parameters
+        ----------
+        df : int
+            Degrees of freedom / sample size to generate null distribution for.
+
+        add_to_null_dists : bool, optional (default: True)
+            Whether to add the null dist to the dictionary of null dists or
+            just return it.
+
+        Returns
+        -------
+        null_dist : array of shape [df,]
+            Only returned,if add_to_null_dists is False.
+        """
+
+        if self.verbosity > 0:
+            print("Generating null distribution for df = %d. " % df)
+
+            if add_to_null_dists:
+                print("For faster computations, run function "
+                      "generate_and_save_nulldists(...) to "
+                      "precompute null distribution and load *.npz file with "
+                      "argument null_dist_filename")
+
+        xyz = np.array([0,1])
+        # TODO no null_samples member
+        # TODO ask jakob:
+        #  * are only GP expected to have null distributions and null samples?
+        null_dist = np.zeros(self.null_samples)
+        for i in range(self.null_samples):
+            array = np.random.rand(2, df)
+
+            # TODO no get_dependence_measure
+            null_dist[i] = self.get_dependence_measure(array, xyz)
+
+        null_dist.sort()
+        # TODO only return if not add_to_null_dists??
+        if add_to_null_dists:
+            self.null_dists[df] = null_dist
+        else:
+            return null_dist
+
+    def generate_and_save_nulldists(self, sample_sizes, null_dist_filename):
+        # TODO test this function
+        """Generates and saves null distribution for pairwise independence
+        tests.
+
+        Generates the null distribution for different sample sizes. Calls
+        generate_nulldist. Null dists are saved to disk as
+        self.null_dist_filename.npz. Also adds the null distributions to
+        self.null_dists.
+
+        Parameters
+        ----------
+        sample_sizes : list
+            List of sample sizes.
+
+        null_dist_filename : str
+            Name to save file containing null distributions.
+        """
+
+        self.null_dist_filename = null_dist_filename
+
+        null_dists = np.zeros((len(sample_sizes), self.sig_samples))
+
+        for iT, T in enumerate(sample_sizes):
+            null_dists[iT] = self.generate_nulldist(T, add_to_null_dists=False)
+            # TODO no null_samples member
+            self.null_dists[T] = null_dists[iT]
+
+        np.savez("%s" % null_dist_filename,
+                 exact_dist=null_dists,
+                 T=np.array(sample_sizes))
 
     def _get_single_residuals(self, array, target_var,
                               return_means=False,
@@ -1669,7 +1715,8 @@ class GaussProcTest(CondIndTest):
 
         dim, T = array.shape
 
-        y, logli = self._get_single_residuals(array,
+        # TODO ask jakob new function _get_likelihood
+        _, logli = self._get_single_residuals(array,
                                               target_var=1,
                                               return_likelihood=True)
         # TODO this has a bad operand type...
@@ -1773,17 +1820,6 @@ class GPACE(GaussProcTest):
             print("ace_version = %s" % self.ace_version)
             print("")
 
-        if null_dist_filename is None:
-            self.null_samples = self.sig_samples
-            self.null_dists = {}
-        else:
-            null_dist_file = np.load(null_dist_filename)
-            # self.sample_sizes = null_dist_file['T']
-            self.null_dists = dict(zip(null_dist_file['T'],
-                                       null_dist_file['exact_dist']))
-            # print self.null_dist
-            self.null_samples = len(null_dist_file['exact_dist'][0])
-
     def get_dependence_measure(self, array, xyz):
         # TODO test this function
         """Return GPACE measure.
@@ -1805,8 +1841,6 @@ class GPACE(GaussProcTest):
             GPACE test statistic.
         """
         # TODO abstract this function
-        D, T = array.shape
-
         x_vals = self._get_single_residuals(array, target_var=0)
         y_vals = self._get_single_residuals(array, target_var=1)
         val = self._get_maxcorr(np.array([x_vals, y_vals]))
@@ -2085,8 +2119,6 @@ class GPDC(GaussProcTest):
             GPDC test statistic.
         """
         # TODO abstract this function
-        D, T = array.shape
-
         x_vals = self._get_single_residuals(array, target_var=0)
         y_vals = self._get_single_residuals(array, target_var=1)
         val = self._get_dcorr(np.array([x_vals, y_vals]))
@@ -2114,10 +2146,8 @@ class GPDC(GaussProcTest):
         val : float
             Distance correlation coefficient.
         """
-
         # Remove ties before applying transformation to uniform marginals
         # array_resid = self._remove_ties(array_resid, verbosity=4)
-
         x_vals, y_vals = self._trafo2uniform(array_resid)
         # TODO pylint cannot find dcov_all, check it exists and works
         _, val, _, _ = tigramite_cython_code.dcov_all(x_vals, y_vals)
