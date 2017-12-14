@@ -7,6 +7,9 @@ import pytest
 import numpy as np
 import tigramite.data_processing as pp
 
+# Pylint settings
+# pylint: disable=redefined-outer-name
+
 # TEST DATA GENERATION #########################################################
 def gen_decay(init_val, decay_const, n_times, delay):
     """
@@ -156,7 +159,8 @@ def test_coupled_process_data(coupled_exp_decay_process):
     (0,     0,      1,     "Positive time delay"),
     (100,   0,      -1,    "Non-contiguous node ID"),
     (-10,   0,      -1,    "Node IDs not starting from zero"),
-    (0,     100,    -1,    "Non-existant node as parent")])
+    (0,     100,    -1,    "Non-existant node as parent"),
+    (1,     0,      0,     "Non-symmetric instantaneous relation")])
 def bad_parameter_sets(request):
     # Define a good parameter set
     default_coef = 0.5
@@ -182,12 +186,16 @@ def test_bad_parameters(bad_parameter_sets):
     # Test the good parameter set
     try:
         pp._check_parent_neighbor(good_params)
+        covar = pp._get_covariance_matrix(good_params)
+        pp._check_symmetric_relations(covar)
     # Ensure no exception is raised
     except:
         pytest.fail("Good parameter set triggers exception incorrectly!")
     # Ensure an exception is raised for a bad parameter set
     with pytest.raises(ValueError, message=error_message):
         pp._check_parent_neighbor(bad_params)
+        covar = pp._get_covariance_matrix(bad_params)
+        pp._check_symmetric_relations(covar)
 
 # TEST STABILITY CHECKING ######################################################
 @pytest.fixture(params=[
@@ -248,9 +256,12 @@ def covariance_parameters(request):
     """
     default_coef = 0.1
     good_params = {}
-    good_params[0] = [((1, 0), default_coef * 1.)]
-    good_params[1] = [((2, 0), default_coef * 2.)]
-    good_params[2] = [((0, 0), default_coef * 3.)]
+    good_params[0] = [((1, 0), default_coef * 1.),
+                      ((2, 0), default_coef * 3.)]
+    good_params[1] = [((2, 0), default_coef * 2.),
+                      ((0, 0), default_coef * 1.)]
+    good_params[2] = [((0, 0), default_coef * 3.),
+                      ((1, 0), default_coef * 2.)]
     good_params[3] = [((3, 0), default_coef * 4.)]
     # Get the innovation matrix
     covar_matrix = pp._get_covariance_matrix(good_params)

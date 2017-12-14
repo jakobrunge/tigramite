@@ -8,7 +8,7 @@ from collections import defaultdict
 import sys
 import warnings
 import copy
-import numpy
+import numpy as np
 import scipy.sparse
 import scipy.sparse.linalg
 
@@ -48,13 +48,13 @@ class DataFrame():
         self.missing_flag = missing_flag
         T, N = data.shape
 
-        # if type(self.values) != numpy.ndarray:
+        # if type(self.values) != np.ndarray:
         #     raise TypeError("data is of type %s, " % type(self.values) +
-        #                     "must be numpy.ndarray")
+        #                     "must be np.ndarray")
         if N > T:
             warnings.warn("data.shape = %s," % str(self.values.shape) +
                           " is it of shape (observations, variables) ?")
-        # if numpy.isnan(data).sum() != 0:
+        # if np.isnan(data).sum() != 0:
         #     raise ValueError("NaNs in the data")
         self._check_mask()
 
@@ -75,12 +75,12 @@ class DataFrame():
         # If we have a mask, check it
         if self.mask is not None:
             # Check the mask inherets from an ndarray
-            if not isinstance(self.mask, numpy.ndarray):
+            if not isinstance(self.mask, np.ndarray):
                 raise TypeError("dataframe.mask is of type %s, " %
                                 type(self.mask) +
                                 "must be numpy.ndarray")
             # Check if there is an nan-value in the mask
-            if numpy.isnan(numpy.sum(self.mask)):
+            if np.isnan(np.sum(self.mask)):
                 raise ValueError("NaNs in the dataframe mask")
             # Check the mask and the values have the same shape
             if self.values.shape != self.mask.shape:
@@ -121,7 +121,7 @@ def lowhighpass_filter(data, cutperiod, pass_periods='low'):
     order = 3
     ws = 1. / cutperiod / (0.5 * fs)
     b, a = butter(order, ws, pass_periods)
-    if numpy.ndim(data) == 1:
+    if np.ndim(data) == 1:
         data = filtfilt(b, a, data)
     else:
         for i in range(data.shape[1]):
@@ -171,29 +171,29 @@ def smooth(data, smooth_width, kernel='gaussian',
 
     totaltime = len(data)
     if kernel == 'gaussian':
-        window = numpy.exp(-(numpy.arange(totaltime).reshape((1, totaltime)) -
-                             numpy.arange(totaltime).reshape((totaltime, 1))
+        window = np.exp(-(np.arange(totaltime).reshape((1, totaltime)) -
+                             np.arange(totaltime).reshape((totaltime, 1))
                              ) ** 2 / ((2. * smooth_width / 2.) ** 2))
     elif kernel == 'heaviside':
         import scipy.linalg
-        wtmp = numpy.zeros(totaltime)
-        wtmp[:numpy.ceil(smooth_width / 2.)] = 1
+        wtmp = np.zeros(totaltime)
+        wtmp[:np.ceil(smooth_width / 2.)] = 1
         window = scipy.linalg.toeplitz(wtmp)
 
     if mask is None:
-        if numpy.ndim(data) == 1:
+        if np.ndim(data) == 1:
             smoothed_data = (data * window).sum(axis=1) / window.sum(axis=1)
         else:
-            smoothed_data = numpy.zeros(data.shape)
+            smoothed_data = np.zeros(data.shape)
             for i in range(data.shape[1]):
                 smoothed_data[:, i] = (
                     data[:, i] * window).sum(axis=1) / window.sum(axis=1)
     else:
-        if numpy.ndim(data) == 1:
+        if np.ndim(data) == 1:
             smoothed_data = ((data * window * (mask==False)).sum(axis=1) /
                              (window * (mask==False)).sum(axis=1))
         else:
-            smoothed_data = numpy.zeros(data.shape)
+            smoothed_data = np.zeros(data.shape)
             for i in range(data.shape[1]):
                 smoothed_data[:, i] = ((
                     data[:, i] * window * (mask==False)[:, i]).sum(axis=1) /
@@ -225,13 +225,13 @@ def weighted_avg_and_std(values, axis, weights):
         Tuple of weighted average and standard deviation along axis.
     """
 
-    values[numpy.isnan(values)] = 0.
-    average = numpy.ma.average(values, axis=axis, weights=weights)
+    values[np.isnan(values)] = 0.
+    average = np.ma.average(values, axis=axis, weights=weights)
 
-    variance = numpy.sum(weights * (values - numpy.expand_dims(average, axis)
+    variance = np.sum(weights * (values - np.expand_dims(average, axis)
                                     ) ** 2, axis=axis) / weights.sum(axis=axis)
 
-    return (average, numpy.sqrt(variance))
+    return (average, np.sqrt(variance))
 
 
 def time_bin_with_mask(data, time_bin_length, sample_selector=None):
@@ -259,13 +259,13 @@ def time_bin_with_mask(data, time_bin_length, sample_selector=None):
     time_bin_length = int(time_bin_length)
 
     if sample_selector is None:
-        sample_selector = numpy.ones(data.shape)
+        sample_selector = np.ones(data.shape)
 
-    if numpy.ndim(data) == 1.:
+    if np.ndim(data) == 1.:
         data.shape = (T, 1)
         sample_selector.shape = (T, 1)
 
-    bindata = numpy.zeros(
+    bindata = np.zeros(
         (T // time_bin_length,) + data.shape[1:], dtype="float32")
     for index, i in enumerate(range(0, T - time_bin_length + 1,
                                     time_bin_length)):
@@ -334,17 +334,17 @@ def ordinal_patt_array(array, array_mask=None, dim=2, step=1,
     if array_mask is not None:
         assert array_mask.dtype == 'int32'
     else:
-        array_mask = numpy.zeros(array.shape, dtype='int32')
+        array_mask = np.zeros(array.shape, dtype='int32')
 
 
-    if numpy.ndim(array) == 1:
+    if np.ndim(array) == 1:
         T = len(array)
         array = array.reshape(T, 1)
         array_mask = array_mask.reshape(T, 1)
 
     # Add noise to destroy ties...
     array += (1E-6 * array.std(axis=0)
-              * numpy.random.rand(array.shape[0], array.shape[1]).astype('float64'))
+              * np.random.rand(array.shape[0], array.shape[1]).astype('float64'))
 
 
     patt_time = int(array.shape[0] - step * (dim - 1))
@@ -354,14 +354,14 @@ def ordinal_patt_array(array, array_mask=None, dim=2, step=1,
         raise ValueError("Dim mist be > 1 and length of delay vector smaller "
                          "array length.")
 
-    patt = numpy.zeros((patt_time, N), dtype='int32')
-    weights_array = numpy.zeros((patt_time, N), dtype='float64')
+    patt = np.zeros((patt_time, N), dtype='int32')
+    weights_array = np.zeros((patt_time, N), dtype='float64')
 
-    patt_mask = numpy.zeros((patt_time, N), dtype='int32')
+    patt_mask = np.zeros((patt_time, N), dtype='int32')
 
     # Precompute factorial for c-code... patterns of dimension
     # larger than 10 are not supported
-    fac = factorial(numpy.arange(10)).astype('int32')
+    fac = factorial(np.arange(10)).astype('int32')
 
     # _get_patterns_cython assumes mask=0 to be a masked value
     array_mask = (array_mask == False).astype('int32')
@@ -372,10 +372,10 @@ def ordinal_patt_array(array, array_mask=None, dim=2, step=1,
                                                        weights_array, dim,
                                                        step, fac, N, T)
 
-    weights_array = numpy.asarray(weights_array)
-    patt = numpy.asarray(patt)
+    weights_array = np.asarray(weights_array)
+    patt = np.asarray(patt)
     # Transform back to mask=1 implying a masked value
-    patt_mask = numpy.asarray(patt_mask) == False
+    patt_mask = np.asarray(patt_mask) == False
 
     if weights:
         return (patt, patt_mask, patt_time, weights_array)
@@ -402,12 +402,12 @@ def quantile_bin_array(data, bins=6):
     T, N = data.shape
 
     # get the bin quantile steps
-    bin_edge = int(numpy.ceil(T / float(bins)))
+    bin_edge = int(np.ceil(T / float(bins)))
 
-    symb_array = numpy.zeros((T, N), dtype='int32')
+    symb_array = np.zeros((T, N), dtype='int32')
 
     # get the lower edges of the bins for every time series
-    edges = numpy.sort(data, axis=0)[::bin_edge, :].T
+    edges = np.sort(data, axis=0)[::bin_edge, :].T
     bins = edges.shape[1]
 
     # This gives the symbolic time series
@@ -445,10 +445,10 @@ def _generate_noise(covar_matrix, time=1000, use_inverse=False):
     if use_inverse:
         this_covar = copy.deepcopy(covar_matrix)
         this_covar *= -1
-        this_covar[numpy.diag_indices_from(this_covar)] *= -1
-        this_covar = numpy.linalg.inv(this_covar)
+        this_covar[np.diag_indices_from(this_covar)] *= -1
+        this_covar = np.linalg.inv(this_covar)
     # Return the noise distribution
-    return numpy.random.multivariate_normal(mean=numpy.zeros(n_nodes),
+    return np.random.multivariate_normal(mean=np.zeros(n_nodes),
                                             cov=this_covar,
                                             size=time)
 
@@ -495,7 +495,7 @@ def _check_stability(graph):
                                                 k=(n_eigs - 2),
                                                 return_eigenvectors=False)
     # Ensure they all have less than one magnitude
-    assert numpy.all(numpy.abs(eigen_values) < 1.), \
+    assert np.all(np.abs(eigen_values) < 1.), \
         "Values given by time lagged connectivity matrix corresponds to a "+\
         " non-stationary process!"
 
@@ -511,7 +511,7 @@ def _check_initial_values(initial_values, shape):
         Lagged connectivity matrices. Shape is (n_nodes, n_nodes, max_delay+1)
     """
     # Ensure it is a numpy array
-    assert isinstance(initial_values, numpy.ndarray),\
+    assert isinstance(initial_values, np.ndarray),\
         "User must provide initial_values as a numpy.ndarray"
     # Check the shape is correct
     assert initial_values.shape == shape,\
@@ -577,7 +577,7 @@ def _var_network(graph,
     _check_stability(graph)
 
     # Generate the returned data
-    data = numpy.random.randn(n_nodes, time)
+    data = np.random.randn(n_nodes, time)
     # Load the initial values
     if initial_values is not None:
         # Check the shape of the initial values
@@ -595,11 +595,11 @@ def _var_network(graph,
                                     use_inverse=invert_inno)
         # Otherwise just use uncorrelated random noise
         else:
-            noise = numpy.random.randn(time, n_nodes)
+            noise = np.random.randn(time, n_nodes)
 
     # TODO further numpy usage may simplify this
     for a_time in range(period, time):
-        data_past = numpy.repeat(
+        data_past = np.repeat(
             data[:, a_time-period:a_time][:, ::-1].reshape(1, n_nodes, period),
             n_nodes, axis=0)
         data[:, a_time] = (data_past*graph).sum(axis=2).sum(axis=1)
@@ -680,6 +680,39 @@ def _check_parent_neighbor(parents_neighbors_coeffs):
                          "\n Parent IDs "+" ".join(map(str, all_parents_list))+\
                          "\n Node IDs "+" ".join(map(str, all_nodes_list)) +\
                          "\n Missing IDs " + " ".join(map(str, missing_nodes)))
+
+def _check_symmetric_relations(a_matrix):
+    """
+    Check if the argument matrix is symmetric.  Raise a value error with details
+    about the offending elements if it is not.  This is useful for checking the
+    instantaneously linked nodes have the same link strength.
+
+    Parameters
+    ----------
+    a_matrix : 2D numpy array
+        Relationships between nodes at tau = 0. Indexed such that first index is
+        node and second is parent, i.e. node j with parent i has strength
+        a_matrix[j,i]
+    """
+    # Check it is symmetric
+    if not np.allclose(a_matrix, a_matrix.T, rtol=1e-10, atol=1e-10):
+        # Store the disagreement elements
+        bad_elems = ~np.isclose(a_matrix, a_matrix.T, rtol=1e-10, atol=1e-10)
+        bad_idxs = np.argwhere(bad_elems)
+        error_message = ""
+        for node, parent in bad_idxs:
+            # Check that we haven't already printed about this pair
+            if bad_elems[node, parent]:
+                error_message += \
+                    "Parent {:d} of node {:d}".format(parent, node)+\
+                    " has coefficient {:f}.\n".format(a_matrix[node, parent])+\
+                    "Parent {:d} of node {:d}".format(node, parent)+\
+                    " has coefficient {:f}.\n".format(a_matrix[parent, node])
+            # Check if we already printed about this one
+            bad_elems[node, parent] = False
+            bad_elems[parent, node] = False
+        raise ValueError("Relationships between nodes at tau=0 are not"+\
+                         " symmetric!\n"+error_message)
 
 def _find_max_time_lag_and_node_id(parents_neighbors_coeffs):
     """
@@ -762,13 +795,12 @@ def _get_covariance_matrix(parents_neighbors_coeffs):
             _find_max_time_lag_and_node_id(parents_neighbors_coeffs)
     n_nodes = max_node_id + 1
     # Initialize the covariance matrix
-    covar_matrix = numpy.identity(n_nodes)
+    covar_matrix = np.identity(n_nodes)
     # Iterate through all the node connections
     for j, i, tau, coeff in _iter_coeffs(parents_neighbors_coeffs):
         # Add to covar_matrix if node connection is instantaneous
         if tau == 0:
-            # TODO should there be a j != i catch?
-            covar_matrix[j, i] = covar_matrix[i, j] = coeff
+            covar_matrix[j, i] = coeff
     return covar_matrix
 
 def _get_lag_connect_matrix(parents_neighbors_coeffs):
@@ -795,7 +827,7 @@ def _get_lag_connect_matrix(parents_neighbors_coeffs):
     n_nodes = max_node_id + 1
     n_times = max_time_lag + 1
     # Initialize full time graph
-    connect_matrix = numpy.zeros((n_nodes, n_nodes, n_times))
+    connect_matrix = np.zeros((n_nodes, n_nodes, n_times))
     for j, i, tau, coeff in _iter_coeffs(parents_neighbors_coeffs):
         # If there is a non-zero time lag, add the connection to the matrix
         if tau != 0:
@@ -849,7 +881,7 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
     _check_parent_neighbor(parents_neighbors_coeffs)
     # Generate the true parent neighbors graph
     true_parents_neighbors = \
-            _get_true_parent_neighbor_dict(parents_neighbors_coeffs)
+        _get_true_parent_neighbor_dict(parents_neighbors_coeffs)
     # Generate the correlated innovations
     innos = _get_covariance_matrix(parents_neighbors_coeffs)
     # Generate the lagged connectivity matrix for _var_network
@@ -875,6 +907,9 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
     # Use decorrelated noise
     else:
         innos = None
+    # Ensure the innovation matrix is symmetric if it is used
+    if (innos is not None) and add_noise:
+        _check_symmetric_relations(innos)
     # Generate the data using _var_network
     data = _var_network(graph=connect_matrix,
                         add_noise=add_noise,

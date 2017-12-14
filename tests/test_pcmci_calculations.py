@@ -3,7 +3,7 @@ Tests for pcmci.py, including tests for run_pc_stable, run_mci, and run_pcmci.
 """
 from __future__ import print_function
 from collections import Counter, defaultdict
-import numpy
+import numpy as np
 from nose.tools import assert_equal
 import pytest
 
@@ -11,8 +11,11 @@ from tigramite.pcmci import PCMCI
 from tigramite.independence_tests import ParCorr #, GPACE
 import tigramite.data_processing as pp
 
+# Pylint settings
+# pylint: disable=redefined-outer-name
+
 # Define the verbosity at the global scope
-VERBOSITY = 10
+VERBOSITY = 1
 
 # CONVENIENCE FUNCTIONS ########################################################
 def assert_graphs_equal(actual, expected):
@@ -49,29 +52,54 @@ def _get_parents_from_results(pcmci, results, alpha_level):
     alpha_level
     """
     significant_parents = \
-        pcmci._return_significant_parents(pq_matrix=results['p_matrix'],
-                                          val_matrix=results['val_matrix'],
-                                          alpha_level=alpha_level)
+        pcmci.return_significant_parents(pq_matrix=results['p_matrix'],
+                                         val_matrix=results['val_matrix'],
+                                         alpha_level=alpha_level)
     return significant_parents['parents']
+
+# TEST LINK GENERATION #########################################################
+def a_chain(auto_corr, coeff, length=3):
+    """
+    Generate a simple chain process with the given auto-correlations and
+    parents with the given coefficient strength.  A length can also be defined
+    to get a longer chain.
+
+    Parameters
+    ----------
+    auto_corr: float
+        Autocorrelation strength for all nodes
+    coeff : float
+        Parent strength for all relations
+    length : int
+        Length of the chain
+    """
+    return_links = dict()
+    return_links[0] = [((0, -1), auto_corr)]
+    for lnk in range(1, length):
+        return_links[lnk] = [((lnk, -1), auto_corr), ((lnk-1, -1), coeff)]
+    return return_links
+
+# TODO implement common_driver: return two variables commonly driven by N common
+# drivers which are random noise, autocorrelation as parameter
+# TODO implement independent drivers, autocorrelated noise
+# TODO check common_driver, independent driver cases for current variable sets
+# TODO implement USER_INPUT dictionary,
+# USER_INPUT = dict()
 
 # TEST DATA GENERATION #########################################################
 @pytest.fixture(params=[
     # Generate a test data sample
     # Parameterize the sample by setting the autocorrelation value, coefficient
     # value, total time length, and random seed to different numbers
-    # auto_corr, coeff, time, seed_val
-    (0.1,        0.9,   1000, 2),
-    (0.5,        0.6,   1000, 11),
-    (0.5,        0.6,   1000, 42)])
+    # links_coeffs,     time, seed_val
+    (a_chain(0.1, 0.9), 1000, 2),
+    (a_chain(0.5, 0.6), 1000, 11),
+    (a_chain(0.5, 0.6, length=5), 10000, 42)])
 def a_sample(request):
     # Set the parameters
-    auto_corr, coeff, time, seed_val = request.param
+    links_coeffs, time, seed_val = request.param
     # Set the random seed
-    numpy.random.seed(seed_val)
-    # Define the parent-neighghbour relations
-    links_coeffs = {0: [((0, -1), auto_corr)],
-                    1: [((1, -1), auto_corr), ((0, -1), coeff)],
-                    2: [((2, -1), auto_corr), ((1, -1), coeff)]}
+    np.random.seed(seed_val)
     # Generate the data
     data, _ = pp.var_process(links_coeffs, T=time)
     # Get the true parents
@@ -85,7 +113,7 @@ def a_sample(request):
      (1,       2,        None),
      (1,       2,        [0])])
 def a_common_params(request):
-    # Unpack the parameters to return them in a common tuple
+    # Return the requested parameters
     return request.param
 
 @pytest.fixture()
@@ -128,7 +156,7 @@ def a_pcmci(a_sample, a_test, a_common_params, request):
      (0.05,      None,           1,        False),
      (0.05,      None,           10,       False),
      (0.05,      None,           1,        True),
-     (0.05,      2,              1,        False)])
+     (0.05,      3,              1,        False)])
 def a_pc_stable_params(request):
     # Return the parameters for the pc_stable test
     return request.param
@@ -151,6 +179,9 @@ def a_run_pc_stable(a_pcmci, a_pc_stable_params):
     return pcmci.all_parents, true_parents
 
 def test_pc_stable(a_run_pc_stable):
+    """
+    Test the pc_stable algorithm and check it calculates the correct parents.
+    """
     # Unpack the calculated and true parents
     parents, true_parents = a_run_pc_stable
     # Ensure they are the same
@@ -182,6 +213,9 @@ def a_run_mci(a_pcmci, a_mci_params):
     return _get_parents_from_results(pcmci, results, alpha_level), true_parents
 
 def test_mci(a_run_mci):
+    """
+    Test the mci algorithm and check it calculates the correct parents.
+    """
     # Unpack the calculated and true parents
     parents, true_parents = a_run_mci
     # Ensure they are the same
@@ -210,6 +244,9 @@ def a_run_pcmci(a_pcmci, a_pc_stable_params, a_mci_params):
     return _get_parents_from_results(pcmci, results, alpha_level), true_parents
 
 def test_pcmci(a_run_pcmci):
+    """
+    Test the pcmci algorithm and check it calculates the correct parents.
+    """
     # Unpack the calculated and true parents
     parents, true_parents = a_run_pcmci
     # Ensure they are the same

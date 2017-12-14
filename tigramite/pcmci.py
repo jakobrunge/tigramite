@@ -15,7 +15,6 @@ try:
 except:
     print("Could not import statsmodels, p-value corrections not available.")
 
-# TODO check pc_alpha default docstrings
 def _create_nested_dictionary(depth=0, lowest_type=dict):
     """Create a series of nested dictionaries to a maximum depth.  The first
     depth - 1 nested dictionaries are defaultdicts, the last is a normal
@@ -259,7 +258,7 @@ class PCMCI():
         self.var_names = var_names
         # Set the default variable names if none are set
         if self.var_names is None:
-            self.var_names = dict([(i, i) for i in range(len(self.data))])
+            self.var_names = {i: i for i in range(len(self.data))}
         # Store the shape of the data in the T and N variables
         self.T, self.N = self.data.shape
         # Set the selected variables
@@ -267,7 +266,6 @@ class PCMCI():
             self._set_selected_variables(selected_variables)
 
     def _set_selected_variables(self, selected_variables):
-        # TODO test this function
         """Helper function to set and check the selected variables argument
 
         Parameters
@@ -281,18 +279,21 @@ class PCMCI():
             Defaults to a list of all given variable IDs [0..N-1]
         """
         # Set the default selected variables if none are set
-        if selected_variables is None:
-            selected_variables = range(self.N)
+        _int_selected_variables = deepcopy(selected_variables)
+        if _int_selected_variables is None:
+            _int_selected_variables = range(self.N)
         # Some checks
-        if selected_variables is not None and \
-          (np.any(np.array(selected_variables) < 0) or
-           np.any(np.array(selected_variables) >= self.N)):
+        # TODO move checks into dataframe object?
+        if _int_selected_variables is not None and \
+          (np.any(np.array(_int_selected_variables) < 0) or
+           np.any(np.array(_int_selected_variables) >= self.N)):
             raise ValueError("selected_variables must be within 0..N-1")
+        # Ensure there are only unique values
+        _int_selected_variables = sorted(list(set(_int_selected_variables)))
         # Return the selected variables
-        return selected_variables
+        return _int_selected_variables
 
     def _set_sel_links(self, selected_links, tau_min, tau_max):
-        # TODO test this function
         """Helper function to set and check the selected links argument
 
         Parameters
@@ -311,24 +312,49 @@ class PCMCI():
         selected_variables : list
             Defaults to a list of all given variable IDs [0..N-1]
         """
-        # Set the default selected variables if none are set
-        if selected_links is None:
-            selected_links = {}
-            for j in range(self.N):
+        # Copy and pass into the function
+        _int_sel_links = deepcopy(selected_links)
+        # Set the default selected links if none are set
+        _vars = list(range(self.N))
+        if _int_sel_links is None:
+            _int_sel_links = {}
+            # Set the default as all combinations of the selected variables
+            for j in _vars:
+                # If it is in selected variables, select all possible links
                 if j in self.selected_variables:
-                    selected_links[j] = [(var, -lag) for var in range(self.N)
+                    _int_sel_links[j] = [(var, -lag) for var in _vars
                                          for lag in range(tau_min, tau_max + 1)]
+                # If it is not, make it an empty list
+                # TODO I think we can remove the lines below
                 else:
-                    selected_links[j] = []
-        # Return the selected variables
-        return selected_links
+                    _int_sel_links[j] = []
+        # Otherwise, check that our selection is sane
+        # TODO move checks to dataframe object?
+        # Check that the selected links refer to links that are inside the
+        # data range
+        _key_set = set(_int_sel_links.keys())
+        valid_entries = _key_set.issubset(_vars)
+        valid_entries = valid_entries and \
+            set(var for parents in _int_sel_links.values()
+                    for var, _ in parents).issubset(_vars)
+        if not valid_entries:
+            raise ValueError("Out of range variable defined in \n",
+                             _int_sel_links,
+                             "\nMust be in range [0, ", self.N-1, "]")
+        # Warning if keys in selected links not in selected_variables
+        if self.verbosity > 0 and \
+                not _key_set.issubset(set(self.selected_variables)):
+            print("Warning: Link specified in selected links that is outside "+\
+                  "the scope of the selected variables")
+        ## Note: variables are scoped by selected_variables first, and then
+        ## by selected links.  Add to docstring?
+        # Return the selected links
+        return _int_sel_links
 
-    def _iter_condtions(self, parent, j, conds_dim, all_parents):
-        # TODO test this function
+    def _iter_conditions(self, parent, j, conds_dim, all_parents):
         """Yield next condition.
 
-        Returns next condition from lexicographically ordered conditions.
-        Returns False if all possible conditions have been tested.
+        Yields next condition from lexicographically ordered conditions.
 
         Parameters
         ----------
@@ -351,7 +377,6 @@ class PCMCI():
             yield list(cond)
 
     def _sort_parents(self, parents_vals):
-        # TODO test this function
         """Sort current parents according to test statistic values.
 
         Sorting is from strongest to weakest absolute values.
@@ -367,18 +392,14 @@ class PCMCI():
         parents : list
             List of form [(0, -1), (3, -2), ...] containing sorted parents.
         """
-        # TODO test function
         if self.verbosity > 1:
             print("\n    Sorting parents in decreasing order with "
                   "\n    weight(i-tau->j) = min_{iterations} |I_{ij}(tau)| ")
         # Get the absoute value for all the test statistics
-        # TODO aren't these already absolute valued?
         abs_values = {k : np.abs(parents_vals[k]) for k in list(parents_vals)}
         return sorted(abs_values, key=abs_values.get, reverse=True)
 
     def _dict_to_matrix(self, val_dict, tau_max, n_vars):
-        # TODO use _get_lagged_connect_matrix instead
-        # TODO _get_lagged_connect_matrix *almost* works, but not quite..
         """Helper function to convert dictionary to matrix formart.
 
         Parameters
@@ -564,12 +585,12 @@ class PCMCI():
         # Ensure tau_min is atleast 1
         tau_min = max(1, tau_min)
 
+        # Loop over all possible condition dimentions
+        max_conds_dim = self._set_max_condition_dim(max_conds_dim,
+                                                    tau_min, tau_max)
         # Iteration through increasing number of conditions
         converged = False
-        # Loop over all possible condition dimentions
-        # TODO translated from a while loop to a for loop verbatum.  Is this the
-        # intended limit of the function?
-        for conds_dim in range(max_conds_dim + 1):
+        for conds_dim in range(max_conds_dim):
             # (Re)initialize the list of non-significant links
             nonsig_parents = list()
             # Check if the algorithm has converged
@@ -587,12 +608,12 @@ class PCMCI():
                     self._print_link_info(j, index_parent, parent, len(parents))
                 # Iterate through all possible combinations
                 for comb_index, Z in \
-                        enumerate(self._iter_condtions(parent, j,
-                                                       conds_dim, parents)):
+                        enumerate(self._iter_conditions(parent, j,
+                                                        conds_dim, parents)):
                     # Break if we try too many combinations
                     if comb_index > max_combinations:
                         break
-                    # TODO start this index from zero
+                    # Incriment the combinations
                     comb_index += 1
                     # Perform independence test
                     val, pval = self.cond_ind_test.run_test(X=[parent],
@@ -605,7 +626,8 @@ class PCMCI():
                     # Keep track of maximum p-value and minimum estimated value
                     # for each pair (across any condition)
                     parents_values[parent] = \
-                        min(np.abs(val), parents_values.get(parent,float("inf")))
+                        min(np.abs(val), parents_values.get(parent,
+                                                            float("inf")))
                     p_max[parent] = \
                         max(np.abs(pval), p_max.get(parent, -float("inf")))
                     val_min[parent] = \
@@ -629,7 +651,8 @@ class PCMCI():
             # Remove non-significant links
             for _, parent in nonsig_parents:
                 del parents_values[parent]
-            # Return the parents list sorted by the test metric
+            # Return the parents list sorted by the test metric so that the
+            # updated parents list is given to the next cond_dim loop
             parents = self._sort_parents(parents_values)
             # Print information about the change in possible parents
             if self.verbosity > 1:
@@ -709,7 +732,6 @@ class PCMCI():
               (self.var_names[j], optimal_alpha))
 
     def _check_tau_limits(self, tau_min, tau_max):
-        # TODO test this function
         """
         Check the tau limits adhere to 0 <= tau_min <= tau_max
 
@@ -725,7 +747,7 @@ class PCMCI():
                              "tau_min = %d, " % (tau_min) +\
                              "but 0 <= tau_min <= tau_max")
 
-    def _set_max_condition_dim(self, max_conds_dim, tau_max):
+    def _set_max_condition_dim(self, max_conds_dim, tau_min, tau_max):
         """
         Set the maximum dimension of the conditions. Defaults to self.N*tau_max
 
@@ -743,7 +765,7 @@ class PCMCI():
         """
         # Check if an input was given
         if max_conds_dim is None:
-            max_conds_dim = self.N * tau_max
+            max_conds_dim = self.N * (tau_max - tau_min + 1)
         # Check this is a valid
         if max_conds_dim < 0:
             raise ValueError("maximum condition dimension must be >= 0")
@@ -779,7 +801,7 @@ class PCMCI():
         save_iterations : bool, default: False
             Whether to save iteration step results such as conditions used.
 
-        pc_alpha : float or list of floats, default: 0.3
+        pc_alpha : float or list of floats, default: 0.2
             Significance level in algorithm. If a list or None is passed, the
             pc_alpha level is optimized for every variable across the given
             pc_alpha values using the score computed in
@@ -812,7 +834,6 @@ class PCMCI():
             select_optimal_alpha = False
         # Check the limits on tau_min
         self._check_tau_limits(tau_min, tau_max)
-        # TODO why is this imposed here??
         tau_min = max(1, tau_min)
         # Check that the maximum combinatiosn variable is correct
         if max_combinations <= 0:
@@ -823,15 +844,16 @@ class PCMCI():
         iterations = defaultdict(dict)
         # Print information about the selected parameters
         if self.verbosity > 0:
-            self._print_pc_params(selected_links, tau_min, tau_max, 
-                                  _int_pc_alpha, max_conds_dim, 
+            self._print_pc_params(selected_links, tau_min, tau_max,
+                                  _int_pc_alpha, max_conds_dim,
                                   max_combinations)
         # Set the selected links
-        selected_links = self._set_sel_links(selected_links, tau_min, tau_max)
+        _int_sel_links = self._set_sel_links(selected_links, tau_min, tau_max)
         # Initialize all parents
         all_parents = dict()
         # Set the maximum condition dimension
-        max_conds_dim = self._set_max_condition_dim(max_conds_dim, tau_max)
+        max_conds_dim = self._set_max_condition_dim(max_conds_dim,
+                                                    tau_min, tau_max)
 
         # Loop through the selected variables
         for j in self.selected_variables:
@@ -853,7 +875,7 @@ class PCMCI():
                 # Get the results for this alpha value
                 results[pc_alpha_here] = \
                     self._run_pc_stable_single(j,
-                                               selected_links=selected_links[j],
+                                               selected_links=_int_sel_links[j],
                                                tau_min=tau_min,
                                                tau_max=tau_max,
                                                save_iterations=save_iterations,
@@ -1052,7 +1074,7 @@ class PCMCI():
             conds_y = parents[j][:max_conds_py]
             # Create a parent list from links seperated in time and by node
             parent_list = [(i, tau) for i, tau in selected_links[j]
-                           if tau != 0 or i != j]
+                           if (i, tau) != (j, 0)]
             # Iterate through parents (except those in conditions)
             for cnt, (i, tau) in enumerate(parent_list):
                 # Get the conditions for node i
@@ -1061,10 +1083,13 @@ class PCMCI():
                 if self.verbosity > 1:
                     self._print_mci_conditions(conds_y, conds_x, j, i, tau,
                                                cnt, len(parent_list))
+                # Remove conds_x elemet overlaps
+                conds_x = [node for node in conds_x if node not in conds_y]
                 # Construct lists of tuples for estimating
                 # I(X_t-tau; Y_t | Z^Y_t, Z^X_t-tau)
                 # with conditions for X shifted by tau
                 Z = [node for node in conds_y if node != (i, tau)]
+                # Shift the conditions for X by tau
                 Z += [(k, tau + k_tau) for k, k_tau in conds_x]
                 # Yield these list
                 yield j, i, tau, Z
@@ -1076,7 +1101,6 @@ class PCMCI():
                                 parents=None,
                                 max_conds_py=None,
                                 max_conds_px=None):
-        # TODO check docstring for max_conds_py
         """Returns matrix of lagged dependence measure values.
 
         Parameters
@@ -1094,11 +1118,11 @@ class PCMCI():
             specifying the conditions for each variable. If None is
             passed, no conditions are used.
         max_conds_py : int or None
-            Maximum number of conditions of Y to use. If None is passed, this
-            number is unrestricted.
+            Maximum number of conditions from parents of Y to use. If None is
+            passed, this number is unrestricted.
         max_conds_px : int or None
-            Maximum number of conditions of Z to use. If None is passed, this
-            number is unrestricted.
+            Maximum number of conditions from parents of X to use. If None is
+            passed, this number is unrestricted.
 
         Returns
         -------
@@ -1109,13 +1133,15 @@ class PCMCI():
         # Check the limits on tau
         self._check_tau_limits(tau_min, tau_max)
         # Set the selected links
-        selected_links = self._set_sel_links(selected_links, tau_min, tau_max)
+        _int_sel_links = self._set_sel_links(selected_links, tau_min, tau_max)
         # Print status message
         if self.verbosity > 0:
             print("\n## Estimating lagged dependencies")
-        # Set the maximum condition dimension for Y and Z
-        max_conds_py = self._set_max_condition_dim(max_conds_py, tau_max)
-        max_conds_px = self._set_max_condition_dim(max_conds_px, tau_max)
+        # Set the maximum condition dimension for Y and X
+        max_conds_py = self._set_max_condition_dim(max_conds_py,
+                                                   tau_min, tau_max)
+        max_conds_px = self._set_max_condition_dim(max_conds_px,
+                                                   tau_min, tau_max)
         # Get the parents that will be checked
         _int_parents = self._get_int_parents(parents)
         # Initialize the returned val_matrix
@@ -1123,7 +1149,7 @@ class PCMCI():
         # Get the conditions as implied by the input arguments
         for j, i, tau, Z in self._iter_indep_conds(_int_parents,
                                                    self.selected_variables,
-                                                   selected_links,
+                                                   _int_sel_links,
                                                    max_conds_py,
                                                    max_conds_px):
             # Set X and Y (for clarity of code)
@@ -1204,15 +1230,17 @@ class PCMCI():
         # Check the limits on tau
         self._check_tau_limits(tau_min, tau_max)
         # Set the selected links
-        selected_links = self._set_sel_links(selected_links, tau_min, tau_max)
+        _int_sel_links = self._set_sel_links(selected_links, tau_min, tau_max)
         # Print information about the input parameters
         if self.verbosity > 0:
             self._print_mci_parameters(tau_min, tau_max,
                                        max_conds_py, max_conds_px)
 
-        # Set the maximum condition dimension for Y and Z
-        max_conds_py = self._set_max_condition_dim(max_conds_py, tau_max)
-        max_conds_px = self._set_max_condition_dim(max_conds_px, tau_max)
+        # Set the maximum condition dimension for Y and X
+        max_conds_py = self._set_max_condition_dim(max_conds_py,
+                                                   tau_min, tau_max)
+        max_conds_px = self._set_max_condition_dim(max_conds_px,
+                                                   tau_min, tau_max)
         # Get the parents that will be checked
         _int_parents = self._get_int_parents(parents)
         # Initialize the return values
@@ -1226,7 +1254,7 @@ class PCMCI():
         # Get the conditions as implied by the input arguments
         for j, i, tau, Z in self._iter_indep_conds(_int_parents,
                                                    self.selected_variables,
-                                                   selected_links,
+                                                   _int_sel_links,
                                                    max_conds_py,
                                                    max_conds_px):
             # Set X and Y (for clarity of code)
@@ -1236,12 +1264,12 @@ class PCMCI():
             val, pval = self.cond_ind_test.run_test(X, Y, Z=Z, tau_max=tau_max)
             val_matrix[i, j, abs(tau)] = val
             p_matrix[i, j, abs(tau)] = pval
-            # Get the confidance value
-            # TODO move this underneath the if statement
+            # Get the confidance value, returns None if cond_ind_test.confidance
+            # is False
             conf = self.cond_ind_test.get_confidence(X, Y, Z=Z, tau_max=tau_max)
             # Record the value if the conditional independence requires it
             # TODO this break OOP, this should be a feature of PCMCI
-            if self.cond_ind_test.confidence is not False:
+            if self.cond_ind_test.confidence:
                 conf_matrix[i, j, abs(tau)] = conf
             # Print the results if needed
             if self.verbosity > 1:
@@ -1249,7 +1277,6 @@ class PCMCI():
                                                            pval=pval,
                                                            conf=conf)
         # Return the values as a dictionary
-        # TODO only return conf_matrix key if we make conf matrix
         return {'val_matrix':val_matrix,
                 'p_matrix':p_matrix,
                 'conf_matrix':conf_matrix}
@@ -1257,7 +1284,6 @@ class PCMCI():
     def get_corrected_pvalues(self, p_matrix,
                               fdr_method='fdr_bh',
                               exclude_contemporaneous=True):
-        # TODO test this function
         """Returns p-values corrected for multiple testing.
 
         Wrapper around statsmodels.sandbox.stats.multicomp.multipletests.
@@ -1270,7 +1296,9 @@ class PCMCI():
             Matrix of p-values. Must be of shape (N, N, tau_max + 1).
         fdr_method : str, optional (default: 'fdr_bh')
             Correction method, default is Benjamini-Hochberg False Discovery
-            Rate method.
+            Rate method. See statsmodels.sandbox.stats.multicomp.multipletests
+            for other valid modes.  Additionally, 'none' is a valid mode that
+            does nothing to the input p_matrix.
         exclude_contemporaneous : bool, optional (default: True)
             Whether to include contemporaneous links in correction.
 
@@ -1297,10 +1325,10 @@ class PCMCI():
         # Return the new matrix
         return q_matrix
 
-    def _return_significant_parents(self,
-                                    pq_matrix,
-                                    val_matrix,
-                                    alpha_level=0.05):
+    def return_significant_parents(self,
+                                   pq_matrix,
+                                   val_matrix,
+                                   alpha_level=0.05):
         """Returns list of significant parents as well as a boolean matrix.
 
         Significance based on p-matrix, or q-value matrix with corrected
@@ -1308,14 +1336,14 @@ class PCMCI():
 
         Parameters
         ----------
-        alpha_level : float, optional (default: 0.05)
-            Significance level.
         pq_matrix : array-like
             p-matrix, or q-value matrix with corrected p-values. Must be of
             shape (N, N, tau_max + 1).
         val_matrix : array-like
             Matrix of test statistic values. Must be of shape (N, N, tau_max +
             1).
+        alpha_level : float, optional (default: 0.05)
+            Significance level.
 
         Returns
         -------
@@ -1328,7 +1356,6 @@ class PCMCI():
         """
         # Initialize the return value
         all_parents = dict()
-        # TODO put good_link before the for loop, open loop over good links
         for j in self.selected_variables:
             # Get the good links
             good_links = np.argwhere(pq_matrix[:, j, 1:] <= alpha_level)
@@ -1341,12 +1368,12 @@ class PCMCI():
         return {'parents': all_parents,
                 'link_matrix': pq_matrix <= alpha_level}
 
-    def _print_significant_links(self,
-                                 p_matrix,
-                                 val_matrix,
-                                 conf_matrix=None,
-                                 q_matrix=None,
-                                 alpha_level=0.05):
+    def print_significant_links(self,
+                                p_matrix,
+                                val_matrix,
+                                conf_matrix=None,
+                                q_matrix=None,
+                                alpha_level=0.05):
         """Prints significant parents.
 
         Parameters
@@ -1366,44 +1393,65 @@ class PCMCI():
         conf_matrix : array-like, optional (default: None)
             Matrix of confidence intervals of shape (N, N, tau_max+1, 2)
         """
-
         if q_matrix is not None:
             sig_links = (q_matrix <= alpha_level)
         else:
             sig_links = (p_matrix <= alpha_level)
-
         print("\n## Significant links at alpha = %s:" % alpha_level)
         for j in self.selected_variables:
-
-            links = dict([((p[0], -p[1] ), np.abs(val_matrix[p[0],
-                            j, abs(p[1])]))
-                          for p in zip(*np.where(sig_links[:, j, :]))])
-
+            links = {(p[0], -p[1]): np.abs(val_matrix[p[0], j, abs(p[1])])
+                     for p in zip(*np.where(sig_links[:, j, :]))}
             # Sort by value
             sorted_links = sorted(links, key=links.get, reverse=True)
-
             n_links = len(links)
-
             string = ("\n    Variable %s has %d "
                       "link(s):" % (self.var_names[j], n_links))
             for p in sorted_links:
                 string += ("\n        (%s %d): pval = %.5f" %
                            (self.var_names[p[0]], p[1],
                             p_matrix[p[0], j, abs(p[1])]))
-
                 if q_matrix is not None:
                     string += " | qval = %.5f" % (
                         q_matrix[p[0], j, abs(p[1])])
-
                 string += " | val = %.3f" % (
                     val_matrix[p[0], j, abs(p[1])])
-
                 if conf_matrix is not None:
                     string += " | conf = (%.3f, %.3f)" % (
                         conf_matrix[p[0], j, abs(p[1])][0],
                         conf_matrix[p[0], j, abs(p[1])][1])
-
             print(string)
+
+    def print_results(self, return_dict, alpha_level=0.05):
+        """Prints significant parents from output of MCI or PCMCI algorithms.
+
+        Parameters
+        ----------
+        return_dict : dict
+            Dictionary of return values, containing keys
+                * 'p_matrix'
+                * 'val_matrix'
+                * 'conf_matrix'
+            'q_matrix' can also be included in keys, but is not necessary.
+        alpha_level : float, optional (default: 0.05)
+            Significance level.
+        """
+        # Check if q_matrix is defined.  It is returned for PCMCI but not for
+        # MCI
+        q_matrix = None
+        q_key = 'q_matrix'
+        if q_key in return_dict:
+            q_matrix = return_dict[q_key]
+        # Check if conf_matrix is defined
+        conf_matrix = None
+        conf_key = 'conf_matrix'
+        if conf_key in return_dict:
+            conf_matrix = return_dict[conf_key]
+        # Wrap the already defined function
+        self.print_significant_links(return_dict['p_matrix'],
+                                     return_dict['val_matrix'],
+                                     conf_matrix=conf_matrix,
+                                     q_matrix=q_matrix,
+                                     alpha_level=alpha_level)
 
     def run_pcmci(self,
                   selected_links=None,
@@ -1436,7 +1484,7 @@ class PCMCI():
         save_iterations : bool, optional (default: False)
           Whether to save iteration step results such as conditions used.
 
-        pc_alpha : float, optional (default: 0.1)
+        pc_alpha : float, optional (default: 0.05)
           Significance level in algorithm.
 
         max_conds_dim : int, optional (default: None)
@@ -1501,7 +1549,13 @@ class PCMCI():
         ## TODO this violates object orientation.  Parents should be returned, if
         ## need be
         self.all_parents = all_parents
-        return {'val_matrix': val_matrix,
-                'p_matrix': p_matrix,
-                'q_matrix': q_matrix,
-                'conf_matrix': conf_matrix}
+        # Cache the resulting values in the return dictionary
+        return_dict = {'val_matrix': val_matrix,
+                       'p_matrix': p_matrix,
+                       'q_matrix': q_matrix,
+                       'conf_matrix': conf_matrix}
+        # Print the information
+        if self.verbosity > 0:
+            self.print_results(return_dict)
+        # Return the dictionary
+        return return_dict
