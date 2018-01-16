@@ -338,6 +338,8 @@ class CondIndTest(object):
         # If we recycle residuals, then set up a residual cache
         self.recycle_residuals = recycle_residuals
         if self.recycle_residuals:
+            if self.recycle_residuals is True:
+                warnings.warn("Using a mask disables recycling residuals.")
             self.residuals = {}
         # If we use a mask, do not recycle residuals
         # TODO ask jakob:
