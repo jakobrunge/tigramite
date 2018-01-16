@@ -30,7 +30,7 @@ def rand_node(t_min, n_max, t_max=0, n_min=0):
     rand_time = np.random.randint(t_min, t_max)
     return (rand_node, rand_time)
 
-def gen_nodes(n_nodes, seed, t_min=-2, n_max=2):
+def gen_nodes(n_nodes, seed, t_min, n_max):
     """
     Generate some random nodes to tests
     """
@@ -63,16 +63,17 @@ def gen_data_sample(seed, corr_val, T):
 # CONSTRUCT ARRAY TESTING ######################################################
 @pytest.fixture(params=[
     # Parameterize the array construction
-    #(X, Y, Z) nodes,                    t_max, m_val, mask_type
-    (gen_nodes(3, 0, t_min=-3, n_max=9), 3,     False, None), # Few nodes
-    (gen_nodes(7, 1, t_min=-3, n_max=9), 3,     False, None), # More nodes
-    (gen_nodes(7, 2, t_min=-3, n_max=3), 3,     False, None), # Repeated nodes
-    (gen_nodes(7, 3, t_min=-3, n_max=9), 3,     True,  None), # Missing vals
-    (gen_nodes(7, 4, t_min=-3, n_max=9), 3,     True,  ['x']), # M-val + mask
-    (gen_nodes(3, 5, t_min=-4, n_max=9), 2,     False, ['x']), # masked x
-    (gen_nodes(3, 6, t_min=-4, n_max=9), 2,     False, ['y']), # masked y
-    (gen_nodes(3, 7, t_min=-4, n_max=9), 2,     False, ['z']), # masked z
-    (gen_nodes(3, 7, t_min=-4, n_max=9), 2,     False, ['x','y','z'])])#mask xyz
+    #(X, Y, Z) nodes,        t_max, m_val, mask_type
+    (gen_nodes(3, 0, -3, 9), 3,     False, None),           # Few nodes
+    (gen_nodes(7, 1, -3, 9), 3,     False, None),           # More nodes
+    (gen_nodes(7, 2, -3, 3), 3,     False, None),           # Repeated nodes
+    (gen_nodes(7, 3, -3, 9), 3,     True,  None),           # Missing vals
+    (gen_nodes(7, 4, -3, 9), 3,     True,  ['x']),          # M-val + masked x
+    (gen_nodes(7, 4, -3, 9), 3,     True,  ['x','y']),      # M-val + masked xy
+    (gen_nodes(3, 5, -4, 9), 2,     False, ['x']),          # masked x
+    (gen_nodes(3, 6, -4, 9), 2,     False, ['y']),          # masked y
+    (gen_nodes(3, 7, -4, 9), 2,     False, ['z']),          # masked z
+    (gen_nodes(3, 7, -4, 9), 2,     False, ['x','y','z'])]) # mask xyz
 def cstrct_array_params(request):
     return request.param
 
@@ -81,7 +82,7 @@ def test_construct_array(cstrct_array_params):
     (x_nds, y_nds, z_nds), tau_max, missing_vals, mask_type =\
         cstrct_array_params
     # Make some fake data
-    data = np.arange(150).reshape(10, 15).T
+    data = np.arange(1000).reshape(10, 100).T
     # Get the needed parameters from the data
     T, N = data.shape
     max_lag = 2*tau_max
@@ -105,14 +106,18 @@ def test_construct_array(cstrct_array_params):
                 data_mask[a_tau - n_times + n_rows_masked, a_nd] = True
                 n_rows_masked += 1
 
-    # Choose fake missing value as the first entry from the value that would be
-    # returned from the first z-node
+    # Choose fake missing value as the earliest time entry in the first z-node
+    # from the original (non-shifted) datathat is not cutoff by max_lag or
+    # masked values from the first z-node
     missing_flag = None
     if missing_vals:
-        # Take a value that would appear in the z-node selection and make
-        # it the missing value flag
-        a_nd, a_tau = z_nds[0]
-        missing_flag = data[a_tau - n_times + n_rows_masked, a_nd]
+        # Get the node index
+        a_nd, _ = z_nds[0]
+        # Select the earliest non-cutoff entry from the unshifted data set
+        earliest_time = max_lag + n_rows_masked
+        missing_flag = data[earliest_time, a_nd]
+        # Record that the row with this value and all rows up to max_lag after
+        # this value have been cut off as well
         n_rows_masked += max_lag + 1
 
     # Construct the array
