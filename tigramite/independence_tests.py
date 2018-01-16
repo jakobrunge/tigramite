@@ -199,32 +199,14 @@ def _construct_array(X, Y, Z, tau_max, data,
         array[i, :] = data[max_lag + lag:T + lag, var]
 
     # Choose which indices to use
-    # TODO should masking
     use_indices = np.ones(time_length, dtype='int')
 
     # Remove all values that have missing value flag, as well as the time slices
     # that occur up to max_lag after
     if missing_flag is not None:
-        # Find all samples where the missing value occurs in one at least
-        # variable
-        # TODO ask jakob:
-        #  * If data has missing value, is time slice of max_lag of augumented
-        #  array, i.e. with all taus considered (array) invalid, or is time
-        #  slice of max_delay of data before the augmentation (i.e. data array)
-        #  invalid
-        missing_anywhere = np.any(array == missing_flag, axis=0)
-        # Add on some dummy indices so we can permute the values across all
-        # allowed lags using np.roll without np.roll causing late-values to
-        # interfere with early values
-        missing_anywhere = np.append(missing_anywhere,
-                                     np.zeros((max_lag), dtype=bool))
-        # TODO check with jakob:
-        #   * Before, only lags up to tau were included.
+        missing_anywhere = np.any(data == missing_flag, axis=1)
         for tau in range(max_lag+1):
-            # Mask all times where the missing value was found (tau = 0) and
-            # all times after (0 < tau <= max_lag)
-            permuted_indexes = np.roll(missing_anywhere, tau)[:-max_lag]
-            use_indices[permuted_indexes] = 0
+            use_indices[missing_anywhere[tau:T-max_lag+tau]] = 0
 
     if use_mask:
         # Remove samples with mask == 1 conditional on which mask_type is used
