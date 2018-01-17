@@ -387,7 +387,6 @@ class CondIndTest():
         if self.verbosity > 0:
             print("\n# Initialize conditional independence test\n"
                   "\nParameters:")
-            # TODO REFACTOR self.measure does not exist in ABC
             print("independence test = %s" % self.measure
                   + "\nsignificance = %s" % self.significance)
             if self.significance == 'shuffle_test':
@@ -439,6 +438,15 @@ class CondIndTest():
         should override when possible.
         """
         raise NotImplementedError("Analytic significance not"+\
+                                  " implemented for %s" % self.measure)
+
+    def get_shuffle_significance(self, array, xyz, value,
+                                 return_null_dist=False):
+        """
+        Base class assumption that this is not implemented.  Concrete classes
+        should override when possible.
+        """
+        raise NotImplementedError("Shuffle significance not"+\
                                   " implemented for %s" % self.measure)
 
     def _get_single_residuals(self, array, target_var,
@@ -559,7 +567,6 @@ class CondIndTest():
         if self.significance == 'analytic':
             pval = self.get_analytic_significance(value=val, T=T, dim=dim)
 
-        # TODO continue here, abstract shuffle significance
         elif self.significance == 'shuffle_test':
             pval = self.get_shuffle_significance(array=array,
                                                  xyz=xyz,
@@ -581,6 +588,7 @@ class CondIndTest():
         return val, pval
 
     def get_measure(self, X, Y, Z=None, tau_max=0):
+        # TODO test this function?
         """Estimate dependence measure.
 
         Calls the dependence measure function. The child classes must specify
@@ -602,9 +610,7 @@ class CondIndTest():
             The test statistic value.
 
         """
-        # TODO unpack X, Y, Z on same line
-        array, xyz, XYZ = self._get_array(X, Y, Z, tau_max)
-        X, Y, Z = XYZ
+        array, xyz, (X, Y, Z) = self._get_array(X, Y, Z, tau_max)
 
         D, T = array.shape
 
@@ -665,7 +671,9 @@ class CondIndTest():
             if self.conf_lev < .5 or self.conf_lev >= 1.:
                 raise ValueError("conf_lev = %.2f, " % self.conf_lev +
                                  "but must be between 0.5 and 1")
-            half_conf = self.confidence*(1. - self.conf_lev) / 2.
+            half_conf = self.confidence * (1. - self.conf_lev)/2.
+            # TODO: ask jakob is self.confidence a string (below) or a number 
+            # (above)?
             if self.confidence == 'bootstrap' and  half_conf < 1.:
                 raise ValueError("conf_samples*(1.-conf_lev)/2 is %.2f"
                                  % half_conf + ", must be >> 1")
@@ -677,7 +685,6 @@ class CondIndTest():
         if np.isnan(array).sum() != 0:
             raise ValueError("nans in the array!")
 
-        # TODO REFACTOR ABC instatiate base functions
         if self.confidence == 'analytic':
             val = self.get_dependence_measure(array, xyz)
 
