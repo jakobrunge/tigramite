@@ -54,7 +54,6 @@ except:
     print("Could not import python ACE package for GPACE")
 
 def _construct_array(X, Y, Z, tau_max, data,
-                     use_mask=False,
                      mask=None,
                      mask_type=None,
                      missing_flag=None,
@@ -64,7 +63,6 @@ def _construct_array(X, Y, Z, tau_max, data,
                      verbosity=0):
     # TODO input array is (T,N) but output array is like (N,T)?
     # TODO are the input and output arrays the same length in time?
-    # TODO remove mask and use_mask, mask should just be None if not used
     # TODO REFACTOR move this to data processing
     # TODO TEST : cutoff
     """Constructs array from variables X, Y, Z from data.
@@ -87,12 +85,9 @@ def _construct_array(X, Y, Z, tau_max, data,
     data : array-like,
         This is the data input array of shape = (T, N)
 
-    use_mask : bool, optional (default: False)
-        Whether a supplied mask should be used.
-
-    mask : boolean array, optional (default: False)
+    mask : boolean array, optional (default: None)
         Mask of data array, marking masked values as 1. Must be of same
-        shape as data.
+        shape as data. If is None, no mask will be used.
 
     missing_flag : number, optional (default: None)
         Flag for missing values. Dismisses all time slices of samples where
@@ -209,7 +204,7 @@ def _construct_array(X, Y, Z, tau_max, data,
         for tau in range(max_lag+1):
             use_indices[missing_anywhere[tau:T-max_lag+tau]] = 0
 
-    if use_mask:
+    if mask is not None:
         # Remove samples with mask == 1 conditional on which mask_type is used
         # Create an array selector that is the same shape as the output array
         array_mask = np.zeros((dim, time_length), dtype='int32')
@@ -230,24 +225,22 @@ def _construct_array(X, Y, Z, tau_max, data,
                 slice_select = np.prod(array_mask[xyz == cde, :], axis=0)
                 use_indices *= slice_select
 
-    if (missing_flag is not None) or use_mask:
+    if (missing_flag is not None) or (mask is not None):
         if use_indices.sum() == 0:
             raise ValueError("No unmasked samples")
         array = array[:, use_indices == 1]
 
     # TODO REFACTOR into own function
     if verbosity > 2:
-        print("            Constructed array of shape " +
-              "%s from\n" % str(array.shape) +
-              "            X = %s\n" % str(X) +
-              "            Y = %s\n" % str(Y) +
-              "            Z = %s" % str(Z))
-        if use_mask:
-            print("            with masked samples in "
-                  "%s removed" % mask_type)
+        indent = " " * 12
+        print(indent + "Constructed array of shape %s from" % str(array.shape) +
+              "\n" + indent + "X = %s" % str(X) +
+              "\n" + indent + "Y = %s" % str(Y) +
+              "\n" + indent + "Z = %s" % str(Z))
+        if mask is not None:
+            print(indent+"with masked samples in %s removed" % mask_type)
         if missing_flag is not None:
-            print("            with missing values labeled "
-                  "%s removed" % missing_flag)
+            print(indent+"with missing values labeled %s removed"%missing_flag)
 
     if return_cleaned_xyz:
         return array, xyz, (X, Y, Z)
@@ -265,10 +258,8 @@ class CondIndTest():
 
     Parameters
     ----------
-    use_mask : bool, optional (default: False)
-        Whether a supplied mask should be used.
-
-    mask_type : {'y','x','z','xy','xz','yz','xyz'}
+    mask_type : str, optional (default = None)
+        Must be in {'y','x','z','xy','xz','yz','xyz'}
         Masking mode: Indicators for which variables in the dependence measure
         I(X; Y | Z) the samples should be masked. If None, 'y' is used, which
         excludes all time slices containing masked samples in Y. Explained in
@@ -327,7 +318,6 @@ class CondIndTest():
         pass
 
     def __init__(self,
-                 use_mask=False,
                  mask_type=None,
                  significance='analytic',
                  fixed_thres=0.1,
@@ -340,7 +330,6 @@ class CondIndTest():
                  recycle_residuals=False,
                  verbosity=0):
         # Set the options
-        self.use_mask = use_mask
         self.mask_type = mask_type
         self.significance = significance
         # TODO REFACTOR this should not be a member, it should be an
@@ -354,21 +343,15 @@ class CondIndTest():
         # If we recycle residuals, then set up a residual cache
         self.recycle_residuals = recycle_residuals
         if self.recycle_residuals:
+            self.residuals = {}
+        # If we use a mask, we cannot recycle residuals
+        if self.mask_type is not None:
             if self.recycle_residuals is True:
                 warnings.warn("Using a mask disables recycling residuals.")
-            self.residuals = {}
-        # If we use a mask, do not recycle residuals
-        # TODO ask jakob:
-        #  * why does this come after the recycle residuals option is already
-        #  used?
-        #  * why does mask usage preclude the recycling of residuals?
-        if self.use_mask:
             self.recycle_residuals = False
-        # TODO ask jakob:
-        #  * why is there a default mask type?
-        #  * Maybe mask_type is None can mean do not use mask.
-        if self.mask_type is None:
-            self.mask_type = 'y'
+        # TODO ask jakob: I removed the default mask type, is this okay?
+        # if self.mask_type is None:
+        # self.mask_type = 'y'
 
         # TODO this should be of string type or of None type
         self.confidence = confidence
@@ -401,9 +384,8 @@ class CondIndTest():
                 if self.confidence == 'bootstrap':
                     print("conf_samples = %s" % self.conf_samples +
                           "\nconf_blocklength = %s" % self.conf_blocklength)
-            if self.use_mask:
-                print("use_mask = %s" % self.use_mask +
-                      "\nmask_type = %s" % self.mask_type)
+            if mask_type is not None:
+                print("mask_type = %s" % self.mask_type)
             if self.recycle_residuals:
                 print("recycle_residuals = %s" % self.recycle_residuals)
 
@@ -476,7 +458,7 @@ class CondIndTest():
         self.data = dataframe.values
         self.mask = dataframe.mask
         self.missing_flag = dataframe.missing_flag
-        if self.use_mask:
+        if self.mask_type is not None:
             dataframe._check_mask(require_mask=True)
 
     def _keyfy(self, x, z):
@@ -494,7 +476,6 @@ class CondIndTest():
         return _construct_array(X=X, Y=Y, Z=Z,
                                 tau_max=tau_max,
                                 data=self.data,
-                                use_mask=self.use_mask,
                                 mask=self.mask,
                                 mask_type=self.mask_type,
                                 missing_flag=self.missing_flag,
@@ -504,8 +485,6 @@ class CondIndTest():
 
     def run_test(self, X, Y, Z=None, tau_max=0):
         # TODO test this function
-        # TODO REFACTOR
-        #  * make this an abstract base class, add purely abstract methods
         """Perform conditional independence test.
 
         Calls the dependence measure and signficicance test functions. The child
@@ -672,7 +651,7 @@ class CondIndTest():
                 raise ValueError("conf_lev = %.2f, " % self.conf_lev +
                                  "but must be between 0.5 and 1")
             half_conf = self.confidence * (1. - self.conf_lev)/2.
-            # TODO: ask jakob is self.confidence a string (below) or a number 
+            # TODO: ask jakob is self.confidence a string (below) or a number
             # (above)?
             if self.confidence == 'bootstrap' and  half_conf < 1.:
                 raise ValueError("conf_samples*(1.-conf_lev)/2 is %.2f"
@@ -916,8 +895,7 @@ class CondIndTest():
             hilbert = np.abs(signal.hilbert(autocov))
 
             try:
-                popt, pcov = \
-                        optimize.curve_fit(func, range(0, max_lag + 1), hilbert)
+                popt, _ = optimize.curve_fit(func, range(0, max_lag+1), hilbert)
                 phi = popt[1]
 
                 # Formula of Pfeifer (2005) assuming non-overlapping blocks
@@ -927,9 +905,8 @@ class CondIndTest():
                 block_len = max(block_len, int(l_opt))
 
             except RuntimeError:
-                print(
-                    "Error - curve_fit failed in block_shuffle, using"
-                    " block_len = %d" % (int(.05 * T)))
+                print("Error - curve_fit failed in block_shuffle, using"
+                      " block_len = %d" % (int(.05 * T)))
                 block_len = max(int(.05 * T), 2)
 
         # Limit block length to a maximum of 10% of T
@@ -1361,7 +1338,6 @@ class ParCorr(CondIndTest):
             X=X, Y=Y, Z=Z,
             tau_max=tau_max,
             data=self.data,
-            use_mask=self.use_mask,
             mask=self.mask,
             mask_type=self.mask_type,
             return_cleaned_xyz=False,
@@ -1433,18 +1409,18 @@ class GaussProcTest(CondIndTest):
     def _load_nulldist(self, filename):
         # TODO check docstring with jakob
         """
-        Load a precomputed null distribution from a \*.npz file.  This 
+        Load a precomputed null distribution from a \*.npz file.  This
         distribution can be calculated using generate_and_save_nulldists(...).
 
         Parameters
         ----------
         filename : strng
             Path to the \*.npz file
-        
+
         Returns
         -------
         null_dists, null_samples : dict, int
-            The null distirbution as a dictionary of distributions keyed by 
+            The null distirbution as a dictionary of distributions keyed by
             sample size, the number of null samples in total.
         """
         null_dist_file = np.load(filename)
@@ -1487,14 +1463,11 @@ class GaussProcTest(CondIndTest):
                       "argument null_dist_filename")
 
         xyz = np.array([0,1])
-        # TODO no null_samples member
         # TODO ask jakob:
         #  * are only GP expected to have null distributions and null samples?
         null_dist = np.zeros(self.null_samples)
         for i in range(self.null_samples):
             array = np.random.rand(2, df)
-
-            # TODO no get_dependence_measure
             null_dist[i] = self.get_dependence_measure(array, xyz)
 
         null_dist.sort()
@@ -1529,7 +1502,6 @@ class GaussProcTest(CondIndTest):
 
         for iT, T in enumerate(sample_sizes):
             null_dists[iT] = self.generate_nulldist(T, add_to_null_dists=False)
-            # TODO no null_samples member
             self.null_dists[T] = null_dists[iT]
 
         np.savez("%s" % null_dist_filename,
@@ -1642,7 +1614,6 @@ class GaussProcTest(CondIndTest):
 
         gp.fit(z, target_series.reshape(-1, 1))
 
-        # TODO GP has no member vebosity...
         if self.verbosity > 3 and self.gp_version == 'new':
             print(kernel, alpha, gp.kernel_, gp.alpha)
 
@@ -1692,12 +1663,10 @@ class GaussProcTest(CondIndTest):
         Y = [(j, 0)]
         X = [(j, 0)]   # dummy variable here
         Z = parents
-        # TODO GP is missing many of these members
         array, xyz = _construct_array(
             X=X, Y=Y, Z=Z,
             tau_max=tau_max,
             data=self.data,
-            use_mask=self.use_mask,
             mask=self.mask,
             mask_type=self.mask_type,
             return_cleaned_xyz=False,
@@ -2123,8 +2092,8 @@ class GPDC(GaussProcTest):
         The variables are transformed to uniform marginals using the empirical
         cumulative distribution function beforehand. Here the null distribution
         is not analytically available, but can be precomputed with the function
-        generate_and_save_nulldists(...) which saves a \*.npz file containing the
-        null distribution for different sample sizes. This file can then be
+        generate_and_save_nulldists(...) which saves a \*.npz file containing 
+        the null distribution for different sample sizes. This file can then be
         supplied as null_dist_filename.
 
         Parameters
