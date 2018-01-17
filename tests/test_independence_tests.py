@@ -94,10 +94,8 @@ def test_construct_array(cstrct_array_params):
     n_rows_masked = 0
 
     # Make a fake mask
-    use_mask = False
     data_mask = np.zeros_like(data, dtype='bool')
     if mask_type is not None:
-        use_mask = True
         for var, nodes in zip(['x', 'y', 'z'], [x_nds, y_nds, z_nds]):
             if var in mask_type:
                 # Get the first node
@@ -123,7 +121,6 @@ def test_construct_array(cstrct_array_params):
     # Construct the array
     array, xyz = _construct_array(x_nds, y_nds, z_nds,
                                   tau_max=tau_max,
-                                  use_mask=use_mask,
                                   data=data,
                                   mask=data_mask,
                                   missing_flag=missing_flag,
@@ -155,8 +152,7 @@ def test_construct_array(cstrct_array_params):
 @pytest.fixture()
 def par_corr(request):
     # Generate the par_corr independence test
-    return ParCorr(use_mask=False,
-                   mask_type=None,
+    return ParCorr(mask_type=None,
                    significance='analytic',
                    fixed_thres=0.1,
                    sig_samples=10000,
@@ -251,8 +247,7 @@ def test_parcorr(par_corr, data_sample_a):
 # TODO need test for GPDC get_dependence_measure
 @pytest.fixture()
 def gpdc(request):
-    return GPDC(use_mask=False,
-                mask_type='y',
+    return GPDC(mask_type=None,
                 significance='analytic',
                 fixed_thres=0.1,
                 sig_samples=1000,
@@ -334,8 +329,7 @@ def test_trafo2uniform(gpdc, data_sample_a):
 # CMIknn TESTING ###############################################################
 @pytest.fixture()
 def cmi_knn(request):
-    return CMIknn(use_mask=False,
-                  mask_type=None,
+    return CMIknn(mask_type=None,
                   significance='shuffle_test',
                   fixed_thres=None,
                   sig_samples=10000,
@@ -381,8 +375,7 @@ def test_cmi_knn(cmi_knn, data_sample_c):
 # CMIsymb TESTING ##############################################################
 @pytest.fixture()
 def cmi_symb(request):
-    return CMIsymb(use_mask=False,
-                   mask_type=None,
+    return CMIsymb(mask_type=None,
                    significance='shuffle_test',
                    fixed_thres=0.1,
                    sig_samples=10000,

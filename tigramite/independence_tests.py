@@ -179,13 +179,12 @@ def _construct_array(X, Y, Z, tau_max, data,
         max_lag = max(abs(np.array(XYZ)[:, 1].min()), tau_max)
 
     # Setup XYZ identifier
-    # TODO make more efficient
     index_code = {'x' : 0,
                   'y' : 1,
                   'z' : 2}
-    xyz = np.array([index_code['x'] for i in range(len(X))] +
-                   [index_code['y'] for i in range(len(Y))] +
-                   [index_code['z'] for i in range(len(Z))])
+    xyz = np.array([index_code[name]
+                    for var, name in zip([X, Y, Z], ['x', 'y', 'z'])
+                    for _ in var])
 
     # Setup and fill array with lagged time series
     time_length = T - max_lag
@@ -217,7 +216,7 @@ def _construct_array(X, Y, Z, tau_max, data,
         # i.e. 'x' -> 0, 'y' -> 1, 'z'-> 2
         for idx, cde in index_code.items():
             # Check if the letter index is in the mask type
-            if idx in mask_type:
+            if (mask_type is not None) and (idx in mask_type):
                 # If so, check if any of the data that correspond to the
                 # letter index is masked by taking the product along the
                 # node-data to return a time slice selection, where 0 means the
@@ -2092,7 +2091,7 @@ class GPDC(GaussProcTest):
         The variables are transformed to uniform marginals using the empirical
         cumulative distribution function beforehand. Here the null distribution
         is not analytically available, but can be precomputed with the function
-        generate_and_save_nulldists(...) which saves a \*.npz file containing 
+        generate_and_save_nulldists(...) which saves a \*.npz file containing
         the null distribution for different sample sizes. This file can then be
         supplied as null_dist_filename.
 
@@ -2112,7 +2111,6 @@ class GPDC(GaussProcTest):
         # TODO pylint cannot find dcov_all, check it exists and works
         _, val, _, _ = tigramite_cython_code.dcov_all(x_vals, y_vals)
         return val
-
 
     def get_shuffle_significance(self, array, xyz, value,
                                  return_null_dist=False):
@@ -2195,7 +2193,6 @@ class GPDC(GaussProcTest):
             if int(df) not in list(self.null_dists):
             # if np.abs(self.sample_sizes[idx_near] - df) / float(df) > 0.01:
                 if self.verbosity > 0:
-                    # TODO abstract this message
                     print("Null distribution for GPDC not available "
                           "for deg. of freed. = %d." % df)
                 self.generate_nulldist(df)
