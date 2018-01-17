@@ -53,200 +53,6 @@ try:
 except:
     print("Could not import python ACE package for GPACE")
 
-def _construct_array(X, Y, Z, tau_max, data,
-                     mask=None,
-                     mask_type=None,
-                     missing_flag=None,
-                     return_cleaned_xyz=False,
-                     do_checks=True,
-                     cut_off='2xtau_max',
-                     verbosity=0):
-    # TODO input array is (T,N) but output array is like (N,T)?
-    # TODO are the input and output arrays the same length in time?
-    # TODO REFACTOR move this to data processing
-    # TODO TEST : cutoff
-    """Constructs array from variables X, Y, Z from data.
-
-    Data is of shape (T, N), where T is the time series length and N the
-    number of variables.
-
-    Parameters
-    ----------
-    X, Y, Z : list of tuples
-        For a dependence measure I(X;Y|Z), Y is of the form [(varY, 0)],
-        where var specifies the variable index. X typically is of the form
-        [(varX, -tau)] with tau denoting the time lag and Z can be
-        multivariate [(var1, -lag), (var2, -lag), ...] .
-
-    tau_max : int
-        Maximum time lag. This may be used to make sure that estimates for
-        different lags in X and Z all have the same sample size.
-
-    data : array-like,
-        This is the data input array of shape = (T, N)
-
-    mask : boolean array, optional (default: None)
-        Mask of data array, marking masked values as 1. Must be of same
-        shape as data. If is None, no mask will be used.
-
-    missing_flag : number, optional (default: None)
-        Flag for missing values. Dismisses all time slices of samples where
-        missing values occur in any variable and also flags samples for all
-        lags up to 2*tau_max. This avoids biases, see section on masking in
-        Supplement of [1]_.
-
-    mask_type : {'y','x','z','xy','xz','yz','xyz'}
-        Masking mode: Indicators for which variables in the dependence
-        measure I(X; Y | Z) the samples should be masked. If None, 'y' is
-        used, which excludes all time slices containing masked samples in Y.
-        Explained in [1]_.
-
-    return_cleaned_xyz : bool, optional (default: False)
-        Whether to return cleaned X,Y,Z, where possible duplicates are
-        removed.
-
-    do_checks : bool, optional (default: True)
-        Whether to perform sanity checks on input X,Y,Z
-
-    cut_off : {'2xtau_max', 'max_lag', 'max_lag_or_tau_max'}
-        How many samples to cutoff at the beginning. The default is '2xtau_max',
-        which guarantees that MCI tests are all conducted on the same samples.
-        For modeling, 'max_lag_or_tau_max' can be used, which uses the maximum
-        of tau_max and the conditions, which is useful to compare multiple
-        models on the same sample. Last, 'max_lag' uses as much samples as
-        possible.
-
-    verbosity : int, optional (default: 0)
-        Level of verbosity.
-
-    Returns
-    -------
-    array, xyz [,XYZ] : Tuple of data array of shape (dim, T) and xyz
-        identifier array of shape (dim,) identifying which row in array
-        corresponds to X, Y, and Z. For example::
-            X = [(0, -1)], Y = [(1, 0)], Z = [(1, -1), (0, -2)]
-            yields an array of shape (5, T) and xyz is
-            xyz = numpy.array([0,1,2,2])
-        If return_cleaned_xyz is True, also outputs the cleaned XYZ lists.
-    """
-
-    def uniq(a_input):
-        output = []
-        for i in a_input:
-            if i not in output:
-                output.append(i)
-        return output
-
-    data_type = data.dtype
-
-    T, N = data.shape
-
-    # Remove duplicates in X, Y, Z
-    # TODO go straight to XYZ here
-    # TODO are X and Y always only one node?
-    X = uniq(X)
-    Y = uniq(Y)
-    Z = uniq(Z)
-
-    # If a node in Z occurs already in X or Y, remove it from Z
-    Z = [node for node in Z if (node not in X) and (node not in Y)]
-
-    # Check that all lags are non-positive and indices are in [0,N-1]
-    XYZ = X + Y + Z
-    dim = len(XYZ)
-
-    # TODO REFACTOR into own command
-    if do_checks:
-        if np.array(XYZ).shape != (dim, 2):
-            raise ValueError("X, Y, Z must be lists of tuples in format"
-                             " [(var, -lag),...], eg., [(2, -2), (1, 0), ...]")
-        if np.any(np.array(XYZ)[:, 1] > 0):
-            raise ValueError("nodes are %s, " % str(XYZ) +
-                             "but all lags must be non-positive")
-        if (np.any(np.array(XYZ)[:, 0] >= N)
-                or np.any(np.array(XYZ)[:, 0] < 0)):
-            raise ValueError("var indices %s," % str(np.array(XYZ)[:, 0]) +
-                             " but must be in [0, %d]" % (N - 1))
-        if np.all(np.array(Y)[:, 1] != 0):
-            raise ValueError("Y-nodes are %s, " % str(Y) +
-                             "but one of the Y-nodes must have zero lag")
-
-    if cut_off == '2xtau_max':
-        max_lag = 2*tau_max
-    elif cut_off == 'max_lag':
-        max_lag = abs(np.array(XYZ)[:, 1].min())
-    elif cut_off == 'max_lag_or_tau_max':
-        max_lag = max(abs(np.array(XYZ)[:, 1].min()), tau_max)
-
-    # Setup XYZ identifier
-    index_code = {'x' : 0,
-                  'y' : 1,
-                  'z' : 2}
-    xyz = np.array([index_code[name]
-                    for var, name in zip([X, Y, Z], ['x', 'y', 'z'])
-                    for _ in var])
-
-    # Setup and fill array with lagged time series
-    time_length = T - max_lag
-    array = np.zeros((dim, time_length), dtype=data_type)
-    # Note, lags are negative here
-    for i, (var, lag) in enumerate(XYZ):
-        array[i, :] = data[max_lag + lag:T + lag, var]
-
-    # Choose which indices to use
-    use_indices = np.ones(time_length, dtype='int')
-
-    # Remove all values that have missing value flag, as well as the time slices
-    # that occur up to max_lag after
-    if missing_flag is not None:
-        missing_anywhere = np.any(data == missing_flag, axis=1)
-        for tau in range(max_lag+1):
-            use_indices[missing_anywhere[tau:T-max_lag+tau]] = 0
-
-    if mask is not None:
-        # Remove samples with mask == 1 conditional on which mask_type is used
-        # Create an array selector that is the same shape as the output array
-        array_mask = np.zeros((dim, time_length), dtype='int32')
-        # Iterate over all nodes named in X, Y, or Z
-        for i, (var, lag) in enumerate(XYZ):
-            # Transform the mask into the output array shape, i.e. from data
-            # mask to array mask
-            array_mask[i, :] = ~mask[max_lag + lag: T + lag, var]
-        # Iterate over defined mapping from letter index to number index,
-        # i.e. 'x' -> 0, 'y' -> 1, 'z'-> 2
-        for idx, cde in index_code.items():
-            # Check if the letter index is in the mask type
-            if (mask_type is not None) and (idx in mask_type):
-                # If so, check if any of the data that correspond to the
-                # letter index is masked by taking the product along the
-                # node-data to return a time slice selection, where 0 means the
-                # time slice will not be used
-                slice_select = np.prod(array_mask[xyz == cde, :], axis=0)
-                use_indices *= slice_select
-
-    if (missing_flag is not None) or (mask is not None):
-        if use_indices.sum() == 0:
-            raise ValueError("No unmasked samples")
-        array = array[:, use_indices == 1]
-
-    # TODO REFACTOR into own function
-    if verbosity > 2:
-        indent = " " * 12
-        print(indent + "Constructed array of shape %s from" % str(array.shape) +
-              "\n" + indent + "X = %s" % str(X) +
-              "\n" + indent + "Y = %s" % str(Y) +
-              "\n" + indent + "Z = %s" % str(Z))
-        if mask is not None:
-            print(indent+"with masked samples in %s removed" % mask_type)
-        if missing_flag is not None:
-            print(indent+"with missing values labeled %s removed"%missing_flag)
-
-    if return_cleaned_xyz:
-        return array, xyz, (X, Y, Z)
-    return array, xyz
-
-# TODO make this an abstract base class and not an instatiatable class
-
 @six.add_metaclass(abc.ABCMeta)
 class CondIndTest():
     """Base class of conditional independence tests.
@@ -328,6 +134,8 @@ class CondIndTest():
                  conf_blocklength=None,
                  recycle_residuals=False,
                  verbosity=0):
+        # Set the dataframe to None for now, will be reset during pcmci call
+        self.dataframe = None
         # Set the options
         self.mask_type = mask_type
         self.significance = significance
@@ -441,8 +249,6 @@ class CondIndTest():
                                   " implemented for %s" % self.measure)
 
     def set_dataframe(self, dataframe):
-        # TODO REFACTOR this violates OOP.  Why not just set a variable like
-        # self.dataframe?
         """Initialize and check the dataframe.
 
         Parameters
@@ -454,9 +260,7 @@ class CondIndTest():
             values flag.
 
         """
-        self.data = dataframe.values
-        self.mask = dataframe.mask
-        self.missing_flag = dataframe.missing_flag
+        self.dataframe = dataframe
         if self.mask_type is not None:
             dataframe._check_mask(require_mask=True)
 
@@ -472,15 +276,12 @@ class CondIndTest():
         if verbosity is None:
             verbosity=self.verbosity
 
-        return _construct_array(X=X, Y=Y, Z=Z,
-                                tau_max=tau_max,
-                                data=self.data,
-                                mask=self.mask,
-                                mask_type=self.mask_type,
-                                missing_flag=self.missing_flag,
-                                return_cleaned_xyz=True,
-                                do_checks=False,
-                                verbosity=verbosity)
+        return self.dataframe.construct_array(X=X, Y=Y, Z=Z,
+                                              tau_max=tau_max,
+                                              mask_type=self.mask_type,
+                                              return_cleaned_xyz=True,
+                                              do_checks=False,
+                                              verbosity=verbosity)
 
     def run_test(self, X, Y, Z=None, tau_max=0):
         # TODO test this function
@@ -1333,15 +1134,12 @@ class ParCorr(CondIndTest):
         Y = [(j, 0)]
         X = [(j, 0)]   # dummy variable here
         Z = parents
-        array, xyz = _construct_array(
-            X=X, Y=Y, Z=Z,
-            tau_max=tau_max,
-            data=self.data,
-            mask=self.mask,
-            mask_type=self.mask_type,
-            return_cleaned_xyz=False,
-            do_checks=False,
-            verbosity=self.verbosity)
+        array, xyz = self.dataframe.construct_array(X=X, Y=Y, Z=Z,
+                                                    tau_max=tau_max,
+                                                    mask_type=self.mask_type,
+                                                    return_cleaned_xyz=False,
+                                                    do_checks=False,
+                                                    verbosity=self.verbosity)
 
         dim, T = array.shape
 
@@ -1662,15 +1460,12 @@ class GaussProcTest(CondIndTest):
         Y = [(j, 0)]
         X = [(j, 0)]   # dummy variable here
         Z = parents
-        array, xyz = _construct_array(
-            X=X, Y=Y, Z=Z,
-            tau_max=tau_max,
-            data=self.data,
-            mask=self.mask,
-            mask_type=self.mask_type,
-            return_cleaned_xyz=False,
-            do_checks=False,
-            verbosity=self.verbosity)
+        array, xyz = self.dataframe.construct_array(X=X, Y=Y, Z=Z,
+                                                    tau_max=tau_max,
+                                                    mask_type=self.mask_type,
+                                                    return_cleaned_xyz=False,
+                                                    do_checks=False,
+                                                    verbosity=self.verbosity)
 
         dim, T = array.shape
 

@@ -7,7 +7,6 @@ import numpy as np
 import pytest
 
 from tigramite.independence_tests import ParCorr, GPDC, CMIsymb, CMIknn #, GPACE
-from tigramite.independence_tests import _construct_array
 import tigramite.data_processing as pp
 
 # Pylint settings
@@ -119,13 +118,11 @@ def test_construct_array(cstrct_array_params):
         n_rows_masked += max_lag + 1
 
     # Construct the array
-    array, xyz = _construct_array(x_nds, y_nds, z_nds,
-                                  tau_max=tau_max,
-                                  data=data,
-                                  mask=data_mask,
-                                  missing_flag=missing_flag,
-                                  mask_type=mask_type,
-                                  verbosity=VERBOSITY)
+    data_f = pp.DataFrame(data, data_mask, missing_flag)
+    array, xyz = data_f.construct_array(x_nds, y_nds, z_nds,
+                                        tau_max=tau_max,
+                                        mask_type=mask_type,
+                                        verbosity=VERBOSITY)
     # Ensure x_nds, y_nds, z_ndes are unique
     x_nds = list(OrderedDict.fromkeys(x_nds))
     y_nds = list(OrderedDict.fromkeys(y_nds))
