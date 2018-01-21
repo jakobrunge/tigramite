@@ -256,21 +256,52 @@ class DataFrame():
                 raise ValueError("No unmasked samples")
             array = array[:, use_indices == 1]
 
-        # TODO REFACTOR into own function
+        # Print information about the constructed array
         if verbosity > 2:
-            indt = " " * 12
-            print(indt + "Constructed array of shape %s from"%str(array.shape) +
-                  "\n" + indt + "X = %s" % str(X) +
-                  "\n" + indt + "Y = %s" % str(Y) +
-                  "\n" + indt + "Z = %s" % str(Z))
-            if self.mask is not None:
-                print(indt+"with masked samples in %s removed" % mask_type)
-            if self.missing_flag is not None:
-                print(indt+"with missing values labeled %s removed" % self.missing_flag)
+            self.print_array_info(array, X, Y, Z, self.missing_flag, mask_type)
 
+        # Return the array and xyz and optionally (X, Y, Z)
         if return_cleaned_xyz:
             return array, xyz, (X, Y, Z)
         return array, xyz
+
+    def print_array_info(self, array, X, Y, Z, missing_flag, mask_type):
+        """
+        Print info about the constructed array
+
+        Parameters
+        ----------
+        array : Data array of shape (dim, T)
+
+        X, Y, Z : list of tuples
+            For a dependence measure I(X;Y|Z), Y is of the form [(varY, 0)],
+            where var specifies the variable index. X typically is of the form
+            [(varX, -tau)] with tau denoting the time lag and Z can be
+            multivariate [(var1, -lag), (var2, -lag), ...] .
+
+        missing_flag : number, optional (default: None)
+            Flag for missing values. Dismisses all time slices of samples where
+            missing values occur in any variable and also flags samples for all
+            lags up to 2*tau_max. This avoids biases, see section on masking in
+            Supplement of [1]_.
+
+        mask_type : {'y','x','z','xy','xz','yz','xyz'}
+            Masking mode: Indicators for which variables in the dependence
+            measure I(X; Y | Z) the samples should be masked. If None, 'y' is
+            used, which excludes all time slices containing masked samples in Y.
+            Explained in [1]_.
+        """
+        indt = " " * 12
+        print(indt + "Constructed array of shape %s from"%str(array.shape) +
+              "\n" + indt + "X = %s" % str(X) +
+              "\n" + indt + "Y = %s" % str(Y) +
+              "\n" + indt + "Z = %s" % str(Z))
+        if self.mask is not None:
+            print(indt+"with masked samples in %s removed" % mask_type)
+        if self.missing_flag is not None:
+            print(indt+"with missing values = %s removed" % self.missing_flag)
+
+
 
 def lowhighpass_filter(data, cutperiod, pass_periods='low'):
     """Butterworth low- or high pass filter.

@@ -139,11 +139,7 @@ class CondIndTest():
         # Set the options
         self.mask_type = mask_type
         self.significance = significance
-        # TODO REFACTOR this should not be a member, it should be an
-        # argument of the functions that need it
         self.sig_samples = sig_samples
-        # TODO REFACTOR this should not be a member, it should be an
-        # argument of the functions that need it
         self.sig_blocklength = sig_blocklength
         self.fixed_thres = fixed_thres
         self.verbosity = verbosity
@@ -160,50 +156,66 @@ class CondIndTest():
         # if self.mask_type is None:
         # self.mask_type = 'y'
 
-        # TODO this should be of string type or of None type
+        # Set the confidence type and details
+        ## TODO this should be of string type or of None type
         self.confidence = confidence
-        # TODO REFACTOR this should not be a member, it should be an
-        # argument of the functions that need it
         self.conf_lev = conf_lev
-        # TODO REFACTOR this should not be a member, it should be an
-        # argument of the functions that need it
         self.conf_samples = conf_samples
-        # TODO REFACTOR this should not be a member, it should be an
-        # argument of the functions that need it
         self.conf_blocklength = conf_blocklength
 
-
-        # TODO REFACTOR into own function
+        # Print information about the
         if self.verbosity > 0:
-            print("\n# Initialize conditional independence test\n"
-                  "\nParameters:")
-            print("independence test = %s" % self.measure
-                  + "\nsignificance = %s" % self.significance)
-            if self.significance == 'shuffle_test':
-                print("sig_samples = %s" % self.sig_samples +
-                      "\nsig_blocklength = %s" % self.sig_blocklength)
-            elif self.significance == 'fixed_thres':
-                print(""
-                + "fixed_thres = %s" % self.fixed_thres)
-            if self.confidence:
-                print("confidence = %s" % self.confidence
-                + "\nconf_lev = %s" % self.conf_lev)
-                if self.confidence == 'bootstrap':
-                    print("conf_samples = %s" % self.conf_samples +
-                          "\nconf_blocklength = %s" % self.conf_blocklength)
-            if mask_type is not None:
-                print("mask_type = %s" % self.mask_type)
-            if self.recycle_residuals:
-                print("recycle_residuals = %s" % self.recycle_residuals)
+            self.print_info()
+        # Check the mask type is keyed correctly
+        self._check_mask_type()
 
-            # print("\n")
-        # TODO include this again
-        # if use_mask:
-        #     if mask_type is None or len(set(mask_type) -
-        #                                 set(['x', 'y', 'z'])) > 0:
-        #         raise ValueError("mask_type = %s, but must be list containing"
-        #                          % mask_type + " 'x','y','z', or any "
-        #                          "combination")
+    def print_info(self):
+        """
+        Print information about the conditional independence test parameters
+        """
+        info_str = "\n# Initialize conditional independence test\n\nParameters:"
+        info_str += "\nindependence test = %s" % self.measure
+        info_str += "\nsignificance = %s" % self.significance
+        # Check if we are using a shuffle test
+        if self.significance == 'shuffle_test':
+            info_str += "\nsig_samples = %s" % self.sig_samples
+            info_str += "\nsig_blocklength = %s" % self.sig_blocklength
+        # Check if we are using a fixed threshold
+        elif self.significance == 'fixed_thres':
+            info_str += "\nfixed_thres = %s" % self.fixed_thres
+            # Check if we have a confidence type
+            if self.confidence:
+                info_str += "\nconfidence = %s" % self.confidence
+                info_str += "\nconf_lev = %s" % self.conf_lev
+                # Check if this confidence type is boostrapping
+                if self.confidence == 'bootstrap':
+                    info_str += "\nconf_samples = %s" % self.conf_samples
+                    info_str += "\nconf_blocklength = %s" %self.conf_blocklength
+                    # Check if we use a non-trivial mask type
+                    if self.mask_type is not None:
+                        info_str += "mask_type = %s" % self.mask_type
+        # Check if we are recycling residuals or not
+        if self.recycle_residuals:
+            info_str += "recycle_residuals = %s" % self.recycle_residuals
+        # Print the information string
+        print(info_str)
+
+    def _check_mask_type(self):
+        """
+        mask_type : str, optional (default = None)
+            Must be in {'y','x','z','xy','xz','yz','xyz'}
+            Masking mode: Indicators for which variables in the dependence
+            measure I(X; Y | Z) the samples should be masked. If None, 'y' is
+            used, which excludes all time slices containing masked samples in Y.
+            Explained in [1]_.
+        """
+        if self.mask_type is not None:
+            mask_set = set(self.mask_type) - set(['x', 'y', 'z'])
+            if mask_set:
+                err_msg = "mask_type = %s," % self.mask_type + " but must be" +\
+                          " list containing 'x','y','z', or any combination"
+                raise ValueError(err_msg)
+
 
     def get_analytic_confidence(self, value, df, conf_lev):
         """
@@ -269,8 +281,6 @@ class CondIndTest():
         return (tuple(set(x)), tuple(set(z)))
 
     def _get_array(self, X, Y, Z, tau_max=0, verbosity=None):
-        # TODO REFACTOR move _construct_array to dataframe, then this part wraps
-        # dataframe functionality (or can also just be moved to dataframe)
         """Convencience wrapper around _construct_array."""
 
         if verbosity is None:
@@ -307,9 +317,7 @@ class CondIndTest():
         -------
         val, pval : Tuple of floats
 
-            The test statistic value and the p-value. These are also made in the
-            class as self.val and self.pval.
-
+            The test statistic value and the p-value.
         """
 
         array, xyz, XYZ = self._get_array(X, Y, Z, tau_max)
@@ -357,13 +365,7 @@ class CondIndTest():
         else:
             raise ValueError("%s not known." % self.significance)
 
-        # TODO REFACTOR remove all of the below, do not cache results as members
-        self.X = X
-        self.Y = Y
-        self.Z = Z
-        self.val = val
-        self.pval = pval
-
+        # Return the value and the pvalue
         return val, pval
 
     def get_measure(self, X, Y, Z=None, tau_max=0):
@@ -472,11 +474,9 @@ class CondIndTest():
 
         elif self.confidence == 'bootstrap':
             # Overwrite analytic values
-            # TODO remove dependence_measure from bootstrap arguments
             (conf_lower, conf_upper) = \
                     self.get_bootstrap_confidence(
                         array, xyz,
-                        dependence_measure=self.get_dependence_measure,
                         conf_samples=self.conf_samples,
                         conf_blocklength=self.conf_blocklength,
                         conf_lev=self.conf_lev, verbosity=self.verbosity)
@@ -519,13 +519,10 @@ class CondIndTest():
                     conf[0], conf[1])
         print(printstr)
 
-    def get_bootstrap_confidence(self, array, xyz, dependence_measure,
+    def get_bootstrap_confidence(self, array, xyz, dependence_measure=None,
                                  conf_samples=100, conf_blocklength=None,
                                  conf_lev=.95, verbosity=0):
-        # TODO Shouldn't default number of conf_samples be the same number of
-        # samples in the original emperical distribution? i.e. bootstrap from
-        # 1,000 measurements => bootstrap sample is 1,000
-        # TODO remove dependence measure in favour of abstract method call
+        # TODO test this function
         """Perform bootstrap confidence interval estimation.
 
         With conf_blocklength > 1 or None a block-bootstrap is performed.
@@ -538,7 +535,7 @@ class CondIndTest():
         xyz : array of ints
             XYZ identifier array of shape (dim,).
 
-        dependence_measure : function
+        dependence_measure : function (default = self.get_dependence_measure)
             Dependence measure function must be of form
             dependence_measure(array, xyz) and return a numeric value
 
@@ -722,7 +719,6 @@ class CondIndTest():
 
         The rows in array corresponding to the X-variable are shuffled using
         a block-shuffle approach.
-
 
         Parameters
         ----------
@@ -2468,38 +2464,21 @@ class CMIsymb(CondIndTest):
         # High-dimensional Histogram
         hist = self._bincount_hist(array, weights=None)
 
-        # TODO look at this later
         def _plogp_vector(T):
             """Precalculation of p*log(p) needed for entropies."""
-            gfunc = np.zeros(T + 1, dtype='float')
             gfunc = np.zeros(T + 1)
-            gfunc[1:] = np.arange(
-                1, T + 1, 1) * np.log(np.arange(1, T + 1, 1))
+            data = np.arange(1, T + 1, 1)
+            gfunc[1:] = data * np.log(data)
             def plogp_func(time):
                 return gfunc[time]
             return np.vectorize(plogp_func)
 
         plogp = _plogp_vector(T)
-
         hxyz = (-(plogp(hist)).sum() + plogp(T)) / float(T)
         hxz = (-(plogp(hist.sum(axis=1))).sum() + plogp(T)) / float(T)
         hyz = (-(plogp(hist.sum(axis=0))).sum() + plogp(T)) / float(T)
         hz = (-(plogp(hist.sum(axis=0).sum(axis=0))).sum()+plogp(T)) / float(T)
-
-        # TODO remove this
-        # else:
-        #     def plogp_func(p):
-        #         if p == 0.: return 0.
-        #         else: return p*np.log(p)
-        #     plogp = np.vectorize(plogp_func)
-
-        #     hxyz = -plogp(hist).sum()
-        #     hxz = -plogp(hist.sum(axis=1)).sum()
-        #     hyz = -plogp(hist.sum(axis=0)).sum()
-        #     hz = -plogp(hist.sum(axis=0).sum(axis=0)).sum()
-
         val = hxz + hyz - hz - hxyz
-
         return val
 
     def get_shuffle_significance(self, array, xyz, value,
@@ -2616,17 +2595,14 @@ class RCOT(CondIndTest):
         self._measure = 'rcot'
         self.two_sided = False
         self.residual_based = False
-        # TODO if resetting defaults of CondIndTest, must call CondIndTest
-        # constructor first
-        self.recycle_residuals = False
-
+        self._pval = None
+        # Call the parent constructor
         CondIndTest.__init__(self, significance=significance, **kwargs)
 
-        # TODO give this its own function
+        # Print some information
         if self.verbosity > 0:
-            print("num_f = %s" % self.num_f)
-            print("approx = %s" % self.approx)
-            print("")
+            print("num_f = %s" % self.num_f + "\n")
+            print("approx = %s" % self.approx + "\n\n")
 
     def get_dependence_measure(self, array, xyz):
         # TODO test this function
@@ -2655,22 +2631,23 @@ class RCOT(CondIndTest):
                                                   approx=self.approx,
                                                   seed=self.seed))
         val = float(rcot[1])
-        # TODO do not use self.pval
-        self.pval = float(rcot[0])
+        # Cache the p-value for use later
+        self._pval = float(rcot[0])
         return val
 
     def get_analytic_significance(self, **args):
         # TODO test this function
-        # TODO what is pval is not set yet?
-        # TODO do not use self.pval
-        """Returns analytic p-value from RCIT test statistic.
+        """
+        Returns analytic p-value from RCIT test statistic.
+        NOTE: Must first run get_dependence_measure, where p-value is determined
+        from RCIT test statistic.
 
         Returns
         -------
         pval : float or numpy.nan
             P-value.
         """
-        return self.pval
+        return self._pval
 
     def get_shuffle_significance(self, array, xyz, value,
                                  return_null_dist=False):
@@ -2707,5 +2684,3 @@ class RCOT(CondIndTest):
         if return_null_dist:
             return pval, null_dist
         return pval
-
-
