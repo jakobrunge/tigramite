@@ -6,8 +6,10 @@ from collections import OrderedDict
 import numpy as np
 import pytest
 
-from tigramite.independence_tests import ParCorr, GPDC, CMIsymb, CMIknn #, GPACE
+from tigramite.independence_tests import ParCorr, GPDC, CMIsymb, CMIknn, GPACE
 import tigramite.data_processing as pp
+
+from test_pcmci_calculations import a_sample
 
 # Pylint settings
 # pylint: disable=redefined-outer-name
@@ -18,6 +20,39 @@ VERBOSITY = 1
 def _par_corr_to_cmi(par_corr):
     """Transformation of partial correlation to CMI scale."""
     return -0.5 * np.log(1. - par_corr**2)
+
+### CHECK LIST ###
+
+# Concrete classes
+   # ParCorr
+   # GPDC
+   # GPACE
+   # CMIknn
+   # CMIsymb
+   # RCOT
+
+# CondIntTest (for all concrete)
+   # _check_mask_type
+   # _get_array
+   # run_test
+   # get_measure
+   # get_confidence
+   # get_bootstrap_confidence
+   # _get_acf
+   # _get_block_length
+   # _get_shuffle_dist
+   # get_fixed_thresh_sig
+   # tranfo2uniform
+# GausProc
+    # TEST _get_single_residuals
+    # TEST generate_and_save_nulldists
+    # TEST generate_nulldist
+    # TEST _load_nulldist
+# GPDC
+    # TEST _get_max_corr
+    # TEST get_shuffle_sig
+    # TEST get_analytic_sig
+    # TEST get_dependence_measure
 
 
 # INDEPENDENCE TEST GENERATION #################################################
@@ -146,11 +181,16 @@ def test_construct_array(cstrct_array_params):
     np.testing.assert_almost_equal(xyz, expect_xyz)
 
 # PARTIAL CORRELATION TESTING ##################################################
-@pytest.fixture()
+@pytest.fixture(params=[
+    # Generate par_corr test instances
+    #sig
+    ('analytic')])
 def par_corr(request):
+    # Unpack the parameters
+    sig = request.param
     # Generate the par_corr independence test
     return ParCorr(mask_type=None,
-                   significance='analytic',
+                   significance=sig,
                    fixed_thres=0.1,
                    sig_samples=10000,
                    sig_blocklength=3,
@@ -173,6 +213,38 @@ def data_sample_a(request):
     # Return the data sample
     return gen_data_sample(seed, corr_val, T)
 
+   # run_test
+   # get_measure
+   # get_confidence
+   # get_bootstrap_confidence
+   # get_fixed_thresh_sig
+   # tranfo2uniform
+   # _check_mask_type
+   # _get_array
+   # _get_acf
+   # _get_block_length
+   # _get_shuffle_dist
+
+
+def test_run_test_parcorr(par_corr, a_sample):
+    # Get the data sample values
+    dataframe, true_parents = a_sample
+    # Set the dataframe of the test object
+    par_corr.set_dataframe(dataframe)
+    # Generate some nodes
+    y_nds = [(0, 0)]
+    x_nds = true_parents[0]
+    z_nds = true_parents[1]
+    tau_max = 3
+    # Run the test
+    val, pval = par_corr.run_test(X=x_nds, Y=y_nds, Z=z_nds, tau_max=tau_max)
+    # Get the array the test is running on
+    array, xyz, XYZ = par_corr._get_array(x_nds, y_nds, z_nds, tau_max)
+    dim, T = array.shape
+    # Get the correct dependence measure
+    val_expt = par_corr.get_dependence_measure(array, xyz)
+    pval_expt = par_corr.get_analytic_significance(value=val_expt, T=T, dim=dim)
+
 def test_bootstrap_conf_parcorr(par_corr, data_sample_a):
     # Get the data sample values
     array, val, _, xyz, dim, T = data_sample_a
@@ -191,7 +263,6 @@ def test_bootstrap_conf_parcorr(par_corr, data_sample_a):
     # Ensure the two intervals are the same
     np.testing.assert_allclose(np.array(conf_a), np.array(conf_b), atol=0.01)
 
-# TODO should val here be get_dependence_measure?
 # TODO test null distribution
 def test_shuffle_sig_parcorr(par_corr, data_sample_a):
     # Get the data sample values
@@ -203,7 +274,6 @@ def test_shuffle_sig_parcorr(par_corr, data_sample_a):
     # Adjust p-value for two-sided measures
     np.testing.assert_allclose(np.array(pval_a), np.array(pval_s), atol=0.01)
 
-# TODO how does this test work?
 # TODO test standardize, return_means as well
 @pytest.mark.parametrize("seed", [5, 29, 135, 170, 174, 284, 342, 363, 425])
 def test_parcorr_residuals(par_corr, seed):
@@ -222,7 +292,6 @@ def test_parcorr_residuals(par_corr, seed):
                                              return_means=False)
     np.testing.assert_allclose(est_res, true_res[0], rtol=1e-5, atol=0.02)
 
-# TODO how does this test work?
 def test_parcorr(par_corr, data_sample_a):
     # Get the data sample values
     small_array, _, corr_val, xyz, dim, T = data_sample_a
@@ -241,7 +310,6 @@ def test_parcorr(par_corr, data_sample_a):
     np.testing.assert_allclose(np.array(corr_val), np.array(val_est), atol=0.02)
 
 # GPDC TESTING #################################################################
-# TODO need test for GPDC get_dependence_measure
 @pytest.fixture()
 def gpdc(request):
     return GPDC(mask_type=None,
@@ -276,8 +344,6 @@ def test_gpdc_residuals(gpdc, seed):
     T = 1000
     # Define the function to check against
     def func(x_arr, c_val=1.):
-        # TODO check x**0
-        # return x * (1. - 4. * x**0 * np.exp(-x**2 / 2.))
         return c_val*x_arr*(1. - 4.*np.exp(-x_arr*x_arr/2.))
     # Generate the array
     array = np.random.randn(3, T)
@@ -296,7 +362,6 @@ def test_gpdc_residuals(gpdc, seed):
                                func(target_res[cntr], c_val),
                                atol=0.2)
 
-# TODO should val here be the val given by the data_sample fixture?
 def test_shuffle_sig_gpdc(gpdc, data_sample_b):
     # Get the data sample
     array, _, _, xyz, dim, T = data_sample_b
@@ -309,7 +374,6 @@ def test_shuffle_sig_gpdc(gpdc, data_sample_b):
     pval_s = gpdc.get_shuffle_significance(array, xyz, val)
     np.testing.assert_allclose(np.array(pval_a), np.array(pval_s), atol=0.05)
 
-# TODO how does this test work?
 def test_trafo2uniform(gpdc, data_sample_a):
     # Get the data sample
     array, _, _, _, _, T = data_sample_a
@@ -350,7 +414,6 @@ def data_sample_c(request):
     # Return the data sample
     return gen_data_sample(seed, corr_val, T)
 
-# TODO how does this test work?
 def test_cmi_knn(cmi_knn, data_sample_c):
     # Get the data sample values
     small_array, _, corr_val, xyz, dim, T = data_sample_c
