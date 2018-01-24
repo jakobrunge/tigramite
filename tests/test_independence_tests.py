@@ -9,7 +9,7 @@ import pytest
 from tigramite.independence_tests import ParCorr, GPDC, CMIsymb, CMIknn, GPACE
 import tigramite.data_processing as pp
 
-from test_pcmci_calculations import a_sample
+from test_pcmci_calculations import a_chain, gen_data_frame
 
 # Pylint settings
 # pylint: disable=redefined-outer-name
@@ -55,29 +55,7 @@ def _par_corr_to_cmi(par_corr):
     # TEST get_dependence_measure
 
 
-# INDEPENDENCE TEST GENERATION #################################################
-def rand_node(t_min, n_max, t_max=0, n_min=0):
-    """
-    Generate a random node to test
-    """
-    rand_node = np.random.randint(n_min, n_max)
-    rand_time = np.random.randint(t_min, t_max)
-    return (rand_node, rand_time)
-
-def gen_nodes(n_nodes, seed, t_min, n_max):
-    """
-    Generate some random nodes to tests
-    """
-    # Set the seed if needed
-    np.random.seed(seed)
-    # Y nodes are always at (0, 0)
-    y_nds = [(0, 0)]
-    # X nodes is only one node
-    x_nds = [rand_node(t_min, n_max)]
-    # Z nodes are multiple nodes
-    z_nds = [rand_node(t_min, n_max) for _ in range(n_nodes)]
-    return x_nds, y_nds, z_nds
-
+# INDEPENDENCE TEST DATA GENERATION ############################################
 def gen_data_sample(seed, corr_val, T):
     # Set the random seed
     np.random.seed(seed)
@@ -94,100 +72,40 @@ def gen_data_sample(seed, corr_val, T):
     # Return the array, the value, and the xyz array
     return array, val, corr_val, xyz, dim, T
 
-# CONSTRUCT ARRAY TESTING ######################################################
-@pytest.fixture(params=[
-    # Parameterize the array construction
-    #(X, Y, Z) nodes,        t_max, m_val, mask_type
-    (gen_nodes(3, 0, -3, 9), 3,     False, None),           # Few nodes
-    (gen_nodes(7, 1, -3, 9), 3,     False, None),           # More nodes
-    (gen_nodes(7, 2, -3, 3), 3,     False, None),           # Repeated nodes
-    (gen_nodes(7, 3, -3, 9), 3,     True,  None),           # Missing vals
-    (gen_nodes(7, 4, -3, 9), 3,     True,  ['x']),          # M-val + masked x
-    (gen_nodes(7, 4, -3, 9), 3,     True,  ['x','y']),      # M-val + masked xy
-    (gen_nodes(3, 5, -4, 9), 2,     False, ['x']),          # masked x
-    (gen_nodes(3, 6, -4, 9), 2,     False, ['y']),          # masked y
-    (gen_nodes(3, 7, -4, 9), 2,     False, ['z']),          # masked z
-    (gen_nodes(3, 7, -4, 9), 2,     False, ['x','y','z'])]) # mask xyz
-def cstrct_array_params(request):
-    return request.param
-
-def test_construct_array(cstrct_array_params):
-    # Unpack the parameters
-    (x_nds, y_nds, z_nds), tau_max, missing_vals, mask_type =\
-        cstrct_array_params
-    # Make some fake data
-    data = np.arange(1000).reshape(10, 100).T
-    # Get the needed parameters from the data
-    T, N = data.shape
-    max_lag = 2*tau_max
-    n_times = T - max_lag
-
-    # When testing masking and missing value flags, we will remove time slices,
-    # starting with the earliest slice.  This counter keeps track of how many
-    # rows have been masked.
-    n_rows_masked = 0
-
-    # Make a fake mask
-    data_mask = np.zeros_like(data, dtype='bool')
-    if mask_type is not None:
-        for var, nodes in zip(['x', 'y', 'z'], [x_nds, y_nds, z_nds]):
-            if var in mask_type:
-                # Get the first node
-                a_nd, a_tau = nodes[0]
-                # Mask the first value of this node
-                data_mask[a_tau - n_times + n_rows_masked, a_nd] = True
-                n_rows_masked += 1
-
-    # Choose fake missing value as the earliest time entry in the first z-node
-    # from the original (non-shifted) datathat is not cutoff by max_lag or
-    # masked values from the first z-node
-    missing_flag = None
-    if missing_vals:
-        # Get the node index
-        a_nd, _ = z_nds[0]
-        # Select the earliest non-cutoff entry from the unshifted data set
-        earliest_time = max_lag + n_rows_masked
-        missing_flag = data[earliest_time, a_nd]
-        # Record that the row with this value and all rows up to max_lag after
-        # this value have been cut off as well
-        n_rows_masked += max_lag + 1
-
-    # Construct the array
-    data_f = pp.DataFrame(data, data_mask, missing_flag)
-    array, xyz = data_f.construct_array(x_nds, y_nds, z_nds,
-                                        tau_max=tau_max,
-                                        mask_type=mask_type,
-                                        verbosity=VERBOSITY)
-    # Ensure x_nds, y_nds, z_ndes are unique
-    x_nds = list(OrderedDict.fromkeys(x_nds))
-    y_nds = list(OrderedDict.fromkeys(y_nds))
-    z_nds = list(OrderedDict.fromkeys(z_nds))
-    z_nds = [node for node in z_nds
-             if (node not in x_nds) and (node not in y_nds)]
-
-    # Get the expected results
-    expect_array = np.array([list(range(data[time-n_times, node],
-                                        data[time-n_times, node]+n_times))
-                             for node, time in x_nds + y_nds + z_nds])
-    expect_xyz = np.array([0 for _ in x_nds] +\
-                          [1 for _ in y_nds] +\
-                          [2 for _ in z_nds])
-    # Apply the mask, which always blocks the latest time of the 0th node of the
-    # masked variable, which removes the first n time slices in the returned
-    # array
-    expect_array = expect_array[:, n_rows_masked:]
-    # Test the results
-    np.testing.assert_almost_equal(array, expect_array)
-    np.testing.assert_almost_equal(xyz, expect_xyz)
+# INDEPENDENCE TEST COMMON TESTS ###############################################
+def check_run_test(ind_test, sample):
+    # Get the data sample values
+    dataframe, true_parents = sample
+    # Set the dataframe of the test object
+    ind_test.set_dataframe(dataframe)
+    # Generate some nodes
+    y_nds = [(0, 0)]
+    x_nds = true_parents[0]
+    z_nds = true_parents[1]
+    tau_max = 3
+    # Run the test
+    val, pval = ind_test.run_test(x_nds, y_nds, z_nds, tau_max)
+    # Get the array the test is running on
+    array, xyz, _ = ind_test._get_array(x_nds, y_nds, z_nds, tau_max)
+    dim, T = array.shape
+    # Get the correct dependence measure
+    val_expt = ind_test.get_dependence_measure(array, xyz)
+    pval_expt = ind_test.get_significance(val, array, xyz, T, dim)
+    # Check the values are close
+    np.testing.assert_allclose(np.array(val), np.array(val_expt), atol=1e-3)
+    np.testing.assert_allclose(np.array(pval), np.array(pval_expt), atol=1e-3)
 
 # PARTIAL CORRELATION TESTING ##################################################
 @pytest.fixture(params=[
     # Generate par_corr test instances
-    #sig
-    ('analytic')])
+    #sig,            recycle,
+    ('analytic',     True),
+    ('analytic',     False),
+    ('shuffle_test', False),
+    ('fixed_thres',  False)])
 def par_corr(request):
     # Unpack the parameters
-    sig = request.param
+    sig, recycle = request.param
     # Generate the par_corr independence test
     return ParCorr(mask_type=None,
                    significance=sig,
@@ -198,7 +116,7 @@ def par_corr(request):
                    conf_lev=0.9,
                    conf_samples=10000,
                    conf_blocklength=1,
-                   recycle_residuals=False,
+                   recycle_residuals=recycle,
                    verbosity=0)
 
 @pytest.fixture(params=[
@@ -213,7 +131,20 @@ def data_sample_a(request):
     # Return the data sample
     return gen_data_sample(seed, corr_val, T)
 
-   # run_test
+@pytest.fixture(params=[
+    # Generate a test data sample
+    # Parameterize the sample by setting the autocorrelation value, coefficient
+    # value, total time length, and random seed to different numbers
+    # links_coeffs,               time, seed_val
+    (a_chain(0.1, 0.9),           1000, 2),
+    (a_chain(0.5, 0.6),           1000, 11),
+    (a_chain(0.5, 0.6, length=5), 1000, 42)])
+def data_frame_a(request):
+    # Set the parameters
+    links_coeffs, time, seed_val = request.param
+    # Generate the dataframe
+    return gen_data_frame(links_coeffs, time, seed_val)
+
    # get_measure
    # get_confidence
    # get_bootstrap_confidence
@@ -225,25 +156,9 @@ def data_sample_a(request):
    # _get_block_length
    # _get_shuffle_dist
 
-
-def test_run_test_parcorr(par_corr, a_sample):
-    # Get the data sample values
-    dataframe, true_parents = a_sample
-    # Set the dataframe of the test object
-    par_corr.set_dataframe(dataframe)
-    # Generate some nodes
-    y_nds = [(0, 0)]
-    x_nds = true_parents[0]
-    z_nds = true_parents[1]
-    tau_max = 3
-    # Run the test
-    val, pval = par_corr.run_test(X=x_nds, Y=y_nds, Z=z_nds, tau_max=tau_max)
-    # Get the array the test is running on
-    array, xyz, XYZ = par_corr._get_array(x_nds, y_nds, z_nds, tau_max)
-    dim, T = array.shape
-    # Get the correct dependence measure
-    val_expt = par_corr.get_dependence_measure(array, xyz)
-    pval_expt = par_corr.get_analytic_significance(value=val_expt, T=T, dim=dim)
+def test_run_test_parcorr(par_corr, data_frame_a):
+    # Check the run_test function
+    check_run_test(par_corr, data_frame_a)
 
 def test_bootstrap_conf_parcorr(par_corr, data_sample_a):
     # Get the data sample values
@@ -336,6 +251,24 @@ def data_sample_b(request):
     # Return the data sample
     return gen_data_sample(seed, corr_val, T)
 
+@pytest.fixture(params=[
+    # Generate a test data sample
+    # Parameterize the sample by setting the autocorrelation value, coefficient
+    # value, total time length, and random seed to different numbers
+    # links_coeffs,               time, seed_val
+    (a_chain(0.1, 0.9),           250, 2),
+    (a_chain(0.5, 0.6),           250, 11),
+    (a_chain(0.5, 0.6, length=5), 250, 42)])
+def data_frame_b(request):
+    # Set the parameters
+    links_coeffs, time, seed_val = request.param
+    # Generate the dataframe
+    return gen_data_frame(links_coeffs, time, seed_val)
+
+def test_run_test_gpdc(gpdc, data_frame_b):
+    # Check the run_test function
+    check_run_test(gpdc, data_frame_b)
+
 @pytest.mark.parametrize("seed", list(range(10)))
 def test_gpdc_residuals(gpdc, seed):
     # Set the random seed
@@ -414,6 +347,24 @@ def data_sample_c(request):
     # Return the data sample
     return gen_data_sample(seed, corr_val, T)
 
+@pytest.fixture(params=[
+    # Generate a test data sample
+    # Parameterize the sample by setting the autocorrelation value, coefficient
+    # value, total time length, and random seed to different numbers
+    # links_coeffs,               time, seed_val
+    (a_chain(0.1, 0.9),           100, 2),
+    (a_chain(0.5, 0.6),           100, 11),
+    (a_chain(0.5, 0.6, length=5), 100, 42)])
+def data_frame_c(request):
+    # Set the parameters
+    links_coeffs, time, seed_val = request.param
+    # Generate the dataframe
+    return gen_data_frame(links_coeffs, time, seed_val)
+
+def test_run_test_cmi_knn(cmi_knn, data_frame_c):
+    # Check the run_test function
+    check_run_test(cmi_knn, data_frame_c)
+
 def test_cmi_knn(cmi_knn, data_sample_c):
     # Get the data sample values
     small_array, _, corr_val, xyz, dim, T = data_sample_c
@@ -457,6 +408,28 @@ def data_sample_d(request):
     seed, corr_val, T = request.param
     # Return the data sample
     return gen_data_sample(seed, corr_val, T)
+
+@pytest.fixture(params=[
+    # Generate a test data sample
+    # Parameterize the sample by setting the autocorrelation value, coefficient
+    # value, total time length, and random seed to different numbers
+    # links_coeffs,               time, seed_val
+    (a_chain(0.1, 0.9),           100, 2),
+    (a_chain(0.5, 0.6),           100, 11),
+    (a_chain(0.5, 0.6, length=5), 100, 42)])
+def data_frame_d(request):
+    # Set the parameters
+    links_coeffs, time, seed_val = request.param
+    # Generate the dataframe
+    return gen_data_frame(links_coeffs, time, seed_val)
+
+# TODO does not work
+#def test_run_test_cmi_symb(cmi_symb, data_frame_d):
+#    # Make the data frame integer values
+#    df, parents = data_frame_d
+#    df.values = (df.values * 1000).astype(int)
+#    # Check the run_test function
+#    check_run_test(cmi_symb, (df, parents))
 
 def test_cmi_symb(cmi_symb, data_sample_d):
     # Get the data sample values
