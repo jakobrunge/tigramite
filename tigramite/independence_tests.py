@@ -452,7 +452,7 @@ class CondIndTest():
             if self.conf_lev < .5 or self.conf_lev >= 1.:
                 raise ValueError("conf_lev = %.2f, " % self.conf_lev +
                                  "but must be between 0.5 and 1")
-            half_conf = self.confidence * (1. - self.conf_lev)/2.
+            half_conf = self.conf_samples * (1. - self.conf_lev)/2.
             # TODO: ask jakob is self.confidence a string (below) or a number
             # (above)?
             if self.confidence == 'bootstrap' and  half_conf < 1.:
