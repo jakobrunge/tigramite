@@ -57,6 +57,15 @@ def _get_parents_from_results(pcmci, results, alpha_level):
                                          alpha_level=alpha_level)
     return significant_parents['parents']
 
+def gen_data_frame(links_coeffs, time, seed_val):
+    # Set the random seed
+    np.random.seed(seed_val)
+    # Generate the data
+    data, _ = pp.var_process(links_coeffs, T=time)
+    # Get the true parents
+    true_parents = _get_parent_graph(links_coeffs)
+    return pp.DataFrame(data), true_parents
+
 # TEST LINK GENERATION #########################################################
 def a_chain(auto_corr, coeff, length=3):
     """
@@ -91,20 +100,15 @@ def a_chain(auto_corr, coeff, length=3):
     # Generate a test data sample
     # Parameterize the sample by setting the autocorrelation value, coefficient
     # value, total time length, and random seed to different numbers
-    # links_coeffs,     time, seed_val
-    (a_chain(0.1, 0.9), 1000, 2),
-    (a_chain(0.5, 0.6), 1000, 11),
+    # links_coeffs,               time,  seed_val
+    (a_chain(0.1, 0.9),           1000,  2),
+    (a_chain(0.5, 0.6),           1000,  11),
     (a_chain(0.5, 0.6, length=5), 10000, 42)])
 def a_sample(request):
     # Set the parameters
     links_coeffs, time, seed_val = request.param
-    # Set the random seed
-    np.random.seed(seed_val)
-    # Generate the data
-    data, _ = pp.var_process(links_coeffs, T=time)
-    # Get the true parents
-    true_parents = _get_parent_graph(links_coeffs)
-    return pp.DataFrame(data), true_parents
+    # Generate the dataframe
+    return gen_data_frame(links_coeffs, time, seed_val)
 
 # PCMCI CONSTRUCTION ###########################################################
 @pytest.fixture(params=[
