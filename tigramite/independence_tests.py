@@ -320,17 +320,21 @@ class CondIndTest():
             The test statistic value and the p-value.
         """
 
+        # Get the array to test on 
         array, xyz, XYZ = self._get_array(X, Y, Z, tau_max)
         X, Y, Z = XYZ
-
+        # Record the dimensions
         dim, T = array.shape
-
+        # Ensure it is a valid array
         if np.isnan(array).sum() != 0:
             raise ValueError("nans in the array!")
 
+        # Check if we are recycling residuals
         if self.recycle_residuals:
+            # Check if we have calculated these residuals
             if self._keyfy(X, Z) in list(self.residuals):
                 x_resid = self.residuals[self._keyfy(X, Z)]
+            # If not, calculate the residuals
             else:
                 x_resid = self._get_single_residuals(array, target_var=0)
                 if Z:
@@ -351,22 +355,64 @@ class CondIndTest():
         else:
             val = self.get_dependence_measure(array, xyz)
 
-        if self.significance == 'analytic':
-            pval = self.get_analytic_significance(value=val, T=T, dim=dim)
+        # Get the p-value
+        pval = self.get_significance(val, array, xyz, T, dim)
 
-        elif self.significance == 'shuffle_test':
+        # Return the value and the pvalue
+        return val, pval
+    
+    def get_significance(self, val, array, xyz, T, dim, sig_override=None):
+        """
+        Returns the p-value from whichever significance function is specified
+        for this test.  If an override is used, then it will call a different
+        function then specified by self.significance
+
+        Parameters
+        ----------
+        val : float
+            Test statistic value.
+
+        array : array-like
+            data array with X, Y, Z in rows and observations in columns
+
+        xyz : array of ints
+            XYZ identifier array of shape (dim,).
+
+        T : int
+            Sample length
+
+        dim : int
+            Dimensionality, ie, number of features.
+
+        sig_override : string
+            Must be in 'analytic', 'shuffle_test', 'fixed_thres'
+
+        Returns
+        -------
+        pval : float or numpy.nan
+            P-value.
+        """
+        # Defaults to the self.signficance memeber value
+        use_sig = self.significance
+        if sig_override is not None:
+            use_sig = sig_override
+        # Check if we are using the analytic significance
+        if use_sig == 'analytic':
+            pval = self.get_analytic_significance(value=val, T=T, dim=dim)
+        # Check if we are using the shuffle significance
+        elif use_sig == 'shuffle_test':
             pval = self.get_shuffle_significance(array=array,
                                                  xyz=xyz,
                                                  value=val)
-        elif self.significance == 'fixed_thres':
+        # Check if we are using the fixed_thres significance
+        elif use_sig == 'fixed_thres':
             pval = self.get_fixed_thres_significance(
                     value=val,
                     fixed_thres=self.fixed_thres)
         else:
             raise ValueError("%s not known." % self.significance)
-
-        # Return the value and the pvalue
-        return val, pval
+        # Return the calculated value
+        return pval
 
     def get_measure(self, X, Y, Z=None, tau_max=0):
         # TODO test this function?
