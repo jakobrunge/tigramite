@@ -37,12 +37,12 @@ def _par_corr_to_cmi(par_corr):
    ##### get_confidence
    ##### get_bootstrap_confidence
    ##### _get_array
-   # _check_mask_type
-   # _get_acf
-   # _get_block_length
    # _get_shuffle_dist
    # get_fixed_thresh_sig
    # tranfo2uniform
+   ## _check_mask_type
+   ## _get_acf
+   ## _get_block_length
 # GausProc
     # TEST _get_single_residuals
     # TEST generate_and_save_nulldists
@@ -53,7 +53,6 @@ def _par_corr_to_cmi(par_corr):
     # TEST get_shuffle_sig
     # TEST get_analytic_sig
     # TEST get_dependence_measure
-
 
 # INDEPENDENCE TEST DATA GENERATION ############################################
 def gen_data_sample(seed, corr_val, T):

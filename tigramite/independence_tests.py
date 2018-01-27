@@ -688,17 +688,18 @@ class CondIndTest():
         autocorr : array of shape (max_lag + 1,)
             Autocorrelation function.
         """
+        # Set the default max lag
         if max_lag is None:
             max_lag = int(max(5, 0.1*len(series)))
-
+        # Initialize the result
         autocorr = np.ones(max_lag + 1)
+        # Iterate over possible lags
         for lag in range(1, max_lag + 1):
-
+            # Set the values
             y1_vals = series[lag:]
             y2_vals = series[:len(series) - lag]
-
+            # Calculate the autocorrelation
             autocorr[lag] = np.corrcoef(y1_vals, y2_vals, ddof=0)[0, 1]
-
         return autocorr
 
     def _get_block_length(self, array, xyz, mode):
@@ -730,49 +731,43 @@ class CondIndTest():
         block_len : int
             Optimal block length.
         """
-
+        # Inject a dependency on siganal, optimize
         from scipy import signal, optimize
-
+        # Get the shape of the array
         dim, T = array.shape
-
+        # Initiailize the indices
         indices = range(dim)
         if mode == 'significance':
             indices = np.where(xyz == 0)[0]
 
         # Maximum lag for autocov estimation
         max_lag = int(0.1*T)
-
+        # Define the function to optimize against
         def func(x_vals, a_const, decay):
             return a_const * decay**x_vals
 
+        # Calculate the block length
         block_len = 1
         for i in indices:
-
             # Get decay rate of envelope of autocorrelation functions
             # via hilbert trafo
             autocov = self._get_acf(series=array[i], max_lag=max_lag)
-
             autocov[0] = 1.
             hilbert = np.abs(signal.hilbert(autocov))
-
+            # Try to fit the curve
             try:
                 popt, _ = optimize.curve_fit(func, range(0, max_lag+1), hilbert)
                 phi = popt[1]
-
                 # Formula of Pfeifer (2005) assuming non-overlapping blocks
                 l_opt = (4. * T * (phi / (1. - phi) + phi**2 / (1. - phi)**2)**2
                          / (1. + 2. * phi / (1. - phi))**2)**(1. / 3.)
-
                 block_len = max(block_len, int(l_opt))
-
             except RuntimeError:
                 print("Error - curve_fit failed in block_shuffle, using"
                       " block_len = %d" % (int(.05 * T)))
                 block_len = max(int(.05 * T), 2)
-
         # Limit block length to a maximum of 10% of T
         block_len = min(block_len, int(0.1 * T))
-
         return block_len
 
     def _get_shuffle_dist(self, array, xyz, dependence_measure,
