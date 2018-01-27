@@ -32,11 +32,12 @@ def _par_corr_to_cmi(par_corr):
    # RCOT
 
 # CondIntTest (for all concrete)
-   # _check_mask_type
-   # _get_array
-   # get_measure
+   ##### run_test
+   ##### get_measure
    # get_confidence
    # get_bootstrap_confidence
+   # _get_array
+   # _check_mask_type
    # _get_acf
    # _get_block_length
    # _get_shuffle_dist
@@ -91,8 +92,27 @@ def check_run_test(ind_test, sample):
     val_expt = ind_test.get_dependence_measure(array, xyz)
     pval_expt = ind_test.get_significance(val, array, xyz, T, dim)
     # Check the values are close
-    np.testing.assert_allclose(np.array(val), np.array(val_expt), atol=1e-3)
-    np.testing.assert_allclose(np.array(pval), np.array(pval_expt), atol=1e-3)
+    np.testing.assert_allclose(np.array(val), np.array(val_expt), atol=1e-2)
+    np.testing.assert_allclose(np.array(pval), np.array(pval_expt), atol=1e-2)
+
+def check_get_measure(ind_test, sample):
+    # Get the data sample values
+    dataframe, true_parents = sample
+    # Set the dataframe of the test object
+    ind_test.set_dataframe(dataframe)
+    # Generate some nodes
+    y_nds = [(0, 0)]
+    x_nds = true_parents[0]
+    z_nds = true_parents[1]
+    tau_max = 3
+    # Run the test
+    val = ind_test.get_measure(x_nds, y_nds, z_nds, tau_max)
+    # Get the array the test is running on
+    array, xyz, _ = ind_test._get_array(x_nds, y_nds, z_nds, tau_max)
+    # Get the correct dependence measure
+    val_expt = ind_test.get_dependence_measure(array, xyz)
+    # Check the values are close
+    np.testing.assert_allclose(np.array(val), np.array(val_expt), atol=1e-2)
 
 # PARTIAL CORRELATION TESTING ##################################################
 @pytest.fixture(params=[
@@ -158,6 +178,10 @@ def data_frame_a(request):
 def test_run_test_parcorr(par_corr, data_frame_a):
     # Check the run_test function
     check_run_test(par_corr, data_frame_a)
+
+def test_get_measure_parcorr(par_corr, data_frame_a):
+    # Check the get_measure function
+    check_get_measure(par_corr, data_frame_a)
 
 def test_bootstrap_conf_parcorr(par_corr, data_sample_a):
     # Get the data sample values
@@ -268,6 +292,10 @@ def test_run_test_gpdc(gpdc, data_frame_b):
     # Check the run_test function
     check_run_test(gpdc, data_frame_b)
 
+def test_get_measure_gpdc(gpdc, data_frame_b):
+    # Check the get_measure function
+    check_get_measure(gpdc, data_frame_b)
+
 @pytest.mark.parametrize("seed", list(range(10)))
 def test_gpdc_residuals(gpdc, seed):
     # Set the random seed
@@ -364,6 +392,10 @@ def test_run_test_cmi_knn(cmi_knn, data_frame_c):
     # Check the run_test function
     check_run_test(cmi_knn, data_frame_c)
 
+def test_get_measure_cmi_knn(cmi_knn, data_frame_c):
+    # Check the get_measure function
+    check_get_measure(cmi_knn, data_frame_c)
+
 def test_cmi_knn(cmi_knn, data_sample_c):
     # Get the data sample values
     small_array, _, corr_val, xyz, dim, T = data_sample_c
@@ -429,6 +461,14 @@ def data_frame_d(request):
 #    df.values = (df.values * 1000).astype(int)
 #    # Check the run_test function
 #    check_run_test(cmi_symb, (df, parents))
+
+# TODO does not work
+#def test_run_test_cmi_symb(cmi_symb, data_frame_d):
+#    # Make the data frame integer values
+#    df, parents = data_frame_d
+#    df.values = (df.values * 1000).astype(int)
+#    # Check the run_test function
+#    check_get_measure(cmi_symb, (df, parents))
 
 def test_cmi_symb(cmi_symb, data_sample_d):
     # Get the data sample values

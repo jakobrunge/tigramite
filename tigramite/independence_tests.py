@@ -128,7 +128,7 @@ class CondIndTest():
                  fixed_thres=0.1,
                  sig_samples=1000,
                  sig_blocklength=None,
-                 confidence=False,
+                 confidence=None,
                  conf_lev=0.9,
                  conf_samples=100,
                  conf_blocklength=None,
@@ -157,7 +157,6 @@ class CondIndTest():
         # self.mask_type = 'y'
 
         # Set the confidence type and details
-        ## TODO this should be of string type or of None type
         self.confidence = confidence
         self.conf_lev = conf_lev
         self.conf_samples = conf_samples
@@ -282,10 +281,10 @@ class CondIndTest():
 
     def _get_array(self, X, Y, Z, tau_max=0, verbosity=None):
         """Convencience wrapper around _construct_array."""
-
+        # Set the verbosity to the default value
         if verbosity is None:
             verbosity=self.verbosity
-
+        # Call the wrapped function
         return self.dataframe.construct_array(X=X, Y=Y, Z=Z,
                                               tau_max=tau_max,
                                               mask_type=self.mask_type,
@@ -460,7 +459,6 @@ class CondIndTest():
         return pval
 
     def get_measure(self, X, Y, Z=None, tau_max=0):
-        # TODO test this function?
         """Estimate dependence measure.
 
         Calls the dependence measure function. The child classes must specify
@@ -515,31 +513,27 @@ class CondIndTest():
         (conf_lower, conf_upper) : Tuple of floats
             Upper and lower confidence bound of confidence interval.
         """
-
+        # Check if a confidence type has been defined
         if self.confidence:
+            # Ensure the confidence level given makes sense
             if self.conf_lev < .5 or self.conf_lev >= 1.:
                 raise ValueError("conf_lev = %.2f, " % self.conf_lev +
                                  "but must be between 0.5 and 1")
             half_conf = self.conf_samples * (1. - self.conf_lev)/2.
-            # TODO: ask jakob is self.confidence a string (below) or a number
-            # (above)?
             if self.confidence == 'bootstrap' and  half_conf < 1.:
                 raise ValueError("conf_samples*(1.-conf_lev)/2 is %.2f"
                                  % half_conf + ", must be >> 1")
-
+        # Make and check the array
         array, xyz, _ = self._get_array(X, Y, Z, tau_max, verbosity=0)
-
         dim, T = array.shape
-
         if np.isnan(array).sum() != 0:
             raise ValueError("nans in the array!")
-
+        
+        # Check if we are using analytic confidence or bootstrapping it
         if self.confidence == 'analytic':
             val = self.get_dependence_measure(array, xyz)
-
             (conf_lower, conf_upper) = self.get_analytic_confidence(df=T-dim,
                                     value=val, conf_lev=self.conf_lev)
-
         elif self.confidence == 'bootstrap':
             # Overwrite analytic values
             (conf_lower, conf_upper) = \
@@ -550,13 +544,12 @@ class CondIndTest():
                         conf_lev=self.conf_lev, verbosity=self.verbosity)
         elif not self.confidence:
             return None
-
         else:
             raise ValueError("%s confidence estimation not implemented"
                              % self.confidence)
-
-        # TODO do not use self.conf
+        # Cache the confidence interval
         self.conf = (conf_lower, conf_upper)
+        # Return the confidence interval
         return (conf_lower, conf_upper)
 
     def _print_cond_ind_results(self, val, pval=None, conf=None):
