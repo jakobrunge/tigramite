@@ -34,7 +34,6 @@ def _par_corr_to_cmi(par_corr):
 # CondIntTest (for all concrete)
    # _check_mask_type
    # _get_array
-   # run_test
    # get_measure
    # get_confidence
    # get_bootstrap_confidence

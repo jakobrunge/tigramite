@@ -168,8 +168,6 @@ class DataFrame():
         T, N = self.values.shape
 
         # Remove duplicates in X, Y, Z
-        # TODO go straight to XYZ here
-        # TODO are X and Y always only one node?
         X = list(OrderedDict.fromkeys(X))
         Y = list(OrderedDict.fromkeys(Y))
         Z = list(OrderedDict.fromkeys(Z))
@@ -181,22 +179,11 @@ class DataFrame():
         XYZ = X + Y + Z
         dim = len(XYZ)
 
-        # TODO REFACTOR into own command
+        # Ensure that XYZ makes sense
         if do_checks:
-            if np.array(XYZ).shape != (dim, 2):
-                raise ValueError("X, Y, Z must be lists of tuples in format"
-                                 " [(var, -lag),...], eg., [(2, -2), (1, 0), ...]")
-            if np.any(np.array(XYZ)[:, 1] > 0):
-                raise ValueError("nodes are %s, " % str(XYZ) +
-                                 "but all lags must be non-positive")
-            if (np.any(np.array(XYZ)[:, 0] >= N)
-                    or np.any(np.array(XYZ)[:, 0] < 0)):
-                raise ValueError("var indices %s," % str(np.array(XYZ)[:, 0]) +
-                                 " but must be in [0, %d]" % (N - 1))
-            if np.all(np.array(Y)[:, 1] != 0):
-                raise ValueError("Y-nodes are %s, " % str(Y) +
-                                 "but one of the Y-nodes must have zero lag")
-
+            self._check_nodes(Y, XYZ, N, dim)
+        
+        # Figure out what cut off we will be using
         if cut_off == '2xtau_max':
             max_lag = 2*tau_max
         elif cut_off == 'max_lag':
@@ -264,6 +251,43 @@ class DataFrame():
         if return_cleaned_xyz:
             return array, xyz, (X, Y, Z)
         return array, xyz
+
+    def _check_nodes(self, Y, XYZ, N, dim):
+        """
+        Checks that:
+            * The requests XYZ nodes have the correct shape
+            * All lags are non-positive
+            * All indices are less than N
+            * One of the Y nodes has zero lag
+
+        Parameters
+        ----------
+            Y : list of tuples
+                Of the form [(var, -tau)], where var specifies the variable
+                index and tau the time lag.
+
+            XYZ : list of tuples
+                List of nodes chosen for current independence test
+
+            N : int
+                Total number of listed nodes
+
+            dim : int
+                Number of nodes excluding repeated nodes
+        """
+        if np.array(XYZ).shape != (dim, 2):
+            raise ValueError("X, Y, Z must be lists of tuples in format"
+                             " [(var, -lag),...], eg., [(2, -2), (1, 0), ...]")
+        if np.any(np.array(XYZ)[:, 1] > 0):
+            raise ValueError("nodes are %s, " % str(XYZ) +
+                             "but all lags must be non-positive")
+        if (np.any(np.array(XYZ)[:, 0] >= N)
+                or np.any(np.array(XYZ)[:, 0] < 0)):
+            raise ValueError("var indices %s," % str(np.array(XYZ)[:, 0]) +
+                             " but must be in [0, %d]" % (N - 1))
+        if np.all(np.array(Y)[:, 1] != 0):
+            raise ValueError("Y-nodes are %s, " % str(Y) +
+                             "but one of the Y-nodes must have zero lag")
 
     def print_array_info(self, array, X, Y, Z, missing_flag, mask_type):
         """

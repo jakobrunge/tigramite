@@ -294,7 +294,6 @@ class CondIndTest():
                                               verbosity=verbosity)
 
     def run_test(self, X, Y, Z=None, tau_max=0):
-        # TODO test this function
         """Perform conditional independence test.
 
         Calls the dependence measure and signficicance test functions. The child
@@ -320,7 +319,7 @@ class CondIndTest():
             The test statistic value and the p-value.
         """
 
-        # Get the array to test on 
+        # Get the array to test on
         array, xyz, XYZ = self._get_array(X, Y, Z, tau_max)
         X, Y, Z = XYZ
         # Record the dimensions
@@ -328,39 +327,85 @@ class CondIndTest():
         # Ensure it is a valid array
         if np.isnan(array).sum() != 0:
             raise ValueError("nans in the array!")
-
-        # Check if we are recycling residuals
-        if self.recycle_residuals:
-            # Check if we have calculated these residuals
-            if self._keyfy(X, Z) in list(self.residuals):
-                x_resid = self.residuals[self._keyfy(X, Z)]
-            # If not, calculate the residuals
-            else:
-                x_resid = self._get_single_residuals(array, target_var=0)
-                if Z:
-                    self.residuals[self._keyfy(X, Z)] = x_resid
-
-            if self._keyfy(Y, Z) in list(self.residuals):
-                y_resid = self.residuals[self._keyfy(Y, Z)]
-            else:
-                y_resid = self._get_single_residuals(array, target_var=1)
-                if Z:
-                    self.residuals[self._keyfy(Y, Z)] = y_resid
-
-            array_resid = np.array([x_resid, y_resid])
-            xyz_resid = np.array([0, 1])
-
-            val = self.get_dependence_measure(array_resid, xyz_resid)
-
-        else:
-            val = self.get_dependence_measure(array, xyz)
-
+        # Get the dependence measure, reycling residuals if need be
+        val = self._get_dependence_measure_recycle(X, Y, Z, xyz, array)
         # Get the p-value
         pval = self.get_significance(val, array, xyz, T, dim)
-
         # Return the value and the pvalue
         return val, pval
-    
+
+    def _get_dependence_measure_recycle(self, X, Y, Z, xyz, array):
+        """Get the dependence_measure, optionally recycling residuals
+
+        If self.recycle_residuals is True, also _get_single_residuals must be
+        available.
+
+        Parameters
+        ----------
+        X, Y, Z : list of tuples
+            X,Y,Z are of the form [(var, -tau)], where var specifies the
+            variable index and tau the time lag.
+
+        xyz : array of ints
+            XYZ identifier array of shape (dim,).
+
+        array : array
+            Data array of shape (dim, T)
+
+        Return
+        ------
+        val : float
+            Test statistic
+        """
+        # Check if we are recycling residuals
+        if self.recycle_residuals:
+            # Get or calculate the cached residuals
+            x_resid = self._get_cached_residuals(X, Z, array, 0)
+            y_resid = self._get_cached_residuals(Y, Z, array, 1)
+            # Make a new residual array
+            array_resid = np.array([x_resid, y_resid])
+            xyz_resid = np.array([0, 1])
+            # Return the dependence measure
+            return self.get_dependence_measure(array_resid, xyz_resid)
+        # If not, return the dependence measure on the array and xyz
+        return self.get_dependence_measure(array, xyz)
+
+    def _get_cached_residuals(self, x_nodes, z_nodes, array, target_var):
+        """
+        Retrieve or calculate the cached residuals for the given node sets.
+
+        Parameters
+        ----------
+            x_nodes : list of tuples
+                List of nodes, X or Y normally. Used to key the residual cache
+                during lookup
+
+            z_nodes : list of tuples
+                List of nodes, Z normally
+
+            target_var : int
+                Key to differentiate X from Y.
+                x_nodes == X => 0, x_nodes == Y => 1
+
+            array : array
+                Data array of shape (dim, T)
+
+        Returns
+        -------
+            x_resid : array
+                Residuals calculated by _get_single_residual
+        """
+        # Check if we have calculated these residuals
+        if self._keyfy(x_nodes, z_nodes) in list(self.residuals):
+            x_resid = self.residuals[self._keyfy(x_nodes, z_nodes)]
+        # If not, calculate the residuals
+        else:
+            x_resid = self._get_single_residuals(array, target_var=target_var)
+            if z_nodes:
+                self.residuals[self._keyfy(x_nodes, z_nodes)] = x_resid
+        # Return these residuals
+        return x_resid
+
     def get_significance(self, val, array, xyz, T, dim, sig_override=None):
         """
         Returns the p-value from whichever significance function is specified
@@ -437,37 +482,14 @@ class CondIndTest():
             The test statistic value.
 
         """
+        # Make the array
         array, xyz, (X, Y, Z) = self._get_array(X, Y, Z, tau_max)
-
         D, T = array.shape
-
+        # Check it is valid
         if np.isnan(array).sum() != 0:
             raise ValueError("nans in the array!")
-
-        if self.recycle_residuals:
-            if self._keyfy(X, Z) in list(self.residuals):
-                x_resid = self.residuals[self._keyfy(X, Z)]
-            else:
-                x_resid = self._get_single_residuals(array, target_var=0)
-                if Z:
-                    self.residuals[self._keyfy(X, Z)] = x_resid
-
-            if self._keyfy(Y, Z) in list(self.residuals):
-                y_resid = self.residuals[self._keyfy(Y, Z)]
-            else:
-                y_resid = self._get_single_residuals(array, target_var=1)
-                if Z:
-                    self.residuals[self._keyfy(Y, Z)] = y_resid
-
-            array_resid = np.array([x_resid, y_resid])
-            xyz_resid = np.array([0, 1])
-
-            val = self.get_dependence_measure(array_resid, xyz_resid)
-
-        else:
-            val = self.get_dependence_measure(array, xyz)
-
-        return val
+        # Return the dependence measure
+        return self._get_dependence_measure_recycle(X, Y, Z, xyz, array)
 
     def get_confidence(self, X, Y, Z=None, tau_max=0):
         # TODO test this function
