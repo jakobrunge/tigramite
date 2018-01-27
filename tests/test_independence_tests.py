@@ -34,9 +34,9 @@ def _par_corr_to_cmi(par_corr):
 # CondIntTest (for all concrete)
    ##### run_test
    ##### get_measure
-   # get_confidence
-   # get_bootstrap_confidence
-   # _get_array
+   ##### get_confidence
+   ##### get_bootstrap_confidence
+   ##### _get_array
    # _check_mask_type
    # _get_acf
    # _get_block_length
@@ -73,6 +73,32 @@ def gen_data_sample(seed, corr_val, T):
     return array, val, corr_val, xyz, dim, T
 
 # INDEPENDENCE TEST COMMON TESTS ###############################################
+def check_get_array(ind_test, sample):
+    # Get the data sample values
+    dataframe, true_parents = sample
+    # Set the dataframe of the test object
+    ind_test.set_dataframe(dataframe)
+    # Generate some nodes
+    y_nds = [(0, 0)]
+    x_nds = true_parents[0]
+    z_nds = true_parents[1]
+    tau_max = 3
+    # Get the array using the wrapper function
+    a_array, a_xyz, a_xyz_nodes = \
+            ind_test._get_array(x_nds, y_nds, z_nds, tau_max)
+    # Get the array directly from the dataframe
+    b_array, b_xyz, b_xyz_nodes = \
+            dataframe.construct_array(x_nds, y_nds, z_nds,
+                                      tau_max=tau_max,
+                                      mask_type=ind_test.mask_type,
+                                      return_cleaned_xyz=True,
+                                      do_checks=False,
+                                      verbosity=ind_test.verbosity)
+    # Check the values are the same
+    np.testing.assert_allclose(a_array, b_array)
+    np.testing.assert_allclose(a_xyz, b_xyz)
+    np.testing.assert_allclose(a_xyz_nodes, b_xyz_nodes)
+
 def check_run_test(ind_test, sample):
     # Get the data sample values
     dataframe, true_parents = sample
@@ -113,6 +139,38 @@ def check_get_measure(ind_test, sample):
     val_expt = ind_test.get_dependence_measure(array, xyz)
     # Check the values are close
     np.testing.assert_allclose(np.array(val), np.array(val_expt), atol=1e-2)
+
+def check_get_confidence(ind_test, sample):
+    """
+    Compares results of current confidence interval evaluation method against
+    bootstrapped confidence interval method.  Implicitly tests
+    get_bootstrap_confidence as well.
+
+    NOTE: this is a computationally expensive test
+    """
+    # Get the data sample values
+    dataframe, true_parents = sample
+    # Set the dataframe of the test object
+    ind_test.set_dataframe(dataframe)
+    # Generate some nodes
+    y_nds = [(0, 0)]
+    x_nds = true_parents[0]
+    z_nds = true_parents[1]
+    tau_max = 3
+    # Get the confidence interval
+    conf_a = ind_test.get_confidence(x_nds, y_nds, z_nds, tau_max)
+    # Get the array the test is running on
+    array, xyz, _ = ind_test._get_array(x_nds, y_nds, z_nds, tau_max)
+    # Test current confidence interval against bootstrapped interval
+    conf_b = ind_test.get_bootstrap_confidence(
+        array,
+        xyz,
+        dependence_measure=ind_test.get_dependence_measure,
+        conf_samples=ind_test.conf_samples,
+        conf_blocklength=ind_test.conf_blocklength,
+        conf_lev=ind_test.conf_lev)
+    # Check the values are close
+    np.testing.assert_allclose(np.array(conf_a), np.array(conf_b), atol=1e-2)
 
 # PARTIAL CORRELATION TESTING ##################################################
 @pytest.fixture(params=[
@@ -174,6 +232,9 @@ def data_frame_a(request):
    # _get_acf
    # _get_block_length
    # _get_shuffle_dist
+def test_get_array_parcorr(par_corr, data_frame_a):
+    # Check the get_array function
+    check_get_array(par_corr, data_frame_a)
 
 def test_run_test_parcorr(par_corr, data_frame_a):
     # Check the run_test function
@@ -182,6 +243,10 @@ def test_run_test_parcorr(par_corr, data_frame_a):
 def test_get_measure_parcorr(par_corr, data_frame_a):
     # Check the get_measure function
     check_get_measure(par_corr, data_frame_a)
+
+def test_get_confidence_parcorr(par_corr, data_frame_a):
+    # Check the get_confidence function
+    check_get_confidence(par_corr, data_frame_a)
 
 def test_bootstrap_conf_parcorr(par_corr, data_sample_a):
     # Get the data sample values
@@ -288,13 +353,17 @@ def data_frame_b(request):
     # Generate the dataframe
     return gen_data_frame(links_coeffs, time, seed_val)
 
-def test_run_test_gpdc(gpdc, data_frame_b):
-    # Check the run_test function
-    check_run_test(gpdc, data_frame_b)
+def test_get_array_gpdc(gpdc, data_frame_b):
+    # Check the get_array function
+    check_get_array(gpdc, data_frame_b)
 
 def test_get_measure_gpdc(gpdc, data_frame_b):
     # Check the get_measure function
     check_get_measure(gpdc, data_frame_b)
+
+def test_get_confidence_gpdc(gpdc, data_frame_b):
+    # Check the get_confidence function
+    check_get_confidence(gpdc, data_frame_b)
 
 @pytest.mark.parametrize("seed", list(range(10)))
 def test_gpdc_residuals(gpdc, seed):
@@ -388,6 +457,10 @@ def data_frame_c(request):
     # Generate the dataframe
     return gen_data_frame(links_coeffs, time, seed_val)
 
+def test_get_array_cmi_knn(cmi_knn, data_frame_c):
+    # Check the get_array function
+    check_get_array(cmi_knn, data_frame_c)
+
 def test_run_test_cmi_knn(cmi_knn, data_frame_c):
     # Check the run_test function
     check_run_test(cmi_knn, data_frame_c)
@@ -395,6 +468,10 @@ def test_run_test_cmi_knn(cmi_knn, data_frame_c):
 def test_get_measure_cmi_knn(cmi_knn, data_frame_c):
     # Check the get_measure function
     check_get_measure(cmi_knn, data_frame_c)
+
+def test_get_confidence_cmi_knn(cmi_knn, data_frame_c):
+    # Check the get_confidence function
+    check_get_confidence(cmi_knn, data_frame_c)
 
 def test_cmi_knn(cmi_knn, data_sample_c):
     # Get the data sample values
