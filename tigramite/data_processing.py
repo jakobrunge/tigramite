@@ -13,6 +13,8 @@ import scipy.sparse
 import scipy.sparse.linalg
 
 # TODO force usage of pandas DF, do not support own data frame...
+# TODO have DataFrame inheret from pandas DataFrame?
+# TODO have your dataframe OWN a Panda's DataFrame
 class DataFrame():
     """Data object containing time series array and optional mask.
 
