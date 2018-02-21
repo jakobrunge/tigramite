@@ -6,7 +6,7 @@ from collections import OrderedDict
 import numpy as np
 import pytest
 
-from tigramite.independence_tests import ParCorr, GPDC, CMIsymb, CMIknn, GPACE
+from tigramite.independence_tests import ParCorr, GPDC, CMIsymb, CMIknn
 import tigramite.data_processing as pp
 
 from test_pcmci_calculations import a_chain, gen_data_frame
@@ -26,7 +26,6 @@ def _par_corr_to_cmi(par_corr):
 # Concrete classes
    # ParCorr
    # GPDC
-   # GPACE
    # CMIknn
    # CMIsymb
    # RCOT
@@ -565,3 +564,35 @@ def test_cmi_symb(cmi_symb, data_sample_d):
     np.testing.assert_allclose(np.array(_par_corr_to_cmi(corr_val)),
                                np.array(val_est),
                                atol=0.02)
+
+# OTHER TESTS ##################################################################
+@pytest.mark.parametrize("mask_type,expected", [
+    ('x', True),    # single item in acceptable list
+    ('y', True),    # single item in acceptable list
+    ('z', True),    # single item in acceptable list
+    ('xy', True),   # multiple items in acceptable list
+    ('xz', True),   # multiple items in acceptable list
+    ('yz', True),   # multiple items in acceptable list
+    ('yx', True),   # multiple items in acceptable list, swapped order
+    ('xyz', True),  # all items in acceptable list
+    ('xzy', True),  # all items in acceptable list, swapped order
+    ('a', False),   # single unacceptable item
+    ('ax', False),  # single unacceptable item and acceptable item
+    ('ab', False)]) # multiple unacceptable items
+def test_check_mask(par_corr, mask_type, expected):
+    # Set the mask type
+    par_corr.mask_type = mask_type
+    # Test the good parameter set
+    if expected:
+        try:
+            par_corr._check_mask_type()
+        # Ensure no exception is raised
+        except:
+            pytest.fail("Acceptable mask type "+mask_type+\
+                        " is incorrectly throwing an error")
+    # Test the bad parameter set
+    else:
+        err_msg = "Unacceptable mask type "+mask_type+\
+                  " is incorrectly NOT throwing an error"
+        with pytest.raises(ValueError, message=err_msg):
+            par_corr._check_mask_type()
