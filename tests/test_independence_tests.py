@@ -453,8 +453,10 @@ def test_get_measure_cmi_knn(cmi_knn, data_frame_c):
     check_get_measure(cmi_knn, data_frame_c)
 
 def test_get_confidence_cmi_knn(cmi_knn, data_frame_c):
-    # Check the get_confidence function
-    check_get_confidence(cmi_knn, data_frame_c)
+    # Skip if just checking boostrap vs. bootstrap
+    if not cmi_knn.confidence == 'bootstrap':
+        # Check the get_confidence function
+        check_get_confidence(cmi_knn, data_frame_c)
 
 def test_cmi_knn(cmi_knn, data_sample_c):
     # Get the data sample values

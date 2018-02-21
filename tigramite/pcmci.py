@@ -44,6 +44,7 @@ def _nested_to_normal(nested_dict):
     return nested_dict
 
 class PCMCI():
+    # TODO update documentation about GPACE
     r"""PCMCI causal discovery for time series datasets.
 
     PCMCI is a 2-step causal discovery method for large-scale time series

@@ -6,20 +6,18 @@
 
 from __future__ import print_function
 import warnings
-import sys
 import math
 import abc
-from scipy import special, stats
+from scipy import special, stats, spatial
 import numpy as np
 import six
 
 try:
     from sklearn import gaussian_process
 except:
-    print("Could not import sklearn for GPACE")
+    print("Could not import sklearn for Gaussian process tests")
 
 try:
-    from scipy import spatial
     from tigramite import tigramite_cython_code
 except:
     print("Could not import packages for CMIknn and GPDC estimation")
@@ -41,17 +39,6 @@ try:
     importr('RCIT')
 except:
     print("Could not import r-package RCIT")
-
-try:
-    importr('acepack')
-except:
-    print("Could not import r-package acepack for GPACE,"
-          " use python ACE package")
-
-try:
-    import ace
-except:
-    print("Could not import python ACE package for GPACE")
 
 @six.add_metaclass(abc.ABCMeta)
 class CondIndTest():
@@ -1532,278 +1519,6 @@ class GaussProcTest(CondIndTest):
         # TODO this has a bad operand type...
         score = -logli
         return score
-
-class GPACE(GaussProcTest):
-    r"""GPACE conditional independence test based on Gaussian processes and
-        maximal correlation.
-
-    GPACE is based on a Gaussian process (GP) regression and a maximal
-    correlation test on the residuals. GP is estimated with scikit-learn and
-    allows to flexibly specify kernels and hyperparameters or let them be
-    optimized automatically. The maximal correlation test is implemented with
-    the ACE estimator either from a pure python implementation (slow) or, if rpy
-    is available, using the R-package 'acepack'. Here the null distribution is
-    not analytically available, but can be precomputed with the function
-    generate_and_save_nulldists(...) which saves a \*.npz file containing the
-    null distribution for different sample sizes. This file can then be supplied
-    as null_dist_filename.
-
-    Notes
-    -----
-    As described in [1]_, GPACE is based on a Gaussian
-    process (GP) regression and a maximal correlation test on the residuals. To
-    test :math:`X \perp Y | Z`, first  :math:`Z` is regressed out from :math:`X`
-    and :math:`Y` assuming the  model
-
-    .. math::  X & =  f_X(Z) + \epsilon_{X} \\
-        Y & =  f_Y(Z) + \epsilon_{Y}  \\
-        \epsilon_{X,Y} &\sim \mathcal{N}(0, \sigma^2)
-
-    using GP regression. Here :math:`\sigma^2` and the kernel bandwidth are
-    optimzed using ``sklearn``. Then the residuals  are transformed to uniform
-    marginals yielding :math:`r_X,r_Y` and their dependency is tested with
-
-    .. math::  \max_{g,h}\rho\left(g(r_X),h(r_Y)\right)
-
-    where :math:`g,h` yielding maximal correlation are obtained using the
-    Alternating Conditional Expectation (ACE) algorithm. The null distribution
-    of the maximal correlation can be pre-computed.
-
-    Parameters
-    ----------
-    null_dist_filename : str, otional (default: None)
-        Path to file containing null distribution.
-
-    gp_version : {'new', 'old'}, optional (default: 'new')
-        The older GP version from scikit-learn 0.17 was used for the numerical
-        simulations in [1]_. The newer version from scikit-learn 0.19 is faster
-        and allows more flexibility regarding kernels etc.
-
-    gp_params : dictionary, optional (default: None)
-        Dictionary with parameters for ``GaussianProcessRegressor``.
-
-    ace_version : {'python', 'acepack'}
-        Estimator for ACE estimator of maximal correlation to use. 'python'
-        loads the very slow pure python version available from
-        https://pypi.python.org/pypi/ace/0.3. 'acepack' loads the much faster
-        version from the R-package acepack. This requires the R-interface
-        rpy2 to be installed and acepack needs to be installed in R beforehand.
-        Note that both versions 'python' and 'acepack' may result in different
-        results. In [1]_ the acepack version was used.
-
-    **kwargs :
-        Arguments passed on to parent class GaussProcTest.
-
-    """
-    @property
-    def measure(self):
-        """
-        Concrete property to return the measure of the independence test
-        """
-        return self._measure
-
-    def __init__(self,
-                 null_dist_filename=None,
-                 gp_version='new',
-                 gp_params=None,
-                 ace_version='acepack',
-                 **kwargs):
-        # Load the member variables
-        self.ace_version = ace_version
-        self._measure = 'gp_ace'
-        self.two_sided = False
-        self.residual_based = True
-        # Load null-dist file, adapt if necessary
-        self.null_dist_filename = null_dist_filename
-        # Call the parent constructor
-        GaussProcTest.__init__(self,
-                               gp_version=gp_version,
-                               gp_params=gp_params,
-                               **kwargs)
-
-        if self.verbosity > 0:
-            print("null_dist_filename = %s" % self.null_dist_filename)
-            print("gp_version = %s" % self.gp_version)
-            if self.gp_params is not None:
-                for key in  list(self.gp_params):
-                    print("%s = %s" % (key, self.gp_params[key]))
-            print("ace_version = %s" % self.ace_version)
-            print("")
-
-    def get_dependence_measure(self, array, xyz):
-        # TODO test this function
-        """Return GPACE measure.
-
-        Estimated as the maximal correlation of the residuals of a GP
-        regression.
-
-        Parameters
-        ----------
-        array : array-like
-            data array with X, Y, Z in rows and observations in columns
-
-        xyz : array of ints
-            XYZ identifier array of shape (dim,).
-
-        Returns
-        -------
-        val : float
-            GPACE test statistic.
-        """
-        # TODO abstract this function
-        x_vals = self._get_single_residuals(array, target_var=0)
-        y_vals = self._get_single_residuals(array, target_var=1)
-        val = self._get_maxcorr(np.array([x_vals, y_vals]))
-        return val
-
-    def _get_maxcorr(self, array_resid):
-        # TODO test this function
-        """Return maximal correlation coefficient estimated by ACE.
-
-        Method is described in [1]_. The maximal correlation test is implemented
-        with the ACE estimator either from a pure python implementation (slow)
-        or, if rpy is available, using the R-package 'acepack'. The variables
-        are transformed to uniform marginals using the empirical cumulative
-        distribution function beforehand. Here the null distribution is not
-        analytically available, but can be precomputed with the function
-        generate_and_save_nulldists(...) which saves a \*.npz file containing
-        the null distribution for different sample sizes. This file can then be
-        supplied as null_dist_filename.
-
-        Parameters
-        ----------
-        array_resid : array-like
-            data array must be of shape (2, T)
-
-        Returns
-        -------
-        val : float
-            Maximal correlation coefficient.
-        """
-
-        # Remove ties before applying transformation to uniform marginals
-        # array_resid = self._remove_ties(array_resid, verbosity=4)
-
-        x, y = self._trafo2uniform(array_resid)
-
-        if self.ace_version == 'python':
-            # TODO clean this up
-            class Suppressor(object):
-                """Wrapper class to prevent output from ACESolver."""
-                def __enter__(self):
-                    self.stdout = sys.stdout
-                    sys.stdout = self
-                def __exit__(self, type, value, traceback):
-                    sys.stdout = self.stdout
-                def write(self, x):
-                    pass
-            myace = ace.ace.ACESolver()
-            myace.specify_data_set([x], y)
-            with Suppressor():
-                myace.solve()
-            val = np.corrcoef(myace.x_transforms[0], myace.y_transform)[0, 1]
-
-        elif self.ace_version == 'acepack':
-            # TODO undefined import used here
-            ace_rpy = rpy2.robjects.r['ace'](x, y)
-            val = np.corrcoef(np.asarray(ace_rpy[8]).flatten(),
-                              np.asarray(ace_rpy[9]))[0, 1]
-        else:
-            raise ValueError("ace_version must be 'python' or 'acepack'")
-
-        return val
-
-
-    def get_shuffle_significance(self, array, xyz, value,
-                                 return_null_dist=False):
-        # TODO test this function
-        """Returns p-value for shuffle significance test.
-
-        For residual-based test statistics only the residuals are shuffled.
-
-        Parameters
-        ----------
-        array : array-like
-            data array with X, Y, Z in rows and observations in columns
-
-        xyz : array of ints
-            XYZ identifier array of shape (dim,).
-
-        value : number
-            Value of test statistic for unshuffled estimate.
-
-        Returns
-        -------
-        pval : float
-            p-value
-        """
-
-        x_val = self._get_single_residuals(array, target_var=0)
-        y_val = self._get_single_residuals(array, target_var=1)
-        array_resid = np.array([x_val, y_val])
-        xyz_resid = np.array([0, 1])
-
-        null_dist = self._get_shuffle_dist(array_resid, xyz_resid,
-                                           self.get_dependence_measure,
-                                           sig_samples=self.sig_samples,
-                                           sig_blocklength=self.sig_blocklength,
-                                           verbosity=self.verbosity)
-
-        pval = (null_dist >= value).mean()
-
-        if return_null_dist:
-            return pval, null_dist
-        return pval
-
-    def get_analytic_significance(self, value, T, dim):
-        # TODO test this function as well
-        """Returns p-value for the maximal correlation coefficient.
-
-        The null distribution for necessary degrees of freedom (df) is loaded.
-        If not available, the null distribution is generated with the function
-        generate_nulldist(). It can be precomputed with the function
-        generate_and_save_nulldists(...) which saves a \*.npz file containing the
-        null distribution for different sample sizes. This file can then be
-        supplied as null_dist_filename. The maximal correlation coefficient is
-        one-sided. If the degrees of freedom are less than 1, numpy.nan is
-        returned.
-
-        Parameters
-        ----------
-        value : float
-            Test statistic value.
-
-        T : int
-            Sample length
-
-        dim : int
-            Dimensionality, ie, number of features.
-
-        Returns
-        -------
-        pval : float or numpy.nan
-            P-value.
-        """
-
-        # GP regression approximately doesn't cost degrees of freedom
-        df = T
-
-        if df < 1:
-            pval = np.nan
-        else:
-            # idx_near = (np.abs(self.sample_sizes - df)).argmin()
-
-            if int(df) not in list(self.null_dists):
-            # np.abs(self.sample_sizes[idx_near] - df) / float(df) > 0.01:
-                if self.verbosity > 0:
-                    print("Null distribution for GPACE not available "
-                          "for deg. of freed. = %d." % df)
-                self.generate_nulldist(df)
-
-            null_dist_here = self.null_dists[df]
-            pval = np.mean(null_dist_here > np.abs(value))
-
-        return pval
 
 class GPDC(GaussProcTest):
     r"""GPDC conditional independence test based on Gaussian processes and

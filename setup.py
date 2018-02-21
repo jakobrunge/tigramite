@@ -51,7 +51,6 @@ INSTALL_REQUIRES = ["numpy", "scipy", "six"]
 # Define the all the possible extras needed
 EXTRAS_REQUIRE = {
     'all' : ['scikit-learn>=0.18',#Gaussian Process (GP) Regression
-             'ace>=0.3',          #pure-python ACE
              'matplotlib>=1.5',   #plotting
              'networkx>=1.10',    #plotting
              'statsmodels'],      #p-value corrections

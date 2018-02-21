@@ -9,7 +9,7 @@ import pytest
 from scipy.misc import comb
 
 from tigramite.pcmci import PCMCI
-from tigramite.independence_tests import ParCorr #, GPACE
+from tigramite.independence_tests import ParCorr
 import tigramite.data_processing as pp
 
 from test_pcmci_calculations import a_chain
