@@ -1195,7 +1195,7 @@ class ParCorr(CondIndTest):
         score = T * np.log(rss) + 2. * p
         return score
 
-class GaussProcReg(CondIndTest):
+class GaussProcReg():
     r"""Gaussian processes abstract base class.
 
     GP is estimated with scikit-learn and allows to flexibly specify kernels and
@@ -1213,6 +1213,14 @@ class GaussProcReg(CondIndTest):
 
     Parameters
     ----------
+    null_samples : int
+        Number of null samples to use
+
+    cond_ind_test : CondIndTest
+        Conditional independence test that this Gaussian Proccess Regressor will
+        calculate the null distribution for.  This is used to grab the
+        get_dependence_measure function.
+
     gp_version : {'new', 'old'}, optional (default: 'new')
         The older GP version from scikit-learn 0.17 was used for the numerical
         simulations in [1]_. The newer version from scikit-learn 0.19 is faster
@@ -1224,21 +1232,24 @@ class GaussProcReg(CondIndTest):
     null_dist_filename : str, otional (default: None)
         Path to file containing null distribution.
 
-    **kwargs :
-        Arguments passed on to parent class CondIndTest.
+    verbosity : int, optional (default: 0)
+        Level of verbosity.
     """
     def __init__(self,
+                 null_samples,
+                 cond_ind_test,
                  gp_version='new',
                  gp_params=None,
                  null_dist_filename=None,
-                 **kwargs):
-        # Call the parent constructor
-        CondIndTest.__init__(self, **kwargs)
+                 verbosity=0):
+        # Set the dependence measure function
+        self.cond_ind_test = cond_ind_test
         # Set member variables
         self.gp_version = gp_version
         self.gp_params = gp_params
+        self.verbosity = verbosity
         # Set the null distribution defaults
-        self.null_samples = self.sig_samples
+        self.null_samples = null_samples
         self.null_dists = {}
         self.null_dist_filename = null_dist_filename
         # Check if we are loading a null distrubtion from a cached file
@@ -1248,7 +1259,7 @@ class GaussProcReg(CondIndTest):
 
     def _load_nulldist(self, filename):
         # TODO check docstring with jakob
-        """
+        r"""
         Load a precomputed null distribution from a \*.npz file.  This
         distribution can be calculated using generate_and_save_nulldists(...).
 
@@ -1269,7 +1280,8 @@ class GaussProcReg(CondIndTest):
         null_samples = len(null_dist_file['exact_dist'][0])
         return null_dists, null_samples
 
-    def generate_nulldist(self, df, add_to_null_dists=True):
+    def _generate_nulldist(self, df,
+                           add_to_null_dists=True):
         # TODO test this function
         """Generates null distribution for pairwise independence tests.
 
@@ -1295,7 +1307,6 @@ class GaussProcReg(CondIndTest):
 
         if self.verbosity > 0:
             print("Generating null distribution for df = %d. " % df)
-
             if add_to_null_dists:
                 print("For faster computations, run function "
                       "generate_and_save_nulldists(...) to "
@@ -1308,16 +1319,14 @@ class GaussProcReg(CondIndTest):
         null_dist = np.zeros(self.null_samples)
         for i in range(self.null_samples):
             array = np.random.rand(2, df)
-            null_dist[i] = self.get_dependence_measure(array, xyz)
+            null_dist[i] = self.cond_ind_test.get_dependence_measure(array, xyz)
 
         null_dist.sort()
-        # TODO only return if not add_to_null_dists??
         if add_to_null_dists:
             self.null_dists[df] = null_dist
-        else:
-            return null_dist
+        return null_dist
 
-    def generate_and_save_nulldists(self, sample_sizes, null_dist_filename):
+    def _generate_and_save_nulldists(self, sample_sizes, null_dist_filename):
         # TODO test this function
         """Generates and saves null distribution for pairwise independence
         tests.
@@ -1338,10 +1347,10 @@ class GaussProcReg(CondIndTest):
 
         self.null_dist_filename = null_dist_filename
 
-        null_dists = np.zeros((len(sample_sizes), self.sig_samples))
+        null_dists = np.zeros((len(sample_sizes), self.null_samples))
 
         for iT, T in enumerate(sample_sizes):
-            null_dists[iT] = self.generate_nulldist(T, add_to_null_dists=False)
+            null_dists[iT] = self._generate_nulldist(T, add_to_null_dists=False)
             self.null_dists[T] = null_dists[iT]
 
         np.savez("%s" % null_dist_filename,
@@ -1475,7 +1484,7 @@ class GaussProcReg(CondIndTest):
             return resid, mean, likelihood
         return resid
 
-    def get_model_selection_criterion(self, j, parents, tau_max=0):
+    def _get_model_selection_criterion(self, j, parents, tau_max=0):
         # TODO test this function
         """Returns log marginal likelihood for GP regression.
 
@@ -1503,12 +1512,14 @@ class GaussProcReg(CondIndTest):
         Y = [(j, 0)]
         X = [(j, 0)]   # dummy variable here
         Z = parents
-        array, xyz = self.dataframe.construct_array(X=X, Y=Y, Z=Z,
-                                                    tau_max=tau_max,
-                                                    mask_type=self.mask_type,
-                                                    return_cleaned_xyz=False,
-                                                    do_checks=False,
-                                                    verbosity=self.verbosity)
+        array, xyz = \
+                self.cond_ind_test.dataframe.construct_array(
+                    X=X, Y=Y, Z=Z,
+                    tau_max=tau_max,
+                    mask_type=self.cond_ind_test.mask_type,
+                    return_cleaned_xyz=False,
+                    do_checks=False,
+                    verbosity=self.verbosity)
 
         dim, T = array.shape
 
@@ -1520,7 +1531,7 @@ class GaussProcReg(CondIndTest):
         score = -logli
         return score
 
-class GPDC(GaussProcReg):
+class GPDC(CondIndTest):
     r"""GPDC conditional independence test based on Gaussian processes and
         distance correlation.
 
@@ -1595,33 +1606,150 @@ class GPDC(GaussProcReg):
         self._measure = 'gp_dc'
         self.two_sided = False
         self.residual_based = True
-        # Load null-dist file, adapt if necessary
-        self.null_dist_filename = null_dist_filename
         # Call the parent constructor
-        GaussProcReg.__init__(self,
-                               gp_version=gp_version,
-                               gp_params=gp_params,
-                               **kwargs)
+        CondIndTest.__init__(self, **kwargs)
+        # Build the regressor
+        self.gauss_pr = GaussProcReg(self.sig_samples,
+                                     self,
+                                     gp_version=gp_version,
+                                     gp_params=gp_params,
+                                     null_dist_filename=null_dist_filename,
+                                     verbosity=self.verbosity)
 
         if self.verbosity > 0:
-            print("null_dist_filename = %s" % self.null_dist_filename)
-            print("gp_version = %s" % self.gp_version)
-            if self.gp_params is not None:
-                for key in  list(self.gp_params):
-                    print("%s = %s" % (key, self.gp_params[key]))
+            print("null_dist_filename = %s" % self.gauss_pr.null_dist_filename)
+            print("gp_version = %s" % self.gauss_pr.gp_version)
+            if self.gauss_pr.gp_params is not None:
+                for key in  list(self.gauss_pr.gp_params):
+                    print("%s = %s" % (key, self.gauss_pr.gp_params[key]))
             print("")
 
-        if null_dist_filename is None:
-            self.null_samples = self.sig_samples
-            self.null_dists = {}
-        else:
-            null_dist_file = np.load(null_dist_filename)
-            # self.sample_sizes = null_dist_file['T']
-            self.null_dists = dict(zip(null_dist_file['T'],
-                                       null_dist_file['exact_dist']))
-            # print self.null_dist
-            self.null_samples = len(null_dist_file['exact_dist'][0])
+    def _load_nulldist(self, filename):
+        r"""
+        Load a precomputed null distribution from a \*.npz file.  This
+        distribution can be calculated using generate_and_save_nulldists(...).
 
+        Parameters
+        ----------
+        filename : strng
+            Path to the \*.npz file
+
+        Returns
+        -------
+        null_dists, null_samples : dict, int
+            The null distirbution as a dictionary of distributions keyed by
+            sample size, the number of null samples in total.
+        """
+        return self.gauss_pr._load_nulldist(filename)
+
+    def generate_nulldist(self, df, add_to_null_dists=True):
+        """Generates null distribution for pairwise independence tests.
+
+        Generates the null distribution for sample size df. Assumes pairwise
+        samples transformed to uniform marginals. Uses get_dependence_measure
+        available in class and generates self.sig_samples random samples. Adds
+        the null distributions to self.gauss_pr.null_dists.
+
+        Parameters
+        ----------
+        df : int
+            Degrees of freedom / sample size to generate null distribution for.
+
+        add_to_null_dists : bool, optional (default: True)
+            Whether to add the null dist to the dictionary of null dists or
+            just return it.
+
+        Returns
+        -------
+        null_dist : array of shape [df,]
+            Only returned,if add_to_null_dists is False.
+        """
+        return self.gauss_pr._generate_nulldist(df, add_to_null_dists)
+
+    def generate_and_save_nulldists(self, sample_sizes, null_dist_filename):
+        """Generates and saves null distribution for pairwise independence
+        tests.
+
+        Generates the null distribution for different sample sizes. Calls
+        generate_nulldist. Null dists are saved to disk as
+        self.null_dist_filename.npz. Also adds the null distributions to
+        self.gauss_pr.null_dists.
+
+        Parameters
+        ----------
+        sample_sizes : list
+            List of sample sizes.
+
+        null_dist_filename : str
+            Name to save file containing null distributions.
+        """
+        self.gauss_pr._generate_and_save_nulldists(sample_sizes,
+                                                   null_dist_filename)
+
+    def _get_single_residuals(self, array, target_var,
+                              return_means=False,
+                              standardize=True,
+                              return_likelihood=False):
+        """Returns residuals of Gaussian process regression.
+
+        Performs a GP regression of the variable indexed by target_var on the
+        conditions Z. Here array is assumed to contain X and Y as the first two
+        rows with the remaining rows (if present) containing the conditions Z.
+        Optionally returns the estimated mean and the likelihood.
+
+        Parameters
+        ----------
+        array : array-like
+            data array with X, Y, Z in rows and observations in columns
+
+        target_var : {0, 1}
+            Variable to regress out conditions from.
+
+        standardize : bool, optional (default: True)
+            Whether to standardize the array beforehand.
+
+        return_means : bool, optional (default: False)
+            Whether to return the estimated regression line.
+
+        return_likelihood : bool, optional (default: False)
+            Whether to return the log_marginal_likelihood of the fitted GP
+
+        Returns
+        -------
+        resid [, mean, likelihood] : array-like
+            The residual of the regression and optionally the estimated mean
+            and/or the likelihood.
+        """
+        return self.gauss_pr._get_single_residuals(
+            array, target_var,
+            return_means,
+            standardize,
+            return_likelihood)
+
+    def get_model_selection_criterion(self, j, parents, tau_max=0):
+        """Returns log marginal likelihood for GP regression.
+
+        Fits a GP model of the parents to variable j and returns the negative
+        log marginal likelihood as a model selection score. Is used to determine
+        optimal hyperparameters in PCMCI, in particular the pc_alpha value.
+
+        Parameters
+        ----------
+        j : int
+            Index of target variable in data array.
+
+        parents : list
+            List of form [(0, -1), (3, -2), ...] containing parents.
+
+        tau_max : int, optional (default: 0)
+            Maximum time lag. This may be used to make sure that estimates for
+            different lags in X, Z, all have the same sample size.
+
+        Returns:
+        score : float
+            Model score.
+        """
+        return self.gauss_pr._get_model_selection_criterion(j, parents, tau_max)
 
     def get_dependence_measure(self, array, xyz):
         # TODO test this function
@@ -1756,13 +1884,13 @@ class GPDC(GaussProcReg):
             pval = np.nan
         else:
             # idx_near = (np.abs(self.sample_sizes - df)).argmin()
-            if int(df) not in list(self.null_dists):
+            if int(df) not in list(self.gauss_pr.null_dists):
             # if np.abs(self.sample_sizes[idx_near] - df) / float(df) > 0.01:
                 if self.verbosity > 0:
                     print("Null distribution for GPDC not available "
                           "for deg. of freed. = %d." % df)
                 self.generate_nulldist(df)
-            null_dist_here = self.null_dists[int(df)]
+            null_dist_here = self.gauss_pr.null_dists[int(df)]
             pval = np.mean(null_dist_here > np.abs(value))
         return pval
 
