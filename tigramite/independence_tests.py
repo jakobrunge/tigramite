@@ -490,7 +490,6 @@ class CondIndTest():
         return self._get_dependence_measure_recycle(X, Y, Z, xyz, array)
 
     def get_confidence(self, X, Y, Z=None, tau_max=0):
-        # TODO test this function
         """Perform confidence interval estimation.
 
         Calls the dependence measure and confidence test functions. The child
@@ -528,12 +527,14 @@ class CondIndTest():
         dim, T = array.shape
         if np.isnan(array).sum() != 0:
             raise ValueError("nans in the array!")
-        
+
         # Check if we are using analytic confidence or bootstrapping it
         if self.confidence == 'analytic':
             val = self.get_dependence_measure(array, xyz)
-            (conf_lower, conf_upper) = self.get_analytic_confidence(df=T-dim,
-                                    value=val, conf_lev=self.conf_lev)
+            (conf_lower, conf_upper) = \
+                    self.get_analytic_confidence(df=T-dim,
+                                                 value=val,
+                                                 conf_lev=self.conf_lev)
         elif self.confidence == 'bootstrap':
             # Overwrite analytic values
             (conf_lower, conf_upper) = \

@@ -173,21 +173,22 @@ def check_get_confidence(ind_test, sample):
 # PARTIAL CORRELATION TESTING ##################################################
 @pytest.fixture(params=[
     # Generate par_corr test instances
-    #sig,            recycle,
-    ('analytic',     True),
-    ('analytic',     False),
-    ('shuffle_test', False),
-    ('fixed_thres',  False)])
+    #sig,            recycle, confidence
+    ('analytic',     True,    'analytic'),
+    ('analytic',     False,   'analytic'),
+    ('analytic',     False,   'bootstrap'),
+    ('shuffle_test', False,   'analytic'),
+    ('fixed_thres',  False,   'analytic')])
 def par_corr(request):
     # Unpack the parameters
-    sig, recycle = request.param
+    sig, recycle, conf = request.param
     # Generate the par_corr independence test
     return ParCorr(mask_type=None,
                    significance=sig,
                    fixed_thres=0.1,
                    sig_samples=10000,
                    sig_blocklength=3,
-                   confidence='analytic',
+                   confidence=conf,
                    conf_lev=0.9,
                    conf_samples=10000,
                    conf_blocklength=1,
@@ -245,24 +246,6 @@ def test_get_measure_parcorr(par_corr, data_frame_a):
 def test_get_confidence_parcorr(par_corr, data_frame_a):
     # Check the get_confidence function
     check_get_confidence(par_corr, data_frame_a)
-
-def test_bootstrap_conf_parcorr(par_corr, data_sample_a):
-    # Get the data sample values
-    array, val, _, xyz, dim, T = data_sample_a
-    # Get the analytic confidence interval
-    conf_a = par_corr.get_analytic_confidence(df=T-dim,
-                                              value=val,
-                                              conf_lev=par_corr.conf_lev)
-    # Bootstrap the confidence interval
-    conf_b = par_corr.get_bootstrap_confidence(
-        array,
-        xyz,
-        dependence_measure=par_corr.get_dependence_measure,
-        conf_samples=par_corr.conf_samples,
-        conf_blocklength=par_corr.conf_blocklength,
-        conf_lev=par_corr.conf_lev)
-    # Ensure the two intervals are the same
-    np.testing.assert_allclose(np.array(conf_a), np.array(conf_b), atol=0.01)
 
 # TODO test null distribution
 def test_shuffle_sig_parcorr(par_corr, data_sample_a):
@@ -328,9 +311,9 @@ def gpdc(request):
 @pytest.fixture(params=[
     # Generate the sample to be used for confidence interval comparison
     #seed, corr_val, T
-    (5,    0.3,      250),  # Default
-    (6,    0.3,      250),  # New Seed
-    (1,    0.9,      250)]) # Strong Correlation
+    (5,    0.3,      200),  # Default
+    (6,    0.3,      200),  # New Seed
+    (1,    0.9,      200)]) # Strong Correlation
 def data_sample_b(request):
     # Unpack the parameters
     seed, corr_val, T = request.param
@@ -360,8 +343,10 @@ def test_get_measure_gpdc(gpdc, data_frame_b):
     check_get_measure(gpdc, data_frame_b)
 
 def test_get_confidence_gpdc(gpdc, data_frame_b):
-    # Check the get_confidence function
-    check_get_confidence(gpdc, data_frame_b)
+    # Skip if just checking boostrap vs. bootstrap
+    if not gpdc.confidence == 'bootstrap':
+        # Check the get_confidence function
+        check_get_confidence(gpdc, data_frame_b)
 
 @pytest.mark.parametrize("seed", list(range(10)))
 def test_gpdc_residuals(gpdc, seed):
