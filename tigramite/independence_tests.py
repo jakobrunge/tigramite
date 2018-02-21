@@ -1195,7 +1195,7 @@ class ParCorr(CondIndTest):
         score = T * np.log(rss) + 2. * p
         return score
 
-class GaussProcTest(CondIndTest):
+class GaussProcReg(CondIndTest):
     r"""Gaussian processes abstract base class.
 
     GP is estimated with scikit-learn and allows to flexibly specify kernels and
@@ -1520,7 +1520,7 @@ class GaussProcTest(CondIndTest):
         score = -logli
         return score
 
-class GPDC(GaussProcTest):
+class GPDC(GaussProcReg):
     r"""GPDC conditional independence test based on Gaussian processes and
         distance correlation.
 
@@ -1577,7 +1577,7 @@ class GPDC(GaussProcTest):
         Dictionary with parameters for ``GaussianProcessRegressor``.
 
     **kwargs :
-        Arguments passed on to parent class GaussProcTest.
+        Arguments passed on to parent class GaussProcReg.
 
     """
     @property
@@ -1598,7 +1598,7 @@ class GPDC(GaussProcTest):
         # Load null-dist file, adapt if necessary
         self.null_dist_filename = null_dist_filename
         # Call the parent constructor
-        GaussProcTest.__init__(self,
+        GaussProcReg.__init__(self,
                                gp_version=gp_version,
                                gp_params=gp_params,
                                **kwargs)
