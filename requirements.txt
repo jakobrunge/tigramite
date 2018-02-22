@@ -5,3 +5,4 @@ ace >= 0.3.0
 matplotlib >= 1.5.1
 networkx == 1.10.0
 statsmodels >= 0.8.0
+six >= 1.9.0

@@ -6,9 +6,10 @@ from collections import OrderedDict
 import numpy as np
 import pytest
 
-from tigramite.independence_tests import ParCorr, GPDC, CMIsymb, CMIknn #, GPACE
-from tigramite.independence_tests import _construct_array
+from tigramite.independence_tests import ParCorr, GPDC, CMIsymb, CMIknn
 import tigramite.data_processing as pp
+
+from test_pcmci_calculations import a_chain, gen_data_frame
 
 # Pylint settings
 # pylint: disable=redefined-outer-name
@@ -20,30 +21,39 @@ def _par_corr_to_cmi(par_corr):
     """Transformation of partial correlation to CMI scale."""
     return -0.5 * np.log(1. - par_corr**2)
 
+### CHECK LIST ###
 
-# INDEPENDENCE TEST GENERATION #################################################
-def rand_node(t_min, n_max, t_max=0, n_min=0):
-    """
-    Generate a random node to test
-    """
-    rand_node = np.random.randint(n_min, n_max)
-    rand_time = np.random.randint(t_min, t_max)
-    return (rand_node, rand_time)
+# Concrete classes
+   # ParCorr
+   # GPDC
+   # CMIknn
+   # CMIsymb
+   # RCOT
 
-def gen_nodes(n_nodes, seed, t_min, n_max):
-    """
-    Generate some random nodes to tests
-    """
-    # Set the seed if needed
-    np.random.seed(seed)
-    # Y nodes are always at (0, 0)
-    y_nds = [(0, 0)]
-    # X nodes is only one node
-    x_nds = [rand_node(t_min, n_max)]
-    # Z nodes are multiple nodes
-    z_nds = [rand_node(t_min, n_max) for _ in range(n_nodes)]
-    return x_nds, y_nds, z_nds
+# CondIntTest (for all concrete)
+   ##### run_test
+   ##### get_measure
+   ##### get_confidence
+   ##### get_bootstrap_confidence
+   ##### _get_array
+   # tranfo2uniform
+   ## _check_mask_type
+   ## _get_acf
+   ## _get_block_length
+   ## _get_shuffle_dist
+   ## get_fixed_thresh_sig
+# GausProc
+    # TEST _get_single_residuals
+    # TEST generate_and_save_nulldists
+    # TEST generate_nulldist
+    # TEST _load_nulldist
+# GPDC
+    # TEST _get_max_corr
+    # TEST get_shuffle_sig
+    # TEST get_analytic_sig
+    # TEST get_dependence_measure
 
+# INDEPENDENCE TEST DATA GENERATION ############################################
 def gen_data_sample(seed, corr_val, T):
     # Set the random seed
     np.random.seed(seed)
@@ -60,112 +70,129 @@ def gen_data_sample(seed, corr_val, T):
     # Return the array, the value, and the xyz array
     return array, val, corr_val, xyz, dim, T
 
-# CONSTRUCT ARRAY TESTING ######################################################
-@pytest.fixture(params=[
-    # Parameterize the array construction
-    #(X, Y, Z) nodes,        t_max, m_val, mask_type
-    (gen_nodes(3, 0, -3, 9), 3,     False, None),           # Few nodes
-    (gen_nodes(7, 1, -3, 9), 3,     False, None),           # More nodes
-    (gen_nodes(7, 2, -3, 3), 3,     False, None),           # Repeated nodes
-    (gen_nodes(7, 3, -3, 9), 3,     True,  None),           # Missing vals
-    (gen_nodes(7, 4, -3, 9), 3,     True,  ['x']),          # M-val + masked x
-    (gen_nodes(7, 4, -3, 9), 3,     True,  ['x','y']),      # M-val + masked xy
-    (gen_nodes(3, 5, -4, 9), 2,     False, ['x']),          # masked x
-    (gen_nodes(3, 6, -4, 9), 2,     False, ['y']),          # masked y
-    (gen_nodes(3, 7, -4, 9), 2,     False, ['z']),          # masked z
-    (gen_nodes(3, 7, -4, 9), 2,     False, ['x','y','z'])]) # mask xyz
-def cstrct_array_params(request):
-    return request.param
+# INDEPENDENCE TEST COMMON TESTS ###############################################
+def check_get_array(ind_test, sample):
+    # Get the data sample values
+    dataframe, true_parents = sample
+    # Set the dataframe of the test object
+    ind_test.set_dataframe(dataframe)
+    # Generate some nodes
+    y_nds = [(0, 0)]
+    x_nds = true_parents[0]
+    z_nds = true_parents[1]
+    tau_max = 3
+    # Get the array using the wrapper function
+    a_array, a_xyz, a_xyz_nodes = \
+            ind_test._get_array(x_nds, y_nds, z_nds, tau_max)
+    # Get the array directly from the dataframe
+    b_array, b_xyz, b_xyz_nodes = \
+            dataframe.construct_array(x_nds, y_nds, z_nds,
+                                      tau_max=tau_max,
+                                      mask_type=ind_test.mask_type,
+                                      return_cleaned_xyz=True,
+                                      do_checks=False,
+                                      verbosity=ind_test.verbosity)
+    # Check the values are the same
+    np.testing.assert_allclose(a_array, b_array)
+    np.testing.assert_allclose(a_xyz, b_xyz)
+    np.testing.assert_allclose(a_xyz_nodes, b_xyz_nodes)
 
-def test_construct_array(cstrct_array_params):
-    # Unpack the parameters
-    (x_nds, y_nds, z_nds), tau_max, missing_vals, mask_type =\
-        cstrct_array_params
-    # Make some fake data
-    data = np.arange(1000).reshape(10, 100).T
-    # Get the needed parameters from the data
-    T, N = data.shape
-    max_lag = 2*tau_max
-    n_times = T - max_lag
+def check_run_test(ind_test, sample):
+    # Get the data sample values
+    dataframe, true_parents = sample
+    # Set the dataframe of the test object
+    ind_test.set_dataframe(dataframe)
+    # Generate some nodes
+    y_nds = [(0, 0)]
+    x_nds = true_parents[0]
+    z_nds = true_parents[1]
+    tau_max = 3
+    # Run the test
+    val, pval = ind_test.run_test(x_nds, y_nds, z_nds, tau_max)
+    # Get the array the test is running on
+    array, xyz, _ = ind_test._get_array(x_nds, y_nds, z_nds, tau_max)
+    dim, T = array.shape
+    # Get the correct dependence measure
+    val_expt = ind_test.get_dependence_measure(array, xyz)
+    pval_expt = ind_test.get_significance(val, array, xyz, T, dim)
+    # Check the values are close
+    np.testing.assert_allclose(np.array(val), np.array(val_expt), atol=1e-2)
+    np.testing.assert_allclose(np.array(pval), np.array(pval_expt), atol=1e-2)
 
-    # When testing masking and missing value flags, we will remove time slices,
-    # starting with the earliest slice.  This counter keeps track of how many
-    # rows have been masked.
-    n_rows_masked = 0
+def check_get_measure(ind_test, sample):
+    # Get the data sample values
+    dataframe, true_parents = sample
+    # Set the dataframe of the test object
+    ind_test.set_dataframe(dataframe)
+    # Generate some nodes
+    y_nds = [(0, 0)]
+    x_nds = true_parents[0]
+    z_nds = true_parents[1]
+    tau_max = 3
+    # Run the test
+    val = ind_test.get_measure(x_nds, y_nds, z_nds, tau_max)
+    # Get the array the test is running on
+    array, xyz, _ = ind_test._get_array(x_nds, y_nds, z_nds, tau_max)
+    # Get the correct dependence measure
+    val_expt = ind_test.get_dependence_measure(array, xyz)
+    # Check the values are close
+    np.testing.assert_allclose(np.array(val), np.array(val_expt), atol=1e-2)
 
-    # Make a fake mask
-    use_mask = False
-    data_mask = np.zeros_like(data, dtype='bool')
-    if mask_type is not None:
-        use_mask = True
-        for var, nodes in zip(['x', 'y', 'z'], [x_nds, y_nds, z_nds]):
-            if var in mask_type:
-                # Get the first node
-                a_nd, a_tau = nodes[0]
-                # Mask the first value of this node
-                data_mask[a_tau - n_times + n_rows_masked, a_nd] = True
-                n_rows_masked += 1
+def check_get_confidence(ind_test, sample):
+    """
+    Compares results of current confidence interval evaluation method against
+    bootstrapped confidence interval method.  Implicitly tests
+    get_bootstrap_confidence as well.
 
-    # Choose fake missing value as the earliest time entry in the first z-node
-    # from the original (non-shifted) datathat is not cutoff by max_lag or
-    # masked values from the first z-node
-    missing_flag = None
-    if missing_vals:
-        # Get the node index
-        a_nd, _ = z_nds[0]
-        # Select the earliest non-cutoff entry from the unshifted data set
-        earliest_time = max_lag + n_rows_masked
-        missing_flag = data[earliest_time, a_nd]
-        # Record that the row with this value and all rows up to max_lag after
-        # this value have been cut off as well
-        n_rows_masked += max_lag + 1
-
-    # Construct the array
-    array, xyz = _construct_array(x_nds, y_nds, z_nds,
-                                  tau_max=tau_max,
-                                  use_mask=use_mask,
-                                  data=data,
-                                  mask=data_mask,
-                                  missing_flag=missing_flag,
-                                  mask_type=mask_type,
-                                  verbosity=VERBOSITY)
-    # Ensure x_nds, y_nds, z_ndes are unique
-    x_nds = list(OrderedDict.fromkeys(x_nds))
-    y_nds = list(OrderedDict.fromkeys(y_nds))
-    z_nds = list(OrderedDict.fromkeys(z_nds))
-    z_nds = [node for node in z_nds
-             if (node not in x_nds) and (node not in y_nds)]
-
-    # Get the expected results
-    expect_array = np.array([list(range(data[time-n_times, node],
-                                        data[time-n_times, node]+n_times))
-                             for node, time in x_nds + y_nds + z_nds])
-    expect_xyz = np.array([0 for _ in x_nds] +\
-                          [1 for _ in y_nds] +\
-                          [2 for _ in z_nds])
-    # Apply the mask, which always blocks the latest time of the 0th node of the
-    # masked variable, which removes the first n time slices in the returned
-    # array
-    expect_array = expect_array[:, n_rows_masked:]
-    # Test the results
-    np.testing.assert_almost_equal(array, expect_array)
-    np.testing.assert_almost_equal(xyz, expect_xyz)
+    NOTE: this is a computationally expensive test
+    """
+    # Get the data sample values
+    dataframe, true_parents = sample
+    # Set the dataframe of the test object
+    ind_test.set_dataframe(dataframe)
+    # Generate some nodes
+    y_nds = [(0, 0)]
+    x_nds = true_parents[0]
+    z_nds = true_parents[1]
+    tau_max = 3
+    # Get the confidence interval
+    conf_a = ind_test.get_confidence(x_nds, y_nds, z_nds, tau_max)
+    # Get the array the test is running on
+    array, xyz, _ = ind_test._get_array(x_nds, y_nds, z_nds, tau_max)
+    # Test current confidence interval against bootstrapped interval
+    conf_b = ind_test.get_bootstrap_confidence(
+        array,
+        xyz,
+        dependence_measure=ind_test.get_dependence_measure,
+        conf_samples=ind_test.conf_samples,
+        conf_blocklength=ind_test.conf_blocklength,
+        conf_lev=ind_test.conf_lev)
+    # Check the values are close
+    np.testing.assert_allclose(np.array(conf_a), np.array(conf_b), atol=1e-2)
 
 # PARTIAL CORRELATION TESTING ##################################################
-@pytest.fixture()
+@pytest.fixture(params=[
+    # Generate par_corr test instances
+    #sig,            recycle, confidence
+    ('analytic',     True,    'analytic'),
+    ('analytic',     False,   'analytic'),
+    ('analytic',     False,   'bootstrap'),
+    ('shuffle_test', False,   'analytic'),
+    ('fixed_thres',  False,   'analytic')])
 def par_corr(request):
+    # Unpack the parameters
+    sig, recycle, conf = request.param
     # Generate the par_corr independence test
-    return ParCorr(use_mask=False,
-                   mask_type=None,
-                   significance='analytic',
+    return ParCorr(mask_type=None,
+                   significance=sig,
                    fixed_thres=0.1,
                    sig_samples=10000,
                    sig_blocklength=3,
-                   confidence='analytic',
+                   confidence=conf,
                    conf_lev=0.9,
                    conf_samples=10000,
                    conf_blocklength=1,
-                   recycle_residuals=False,
+                   recycle_residuals=recycle,
                    verbosity=0)
 
 @pytest.fixture(params=[
@@ -180,25 +207,46 @@ def data_sample_a(request):
     # Return the data sample
     return gen_data_sample(seed, corr_val, T)
 
-def test_bootstrap_conf_parcorr(par_corr, data_sample_a):
-    # Get the data sample values
-    array, val, _, xyz, dim, T = data_sample_a
-    # Get the analytic confidence interval
-    conf_a = par_corr.get_analytic_confidence(df=T-dim,
-                                              value=val,
-                                              conf_lev=par_corr.conf_lev)
-    # Bootstrap the confidence interval
-    conf_b = par_corr.get_bootstrap_confidence(
-        array,
-        xyz,
-        dependence_measure=par_corr.get_dependence_measure,
-        conf_samples=par_corr.conf_samples,
-        conf_blocklength=par_corr.conf_blocklength,
-        conf_lev=par_corr.conf_lev)
-    # Ensure the two intervals are the same
-    np.testing.assert_allclose(np.array(conf_a), np.array(conf_b), atol=0.01)
+@pytest.fixture(params=[
+    # Generate a test data sample
+    # Parameterize the sample by setting the autocorrelation value, coefficient
+    # value, total time length, and random seed to different numbers
+    # links_coeffs,               time, seed_val
+    (a_chain(0.1, 0.9),           1000, 2),
+    (a_chain(0.5, 0.6),           1000, 11),
+    (a_chain(0.5, 0.6, length=5), 1000, 42)])
+def data_frame_a(request):
+    # Set the parameters
+    links_coeffs, time, seed_val = request.param
+    # Generate the dataframe
+    return gen_data_frame(links_coeffs, time, seed_val)
 
-# TODO should val here be get_dependence_measure?
+   # get_measure
+   # get_confidence
+   # get_bootstrap_confidence
+   # get_fixed_thresh_sig
+   # tranfo2uniform
+   # _check_mask_type
+   # _get_array
+   # _get_acf
+   # _get_block_length
+   # _get_shuffle_dist
+def test_get_array_parcorr(par_corr, data_frame_a):
+    # Check the get_array function
+    check_get_array(par_corr, data_frame_a)
+
+def test_run_test_parcorr(par_corr, data_frame_a):
+    # Check the run_test function
+    check_run_test(par_corr, data_frame_a)
+
+def test_get_measure_parcorr(par_corr, data_frame_a):
+    # Check the get_measure function
+    check_get_measure(par_corr, data_frame_a)
+
+def test_get_confidence_parcorr(par_corr, data_frame_a):
+    # Check the get_confidence function
+    check_get_confidence(par_corr, data_frame_a)
+
 # TODO test null distribution
 def test_shuffle_sig_parcorr(par_corr, data_sample_a):
     # Get the data sample values
@@ -210,7 +258,6 @@ def test_shuffle_sig_parcorr(par_corr, data_sample_a):
     # Adjust p-value for two-sided measures
     np.testing.assert_allclose(np.array(pval_a), np.array(pval_s), atol=0.01)
 
-# TODO how does this test work?
 # TODO test standardize, return_means as well
 @pytest.mark.parametrize("seed", [5, 29, 135, 170, 174, 284, 342, 363, 425])
 def test_parcorr_residuals(par_corr, seed):
@@ -229,7 +276,6 @@ def test_parcorr_residuals(par_corr, seed):
                                              return_means=False)
     np.testing.assert_allclose(est_res, true_res[0], rtol=1e-5, atol=0.02)
 
-# TODO how does this test work?
 def test_parcorr(par_corr, data_sample_a):
     # Get the data sample values
     small_array, _, corr_val, xyz, dim, T = data_sample_a
@@ -248,11 +294,9 @@ def test_parcorr(par_corr, data_sample_a):
     np.testing.assert_allclose(np.array(corr_val), np.array(val_est), atol=0.02)
 
 # GPDC TESTING #################################################################
-# TODO need test for GPDC get_dependence_measure
 @pytest.fixture()
 def gpdc(request):
-    return GPDC(use_mask=False,
-                mask_type='y',
+    return GPDC(mask_type=None,
                 significance='analytic',
                 fixed_thres=0.1,
                 sig_samples=1000,
@@ -267,14 +311,42 @@ def gpdc(request):
 @pytest.fixture(params=[
     # Generate the sample to be used for confidence interval comparison
     #seed, corr_val, T
-    (5,    0.3,      250),  # Default
-    (6,    0.3,      250),  # New Seed
-    (1,    0.9,      250)]) # Strong Correlation
+    (5,    0.3,      200),  # Default
+    (6,    0.3,      200),  # New Seed
+    (1,    0.9,      200)]) # Strong Correlation
 def data_sample_b(request):
     # Unpack the parameters
     seed, corr_val, T = request.param
     # Return the data sample
     return gen_data_sample(seed, corr_val, T)
+
+@pytest.fixture(params=[
+    # Generate a test data sample
+    # Parameterize the sample by setting the autocorrelation value, coefficient
+    # value, total time length, and random seed to different numbers
+    # links_coeffs,               time, seed_val
+    (a_chain(0.1, 0.9),           250, 2),
+    (a_chain(0.5, 0.6),           250, 11),
+    (a_chain(0.5, 0.6, length=5), 250, 42)])
+def data_frame_b(request):
+    # Set the parameters
+    links_coeffs, time, seed_val = request.param
+    # Generate the dataframe
+    return gen_data_frame(links_coeffs, time, seed_val)
+
+def test_get_array_gpdc(gpdc, data_frame_b):
+    # Check the get_array function
+    check_get_array(gpdc, data_frame_b)
+
+def test_get_measure_gpdc(gpdc, data_frame_b):
+    # Check the get_measure function
+    check_get_measure(gpdc, data_frame_b)
+
+def test_get_confidence_gpdc(gpdc, data_frame_b):
+    # Skip if just checking boostrap vs. bootstrap
+    if not gpdc.confidence == 'bootstrap':
+        # Check the get_confidence function
+        check_get_confidence(gpdc, data_frame_b)
 
 @pytest.mark.parametrize("seed", list(range(10)))
 def test_gpdc_residuals(gpdc, seed):
@@ -284,8 +356,6 @@ def test_gpdc_residuals(gpdc, seed):
     T = 1000
     # Define the function to check against
     def func(x_arr, c_val=1.):
-        # TODO check x**0
-        # return x * (1. - 4. * x**0 * np.exp(-x**2 / 2.))
         return c_val*x_arr*(1. - 4.*np.exp(-x_arr*x_arr/2.))
     # Generate the array
     array = np.random.randn(3, T)
@@ -304,7 +374,6 @@ def test_gpdc_residuals(gpdc, seed):
                                func(target_res[cntr], c_val),
                                atol=0.2)
 
-# TODO should val here be the val given by the data_sample fixture?
 def test_shuffle_sig_gpdc(gpdc, data_sample_b):
     # Get the data sample
     array, _, _, xyz, dim, T = data_sample_b
@@ -317,7 +386,6 @@ def test_shuffle_sig_gpdc(gpdc, data_sample_b):
     pval_s = gpdc.get_shuffle_significance(array, xyz, val)
     np.testing.assert_allclose(np.array(pval_a), np.array(pval_s), atol=0.05)
 
-# TODO how does this test work?
 def test_trafo2uniform(gpdc, data_sample_a):
     # Get the data sample
     array, _, _, _, _, T = data_sample_a
@@ -334,8 +402,7 @@ def test_trafo2uniform(gpdc, data_sample_a):
 # CMIknn TESTING ###############################################################
 @pytest.fixture()
 def cmi_knn(request):
-    return CMIknn(use_mask=False,
-                  mask_type=None,
+    return CMIknn(mask_type=None,
                   significance='shuffle_test',
                   fixed_thres=None,
                   sig_samples=10000,
@@ -359,7 +426,38 @@ def data_sample_c(request):
     # Return the data sample
     return gen_data_sample(seed, corr_val, T)
 
-# TODO how does this test work?
+@pytest.fixture(params=[
+    # Generate a test data sample
+    # Parameterize the sample by setting the autocorrelation value, coefficient
+    # value, total time length, and random seed to different numbers
+    # links_coeffs,               time, seed_val
+    (a_chain(0.1, 0.9),           100, 2),
+    (a_chain(0.5, 0.6),           100, 11),
+    (a_chain(0.5, 0.6, length=5), 100, 42)])
+def data_frame_c(request):
+    # Set the parameters
+    links_coeffs, time, seed_val = request.param
+    # Generate the dataframe
+    return gen_data_frame(links_coeffs, time, seed_val)
+
+def test_get_array_cmi_knn(cmi_knn, data_frame_c):
+    # Check the get_array function
+    check_get_array(cmi_knn, data_frame_c)
+
+def test_run_test_cmi_knn(cmi_knn, data_frame_c):
+    # Check the run_test function
+    check_run_test(cmi_knn, data_frame_c)
+
+def test_get_measure_cmi_knn(cmi_knn, data_frame_c):
+    # Check the get_measure function
+    check_get_measure(cmi_knn, data_frame_c)
+
+def test_get_confidence_cmi_knn(cmi_knn, data_frame_c):
+    # Skip if just checking boostrap vs. bootstrap
+    if not cmi_knn.confidence == 'bootstrap':
+        # Check the get_confidence function
+        check_get_confidence(cmi_knn, data_frame_c)
+
 def test_cmi_knn(cmi_knn, data_sample_c):
     # Get the data sample values
     small_array, _, corr_val, xyz, dim, T = data_sample_c
@@ -381,8 +479,7 @@ def test_cmi_knn(cmi_knn, data_sample_c):
 # CMIsymb TESTING ##############################################################
 @pytest.fixture()
 def cmi_symb(request):
-    return CMIsymb(use_mask=False,
-                   mask_type=None,
+    return CMIsymb(mask_type=None,
                    significance='shuffle_test',
                    fixed_thres=0.1,
                    sig_samples=10000,
@@ -405,6 +502,36 @@ def data_sample_d(request):
     # Return the data sample
     return gen_data_sample(seed, corr_val, T)
 
+@pytest.fixture(params=[
+    # Generate a test data sample
+    # Parameterize the sample by setting the autocorrelation value, coefficient
+    # value, total time length, and random seed to different numbers
+    # links_coeffs,               time, seed_val
+    (a_chain(0.1, 0.9),           100, 2),
+    (a_chain(0.5, 0.6),           100, 11),
+    (a_chain(0.5, 0.6, length=5), 100, 42)])
+def data_frame_d(request):
+    # Set the parameters
+    links_coeffs, time, seed_val = request.param
+    # Generate the dataframe
+    return gen_data_frame(links_coeffs, time, seed_val)
+
+# TODO does not work
+#def test_run_test_cmi_symb(cmi_symb, data_frame_d):
+#    # Make the data frame integer values
+#    df, parents = data_frame_d
+#    df.values = (df.values * 1000).astype(int)
+#    # Check the run_test function
+#    check_run_test(cmi_symb, (df, parents))
+
+# TODO does not work
+#def test_run_test_cmi_symb(cmi_symb, data_frame_d):
+#    # Make the data frame integer values
+#    df, parents = data_frame_d
+#    df.values = (df.values * 1000).astype(int)
+#    # Check the run_test function
+#    check_get_measure(cmi_symb, (df, parents))
+
 def test_cmi_symb(cmi_symb, data_sample_d):
     # Get the data sample values
     small_array, _, corr_val, xyz, dim, T = data_sample_d
@@ -424,3 +551,35 @@ def test_cmi_symb(cmi_symb, data_sample_d):
     np.testing.assert_allclose(np.array(_par_corr_to_cmi(corr_val)),
                                np.array(val_est),
                                atol=0.02)
+
+# OTHER TESTS ##################################################################
+@pytest.mark.parametrize("mask_type,expected", [
+    ('x', True),    # single item in acceptable list
+    ('y', True),    # single item in acceptable list
+    ('z', True),    # single item in acceptable list
+    ('xy', True),   # multiple items in acceptable list
+    ('xz', True),   # multiple items in acceptable list
+    ('yz', True),   # multiple items in acceptable list
+    ('yx', True),   # multiple items in acceptable list, swapped order
+    ('xyz', True),  # all items in acceptable list
+    ('xzy', True),  # all items in acceptable list, swapped order
+    ('a', False),   # single unacceptable item
+    ('ax', False),  # single unacceptable item and acceptable item
+    ('ab', False)]) # multiple unacceptable items
+def test_check_mask(par_corr, mask_type, expected):
+    # Set the mask type
+    par_corr.mask_type = mask_type
+    # Test the good parameter set
+    if expected:
+        try:
+            par_corr._check_mask_type()
+        # Ensure no exception is raised
+        except:
+            pytest.fail("Acceptable mask type "+mask_type+\
+                        " is incorrectly throwing an error")
+    # Test the bad parameter set
+    else:
+        err_msg = "Unacceptable mask type "+mask_type+\
+                  " is incorrectly NOT throwing an error"
+        with pytest.raises(ValueError, message=err_msg):
+            par_corr._check_mask_type()

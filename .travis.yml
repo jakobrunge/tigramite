@@ -8,4 +8,4 @@ python:
 install: 
   - pip install .[all]
 # command to run tests
-script: pytest
+script: pytest -v
