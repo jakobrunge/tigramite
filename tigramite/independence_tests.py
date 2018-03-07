@@ -2964,7 +2964,7 @@ if __name__ == '__main__':
     Y = [(2, 0)]
     Z = [(1, -1)]  #(2, -1), (1, -1), (0, -3)]  #[(1, -1)]  #[(2, -1), (1, -1), (0, -3)] # [(2, -1), (1, -1), (2, -3)]   [(1, -1)]
     
-    print cond_ind_test._get_shuffle_dist
+    # print cond_ind_test._get_shuffle_dist
 
     val, pval = cond_ind_test.run_test(X, Y, Z, tau_max=tau_max)
     conf_interval = cond_ind_test.get_confidence(X, Y, Z, tau_max=tau_max)
