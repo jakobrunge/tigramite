@@ -612,10 +612,8 @@ class PCMCI():
                         enumerate(self._iter_conditions(parent, j,
                                                         conds_dim, parents)):
                     # Break if we try too many combinations
-                    if comb_index > max_combinations:
+                    if comb_index >= max_combinations:
                         break
-                    # Incriment the combinations
-                    comb_index += 1
                     # Perform independence test
                     val, pval = self.cond_ind_test.run_test(X=[parent],
                                                             Y=[(j, 0)],
@@ -766,7 +764,7 @@ class PCMCI():
         """
         # Check if an input was given
         if max_conds_dim is None:
-            max_conds_dim = self.N * (tau_max - tau_min + 1)
+            max_conds_dim = self.N * (tau_max - tau_min) + 1
         # Check this is a valid
         if max_conds_dim < 0:
             raise ValueError("maximum condition dimension must be >= 0")

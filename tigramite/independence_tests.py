@@ -169,17 +169,17 @@ class CondIndTest():
         # Check if we are using a fixed threshold
         elif self.significance == 'fixed_thres':
             info_str += "\nfixed_thres = %s" % self.fixed_thres
-            # Check if we have a confidence type
-            if self.confidence:
-                info_str += "\nconfidence = %s" % self.confidence
-                info_str += "\nconf_lev = %s" % self.conf_lev
-                # Check if this confidence type is boostrapping
-                if self.confidence == 'bootstrap':
-                    info_str += "\nconf_samples = %s" % self.conf_samples
-                    info_str += "\nconf_blocklength = %s" %self.conf_blocklength
-                    # Check if we use a non-trivial mask type
-                    if self.mask_type is not None:
-                        info_str += "mask_type = %s" % self.mask_type
+        # Check if we have a confidence type
+        if self.confidence:
+            info_str += "\nconfidence = %s" % self.confidence
+            info_str += "\nconf_lev = %s" % self.conf_lev
+        # Check if this confidence type is boostrapping
+        if self.confidence == 'bootstrap':
+            info_str += "\nconf_samples = %s" % self.conf_samples
+            info_str += "\nconf_blocklength = %s" %self.conf_blocklength
+        # Check if we use a non-trivial mask type
+        if self.mask_type is not None:
+            info_str += "mask_type = %s" % self.mask_type
         # Check if we are recycling residuals or not
         if self.recycle_residuals:
             info_str += "recycle_residuals = %s" % self.recycle_residuals
