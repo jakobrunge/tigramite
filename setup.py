@@ -30,20 +30,17 @@ def define_extension(extension_name, source_files=None):
     # Default source file
     if source_files is None:
         source_files = [extension_name.replace(".", "/") + ".c"]
-    # Check if we are in develop mode
-    if len(sys.argv) >= 2 and (sys.argv[1] in ['develop']):
-        # If we are, try to import and use cythonize
-        try:
-            from Cython.Build import cythonize
-            # Replace any extension in the source file list with .pyx
-            source_files = [".".join(f.split(".")[:-1] + ["pyx"]) \
-                            for f in source_files]
-            # Return the cythonized extension
-            return cythonize(Extension(extension_name, source_files))
-        except ImportError:
-            print("Cython is needed for development installation")
-            raise ImportError
-    else:
+    # If we are, try to import and use cythonize
+    try:
+        from Cython.Build import cythonize
+        # Replace any extension in the source file list with .pyx
+        source_files = [".".join(f.split(".")[:-1] + ["pyx"]) \
+                        for f in source_files]
+        # Return the cythonized extension
+        return cythonize(Extension(extension_name, source_files))
+    except ImportError:
+        print("Cython cannot be found.  Skipping compilation of cython code"+\
+              " and using pre-compiled code")
         return [Extension(extension_name, source_files)]
 
 # Define the minimal classes needed to install and run tigramite
@@ -83,7 +80,7 @@ setup(
     ext_modules=EXT_MODULES,
     install_requires=INSTALL_REQUIRES,
     extras_require=EXTRAS_REQUIRE,
-    test_suite='nose.collector',
+    test_suite='tests',
     tests_require=TESTS_REQUIRE,
     classifiers=[
         'Development Status :: 4 - Beta',
