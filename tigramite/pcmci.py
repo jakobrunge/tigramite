@@ -764,7 +764,7 @@ class PCMCI():
         """
         # Check if an input was given
         if max_conds_dim is None:
-            max_conds_dim = self.N * (tau_max - tau_min) + 1
+            max_conds_dim = self.N * (tau_max - tau_min + 1) + 1
         # Check this is a valid
         if max_conds_dim < 0:
             raise ValueError("maximum condition dimension must be >= 0")
@@ -980,15 +980,15 @@ class PCMCI():
         cond_string += "]"
         return cond_string
 
-    def _print_mci_conditions(self, conds_y, conds_x, j, i,
-                              tau, count, n_parents):
+    def _print_mci_conditions(self, conds_y, conds_x_lagged,
+                              j, i, tau, count, n_parents):
         """Print information about the conditions for the MCI algorithm
 
         Parameters
         ----------
         conds_y : list
             Conditions on node
-        conds_x : list
+        conds_x_lagged : list
             Conditions on parent
         j : int
             Current node
@@ -1004,9 +1004,9 @@ class PCMCI():
         # Remove the current parent from the conditions
         conds_y_no_i = [node for node in conds_y if node != (i, tau)]
         # Get the condition string for parent
-        condx_str = self._mci_condition_to_string(conds_y_no_i)
+        condy_str = self._mci_condition_to_string(conds_y_no_i)
         # Get the condition string for node
-        condy_str = self._mci_condition_to_string(conds_x)
+        condx_str = self._mci_condition_to_string(conds_x_lagged)
         # Formate and print the information
         indent = "\n        "
         print_str = indent + "link (%s %d) " % (self.var_names[i], tau)
@@ -1078,18 +1078,21 @@ class PCMCI():
             for cnt, (i, tau) in enumerate(parent_list):
                 # Get the conditions for node i
                 conds_x = parents[i][:max_conds_px]
+                conds_x_lagged = [(k, tau + k_tau) for k, k_tau in conds_x]
+
                 # Print information about the mci conditions if requested
                 if self.verbosity > 1:
-                    self._print_mci_conditions(conds_y, conds_x, j, i, tau,
-                                               cnt, len(parent_list))
+                    self._print_mci_conditions(conds_y, conds_x_lagged, j, i,
+                                               tau, cnt, len(parent_list))
                 # Remove conds_x elemet overlaps
-                conds_x = [node for node in conds_x if node not in conds_y]
+                # conds_x = [node for node in conds_x if node not in conds_y]
+                # TODO jakob why did we remove this overlap check?
                 # Construct lists of tuples for estimating
                 # I(X_t-tau; Y_t | Z^Y_t, Z^X_t-tau)
                 # with conditions for X shifted by tau
                 Z = [node for node in conds_y if node != (i, tau)]
                 # Shift the conditions for X by tau
-                Z += [(k, tau + k_tau) for k, k_tau in conds_x]
+                Z += [node for node in conds_x_lagged if node not in conds_y]
                 # Yield these list
                 yield j, i, tau, Z
 
@@ -1558,3 +1561,111 @@ class PCMCI():
             self.print_results(return_dict)
         # Return the dictionary
         return return_dict
+
+# TODO jakob can i remove this?
+if __name__ == '__main__':
+
+    import numpy
+    import data_processing as pp
+    from independence_tests import ParCorr
+
+    numpy.random.seed(42)
+    # Example process to play around with
+    a = 0.2
+    c1 = .3
+    c2 = -.8
+    c3 = .8
+    T = 1000
+
+    # Each key refers to a variable and the incoming links are supplied as a
+    # list of format [((driver, lag), coeff), ...]
+    links_coeffs = {0: [((0, -1), a), ((1, -1), c1)],
+                    1: [((1, -1), a), ((0, -1), c1)],
+                    # 2: [((2, -1), a), ((1, -2), c2), ((3, -3), c3)],
+                    # 3: [((3, -1), a)],
+                    }
+
+    data, true_parents_neighbors = pp.var_process(links_coeffs,
+                                                  use='inv_inno_cov', T=T)
+    print (data.shape)
+    data_mask = numpy.zeros(data.shape, dtype='int')
+
+
+
+    T, N = data.shape
+
+    var_names = range(N)  # ['X', 'Y', 'Z', 'W']
+
+    pc_alpha = 0.2  # [0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
+    selected_variables = None  #[2] # [2]  # [2]
+
+    tau_max = 2
+    alpha_level = 0.01
+
+    dataframe = pp.DataFrame(data,
+        mask=data_mask,
+        )
+    verbosity = 2
+
+    cond_ind_test = ParCorr(
+        verbosity=verbosity)
+
+    pcmci = PCMCI(
+        dataframe=dataframe,
+        cond_ind_test=cond_ind_test,
+        selected_variables=selected_variables,
+        verbosity=verbosity)
+
+    # results = pcmci.run_pcmci(
+    #     selected_links=None,
+    #     tau_min=1,
+    #     tau_max=tau_max,
+    #     save_iterations=False,
+
+    #     pc_alpha=pc_alpha,
+    #     max_conds_dim=None,
+    #     max_combinations=1,
+
+    #     max_conds_py=None,
+    #     max_conds_px=None,
+
+    #     fdr_method='fdr_bh',
+    # )
+    parents = pcmci.run_pc_stable(
+                      tau_max=tau_max,
+                      save_iterations=True,
+                      pc_alpha=0.2,
+                      max_conds_dim=None,
+                      )
+    # parents = {}
+    # for j in range(N):
+    #     parents[j] = [(i, -lag) for i in range(N)
+    #                  for lag in range(1, tau_max + 1)]
+
+    results = pcmci.run_mci(
+        selected_links=None,
+        tau_min=1,
+        tau_max=tau_max,
+        parents = parents,
+        max_conds_py=None,
+        max_conds_px=None,
+    )
+    pcmci.print_significant_links(
+                   p_matrix=results['p_matrix'],
+                   # q_matrix=results['q_matrix'],
+                   val_matrix=results['val_matrix'],
+                   alpha_level=alpha_level,
+                   # conf_matrix=results['conf_matrix']
+                   )
+
+    # pcmci.run_mci(
+    #     selected_links=None,
+    #     tau_min=1,
+    #     tau_max=tau_max,
+    #     parents = None,
+
+    #     max_conds_py=None,
+    #     max_conds_px=None,
+    # )
+
+
