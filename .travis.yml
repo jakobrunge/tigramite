@@ -6,6 +6,6 @@ python:
   - "3.6"
 # command to install dependencies
 install: 
-  - pip install .[all]
+  - pip install .
 # command to run tests
 script: pytest -v
