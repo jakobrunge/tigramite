@@ -56,10 +56,11 @@ EXTRAS_REQUIRE = {
              'rpy2'],             #R-based RCOT, requires acepack installed in R
     'R'   : ['rpy2']              #R-based RCOT, requires acepack installed in R
     }
-# Define the extras needed for development
-EXTRAS_REQUIRE['dev'] = EXTRAS_REQUIRE['all'] + ['nose', 'cython', 'pytest']
 # Define the packages needed for testing
 TESTS_REQUIRE = ['nose', 'pytest']
+EXTRAS_REQUIRE['test'] = TESTS_REQUIRE
+# Define the extras needed for development
+EXTRAS_REQUIRE['dev'] = EXTRAS_REQUIRE['all'] + TESTS_REQUIRE + ['cython']
 
 # Use a custom build to handle numpy.include_dirs() when building
 CMDCLASS = {'build_ext': UseNumpyHeadersBuildExt}
