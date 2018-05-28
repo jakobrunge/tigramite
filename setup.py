@@ -3,6 +3,8 @@ import sys
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 
+extra_link_args=['-L/usr/lib/x86_64-linux-gnu/']
+
 # Handle building against numpy headers before installing numpy
 class UseNumpyHeadersBuildExt(build_ext):
     """
@@ -37,11 +39,11 @@ def define_extension(extension_name, source_files=None):
         source_files = [".".join(f.split(".")[:-1] + ["pyx"]) \
                         for f in source_files]
         # Return the cythonized extension
-        return cythonize(Extension(extension_name, source_files))
+        return cythonize(Extension(extension_name, source_files, extra_link_args=extra_link_args))
     except ImportError:
         print("Cython cannot be found.  Skipping compilation of cython code"+\
               " and using pre-compiled code")
-        return [Extension(extension_name, source_files)]
+        return [Extension(extension_name, source_files, extra_link_args=extra_link_args)]
 
 # Define the minimal classes needed to install and run tigramite
 INSTALL_REQUIRES = ["numpy", "scipy", "six"]
@@ -64,6 +66,7 @@ CMDCLASS = {'build_ext': UseNumpyHeadersBuildExt}
 # Define the external modules to build
 EXT_MODULES = []
 EXT_MODULES += define_extension("tigramite.tigramite_cython_code")
+
 
 # Run the setup
 setup(
