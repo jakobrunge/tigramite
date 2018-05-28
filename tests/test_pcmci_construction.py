@@ -249,8 +249,9 @@ def test_condition_iterator(a_pcmci, a_iter_cond_param):
         # Parents for this node
         parents = sel_links[j]
         # Loop over all possible dimentionality of conditions
-        # TODO max_cond_dim - N fixes this test, where N is greq 1
-        for cond_dim in range(max_cond_dim):
+        # TODO FINAL check with Jakob why max_cond_dim can be greater than the 
+        # total possible number of parents
+        for cond_dim in range(max_cond_dim - 1):
             # Iterate through all possible pairs (that have not converged yet)
             for par in parents:
                 # Number of conditions for this dimension
