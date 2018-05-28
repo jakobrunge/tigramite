@@ -352,20 +352,18 @@ class PCMCI():
         # Return the selected links
         return _int_sel_links
 
-    def _iter_conditions(self, parent, j, conds_dim, all_parents):
+    def _iter_conditions(self, parent, conds_dim, all_parents):
         """Yield next condition.
 
         Yields next condition from lexicographically ordered conditions.
 
         Parameters
         ----------
-        j : int
-            Index of current variable.
         parent : tuple
             Tuple of form (i, -tau).
         conds_dim : int
             Cardinality in current step.
-        parents_j : list
+        all_parents : list
             List of form [(0, -1), (3, -2), ...]
 
         Yields
@@ -373,8 +371,8 @@ class PCMCI():
         cond :  list
             List of form [(0, -1), (3, -2), ...] for the next condition.
         """
-        parents_j_excl_current = [p for p in all_parents if p != parent]
-        for cond in itertools.combinations(parents_j_excl_current, conds_dim):
+        all_parents_excl_current = [p for p in all_parents if p != parent]
+        for cond in itertools.combinations(all_parents_excl_current, conds_dim):
             yield list(cond)
 
     def _sort_parents(self, parents_vals):
@@ -609,8 +607,8 @@ class PCMCI():
                     self._print_link_info(j, index_parent, parent, len(parents))
                 # Iterate through all possible combinations
                 for comb_index, Z in \
-                        enumerate(self._iter_conditions(parent, j,
-                                                        conds_dim, parents)):
+                        enumerate(self._iter_conditions(parent, conds_dim,
+                                                        parents)):
                     # Break if we try too many combinations
                     if comb_index >= max_combinations:
                         break
@@ -759,7 +757,7 @@ class PCMCI():
 
         Returns
         -------
-        max_cond_dim : int
+        max_conds_dim : int
             Input maximum condition dimension or default
         """
         # Check if an input was given
@@ -1088,7 +1086,7 @@ class PCMCI():
                 # I(X_t-tau; Y_t | Z^Y_t, Z^X_t-tau)
                 # with conditions for X shifted by tau
                 Z = [node for node in conds_y if node != (i, tau)]
-                # Shift the conditions for X by tau and remove overlapped nodes 
+                # Shift the conditions for X by tau and remove overlapped nodes
                 # between conds_x_lagged and conds_y
                 Z += [node for node in conds_x_lagged if node not in conds_y]
                 # Yield these list

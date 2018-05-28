@@ -240,7 +240,7 @@ def test_condition_iterator(a_pcmci, a_iter_cond_param):
     # Get all possible links
     sel_links = pcmci._set_sel_links(None, tau_min, tau_max)
     # Loop over all possible condition dimentions
-    max_cond_dim = pcmci._set_max_condition_dim(None, tau_min, tau_max)
+    max_cond_dim = pcmci._set_max_condition_dim(max_cond_dim, tau_min, tau_max)
     # Loop over all nodes
     for j in range(pcmci.N):
         # Initialise the list of conditions for this node
@@ -249,6 +249,7 @@ def test_condition_iterator(a_pcmci, a_iter_cond_param):
         # Parents for this node
         parents = sel_links[j]
         # Loop over all possible dimentionality of conditions
+        # TODO max_cond_dim - N fixes this test, where N is greq 1
         for cond_dim in range(max_cond_dim):
             # Iterate through all possible pairs (that have not converged yet)
             for par in parents:
@@ -258,7 +259,7 @@ def test_condition_iterator(a_pcmci, a_iter_cond_param):
                 # Create an array for these conditions
                 par_conds = list()
                 # Iterate through all possible combinations
-                for cond in pcmci._iter_conditions(par, j, cond_dim, parents):
+                for cond in pcmci._iter_conditions(par, cond_dim, parents):
                     # Ensure the condition does not contain the parent
                     assert par not in cond, "Parent should not be in condition"
                     # Keep this condition in list of conditions
