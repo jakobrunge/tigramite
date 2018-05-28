@@ -1084,14 +1084,12 @@ class PCMCI():
                 if self.verbosity > 1:
                     self._print_mci_conditions(conds_y, conds_x_lagged, j, i,
                                                tau, cnt, len(parent_list))
-                # Remove conds_x elemet overlaps
-                # conds_x = [node for node in conds_x if node not in conds_y]
-                # TODO jakob why did we remove this overlap check?
                 # Construct lists of tuples for estimating
                 # I(X_t-tau; Y_t | Z^Y_t, Z^X_t-tau)
                 # with conditions for X shifted by tau
                 Z = [node for node in conds_y if node != (i, tau)]
-                # Shift the conditions for X by tau
+                # Shift the conditions for X by tau and remove overlapped nodes 
+                # between conds_x_lagged and conds_y
                 Z += [node for node in conds_x_lagged if node not in conds_y]
                 # Yield these list
                 yield j, i, tau, Z

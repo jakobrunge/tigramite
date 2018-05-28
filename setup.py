@@ -50,8 +50,9 @@ EXTRAS_REQUIRE = {
     'all' : ['scikit-learn>=0.18',#Gaussian Process (GP) Regression
              'matplotlib>=1.5',   #plotting
              'networkx>=1.10',    #plotting
-             'statsmodels'],      #p-value corrections
-    'R'   : ['rpy2']              #R-based ACE, requires acepack installed in R
+             'statsmodels',       #p-value corrections
+             'rpy2'],             #R-based RCOT, requires acepack installed in R
+    'R'   : ['rpy2']              #R-based RCOT, requires acepack installed in R
     }
 # Define the extras needed for development
 EXTRAS_REQUIRE['dev'] = EXTRAS_REQUIRE['all'] + ['nose', 'cython', 'pytest']

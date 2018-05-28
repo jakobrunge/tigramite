@@ -330,6 +330,8 @@ def test_iter_indep_conds(a_pcmci, a_iter_indep_cond_param):
         for i, tau in node_list:
             if not (i == j and  tau == 0):
                 expect_links += 1
+    ## TODO try to check content of Z to ensure it contains parent of y, parents 
+    ## of x lagged.
     # Iterate over all the returned conditions
     for j, i, tau, Z in pcmci._iter_indep_conds(_int_parents,
                                                 pcmci.selected_variables,
