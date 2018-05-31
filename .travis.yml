@@ -26,6 +26,7 @@ install:
   # Create and activate the environmenbt
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION
   - source activate test-environment
+  - conda install pip
   # Install the python packages
   - pip install .['test']
   # Install the r_packages
