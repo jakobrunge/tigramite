@@ -10,8 +10,7 @@ import math
 
 from scipy import linalg, special, stats
 from copy import deepcopy
-
-from tigramite.independence_tests import _construct_array
+from data_processing import DataFrame
 
 try:
     import sklearn
@@ -48,12 +47,9 @@ class Models():
         Optional parameters passed on to sklearn model
 
     data_transform : sklearn preprocessing object, optional (default: None)
-        Used to transform data prior to fitting. For example, 
+        Used to transform data prior to fitting. For example,
         sklearn.preprocessing.StandardScaler for simple standardization. The
         fitted parameters are stored.
-    
-    use_mask : bool, optional (default: False)
-        Whether a supplied mask should be used.
 
     mask_type : {'y','x','z','xy','xz','yz','xyz'}
         Masking mode: Indicators for which variables in the dependence measure
@@ -71,26 +67,20 @@ class Models():
         Level of verbosity.
     """
 
-    def __init__(self, 
+    def __init__(self,
             dataframe,
             model,
             model_params=None,
             data_transform=None,
-            use_mask=False,
             mask_type=None,
             missing_flag=None,
             verbosity=0,
             ):
 
-        self.use_mask = use_mask
         self.mask_type = mask_type
-        self.missing_flag = missing_flag
-
         self.dataframe = dataframe
-        self.data = dataframe.values
-        self.mask = dataframe.mask
 
-        self.N = self.data.shape[1]
+        self.N = self.dataframe.values.shape[1]
 
         self.model = model
         self.model_params = model_params
@@ -113,10 +103,10 @@ class Models():
 
         Parameters
         ----------
-        all_parents : dictionary 
+        all_parents : dictionary
             Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing
             the parents estimated with PCMCI.
-  
+
         selected_variables : list of integers, optional (default: range(N))
             Specify to estimate parents only for selected variables. If None is
             passed, parents are estimated for all variables.
@@ -171,15 +161,12 @@ class Models():
             Y = [(j, 0)]
             X = [(j, 0)] # dummy
             Z = self.all_parents[j]
-            array, xyz = _construct_array(X, Y, Z, 
-                                    tau_max=self.tau_max,
-                                    data=self.data,
-                                    use_mask=self.use_mask,
-                                    mask=self.mask, 
-                                    mask_type=self.mask_type,
-                                    missing_flag=self.missing_flag,
-                                    cut_off=cut_off,
-                                    verbosity=self.verbosity)
+            array, xyz = \
+                self.dataframe.construct_array(X, Y, Z,
+                                               tau_max=self.tau_max,
+                                               mask_type=self.mask_type,
+                                               cut_off=cut_off,
+                                               verbosity=self.verbosity)
 
             dim, T = array.shape
             dim_z = dim - 2
@@ -241,7 +228,7 @@ class LinearMediation(Models):
     Fits linear model to parents and provides functions to return measures such
     as causal effect, mediated causal effect, average causal effect, etc. as
     described in [4]_.
-    
+
     Notes
     -----
     This class implements the following causal mediation measures introduced in
@@ -259,8 +246,8 @@ class LinearMediation(Models):
               Y_t &= 0.5 X_{t-1} +  \eta^Y_t \\
               Z_t &= 0.5 Y_{t-1} +  \eta^Z_t
 
-    Here the link coefficient of :math:`X_{t-2} \to Z_t` is zero while the 
-    causal effect is 0.25. MCE through :math:`Y` is 0.25 implying that *all* 
+    Here the link coefficient of :math:`X_{t-2} \to Z_t` is zero while the
+    causal effect is 0.25. MCE through :math:`Y` is 0.25 implying that *all*
     of the the CE is explained by :math:`Y`. ACE from :math:`X` is 0.37 since it
     has CE 0.5 on :math:`Y` and 0.25 on :math:`Z`.
 
@@ -288,7 +275,7 @@ class LinearMediation(Models):
     References
     ----------
     .. [4]  J. Runge et al. (2015): Identifying causal gateways and mediators in
-            complex spatio-temporal systems. 
+            complex spatio-temporal systems.
             Nature Communications, 6, 8502. http://doi.org/10.1038/ncomms9502
 
     Parameters
@@ -302,12 +289,9 @@ class LinearMediation(Models):
         Optional parameters passed on to sklearn model
 
     data_transform : sklearn preprocessing object, optional (default: None)
-        Used to transform data prior to fitting. For example, 
+        Used to transform data prior to fitting. For example,
         sklearn.preprocessing.StandardScaler for simple standardization. The
         fitted parameters are stored.
-    
-    use_mask : bool, optional (default: False)
-        Whether a supplied mask should be used.
 
     mask_type : {'y','x','z','xy','xz','yz','xyz'}
         Masking mode: Indicators for which variables in the dependence measure
@@ -325,11 +309,10 @@ class LinearMediation(Models):
         Level of verbosity.
     """
 
-    def __init__(self, 
+    def __init__(self,
             dataframe,
             model_params=None,
             data_transform=None,
-            use_mask=False,
             mask_type=None,
             missing_flag=None,
             verbosity=0,
@@ -348,12 +331,11 @@ class LinearMediation(Models):
                     return X
             data_transform = noscaler()
 
-        Models.__init__(self, 
+        Models.__init__(self,
             dataframe=dataframe,
             model=sklearn.linear_model.LinearRegression,
             model_params=model_params,
             data_transform=data_transform,
-            use_mask=use_mask,
             mask_type=mask_type,
             missing_flag=missing_flag,
             verbosity=verbosity)
@@ -364,15 +346,15 @@ class LinearMediation(Models):
         """Fit linear time series model.
 
         Fits a sklearn.linear_model.LinearRegression model to the parents of
-        each variable and computes the coefficient matrices :math:`\Phi` and 
+        each variable and computes the coefficient matrices :math:`\Phi` and
         :math:`\Psi` as described in [4]_.
 
         Parameters
         ----------
-        all_parents : dictionary 
+        all_parents : dictionary
             Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing
             the parents estimated with PCMCI.
-        
+
         tau_max : int, optional (default: None)
             Maximum time lag. If None, the maximum lag in all_parents is used.
 
@@ -395,7 +377,7 @@ class LinearMediation(Models):
         if len(X) != 1 or len(Y) != 1:
             raise ValueError("X must be of form [(i, -tau)] and Y = [(j, 0)], "
                              "but are X = %s, Y=%s" % (X, Y))
-        
+
         i, tau = X[0]
 
         if abs(tau) > self.tau_max:
@@ -427,7 +409,7 @@ class LinearMediation(Models):
                 i, tau = par
                 phi[abs(tau), j, i] = coeffs[j][par]
 
-        return phi 
+        return phi
 
     def _get_psi(self, phi):
         """Returns the linear causal effect matrices for different lags.
@@ -447,7 +429,7 @@ class LinearMediation(Models):
 
         psi[0] = numpy.identity(self.N)
         for n in range(1, self.tau_max + 1):
-            psi[n] = numpy.zeros((self.N, self.N)) 
+            psi[n] = numpy.zeros((self.N, self.N))
             for s in range(1, n+1):
                 psi[n] += numpy.dot(phi[s], psi[n-s])
 
@@ -478,7 +460,7 @@ class LinearMediation(Models):
         phi_k[1:, k, :] = 0.
         # print phi_k[1]
         for n in range(1, self.tau_max + 1):
-            psi_k[n] = numpy.zeros((self.N, self.N)) 
+            psi_k[n] = numpy.zeros((self.N, self.N))
             for s in range(1, n+1):
                 psi_k[n] += numpy.dot(phi_k[s], psi_k[n-s])
 
@@ -509,7 +491,7 @@ class LinearMediation(Models):
     def get_val_matrix(self,):
         """Returns the matrix of linear coefficients.
 
-        Format is val_matrix[i, j, tau] denotes coefficient of link 
+        Format is val_matrix[i, j, tau] denotes coefficient of link
         i --tau--> j.
 
         Returns
@@ -520,7 +502,7 @@ class LinearMediation(Models):
 
         return self.phi.transpose()
 
-    
+
     def net_to_tsg(self, row, lag, max_lag):
         """Helper function to translate from network to time series graph."""
         return row*max_lag + lag
@@ -529,7 +511,7 @@ class LinearMediation(Models):
         """Helper function to translate from time series graph to network."""
         row = node // max_lag
         lag = node % max_lag
-        return (row, -lag)        
+        return (row, -lag)
 
     def get_tsg(self, link_matrix, val_matrix=None, include_neighbors = False):
         """Returns time series graph matrix.
@@ -564,7 +546,7 @@ class LinearMediation(Models):
                 for t in range(max_lag):
                     link_start = self.net_to_tsg(i, t-tau, max_lag)
                     link_end = self.net_to_tsg(j, t, max_lag)
-                    if (0 <= link_start and 
+                    if (0 <= link_start and
                         (link_start % max_lag) <= (link_end  % max_lag)):
                         if val_matrix is not None:
                             tsg[link_start, link_end] = val_matrix[i,j,tau]
@@ -576,9 +558,9 @@ class LinearMediation(Models):
 
     def get_mediation_graph_data(self,  i, tau, j, include_neighbors=False):
         r"""Returns link and node weights for mediation analysis.
-        
+
         Returns array with non-zero entries for links that are on causal
-        paths between :math:`i` and :math:`j` at lag :math:`\tau`. 
+        paths between :math:`i` and :math:`j` at lag :math:`\tau`.
         ``path_val_matrix`` contains the corresponding path coefficients and
         ``path_node_array`` the MCE values. ``tsg_path_val_matrix`` contains the
         corresponding values in the time series graph format.
@@ -608,7 +590,7 @@ class LinearMediation(Models):
         path_val_matrix = numpy.zeros((self.N, self.N, self.tau_max + 1))
 
         # Get mediation of path variables
-        path_node_array = (self.psi.reshape(1, self.tau_max + 1, self.N, self.N) 
+        path_node_array = (self.psi.reshape(1, self.tau_max + 1, self.N, self.N)
                          - self.all_psi_k)[:,abs(tau), j, i]
 
         # Get involved links
@@ -620,7 +602,7 @@ class LinearMediation(Models):
         # include_neighbors = False because True would allow
         # --> o -- motifs in networkx.all_simple_paths as paths, but
         # these are blocked...
-        tsg = self.get_tsg(link_matrix, val_matrix=val_matrix, 
+        tsg = self.get_tsg(link_matrix, val_matrix=val_matrix,
                             include_neighbors = False)
 
         if include_neighbors:
@@ -637,8 +619,8 @@ class LinearMediation(Models):
         graph = networkx.DiGraph(tsg)
         pathways = []
 
-        for path in networkx.all_simple_paths(graph, 
-                    source=self.net_to_tsg(i, max_lag-tau-1, max_lag), 
+        for path in networkx.all_simple_paths(graph,
+                    source=self.net_to_tsg(i, max_lag-tau-1, max_lag),
                     target=self.net_to_tsg(j, max_lag-0-1, max_lag)):
             pathways.append([self.tsg_to_net(p, max_lag) for p in path])
             for ip, p in enumerate(path[1:]):
@@ -648,10 +630,10 @@ class LinearMediation(Models):
                 link_start = self.tsg_to_net(path[ip], max_lag)
                 link_end = self.tsg_to_net(p, max_lag)
                 delta_tau = abs(link_end[1] - link_start[1])
-                path_val_matrix[link_start[0], 
-                                link_end[0], 
-                                delta_tau] = val_matrix[link_start[0], 
-                                                        link_end[0], 
+                path_val_matrix[link_start[0],
+                                link_end[0],
+                                delta_tau] = val_matrix[link_start[0],
+                                                        link_end[0],
                                                         delta_tau]
 
         graph_data = {'path_node_array':path_node_array,
@@ -663,7 +645,7 @@ class LinearMediation(Models):
 
     def get_coeff(self, i, tau, j):
         """Returns link coefficient.
-        
+
         This is the causal effect for a particular link (i, tau) --> j.
 
         Parameters
@@ -687,7 +669,7 @@ class LinearMediation(Models):
 
     def get_ce(self, i, tau, j):
         """Returns the causal effect.
-        
+
         This is the causal effect for  (i, tau) -- --> j.
 
         Parameters
@@ -709,7 +691,7 @@ class LinearMediation(Models):
 
     def get_ce_max(self, i, j):
         """Returns the causal effect.
-        
+
         This is the maximum absolute causal effect for  i --> j across all lags.
 
         Parameters
@@ -728,7 +710,7 @@ class LinearMediation(Models):
 
     def get_mce(self, i, tau, j, k):
         """Returns the mediated causal effect.
-        
+
         This is the causal effect for  i --> j minus the causal effect not going
         through k.
 
@@ -750,14 +732,14 @@ class LinearMediation(Models):
         -------
         mce : float
         """
-        mce = self.psi[abs(tau), j, i] - self.all_psi_k[k, abs(tau), j, i] 
-        
-        return mce 
-            
+        mce = self.psi[abs(tau), j, i] - self.all_psi_k[k, abs(tau), j, i]
+
+        return mce
+
 
     def get_ace(self, i, lag_mode='absmax', exclude_i=True):
         """Returns the average causal effect.
-        
+
         This is the average causal effect (ACE) emanating from variable i to any
         other variable. With lag_mode='absmax' this is based on the lag of
         maximum CE for each pair.
@@ -766,7 +748,7 @@ class LinearMediation(Models):
         ----------
         i : int
             Index of cause variable.
-        
+
         lag_mode : {'absmax', 'all_lags'}
             Lag mode. Either average across all lags between each pair or only
             at the lag of maximum absolute causal effect.
@@ -791,16 +773,16 @@ class LinearMediation(Models):
             return numpy.abs(self.psi[1:, all_but_i, i]).mean()
         else:
             raise ValueError("lag_mode = %s not implemented" % lag_mode)
-    
+
     def get_all_ace(self, lag_mode='absmax', exclude_i=True):
         """Returns the average causal effect for all variables.
-        
+
         This is the average causal effect (ACE) emanating from variable i to any
         other variable. With lag_mode='absmax' this is based on the lag of
         maximum CE for each pair.
 
         Parameters
-        ----------       
+        ----------
         lag_mode : {'absmax', 'all_lags'}
             Lag mode. Either average across all lags between each pair or only
             at the lag of maximum absolute causal effect.
@@ -823,7 +805,7 @@ class LinearMediation(Models):
 
     def get_acs(self, j, lag_mode='absmax', exclude_j=True):
         """Returns the average causal susceptibility.
-        
+
         This is the Average Causal Susceptibility (ACS) affecting a variable j
         from any other variable. With lag_mode='absmax' this is based on the lag
         of maximum CE for each pair.
@@ -832,7 +814,7 @@ class LinearMediation(Models):
         ----------
         j : int
             Index of variable.
-        
+
         lag_mode : {'absmax', 'all_lags'}
             Lag mode. Either average across all lags between each pair or only
             at the lag of maximum absolute causal effect.
@@ -860,13 +842,13 @@ class LinearMediation(Models):
 
     def get_all_acs(self, lag_mode='absmax', exclude_j=True):
         """Returns the average causal susceptibility.
-        
+
         This is the Average Causal Susceptibility (ACS) for each variable from
         any other variable. With lag_mode='absmax' this is based on the lag of
         maximum CE for each pair.
 
         Parameters
-        ----------        
+        ----------
         lag_mode : {'absmax', 'all_lags'}
             Lag mode. Either average across all lags between each pair or only
             at the lag of maximum absolute causal effect.
@@ -887,10 +869,10 @@ class LinearMediation(Models):
 
         return acs
 
-    def get_amce(self, k, lag_mode='absmax', 
+    def get_amce(self, k, lag_mode='absmax',
                     exclude_k=True, exclude_self_effects=True):
         """Returns the average mediated causal effect.
-        
+
         This is the Average Mediated Causal Effect (AMCE) through a variable k
         With lag_mode='absmax' this is based on the lag of maximum CE for each
         pair.
@@ -899,13 +881,13 @@ class LinearMediation(Models):
         ----------
         k : int
             Index of variable.
-        
+
         lag_mode : {'absmax', 'all_lags'}
             Lag mode. Either average across all lags between each pair or only
             at the lag of maximum absolute causal effect.
 
         exclude_k : bool, optional (default: True)
-            Whether to exclude causal effects through the variable itself at 
+            Whether to exclude causal effects through the variable itself at
             previous lags.
 
         exclude_self_effects : bool, optional (default: True)
@@ -932,7 +914,7 @@ class LinearMediation(Models):
         if self.tau_max < 2:
             raise ValueError("Mediation only nonzero for tau_max >= 2")
 
-        all_mce = self.psi[2:, :, :] - self.all_psi_k[k, 2:, :, :] 
+        all_mce = self.psi[2:, :, :] - self.all_psi_k[k, 2:, :, :]
         # all_mce[:, range(self.N), range(self.N)] = 0.
 
         if lag_mode == 'absmax':
@@ -945,10 +927,10 @@ class LinearMediation(Models):
             raise ValueError("lag_mode = %s not implemented" % lag_mode)
 
 
-    def get_all_amce(self, lag_mode='absmax', 
+    def get_all_amce(self, lag_mode='absmax',
                     exclude_k=True, exclude_self_effects=True):
         """Returns the average mediated causal effect.
-        
+
         This is the Average Mediated Causal Effect (AMCE) through all variables
         With lag_mode='absmax' this is based on the lag of maximum CE for each
         pair.
@@ -960,7 +942,7 @@ class LinearMediation(Models):
             at the lag of maximum absolute causal effect.
 
         exclude_k : bool, optional (default: True)
-            Whether to exclude causal effects through the variable itself at 
+            Whether to exclude causal effects through the variable itself at
             previous lags.
 
         exclude_self_effects : bool, optional (default: True)
@@ -973,13 +955,13 @@ class LinearMediation(Models):
         """
         amce = numpy.zeros(self.N)
         for k in range(self.N):
-            amce[k] = self.get_amce(k, 
-                                lag_mode=lag_mode, 
-                                exclude_k=exclude_k, 
+            amce[k] = self.get_amce(k,
+                                lag_mode=lag_mode,
+                                exclude_k=exclude_k,
                                 exclude_self_effects=exclude_self_effects)
 
         return amce
-       
+
 
 class Prediction(Models, PCMCI):
     r"""Prediction class for time series models.
@@ -1010,14 +992,14 @@ class Prediction(Models, PCMCI):
 
     cond_ind_model : Conditional independence test class object, optional
         Only needed if predictors are estimated with causal algorithm.
-        The class will be initialized with masking set to the training data. 
+        The class will be initialized with masking set to the training data.
         Further parameters can be supplied by cond_ind_params.
 
     cond_ind_params : dictionary, optional
         Parameters for conditional independence test.
 
     data_transform : sklearn preprocessing object, optional (default: None)
-        Used to transform data prior to fitting. For example, 
+        Used to transform data prior to fitting. For example,
         sklearn.preprocessing.StandardScaler for simple standardization. The
         fitted parameters are stored.
 
@@ -1031,7 +1013,7 @@ class Prediction(Models, PCMCI):
         Level of verbosity.
     """
 
-    def __init__(self, 
+    def __init__(self,
             dataframe,
             train_indices,
             test_indices,
@@ -1045,12 +1027,11 @@ class Prediction(Models, PCMCI):
             ):
 
 
-        Models.__init__(self, 
+        Models.__init__(self,
             dataframe=dataframe,
             model=prediction_model,
             model_params=prediction_model_params,
             data_transform=data_transform,
-            use_mask=True,
             mask_type='y',
             missing_flag=missing_flag,
             verbosity=verbosity)
@@ -1060,7 +1041,6 @@ class Prediction(Models, PCMCI):
 
         if cond_ind_model is not None:
             cond_ind_test = cond_ind_model(
-                    use_mask=True,
                     mask_type='y',
                     verbosity=verbosity,
                     **cond_ind_params)
@@ -1074,16 +1054,17 @@ class Prediction(Models, PCMCI):
 
         T = len(dataframe.values)
 
+        # TODO consider self.train_dataframe and self.test_dataframe
         self.train_mask = numpy.copy(mask)
         self.train_mask[[t for t in range(T) if t not in train_indices]] = True
 
         self.test_mask = numpy.copy(mask)
         self.test_mask[[t for t in range(T) if t not in test_indices]] = True
 
-        dataframe_here = deepcopy(dataframe)
-        dataframe_here.mask = self.train_mask
-
         if cond_ind_test is not None:
+            dataframe_here = deepcopy(dataframe)
+            dataframe_here.mask = self.train_mask
+
             PCMCI.__init__(self,
                 dataframe=dataframe_here,
                 cond_ind_test=cond_ind_test,
@@ -1106,8 +1087,8 @@ class Prediction(Models, PCMCI):
                       ):
         """Estimate predictors using PC1 algorithm.
 
-        Wrapper around PCMCI.run_pc_stable that estimates causal predictors. 
-        The lead time can be specified by ``steps_ahead``. 
+        Wrapper around PCMCI.run_pc_stable that estimates causal predictors.
+        The lead time can be specified by ``steps_ahead``.
 
         Parameters
         ----------
@@ -1116,26 +1097,26 @@ class Prediction(Models, PCMCI):
             all variables are estimated.
 
         selected_links : dict or None
-            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} 
+            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}
             specifying whether only selected links should be tested. If None is
             passed, all links are tested
 
         steps_ahead : int, default: 1
             Minimum time lag to test. Useful for multi-step ahead predictions.
-        
+
         tau_max : int, default: 1
             Maximum time lag. Must be larger or equal to tau_min.
-                
+
         pc_alpha : float or list of floats, default: 0.2
             Significance level in algorithm. If a list or None is passed, the
-            pc_alpha level is optimized for every variable across the given 
-            pc_alpha values using the score computed in 
+            pc_alpha level is optimized for every variable across the given
+            pc_alpha values using the score computed in
             cond_ind_test.get_model_selection_criterion()
-        
+
         max_conds_dim : int or None
             Maximum number of conditions to test. If None is passed, this number
             is unrestricted.
-        
+
         max_combinations : int, default: 1
             Maximum number of combinations of conditions of current cardinality
             to test. Defaults to 1 for PC_1 algorithm. For original PC algorithm
@@ -1144,7 +1125,7 @@ class Prediction(Models, PCMCI):
         Returns
         -------
         predictors : dict
-            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} 
+            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}
             containing estimated predictors.
         """
 
@@ -1153,9 +1134,10 @@ class Prediction(Models, PCMCI):
 
         if selected_targets is None:
             self.selected_variables = range(self.N)
-        else:      
+        else:
             self.selected_variables = selected_targets
 
+        # TODO check how this effects the code
         self.mask = self.train_mask
 
         predictors = self.run_pc_stable(
@@ -1183,16 +1165,16 @@ class Prediction(Models, PCMCI):
 
         Parameters
         ----------
-        target_predictors : dictionary 
+        target_predictors : dictionary
             Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing
             the predictors estimated with PCMCI.
-        
+
         selected_targets : list of integers, optional (default: range(N))
             Specify to fit model only for selected targets. If None is
             passed, models are estimated for all variables.
 
         tau_max : int, optional (default: None)
-            Maximum time lag. If None, the maximum lag in target_predictors is 
+            Maximum time lag. If None, the maximum lag in target_predictors is
             used.
 
         return_data : bool, optional (default: False)
@@ -1215,6 +1197,7 @@ class Prediction(Models, PCMCI):
                 raise ValueError("No predictors given for target %s" % target)
 
         # Set mask to train_indices
+        # TODO check how this effects the code
         self.mask = self.train_mask
 
         self.fitted_model = self.get_fit(
@@ -1226,7 +1209,7 @@ class Prediction(Models, PCMCI):
 
         return self
 
-    
+
     def predict(self, target, new_data=None, pred_params=None,
                 cut_off='max_lag_or_tau_max'):
         r"""Predict target variable with fitted model.
@@ -1266,17 +1249,15 @@ class Prediction(Models, PCMCI):
         if pred_params is None:
             pred_params = {}
 
-        if new_data is None:
-            data = self.dataframe.values
-            # Set mask to test_indices
-            mask = self.test_mask
+        # Check if we've passed a new dataframe object
+        test_dataframe = None
+        if new_data is not None:
+            test_dataframe = new_data
+        # Otherwise use the default values
         else:
-            data = new_data.values
-            if new_data.mask is not None:
-                mask = new_data.mask
-            else:
-                mask = numpy.zeros(data.shape)
-
+            test_dataframe = DataFrame(self.dataframe.values,
+                                       mask=self.test_mask,
+                                       missing_flag=self.dataframe.missing_flag)
 
         if target not in self.selected_targets:
             raise ValueError("Target %s not yet fitted" % target)
@@ -1285,15 +1266,11 @@ class Prediction(Models, PCMCI):
         X = [(target, 0)] # dummy
         Z = self.target_predictors[target]
 
-        array, xyz = _construct_array(X, Y, Z, 
-                                tau_max=self.tau_max,
-                                data=data,
-                                use_mask=self.use_mask,
-                                mask=mask, 
-                                mask_type=self.mask_type,
-                                missing_flag=self.missing_flag,
-                                cut_off=cut_off,
-                                verbosity=self.verbosity)
+        array, xyz = test_dataframe.construct_array(X, Y, Z,
+                                                    tau_max=self.tau_max,
+                                                    mask_type=self.mask_type,
+                                                    cut_off=cut_off,
+                                                    verbosity=self.verbosity)
 
         if self.data_transform is not None:
             # print array.shape
@@ -1352,7 +1329,7 @@ if __name__ == '__main__':
     # import sklearn
     # import sklearn.linear_model
 
-    # model = Models(dataframe=dataframe, 
+    # model = Models(dataframe=dataframe,
     #     model = sklearn.linear_model.LinearRegression,
     #     # model = sklearn.gaussian_process.GaussianProcessRegressor,
     #     # model_params={'fit_intercept':False},
@@ -1361,8 +1338,8 @@ if __name__ == '__main__':
     #     # data_transform=sklearn.preprocessing.StandardScaler(),
 
     #     )
-    
-    # results = model.get_fit(all_parents=all_parents, 
+
+    # results = model.get_fit(all_parents=all_parents,
     #                         )
 
     # for j in list(results):
@@ -1391,7 +1368,7 @@ if __name__ == '__main__':
 
     i=0; tau=4; j=2
 
-    graph_data = med.get_mediation_graph_data(i=i, tau=tau, j=j, 
+    graph_data = med.get_mediation_graph_data(i=i, tau=tau, j=j,
                                             include_neighbors=True)
 
     import plotting as tp
@@ -1399,7 +1376,7 @@ if __name__ == '__main__':
 
     tp.plot_mediation_graph(
                 var_names=['X', 'Y', 'Z'],
-                path_val_matrix=graph_data['path_val_matrix'], 
+                path_val_matrix=graph_data['path_val_matrix'],
                path_node_array=graph_data['path_node_array'],
                save_name="/home/jakobrunge/test/test_graph.pdf"
                 )
@@ -1477,8 +1454,8 @@ if __name__ == '__main__':
     #                   )
 
     # print all_predictors
-    
-    # pred.fit(target_predictors=all_predictors, 
+
+    # pred.fit(target_predictors=all_predictors,
     #                 selected_targets=[target],
     #                     tau_max=tau_max,
     #                     return_data=True)
@@ -1519,7 +1496,7 @@ if __name__ == '__main__':
     #     verbosity=0
     #     )
     # all_predictors = {2:[(i, -tau) for i in range(3) for tau in range(1, tau_max+1)]}
-    # pred_bad.fit(target_predictors=all_predictors, 
+    # pred_bad.fit(target_predictors=all_predictors,
     #                 selected_targets=[target],
     #                     tau_max=tau_max)
 
