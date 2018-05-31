@@ -57,7 +57,9 @@ EXTRAS_REQUIRE = {
     'R'   : ['rpy2']              #R-based RCOT, requires acepack installed in R
     }
 # Define the packages needed for testing
-TESTS_REQUIRE = ['nose', 'pytest']
+TESTS_REQUIRE = ['nose',
+                 'pytest',
+                 'scikit-learn>=0.18']
 EXTRAS_REQUIRE['test'] = TESTS_REQUIRE
 # Define the extras needed for development
 EXTRAS_REQUIRE['dev'] = EXTRAS_REQUIRE['all'] + TESTS_REQUIRE + ['cython']
