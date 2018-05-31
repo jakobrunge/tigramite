@@ -14,8 +14,6 @@ class UseNumpyHeadersBuildExt(build_ext):
     dependency.
     """
     def run(self):
-        # Hack to tell setup.py that numpy has been installed in this process
-        __builtins__.__NUMPY_SETUP__ = False
         # Import numpy here, only when headers are needed
         import numpy
         # Add numpy headers to include_dirs
