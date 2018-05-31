@@ -3,7 +3,6 @@ python:
   # We don't actually use the Travis Python since we are using Conda, but this
   # keeps it organized.
   - "2.7"
-  - "3.4"
   - "3.5"
   - "3.6"
 install:
@@ -35,5 +34,4 @@ install:
   - ./install_r_packages.sh
 script: 
   # Run the tests
-  - python -c 'import rpy2; from rpy2.robjects.packages import importr; print(importr("RCIT"))'
-  #- pytest -v
+  - pytest -v
