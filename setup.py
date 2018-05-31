@@ -59,7 +59,8 @@ EXTRAS_REQUIRE = {
 # Define the packages needed for testing
 TESTS_REQUIRE = ['nose',
                  'pytest',
-                 'scikit-learn>=0.18']
+                 'scikit-learn>=0.18',
+                 'statsmodels']
 EXTRAS_REQUIRE['test'] = TESTS_REQUIRE
 # Define the extras needed for development
 EXTRAS_REQUIRE['dev'] = EXTRAS_REQUIRE['all'] + TESTS_REQUIRE + ['cython']
