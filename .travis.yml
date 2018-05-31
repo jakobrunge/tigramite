@@ -1,11 +1,36 @@
 language: python
 python:
+  # We don't actually use the Travis Python since we are using Conda, but this
+  # keeps it organized.
   - "2.7"
   - "3.4"
   - "3.5"
   - "3.6"
-# command to install dependencies
-install: 
+install:
+  - sudo apt-get update
+  # We do this conditionally because it saves us some downloading if the
+  # version is the same.
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
+    else
+      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+    fi
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  # Useful for debugging any issues with conda
+  - conda info -a
+
+  # Create and activate the environmenbt
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION
+  - source activate test-environment
+  # Install the python packages
   - pip install .['test']
-# command to run tests
-script: pytest -v
+  # Install the r_packages
+  - ./install_r_packages.sh
+script: 
+  # Run the tests
+  - python -c 'import rpy2; from rpy2.robjects.packages import importr; print(importr("RCIT"))'
+  #- pytest -v
