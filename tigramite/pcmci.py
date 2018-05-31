@@ -1076,6 +1076,7 @@ class PCMCI():
             for cnt, (i, tau) in enumerate(parent_list):
                 # Get the conditions for node i
                 conds_x = parents[i][:max_conds_px]
+                # Shift the conditions for X by tau
                 conds_x_lagged = [(k, tau + k_tau) for k, k_tau in conds_x]
 
                 # Print information about the mci conditions if requested
@@ -1086,8 +1087,7 @@ class PCMCI():
                 # I(X_t-tau; Y_t | Z^Y_t, Z^X_t-tau)
                 # with conditions for X shifted by tau
                 Z = [node for node in conds_y if node != (i, tau)]
-                # Shift the conditions for X by tau and remove overlapped nodes
-                # between conds_x_lagged and conds_y
+                # Remove overlapped nodes between conds_x_lagged and conds_y
                 Z += [node for node in conds_x_lagged if node not in conds_y]
                 # Yield these list
                 yield j, i, tau, Z
