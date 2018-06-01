@@ -73,6 +73,8 @@ class Models():
         # Get the number of nodes for this dataset
         self.N = self.dataframe.values.shape[1]
         # Set the model to be used
+        # TODO why don't we just pass it the constructed model and not the 
+        # model+params?
         self.model = model
         self.model_params = model_params
         if self.model_params is None:
@@ -1019,6 +1021,7 @@ class Prediction(Models, PCMCI):
 
         # Check if there is a conditional independence test given
         cond_ind_test = None
+        # TODO why don't we just pass it the constructed cond_ind_test?
         if cond_ind_model is not None:
             cond_ind_test = cond_ind_model(mask_type='y',
                                            verbosity=verbosity,

@@ -4,24 +4,17 @@ Tests for pcmci.py, including tests for run_pc_stable, run_mci, and run_pcmci.
 from __future__ import print_function
 import numpy as np
 import pytest
+import sklearn.linear_model
 
 from tigramite.models import LinearMediation
 import tigramite.data_processing as pp
+from tigramite.models import Prediction
+from tigramite.independence_tests import ParCorr
 
 from test_pcmci_calculations import a_chain, gen_data_frame
 
 # Pylint settings
 # pylint: disable=redefined-outer-name
-
-# Define the verbosity at the global scope
-VERBOSITY = 1
-
-    #Link coefficient (0, -2) --> 2:  0.0
-    #Causal effect (0, -2) --> 2:  0.250648072987
-    #Mediated Causal effect (0, -2) --> 2 through 1:  0.250648072987
-    #Average Causal Effect:  [ 0.36897445  0.25718002  0.        ]
-    #Average Causal Susceptibility:  [ 0.          0.24365041  0.38250406]
-    #Average Mediated Causal Effect:  [ 0.          0.12532404  0.        ]
 
 # TEST LINK GENERATION #########################################################
 @pytest.fixture(params=[
@@ -37,7 +30,7 @@ def data_frame_a(request):
     # Generate the dataframe
     return gen_data_frame(links_coeffs, time, seed_val), links_coeffs
 
-# TEST MODEL FUNCTIONALITY #####################################################
+# TEST MODELS ##################################################################
 def test_linear_mediation_coeffs(data_frame_a):
     # Build the dataframe and the model
     (dataframe, true_parents), links_coeffs = data_frame_a
@@ -49,9 +42,9 @@ def test_linear_mediation_coeffs(data_frame_a):
         np.testing.assert_allclose(med.get_coeff(i=i, tau=tau, j=j),
                                    coeff, rtol=1e-1)
 
-def test_linear_mediation_causal_coeffs(data_frame_a):
+def test_linear_med_cause_coeffs(data_frame_a):
     # Build the dataframe and the model
-    (dataframe, true_parents), links_coeffs = data_frame_a
+    (dataframe, true_parents), _ = data_frame_a
     med = LinearMediation(dataframe=dataframe)
     # Fit the model
     med.fit_model(all_parents=true_parents, tau_max=3)
@@ -59,3 +52,40 @@ def test_linear_mediation_causal_coeffs(data_frame_a):
     for causal_coeff in [med.get_ce(i=0, tau=-2, j=2),
                          med.get_mce(i=0, tau=-2, j=2, k=1)]:
         np.testing.assert_allclose(causal_coeff, 0.035, rtol=1e-1)
+
+# TEST PREDICTIONS #############################################################
+def test_predictions(data_frame_a):
+    # TODO NOTE: This doesn't actually test if the predictions make sense, only 
+    # that they work!
+    # Get the data
+    (dataframe, true_parents), links_coeffs = data_frame_a
+    T, _ = dataframe.values.shape
+    # Build the prediction
+    pred = Prediction(dataframe=dataframe,
+                      cond_ind_model=ParCorr,
+                      cond_ind_params={'significance':'analytic',
+                                       'fixed_thres':0.01},
+                      prediction_model=sklearn.linear_model.LinearRegression,
+                      train_indices=range(int(0.8*T)),
+                      test_indices=range(int(0.8*T), T),
+                      verbosity=0)
+    # Load some parameters
+    tau_max = 3
+    steps_ahead = 0
+    target = 2
+    # Get the predictors from pc_stable
+    all_predictors = pred.get_predictors(selected_targets=[target],
+                                         selected_links=None,
+                                         steps_ahead=steps_ahead,
+                                         tau_max=tau_max,
+                                         pc_alpha=None,
+                                         max_conds_dim=None,
+                                         max_combinations=1)
+    # Fit the predictors using the ML method
+    pred.fit(target_predictors=all_predictors,
+             selected_targets=[target],
+             tau_max=tau_max,
+             return_data=True)
+    # Predict the values
+    _ = pred.predict(target)
+    # TODO test the values make sense
