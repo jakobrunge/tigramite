@@ -122,7 +122,6 @@ class CondIndTest():
         # Set the dataframe to None for now, will be reset during pcmci call
         self.dataframe = None
         # Set the options
-        self.mask_type = mask_type
         self.significance = significance
         self.sig_samples = sig_samples
         self.sig_blocklength = sig_blocklength
@@ -133,13 +132,7 @@ class CondIndTest():
         if self.recycle_residuals:
             self.residuals = {}
         # If we use a mask, we cannot recycle residuals
-        if self.mask_type is not None:
-            if self.recycle_residuals is True:
-                warnings.warn("Using a mask disables recycling residuals.")
-            self.recycle_residuals = False
-        # TODO ask jakob: I removed the default mask type, is this okay?
-        # if self.mask_type is None:
-        # self.mask_type = 'y'
+        self.set_mask_type(mask_type)
 
         # Set the confidence type and details
         self.confidence = confidence
@@ -150,6 +143,28 @@ class CondIndTest():
         # Print information about the
         if self.verbosity > 0:
             self.print_info()
+
+    def set_mask_type(self, mask_type):
+        """
+        Setter for mask type to ensure that this option does not clash with
+        recycle_residuals.
+
+        Parameters
+        ----------
+        mask_type : str
+            Must be in {'y','x','z','xy','xz','yz','xyz'}
+            Masking mode: Indicators for which variables in the dependence
+            measure I(X; Y | Z) the samples should be masked. If None, 'y' is
+            used, which excludes all time slices containing masked samples in Y.
+            Explained in [1]_.
+        """
+        # Set the mask type
+        self.mask_type = mask_type
+        # Check if this clashes with residual recycling
+        if self.mask_type is not None:
+            if self.recycle_residuals is True:
+                warnings.warn("Using a mask disables recycling residuals.")
+            self.recycle_residuals = False
         # Check the mask type is keyed correctly
         self._check_mask_type()
 

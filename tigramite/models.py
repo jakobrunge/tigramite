@@ -39,11 +39,8 @@ class Models():
         optionally a mask of the same shape and a missing values flag.
 
     model : sklearn model object
-        For example, sklearn.linear_model.LinearRegression for a linear
+        For example, sklearn.linear_model.LinearRegression() for a linear
         regression model.
-
-    model_params : dictionary, optional (default: None)
-        Optional parameters passed on to sklearn model
 
     data_transform : sklearn preprocessing object, optional (default: None)
         Used to transform data prior to fitting. For example,
@@ -73,12 +70,7 @@ class Models():
         # Get the number of nodes for this dataset
         self.N = self.dataframe.values.shape[1]
         # Set the model to be used
-        # TODO why don't we just pass it the constructed model and not the 
-        # model+params?
         self.model = model
-        self.model_params = model_params
-        if self.model_params is None:
-            self.model_params = {}
         # Set the data_transform object and verbosity
         self.data_transform = data_transform
         self.verbosity = verbosity
@@ -171,12 +163,12 @@ class Models():
                 array = self.data_transform.fit_transform(X=array.T).T
             # Fit the model if there are any parents for this variable to fit
             if dim_z > 0:
-                # Initialize and fir the model
-                model = self.model(**self.model_params)
-                model.fit(X=array[2:].T, y=array[1])
+                # Copy and fit the model
+                a_model = deepcopy(self.model)
+                a_model.fit(X=array[2:].T, y=array[1])
                 # Cache the results
                 fit_results[j] = {}
-                fit_results[j]['model'] = model
+                fit_results[j]['model'] = a_model
                 # Cache the data transform
                 if self.data_transform is not None:
                     fit_results[j]['data_transform'] = \
@@ -316,17 +308,18 @@ class LinearMediation(Models):
                     return X
             data_transform = noscaler()
 
+        # Build the model using the parameters
+        if model_params is None:
+            model_params = {}
+        this_model = sklearn.linear_model.LinearRegression(**model_params)
         Models.__init__(self,
                         dataframe=dataframe,
-                        model=sklearn.linear_model.LinearRegression,
-                        model_params=model_params,
+                        model=this_model,
                         data_transform=data_transform,
                         mask_type=mask_type,
                         verbosity=verbosity)
 
-
-    def fit_model(self, all_parents,
-                     tau_max=None,):
+    def fit_model(self, all_parents, tau_max=None):
         """Fit linear time series model.
 
         Fits a sklearn.linear_model.LinearRegression model to the parents of
@@ -959,19 +952,12 @@ class Prediction(Models, PCMCI):
         Either boolean array or time indices marking the test data.
 
     prediction_model : sklearn model object
-        For example, sklearn.linear_model.LinearRegression for a linear
+        For example, sklearn.linear_model.LinearRegression() for a linear
         regression model.
 
-    prediction_model_params : dictionary, optional (default: None)
-        Optional parameters passed on to sklearn model
-
-    cond_ind_model : Conditional independence test class object, optional
+    cond_ind_test : Conditional independence test object, optional
         Only needed if predictors are estimated with causal algorithm.
         The class will be initialized with masking set to the training data.
-        Further parameters can be supplied by cond_ind_params.
-
-    cond_ind_params : dictionary, optional
-        Parameters for conditional independence test.
 
     data_transform : sklearn preprocessing object, optional (default: None)
         Used to transform data prior to fitting. For example,
@@ -981,15 +967,12 @@ class Prediction(Models, PCMCI):
     verbosity : int, optional (default: 0)
         Level of verbosity.
     """
-
     def __init__(self,
                  dataframe,
                  train_indices,
                  test_indices,
                  prediction_model,
-                 prediction_model_params=None,
-                 cond_ind_model=None,
-                 cond_ind_params=None,
+                 cond_ind_test=None,
                  data_transform=None,
                  verbosity=0):
 
@@ -1009,23 +992,9 @@ class Prediction(Models, PCMCI):
         Models.__init__(self,
                         dataframe=self.dataframe,
                         model=prediction_model,
-                        model_params=prediction_model_params,
                         data_transform=data_transform,
                         mask_type='y',
                         verbosity=verbosity)
-
-        # Check if there are any parameters for the conditional independence
-        # test
-        if cond_ind_params is None:
-            cond_ind_params = {}
-
-        # Check if there is a conditional independence test given
-        cond_ind_test = None
-        # TODO why don't we just pass it the constructed cond_ind_test?
-        if cond_ind_model is not None:
-            cond_ind_test = cond_ind_model(mask_type='y',
-                                           verbosity=verbosity,
-                                           **cond_ind_params)
 
         # Build the testing dataframe as well
         self.test_mask = np.copy(mask)
@@ -1033,6 +1002,9 @@ class Prediction(Models, PCMCI):
 
         # Setup the PCMCI instance
         if cond_ind_test is not None:
+            # Force the masking
+            cond_ind_test.set_mask_type('y')
+            cond_ind_test.verbosity = verbosity
             # TODO maybe we don't need a deep copy here?
             PCMCI.__init__(self,
                            dataframe=deepcopy(self.dataframe),
@@ -1042,9 +1014,7 @@ class Prediction(Models, PCMCI):
                            verbosity=verbosity)
 
         # Set the member variables
-        self.cond_ind_model = cond_ind_model
-        self.prediction_model = prediction_model
-        self.prediction_model_params = prediction_model_params
+        self.cond_ind_test = cond_ind_test
         # Initialize member varialbes that are set outside
         self.target_predictors = None
         self.selected_targets = None
@@ -1103,8 +1073,8 @@ class Prediction(Models, PCMCI):
             containing estimated predictors.
         """
         # Ensure an independence model is given
-        if self.cond_ind_model is None:
-            raise ValueError("No cond_ind_model given!")
+        if self.cond_ind_test is None:
+            raise ValueError("No cond_ind_test given!")
         # Set the selected variables
         self.selected_variables = range(self.N)
         if selected_targets is not None:
@@ -1256,222 +1226,3 @@ class Prediction(Models, PCMCI):
     def get_test_array(self):
         """Returns test array."""
         return self.test_array
-
-
-if __name__ == '__main__':
-
-
-    import tigramite.data_processing as pp
-
-    # ###
-    # ### Models class
-    # ###
-
-    # np.random.seed(44)
-    # a = 0.9
-    # c = 0.5
-    # T = 1000
-
-    # verbosity = 0
-    # # Each key refers to a variable and the incoming links are supplied as a
-    # # list of format [((driver, lag), coeff), ...]
-    # links_coeffs = {0: [((0, -1), a)],
-    #                 1: [((1, -1), a), ((0, -1), c)],
-    #                 2: [((2, -1), a), ((1, -1), c), ((0, -1), c)],
-    #                 }
-
-    # data, true_parents_neighbors = pp.var_process(links_coeffs, T=T)
-
-    # # Assume true parents are known
-    # all_parents = true_parents_neighbors
-    # print all_parents
-
-    # # data_mask = np.zeros(data.shape)
-    # dataframe = pp.DataFrame(data)
-
-
-    # import sklearn
-    # import sklearn.linear_model
-
-    # model = Models(dataframe=dataframe,
-    #     model = sklearn.linear_model.LinearRegression,
-    #     # model = sklearn.gaussian_process.GaussianProcessRegressor,
-    #     # model_params={'fit_intercept':False},
-    #     # model_params = {'alpha':0., 'kernel':sklearn.gaussian_process.kernels.RBF() +
-    #     #                                     sklearn.gaussian_process.kernels.WhiteKernel()},
-    #     # data_transform=sklearn.preprocessing.StandardScaler(),
-
-    #     )
-
-    # results = model.get_fit(all_parents=all_parents,
-    #                         )
-
-    # for j in list(results):
-    #     print results[j]['model']  #.coef_
-
-
-    ###
-    ### Linear Mediation
-    ###
-    np.random.seed(42)
-    links_coeffs = {0: [((0, -1), 0.6), ((1, 0), 0.6)],
-                    1: [((1, -1), 0.8), ((0, -1), 0.5), ((0, 0), 0.6)],
-                    2: [((2, -1), 0.9), ((1, -1), 0.5), ((0, -2), 0.)],
-                    }
-
-    data, true_parents = pp.var_process(links_coeffs, T=1000)
-    dataframe = pp.DataFrame(data)
-    med = LinearMediation(dataframe=dataframe, data_transform=False)
-    med.fit_model(all_parents=true_parents, tau_max=4)
-    print ("Link coefficient (0, -2) --> 2: ", med.get_coeff(i=0, tau=-2, j=2))
-    print ("Causal effect (0, -2) --> 2: ", med.get_ce(i=0, tau=-2, j=2))
-    print ("Mediated Causal effect (0, -2) --> 2 through 1: ", med.get_mce(i=0, tau=-2, j=2, k=1))
-    print ("Average Causal Effect: ", med.get_all_ace())
-    print ("Average Causal Susceptibility: ", med.get_all_acs())
-    print ("Average Mediated Causal Effect: ", med.get_all_amce())
-
-    i=0; tau=4; j=2
-
-    graph_data = med.get_mediation_graph_data(i=i, tau=tau, j=j,
-                                            include_neighbors=True)
-
-    import plotting as tp
-
-
-    tp.plot_mediation_graph(
-                var_names=['X', 'Y', 'Z'],
-                path_val_matrix=graph_data['path_val_matrix'],
-               path_node_array=graph_data['path_node_array'],
-               save_name="/home/jakobrunge/test/test_graph.pdf"
-                )
-
-    tp.plot_mediation_time_series_graph(
-        var_names=['X', 'Y', 'Z'],
-        path_node_array=graph_data['path_node_array'],
-        tsg_path_val_matrix=graph_data['tsg_path_val_matrix'],
-        # vmin_edges=-0.5, vmax_edges=0.5, edge_ticks=0.1,
-        # vmin_nodes=-0.5, vmax_nodes=0.5, node_ticks=0.1,
-        save_name="/home/jakobrunge/test/test_tsg_graph.pdf"
-        )
-
-    # ##
-    # ## Prediction
-    # ##
-    # import pylab
-
-    # np.random.seed(44)
-    # a = 0.4
-    # c = 0.6
-    # T = 200
-
-    # verbosity = 0
-    # # Each key refers to a variable and the incoming links are supplied as a
-    # # list of format [((driver, lag), coeff), ...]
-    # links_coeffs = {0: [((0, -1), a)],
-    #                 1: [((1, -1), a), ((0, -1), c)],
-    #                 2: [((2, -1), a), ((1, -1), c)],  # ((0, -1), c)],
-    #                 }
-
-    # data, true_parents_neighbors = pp.var_process(links_coeffs, T=T)
-
-    # # print data
-    # # print data.mean(axis=0), data.std(axis=0)
-    # data_mask = np.zeros(data.shape)
-
-    # dataframe = pp.DataFrame(data)
-
-    # from tigramite.independence_tests import ParCorr
-    # # import sklearn
-    # # import sklearn.preprocessing
-    # # import sklearn.neighbors
-    # # import sklearn.linear_model
-
-    # pred = Prediction(dataframe=dataframe,
-    #         cond_ind_model=ParCorr,
-    #         cond_ind_params = {'significance':'analytic',
-    #                            'fixed_thres':0.01},
-    #         prediction_model = sklearn.linear_model.LinearRegression,
-    #         # prediction_model = sklearn.gaussian_process.GaussianProcessRegressor,
-    #         # prediction_model = sklearn.neighbors.KNeighborsRegressor,
-    #     # prediction_model_params={'fit_intercept':False},
-    #     # prediction_model_params = {'n_neighbors':5},
-    #     # prediction_model_params = {'alpha':0., 'kernel':sklearn.gaussian_process.kernels.RBF() +
-    #     #                                     sklearn.gaussian_process.kernels.WhiteKernel()},
-    #     # data_transform=sklearn.preprocessing.StandardScaler(),
-    #     train_indices= range(int(0.8*T)),
-    #     test_indices= range(int(0.8*T), T),
-    #     verbosity=0
-    #     )
-
-    # tau_max = 25
-    # steps_ahead = 1
-    # target = 2
-
-    # all_predictors = pred.get_predictors(
-    #                   selected_targets=[target],
-    #                   selected_links=None,
-    #                   steps_ahead=steps_ahead,
-    #                   tau_max=tau_max,
-    #                   pc_alpha=None,
-    #                   max_conds_dim=None,
-    #                   max_combinations=1,
-    #                   )
-
-    # print all_predictors
-
-    # pred.fit(target_predictors=all_predictors,
-    #                 selected_targets=[target],
-    #                     tau_max=tau_max,
-    #                     return_data=True)
-
-    # # print all_predictors[target]
-
-    # new_data = pp.DataFrame(pp.var_process(links_coeffs, T=100)[0])
-
-    # predicted = pred.predict(target,
-    #                         # new_data=new_data,
-    #                         # cut_off = 'max_lag',
-    #                         # pred_params = {'return_std':True}
-    #                         )
-    # # print predicted[1]
-
-    # true_data = pred.get_test_array()[0]
-    # train_data = pred.get_train_array(target)
-    # print pred.get_test_array()[0, :10]
-    # print train_data[0, :10]
-
-    # print "NRMSE = %.2f" % (np.abs(true_data - predicted).mean()/true_data.std())
-    # pylab.scatter(true_data, predicted)
-    # pylab.title("NRMSE = %.2f" % (np.abs(true_data - predicted).mean()/true_data.std()))
-
-    # # pylab.errorbar(true_data, predicted[0], yerr=predicted[1], fmt='o')
-
-    # pylab.plot(true_data, true_data, 'k-')
-    # pylab.show()
-
-    # pylab.figure()
-    # pred_bad = Prediction(
-    #     dataframe=dataframe,
-    #     cond_ind_model=ParCorr,
-    #     prediction_model = sklearn.linear_model.LinearRegression,
-    #     data_transform=sklearn.preprocessing.StandardScaler(),
-    #     train_indices= range(int(0.8*T)),
-    #     test_indices= range(int(0.8*T), T),
-    #     verbosity=0
-    #     )
-    # all_predictors = {2:[(i, -tau) for i in range(3) for tau in range(1, tau_max+1)]}
-    # pred_bad.fit(target_predictors=all_predictors,
-    #                 selected_targets=[target],
-    #                     tau_max=tau_max)
-
-    # predicted = pred_bad.predict(target)
-    # true_data = pred_bad.get_test_array()[0]
-    # print "NRMSE = %.2f" % (np.abs(true_data - predicted).mean()/true_data.std())
-
-    # pylab.scatter(true_data, predicted)
-    # pylab.title("\nNRMSE = %.2f" % (np.abs(true_data - predicted).mean()/true_data.std()))
-    # pylab.plot(true_data, true_data, 'k-')
-    # pylab.xlabel('True test data')
-    # pylab.ylabel('Predicted test data')
-
-    # pylab.show()

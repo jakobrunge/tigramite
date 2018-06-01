@@ -61,11 +61,11 @@ def test_predictions(data_frame_a):
     (dataframe, true_parents), links_coeffs = data_frame_a
     T, _ = dataframe.values.shape
     # Build the prediction
+    a_cond_ind_test = ParCorr(significance='analytic',
+                              fixed_thres=0.01)
     pred = Prediction(dataframe=dataframe,
-                      cond_ind_model=ParCorr,
-                      cond_ind_params={'significance':'analytic',
-                                       'fixed_thres':0.01},
-                      prediction_model=sklearn.linear_model.LinearRegression,
+                      cond_ind_test=a_cond_ind_test,
+                      prediction_model=sklearn.linear_model.LinearRegression(),
                       train_indices=range(int(0.8*T)),
                       test_indices=range(int(0.8*T), T),
                       verbosity=0)
