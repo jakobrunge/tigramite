@@ -117,13 +117,6 @@ class DataFrame():
             Maximum time lag. This may be used to make sure that estimates for
             different lags in X and Z all have the same sample size.
 
-        data : array-like,
-            This is the data input array of shape = (T, N)
-
-        mask : boolean array, optional (default: None)
-            Mask of data array, marking masked values as 1. Must be of same
-            shape as data. If is None, no mask will be used.
-
         mask_type : {'y','x','z','xy','xz','yz','xyz'}
             Masking mode: Indicators for which variables in the dependence
             measure I(X; Y | Z) the samples should be masked. If None, 'y' is
@@ -885,14 +878,16 @@ def _check_parent_neighbor(parents_neighbors_coeffs):
     # Initialize some lists for checking later
     all_nodes = set()
     all_parents = set()
+    # Iterate through variables
+    for j in list(parents_neighbors_coeffs):
+        # Cache all node ids to ensure they are contiguous
+        all_nodes.add(j)
     # Iterate through all nodes
     for j, i, tau, _ in _iter_coeffs(parents_neighbors_coeffs):
         # Check all time lags are equal to or less than zero
         if tau > 0:
             raise ValueError("Lag between parent {} and node {}".format(i, j)+\
                              " is {} > 0, must be <= 0!".format(tau))
-        # Cache all node ids to ensure they are contiguous
-        all_nodes.add(j)
         # Cache all parent ids to ensure they are mentioned as node ids
         all_parents.add(i)
     # Check that all nodes are contiguous from zero
