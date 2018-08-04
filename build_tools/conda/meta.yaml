@@ -37,7 +37,7 @@ test:
     - pytest
     - rpy2
   commands:
-    - pytest -k test_run_test_rcot .
+    - pytest .
 
 about:
   home: https://github.com/jakobrunge/tigramite
