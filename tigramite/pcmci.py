@@ -585,9 +585,10 @@ class PCMCI():
         # Loop over all possible condition dimentions
         max_conds_dim = self._set_max_condition_dim(max_conds_dim,
                                                     tau_min, tau_max)
-        # Iteration through increasing number of conditions
+        # Iteration through increasing number of conditions, i.e. from 
+        # [0,max_conds_dim] inclusive
         converged = False
-        for conds_dim in range(max_conds_dim):
+        for conds_dim in range(max_conds_dim+1):
             # (Re)initialize the list of non-significant links
             nonsig_parents = list()
             # Check if the algorithm has converged
@@ -1075,7 +1076,6 @@ class PCMCI():
                 conds_x = parents[i][:max_conds_px]
                 # Shift the conditions for X by tau
                 conds_x_lagged = [(k, tau + k_tau) for k, k_tau in conds_x]
-
                 # Print information about the mci conditions if requested
                 if self.verbosity > 1:
                     self._print_mci_conditions(conds_y, conds_x_lagged, j, i,

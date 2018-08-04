@@ -60,7 +60,6 @@ class Models():
     def __init__(self,
                  dataframe,
                  model,
-                 model_params=None,
                  data_transform=None,
                  mask_type=None,
                  verbosity=0):
@@ -1005,9 +1004,8 @@ class Prediction(Models, PCMCI):
             # Force the masking
             cond_ind_test.set_mask_type('y')
             cond_ind_test.verbosity = verbosity
-            # TODO maybe we don't need a deep copy here?
             PCMCI.__init__(self,
-                           dataframe=deepcopy(self.dataframe),
+                           dataframe=self.dataframe,
                            cond_ind_test=cond_ind_test,
                            selected_variables=None,
                            var_names=None,
@@ -1079,8 +1077,6 @@ class Prediction(Models, PCMCI):
         self.selected_variables = range(self.N)
         if selected_targets is not None:
             self.selected_variables = selected_targets
-        # TODO this runs on the deepcopy of the training dataframe.  Is this
-        # correct Jakob?
         predictors = self.run_pc_stable(selected_links=selected_links,
                                         tau_min=steps_ahead,
                                         tau_max=tau_max,
@@ -1139,7 +1135,6 @@ class Prediction(Models, PCMCI):
                          selected_variables=self.selected_targets,
                          tau_max=tau_max,
                          return_data=return_data)
-        # TODO why are you returning self here?
         return self
 
     def predict(self, target,
