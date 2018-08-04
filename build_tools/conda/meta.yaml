@@ -7,13 +7,17 @@ source:
 
 requirements:
   build:
+    - cython
     - numpy
     - rpy2
     - setuptools
     - python
   host:
-    - python
+    - cython
+    - numpy
+    - rpy2
     - setuptools
+    - python
   run:
     - python
     - numpy 
@@ -27,7 +31,7 @@ requirements:
 
 test:
   source_files:
-    - test/*py
+    - tests/*py
   requires:
     - nose
     - pytest
@@ -35,6 +39,7 @@ test:
     - pytest .
 
 about:
-  home:
-  license:
-  license_file:
+  home: https://github.com/jakobrunge/tigramite
+  license: GNU GPL
+  license_file: license.txt
+  summary: Tigramite is a time series analysis aimed at causal discovery
