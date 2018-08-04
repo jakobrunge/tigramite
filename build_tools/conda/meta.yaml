@@ -1,0 +1,37 @@
+package:
+  name: tigramite
+  version: 4.0.0
+
+source:
+  path: ../..
+
+requirements:
+  build:
+    - rpy2
+  host:
+    - python
+    - setuptools
+  run:
+    - python
+    - numpy 
+    - scipy
+    - six 
+    - scikit-learn>=0.18
+    - matplotlib>=1.5
+    - networkx>=1.10
+    - statsmodels
+    - rpy2
+
+test:
+  source_files:
+    - test/*py
+  requires:
+    - nose
+    - pytest
+  commands:
+    - pytest .
+
+about:
+  home:
+  license:
+  license_file:
