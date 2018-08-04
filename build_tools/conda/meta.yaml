@@ -36,7 +36,7 @@ test:
     - nose
     - pytest
   commands:
-    - pytest .
+    - pytest -k test_run_test_rcot .
 
 about:
   home: https://github.com/jakobrunge/tigramite
