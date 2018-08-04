@@ -1177,31 +1177,30 @@ class Prediction(Models, PCMCI):
         # Default value for pred_params
         if pred_params is None:
             pred_params = {}
-        # Check if we've passed a new dataframe object
-        test_dataframe = None
-        if new_data is not None:
-            test_dataframe = new_data
-        # Otherwise use the default values
-        else:
-            # TODO two options here:
-            # * Force new_data to be a positional argument
-            # * persist test_dataframe as an instance
-            test_dataframe = DataFrame(self.dataframe.values,
-                                       mask=self.test_mask,
-                                       missing_flag=self.dataframe.missing_flag)
         # Check this is a valid target
         if target not in self.selected_targets:
             raise ValueError("Target %s not yet fitted" % target)
-
         # Construct the array form of the data
         Y = [(target, 0)]
         X = [(target, 0)] # dummy
         Z = self.target_predictors[target]
-        test_array, _ = test_dataframe.construct_array(X, Y, Z,
-                                                       tau_max=self.tau_max,
-                                                       mask_type=self.mask_type,
-                                                       cut_off=cut_off,
-                                                       verbosity=self.verbosity)
+        # Check if we've passed a new dataframe object
+        test_array = None
+        if new_data is not None:
+            test_array, _ = new_data.construct_array(X, Y, Z,
+                                                     tau_max=self.tau_max,
+                                                     mask_type=self.mask_type,
+                                                     cut_off=cut_off,
+                                                     verbosity=self.verbosity)
+        # Otherwise use the default values
+        else:
+            test_array, _ = \
+                self.dataframe.construct_array(X, Y, Z,
+                                               tau_max=self.tau_max,
+                                               mask=self.test_mask,
+                                               mask_type=self.mask_type,
+                                               cut_off=cut_off,
+                                               verbosity=self.verbosity)
         # Transform the data if needed
         # TODO why are we not just using self.data_transform here?
         if self.data_transform is not None:
