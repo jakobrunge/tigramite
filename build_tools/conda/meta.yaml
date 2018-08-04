@@ -40,6 +40,6 @@ test:
 
 about:
   home: https://github.com/jakobrunge/tigramite
-  license: GNU GPL
+  license: GPL-3
   license_file: license.txt
   summary: Tigramite is a time series analysis aimed at causal discovery
