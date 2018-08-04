@@ -1,14 +1,14 @@
 echo EWEN DEBUG
 echo $PREFIX
 ls $PREFIX
+pwd
+ls
 return 1
 # Install r-MASS package, which is a dependency of RCIT/RCOT
-R -e 'install.packages("MASS", repos = "https://cloud.r-project.org/")' 
+R -e "install.packages('MASS', '$PREFIX/lib/R/library/', repos='https://cloud.r-project.org/')"
 # Install momentchi2, whichs is a dependency of RCIT/RCOT
-R -e 'install.packages("momentchi2", repos = "https://cloud.r-project.org/")' 
-# Install devtools so we can install from github
-R -e 'install.packages("devtools", repos = "https://cloud.r-project.org/")' 
-# Install RCOT/RCIT
-R -e 'devtools::install("external_packages/RCIT")'
+R -e "install.packages('momentchi2', '$PREFIX/lib/R/library/', repos = 'https://cloud.r-project.org/')"
+# Install the RCIT package
+#R -e install.packages(path_to_file, repos = NULL, type="source")
 # Install tigramite
 $PYTHON setup.py install --single-version-externally-managed --record=record.txt
