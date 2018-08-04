@@ -60,7 +60,7 @@ class Models():
     def __init__(self,
                  dataframe,
                  model,
-                 data_transform=None,
+                 data_transform=sklearn.preprocessing.StandardScaler(),
                  mask_type=None,
                  verbosity=0):
         # Set the mask type and dataframe object
@@ -169,9 +169,7 @@ class Models():
                 fit_results[j] = {}
                 fit_results[j]['model'] = a_model
                 # Cache the data transform
-                if self.data_transform is not None:
-                    fit_results[j]['data_transform'] = \
-                        deepcopy(self.data_transform)
+                fit_results[j]['data_transform'] = deepcopy(self.data_transform)
                 # Cache the data if needed
                 if return_data:
                     fit_results[j]['data'] = array
@@ -285,27 +283,13 @@ class LinearMediation(Models):
     def __init__(self,
                  dataframe,
                  model_params=None,
-                 data_transform=None,
+                 data_transform=sklearn.preprocessing.StandardScaler(),
                  mask_type=None,
                  verbosity=0):
         # Initialize the member variables to None
         self.phi = None
         self.psi = None
         self.all_psi_k = None
-
-        # TODO this should be fixed, i.e. should not be able to parse both None
-        # and False. Pick one default and stick with it
-        if data_transform is None:
-            data_transform=sklearn.preprocessing.StandardScaler()
-        elif data_transform == False:
-            class noscaler():
-                def __init__(self):
-                    pass
-                def fit_transform(self, X):
-                    return X
-                def transform(self, X):
-                    return X
-            data_transform = noscaler()
 
         # Build the model using the parameters
         if model_params is None:
@@ -1202,9 +1186,8 @@ class Prediction(Models, PCMCI):
                                                cut_off=cut_off,
                                                verbosity=self.verbosity)
         # Transform the data if needed
-        # TODO why are we not just using self.data_transform here?
-        if self.data_transform is not None:
-            a_transform = self.fitted_model[target]['data_transform']
+        a_transform = self.fitted_model[target]['data_transform']
+        if a_transform is not None:
             test_array = a_transform.transform(X=test_array.T).T
         # Cache the test array
         self.test_array = test_array
