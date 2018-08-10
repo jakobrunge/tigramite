@@ -247,9 +247,7 @@ class PCMCI():
                  var_names=None,
                  verbosity=0):
         # Set the data for this iteration of the algorithm
-        # TODO remove one (or preferably both) of these
         self.dataframe = dataframe
-        self.data = dataframe.values
         # Set the conditional independence test to be used
         self.cond_ind_test = cond_ind_test
         self.cond_ind_test.set_dataframe(self.dataframe)
@@ -259,9 +257,9 @@ class PCMCI():
         self.var_names = var_names
         # Set the default variable names if none are set
         if self.var_names is None:
-            self.var_names = {i: i for i in range(len(self.data))}
+            self.var_names = {i: i for i in range(len(self.dataframe.values))}
         # Store the shape of the data in the T and N variables
-        self.T, self.N = self.data.shape
+        self.T, self.N = self.dataframe.values.shape
         # Set the selected variables
         self.selected_variables = \
             self._set_selected_variables(selected_variables)
@@ -587,9 +585,10 @@ class PCMCI():
         # Loop over all possible condition dimentions
         max_conds_dim = self._set_max_condition_dim(max_conds_dim,
                                                     tau_min, tau_max)
-        # Iteration through increasing number of conditions
+        # Iteration through increasing number of conditions, i.e. from 
+        # [0,max_conds_dim] inclusive
         converged = False
-        for conds_dim in range(max_conds_dim):
+        for conds_dim in range(max_conds_dim+1):
             # (Re)initialize the list of non-significant links
             nonsig_parents = list()
             # Check if the algorithm has converged
@@ -762,7 +761,7 @@ class PCMCI():
         """
         # Check if an input was given
         if max_conds_dim is None:
-            max_conds_dim = self.N * (tau_max - tau_min + 1) + 1
+            max_conds_dim = self.N * (tau_max - tau_min + 1)
         # Check this is a valid
         if max_conds_dim < 0:
             raise ValueError("maximum condition dimension must be >= 0")
@@ -775,8 +774,7 @@ class PCMCI():
                       save_iterations=False,
                       pc_alpha=0.2,
                       max_conds_dim=None,
-                      max_combinations=1,
-                      ):
+                      max_combinations=1):
         """PC algorithm for estimating parents of all variables.
 
         Parents are made available as self.all_parents
@@ -1078,7 +1076,6 @@ class PCMCI():
                 conds_x = parents[i][:max_conds_px]
                 # Shift the conditions for X by tau
                 conds_x_lagged = [(k, tau + k_tau) for k, k_tau in conds_x]
-
                 # Print information about the mci conditions if requested
                 if self.verbosity > 1:
                     self._print_mci_conditions(conds_y, conds_x_lagged, j, i,
@@ -1088,7 +1085,7 @@ class PCMCI():
                 # with conditions for X shifted by tau
                 Z = [node for node in conds_y if node != (i, tau)]
                 # Remove overlapped nodes between conds_x_lagged and conds_y
-                Z += [node for node in conds_x_lagged if node not in conds_y]
+                Z += [node for node in conds_x_lagged if node not in Z]
                 # Yield these list
                 yield j, i, tau, Z
 

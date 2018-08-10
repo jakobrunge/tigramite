@@ -27,11 +27,12 @@ install:
   - source activate test-environment
   # Ensure we will install all pip packages within conda
   - conda install pip
-  # Install the python packages, installing numpy first to avoid headaches
+  # Install numpy first to avoid headaches
   - pip install numpy
-  - pip install .['test']
   # Install the r_packages
   - ./install_r_packages.sh
+  # Install the packages needed for testing
+  - pip install .['test']
 script: 
   # Run the tests
   - pytest -v

@@ -12,9 +12,6 @@ import numpy as np
 import scipy.sparse
 import scipy.sparse.linalg
 
-# TODO force usage of pandas DF, do not support own data frame...
-# TODO have DataFrame inheret from pandas DataFrame?
-# TODO have your dataframe OWN a Panda's DataFrame
 class DataFrame():
     """Data object containing time series array and optional mask.
 
@@ -60,7 +57,7 @@ class DataFrame():
         #     raise ValueError("NaNs in the data")
         self._check_mask()
 
-    def _check_mask(self, require_mask=False):
+    def _check_mask(self, mask=None, require_mask=False):
         """Checks that the mask is:
             * The same shape as the data
             * Is an numpy ndarray (or subtype)
@@ -71,28 +68,31 @@ class DataFrame():
         require_mask : bool (default : False)
         """
         # Check that there is a mask if required
-        if require_mask and self.mask is None:
-            raise ValueError("dataframe.mask must be array of same shape"
-                             " as fulldata.")
+        _use_mask = mask
+        if _use_mask is None:
+            _use_mask = self.mask
+        if require_mask and _use_mask is None:
+            raise ValueError("Expected a mask, but got nothing!")
         # If we have a mask, check it
-        if self.mask is not None:
+        if _use_mask is not None:
             # Check the mask inherets from an ndarray
-            if not isinstance(self.mask, np.ndarray):
-                raise TypeError("dataframe.mask is of type %s, " %
-                                type(self.mask) +
+            if not isinstance(_use_mask, np.ndarray):
+                raise TypeError("mask is of type %s, " %
+                                type(_use_mask) +
                                 "must be numpy.ndarray")
             # Check if there is an nan-value in the mask
-            if np.isnan(np.sum(self.mask)):
-                raise ValueError("NaNs in the dataframe mask")
+            if np.isnan(np.sum(_use_mask)):
+                raise ValueError("NaNs in the data mask")
             # Check the mask and the values have the same shape
-            if self.values.shape != self.mask.shape:
+            if self.values.shape != _use_mask.shape:
                 raise ValueError("shape mismatch: dataframe.values.shape = %s"
                                  % str(self.values.shape) + \
-                                 " but dataframe.mask.shape = %s,"
-                                 % str(self.mask.shape)) + \
+                                 " but mask.shape = %s,"
+                                 % str(_use_mask.shape)) + \
                                  "must identical"
 
     def construct_array(self, X, Y, Z, tau_max,
+                        mask=None,
                         mask_type=None,
                         return_cleaned_xyz=False,
                         do_checks=True,
@@ -117,12 +117,10 @@ class DataFrame():
             Maximum time lag. This may be used to make sure that estimates for
             different lags in X and Z all have the same sample size.
 
-        data : array-like,
-            This is the data input array of shape = (T, N)
-
-        mask : boolean array, optional (default: None)
-            Mask of data array, marking masked values as 1. Must be of same
-            shape as data. If is None, no mask will be used.
+        mask : array-like, optional (default: None)
+            Optional mask array, must be of same shape as data.  If it is set,
+            then it overrides the self.mask assigned to the dataframe. If it is
+            None, then the self.mask is used, if it exists.
 
         mask_type : {'y','x','z','xy','xz','yz','xyz'}
             Masking mode: Indicators for which variables in the dependence
@@ -176,7 +174,7 @@ class DataFrame():
         # Ensure that XYZ makes sense
         if do_checks:
             self._check_nodes(Y, XYZ, N, dim)
-        
+
         # Figure out what cut off we will be using
         if cut_off == '2xtau_max':
             max_lag = 2*tau_max
@@ -210,7 +208,14 @@ class DataFrame():
             for tau in range(max_lag+1):
                 use_indices[missing_anywhere[tau:T-max_lag+tau]] = 0
 
-        if self.mask is not None:
+        # Use the mask override if needed
+        _use_mask = mask
+        if _use_mask is None:
+            _use_mask = self.mask
+        else:
+            self._check_mask(mask=_use_mask)
+
+        if _use_mask is not None:
             # Remove samples with mask == 1 conditional on which mask_type is
             # used Create an array selector that is the same shape as the output
             # array
@@ -219,7 +224,7 @@ class DataFrame():
             for i, (var, lag) in enumerate(XYZ):
                 # Transform the mask into the output array shape, i.e. from data
                 # mask to array mask
-                array_mask[i, :] = ~self.mask[max_lag + lag: T + lag, var]
+                array_mask[i, :] = ~_use_mask[max_lag + lag: T + lag, var]
             # Iterate over defined mapping from letter index to number index,
             # i.e. 'x' -> 0, 'y' -> 1, 'z'-> 2
             for idx, cde in index_code.items():
@@ -232,7 +237,7 @@ class DataFrame():
                     slice_select = np.prod(array_mask[xyz == cde, :], axis=0)
                     use_indices *= slice_select
 
-        if (self.missing_flag is not None) or (self.mask is not None):
+        if (self.missing_flag is not None) or (_use_mask is not None):
             if use_indices.sum() == 0:
                 raise ValueError("No unmasked samples")
             array = array[:, use_indices == 1]
@@ -885,14 +890,16 @@ def _check_parent_neighbor(parents_neighbors_coeffs):
     # Initialize some lists for checking later
     all_nodes = set()
     all_parents = set()
+    # Iterate through variables
+    for j in list(parents_neighbors_coeffs):
+        # Cache all node ids to ensure they are contiguous
+        all_nodes.add(j)
     # Iterate through all nodes
     for j, i, tau, _ in _iter_coeffs(parents_neighbors_coeffs):
         # Check all time lags are equal to or less than zero
         if tau > 0:
             raise ValueError("Lag between parent {} and node {}".format(i, j)+\
                              " is {} > 0, must be <= 0!".format(tau))
-        # Cache all node ids to ensure they are contiguous
-        all_nodes.add(j)
         # Cache all parent ids to ensure they are mentioned as node ids
         all_parents.add(i)
     # Check that all nodes are contiguous from zero
