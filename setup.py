@@ -3,6 +3,8 @@ import sys
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 
+extra_link_args=['-L/usr/lib/x86_64-linux-gnu/']
+
 # Handle building against numpy headers before installing numpy
 class UseNumpyHeadersBuildExt(build_ext):
     """
@@ -30,21 +32,18 @@ def define_extension(extension_name, source_files=None):
     # Default source file
     if source_files is None:
         source_files = [extension_name.replace(".", "/") + ".c"]
-    # Check if we are in develop mode
-    if len(sys.argv) >= 2 and (sys.argv[1] in ['develop']):
-        # If we are, try to import and use cythonize
-        try:
-            from Cython.Build import cythonize
-            # Replace any extension in the source file list with .pyx
-            source_files = [".".join(f.split(".")[:-1] + ["pyx"]) \
-                            for f in source_files]
-            # Return the cythonized extension
-            return cythonize(Extension(extension_name, source_files))
-        except ImportError:
-            print("Cython is needed for development installation")
-            raise ImportError
-    else:
-        return [Extension(extension_name, source_files)]
+    # If we are, try to import and use cythonize
+    try:
+        from Cython.Build import cythonize
+        # Replace any extension in the source file list with .pyx
+        source_files = [".".join(f.split(".")[:-1] + ["pyx"]) \
+                        for f in source_files]
+        # Return the cythonized extension
+        return cythonize(Extension(extension_name, source_files, extra_link_args=extra_link_args))
+    except ImportError:
+        print("Cython cannot be found.  Skipping compilation of cython code"+\
+              " and using pre-compiled code")
+        return [Extension(extension_name, source_files, extra_link_args=extra_link_args)]
 
 # Define the minimal classes needed to install and run tigramite
 INSTALL_REQUIRES = ["numpy", "scipy", "six"]
@@ -53,19 +52,25 @@ EXTRAS_REQUIRE = {
     'all' : ['scikit-learn>=0.18',#Gaussian Process (GP) Regression
              'matplotlib>=1.5',   #plotting
              'networkx>=1.10',    #plotting
-             'statsmodels'],      #p-value corrections
-    'R'   : ['rpy2']              #R-based ACE, requires acepack installed in R
+             'statsmodels',       #p-value corrections
+             'rpy2'],             #R-based RCOT, requires acepack installed in R
+    'R'   : ['rpy2']              #R-based RCOT, requires acepack installed in R
     }
-# Define the extras needed for development
-EXTRAS_REQUIRE['dev'] = EXTRAS_REQUIRE['all'] + ['nose', 'cython', 'pytest']
 # Define the packages needed for testing
-TESTS_REQUIRE = ['nose', 'pytest']
+TESTS_REQUIRE = ['nose',
+                 'pytest',
+                 'scikit-learn>=0.18',
+                 'statsmodels']
+EXTRAS_REQUIRE['test'] = TESTS_REQUIRE
+# Define the extras needed for development
+EXTRAS_REQUIRE['dev'] = EXTRAS_REQUIRE['all'] + TESTS_REQUIRE + ['cython']
 
 # Use a custom build to handle numpy.include_dirs() when building
 CMDCLASS = {'build_ext': UseNumpyHeadersBuildExt}
 # Define the external modules to build
 EXT_MODULES = []
 EXT_MODULES += define_extension("tigramite.tigramite_cython_code")
+
 
 # Run the setup
 setup(
@@ -83,7 +88,7 @@ setup(
     ext_modules=EXT_MODULES,
     install_requires=INSTALL_REQUIRES,
     extras_require=EXTRAS_REQUIRE,
-    test_suite='nose.collector',
+    test_suite='tests',
     tests_require=TESTS_REQUIRE,
     classifiers=[
         'Development Status :: 4 - Beta',

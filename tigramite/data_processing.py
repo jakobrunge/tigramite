@@ -124,12 +124,6 @@ class DataFrame():
             Mask of data array, marking masked values as 1. Must be of same
             shape as data. If is None, no mask will be used.
 
-        missing_flag : number, optional (default: None)
-            Flag for missing values. Dismisses all time slices of samples where
-            missing values occur in any variable and also flags samples for all
-            lags up to 2*tau_max. This avoids biases, see section on masking in
-            Supplement of [1]_.
-
         mask_type : {'y','x','z','xy','xz','yz','xyz'}
             Masking mode: Indicators for which variables in the dependence
             measure I(X; Y | Z) the samples should be masked. If None, 'y' is

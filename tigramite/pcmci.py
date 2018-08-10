@@ -352,20 +352,18 @@ class PCMCI():
         # Return the selected links
         return _int_sel_links
 
-    def _iter_conditions(self, parent, j, conds_dim, all_parents):
+    def _iter_conditions(self, parent, conds_dim, all_parents):
         """Yield next condition.
 
         Yields next condition from lexicographically ordered conditions.
 
         Parameters
         ----------
-        j : int
-            Index of current variable.
         parent : tuple
             Tuple of form (i, -tau).
         conds_dim : int
             Cardinality in current step.
-        parents_j : list
+        all_parents : list
             List of form [(0, -1), (3, -2), ...]
 
         Yields
@@ -373,8 +371,8 @@ class PCMCI():
         cond :  list
             List of form [(0, -1), (3, -2), ...] for the next condition.
         """
-        parents_j_excl_current = [p for p in all_parents if p != parent]
-        for cond in itertools.combinations(parents_j_excl_current, conds_dim):
+        all_parents_excl_current = [p for p in all_parents if p != parent]
+        for cond in itertools.combinations(all_parents_excl_current, conds_dim):
             yield list(cond)
 
     def _sort_parents(self, parents_vals):
@@ -609,13 +607,11 @@ class PCMCI():
                     self._print_link_info(j, index_parent, parent, len(parents))
                 # Iterate through all possible combinations
                 for comb_index, Z in \
-                        enumerate(self._iter_conditions(parent, j,
-                                                        conds_dim, parents)):
+                        enumerate(self._iter_conditions(parent, conds_dim,
+                                                        parents)):
                     # Break if we try too many combinations
-                    if comb_index > max_combinations:
+                    if comb_index >= max_combinations:
                         break
-                    # Incriment the combinations
-                    comb_index += 1
                     # Perform independence test
                     val, pval = self.cond_ind_test.run_test(X=[parent],
                                                             Y=[(j, 0)],
@@ -761,12 +757,12 @@ class PCMCI():
 
         Returns
         -------
-        max_cond_dim : int
+        max_conds_dim : int
             Input maximum condition dimension or default
         """
         # Check if an input was given
         if max_conds_dim is None:
-            max_conds_dim = self.N * (tau_max - tau_min + 1)
+            max_conds_dim = self.N * (tau_max - tau_min + 1) + 1
         # Check this is a valid
         if max_conds_dim < 0:
             raise ValueError("maximum condition dimension must be >= 0")
@@ -982,15 +978,15 @@ class PCMCI():
         cond_string += "]"
         return cond_string
 
-    def _print_mci_conditions(self, conds_y, conds_x, j, i,
-                              tau, count, n_parents):
+    def _print_mci_conditions(self, conds_y, conds_x_lagged,
+                              j, i, tau, count, n_parents):
         """Print information about the conditions for the MCI algorithm
 
         Parameters
         ----------
         conds_y : list
             Conditions on node
-        conds_x : list
+        conds_x_lagged : list
             Conditions on parent
         j : int
             Current node
@@ -1006,9 +1002,9 @@ class PCMCI():
         # Remove the current parent from the conditions
         conds_y_no_i = [node for node in conds_y if node != (i, tau)]
         # Get the condition string for parent
-        condx_str = self._mci_condition_to_string(conds_y_no_i)
+        condy_str = self._mci_condition_to_string(conds_y_no_i)
         # Get the condition string for node
-        condy_str = self._mci_condition_to_string(conds_x)
+        condx_str = self._mci_condition_to_string(conds_x_lagged)
         # Formate and print the information
         indent = "\n        "
         print_str = indent + "link (%s %d) " % (self.var_names[i], tau)
@@ -1080,18 +1076,19 @@ class PCMCI():
             for cnt, (i, tau) in enumerate(parent_list):
                 # Get the conditions for node i
                 conds_x = parents[i][:max_conds_px]
+                # Shift the conditions for X by tau
+                conds_x_lagged = [(k, tau + k_tau) for k, k_tau in conds_x]
+
                 # Print information about the mci conditions if requested
                 if self.verbosity > 1:
-                    self._print_mci_conditions(conds_y, conds_x, j, i, tau,
-                                               cnt, len(parent_list))
-                # Remove conds_x elemet overlaps
-                conds_x = [node for node in conds_x if node not in conds_y]
+                    self._print_mci_conditions(conds_y, conds_x_lagged, j, i,
+                                               tau, cnt, len(parent_list))
                 # Construct lists of tuples for estimating
                 # I(X_t-tau; Y_t | Z^Y_t, Z^X_t-tau)
                 # with conditions for X shifted by tau
                 Z = [node for node in conds_y if node != (i, tau)]
-                # Shift the conditions for X by tau
-                Z += [(k, tau + k_tau) for k, k_tau in conds_x]
+                # Remove overlapped nodes between conds_x_lagged and conds_y
+                Z += [node for node in conds_x_lagged if node not in conds_y]
                 # Yield these list
                 yield j, i, tau, Z
 

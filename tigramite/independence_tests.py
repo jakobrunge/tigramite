@@ -22,18 +22,16 @@ try:
 except:
     print("Could not import packages for CMIknn and GPDC estimation")
 
+try:
+    import rpy2
+    import rpy2.robjects
+    rpy2.robjects.r['options'](warn=-1)
 
-# TODO why is this commented out
-# try:
-#     import rpy2
-#     import rpy2.robjects
-#     rpy2.robjects.r['options'](warn=-1)
-
-#     from rpy2.robjects.packages import importr
-#     import rpy2.robjects.numpy2ri
-#     rpy2.robjects.numpy2ri.activate()
-# except:
-#         print("Could not import rpy package")
+    from rpy2.robjects.packages import importr
+    import rpy2.robjects.numpy2ri
+    rpy2.robjects.numpy2ri.activate()
+except:
+    print("Could not import rpy package")
 
 try:
     importr('RCIT')
@@ -73,7 +71,7 @@ class CondIndTest():
         block length is determined from the decay of the autocovariance as
         explained in [1]_.
 
-    confidence : False or str, optional (default: False)
+    confidence : str, optional (default: None)
         Specify type of confidence estimation. If False, numpy.nan is returned.
         'bootstrap' can be used with any test, for ParCorr also 'analytic' is
         implemented.
@@ -169,17 +167,17 @@ class CondIndTest():
         # Check if we are using a fixed threshold
         elif self.significance == 'fixed_thres':
             info_str += "\nfixed_thres = %s" % self.fixed_thres
-            # Check if we have a confidence type
-            if self.confidence:
-                info_str += "\nconfidence = %s" % self.confidence
-                info_str += "\nconf_lev = %s" % self.conf_lev
-                # Check if this confidence type is boostrapping
-                if self.confidence == 'bootstrap':
-                    info_str += "\nconf_samples = %s" % self.conf_samples
-                    info_str += "\nconf_blocklength = %s" %self.conf_blocklength
-                    # Check if we use a non-trivial mask type
-                    if self.mask_type is not None:
-                        info_str += "mask_type = %s" % self.mask_type
+        # Check if we have a confidence type
+        if self.confidence:
+            info_str += "\nconfidence = %s" % self.confidence
+            info_str += "\nconf_lev = %s" % self.conf_lev
+        # Check if this confidence type is boostrapping
+        if self.confidence == 'bootstrap':
+            info_str += "\nconf_samples = %s" % self.conf_samples
+            info_str += "\nconf_blocklength = %s" %self.conf_blocklength
+        # Check if we use a non-trivial mask type
+        if self.mask_type is not None:
+            info_str += "mask_type = %s" % self.mask_type
         # Check if we are recycling residuals or not
         if self.recycle_residuals:
             info_str += "recycle_residuals = %s" % self.recycle_residuals
@@ -2528,8 +2526,7 @@ class RCOT(CondIndTest):
         x_vals = array[0]
         y_vals = array[1]
         z_vals = np.fastCopyAndTranspose(array[2:])
-        rcot = np.asarray(rpy2.robjects.r['RCIT'](x_vals, y_vals, z_vals,
-                                                  corr=True,
+        rcot = np.asarray(rpy2.robjects.r['RCoT'](x_vals, y_vals, z_vals,
                                                   num_f=self.num_f,
                                                   approx=self.approx,
                                                   seed=self.seed))
