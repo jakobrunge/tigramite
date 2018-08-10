@@ -73,7 +73,6 @@ CMDCLASS = {'build_ext': UseNumpyHeadersBuildExt}
 EXT_MODULES = []
 EXT_MODULES += define_extension("tigramite.tigramite_cython_code")
 
-
 # Run the setup
 setup(
     name='tigramite',
