@@ -1,6 +1,6 @@
 """Tigramite data processing functions."""
 
-# Author: Jakob Runge <jakobrunge@posteo.de>
+# Author: Jakob Runge <jakob@jakob-runge.com>
 #
 # License: GNU General Public License v3.0
 from __future__ import print_function
@@ -98,8 +98,6 @@ class DataFrame():
                         do_checks=True,
                         cut_off='2xtau_max',
                         verbosity=0):
-        # TODO input array is (T,N) but output array is like (N,T)?
-        # TODO TEST : cutoff
         """Constructs array from variables X, Y, Z from data.
 
         Data is of shape (T, N), where T is the time series length and N the
@@ -224,7 +222,7 @@ class DataFrame():
             for i, (var, lag) in enumerate(XYZ):
                 # Transform the mask into the output array shape, i.e. from data
                 # mask to array mask
-                array_mask[i, :] = ~_use_mask[max_lag + lag: T + lag, var]
+                array_mask[i, :] = (_use_mask[max_lag + lag: T + lag, var] == False)
             # Iterate over defined mapping from letter index to number index,
             # i.e. 'x' -> 0, 'y' -> 1, 'z'-> 2
             for idx, cde in index_code.items():
@@ -717,7 +715,6 @@ def _check_stability(graph):
     # Check the number of dimensions to see if we can afford to use a dense
     # matrix
     n_eigs = stability_matrix.shape[0]
-    # TODO clarify what number to use here
     if n_eigs <= 25:
         # If it is relatively low in dimensionality, use a dense array
         stability_matrix = stability_matrix.todense()
@@ -807,7 +804,7 @@ def _var_network(graph,
         Array of realization.
     """
     n_nodes, _, period = graph.shape
-    # TODO enforce usage of time instead of bad parameter name T
+
     time = T
     # Test stability
     _check_stability(graph)
@@ -833,7 +830,6 @@ def _var_network(graph,
         else:
             noise = np.random.randn(time, n_nodes)
 
-    # TODO further numpy usage may simplify this
     for a_time in range(period, time):
         data_past = np.repeat(
             data[:, a_time-period:a_time][:, ::-1].reshape(1, n_nodes, period),
@@ -1075,9 +1071,6 @@ def _get_lag_connect_matrix(parents_neighbors_coeffs):
 
 def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
                 verbosity=0, initial_values=None):
-    #TODO j: [var1, lag1, coeff] is a better format
-    #TODO sparse array of j->[var1, lag1, coeff]
-    #TODO normal array of j->[var1, lag1, coeff], forcing j to be contiguous from 0
     """Returns a vector-autoregressive process with correlated innovations.
 
     Wrapper around var_network with possibly more user-friendly input options.

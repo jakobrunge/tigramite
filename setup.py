@@ -54,8 +54,8 @@ EXTRAS_REQUIRE = {
              'matplotlib>=1.5',   #plotting
              'networkx>=1.10',    #plotting
              'statsmodels',       #p-value corrections
-             'rpy2'],             #R-based RCOT, requires acepack installed in R
-    'R'   : ['rpy2']              #R-based RCOT, requires acepack installed in R
+             'rpy2'],             #R-based RCOT
+    'R'   : ['rpy2']              #R-based RCOT
     }
 # Define the packages needed for testing
 TESTS_REQUIRE = ['nose',
@@ -76,7 +76,7 @@ EXT_MODULES += define_extension("tigramite.tigramite_cython_code")
 # Run the setup
 setup(
     name='tigramite',
-    version='3.0.0-beta',
+    version='4.0.0-beta',
     packages=['tigramite'],
     license='GNU General Public License v3.0',
     description='Tigramite causal discovery for time series',

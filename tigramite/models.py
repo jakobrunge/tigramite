@@ -1,6 +1,6 @@
 """Tigramite causal discovery for time series."""
 
-# Author: Jakob Runge <jakobrunge@posteo.de>
+# Author: Jakob Runge <jakob@jakob-runge.com>
 #
 # License: GNU General Public License v3.0
 
@@ -1112,8 +1112,6 @@ class Prediction(Models, PCMCI):
             if target not in list(self.target_predictors):
                 raise ValueError("No predictors given for target %s" % target)
 
-        # TODO this also fits to the training set, but this time the one that
-        # was NOT deep copied...
         self.fitted_model = \
             self.get_fit(all_parents=self.target_predictors,
                          selected_variables=self.selected_targets,

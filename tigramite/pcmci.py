@@ -1,6 +1,6 @@
 """Tigramite causal discovery for time series."""
 
-# Author: Jakob Runge <jakobrunge@posteo.de>
+# Author: Jakob Runge <jakob@jakob-runge.com>
 #
 # License: GNU General Public License v3.0
 
@@ -44,7 +44,6 @@ def _nested_to_normal(nested_dict):
     return nested_dict
 
 class PCMCI():
-    # TODO update documentation about GPACE
     r"""PCMCI causal discovery for time series datasets.
 
     PCMCI is a 2-step causal discovery method for large-scale time series
@@ -129,9 +128,9 @@ class PCMCI():
 
     References
     ----------
-    .. [1] J. Runge, D. Sejdinovic, S. Flaxman (2017): Detecting causal
-           associations in large nonlinear time series datasets,
-           https://arxiv.org/abs/1702.07007
+    .. [1] J. Runge et al. (2018): Detecting Causal Associations in Large 
+           Nonlinear Time Series Datasets.
+           https://arxiv.org/abs/1702.07007v2
 
     Examples
     --------
@@ -255,11 +254,11 @@ class PCMCI():
         self.verbosity = verbosity
         # Set the variable names
         self.var_names = var_names
-        # Set the default variable names if none are set
-        if self.var_names is None:
-            self.var_names = {i: i for i in range(len(self.dataframe.values))}
         # Store the shape of the data in the T and N variables
         self.T, self.N = self.dataframe.values.shape
+        # Set the default variable names if none are set
+        if self.var_names is None:
+            self.var_names = {i: i for i in range(self.N)}
         # Set the selected variables
         self.selected_variables = \
             self._set_selected_variables(selected_variables)
@@ -282,7 +281,6 @@ class PCMCI():
         if _int_selected_variables is None:
             _int_selected_variables = range(self.N)
         # Some checks
-        # TODO move checks into dataframe object?
         if _int_selected_variables is not None and \
           (np.any(np.array(_int_selected_variables) < 0) or
            np.any(np.array(_int_selected_variables) >= self.N)):
@@ -324,11 +322,9 @@ class PCMCI():
                     _int_sel_links[j] = [(var, -lag) for var in _vars
                                          for lag in range(tau_min, tau_max + 1)]
                 # If it is not, make it an empty list
-                # TODO I think we can remove the lines below
                 else:
                     _int_sel_links[j] = []
         # Otherwise, check that our selection is sane
-        # TODO move checks to dataframe object?
         # Check that the selected links refer to links that are inside the
         # data range
         _key_set = set(_int_sel_links.keys())
@@ -899,7 +895,6 @@ class PCMCI():
             if select_optimal_alpha:
                 iterations[j]['optimal_pc_alpha'] = optimal_alpha
         # Save the results in the current status of the algorithm
-        # TODO consider using return values instead of attributes
         self.all_parents = all_parents
         self.val_matrix = self._dict_to_matrix(val_min, tau_max, self.N)
         self.p_matrix = self._dict_to_matrix(p_max, tau_max, self.N)
@@ -912,7 +907,6 @@ class PCMCI():
         return all_parents
 
     def _print_parents_single(self, j, parents, val_min, p_max):
-        # TODO fix this for reformed, OOP style
         """Print current parents for variable j.
 
         Parameters
@@ -1263,7 +1257,6 @@ class PCMCI():
             # is False
             conf = self.cond_ind_test.get_confidence(X, Y, Z=Z, tau_max=tau_max)
             # Record the value if the conditional independence requires it
-            # TODO this break OOP, this should be a feature of PCMCI
             if self.cond_ind_test.confidence:
                 conf_matrix[i, j, abs(tau)] = conf
             # Print the results if needed
@@ -1416,7 +1409,9 @@ class PCMCI():
                         conf_matrix[p[0], j, abs(p[1])][1])
             print(string)
 
-    def print_results(self, return_dict, alpha_level=0.05):
+    def print_results(self, 
+                      return_dict, 
+                      alpha_level=0.05):
         """Prints significant parents from output of MCI or PCMCI algorithms.
 
         Parameters
@@ -1427,6 +1422,7 @@ class PCMCI():
                 * 'val_matrix'
                 * 'conf_matrix'
             'q_matrix' can also be included in keys, but is not necessary.
+
         alpha_level : float, optional (default: 0.05)
             Significance level.
         """
@@ -1530,8 +1526,7 @@ class PCMCI():
         p_matrix = results['p_matrix']
         # Initialize and fill the the confidance matrix if the confidance test
         # says it should be returned
-        ## TODO this violates object orientation.  Detect the conf_matrix
-        ## directly from the results dictionary from run_mci
+
         conf_matrix = None
         if self.cond_ind_test.confidence is not False:
             conf_matrix = results['conf_matrix']
@@ -1541,8 +1536,6 @@ class PCMCI():
             q_matrix = self.get_corrected_pvalues(p_matrix,
                                                   fdr_method=fdr_method)
         # Store the parents in the pcmci member
-        ## TODO this violates object orientation.  Parents should be returned, if
-        ## need be
         self.all_parents = all_parents
         # Cache the resulting values in the return dictionary
         return_dict = {'val_matrix': val_matrix,

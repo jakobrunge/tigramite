@@ -388,7 +388,7 @@ def plot_timeseries(data,
     if save_name is not None:
         fig.savefig(save_name)
     else:
-        pyplot.show()
+        return fig, axes
 
 def plot_lagfuncs(val_matrix, name=None, setup_args={}, add_lagfunc_args={}):
     """Wrapper helper function to plot lag functions.
@@ -586,7 +586,8 @@ class setup_matrix():
                     self.axes_dict[(i, j)].set_ylim(
                         _myround(minimum, y_base, 'down'),
                         _myround(maximum, y_base, 'up'))
-                self.axes_dict[(i, j)].label_outer()
+                if j != 0:    
+                    self.axes_dict[(i, j)].get_yaxis().set_ticklabels([]) #label_outer()
                 self.axes_dict[(i, j)].set_xlim(0, self.tau_max)
                 if plot_gridlines:
                     self.axes_dict[(i, j)].grid(True, which='major',
@@ -797,7 +798,7 @@ def _draw_network_with_curved_edges(
         n2 = G.node[v]['patch']
 
         if directed:
-            rad = curved_radius
+            rad = -1.*curved_radius
 #            facecolor = d['directed_color']
 #            edgecolor = d['directed_edgecolor']
             if cmap_links is not None:
@@ -824,7 +825,7 @@ def _draw_network_with_curved_edges(
             link_edge = d['directed_edge']
             linestyle = 'solid'
             linewidth = 0.
-            if d['directed_attribute'] == 'spurious':
+            if 'directed_attribute' in d and d['directed_attribute'] == 'spurious':
                 facecolor = 'grey'
             #     linestyle = 'dashed'
 
@@ -850,9 +851,9 @@ def _draw_network_with_curved_edges(
             alpha = d['undirected_alpha']
             arrowstyle = 'simple,head_length=0.0001'
             link_edge = d['undirected_edge']
-            linestyle = d['undirected_style']
+            linestyle = undirected_style     #d['undirected_style']
             linewidth = 0.
-            if d['undirected_attribute'] == 'spurious':
+            if 'undirected_attribute' in d and d['undirected_attribute'] == 'spurious':
                 facecolor = 'grey'
                 # linestyle = 'dashed'
 
@@ -883,7 +884,8 @@ def _draw_network_with_curved_edges(
                             linestyle=linestyle,
                             color=facecolor,
                             clip_on=False,
-                            patchA=n1, patchB=n2)
+                            patchA=n1, patchB=n2
+                            )
         ax.add_patch(e)
 
         if d['label'] is not None and directed:
@@ -1460,7 +1462,7 @@ def plot_graph(val_matrix,
     if save_name is not None:
         pyplot.savefig(save_name)
     else:
-        pyplot.show()
+        return fig, ax
 
 
 def plot_time_series_graph(val_matrix, 
@@ -1486,7 +1488,8 @@ def plot_time_series_graph(val_matrix,
         node_label_size=10,
         label_space_left=0.1,
         label_space_top=0.,
-        network_lower_bound=0.2
+        network_lower_bound=0.2,
+        undirected_style='dashed'
                            ):
     """Creates a time series graph.
 
@@ -1571,6 +1574,9 @@ def plot_time_series_graph(val_matrix,
 
     network_lower_bound : float, optional (default: 0.2)
         Fraction of vertical space below graph plot.
+
+    undirected_style : string, optional (default: 'dashed')
+        Style of undirected contemporaneous links.
     """
 
     import networkx
@@ -1722,8 +1728,8 @@ def plot_time_series_graph(val_matrix,
         curved_radius=curved_radius, label_fontsize=label_fontsize,
         label_fraction=.5,
         link_colorbar_label=link_colorbar_label, undirected_curved=True,
-        network_lower_bound=network_lower_bound
-        # undirected_style=undirected_style
+        network_lower_bound=network_lower_bound,
+        undirected_style=undirected_style
         )
 
     for i in range(N):
@@ -2353,22 +2359,22 @@ if __name__ == '__main__':
     # print link_matrix
 
 
-    data = numpy.random.randn(100, 3)
-    datatime = numpy.arange(100)
-    mask = numpy.zeros(data.shape)
+    # data = numpy.random.randn(100, 3)
+    # datatime = numpy.arange(100)
+    # mask = numpy.zeros(data.shape)
 
-    mask[:int(len(data)/2)]=True
+    # mask[:int(len(data)/2)]=True
 
-    data[:,0] = -99.
-    plot_lagfuncs(val_matrix=val_matrix, 
-        setup_args={'figsize':(10,10),
-     'label_space_top':0.05,
-     'label_space_left':0.1,
-      'x_base':1, 'y_base':5,
-        'var_names':range(3), 
-        'lag_array':numpy.array(['a%d' % i for  i in range(4)])},
-        name='test.pdf',
- )
+    # data[:,0] = -99.
+ #    plot_lagfuncs(val_matrix=val_matrix, 
+ #        setup_args={'figsize':(10,10),
+ #     'label_space_top':0.05,
+ #     'label_space_left':0.1,
+ #      'x_base':1, 'y_base':5,
+ #        'var_names':range(3), 
+ #        'lag_array':numpy.array(['a%d' % i for  i in range(4)])},
+ #        name='test.pdf',
+ # )
 
 
     # plot_timeseries(data,  
@@ -2400,19 +2406,21 @@ if __name__ == '__main__':
     # fig = pyplot.figure(figsize=(4, 3), frameon=False)
     # ax = fig.add_subplot(111, frame_on=False)
 
-    # plot_graph(
-    #     val_matrix=val_matrix,
-    #     sig_thres=None,
-    #     link_matrix=link_matrix,
-    #     var_names=range(len(val_matrix)),
-    # )
-
-
-    plot_time_series_graph(
+    plot_graph(
+        figsize=(3, 3),
         val_matrix=val_matrix,
         sig_thres=None,
         link_matrix=link_matrix,
         var_names=range(len(val_matrix)),
-
+        save_name='/home/rung_ja/Downloads/test.pdf',
     )
-    pyplot.show()
+
+
+    # plot_time_series_graph(
+    #     val_matrix=val_matrix,
+    #     sig_thres=None,
+    #     link_matrix=link_matrix,
+    #     var_names=range(len(val_matrix)),
+    #     undirected_style='dashed',
+    # )
+    # pyplot.show()

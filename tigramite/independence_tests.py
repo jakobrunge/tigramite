@@ -1,6 +1,6 @@
 """Tigramite causal discovery for time series."""
 
-# Author: Jakob Runge <jakobrunge@posteo.de>
+# Author: Jakob Runge <jakob@jakob-runge.com>
 #
 # License: GNU General Public License v3.0
 
@@ -251,7 +251,6 @@ class CondIndTest():
 
     def _get_single_residuals(self, array, target_var,
                               standardize=True, return_means=False):
-        # TODO not great that GP has different signature here
         """
         Base class assumption that this is not implemented.  Concrete classes
         should override when possible.
@@ -584,7 +583,6 @@ class CondIndTest():
     def get_bootstrap_confidence(self, array, xyz, dependence_measure=None,
                                  conf_samples=100, conf_blocklength=None,
                                  conf_lev=.95, verbosity=0):
-        # TODO test this function
         """Perform bootstrap confidence interval estimation.
 
         With conf_blocklength > 1 or None a block-bootstrap is performed.
@@ -651,17 +649,11 @@ class CondIndTest():
             array_bootstrap = \
                     np.zeros((dim, n_blks*conf_blocklength), dtype=array.dtype)
             # Fill the array of block resamples
-            # TODO find more numpy way of doing this:
-            #   * currently fills non-sequentially, i.e. 1st element of each
-            #     block, second element of each block, etc.
-            #   * Try to fill 1st block, second block, third block, etc
             for i in range(conf_blocklength):
                 array_bootstrap[:, i::conf_blocklength] = array[:, blk_strt + i]
             # Cut to proper length
             array_bootstrap = array_bootstrap[:, :T]
-            # TODO add a default for this as self.get_dependence_measure.  This
-            # leads to better OOP standards, because without this default, this
-            # function has little difference between each test.
+
             bootdist[smpl] = dependence_measure(array_bootstrap, xyz)
 
         # Sort and get quantile
@@ -672,7 +664,6 @@ class CondIndTest():
         return (conf_lower, conf_upper)
 
     def _get_acf(self, series, max_lag=None):
-        # TODO test this function
         """Returns autocorrelation function.
 
         Parameters
@@ -704,7 +695,6 @@ class CondIndTest():
         return autocorr
 
     def _get_block_length(self, array, xyz, mode):
-        # TODO test this function
         """Returns optimal block length for significance and confidence tests.
 
         Determine block length using approach in Mader (2013) [Eq. (6)] which
@@ -774,7 +764,6 @@ class CondIndTest():
     def _get_shuffle_dist(self, array, xyz, dependence_measure,
                           sig_samples, sig_blocklength=None,
                           verbosity=0):
-        # TODO test this function
         """Returns shuffle distribution of test statistic.
 
         The rows in array corresponding to the X-variable are shuffled using
@@ -862,7 +851,6 @@ class CondIndTest():
         return null_dist
 
     def get_fixed_thres_significance(self, value, fixed_thres):
-        # TODO test this function
         """Returns signficance for thresholding test.
 
         Returns 0 if numpy.abs(value) is smaller than fixed_thres and 1 else.
@@ -947,7 +935,6 @@ class ParCorr(CondIndTest):
     **kwargs :
         Arguments passed on to Parent class CondIndTest.
     """
-    # TODO check that CondIndTest correctly linked in the resulting
     # documentation
     @property
     def measure(self):
@@ -1090,8 +1077,6 @@ class ParCorr(CondIndTest):
         return pval
 
     def get_analytic_significance(self, value, T, dim):
-        # TODO citation?
-        # TODO test this function
         """Returns analytic p-value from Student's t-test for the Pearson
         correlation coefficient.
 
@@ -1127,8 +1112,6 @@ class ParCorr(CondIndTest):
         return pval
 
     def get_analytic_confidence(self, value, df, conf_lev):
-        # TODO citation?
-        # TODO test this function on its own, not just against bootstrap
         """Returns analytic confidence interval for correlation coefficient.
 
         Based on Student's t-distribution.
@@ -1163,7 +1146,6 @@ class ParCorr(CondIndTest):
 
 
     def get_model_selection_criterion(self, j, parents, tau_max=0):
-        # TODO test this function
         """Returns Akaike's Information criterion modulo constants.
 
         Fits a linear model of the parents to variable j and returns the score.
@@ -1271,7 +1253,6 @@ class GaussProcReg():
                     self._load_nulldist(self.null_dist_filename)
 
     def _load_nulldist(self, filename):
-        # TODO check docstring with jakob
         r"""
         Load a precomputed null distribution from a \*.npz file.  This
         distribution can be calculated using generate_and_save_nulldists(...).
@@ -1295,7 +1276,6 @@ class GaussProcReg():
 
     def _generate_nulldist(self, df,
                            add_to_null_dists=True):
-        # TODO test this function
         """Generates null distribution for pairwise independence tests.
 
         Generates the null distribution for sample size df. Assumes pairwise
@@ -1327,8 +1307,7 @@ class GaussProcReg():
                       "argument null_dist_filename")
 
         xyz = np.array([0,1])
-        # TODO ask jakob:
-        #  * are only GP expected to have null distributions and null samples?
+
         null_dist = np.zeros(self.null_samples)
         for i in range(self.null_samples):
             array = np.random.rand(2, df)
@@ -1340,7 +1319,6 @@ class GaussProcReg():
         return null_dist
 
     def _generate_and_save_nulldists(self, sample_sizes, null_dist_filename):
-        # TODO test this function
         """Generates and saves null distribution for pairwise independence
         tests.
 
@@ -1374,7 +1352,6 @@ class GaussProcReg():
                               return_means=False,
                               standardize=True,
                               return_likelihood=False):
-        # TODO test this function
         """Returns residuals of Gaussian process regression.
 
         Performs a GP regression of the variable indexed by target_var on the
@@ -1428,7 +1405,6 @@ class GaussProcReg():
         if np.ndim(z) == 1:
             z = z.reshape(-1, 1)
 
-        # TODO consider removing gp_version == 'old'
         if self.gp_version == 'old':
             # Old GP failed for ties in the data
             def remove_ties(series, verbosity=0):
@@ -1498,7 +1474,6 @@ class GaussProcReg():
         return resid
 
     def _get_model_selection_criterion(self, j, parents, tau_max=0):
-        # TODO test this function
         """Returns log marginal likelihood for GP regression.
 
         Fits a GP model of the parents to variable j and returns the negative
@@ -1536,11 +1511,10 @@ class GaussProcReg():
 
         dim, T = array.shape
 
-        # TODO ask jakob new function _get_likelihood
         _, logli = self._get_single_residuals(array,
                                               target_var=1,
                                               return_likelihood=True)
-        # TODO this has a bad operand type...
+
         score = -logli
         return score
 
@@ -1765,7 +1739,6 @@ class GPDC(CondIndTest):
         return self.gauss_pr._get_model_selection_criterion(j, parents, tau_max)
 
     def get_dependence_measure(self, array, xyz):
-        # TODO test this function
         """Return GPDC measure.
 
         Estimated as the distance correlation of the residuals of a GP
@@ -1784,7 +1757,7 @@ class GPDC(CondIndTest):
         val : float
             GPDC test statistic.
         """
-        # TODO abstract this function
+
         x_vals = self._get_single_residuals(array, target_var=0)
         y_vals = self._get_single_residuals(array, target_var=1)
         val = self._get_dcorr(np.array([x_vals, y_vals]))
@@ -1792,7 +1765,6 @@ class GPDC(CondIndTest):
 
 
     def _get_dcorr(self, array_resid):
-        # TODO test this function
         """Return distance correlation coefficient.
 
         The variables are transformed to uniform marginals using the empirical
@@ -1815,13 +1787,12 @@ class GPDC(CondIndTest):
         # Remove ties before applying transformation to uniform marginals
         # array_resid = self._remove_ties(array_resid, verbosity=4)
         x_vals, y_vals = self._trafo2uniform(array_resid)
-        # TODO pylint cannot find dcov_all, check it exists and works
+
         _, val, _, _ = tigramite_cython_code.dcov_all(x_vals, y_vals)
         return val
 
     def get_shuffle_significance(self, array, xyz, value,
                                  return_null_dist=False):
-        # TODO test this function using null_dist
         """Returns p-value for shuffle significance test.
 
         For residual-based test statistics only the residuals are shuffled.
@@ -1861,8 +1832,6 @@ class GPDC(CondIndTest):
         return pval
 
     def get_analytic_significance(self, value, T, dim):
-        # TODO test this function
-        # TODO citation?
         """Returns p-value for the distance correlation coefficient.
 
         The null distribution for necessary degrees of freedom (df) is loaded.
@@ -1944,15 +1913,15 @@ class CMIknn(CondIndTest):
     that the estimated CMI values can be slightly negative while CMI is a non-
     negative quantity.
 
-    This class requires the scipy.spatial.cKDTree package and the tigramite
+    This method requires the scipy.spatial.cKDTree package and the tigramite
     cython module.
 
     References
     ----------
-    .. [3] J. Runge, J. Heitzig, V. Petoukhov, and J. Kurths:
-           Escaping the Curse of Dimensionality in Estimating Multivariate
-           Transfer Entropy. Physical Review Letters, 108(25), 258701.
-           http://doi.org/10.1103/PhysRevLett.108.258701
+    .. [3] J. Runge (2018): Conditional Independence Testing Based on a 
+           Nearest-Neighbor Estimator of Conditional Mutual Information.
+           In Proceedings of the 21st International Conference on Artificial 
+           Intelligence and Statistics.
 
     Parameters
     ----------
@@ -2003,7 +1972,6 @@ class CMIknn(CondIndTest):
         # Call the parent constructor
         CondIndTest.__init__(self, significance=significance, **kwargs)
         # Print some information about construction
-        # TODO move to its own function
         if self.verbosity > 0:
             if self.knn < 1:
                 print("knn/T = %s" % self.knn)
@@ -2012,7 +1980,6 @@ class CMIknn(CondIndTest):
             print("shuffle_neighbors = %d\n" % self.shuffle_neighbors)
 
     def _get_nearest_neighbors(self, array, xyz, knn):
-        # TODO test this function
         """Returns nearest neighbors according to Frenzel and Pompe (2007).
 
         Retrieves the distances eps to the k-th nearest neighbors for every
@@ -2083,7 +2050,6 @@ class CMIknn(CondIndTest):
         return k_xz, k_yz, k_z
 
     def get_dependence_measure(self, array, xyz):
-        # TODO test this function
         """Returns CMI estimate as described in Frenzel and Pompe PRL (2007).
 
         Parameters
@@ -2120,7 +2086,6 @@ class CMIknn(CondIndTest):
 
     def get_shuffle_significance(self, array, xyz, value,
                                  return_null_dist=False):
-        # TODO test this function
         """Returns p-value for nearest-neighbor shuffle significance test.
 
         For non-empty Z, overwrites get_shuffle_significance from the parent
@@ -2159,7 +2124,7 @@ class CMIknn(CondIndTest):
         x_indices = np.where(xyz == 0)[0]
         z_indices = np.where(xyz == 2)[0]
 
-        if z_indices and self.shuffle_neighbors < T:
+        if len(z_indices) > 0 and self.shuffle_neighbors < T:
             if self.verbosity > 2:
                 print("            nearest-neighbor shuffle significance "
                       "test with n = %d and %d surrogates" % (
@@ -2172,7 +2137,6 @@ class CMIknn(CondIndTest):
                                        k=self.shuffle_neighbors,
                                        p=np.inf,
                                        eps=0.)[1].astype('int32')
-            # print neighbors
 
             null_dist = np.zeros(self.sig_samples)
             for sam in range(self.sig_samples):
@@ -2180,7 +2144,7 @@ class CMIknn(CondIndTest):
                 # Generate random order in which to go through indices loop in
                 # next step
                 order = np.random.permutation(T).astype('int32')
-
+                # print(order[:5])
                 # Select a series of neighbor indices that contains as few as
                 # possible duplicates
                 restricted_permutation = \
@@ -2288,7 +2252,6 @@ class CMIsymb(CondIndTest):
                           "data")
 
     def _bincount_hist(self, symb_array, weights=None):
-        # TODO test this function
         """Computes histogram from symbolic array.
 
         The maximum of the symbolic array determines the alphabet / number
@@ -2319,16 +2282,16 @@ class CMIsymb(CondIndTest):
         dim, T = symb_array.shape
 
         # Needed because np.bincount cannot process longs
-        if not isinstance(self.n_symbs ** dim, int):
-            raise ValueError("Too many n_symbs and/or dimensions, "
-                             "numpy.bincount cannot process longs")
-        if self.n_symbs ** dim * 16. / 8. / 1024. ** 3 > 3.:
-            raise ValueError("Dimension exceeds 3 GB of necessary "
-                             "memory (change this code line if more...)")
-        if dim * self.n_symbs ** dim > 2 ** 65:
-            raise ValueError("base = %d, D = %d: Histogram failed: "
-                             "dimension D*base**D exceeds int64 data type"
-                             % (self.n_symbs, dim))
+        # if not isinstance(self.n_symbs ** dim, int):
+        #     raise ValueError("Too many n_symbs and/or dimensions, "
+        #                      "numpy.bincount cannot process longs")
+        # if self.n_symbs ** dim * 16. / 8. / 1024. ** 3 > 3.:
+        #     raise ValueError("Dimension exceeds 3 GB of necessary "
+        #                      "memory (change this code line if more...)")
+        # if dim * self.n_symbs ** dim > 2 ** 65:
+        #     raise ValueError("base = %d, D = %d: Histogram failed: "
+        #                      "dimension D*base**D exceeds int64 data type"
+        #                      % (self.n_symbs, dim))
 
         flathist = np.zeros((self.n_symbs ** dim), dtype='int16')
         multisymb = np.zeros(T, dtype='int64')
@@ -2358,7 +2321,6 @@ class CMIsymb(CondIndTest):
         return hist
 
     def get_dependence_measure(self, array, xyz):
-        # TODO test this function
         """Returns CMI estimate based on bincount histogram.
 
         Parameters
@@ -2399,7 +2361,6 @@ class CMIsymb(CondIndTest):
 
     def get_shuffle_significance(self, array, xyz, value,
                                  return_null_dist=False):
-        # TODO test this function
         """Returns p-value for shuffle significance test.
 
         For residual-based test statistics only the residuals are shuffled.
@@ -2521,7 +2482,6 @@ class RCOT(CondIndTest):
             print("approx = %s" % self.approx + "\n\n")
 
     def get_dependence_measure(self, array, xyz):
-        # TODO test this function
         """Returns RCOT estimate.
 
         Parameters
@@ -2551,7 +2511,6 @@ class RCOT(CondIndTest):
         return val
 
     def get_analytic_significance(self, **args):
-        # TODO test this function
         """
         Returns analytic p-value from RCIT test statistic.
         NOTE: Must first run get_dependence_measure, where p-value is determined
@@ -2566,7 +2525,6 @@ class RCOT(CondIndTest):
 
     def get_shuffle_significance(self, array, xyz, value,
                                  return_null_dist=False):
-        # TODO test this function
         """Returns p-value for shuffle significance test.
 
         For residual-based test statistics only the residuals are shuffled.
@@ -2599,3 +2557,87 @@ class RCOT(CondIndTest):
         if return_null_dist:
             return pval, null_dist
         return pval
+
+
+if __name__ == '__main__':
+
+    # import sys
+
+    # np.random.seed(30)
+    # T = 10
+    # shuffle_neighbors = 3
+    # neighbors = np.zeros((T, shuffle_neighbors))
+    # order = np.random.permutation(T).astype('int32')
+
+    # for i in range(T):
+    #     neighbors[i] = np.random.permutation(T)[:shuffle_neighbors]
+    # neighbors = neighbors.astype('int32')
+
+    # print (order)
+    # print (neighbors)
+
+    # print(neighbors.shape)
+
+    # p = tigramite_cython_code._get_restricted_permutation_cython(
+    #             T=T,
+    #             shuffle_neighbors=shuffle_neighbors,
+    #             neighbors=neighbors,
+    #             order=order)
+    # print(p)
+
+    # sys.exit(0)
+
+    # Quick test
+    import data_processing as pp
+    np.random.seed(44)
+    a = 0.
+    c = 0.
+    d = 0.9
+    T = 1000
+    # Each key refers to a variable and the incoming links are supplied as a
+    # list of format [((driver, lag), coeff), ...]
+    links_coeffs = {0: [((0, -1), a)],
+                    1: [((1, -1), a), ((0, -1), d)],
+                    2: [((2, -1), a), ((0, -2), d), ((1, -1), c)],
+                    }
+
+    data, true_parents_neighbors = pp.var_process(links_coeffs, T=T)
+
+    data_mask = np.zeros(data.shape)
+
+    # cond_ind_test = CMIknn(
+    #     significance='shuffle_test',
+    #     sig_samples=1000,
+    #     knn=.05,
+    #     transform='ranks',
+    #     shuffle_neighbors=5,
+    #     confidence=False, #'bootstrap',
+    #     conf_lev=0.9,
+    #     conf_samples=1000,
+    #     conf_blocklength=None,
+    #     verbosity=3)
+    #     )
+    # cond_ind_test = RCOT(significance='shuffle_test',
+    #     confidence='bootstrap', conf_samples=100)
+
+
+    dataframe = pp.DataFrame(data)
+    cond_ind_test.set_dataframe(dataframe)
+
+    tau_max = 5
+    X = [(1, -1)]
+    Y = [(2, 0)]
+    Z = [(0, -2),(0, -3),(0, -4)]  #(2, -1), (1, -1), (0, -3)]  #[(1, -1)]  #[(2, -1), (1, -1), (0, -3)] # [(2, -1), (1, -1), (2, -3)]   [(1, -1)]
+    
+    # print cond_ind_test._get_shuffle_dist
+
+    val, pval = cond_ind_test.run_test(X, Y, Z, tau_max=tau_max)
+    conf_interval = cond_ind_test.get_confidence(X, Y, Z, tau_max=tau_max)
+
+    # print cond_ind_test.get_model_selection_criterion(2,
+    #                                   [(0, -2)],
+    #                                   tau_max=tau_max)
+
+    print ("I(X,Y|Z) = %.4f | p-value = %.3f " % (val, pval))
+    if conf_interval is not None:
+        print ("[%.2f, %.2f]" % conf_interval)
