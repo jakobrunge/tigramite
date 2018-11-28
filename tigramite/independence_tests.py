@@ -996,7 +996,7 @@ class ParCorr(CondIndTest):
 
         if dim_z > 0:
             z = np.fastCopyAndTranspose(array[2:, :])
-            beta_hat = np.linalg.lstsq(z, y)[0]
+            beta_hat = np.linalg.lstsq(z, y, rcond=None)[0]
             mean = np.dot(z, beta_hat)
             resid = y - mean
         else:
@@ -2190,7 +2190,7 @@ class CMIsymb(CondIndTest):
     shuffle test to generate  the distribution under the null hypothesis of
     independence. The knn-estimator is suitable only for discrete variables.
     For continuous variables, either pre-process the data using the functions
-    in data_processing or use the CMIknn class.
+    in data_processing or, better, use the CMIknn class.
 
     Notes
     -----
@@ -2300,16 +2300,13 @@ class CMIsymb(CondIndTest):
             flathist = np.zeros((self.n_symbs ** dim), dtype='float32')
             multiweights = np.ones(T, dtype='float32')
 
-        # print np.prod(weights, axis=0)
         for i in range(dim):
             multisymb += symb_array[i, :] * self.n_symbs ** i
             if weights is not None:
                 multiweights *= weights[i, :]
-                # print i, multiweights
 
         if weights is None:
             result = np.bincount(multisymb)
-            # print result
         else:
             result = (np.bincount(multisymb, weights=multiweights)
                       / multiweights.sum())
@@ -2340,7 +2337,7 @@ class CMIsymb(CondIndTest):
 
         _, T = array.shape
 
-        # High-dimensional Histogram
+        # High-dimensional histogram
         hist = self._bincount_hist(array, weights=None)
 
         def _plogp_vector(T):
@@ -2513,9 +2510,9 @@ class RCOT(CondIndTest):
 
     def get_analytic_significance(self, **args):
         """
-        Returns analytic p-value from RCIT test statistic.
+        Returns analytic p-value from RCoT test statistic.
         NOTE: Must first run get_dependence_measure, where p-value is determined
-        from RCIT test statistic.
+        from RCoT test statistic.
 
         Returns
         -------
@@ -2592,9 +2589,9 @@ if __name__ == '__main__':
     import data_processing as pp
     np.random.seed(44)
     a = 0.
-    c = 0.
+    c = 0.3
     d = 0.9
-    T = 1000
+    T = 10000
     # Each key refers to a variable and the incoming links are supplied as a
     # list of format [((driver, lag), coeff), ...]
     links_coeffs = {0: [((0, -1), a)],
@@ -2618,12 +2615,16 @@ if __name__ == '__main__':
     #     conf_blocklength=None,
     #     verbosity=3)
     #     )
-    # cond_ind_test = RCOT(significance='shuffle_test',
-    #     confidence='bootstrap', conf_samples=100)
+    cond_ind_test = RCOT(significance='analytic')
 
+    # data = pp.quantile_bin_array(data, bins=6) #.astype('int64')
+    # cond_ind_test = CMIsymb(sig_samples=1000)
+
+    # cond_ind_test = ParCorr()
 
     dataframe = pp.DataFrame(data)
     cond_ind_test.set_dataframe(dataframe)
+
 
     tau_max = 5
     X = [(1, -1)]
