@@ -23,6 +23,11 @@ Tigramite is a causal time series analysis python package. It allows to efficien
 
 4. J. Runge (2018): Conditional Independence Testing Based on a Nearest-Neighbor Estimator of Conditional Mutual Information.
    In Proceedings of the 21st International Conference on Artificial Intelligence and Statistics.
+   http://proceedings.mlr.press/v84/runge18a.html
+
+5. J. Runge (2018): Causal Network Reconstruction from Time Series: From Theoretical Assumptions to Practical Estimation.
+   Chaos: An Interdisciplinary Journal of Nonlinear Science 28 (7): 075310.   
+   https://aip.scitation.org/doi/10.1063/1.5025050
 
 
 .. toctree::

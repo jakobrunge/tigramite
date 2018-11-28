@@ -1922,6 +1922,7 @@ class CMIknn(CondIndTest):
            Nearest-Neighbor Estimator of Conditional Mutual Information.
            In Proceedings of the 21st International Conference on Artificial 
            Intelligence and Statistics.
+           http://proceedings.mlr.press/v84/runge18a.html
 
     Parameters
     ----------
