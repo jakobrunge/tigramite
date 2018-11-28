@@ -899,6 +899,8 @@ class PCMCI():
         self.val_matrix = self._dict_to_matrix(val_min, tau_max, self.N)
         self.p_matrix = self._dict_to_matrix(p_max, tau_max, self.N)
         self.iterations = iterations
+        self.val_min = val_min
+        self.p_max = p_max
         # Print the results
         if self.verbosity > 0:
             print("\n## Resulting condition sets:")

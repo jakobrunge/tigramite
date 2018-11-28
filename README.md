@@ -52,13 +52,13 @@ python setup.py install
 
 This will install tigramite in your path.
 
-To use just the ParCorr and CMIsymb independence tests, only numpy and scipy are required. For other independence tests more packages are requires:
+To use just the ParCorr and CMIsymb independence tests, only numpy and scipy are required. For other independence tests more packages are required:
 
-- CMIknn: cython can optionally be used for compilation, otherwise the provided ``*.c'' file is used. 
+- CMIknn: cython can optionally be used for compilation, otherwise the provided ``*.c'' file is used 
 
-- GPDC also is based on cython, and additionally, scikit-learn is required for Gaussian Process regression.
+- GPDC: also based on cython, and additionally, scikit-learn is required for Gaussian Process regression
 
-- RCOT requires more work: Firstly, rpy2 is required to access R-packages. The requires R-packages can be installed with the script ``install_r_packages.sh''
+- RCOT requires more work: Firstly, rpy2 is required to access R-packages. The required R-packages can be installed with the script ``install_r_packages.sh''
 
 
 ## User Agreement
