@@ -4,3 +4,18 @@
 
 # Python byte code
 *.pyc
+
+# Python virtual env
+.venv/
+
+# C extensions
+*.so
+
+# Python build and distribution related
+build/
+dist/
+*.egg-info/
+
+# Pipfile
+Pipfile
+Pipfile.lock
