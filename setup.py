@@ -64,7 +64,7 @@ TESTS_REQUIRE = ['nose',
                  'statsmodels',
                  'rpy2',
                  'coverage',
-                'pytest-cov',
+                 'pytest-cov',
 ]
 EXTRAS_REQUIRE['test'] = TESTS_REQUIRE
 # Define the extras needed for development

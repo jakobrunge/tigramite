@@ -32,6 +32,8 @@ install:
   - source activate test-environment
   # Ensure we will install all pip packages within conda
   - conda install pip
+  # required to send coverage report to codecov.com with the codecov command
+  - pip install codecov
   # Install numpy first to avoid headaches
   - pip install numpy
   # Install the r_packages
