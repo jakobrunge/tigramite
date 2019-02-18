@@ -1,4 +1,11 @@
 # TIGRAMITE – Causal discovery for time series datasets
+
+[![image](https://img.shields.io/pypi/v/tigramite.svg)](https://pypi.org/project/tigramite/)
+[![image](https://img.shields.io/pypi/pyversions/tigramite.svg)](https://pypi.org/project/tigramite/)
+[![image](https://travis-ci.org/shaypal5/skift.svg?branch=master)](https://travis-ci.org/shaypal5/skift)
+[![codecov.io](https://codecov.io/github/shaypal5/tigramite/coverage.svg?branch=master)](https://codecov.io/github/shaypal5/tigramite)
+[![image](https://img.shields.io/pypi/l/tigramite.svg)](https://pypi.org/project/tigramite/)
+
 Version 4.0 described in http://arxiv.org/abs/1702.07007v2
 
 (Python Package)
