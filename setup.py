@@ -62,7 +62,10 @@ TESTS_REQUIRE = ['nose',
                  'pytest',
                  'scikit-learn>=0.18',
                  'statsmodels',
-                 'rpy2']
+                 'rpy2',
+                 'coverage',
+                'pytest-cov',
+]
 EXTRAS_REQUIRE['test'] = TESTS_REQUIRE
 # Define the extras needed for development
 EXTRAS_REQUIRE['dev'] = EXTRAS_REQUIRE['all'] + TESTS_REQUIRE + ['cython']

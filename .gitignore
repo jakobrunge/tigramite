@@ -19,3 +19,19 @@ dist/
 # Pipfile
 Pipfile
 Pipfile.lock
+
+# Rope project settings
+.ropeproject
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/

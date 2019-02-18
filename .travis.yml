@@ -5,6 +5,11 @@ python:
   - "2.7"
   - "3.5"
   - "3.6"
+matrix:
+  include:
+    - python: 3.7
+      dist: xenial
+      sudo: true
 install:
   - sudo apt-get update
   # We do this conditionally because it saves us some downloading if the
@@ -35,5 +40,7 @@ install:
   # Install the packages needed for testing
   - pip install .['test']
 script: 
-  # Run the tests
-  - pytest -v
+  # Run the tests; all flags are in pytest.ini
+  - pytest
+  # send coverage results to codecov
+  - codecov

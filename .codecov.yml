@@ -1,0 +1,28 @@
+codecov:
+  notify:
+      require_ci_to_pass: yes
+
+coverage:
+  precision: 2
+  round: down
+  range: "70...100"
+  ignore: Tests
+  status:
+    patch:
+      default:
+        target: '80'
+    project: false
+
+comment:
+  layout: header, changes, diff
+    behavior: default
+    require_changes: false
+    branches: null
+    flags: null
+    paths: null
+
+ignore:
+  - "versioneer.py"
+  - "tests"
+  - "**/_version.py"
+  - "**/__init__.py"
