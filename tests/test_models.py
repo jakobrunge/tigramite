@@ -11,7 +11,7 @@ import tigramite.data_processing as pp
 from tigramite.models import Prediction
 from tigramite.independence_tests import ParCorr
 
-from test_pcmci_calculations import a_chain, gen_data_frame
+from .test_pcmci_calculations import a_chain, gen_data_frame
 
 # Pylint settings
 # pylint: disable=redefined-outer-name
@@ -55,7 +55,7 @@ def test_linear_med_cause_coeffs(data_frame_a):
 
 # TEST PREDICTIONS #############################################################
 def test_predictions(data_frame_a):
-    # TODO NOTE: This doesn't actually test if the predictions make sense, only 
+    # TODO NOTE: This doesn't actually test if the predictions make sense, only
     # that they work!
     # Get the data
     (dataframe, true_parents), links_coeffs = data_frame_a

@@ -12,7 +12,7 @@ from tigramite.pcmci import PCMCI
 from tigramite.independence_tests import ParCorr
 import tigramite.data_processing as pp
 
-from test_pcmci_calculations import a_chain
+from .test_pcmci_calculations import a_chain
 
 # Pylint settings
 # pylint: disable=redefined-outer-name
@@ -250,7 +250,7 @@ def test_condition_iterator(a_pcmci, a_iter_cond_param):
         parents = sel_links[j]
         # Loop over all possible dimentionality of conditions
         for cond_dim in range(max_cond_dim+1):
-            # Skip the case where (cond_dim == num_parents + 1), as is done in 
+            # Skip the case where (cond_dim == num_parents + 1), as is done in
             # the main loop of the code
             if cond_dim > len(parents) - 1:
                 continue
@@ -334,7 +334,7 @@ def test_iter_indep_conds(a_pcmci, a_iter_indep_cond_param):
         for i, tau in node_list:
             if not (i == j and  tau == 0):
                 expect_links += 1
-    ## TODO try to check content of Z to ensure it contains parent of y, parents 
+    ## TODO try to check content of Z to ensure it contains parent of y, parents
     ## of x lagged.
     # Iterate over all the returned conditions
     for j, i, tau, Z in pcmci._iter_indep_conds(_int_parents,

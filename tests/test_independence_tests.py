@@ -8,7 +8,7 @@ import pytest
 from tigramite.independence_tests import ParCorr, GPDC, CMIsymb, CMIknn, RCOT
 import tigramite.data_processing as pp
 
-from test_pcmci_calculations import a_chain, gen_data_frame
+from .test_pcmci_calculations import a_chain, gen_data_frame
 
 # Pylint settings
 # pylint: disable=redefined-outer-name
