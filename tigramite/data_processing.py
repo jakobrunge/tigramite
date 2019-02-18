@@ -39,13 +39,22 @@ class DataFrame():
         samples for all lags up to 2*tau_max. This avoids biases, see
         section on masking in Supplement of [1]_.
 
+    var_names : list of strings, optional (default: range(N))
+        Names of variables, must match the number of variables. If None is
+        passed, variables are enumerated as [0, 1, ...]
+
     """
-    def __init__(self, data, mask=None, missing_flag=None):
+    def __init__(self, data, mask=None, missing_flag=None, var_names=None):
 
         self.values = data
         self.mask = mask
         self.missing_flag = missing_flag
         T, N = data.shape
+        # Set the variable names
+        self.var_names = var_names
+        # Set the default variable names if none are set
+        if self.var_names is None:
+            self.var_names = {i: i for i in range(N)}
 
         # if type(self.values) != np.ndarray:
         #     raise TypeError("data is of type %s, " % type(self.values) +

@@ -210,7 +210,7 @@ class PCMCI():
 
     var_names : list of strings, optional (default: range(N))
         Names of variables, must match the number of variables. If None is
-        passed, variables are enumerated as [0, 1, ...]
+        passed, names are taken from dataframe
 
     verbosity : int, optional (default: 0)
         Verbose levels 0, 1, ...
@@ -252,13 +252,13 @@ class PCMCI():
         self.cond_ind_test.set_dataframe(self.dataframe)
         # Set the verbosity for debugging/logging messages
         self.verbosity = verbosity
-        # Set the variable names
-        self.var_names = var_names
+        # Set the variable names if not already set in dataframe
+        if var_names is None:
+            self.var_names = self.dataframe.var_names
+        else:
+            self.var_names = var_names
         # Store the shape of the data in the T and N variables
         self.T, self.N = self.dataframe.values.shape
-        # Set the default variable names if none are set
-        if self.var_names is None:
-            self.var_names = {i: i for i in range(self.N)}
         # Set the selected variables
         self.selected_variables = \
             self._set_selected_variables(selected_variables)
