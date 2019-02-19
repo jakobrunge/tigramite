@@ -32,7 +32,7 @@ install:
   - source activate test-environment
   # Ensure we will install all pip packages within conda
   - conda install pip
-  # Installing cython; prevents NameError: name 'tigramite_cython_code' is not defined errors.
+  # enables sending of code coverage reports with the codecov command
   - pip install codecov
   # Install numpy first to avoid headaches
   - pip install numpy
@@ -40,6 +40,7 @@ install:
   - conda install rpy2
   - ./install_r_packages.sh
   # build extensions
+  - python -m pip install cython
   - python setup.py build_ext
   # Install the packages needed for testing
   - pip install .['test']
