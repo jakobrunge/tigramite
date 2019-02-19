@@ -2,8 +2,8 @@
 
 [![image](https://img.shields.io/pypi/v/tigramite.svg)](https://pypi.org/project/tigramite/)
 [![image](https://img.shields.io/pypi/pyversions/tigramite.svg)](https://pypi.org/project/tigramite/)
-[![image](https://travis-ci.org/shaypal5/skift.svg?branch=master)](https://travis-ci.org/shaypal5/skift)
-[![codecov.io](https://codecov.io/github/shaypal5/tigramite/coverage.svg?branch=master)](https://codecov.io/github/shaypal5/tigramite)
+[![image](https://travis-ci.org/shaypal5/skift.svg?branch=developer)](https://travis-ci.org/shaypal5/skift)
+[![codecov.io](https://codecov.io/github/shaypal5/tigramite/coverage.svg?branch=developer)](https://codecov.io/github/shaypal5/tigramite)
 [![image](https://img.shields.io/pypi/l/tigramite.svg)](https://pypi.org/project/tigramite/)
 
 
