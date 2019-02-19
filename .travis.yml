@@ -40,7 +40,8 @@ install:
   - conda install rpy2
   - ./install_r_packages.sh
   # build extensions
-  - python -m pip install cython
+  # - python -m pip install cython
+  - conda install cython
   - python setup.py build_ext
   # Install the packages needed for testing
   - pip install -e .['test']
