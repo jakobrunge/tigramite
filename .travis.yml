@@ -42,7 +42,7 @@ install:
   - conda install rpy2
   - ./install_r_packages.sh
   # Install the packages needed for testing
-  - pip install .['test']
+  - pip install -e .['test']
 script: 
   # Run the tests; all flags are in pytest.ini
   - pytest
