@@ -1,8 +1,8 @@
 """
 Install tigramite
 """
-import warnings
 from __future__ import print_function
+import warnings
 import io
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
