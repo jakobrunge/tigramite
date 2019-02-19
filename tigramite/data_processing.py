@@ -43,8 +43,11 @@ class DataFrame():
         Names of variables, must match the number of variables. If None is
         passed, variables are enumerated as [0, 1, ...]
 
+    datatime : array-like, optional (default: None)
+        Timelabel array. If None, range(T) is used.
     """
-    def __init__(self, data, mask=None, missing_flag=None, var_names=None):
+    def __init__(self, data, mask=None, missing_flag=None, var_names=None,
+        datatime=None):
 
         self.values = data
         self.mask = mask
@@ -55,6 +58,11 @@ class DataFrame():
         # Set the default variable names if none are set
         if self.var_names is None:
             self.var_names = {i: i for i in range(N)}
+
+        # Set datatime
+        self.datatime = datatime
+        if self.datatime is None:
+            self.datatime = np.arange(T)
 
         # if type(self.values) != np.ndarray:
         #     raise TypeError("data is of type %s, " % type(self.values) +
