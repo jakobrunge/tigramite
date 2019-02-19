@@ -139,7 +139,7 @@ Chaos: An Interdisciplinary Journal of Nonlinear Science 28 (7): 075310.
 <h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">tigramite.pcmci</span></code>: PCMCI<a class="headerlink" href="#tigramite-pcmci-pcmci" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="tigramite.pcmci.PCMCI">
-<em class="property">class </em><code class="descclassname">tigramite.pcmci.</code><code class="descname">PCMCI</code><span class="sig-paren">(</span><em>dataframe</em>, <em>cond_ind_test</em>, <em>selected_variables=None</em>, <em>var_names=None</em>, <em>verbosity=0</em><span class="sig-paren">)</span><a class="headerlink" href="#tigramite.pcmci.PCMCI" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">tigramite.pcmci.</code><code class="descname">PCMCI</code><span class="sig-paren">(</span><em>dataframe</em>, <em>cond_ind_test</em>, <em>selected_variables=None</em>, <em>verbosity=0</em><span class="sig-paren">)</span><a class="headerlink" href="#tigramite.pcmci.PCMCI" title="Permalink to this definition">¶</a></dt>
 <dd><p>PCMCI causal discovery for time series datasets.</p>
 <p>PCMCI is a 2-step causal discovery method for large-scale time series
 datasets. The first step is a condition-selection followed by the MCI
@@ -216,7 +216,7 @@ criteria.</p>
 <table class="docutils footnote" frame="void" id="id5" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[1]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>, <a class="fn-backref" href="#id3">3</a>, <a class="fn-backref" href="#id4">4</a>, <a class="fn-backref" href="#id6">5</a>, <a class="fn-backref" href="#id7">6</a>, <a class="fn-backref" href="#id8">7</a>, <a class="fn-backref" href="#id9">8</a>, <a class="fn-backref" href="#id10">9</a>, <a class="fn-backref" href="#id11">10</a>, <a class="fn-backref" href="#id15">11</a>, <a class="fn-backref" href="#id21">12</a>, <a class="fn-backref" href="#id22">13</a>, <a class="fn-backref" href="#id23">14</a>, <a class="fn-backref" href="#id24">15</a>, <a class="fn-backref" href="#id25">16</a>, <a class="fn-backref" href="#id29">17</a>, <a class="fn-backref" href="#id31">18</a>)</em> J. Runge et al. (2018): Detecting Causal Associations in Large
+<tr><td class="label">[1]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>, <a class="fn-backref" href="#id3">3</a>, <a class="fn-backref" href="#id4">4</a>, <a class="fn-backref" href="#id6">5</a>, <a class="fn-backref" href="#id7">6</a>, <a class="fn-backref" href="#id8">7</a>, <a class="fn-backref" href="#id9">8</a>, <a class="fn-backref" href="#id10">9</a>, <a class="fn-backref" href="#id11">10</a>, <a class="fn-backref" href="#id15">11</a>, <a class="fn-backref" href="#id21">12</a>, <a class="fn-backref" href="#id22">13</a>, <a class="fn-backref" href="#id23">14</a>, <a class="fn-backref" href="#id24">15</a>, <a class="fn-backref" href="#id25">16</a>, <a class="fn-backref" href="#id29">17</a>)</em> J. Runge et al. (2018): Detecting Causal Associations in Large
 Nonlinear Time Series Datasets.
 <a class="reference external" href="https://arxiv.org/abs/1702.07007v2">https://arxiv.org/abs/1702.07007v2</a></td></tr>
 </tbody>
@@ -296,8 +296,6 @@ must have the signature:</p>
 </li>
 <li><strong>selected_variables</strong> (<em>list of integers</em><em>, </em><em>optional</em><em> (</em><em>default: range</em><em>(</em><em>N</em><em>)</em><em>)</em>) – Specify to estimate parents only for selected variables. If None is
 passed, parents are estimated for all variables.</li>
-<li><strong>var_names</strong> (<em>list of strings</em><em>, </em><em>optional</em><em> (</em><em>default: range</em><em>(</em><em>N</em><em>)</em><em>)</em>) – Names of variables, must match the number of variables. If None is
-passed, variables are enumerated as [0, 1, …]</li>
 <li><strong>verbosity</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) – Verbose levels 0, 1, …</li>
 </ul>
 </td>
@@ -348,8 +346,8 @@ p-value for each link estimated in the PC algorithm.</p>
 <dt id="tigramite.pcmci.PCMCI.get_corrected_pvalues">
 <code class="descname">get_corrected_pvalues</code><span class="sig-paren">(</span><em>p_matrix</em>, <em>fdr_method='fdr_bh'</em>, <em>exclude_contemporaneous=True</em><span class="sig-paren">)</span><a class="headerlink" href="#tigramite.pcmci.PCMCI.get_corrected_pvalues" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns p-values corrected for multiple testing.</p>
-<p>Wrapper around statsmodels.sandbox.stats.multicomp.multipletests.
-Correction is performed either among all links if
+<p>Currently implemented is Benjamini-Hochberg False Discovery Rate
+method. Correction is performed either among all links if
 exclude_contemporaneous==False, or only among lagged links.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -357,10 +355,8 @@ exclude_contemporaneous==False, or only among lagged links.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>p_matrix</strong> (<em>array-like</em>) – Matrix of p-values. Must be of shape (N, N, tau_max + 1).</li>
-<li><strong>fdr_method</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'fdr_bh'</em><em>)</em>) – Correction method, default is Benjamini-Hochberg False Discovery
-Rate method. See statsmodels.sandbox.stats.multicomp.multipletests
-for other valid modes.  Additionally, ‘none’ is a valid mode that
-does nothing to the input p_matrix.</li>
+<li><strong>fdr_method</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'fdr_bh'</em><em>)</em>) – Correction method, currently implemented is Benjamini-Hochberg
+False Discovery Rate method.</li>
 <li><strong>exclude_contemporaneous</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – Whether to include contemporaneous links in correction.</li>
 </ul>
 </td>
@@ -492,7 +488,7 @@ containing estimated parents.</li>
 
 <dl class="method">
 <dt id="tigramite.pcmci.PCMCI.run_mci">
-<code class="descname">run_mci</code><span class="sig-paren">(</span><em>selected_links=None</em>, <em>tau_min=1</em>, <em>tau_max=1</em>, <em>parents=None</em>, <em>max_conds_py=None</em>, <em>max_conds_px=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tigramite.pcmci.PCMCI.run_mci" title="Permalink to this definition">¶</a></dt>
+<code class="descname">run_mci</code><span class="sig-paren">(</span><em>selected_links=None</em>, <em>tau_min=0</em>, <em>tau_max=1</em>, <em>parents=None</em>, <em>max_conds_py=None</em>, <em>max_conds_px=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tigramite.pcmci.PCMCI.run_mci" title="Permalink to this definition">¶</a></dt>
 <dd><p>MCI conditional independence tests.</p>
 <p>Implements the MCI test (Algorithm 2 in <a class="footnote-reference" href="#id5" id="id6">[1]</a>). Returns the matrices of
 test statistic values,  p-values, and confidence intervals.</p>
@@ -504,7 +500,7 @@ test statistic values,  p-values, and confidence intervals.</p>
 <li><strong>selected_links</strong> (<em>dict</em><em> or </em><em>None</em>) – Dictionary of form {0:all_parents (3, -2), …], 1:[], …}
 specifying whether only selected links should be tested. If None is
 passed, all links are tested</li>
-<li><strong>tau_min</strong> (<em>int</em><em>, </em><em>default: 1</em>) – Minimum time lag to test. Note that zero-lags are undirected.</li>
+<li><strong>tau_min</strong> (<em>int</em><em>, </em><em>default: 0</em>) – Minimum time lag to test. Note that zero-lags are undirected.</li>
 <li><strong>tau_max</strong> (<em>int</em><em>, </em><em>default: 1</em>) – Maximum time lag. Must be larger or equal to tau_min.</li>
 <li><strong>parents</strong> (<em>dict</em><em> or </em><em>None</em>) – Dictionary of form {0:[(0, -1), (3, -2), …], 1:[], …}
 specifying the conditions for each variable. If None is
@@ -569,7 +565,7 @@ containing estimated parents.</p>
 
 <dl class="method">
 <dt id="tigramite.pcmci.PCMCI.run_pcmci">
-<code class="descname">run_pcmci</code><span class="sig-paren">(</span><em>selected_links=None</em>, <em>tau_min=1</em>, <em>tau_max=1</em>, <em>save_iterations=False</em>, <em>pc_alpha=0.05</em>, <em>max_conds_dim=None</em>, <em>max_combinations=1</em>, <em>max_conds_py=None</em>, <em>max_conds_px=None</em>, <em>fdr_method='none'</em><span class="sig-paren">)</span><a class="headerlink" href="#tigramite.pcmci.PCMCI.run_pcmci" title="Permalink to this definition">¶</a></dt>
+<code class="descname">run_pcmci</code><span class="sig-paren">(</span><em>selected_links=None</em>, <em>tau_min=0</em>, <em>tau_max=1</em>, <em>save_iterations=False</em>, <em>pc_alpha=0.05</em>, <em>max_conds_dim=None</em>, <em>max_combinations=1</em>, <em>max_conds_py=None</em>, <em>max_conds_px=None</em>, <em>fdr_method='none'</em><span class="sig-paren">)</span><a class="headerlink" href="#tigramite.pcmci.PCMCI.run_pcmci" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run full PCMCI causal discovery for time series datasets.</p>
 <p>Wrapper around PC-algorithm function and MCI function.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -580,7 +576,7 @@ containing estimated parents.</p>
 <li><strong>selected_links</strong> (<em>dict</em><em> or </em><em>None</em>) – Dictionary of form {0:all_parents (3, -2), …], 1:[], …}
 specifying whether only selected links should be tested. If None is
 passed, all links are tested</li>
-<li><strong>tau_min</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) – Minimum time lag to test. Note that zero-lags are undirected.</li>
+<li><strong>tau_min</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) – Minimum time lag to test. Note that zero-lags are undirected.</li>
 <li><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) – Maximum time lag. Must be larger or equal to tau_min.</li>
 <li><strong>save_iterations</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – Whether to save iteration step results such as conditions used.</li>
 <li><strong>pc_alpha</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.05</em><em>)</em>) – Significance level in algorithm.</li>
@@ -1671,7 +1667,7 @@ from RCoT test statistic.</p>
 <p>Tigramite data processing functions.</p>
 <dl class="class">
 <dt id="tigramite.data_processing.DataFrame">
-<em class="property">class </em><code class="descclassname">tigramite.data_processing.</code><code class="descname">DataFrame</code><span class="sig-paren">(</span><em>data</em>, <em>mask=None</em>, <em>missing_flag=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tigramite.data_processing.DataFrame" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">tigramite.data_processing.</code><code class="descname">DataFrame</code><span class="sig-paren">(</span><em>data</em>, <em>mask=None</em>, <em>missing_flag=None</em>, <em>var_names=None</em>, <em>datatime=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tigramite.data_processing.DataFrame" title="Permalink to this definition">¶</a></dt>
 <dd><p>Data object containing time series array and optional mask.</p>
 <p>Alternatively, a panda dataframe can be used.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -1705,6 +1701,19 @@ from RCoT test statistic.</p>
 samples where missing values occur in any variable and also flags
 samples for all lags up to 2*tau_max. This avoids biases, see
 section on masking in Supplement of <a class="footnote-reference" href="#id5" id="id21">[1]</a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="tigramite.data_processing.DataFrame.var_names">
+<code class="descname">var_names</code><a class="headerlink" href="#tigramite.data_processing.DataFrame.var_names" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list of strings, optional (default: range(N))</em> – Names of variables, must match the number of variables. If None is
+passed, variables are enumerated as [0, 1, …]</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="tigramite.data_processing.DataFrame.datatime">
+<code class="descname">datatime</code><a class="headerlink" href="#tigramite.data_processing.DataFrame.datatime" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>array-like, optional (default: None)</em> – Timelabel array. If None, range(T) is used.</p>
 </dd></dl>
 
 <dl class="method">
@@ -2777,7 +2786,7 @@ coordinates could have been transformed before for basemap plots.</li>
 <li><strong>alpha</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1.</em><em>)</em>) – Opacity.</li>
 <li><strong>node_label_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em>) – Fontsize of node labels.</li>
 <li><strong>link_label_fontsize</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 6</em><em>)</em>) – Fontsize of link labels.</li>
-<li><strong>lag_array</strong> (<em>array</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Optional specification of lags overwriting numpy.arange(0, tau_max+1)</li>
+<li><strong>lag_array</strong> (<em>array</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Optional specification of lags overwriting np.arange(0, tau_max+1)</li>
 <li><strong>network_lower_bound</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.2</em><em>)</em>) – Fraction of vertical space below graph plot.</li>
 <li><strong>show_colorbar</strong> (<em>bool</em>) – Whether to show colorbars for links and nodes.</li>
 </ul>
@@ -2864,7 +2873,7 @@ coordinates could have been transformed before for basemap plots.</li>
 <li><strong>node_label_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em>) – Fontsize of node labels.</li>
 <li><strong>link_label_fontsize</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 6</em><em>)</em>) – Fontsize of link labels.</li>
 <li><strong>network_lower_bound</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.2</em><em>)</em>) – Fraction of vertical space below graph plot.</li>
-<li><strong>lag_array</strong> (<em>array</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Optional specification of lags overwriting numpy.arange(0, tau_max+1)</li>
+<li><strong>lag_array</strong> (<em>array</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Optional specification of lags overwriting np.arange(0, tau_max+1)</li>
 </ul>
 </td>
 </tr>
@@ -2970,16 +2979,16 @@ given by arrow_linewidth. If None, all links have same width.</li>
 
 <dl class="function">
 <dt id="tigramite.plotting.plot_timeseries">
-<code class="descclassname">tigramite.plotting.</code><code class="descname">plot_timeseries</code><span class="sig-paren">(</span><em>data</em>, <em>datatime=None</em>, <em>var_names=None</em>, <em>save_name=None</em>, <em>fig_axes=None</em>, <em>figsize=None</em>, <em>var_units=None</em>, <em>time_label='time'</em>, <em>use_mask=False</em>, <em>mask=None</em>, <em>missing_flag=None</em>, <em>grey_masked_samples=False</em>, <em>data_linewidth=1.0</em>, <em>skip_ticks_data_x=1</em>, <em>skip_ticks_data_y=2</em>, <em>label_fontsize=8</em><span class="sig-paren">)</span><a class="headerlink" href="#tigramite.plotting.plot_timeseries" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">tigramite.plotting.</code><code class="descname">plot_timeseries</code><span class="sig-paren">(</span><em>dataframe=None</em>, <em>save_name=None</em>, <em>fig_axes=None</em>, <em>figsize=None</em>, <em>var_units=None</em>, <em>time_label='time'</em>, <em>use_mask=False</em>, <em>grey_masked_samples=False</em>, <em>data_linewidth=1.0</em>, <em>skip_ticks_data_x=1</em>, <em>skip_ticks_data_y=2</em>, <em>label_fontsize=8</em><span class="sig-paren">)</span><a class="headerlink" href="#tigramite.plotting.plot_timeseries" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create and save figure of stacked panels with time series.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>data</strong> (<em>array-like</em>) – Data series array of shape (T, N).</li>
-<li><strong>datatime</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Timelabel array. If None, range(T) is used.</li>
-<li><strong>var_names</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – List of variable names. If None, range(N) is used.</li>
+<li><strong>dataframe</strong> (<em>data object</em><em>, </em><em>optional</em>) – This is the Tigramite dataframe object. It has the attributes
+dataframe.values yielding a np array of shape (observations T,
+variables N) and optionally a mask of the same shape.</li>
 <li><strong>save_name</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Name of figure file to save figure. If None, figure is shown in window.</li>
 <li><strong>fig_axes</strong> (<em>subplots instance</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Figure and axes instance. If None they are created as
 fig, axes = pyplot.subplots(N,…)</li>
@@ -2988,11 +2997,6 @@ is used.</li>
 <li><strong>var_units</strong> (<em>list of str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Units of variables.</li>
 <li><strong>time_label</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: ''</em><em>)</em>) – Label of time axis.</li>
 <li><strong>use_mask</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – Whether to use masked data.</li>
-<li><strong>mask</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Data mask where True labels masked samples.</li>
-<li><strong>missing_flag</strong> (<em>number</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Flag for missing values in dataframe. Dismisses all time slices of
-samples where missing values occur in any variable and also flags
-samples for all lags up to 2*tau_max. This avoids biases, see section on
-masking in Supplement of <a class="footnote-reference" href="#id5" id="id31">[1]</a>.</li>
 <li><strong>grey_masked_samples</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – Whether to mark masked samples by grey fills (‘fill’) or grey data (‘data’).</li>
 <li><strong>data_linewidth</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1.</em><em>)</em>) – Linewidth.</li>
 <li><strong>skip_ticks_data_x</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) – Skip every other tickmark.</li>
@@ -3032,7 +3036,7 @@ legend.</li>
 <li><strong>y_base</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: .4</em><em>)</em>) – y-tick intervals to show.</li>
 <li><strong>plot_gridlines</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – Whether to show a grid.</li>
 <li><strong>lag_units</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: ''</em><em>)</em>) – </li>
-<li><strong>lag_array</strong> (<em>array</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Optional specification of lags overwriting numpy.arange(0, tau_max+1)</li>
+<li><strong>lag_array</strong> (<em>array</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Optional specification of lags overwriting np.arange(0, tau_max+1)</li>
 <li><strong>label_fontsize</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em>) – Fontsize of variable labels.</li>
 </ul>
 </td>
