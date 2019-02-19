@@ -42,7 +42,7 @@ install:
   # build extensions
   - python setup.py build_ext
   # Install the packages needed for testing
-  - pip install -e .['test']
+  - pip install .['test']
 script: 
   # Run the tests; all flags are in pytest.ini
   - pytest
