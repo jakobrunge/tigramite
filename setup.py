@@ -1,6 +1,7 @@
 """
 Install tigramite
 """
+import warnings
 from __future__ import print_function
 import io
 from setuptools import setup, Extension
@@ -42,7 +43,7 @@ def define_extension(extension_name, source_files=None):
         # Return the cythonized extension
         return cythonize(Extension(extension_name, source_files))
     except ImportError:
-        print("Cython cannot be found.  Skipping generation of C code from"+\
+        warnings.warn("Cython cannot be found.  Skipping generation of C code from"+\
               " cython and using pre-compiled C code instead")
         return [Extension(extension_name, source_files)]
 
