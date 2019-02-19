@@ -283,6 +283,11 @@ class CondIndTest():
         # Set the verbosity to the default value
         if verbosity is None:
             verbosity=self.verbosity
+
+        if self.measure in ['par_corr']:
+            if len(X) > 1 or len(Y) > 1:
+                raise ValueError("X and Y for %s must be univariate." %
+                                        self.measure)
         # Call the wrapped function
         return self.dataframe.construct_array(X=X, Y=Y, Z=Z,
                                               tau_max=tau_max,
@@ -2587,11 +2592,11 @@ if __name__ == '__main__':
 
     # Quick test
     import data_processing as pp
-    np.random.seed(44)
+    # np.random.seed(44)
     a = 0.
-    c = 0.3
+    c = 0.1
     d = 0.9
-    T = 10000
+    T = 500
     # Each key refers to a variable and the incoming links are supplied as a
     # list of format [((driver, lag), coeff), ...]
     links_coeffs = {0: [((0, -1), a)],
@@ -2603,33 +2608,33 @@ if __name__ == '__main__':
 
     data_mask = np.zeros(data.shape)
 
-    # cond_ind_test = CMIknn(
-    #     significance='shuffle_test',
-    #     sig_samples=1000,
-    #     knn=.05,
-    #     transform='ranks',
-    #     shuffle_neighbors=5,
-    #     confidence=False, #'bootstrap',
-    #     conf_lev=0.9,
-    #     conf_samples=1000,
-    #     conf_blocklength=None,
-    #     verbosity=3)
-    #     )
-    cond_ind_test = RCOT(significance='analytic')
+    cond_ind_test = CMIknn(
+        significance='shuffle_test',
+        sig_samples=1000,
+        knn=.1,
+        transform='ranks',
+        shuffle_neighbors=5,
+        confidence=False, #'bootstrap',
+        conf_lev=0.9,
+        conf_samples=1000,
+        conf_blocklength=None,
+        verbosity=0)
+        
+    # cond_ind_test = RCOT(significance='analytic')
 
-    # data = pp.quantile_bin_array(data, bins=6) #.astype('int64')
+    data = pp.quantile_bin_array(data, bins=2) #.astype('int64')
     # cond_ind_test = CMIsymb(sig_samples=1000)
+    # cond_ind_test = GPDC()
 
     # cond_ind_test = ParCorr()
 
     dataframe = pp.DataFrame(data)
     cond_ind_test.set_dataframe(dataframe)
 
-
     tau_max = 5
     X = [(1, -1)]
     Y = [(2, 0)]
-    Z = [(0, -2),(0, -3),(0, -4)]  #(2, -1), (1, -1), (0, -3)]  #[(1, -1)]  #[(2, -1), (1, -1), (0, -3)] # [(2, -1), (1, -1), (2, -3)]   [(1, -1)]
+    Z = [(0, -2)] #,(0, -3),(0, -4)]  #(2, -1), (1, -1), (0, -3)]  #[(1, -1)]  #[(2, -1), (1, -1), (0, -3)] # [(2, -1), (1, -1), (2, -3)]   [(1, -1)]
     
     # print cond_ind_test._get_shuffle_dist
 

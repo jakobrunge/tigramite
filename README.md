@@ -50,7 +50,6 @@ Tigramite is a causal time series analysis python package. It allows to efficien
 - cython>=0.26   (optional, necessary for CMIknn and GPDC tests)
 - basemap>=1.0.0   (only if plotting on a map is needed)
 - mpi4py>=2.0.0   (optional, necessary for using the parallelized implementation)
-- statsmodels >= 0.6.0   (optional, necessary for p-value corrections)
 - rpy2>=2.8   (optional, necessary for RCOT test)
 
 

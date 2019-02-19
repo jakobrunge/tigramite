@@ -56,7 +56,6 @@ def run_pc_stable_parallel(j):
         dataframe=dataframe,
         cond_ind_test=cond_ind_test,
         selected_variables=[j],
-        var_names=var_names,
         verbosity=verbosity)
 
     # Run PC condition-selection algorithm. Also here further parameters can be
@@ -120,11 +119,11 @@ T = 500     # time series length
 data, true_parents_neighbors = pp.var_process(links_coeffs, T=T)
 T, N = data.shape
 
-# Initialize dataframe object
-dataframe = pp.DataFrame(data)
-
 # Optionally specify variable names
 var_names = [r'$X^0$', r'$X^1$', r'$X^2$', r'$X^3$']
+
+# Initialize dataframe object
+dataframe = pp.DataFrame(data, var_names=var_names)
 
 # Significance level in condition-selection step. If a list of levels is is
 # provided or pc_alpha=None, the optimal pc_alpha is automatically chosen via

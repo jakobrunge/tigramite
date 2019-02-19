@@ -6,7 +6,7 @@ from collections import defaultdict
 from distutils.version import LooseVersion
 import numpy as np
 import pytest
-from scipy.misc import comb
+from scipy.special import comb
 
 from tigramite.pcmci import PCMCI
 from tigramite.independence_tests import ParCorr
