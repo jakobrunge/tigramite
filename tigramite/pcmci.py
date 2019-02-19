@@ -203,10 +203,6 @@ class PCMCI():
         Specify to estimate parents only for selected variables. If None is
         passed, parents are estimated for all variables.
 
-    var_names : list of strings, optional (default: range(N))
-        Names of variables, must match the number of variables. If None is
-        passed, names are taken from dataframe
-
     verbosity : int, optional (default: 0)
         Verbose levels 0, 1, ...
 
@@ -238,7 +234,6 @@ class PCMCI():
     def __init__(self, dataframe,
                  cond_ind_test,
                  selected_variables=None,
-                 var_names=None,
                  verbosity=0):
         # Set the data for this iteration of the algorithm
         self.dataframe = dataframe
@@ -247,11 +242,9 @@ class PCMCI():
         self.cond_ind_test.set_dataframe(self.dataframe)
         # Set the verbosity for debugging/logging messages
         self.verbosity = verbosity
-        # Set the variable names if not already set in dataframe
-        if var_names is None:
-            self.var_names = self.dataframe.var_names
-        else:
-            self.var_names = var_names
+        # Set the variable names 
+        self.var_names = self.dataframe.var_names
+        
         # Store the shape of the data in the T and N variables
         self.T, self.N = self.dataframe.values.shape
         # Set the selected variables
@@ -1309,7 +1302,7 @@ class PCMCI():
         # Create the return value
         q_matrix = np.array(p_matrix)
         # Use the multiple tests function
-        if fdr_method is None:
+        if fdr_method is None or fdr_method == 'none':
             pass
         elif fdr_method == 'fdr_bh':
             pvs = p_matrix[mask]
