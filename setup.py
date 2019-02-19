@@ -53,7 +53,6 @@ EXTRAS_REQUIRE = {
     'all' : ['scikit-learn>=0.18',#Gaussian Process (GP) Regression
              'matplotlib>=1.5',   #plotting
              'networkx>=1.10',    #plotting
-             'statsmodels',       #p-value corrections
              'rpy2'],             #R-based RCOT
     'R'   : ['rpy2']              #R-based RCOT
     }
@@ -61,7 +60,6 @@ EXTRAS_REQUIRE = {
 TESTS_REQUIRE = ['nose',
                  'pytest',
                  'scikit-learn>=0.18',
-                 'statsmodels',
                  'rpy2']
 EXTRAS_REQUIRE['test'] = TESTS_REQUIRE
 # Define the extras needed for development
@@ -81,7 +79,7 @@ setup(
     license='GNU General Public License v3.0',
     description='Tigramite causal discovery for time series',
     author='Jakob Runge',
-    author_email='jakobrunge@posteo.de',
+    author_email='jakob@jakob-runge.com',
     url='https://github.com/jakobrunge/tigramite/',
     long_description=io.open('README.md', 'r', encoding='utf-8').read(),
     keywords='causality time-series',

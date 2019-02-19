@@ -10,11 +10,6 @@ from collections import defaultdict
 from copy import deepcopy
 import numpy as np
 
-try:
-    from statsmodels.sandbox.stats import multicomp
-except:
-    print("Could not import statsmodels, p-value corrections not available.")
-
 def _create_nested_dictionary(depth=0, lowest_type=dict):
     """Create a series of nested dictionaries to a maximum depth.  The first
     depth - 1 nested dictionaries are defaultdicts, the last is a normal
@@ -1181,7 +1176,7 @@ class PCMCI():
 
     def run_mci(self,
                 selected_links=None,
-                tau_min=1,
+                tau_min=0,
                 tau_max=1,
                 parents=None,
                 max_conds_py=None,
@@ -1197,7 +1192,7 @@ class PCMCI():
             Dictionary of form {0:all_parents (3, -2), ...], 1:[], ...}
             specifying whether only selected links should be tested. If None is
             passed, all links are tested
-        tau_min : int, default: 1
+        tau_min : int, default: 0
             Minimum time lag to test. Note that zero-lags are undirected.
         tau_max : int, default: 1
             Maximum time lag. Must be larger or equal to tau_min.
@@ -1276,8 +1271,8 @@ class PCMCI():
                               exclude_contemporaneous=True):
         """Returns p-values corrected for multiple testing.
 
-        Wrapper around statsmodels.sandbox.stats.multicomp.multipletests.
-        Correction is performed either among all links if
+        Currently implemented is Benjamini-Hochberg False Discovery Rate
+        method. Correction is performed either among all links if
         exclude_contemporaneous==False, or only among lagged links.
 
         Parameters
@@ -1285,10 +1280,8 @@ class PCMCI():
         p_matrix : array-like
             Matrix of p-values. Must be of shape (N, N, tau_max + 1).
         fdr_method : str, optional (default: 'fdr_bh')
-            Correction method, default is Benjamini-Hochberg False Discovery
-            Rate method. See statsmodels.sandbox.stats.multicomp.multipletests
-            for other valid modes.  Additionally, 'none' is a valid mode that
-            does nothing to the input p_matrix.
+            Correction method, currently implemented is Benjamini-Hochberg
+            False Discovery Rate method.     
         exclude_contemporaneous : bool, optional (default: True)
             Whether to include contemporaneous links in correction.
 
@@ -1297,6 +1290,13 @@ class PCMCI():
         q_matrix : array-like
             Matrix of shape (N, N, tau_max + 1) containing corrected p-values.
         """
+
+        def _ecdf(x):
+            '''no frills empirical cdf used in fdrcorrection
+            '''
+            nobs = len(x)
+            return np.arange(1,nobs+1)/float(nobs)
+
         # Get the shape paramters from the p_matrix
         _, N, tau_max_plusone = p_matrix.shape
         # Create a mask for these values
@@ -1309,9 +1309,32 @@ class PCMCI():
         # Create the return value
         q_matrix = np.array(p_matrix)
         # Use the multiple tests function
-        if fdr_method != 'none':
+        if fdr_method is None:
+            pass
+        elif fdr_method == 'fdr_bh':
             pvs = p_matrix[mask]
-            q_matrix[mask] = multicomp.multipletests(pvs, method=fdr_method)[1]
+            # q_matrix[mask] = multicomp.multipletests(pvs, method=fdr_method)[1]
+
+            pvals_sortind = np.argsort(pvs)
+            pvals_sorted = np.take(pvs, pvals_sortind)
+
+            ecdffactor = _ecdf(pvals_sorted)
+            # reject = pvals_sorted <= ecdffactor*alpha
+
+            pvals_corrected_raw = pvals_sorted / ecdffactor
+            pvals_corrected = np.minimum.accumulate(pvals_corrected_raw[::-1])[::-1]
+            del pvals_corrected_raw
+
+            pvals_corrected[pvals_corrected>1] = 1
+            pvals_corrected_ = np.empty_like(pvals_corrected)
+            pvals_corrected_[pvals_sortind] = pvals_corrected
+            del pvals_corrected
+
+            q_matrix[mask] = pvals_corrected_
+
+        else:
+            raise ValueError('Only FDR method fdr_bh implemented')
+
         # Return the new matrix
         return q_matrix
 
@@ -1448,7 +1471,7 @@ class PCMCI():
 
     def run_pcmci(self,
                   selected_links=None,
-                  tau_min=1,
+                  tau_min=0,
                   tau_max=1,
                   save_iterations=False,
                   pc_alpha=0.05,
@@ -1468,7 +1491,7 @@ class PCMCI():
             specifying whether only selected links should be tested. If None is
             passed, all links are tested
 
-        tau_min : int, optional (default: 1)
+        tau_min : int, optional (default: 0)
           Minimum time lag to test. Note that zero-lags are undirected.
 
         tau_max : int, optional (default: 1)
@@ -1549,3 +1572,12 @@ class PCMCI():
             self.print_results(return_dict)
         # Return the dictionary
         return return_dict
+
+if __name__ == '__main__':
+
+    from tigramite.independence_tests import ParCorr
+    import tigramite.data_processing as pp
+    dataframe = pp.DataFrame(np.random.randn(100,3),)
+    pcmci = PCMCI(dataframe, ParCorr())
+
+    pcmci.get_corrected_pvalues(np.random.rand(2,2,2))
