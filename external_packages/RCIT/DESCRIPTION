@@ -1,0 +1,12 @@
+Package: RCIT
+Type: Package
+Title: The Randomized Conditional Independence Test (RCIT) and the Randomized
+    conditional Correlation Test (RCoT)
+Version: 0.1.0
+Author: Eric V. Strobl
+Maintainer:  Eric V. Strobl <ericvonstrobl@gmail.com>
+Description:  RCIT and RCoT are approximate conditional independence tests that use random Fourier features taken from the same class of reproducing kernel Hilbert spaces used by KCIT. RCIT and RCoT are therefore significantly faster than KCIT while at least as accurate.
+Depends: momentchi2, MASS
+License: CC BY-NC 4.0
+LazyData: TRUE
+RoxygenNote: 5.0.1

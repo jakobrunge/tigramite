@@ -15,7 +15,7 @@ step and the MCI step.
 
 from mpi4py import MPI
 import numpy
-import os, sys, cPickle
+import os, sys, pickle
 
 from tigramite import data_processing as pp
 from tigramite.pcmci import PCMCI
@@ -56,7 +56,6 @@ def run_pc_stable_parallel(j):
         dataframe=dataframe,
         cond_ind_test=cond_ind_test,
         selected_variables=[j],
-        var_names=var_names,
         verbosity=verbosity)
 
     # Run PC condition-selection algorithm. Also here further parameters can be
@@ -120,11 +119,11 @@ T = 500     # time series length
 data, true_parents_neighbors = pp.var_process(links_coeffs, T=T)
 T, N = data.shape
 
-# Initialize dataframe object
-dataframe = pp.DataFrame(data)
-
 # Optionally specify variable names
 var_names = [r'$X^0$', r'$X^1$', r'$X^2$', r'$X^3$']
+
+# Initialize dataframe object
+dataframe = pp.DataFrame(data, var_names=var_names)
 
 # Significance level in condition-selection step. If a list of levels is is
 # provided or pc_alpha=None, the optimal pc_alpha is automatically chosen via
@@ -160,7 +159,7 @@ verbosity = 0
 cond_ind_test = ParCorr()  #confidence='analytic')
 
 # Store results in file
-file_name = os.path.expanduser('~') + '/test/test_results.dat'
+file_name = os.path.expanduser('~') + '/test_results.dat'
 
 
 #
@@ -217,8 +216,8 @@ if COMM.rank == 0:
         print("\n\n## Resulting condition sets:")
         for j in [var for var in all_parents.keys()]:
             pcmci_objects[j]._print_parents_single(j, all_parents[j],
-                                    pcmci_objects[j].val_matrix[j], 
-                                    pcmci_objects[j].p_matrix[j])
+                                    pcmci_objects[j].val_min[j], 
+                                    pcmci_objects[j].p_max[j])
 
     if verbosity > -1:
         print("\n##\n## Running Parallelized Tigramite MCI algorithm\n##"
@@ -314,13 +313,13 @@ if COMM.rank == 0:
                         conf_matrix[p[0], j, abs(p[1])][0], 
                         conf_matrix[p[0], j, abs(p[1])][1])
 
-            print string
+            print (string)
 
 
     if verbosity > -1:
         print("Pickling to "), file_name
     file = open(file_name, 'wb')
-    cPickle.dump(all_results, file, protocol=-1)        
+    pickle.dump(all_results, file, protocol=-1)        
     file.close()
     # PCMCI._print_significant_links(
     #        p_matrix=all_results['p_matrix'],
