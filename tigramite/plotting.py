@@ -1385,6 +1385,9 @@ def plot_graph(val_matrix,
         else:
             # Node color is max of average autodependency
             node_color[u] = val_matrix[u, v][argmax]
+            dic['undirected_attribute'] = None
+            dic['directed_attribute'] = None
+
 
         dic['directed_edge'] = False
         dic['directed_edgecolor'] = None
@@ -1623,6 +1626,8 @@ def plot_time_series_graph(val_matrix,
     all_strengths = []
     # Add attributes, contemporaneous and directed links are handled separately
     for (u, v, dic) in G.edges(data=True):
+
+        dic['directed_attribute'] = None
 
         if u != v:
 
@@ -1910,6 +1915,8 @@ def plot_mediation_time_series_graph(
     all_strengths = []
     # Add attributes, contemporaneous and directed links are handled separately
     for (u, v, dic) in G.edges(data=True):
+
+        dic['directed_attribute'] = None
 
         if u != v:
 
@@ -2204,6 +2211,8 @@ def plot_mediation_graph(
     all_strengths = []
     # Add attributes, contemporaneous and directed links are handled separately
     for (u, v, dic) in G.edges(data=True):
+        dic['directed_attribute'] = None
+
         # average lagfunc for link u --> v ANDOR u -- v
         if tau_max > 0:
             # argmax of absolute maximum

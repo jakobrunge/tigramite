@@ -914,10 +914,17 @@
             <span class="n">alpha</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;undirected_alpha&#39;</span><span class="p">]</span>
             <span class="n">arrowstyle</span> <span class="o">=</span> <span class="s1">&#39;simple,head_length=0.0001&#39;</span>
             <span class="n">link_edge</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;undirected_edge&#39;</span><span class="p">]</span>
-            <span class="n">linestyle</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;undirected_style&#39;</span><span class="p">]</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">linestyle</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;undirected_style&#39;</span><span class="p">]</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="n">linestyle</span> <span class="o">=</span> <span class="s1">&#39;solid&#39;</span>
             <span class="n">linewidth</span> <span class="o">=</span> <span class="mf">0.</span>
-            <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;undirected_attribute&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;spurious&#39;</span><span class="p">:</span>
-                <span class="n">facecolor</span> <span class="o">=</span> <span class="s1">&#39;grey&#39;</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;undirected_attribute&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;spurious&#39;</span><span class="p">:</span>
+                    <span class="n">facecolor</span> <span class="o">=</span> <span class="s1">&#39;grey&#39;</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">pass</span>
+                <span class="c1"># facecolor = </span>
                 <span class="c1"># linestyle = &#39;dashed&#39;</span>
 
             <span class="c1"># print d[&#39;undirected_attribute&#39;]</span>
@@ -1464,6 +1471,9 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Node color is max of average autodependency</span>
             <span class="n">node_color</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="n">val_matrix</span><span class="p">[</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">][</span><span class="n">argmax</span><span class="p">]</span>
+            <span class="n">dic</span><span class="p">[</span><span class="s1">&#39;undirected_attribute&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">dic</span><span class="p">[</span><span class="s1">&#39;directed_attribute&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
 
         <span class="n">dic</span><span class="p">[</span><span class="s1">&#39;directed_edge&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="n">dic</span><span class="p">[</span><span class="s1">&#39;directed_edgecolor&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1698,6 +1708,8 @@
     <span class="n">all_strengths</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="c1"># Add attributes, contemporaneous and directed links are handled separately</span>
     <span class="k">for</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">dic</span><span class="p">)</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+        <span class="n">dic</span><span class="p">[</span><span class="s1">&#39;directed_attribute&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="k">if</span> <span class="n">u</span> <span class="o">!=</span> <span class="n">v</span><span class="p">:</span>
 
@@ -1985,6 +1997,8 @@
     <span class="n">all_strengths</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="c1"># Add attributes, contemporaneous and directed links are handled separately</span>
     <span class="k">for</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">dic</span><span class="p">)</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+        <span class="n">dic</span><span class="p">[</span><span class="s1">&#39;directed_attribute&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="k">if</span> <span class="n">u</span> <span class="o">!=</span> <span class="n">v</span><span class="p">:</span>
 
@@ -2279,6 +2293,8 @@
     <span class="n">all_strengths</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="c1"># Add attributes, contemporaneous and directed links are handled separately</span>
     <span class="k">for</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">dic</span><span class="p">)</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">dic</span><span class="p">[</span><span class="s1">&#39;directed_attribute&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
         <span class="c1"># average lagfunc for link u --&gt; v ANDOR u -- v</span>
         <span class="k">if</span> <span class="n">tau_max</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="c1"># argmax of absolute maximum</span>
