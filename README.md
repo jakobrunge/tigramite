@@ -12,11 +12,12 @@ Version 4.0 described in http://arxiv.org/abs/1702.07007v2
 
 Tigramite is a causal time series analysis python package. It allows to efficiently reconstruct causal graphs from high-dimensional time series datasets and model the obtained causal dependencies for causal mediation and prediction analyses. Causal discovery is based on linear as well as non-parametric conditional independence tests applicable to discrete or continuously-valued time series. Currently, tigramite cannot identify causal directionality for contemporaneous links which are left undirected. Also includes functions for high-quality plots of the results. Please cite the following papers depending on which method you use:
 
-- J. Runge et al. (2018): Detecting Causal Associations in Large Nonlinear Time Series Datasets. https://arxiv.org/abs/1702.07007v2
-- J. Runge et al. (2015): Identifying causal gateways and mediators in complex spatio-temporal systems. Nature Communications, 6, 8502. http://doi.org/10.1038/ncomms9502
-- J. Runge (2015): Quantifying information transfer and mediation along causal pathways in complex systems. Phys. Rev. E, 92(6), 62829. http://doi.org/10.1103/PhysRevE.92.062829
-- J. Runge (2018): Conditional Independence Testing Based on a Nearest-Neighbor Estimator of Conditional Mutual Information. In Proceedings of the 21st International Conference on Artificial Intelligence and Statistics. http://proceedings.mlr.press/v84/runge18a.html
-- J. Runge (2018): Causal Network Reconstruction from Time Series: From Theoretical Assumptions to Practical Estimation. Chaos: An Interdisciplinary Journal of Nonlinear Science 28 (7): 075310. https://aip.scitation.org/doi/10.1063/1.5025050
+- PCMCI: J. Runge et al. (2018): Detecting Causal Associations in Large Nonlinear Time Series Datasets. https://arxiv.org/abs/1702.07007v2
+- Generally: J. Runge (2018): Causal Network Reconstruction from Time Series: From Theoretical Assumptions to Practical Estimation. Chaos: An Interdisciplinary Journal of Nonlinear Science 28 (7): 075310. https://aip.scitation.org/doi/10.1063/1.5025050
+- Mediation class: J. Runge et al. (2015): Identifying causal gateways and mediators in complex spatio-temporal systems. Nature Communications, 6, 8502. http://doi.org/10.1038/ncomms9502
+- Mediation class: J. Runge (2015): Quantifying information transfer and mediation along causal pathways in complex systems. Phys. Rev. E, 92(6), 62829. http://doi.org/10.1103/PhysRevE.92.062829
+- CMIknn: J. Runge (2018): Conditional Independence Testing Based on a Nearest-Neighbor Estimator of Conditional Mutual Information. In Proceedings of the 21st International Conference on Artificial Intelligence and Statistics. http://proceedings.mlr.press/v84/runge18a.html
+
 
 ## Features
 
@@ -30,6 +31,7 @@ Tigramite is a causal time series analysis python package. It allows to efficien
 - p-value correction and confidence interval estimation
 - causal mediation class to analyze causal pathways
 - prediction class based on sklearn models including causal feature selection
+- currently, tigramite cannot identify causal directionality for contemporaneous links which are left undirected
 
 
 ## Required python packages
@@ -37,10 +39,9 @@ Tigramite is a causal time series analysis python package. It allows to efficien
 - numpy>=1.10.0
 - scipy>=0.17.0
 - scikit-learn>=0.18.1   (optional, necessary for GPDC test)
-- matplotlib>=1.5.1
-- networkx=1.10.0
+- matplotlib>=1.5.1 (optional, only for plotting)
+- networkx=1.10.0 (optional, only for plotting and mediation)
 - cython>=0.26   (optional, necessary for CMIknn and GPDC tests)
-- basemap>=1.0.0   (only if plotting on a map is needed)
 - mpi4py>=2.0.0   (optional, necessary for using the parallelized implementation)
 - rpy2>=2.8   (optional, necessary for RCOT test)
 
@@ -69,7 +70,7 @@ You commit to cite above papers in your reports or publications.
 
 ## License
 
-Copyright (C) Jakob Runge
+Copyright (C) 2014-2019 Jakob Runge
 
 See license.txt for full text.
 
