@@ -10,7 +10,7 @@ Version 4.0 described in http://arxiv.org/abs/1702.07007v2
 
 ## General Notes
 
-Tigramite is a causal time series analysis python package. It allows to efficiently reconstruct causal graphs from high-dimensional time series datasets and model the obtained causal dependencies for causal mediation and prediction analyses. Causal discovery is based on linear as well as non-parametric conditional independence tests applicable to discrete or continuously-valued time series. Also includes functions for high-quality plots of the results. Please cite the following papers depending on which method you use:
+Tigramite is a causal time series analysis python package. It allows to efficiently reconstruct causal graphs from high-dimensional time series datasets and model the obtained causal dependencies for causal mediation and prediction analyses. Causal discovery is based on linear as well as non-parametric conditional independence tests applicable to discrete or continuously-valued time series. Currently, tigramite cannot identify causal directionality for contemporaneous links which are left undirected. Also includes functions for high-quality plots of the results. Please cite the following papers depending on which method you use:
 
 - J. Runge et al. (2018): Detecting Causal Associations in Large Nonlinear Time Series Datasets. https://arxiv.org/abs/1702.07007v2
 - J. Runge et al. (2015): Identifying causal gateways and mediators in complex spatio-temporal systems. Nature Communications, 6, 8502. http://doi.org/10.1038/ncomms9502
