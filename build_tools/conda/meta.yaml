@@ -1,0 +1,46 @@
+package:
+  name: tigramite
+  version: 4.0.0
+
+source:
+  path: ../..
+
+requirements:
+  build:
+    - cython
+    - numpy
+    - rpy2
+    - setuptools
+    - python
+  host:
+    - cython
+    - numpy
+    - rpy2
+    - setuptools
+    - python
+  run:
+    - python
+    - numpy 
+    - scipy
+    - six 
+    - scikit-learn>=0.18
+    - matplotlib>=1.5
+    - networkx>=1.10
+    - statsmodels
+    - rpy2
+
+test:
+  source_files:
+    - tests/*py
+  requires:
+    - nose
+    - pytest
+    - rpy2
+  commands:
+    - pytest .
+
+about:
+  home: https://github.com/jakobrunge/tigramite
+  license: GPL-3
+  license_file: license.txt
+  summary: Tigramite is a time series analysis aimed at causal discovery
