@@ -26,7 +26,6 @@ try:
     import rpy2
     import rpy2.robjects
     rpy2.robjects.r['options'](warn=-1)
-
     from rpy2.robjects.packages import importr
     import rpy2.robjects.numpy2ri
     rpy2.robjects.numpy2ri.activate()
@@ -2422,7 +2421,8 @@ class RCOT(CondIndTest):
     features. To get reproducable results, you should fix the seed (default).
 
     This class requires the rpy package and the prior installation of ``rcit``
-    from https://github.com/ericstrobl/RCIT.
+    from https://github.com/ericstrobl/RCIT. This is provided with tigramite
+    as an external package.
 
     References
     ----------
@@ -2560,91 +2560,3 @@ class RCOT(CondIndTest):
         if return_null_dist:
             return pval, null_dist
         return pval
-
-
-if __name__ == '__main__':
-
-    # import sys
-
-    # np.random.seed(30)
-    # T = 10
-    # shuffle_neighbors = 3
-    # neighbors = np.zeros((T, shuffle_neighbors))
-    # order = np.random.permutation(T).astype('int32')
-
-    # for i in range(T):
-    #     neighbors[i] = np.random.permutation(T)[:shuffle_neighbors]
-    # neighbors = neighbors.astype('int32')
-
-    # print (order)
-    # print (neighbors)
-
-    # print(neighbors.shape)
-
-    # p = tigramite_cython_code._get_restricted_permutation_cython(
-    #             T=T,
-    #             shuffle_neighbors=shuffle_neighbors,
-    #             neighbors=neighbors,
-    #             order=order)
-    # print(p)
-
-    # sys.exit(0)
-
-    # Quick test
-    import data_processing as pp
-    # np.random.seed(44)
-    a = 0.
-    c = 0.1
-    d = 0.9
-    T = 500
-    # Each key refers to a variable and the incoming links are supplied as a
-    # list of format [((driver, lag), coeff), ...]
-    links_coeffs = {0: [((0, -1), a)],
-                    1: [((1, -1), a), ((0, -1), d)],
-                    2: [((2, -1), a), ((0, -2), d), ((1, -1), c)],
-                    }
-
-    data, true_parents_neighbors = pp.var_process(links_coeffs, T=T)
-
-    data_mask = np.zeros(data.shape)
-
-    cond_ind_test = CMIknn(
-        significance='shuffle_test',
-        sig_samples=1000,
-        knn=.1,
-        transform='ranks',
-        shuffle_neighbors=5,
-        confidence=False, #'bootstrap',
-        conf_lev=0.9,
-        conf_samples=1000,
-        conf_blocklength=None,
-        verbosity=0)
-        
-    # cond_ind_test = RCOT(significance='analytic')
-
-    data = pp.quantile_bin_array(data, bins=2) #.astype('int64')
-    # cond_ind_test = CMIsymb(sig_samples=1000)
-    # cond_ind_test = GPDC()
-
-    # cond_ind_test = ParCorr()
-
-    dataframe = pp.DataFrame(data)
-    cond_ind_test.set_dataframe(dataframe)
-
-    tau_max = 5
-    X = [(1, -1)]
-    Y = [(2, 0)]
-    Z = [(0, -2)] #,(0, -3),(0, -4)]  #(2, -1), (1, -1), (0, -3)]  #[(1, -1)]  #[(2, -1), (1, -1), (0, -3)] # [(2, -1), (1, -1), (2, -3)]   [(1, -1)]
-    
-    # print cond_ind_test._get_shuffle_dist
-
-    val, pval = cond_ind_test.run_test(X, Y, Z, tau_max=tau_max)
-    conf_interval = cond_ind_test.get_confidence(X, Y, Z, tau_max=tau_max)
-
-    # print cond_ind_test.get_model_selection_criterion(2,
-    #                                   [(0, -2)],
-    #                                   tau_max=tau_max)
-
-    print ("I(X,Y|Z) = %.4f | p-value = %.3f " % (val, pval))
-    if conf_interval is not None:
-        print ("[%.2f, %.2f]" % conf_interval)

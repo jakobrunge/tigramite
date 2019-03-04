@@ -780,7 +780,7 @@ class PCMCI():
         save_iterations : bool, default: False
             Whether to save iteration step results such as conditions used.
 
-        pc_alpha : float or list of floats, default: 0.2
+        pc_alpha : float or list of floats, default: [0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
             Significance level in algorithm. If a list or None is passed, the
             pc_alpha level is optimized for every variable across the given
             pc_alpha values using the score computed in
@@ -823,6 +823,39 @@ class PCMCI():
         iterations = defaultdict(dict)
         # Print information about the selected parameters
         if self.verbosity > 0:
+            print("\n##\n## Running Tigramite PC algorithm\n##"
+                  "\n\nParameters:")
+            if len(self.selected_variables) < self.N:
+                print("selected_variables = %s" % self.selected_variables)
+            if selected_links is not None:
+                print("selected_links = %s" % selected_links)
+            print("independence test = %s" % self.cond_ind_test.measure
+                  + "\ntau_min = %d" % tau_min
+                  + "\ntau_max = %d" % tau_max
+                  + "\npc_alpha = %s" % pc_alpha
+                  + "\nmax_conds_dim = %s" % max_conds_dim
+                  + "\nmax_combinations = %d" % max_combinations)
+            print("\n")
+
+        if selected_links is None:
+            selected_links = {}
+            for j in range(self.N):
+                if j in self.selected_variables:
+                    selected_links[j] = [(var, -lag)
+                                         for var in range(self.N)
+                                         for lag in range(tau_min, tau_max + 1)
+                                         ]
+                else:
+                    selected_links[j] = []
+
+        all_parents = selected_links
+
+        if max_conds_dim is None:
+            max_conds_dim = self.N * tau_max
+
+        if max_conds_dim < 0:
+            raise ValueError("max_conds_dim must be >= 0")
+
             self._print_pc_params(selected_links, tau_min, tau_max,
                                   _int_pc_alpha, max_conds_dim,
                                   max_combinations)
@@ -1567,7 +1600,6 @@ class PCMCI():
         return return_dict
 
 if __name__ == '__main__':
-
     from tigramite.independence_tests import ParCorr
     import tigramite.data_processing as pp
     dataframe = pp.DataFrame(np.random.randn(100,3),)

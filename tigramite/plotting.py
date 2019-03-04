@@ -809,7 +809,7 @@ def _draw_network_with_curved_edges(
             link_edge = d['directed_edge']
             linestyle = 'solid'
             linewidth = 0.
-            if 'directed_attribute' in d and d['directed_attribute'] == 'spurious':
+            if d.get('directed_attribute', None) == 'spurious':
                 facecolor = 'grey'
             #     linestyle = 'dashed'
 
@@ -835,9 +835,9 @@ def _draw_network_with_curved_edges(
             alpha = d['undirected_alpha']
             arrowstyle = 'simple,head_length=0.0001'
             link_edge = d['undirected_edge']
-            linestyle = undirected_style     #d['undirected_style']
+            linestyle = undirected_style
             linewidth = 0.
-            if 'undirected_attribute' in d and d['undirected_attribute'] == 'spurious':
+            if d.get('undirected_attribute', None) == 'spurious':
                 facecolor = 'grey'
                 # linestyle = 'dashed'
 
@@ -1057,8 +1057,7 @@ def _draw_network_with_curved_edges(
             cb_e = pyplot.colorbar(
                 data_to_rgb_links, cax=cax_e, orientation='horizontal')
             try:
-                cb_e.set_ticks(np.arange(_myround(links_vmin, links_ticks,
-                                                    'down'),
+                cb_e.set_ticks(np.arange(_myround(links_vmin, links_ticks, 'down'),
                                          _myround(links_vmax, links_ticks, 'up') +
                                          links_ticks, links_ticks))
             except:
@@ -1386,6 +1385,9 @@ def plot_graph(val_matrix,
         else:
             # Node color is max of average autodependency
             node_color[u] = val_matrix[u, v][argmax]
+            dic['undirected_attribute'] = None
+            dic['directed_attribute'] = None
+
 
         dic['directed_edge'] = False
         dic['directed_edgecolor'] = None
@@ -1624,6 +1626,8 @@ def plot_time_series_graph(val_matrix,
     all_strengths = []
     # Add attributes, contemporaneous and directed links are handled separately
     for (u, v, dic) in G.edges(data=True):
+
+        dic['directed_attribute'] = None
 
         if u != v:
 
@@ -1911,6 +1915,8 @@ def plot_mediation_time_series_graph(
     all_strengths = []
     # Add attributes, contemporaneous and directed links are handled separately
     for (u, v, dic) in G.edges(data=True):
+
+        dic['directed_attribute'] = None
 
         if u != v:
 
@@ -2205,6 +2211,8 @@ def plot_mediation_graph(
     all_strengths = []
     # Add attributes, contemporaneous and directed links are handled separately
     for (u, v, dic) in G.edges(data=True):
+        dic['directed_attribute'] = None
+
         # average lagfunc for link u --> v ANDOR u -- v
         if tau_max > 0:
             # argmax of absolute maximum
