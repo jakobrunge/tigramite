@@ -201,7 +201,9 @@ class PCMCI():
 
     selected_variables : list of integers, optional (default: range(N))
         Specify to estimate parents only for selected variables. If None is
-        passed, parents are estimated for all variables.
+        passed, parents are estimated for all variables. Note that parents
+        can still come from all variables, you can restrict parents using 
+        the selected_links parameter.
 
     verbosity : int, optional (default: 0)
         Verbose levels 0, 1, ...
@@ -847,8 +849,6 @@ class PCMCI():
                                          ]
                 else:
                     selected_links[j] = []
-
-        all_parents = selected_links
 
         if max_conds_dim is None:
             max_conds_dim = self.N * tau_max

@@ -2374,20 +2374,20 @@ if __name__ == '__main__':
  # )
 
 
-    plot_timeseries(
-                    dataframe=dataframe,
-                    save_name='/home/rung_ja/Downloads/test.pdf',
-                    fig_axes=None,
-                    var_units=None,
-                    time_label='years',
-                    use_mask=True,
-                    grey_masked_samples='data',
-                    data_linewidth=1.,
-                    skip_ticks_data_x=1,
-                    skip_ticks_data_y=1,
-                    label_fontsize=8,
-                    figsize=(3.375, 3.),
-                    )
+    # plot_timeseries(
+    #                 dataframe=dataframe,
+    #                 save_name='/home/rung_ja/Downloads/test.pdf',
+    #                 fig_axes=None,
+    #                 var_units=None,
+    #                 time_label='years',
+    #                 use_mask=True,
+    #                 grey_masked_samples='data',
+    #                 data_linewidth=1.,
+    #                 skip_ticks_data_x=1,
+    #                 skip_ticks_data_y=1,
+    #                 label_fontsize=8,
+    #                 figsize=(3.375, 3.),
+    #                 )
 
     # lagmat = setup_matrix(3, 3, range(3), lag_units = 'months')
 
@@ -2401,14 +2401,14 @@ if __name__ == '__main__':
     # fig = pyplot.figure(figsize=(4, 3), frameon=False)
     # ax = fig.add_subplot(111, frame_on=False)
 
-    # plot_graph(
-    #     figsize=(3, 3),
-    #     val_matrix=val_matrix,
-    #     sig_thres=None,
-    #     link_matrix=link_matrix,
-    #     var_names=range(len(val_matrix)),
-    #     save_name='/home/rung_ja/Downloads/test.pdf',
-    # )
+    plot_graph(
+        figsize=(3, 3),
+        val_matrix=val_matrix,
+        sig_thres=None,
+        link_matrix=link_matrix,
+        var_names=range(len(val_matrix)),
+        save_name='/home/rung_ja/Downloads/test.pdf',
+    )
 
 
     # plot_time_series_graph(
