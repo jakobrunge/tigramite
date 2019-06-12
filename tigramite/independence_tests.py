@@ -751,7 +751,11 @@ class CondIndTest():
             hilbert = np.abs(signal.hilbert(autocov))
             # Try to fit the curve
             try:
-                popt, _ = optimize.curve_fit(func, range(0, max_lag+1), hilbert)
+                popt, _ = optimize.curve_fit(
+                    f=func,
+                    xdata=np.array(range(0, max_lag+1)),
+                    ydata=hilbert,
+                )
                 phi = popt[1]
                 # Formula of Pfeifer (2005) assuming non-overlapping blocks
                 l_opt = (4. * T * (phi / (1. - phi) + phi**2 / (1. - phi)**2)**2
@@ -1922,9 +1926,9 @@ class CMIknn(CondIndTest):
 
     References
     ----------
-    .. [3] J. Runge (2018): Conditional Independence Testing Based on a 
+    .. [3] J. Runge (2018): Conditional Independence Testing Based on a
            Nearest-Neighbor Estimator of Conditional Mutual Information.
-           In Proceedings of the 21st International Conference on Artificial 
+           In Proceedings of the 21st International Conference on Artificial
            Intelligence and Statistics.
            http://proceedings.mlr.press/v84/runge18a.html
 
