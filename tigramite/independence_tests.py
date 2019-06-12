@@ -2210,7 +2210,9 @@ class CMIsymb(CondIndTest):
     Parameters
     ----------
     n_symbs : int, optional (default: None)
-        Number of symbols in input data. If None, n_symbs=data.max()+1
+        Number of symbols in input data. Should be at least as large as the
+        maximum array entry + 1. If None, n_symbs is based on the
+        maximum value in the array (array.max() + 1).
 
     significance : str, optional (default: 'shuffle_test')
         Type of significance test to use. For CMIsymb only 'fixed_thres' and
@@ -2282,7 +2284,11 @@ class CMIsymb(CondIndTest):
         """
 
         if self.n_symbs is None:
-            self.n_symbs = int(symb_array.max() + 1)
+            n_symbs = int(symb_array.max() + 1)
+        else:
+            n_symbs = self.n_symbs
+            if n_symbs < int(symb_array.max() + 1):
+                raise ValueError("n_symbs must be >= symb_array.max() + 1 = {}".format(symb_array.max() + 1))
 
         if 'int' not in str(symb_array.dtype):
             raise ValueError("Input data must of integer type, where each "
@@ -2290,26 +2296,14 @@ class CMIsymb(CondIndTest):
 
         dim, T = symb_array.shape
 
-        # Needed because np.bincount cannot process longs
-        # if not isinstance(self.n_symbs ** dim, int):
-        #     raise ValueError("Too many n_symbs and/or dimensions, "
-        #                      "numpy.bincount cannot process longs")
-        # if self.n_symbs ** dim * 16. / 8. / 1024. ** 3 > 3.:
-        #     raise ValueError("Dimension exceeds 3 GB of necessary "
-        #                      "memory (change this code line if more...)")
-        # if dim * self.n_symbs ** dim > 2 ** 65:
-        #     raise ValueError("base = %d, D = %d: Histogram failed: "
-        #                      "dimension D*base**D exceeds int64 data type"
-        #                      % (self.n_symbs, dim))
-
-        flathist = np.zeros((self.n_symbs ** dim), dtype='int16')
+        flathist = np.zeros((n_symbs ** dim), dtype='int16')
         multisymb = np.zeros(T, dtype='int64')
         if weights is not None:
-            flathist = np.zeros((self.n_symbs ** dim), dtype='float32')
+            flathist = np.zeros((n_symbs ** dim), dtype='float32')
             multiweights = np.ones(T, dtype='float32')
 
         for i in range(dim):
-            multisymb += symb_array[i, :] * self.n_symbs ** i
+            multisymb += symb_array[i, :] * n_symbs ** i
             if weights is not None:
                 multiweights *= weights[i, :]
 
@@ -2321,8 +2315,8 @@ class CMIsymb(CondIndTest):
 
         flathist[:len(result)] += result
 
-        hist = flathist.reshape(tuple([self.n_symbs, self.n_symbs] +
-                                      [self.n_symbs for i in range(dim - 2)])).T
+        hist = flathist.reshape(tuple([n_symbs, n_symbs] +
+                                      [n_symbs for i in range(dim - 2)])).T
 
         return hist
 
