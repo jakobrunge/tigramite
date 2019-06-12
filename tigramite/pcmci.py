@@ -326,11 +326,7 @@ class PCMCI():
             raise ValueError("Out of range variable defined in \n",
                              _int_sel_links,
                              "\nMust be in range [0, ", self.N-1, "]")
-        # Warning if keys in selected links not in selected_variables
-        if self.verbosity > 0 and \
-                not _key_set.issubset(set(self.selected_variables)):
-            print("Warning: Link specified in selected links that is outside "+\
-                  "the scope of the selected variables")
+
         ## Note: variables are scoped by selected_variables first, and then
         ## by selected links.  Add to docstring?
         # Return the selected links
