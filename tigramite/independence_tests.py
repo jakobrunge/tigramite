@@ -753,7 +753,7 @@ class CondIndTest():
             try:
                 popt, _ = optimize.curve_fit(
                     f=func,
-                    xdata=np.array(range(0, max_lag+1)),
+                    xdata=np.arange(0, max_lag+1),
                     ydata=hilbert,
                 )
                 phi = popt[1]
