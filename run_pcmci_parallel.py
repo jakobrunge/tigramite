@@ -317,7 +317,7 @@ if COMM.rank == 0:
 
 
     if verbosity > -1:
-        print("Pickling to "), file_name
+        print("Pickling to ", file_name)
     file = open(file_name, 'wb')
     pickle.dump(all_results, file, protocol=-1)        
     file.close()
