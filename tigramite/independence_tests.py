@@ -336,6 +336,62 @@ class CondIndTest():
         # Return the value and the pvalue
         return val, pval
 
+    def run_test_raw(self, x, y, z=None):
+        """Perform conditional independence test directly on input arrays x, y, z.
+
+        Calls the dependence measure and signficicance test functions. The child
+        classes must specify a function get_dependence_measure and either or
+        both functions get_analytic_significance and  get_shuffle_significance.
+
+        Parameters
+        ----------
+        x, y, z : arrays
+            x,y,z are of the form (samples, dimension).
+
+        Returns
+        -------
+        val, pval : Tuple of floats
+
+            The test statistic value and the p-value.
+        """
+
+        if np.ndim(x) != 2 or np.ndim(y) != 2:
+            raise ValueError("x,y must be arrays of shape (samples, dimension)"
+                             " where dimension can be 1.")
+
+        if z is not None and np.ndim(z) != 2:
+            raise ValueError("z must be array of shape (samples, dimension)"
+                             " where dimension can be 1.")
+
+        if z is None:
+            # Get the array to test on
+            array = np.vstack((x.T, y.T))
+
+            # xyz is the dimension indicator
+            xyz = np.array([0 for i in range(x.shape[1])] +
+                           [1 for i in range(y.shape[1])])
+
+        else:
+            # Get the array to test on
+            array = np.vstack((x.T, y.T, z.T))
+
+            # xyz is the dimension indicator
+            xyz = np.array([0 for i in range(x.shape[1])] +
+                           [1 for i in range(y.shape[1])] +
+                           [2 for i in range(z.shape[1])])
+
+        # Record the dimensions
+        dim, T = array.shape
+        # Ensure it is a valid array
+        if np.isnan(array).sum() != 0:
+            raise ValueError("nans in the array!")
+        # Get the dependence measure
+        val = self.get_dependence_measure(array, xyz)
+        # Get the p-value
+        pval = self.get_significance(val, array, xyz, T, dim)
+        # Return the value and the pvalue
+        return val, pval
+
     def _get_dependence_measure_recycle(self, X, Y, Z, xyz, array):
         """Get the dependence_measure, optionally recycling residuals
 
@@ -2558,3 +2614,18 @@ class RCOT(CondIndTest):
         if return_null_dist:
             return pval, null_dist
         return pval
+
+if __name__ == '__main__':
+    cmi_knn = CMIknn(significance='shuffle_test',
+                     knn=0.1, 
+                     shuffle_neighbors=5,
+                     sig_samples=1000,
+                     sig_blocklength=1,
+                     transform='ranks')
+
+    samples = 500
+    z = np.random.randn(samples, 2)
+    x = z.mean(axis=1) + np.random.randn(samples)
+    y = z.mean(axis=1) + np.random.randn(samples)
+
+    print(cmi_knn.run_test_raw(x.reshape(samples, 1), y.reshape(samples, 1), z=z))
