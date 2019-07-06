@@ -192,10 +192,11 @@ def test_bad_parameters(bad_parameter_sets):
     except:
         pytest.fail("Good parameter set triggers exception incorrectly!")
     # Ensure an exception is raised for a bad parameter set
-    with pytest.raises(ValueError, message=error_message):
+    with pytest.raises(ValueError):
         pp._check_parent_neighbor(bad_params)
         covar = pp._get_covariance_matrix(bad_params)
         pp._check_symmetric_relations(covar)
+        pytest.fail(error_message)
 
 # TEST STABILITY CHECKING ######################################################
 @pytest.fixture(params=[
@@ -244,8 +245,9 @@ def test_stability_parameters(unstable_parameter_sets):
     except:
         pytest.fail("Stable matrix set triggers exception incorrectly!")
     # Ensure an exception is raised for a bad parameter set
-    with pytest.raises(AssertionError, message=error_message):
+    with pytest.raises(AssertionError):
         pp._check_stability(unst_matrix)
+        pytest.fail(error_message)
 
 # TEST NOISE GENERATION ########################################################
 @pytest.fixture()

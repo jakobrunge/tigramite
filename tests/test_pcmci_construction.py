@@ -137,9 +137,10 @@ def test_select_vars_errors(a_pcmci):
         for bad_val, message in [(-1, "Negative"),
                                  (pcmci.N + 1, "Out of range")]:
             err_msg = message + " selected variables do not fail!"
-            with pytest.raises(ValueError, message=err_msg):
+            with pytest.raises(ValueError):
                 bad_vars = np.array(new_vars) * bad_val
                 _ = pcmci._set_selected_variables(bad_vars)
+                pytest.fail(err_msg)
 
 # TEST LINK SELECTION ##########################################################
 TAU_MIN = 1
@@ -212,9 +213,10 @@ def test_select_links_errors(a_pcmci):
         # Ensure an exception is raised for a bad parameter set
         for bad_val, message in [(pcmci.N + 1, "Out of range")]:
             err_msg = message + " selected links do not fail!"
-            with pytest.raises(ValueError, message=err_msg):
+            with pytest.raises(ValueError):
                 test_links[bad_val] = [(bad_val, TAU_MAX)]
                 _ = pcmci._set_sel_links(test_links, TAU_MIN, TAU_MAX)
+                pytest.fail(err_msg)
 
 # TEST ITERATORS ###############################################################
 @pytest.fixture(params=[
@@ -420,9 +422,9 @@ def test_check_tau_limits(a_pcmci, a_tau_values):
             pytest.fail("Good tau limits failed incorrectly:"+err_msg)
     # If it should fail, make sure it does
     else:
-        with pytest.raises(ValueError,
-                           message="Bad tau limits should fail"+err_msg):
+        with pytest.raises(ValueError):
             pcmci._check_tau_limits(tau_min, tau_max)
+            pytest.fail("Bad tau limits should fail"+err_msg)
 
 @pytest.fixture(params=[
     # Store some parameters for correcting the pvalues

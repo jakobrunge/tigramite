@@ -630,5 +630,6 @@ def test_check_mask(par_corr, mask_type, expected):
     else:
         err_msg = "Unacceptable mask type "+mask_type+\
                   " is incorrectly NOT throwing an error"
-        with pytest.raises(ValueError, message=err_msg):
+        with pytest.raises(ValueError):
             par_corr._check_mask_type()
+            pytest.fail(err_msg)
