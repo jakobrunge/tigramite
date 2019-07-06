@@ -2614,18 +2614,3 @@ class RCOT(CondIndTest):
         if return_null_dist:
             return pval, null_dist
         return pval
-
-if __name__ == '__main__':
-    cmi_knn = CMIknn(significance='shuffle_test',
-                     knn=0.1, 
-                     shuffle_neighbors=5,
-                     sig_samples=1000,
-                     sig_blocklength=1,
-                     transform='ranks')
-
-    samples = 500
-    z = np.random.randn(samples, 2)
-    x = z.mean(axis=1) + np.random.randn(samples)
-    y = z.mean(axis=1) + np.random.randn(samples)
-
-    print(cmi_knn.run_test_raw(x.reshape(samples, 1), y.reshape(samples, 1), z=z))
