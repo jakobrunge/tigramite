@@ -339,7 +339,7 @@ def plot_timeseries(dataframe=None,
         var_units = ['' for i in range(N)]
 
     if fig_axes is None:
-        fig, axes = pyplot.subplots(N, sharex=True, frameon=False, 
+        fig, axes = pyplot.subplots(N, sharex=True, 
                 figsize=figsize)
     else:
         fig, axes = fig_axes
@@ -1263,7 +1263,7 @@ def plot_graph(val_matrix,
 
 
     if fig_ax is None:
-        fig = pyplot.figure(figsize=figsize, frameon=False)
+        fig = pyplot.figure(figsize=figsize)
         ax = fig.add_subplot(111, frame_on=False)
     else:
         fig, ax = fig_ax
@@ -1569,7 +1569,7 @@ def plot_time_series_graph(val_matrix,
 
 
     if fig_ax is None:
-        fig = pyplot.figure(figsize=figsize, frameon=False)
+        fig = pyplot.figure(figsize=figsize)
         ax = fig.add_subplot(111, frame_on=False)
     else:
         fig, ax = fig_ax
@@ -1886,7 +1886,7 @@ def plot_mediation_time_series_graph(
         var_names = range(N)
 
     if fig_ax is None:
-        fig = pyplot.figure(figsize=figsize, frameon=False)
+        fig = pyplot.figure(figsize=figsize)
         ax = fig.add_subplot(111, frame_on=False)
     else:
         fig, ax = fig_ax
@@ -2185,7 +2185,7 @@ def plot_mediation_graph(
     val_matrix = path_val_matrix
 
     if fig_ax is None:
-        fig = pyplot.figure(figsize=figsize, frameon=False)
+        fig = pyplot.figure(figsize=figsize)
         ax = fig.add_subplot(111, frame_on=False)
     else:
         fig, ax = fig_ax
