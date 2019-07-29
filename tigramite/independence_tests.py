@@ -336,6 +336,62 @@ class CondIndTest():
         # Return the value and the pvalue
         return val, pval
 
+    def run_test_raw(self, x, y, z=None):
+        """Perform conditional independence test directly on input arrays x, y, z.
+
+        Calls the dependence measure and signficicance test functions. The child
+        classes must specify a function get_dependence_measure and either or
+        both functions get_analytic_significance and  get_shuffle_significance.
+
+        Parameters
+        ----------
+        x, y, z : arrays
+            x,y,z are of the form (samples, dimension).
+
+        Returns
+        -------
+        val, pval : Tuple of floats
+
+            The test statistic value and the p-value.
+        """
+
+        if np.ndim(x) != 2 or np.ndim(y) != 2:
+            raise ValueError("x,y must be arrays of shape (samples, dimension)"
+                             " where dimension can be 1.")
+
+        if z is not None and np.ndim(z) != 2:
+            raise ValueError("z must be array of shape (samples, dimension)"
+                             " where dimension can be 1.")
+
+        if z is None:
+            # Get the array to test on
+            array = np.vstack((x.T, y.T))
+
+            # xyz is the dimension indicator
+            xyz = np.array([0 for i in range(x.shape[1])] +
+                           [1 for i in range(y.shape[1])])
+
+        else:
+            # Get the array to test on
+            array = np.vstack((x.T, y.T, z.T))
+
+            # xyz is the dimension indicator
+            xyz = np.array([0 for i in range(x.shape[1])] +
+                           [1 for i in range(y.shape[1])] +
+                           [2 for i in range(z.shape[1])])
+
+        # Record the dimensions
+        dim, T = array.shape
+        # Ensure it is a valid array
+        if np.isnan(array).sum() != 0:
+            raise ValueError("nans in the array!")
+        # Get the dependence measure
+        val = self.get_dependence_measure(array, xyz)
+        # Get the p-value
+        pval = self.get_significance(val, array, xyz, T, dim)
+        # Return the value and the pvalue
+        return val, pval
+
     def _get_dependence_measure_recycle(self, X, Y, Z, xyz, array):
         """Get the dependence_measure, optionally recycling residuals
 
@@ -751,7 +807,11 @@ class CondIndTest():
             hilbert = np.abs(signal.hilbert(autocov))
             # Try to fit the curve
             try:
-                popt, _ = optimize.curve_fit(func, range(0, max_lag+1), hilbert)
+                popt, _ = optimize.curve_fit(
+                    f=func,
+                    xdata=np.arange(0, max_lag+1),
+                    ydata=hilbert,
+                )
                 phi = popt[1]
                 # Formula of Pfeifer (2005) assuming non-overlapping blocks
                 l_opt = (4. * T * (phi / (1. - phi) + phi**2 / (1. - phi)**2)**2
@@ -1922,9 +1982,9 @@ class CMIknn(CondIndTest):
 
     References
     ----------
-    .. [3] J. Runge (2018): Conditional Independence Testing Based on a 
+    .. [3] J. Runge (2018): Conditional Independence Testing Based on a
            Nearest-Neighbor Estimator of Conditional Mutual Information.
-           In Proceedings of the 21st International Conference on Artificial 
+           In Proceedings of the 21st International Conference on Artificial
            Intelligence and Statistics.
            http://proceedings.mlr.press/v84/runge18a.html
 
@@ -2206,7 +2266,9 @@ class CMIsymb(CondIndTest):
     Parameters
     ----------
     n_symbs : int, optional (default: None)
-        Number of symbols in input data. If None, n_symbs=data.max()+1
+        Number of symbols in input data. Should be at least as large as the
+        maximum array entry + 1. If None, n_symbs is based on the
+        maximum value in the array (array.max() + 1).
 
     significance : str, optional (default: 'shuffle_test')
         Type of significance test to use. For CMIsymb only 'fixed_thres' and
@@ -2278,7 +2340,11 @@ class CMIsymb(CondIndTest):
         """
 
         if self.n_symbs is None:
-            self.n_symbs = int(symb_array.max() + 1)
+            n_symbs = int(symb_array.max() + 1)
+        else:
+            n_symbs = self.n_symbs
+            if n_symbs < int(symb_array.max() + 1):
+                raise ValueError("n_symbs must be >= symb_array.max() + 1 = {}".format(symb_array.max() + 1))
 
         if 'int' not in str(symb_array.dtype):
             raise ValueError("Input data must of integer type, where each "
@@ -2286,26 +2352,14 @@ class CMIsymb(CondIndTest):
 
         dim, T = symb_array.shape
 
-        # Needed because np.bincount cannot process longs
-        # if not isinstance(self.n_symbs ** dim, int):
-        #     raise ValueError("Too many n_symbs and/or dimensions, "
-        #                      "numpy.bincount cannot process longs")
-        # if self.n_symbs ** dim * 16. / 8. / 1024. ** 3 > 3.:
-        #     raise ValueError("Dimension exceeds 3 GB of necessary "
-        #                      "memory (change this code line if more...)")
-        # if dim * self.n_symbs ** dim > 2 ** 65:
-        #     raise ValueError("base = %d, D = %d: Histogram failed: "
-        #                      "dimension D*base**D exceeds int64 data type"
-        #                      % (self.n_symbs, dim))
-
-        flathist = np.zeros((self.n_symbs ** dim), dtype='int16')
+        flathist = np.zeros((n_symbs ** dim), dtype='int16')
         multisymb = np.zeros(T, dtype='int64')
         if weights is not None:
-            flathist = np.zeros((self.n_symbs ** dim), dtype='float32')
+            flathist = np.zeros((n_symbs ** dim), dtype='float32')
             multiweights = np.ones(T, dtype='float32')
 
         for i in range(dim):
-            multisymb += symb_array[i, :] * self.n_symbs ** i
+            multisymb += symb_array[i, :] * n_symbs ** i
             if weights is not None:
                 multiweights *= weights[i, :]
 
@@ -2317,8 +2371,8 @@ class CMIsymb(CondIndTest):
 
         flathist[:len(result)] += result
 
-        hist = flathist.reshape(tuple([self.n_symbs, self.n_symbs] +
-                                      [self.n_symbs for i in range(dim - 2)])).T
+        hist = flathist.reshape(tuple([n_symbs, n_symbs] +
+                                      [n_symbs for i in range(dim - 2)])).T
 
         return hist
 

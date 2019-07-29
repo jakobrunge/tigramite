@@ -326,11 +326,7 @@ class PCMCI():
             raise ValueError("Out of range variable defined in \n",
                              _int_sel_links,
                              "\nMust be in range [0, ", self.N-1, "]")
-        # Warning if keys in selected links not in selected_variables
-        if self.verbosity > 0 and \
-                not _key_set.issubset(set(self.selected_variables)):
-            print("Warning: Link specified in selected links that is outside "+\
-                  "the scope of the selected variables")
+
         ## Note: variables are scoped by selected_variables first, and then
         ## by selected links.  Add to docstring?
         # Return the selected links
@@ -1367,7 +1363,8 @@ class PCMCI():
     def return_significant_parents(self,
                                    pq_matrix,
                                    val_matrix,
-                                   alpha_level=0.05):
+                                   alpha_level=0.05,
+                                   include_lagzero_parents=False):
         """Returns list of significant parents as well as a boolean matrix.
 
         Significance based on p-matrix, or q-value matrix with corrected
@@ -1383,6 +1380,9 @@ class PCMCI():
             1).
         alpha_level : float, optional (default: 0.05)
             Significance level.
+        include_lagzero_parents : bool (default: False)
+            Whether the parents dictionary should also return parents at lag
+            zero. Note that the link_matrix always contains those.
 
         Returns
         -------
@@ -1397,10 +1397,16 @@ class PCMCI():
         all_parents = dict()
         for j in self.selected_variables:
             # Get the good links
-            good_links = np.argwhere(pq_matrix[:, j, 1:] <= alpha_level)
-            # Build a dictionary from these links to their values
-            links = {(i, -tau-1): np.abs(val_matrix[i, j, abs(tau) + 1])
-                     for i, tau in good_links}
+            if include_lagzero_parents:
+                good_links = np.argwhere(pq_matrix[:, j, :] <= alpha_level)
+                # Build a dictionary from these links to their values
+                links = {(i, -tau): np.abs(val_matrix[i, j, abs(tau)])
+                         for i, tau in good_links}
+            else:
+                good_links = np.argwhere(pq_matrix[:, j, 1:] <= alpha_level)
+                # Build a dictionary from these links to their values
+                links = {(i, -tau-1): np.abs(val_matrix[i, j, abs(tau) + 1])
+                         for i, tau in good_links}
             # Sort by value
             all_parents[j] = sorted(links, key=links.get, reverse=True)
         # Return the significant parents
