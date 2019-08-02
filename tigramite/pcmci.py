@@ -1357,7 +1357,7 @@ class PCMCI():
         for j, i, tau, Z in self._iter_indep_conds(_int_parents,
                                                    self.selected_variables,
                                                    _int_sel_links,
-                                                   None, None):
+                                                   None, 0):
             # Set X and Y (for clarity of code)
             X = [(i, tau)]
             Y = [(j, 0)]
