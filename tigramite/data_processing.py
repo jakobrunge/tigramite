@@ -197,6 +197,9 @@ class DataFrame():
             max_lag = abs(np.array(XYZ)[:, 1].min())
         elif cut_off == 'max_lag_or_tau_max':
             max_lag = max(abs(np.array(XYZ)[:, 1].min()), tau_max)
+        else:
+            raise ValueError("max_lag must be in {'2xtau_max', 'max_lag', 'max_lag_or_tau_max'}")
+
 
         # Setup XYZ identifier
         index_code = {'x' : 0,
