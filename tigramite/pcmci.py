@@ -1288,6 +1288,101 @@ class PCMCI():
                 'p_matrix':p_matrix,
                 'conf_matrix':conf_matrix}
 
+    def _print_fullci_parameters(self, tau_min, tau_max):
+        """Print the parameters for this MCI algorithm
+
+        Parameters
+        ----------
+        tau_min : int
+            Minimum time delay
+        tau_max : int
+            Maximum time delay
+        """
+        print("\n##\n## Running Tigramite FullCI algorithm\n##"
+              "\n\nParameters:")
+        print("\nindependence test = %s" % self.cond_ind_test.measure
+              + "\ntau_min = %d" % tau_min
+              + "\ntau_max = %d" % tau_max)
+
+    def run_fullci(self,
+                selected_links=None,
+                tau_min=0,
+                tau_max=1):
+        """FullCI conditional independence tests.
+
+        Implements the FullCI test (see [1]_). Returns the matrices of
+        test statistic values,  p-values, and confidence intervals.
+
+        Parameters
+        ----------
+        selected_links : dict or None
+            Dictionary of form {0:all_parents (3, -2), ...], 1:[], ...}
+            specifying whether only selected links should be tested. If None is
+            passed, all links are tested
+        tau_min : int, default: 0
+            Minimum time lag to test. Note that zero-lags are undirected.
+        tau_max : int, default: 1
+            Maximum time lag. Must be larger or equal to tau_min.
+
+        Returns
+        -------
+        results : dictionary of arrays of shape [N, N, tau_max+1]
+            {'val_matrix':val_matrix, 'p_matrix':p_matrix} are always returned
+            and optionally conf_matrix which is of shape [N, N, tau_max+1,2]
+        """
+        # Check the limits on tau
+        self._check_tau_limits(tau_min, tau_max)
+        # Set the selected links
+        _int_sel_links = self._set_sel_links(selected_links, tau_min, tau_max)
+        # Print information about the input parameters
+        if self.verbosity > 0:
+            self._print_fullci_parameters(tau_min, tau_max)
+
+        full_past = dict([(j, [(i, -tau)
+                             for i in range(self.N)
+                             for tau in range(min(1, tau_min), tau_max+1)])
+                             for j in range(self.N)])
+
+        # Get the parents that will be checked
+        _int_parents = self._get_int_parents(full_past)
+        # Initialize the return values
+        val_matrix = np.zeros((self.N, self.N, tau_max + 1))
+        p_matrix = np.ones((self.N, self.N, tau_max + 1))
+        # Initialize the optional return of the confidance matrix
+        conf_matrix = None
+        if self.cond_ind_test.confidence is not False:
+            conf_matrix = np.zeros((self.N, self.N, tau_max + 1, 2))
+
+        # Get the conditions as implied by the input arguments
+        for j, i, tau, Z in self._iter_indep_conds(_int_parents,
+                                                   self.selected_variables,
+                                                   _int_sel_links,
+                                                   None, None):
+            # Set X and Y (for clarity of code)
+            X = [(i, tau)]
+            Y = [(j, 0)]
+            # Run the independence tests and record the results
+            val, pval = self.cond_ind_test.run_test(X, Y, Z=Z, 
+                                                    tau_max=tau_max,
+                                                    cut_off='max_lag')
+            val_matrix[i, j, abs(tau)] = val
+            p_matrix[i, j, abs(tau)] = pval
+            # Get the confidance value, returns None if cond_ind_test.confidance
+            # is False
+            conf = self.cond_ind_test.get_confidence(X, Y, Z=Z, tau_max=tau_max)
+            # Record the value if the conditional independence requires it
+            if self.cond_ind_test.confidence:
+                conf_matrix[i, j, abs(tau)] = conf
+            # Print the results if needed
+            if self.verbosity > 1:
+                self.cond_ind_test._print_cond_ind_results(val,
+                                                           pval=pval,
+                                                           conf=conf)
+        # Return the values as a dictionary
+        return {'val_matrix':val_matrix,
+                'p_matrix':p_matrix,
+                'conf_matrix':conf_matrix}
+
     def get_corrected_pvalues(self, p_matrix,
                               fdr_method='fdr_bh',
                               exclude_contemporaneous=True):

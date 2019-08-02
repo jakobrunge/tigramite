@@ -277,7 +277,7 @@ class CondIndTest():
         """Helper function to make lists unique."""
         return (tuple(set(x)), tuple(set(z)))
 
-    def _get_array(self, X, Y, Z, tau_max=0, verbosity=None):
+    def _get_array(self, X, Y, Z, tau_max=0, cut_off='2xtau_max', verbosity=None):
         """Convencience wrapper around _construct_array."""
         # Set the verbosity to the default value
         if verbosity is None:
@@ -293,9 +293,10 @@ class CondIndTest():
                                               mask_type=self.mask_type,
                                               return_cleaned_xyz=True,
                                               do_checks=False,
+                                              cut_off=cut_off,
                                               verbosity=verbosity)
 
-    def run_test(self, X, Y, Z=None, tau_max=0):
+    def run_test(self, X, Y, Z=None, tau_max=0, cut_off='2xtau_max'):
         """Perform conditional independence test.
 
         Calls the dependence measure and signficicance test functions. The child
@@ -314,6 +315,14 @@ class CondIndTest():
             Maximum time lag. This may be used to make sure that estimates for
             different lags in X, Z, all have the same sample size.
 
+        cut_off : {'2xtau_max', 'max_lag', 'max_lag_or_tau_max'}
+            How many samples to cutoff at the beginning. The default is
+            '2xtau_max', which guarantees that MCI tests are all conducted on
+            the same samples. For modeling, 'max_lag_or_tau_max' can be used,
+            which uses the maximum of tau_max and the conditions, which is
+            useful to compare multiple models on the same sample.  Last,
+            'max_lag' uses as much samples as possible.
+
         Returns
         -------
         val, pval : Tuple of floats
@@ -322,7 +331,7 @@ class CondIndTest():
         """
 
         # Get the array to test on
-        array, xyz, XYZ = self._get_array(X, Y, Z, tau_max)
+        array, xyz, XYZ = self._get_array(X, Y, Z, tau_max, cut_off)
         X, Y, Z = XYZ
         # Record the dimensions
         dim, T = array.shape
