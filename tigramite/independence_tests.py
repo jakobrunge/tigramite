@@ -2015,6 +2015,10 @@ class CMIknn(CondIndTest):
         Whether to transform the array beforehand by standardizing
         or transforming to uniform marginals.
 
+    n_jobs : int (optional, default = -1)
+        Number of jobs to schedule for parallel processing. If -1 is given
+        all processors are used. Default: 1.
+
     significance : str, optional (default: 'shuffle_test')
         Type of significance test to use. For CMIknn only 'fixed_thres' and
         'shuffle_test' are available.
@@ -2034,6 +2038,7 @@ class CMIknn(CondIndTest):
                  shuffle_neighbors=5,
                  significance='shuffle_test',
                  transform='standardize',
+                 n_jobs=-1,
                  **kwargs):
         # Set the member variables
         self.knn = knn
@@ -2043,6 +2048,7 @@ class CMIknn(CondIndTest):
         self.two_sided = False
         self.residual_based = False
         self.recycle_residuals = False
+        self.n_jobs = n_jobs
         # Call the parent constructor
         CondIndTest.__init__(self, significance=significance, **kwargs)
         # Print some information about construction
@@ -2107,7 +2113,7 @@ class CMIknn(CondIndTest):
         # every sample in joint space XYZ with maximum norm
         tree_xyz = spatial.cKDTree(array.T)
         epsarray = tree_xyz.query(array.T, k=knn+1, p=np.inf,
-                                  eps=0.)[0][:, knn].astype('float')
+                                  eps=0., n_jobs=self.n_jobs)[0][:, knn].astype('float')
 
         # Prepare for fast cython access
         dim_x = int(np.where(xyz == 0)[0][-1] + 1)
