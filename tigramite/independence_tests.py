@@ -2580,11 +2580,8 @@ class RCOT(CondIndTest):
         print("HHHHHHHHHHHHHHHHHHHEEEEEEEEEEEEEEEERRRRRRRRRRRRREEEEEEEEEEEEEEEEEEEEEEEEEEEE")
         print(tmp)
         print(type(tmp))
-        print("HHHHHHHHHHHHHHHHHHHEEEEEEEEEEEEEEEERRttttttttttttttttttttttttttttttttttt")
-        rcot = np.asarray(rpy2.robjects.r['RCoT'](x_vals, y_vals, z_vals,
-                                                  num_f=self.num_f,
-                                                  approx=self.approx,
-                                                  seed=self.seed))
+        print("HHHHHHHHHHHHHHHHHHHEEEEEEEEEEEEEEEERR")
+        rcot = np.asarray(tmp)
         val = float(rcot[1])
         # Cache the p-value for use later
         self._pval = float(rcot[0])
