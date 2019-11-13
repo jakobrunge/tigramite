@@ -488,7 +488,7 @@ def weighted_avg_and_std(values, axis, weights):
     return (average, np.sqrt(variance))
 
 
-def time_bin_with_mask(data, time_bin_length, sample_selector=None):
+def time_bin_with_mask(data, time_bin_length, mask=None):
     """Returns time binned data where only about non-masked values is averaged.
 
     Parameters
@@ -512,12 +512,15 @@ def time_bin_with_mask(data, time_bin_length, sample_selector=None):
 
     time_bin_length = int(time_bin_length)
 
-    if sample_selector is None:
+    if mask is None:
         sample_selector = np.ones(data.shape)
+    else:
+        # Invert mask
+        sample_selector = (mask == False)
 
     if np.ndim(data) == 1.:
         data.shape = (T, 1)
-        sample_selector.shape = (T, 1)
+        mask.shape = (T, 1)
 
     bindata = np.zeros(
         (T // time_bin_length,) + data.shape[1:], dtype="float32")
