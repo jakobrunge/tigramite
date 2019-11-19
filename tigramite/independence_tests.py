@@ -2574,16 +2574,14 @@ class RCOT(CondIndTest):
         y_vals = array[1]
         z_vals = np.fastCopyAndTranspose(array[2:])
 
-        rcot_ret = rpy2.robjects.r['RCoT'](x_vals, y_vals, z_vals,
-                                           num_f=self.num_f,
-                                           approx=self.approx,
-                                           seed=self.seed)
-
-        rcot = { key : rcot_ret.rx2(key)[0] for key in rcot_ret.names }
-
-        val = float(rcot['Sta'])
+        rcot = rpy2.robjects.r['RCoT'](x_vals, y_vals, z_vals,
+                                       num_f=self.num_f,
+                                       approx=self.approx,
+                                       seed=self.seed)
+        
+        val = float(rcot.rx2('Sta')[0])
         # Cache the p-value for use later
-        self._pval = float(rcot['p'])       
+        self._pval = float(rcot.rx2('p')[0])       
         
         return val
 
