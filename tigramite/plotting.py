@@ -185,13 +185,13 @@ def _add_timeseries(fig, axes, i, time, dataseries, label,
         Units of variable.
 
     last : bool, optional (default: False)
-        Specifiy whether this is the last panel where also the bottom axis is 
+        Specifiy whether this is the last panel where also the bottom axis is
         plotted.
 
     time_label : str, optional (default: '')
         Label of time axis.
 
-    label_fontsize : int, optional (default: 10)   
+    label_fontsize : int, optional (default: 10)
         Fontsize.
 
     color : str, optional (default: black)
@@ -208,11 +208,11 @@ def _add_timeseries(fig, axes, i, time, dataseries, label,
         ax = axes
 
     if missing_flag is not None:
-        dataseries_nomissing = np.ma.masked_where(dataseries==missing_flag, 
+        dataseries_nomissing = np.ma.masked_where(dataseries==missing_flag,
                                                  dataseries)
     else:
         dataseries_nomissing = np.ma.masked_where(
-                                                 np.zeros(dataseries.shape), 
+                                                 np.zeros(dataseries.shape),
                                                  dataseries)
 
     if use_mask:
@@ -268,7 +268,7 @@ def _add_timeseries(fig, axes, i, time, dataseries, label,
     pyplot.tight_layout()
 
 
-def plot_timeseries(dataframe=None, 
+def plot_timeseries(dataframe=None,
                     save_name=None,
                     fig_axes=None,
                     figsize=None,
@@ -282,7 +282,7 @@ def plot_timeseries(dataframe=None,
                     label_fontsize=8,
                     ):
     """Create and save figure of stacked panels with time series.
-    
+
     Parameters
     ----------
     dataframe : data object, optional
@@ -322,7 +322,7 @@ def plot_timeseries(dataframe=None,
     skip_ticks_data_y : int, optional (default: 2)
         Skip every other tickmark.
 
-    label_fontsize : int, optional (default: 10)   
+    label_fontsize : int, optional (default: 10)
         Fontsize of variable labels.
     """
 
@@ -339,7 +339,7 @@ def plot_timeseries(dataframe=None,
         var_units = ['' for i in range(N)]
 
     if fig_axes is None:
-        fig, axes = pyplot.subplots(N, sharex=True, 
+        fig, axes = pyplot.subplots(N, sharex=True,
                 figsize=figsize)
     else:
         fig, axes = fig_axes
@@ -384,12 +384,12 @@ def plot_lagfuncs(val_matrix, name=None, setup_args={}, add_lagfunc_args={}):
     ----------
     val_matrix : array_like
         Matrix of shape (N, N, tau_max+1) containing test statistic values.
-    
+
     name : str, optional (default: None)
         File name. If None, figure is shown in window.
 
     setup_args : dict
-        Arguments for setting up the lag function matrix, see doc of 
+        Arguments for setting up the lag function matrix, see doc of
         setup_matrix.
 
     add_lagfunc_args : dict
@@ -406,12 +406,12 @@ def plot_lagfuncs(val_matrix, name=None, setup_args={}, add_lagfunc_args={}):
     tau_max = tau_max_plusone - 1
 
     matrix = setup_matrix(N=N, tau_max=tau_max, **setup_args)
-     # **{key: value for key, value in 
-     #                                               kwargs.items() if key 
+     # **{key: value for key, value in
+     #                                               kwargs.items() if key
      #                          in setup_matrix.__init__.func_code.co_varnames})
     matrix.add_lagfuncs(val_matrix=val_matrix, **add_lagfunc_args)
-        # **{key: value for key, value in 
-        #                                             kwargs.items() if key 
+        # **{key: value for key, value in
+        #                                             kwargs.items() if key
         #                     in setup_matrix.add_lagfuncs.func_code.co_varnames})
 
     if name is not None:
@@ -459,7 +459,7 @@ class setup_matrix():
 
     x_base : float, optional (default: 1.)
         x-tick intervals to show.
-    
+
     y_base : float, optional (default: .4)
         y-tick intervals to show.
 
@@ -471,11 +471,11 @@ class setup_matrix():
     lag_array : array, optional (default: None)
         Optional specification of lags overwriting np.arange(0, tau_max+1)
 
-    label_fontsize : int, optional (default: 10)   
+    label_fontsize : int, optional (default: 10)
         Fontsize of variable labels.
     """
 
-    def __init__(self, N, tau_max, 
+    def __init__(self, N, tau_max,
                  var_names=None,
                  figsize=None,
                  minimum=-1,
@@ -570,7 +570,7 @@ class setup_matrix():
                     self.axes_dict[(i, j)].set_ylim(
                         _myround(minimum, y_base, 'down'),
                         _myround(maximum, y_base, 'up'))
-                if j != 0:    
+                if j != 0:
                     self.axes_dict[(i, j)].get_yaxis().set_ticklabels([]) #label_outer()
                 self.axes_dict[(i, j)].set_xlim(0, self.tau_max)
                 if plot_gridlines:
@@ -583,7 +583,7 @@ class setup_matrix():
 
                 plot_index += 1
 
-    def add_lagfuncs(self, val_matrix, 
+    def add_lagfuncs(self, val_matrix,
                      sig_thres=None,
                      conf_matrix=None,
                      color='black',
@@ -601,7 +601,7 @@ class setup_matrix():
             Matrix of shape (N, N, tau_max+1) containing test statistic values.
 
         sig_thres : array-like, optional (default: None)
-            Matrix of significance thresholds. Must be of same shape as 
+            Matrix of significance thresholds. Must be of same shape as
             val_matrix.
 
         conf_matrix : array-like, optional (default: None)
@@ -733,7 +733,7 @@ class setup_matrix():
             assert self.lag_array.shape == np.arange(self.tau_max + 1).shape
             for ij in list(self.axes_dict):
                 i = ij[0]
-                j = ij[1]            
+                j = ij[1]
                 self.axes_dict[(i, j)].set_xticklabels(self.lag_array[::self.x_base])
 
         if name is not None:
@@ -778,8 +778,17 @@ def _draw_network_with_curved_edges(
 
     def draw_edge(ax, u, v, d, seen, arrowstyle='simple', directed=True):
 
-        n1 = G.node[u]['patch']
-        n2 = G.node[v]['patch']
+
+
+        # avoiding attribute error raised by changes in networkx
+        if hasattr(G, 'node'):
+            # works with networkx 1.10
+            n1 = G.node[u]['patch']
+            n2 = G.node[v]['patch']
+        else:
+            # works with networkx 2.4
+            n1 = G.nodes[u]['patch']
+            n2 = G.nodes[v]['patch']
 
         if directed:
             rad = -1.*curved_radius
@@ -884,7 +893,7 @@ def _draw_network_with_curved_edges(
                 ax.text(label_vert[0], label_vert[1], string,
                         fontsize=link_label_fontsize,
                         verticalalignment='center',
-                        horizontalalignment='center')      
+                        horizontalalignment='center')
 
         return rad
 
@@ -1020,7 +1029,14 @@ def _draw_network_with_curved_edges(
         size = standard_size*.3
         c = Circle(pos[n], radius=size, alpha=0., fill=False, linewidth=0.)
         ax.add_patch(c)
-        G.node[n]['patch'] = c
+
+        # avoiding attribute error raised by changes in networkx
+        if hasattr(G, 'node'):
+            # works with networkx 1.10
+            G.node[n]['patch'] = c
+        else:
+            # works with networkx 2.4
+            G.nodes[n]['patch'] = c
 
     # Collect all edge weights to get color scale
     all_links_weights = []
@@ -1096,7 +1112,7 @@ def _draw_network_with_curved_edges(
                                                 links_edges_ticks, 'up') +
                                         links_edges_ticks,
                                         links_edges_ticks))
-        except: 
+        except:
             print ('no ticks given')
         cb_e.outline.remove()
         # cb_n.set_ticks()
@@ -1115,8 +1131,8 @@ def _draw_network_with_curved_edges(
     # pyplot.tight_layout()
     pyplot.subplots_adjust(bottom=network_lower_bound)
 
-def plot_graph(val_matrix, 
-               var_names=None, 
+def plot_graph(val_matrix,
+               var_names=None,
                fig_ax=None,
                figsize=None,
                sig_thres=None,
@@ -1166,7 +1182,7 @@ def plot_graph(val_matrix,
 
     var_names : list, optional (default: None)
         List of variable names. If None, range(N) is used.
-  
+
     fig_ax : tuple of figure and axis object, optional (default: None)
         Figure and axes instance. If None they are created.
 
@@ -1198,8 +1214,8 @@ def plot_graph(val_matrix,
         String array of val_matrix.shape specifying link attributes.
 
     node_pos : dictionary, optional (default: None)
-        Dictionary of node positions in axis coordinates of form 
-        node_pos = {'x':array of shape (N,), 'y':array of shape(N)}. These 
+        Dictionary of node positions in axis coordinates of form
+        node_pos = {'x':array of shape (N,), 'y':array of shape(N)}. These
         coordinates could have been transformed before for basemap plots.
 
     arrow_linewidth : float, optional (default: 30)
@@ -1228,26 +1244,26 @@ def plot_graph(val_matrix,
 
     cmap_nodes : str, optional (default: 'OrRd')
         Colormap for links.
-   
+
     node_size : int, optional (default: 20)
         Node size.
 
-    arrowhead_size : int, optional (default: 20)    
+    arrowhead_size : int, optional (default: 20)
         Size of link arrow head. Passed on to FancyArrowPatch object.
 
     curved_radius, float, optional (default: 0.2)
         Curvature of links. Passed on to FancyArrowPatch object.
 
-    label_fontsize : int, optional (default: 10)   
+    label_fontsize : int, optional (default: 10)
         Fontsize of colorbar labels.
 
     alpha : float, optional (default: 1.)
         Opacity.
 
-    node_label_size : int, optional (default: 10)   
+    node_label_size : int, optional (default: 10)
         Fontsize of node labels.
-    
-    link_label_fontsize : int, optional (default: 6)   
+
+    link_label_fontsize : int, optional (default: 6)
         Fontsize of link labels.
 
     lag_array : array, optional (default: None)
@@ -1288,7 +1304,7 @@ def plot_graph(val_matrix,
     # partial correlation)
     # val_matrix[np.abs(val_matrix) < sig_thres] = 0.
 
-    net = _get_absmax(val_matrix * link_matrix)  
+    net = _get_absmax(val_matrix * link_matrix)
     G = networkx.DiGraph(net)
 
     node_color = np.zeros(N)
@@ -1334,13 +1350,13 @@ def plot_graph(val_matrix,
                 dic['undirected_attribute'] = None
             else:
                 dic['undirected_attribute'] =  link_attribute[
-                                                u, v, 0] 
+                                                u, v, 0]
 
             #     # fraction of nonzero values
             dic['undirected_style'] = 'solid'
             # else:
             # dic['undirected_style'] = link_style[
-            #         u, v, 0] 
+            #         u, v, 0]
 
             all_strengths.append(dic['undirected_color'])
 
@@ -1365,7 +1381,7 @@ def plot_graph(val_matrix,
                 dic['directed_attribute'] = None
             else:
                 dic['directed_attribute'] = link_attribute[
-                    u, v, argmax] 
+                    u, v, argmax]
 
             # value at argmax of average
             dic['directed_color'] = val_matrix[u, v][argmax]
@@ -1451,8 +1467,8 @@ def plot_graph(val_matrix,
         return fig, ax
 
 
-def plot_time_series_graph(val_matrix, 
-        var_names=None, 
+def plot_time_series_graph(val_matrix,
+        var_names=None,
         fig_ax=None,
         figsize=None,
         sig_thres=None,
@@ -1489,7 +1505,7 @@ def plot_time_series_graph(val_matrix,
 
     var_names : list, optional (default: None)
         List of variable names. If None, range(N) is used.
-  
+
     fig_ax : tuple of figure and axis object, optional (default: None)
         Figure and axes instance. If None they are created.
 
@@ -1530,26 +1546,26 @@ def plot_time_series_graph(val_matrix,
 
     cmap_edges : str, optional (default: 'RdBu_r')
         Colormap for links.
-   
+
     node_size : int, optional (default: 20)
         Node size.
 
-    arrowhead_size : int, optional (default: 20)    
+    arrowhead_size : int, optional (default: 20)
         Size of link arrow head. Passed on to FancyArrowPatch object.
 
     curved_radius, float, optional (default: 0.2)
         Curvature of links. Passed on to FancyArrowPatch object.
 
-    label_fontsize : int, optional (default: 10)   
+    label_fontsize : int, optional (default: 10)
         Fontsize of colorbar labels.
 
     alpha : float, optional (default: 1.)
         Opacity.
 
-    node_label_size : int, optional (default: 10)   
+    node_label_size : int, optional (default: 10)
         Fontsize of node labels.
-    
-    link_label_fontsize : int, optional (default: 6)   
+
+    link_label_fontsize : int, optional (default: 6)
         Fontsize of link labels.
 
     label_space_left : float, optional (default: 0.1)
@@ -1753,7 +1769,7 @@ def plot_time_series_graph(val_matrix,
 def plot_mediation_time_series_graph(
         path_node_array,
         tsg_path_val_matrix,
-        var_names=None, 
+        var_names=None,
         fig_ax=None,
         figsize=None,
         link_colorbar_label='link coeff. (edge color)',
@@ -1795,7 +1811,7 @@ def plot_mediation_time_series_graph(
 
     var_names : list, optional (default: None)
         List of variable names. If None, range(N) is used.
-  
+
     fig_ax : tuple of figure and axis object, optional (default: None)
         Figure and axes instance. If None they are created.
 
@@ -1848,22 +1864,22 @@ def plot_mediation_time_series_graph(
     node_size : int, optional (default: 20)
         Node size.
 
-    arrowhead_size : int, optional (default: 20)    
+    arrowhead_size : int, optional (default: 20)
         Size of link arrow head. Passed on to FancyArrowPatch object.
 
     curved_radius, float, optional (default: 0.2)
         Curvature of links. Passed on to FancyArrowPatch object.
 
-    label_fontsize : int, optional (default: 10)   
+    label_fontsize : int, optional (default: 10)
         Fontsize of colorbar labels.
 
     alpha : float, optional (default: 1.)
         Opacity.
 
-    node_label_size : int, optional (default: 10)   
+    node_label_size : int, optional (default: 10)
         Fontsize of node labels.
-    
-    link_label_fontsize : int, optional (default: 6)   
+
+    link_label_fontsize : int, optional (default: 6)
         Fontsize of link labels.
 
     label_space_left : float, optional (default: 0.1)
@@ -2051,9 +2067,9 @@ def plot_mediation_time_series_graph(
         pyplot.show()
 
 def plot_mediation_graph(
-               path_val_matrix, 
+               path_val_matrix,
                path_node_array=None,
-               var_names=None, 
+               var_names=None,
                fig_ax=None,
                figsize=None,
                save_name=None,
@@ -2101,7 +2117,7 @@ def plot_mediation_graph(
 
     var_names : list, optional (default: None)
         List of variable names. If None, range(N) is used.
-  
+
     fig_ax : tuple of figure and axis object, optional (default: None)
         Figure and axes instance. If None they are created.
 
@@ -2122,8 +2138,8 @@ def plot_mediation_graph(
         given by arrow_linewidth. If None, all links have same width.
 
     node_pos : dictionary, optional (default: None)
-        Dictionary of node positions in axis coordinates of form 
-        node_pos = {'x':array of shape (N,), 'y':array of shape(N)}. These 
+        Dictionary of node positions in axis coordinates of form
+        node_pos = {'x':array of shape (N,), 'y':array of shape(N)}. These
         coordinates could have been transformed before for basemap plots.
 
     arrow_linewidth : float, optional (default: 30)
@@ -2152,26 +2168,26 @@ def plot_mediation_graph(
 
     cmap_nodes : str, optional (default: 'OrRd')
         Colormap for links.
-   
+
     node_size : int, optional (default: 20)
         Node size.
 
-    arrowhead_size : int, optional (default: 20)    
+    arrowhead_size : int, optional (default: 20)
         Size of link arrow head. Passed on to FancyArrowPatch object.
 
     curved_radius, float, optional (default: 0.2)
         Curvature of links. Passed on to FancyArrowPatch object.
 
-    label_fontsize : int, optional (default: 10)   
+    label_fontsize : int, optional (default: 10)
         Fontsize of colorbar labels.
 
     alpha : float, optional (default: 1.)
         Opacity.
 
-    node_label_size : int, optional (default: 10)   
+    node_label_size : int, optional (default: 10)
         Fontsize of node labels.
-    
-    link_label_fontsize : int, optional (default: 6)   
+
+    link_label_fontsize : int, optional (default: 6)
         Fontsize of link labels.
 
     network_lower_bound : float, optional (default: 0.2)
@@ -2203,7 +2219,7 @@ def plot_mediation_graph(
     # partial correlation)
     # val_matrix[np.abs(val_matrix) < sig_thres] = 0.
     link_matrix = val_matrix != 0.
-    net = _get_absmax(val_matrix)  
+    net = _get_absmax(val_matrix)
     G = networkx.DiGraph(net)
 
     node_color = np.zeros(N)
@@ -2363,12 +2379,12 @@ if __name__ == '__main__':
     # mask[:int(len(data)/2)]=True
 
     # data[:,0] = -99.
- #    plot_lagfuncs(val_matrix=val_matrix, 
+ #    plot_lagfuncs(val_matrix=val_matrix,
  #        setup_args={'figsize':(10,10),
  #     'label_space_top':0.05,
  #     'label_space_left':0.1,
  #      'x_base':1, 'y_base':5,
- #        'var_names':range(3), 
+ #        'var_names':range(3),
  #        'lag_array':np.array(['a%d' % i for  i in range(4)])},
  #        name='test.pdf',
  # )
@@ -2397,7 +2413,7 @@ if __name__ == '__main__':
     #     # link_matrix=link_matrix
     #     )
     # lagmat.savefig()
-    
+
     # fig = pyplot.figure(figsize=(4, 3), frameon=False)
     # ax = fig.add_subplot(111, frame_on=False)
 
