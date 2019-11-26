@@ -2010,8 +2010,8 @@ class CMIknn(CondIndTest):
         determines the size of hyper-cubes around each (high-dimensional) sample
         point.
 
-    transform : {'standardize', 'ranks',  'uniform', False}, optional
-        (default: 'standardize')
+    transform : {'ranks', 'standardize',  'uniform', False}, optional
+        (default: 'ranks')
         Whether to transform the array beforehand by standardizing
         or transforming to uniform marginals.
 
@@ -2037,7 +2037,7 @@ class CMIknn(CondIndTest):
                  knn=0.2,
                  shuffle_neighbors=5,
                  significance='shuffle_test',
-                 transform='standardize',
+                 transform='ranks',
                  n_jobs=-1,
                  **kwargs):
         # Set the member variables

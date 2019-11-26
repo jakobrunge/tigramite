@@ -123,9 +123,11 @@ class PCMCI():
 
     References
     ----------
-    .. [1] J. Runge et al. (2018): Detecting Causal Associations in Large 
-           Nonlinear Time Series Datasets.
-           https://arxiv.org/abs/1702.07007v2
+
+    .. [1] J. Runge, P. Nowack, M. Kretschmer, S. Flaxman, D. Sejdinovic,
+           Detecting and quantifying causal associations in large nonlinear time 
+           series datasets. Sci. Adv. 5, eaau4996 (2019) 
+           https://advances.sciencemag.org/content/5/11/eaau4996
 
     Examples
     --------

@@ -58,7 +58,7 @@ To use just the ParCorr and CMIsymb independence tests, only numpy and scipy are
 
 - GPDC: also based on cython, and additionally, scikit-learn is required for Gaussian Process regression
 
-- RCOT requires more work: Firstly, rpy2 is required to access R-packages. The required R-packages can be installed with the script ``install_r_packages.sh''
+- RCOT requires more work: Firstly, rpy2 is required to access R-packages. The required R-packages can be installed with the script ``install_r_packages.sh''. Due to R-related issues, the installation of R's devtools might fail when running "install_r_packages.sh". This can be solved e.g. by installing missing / not resolved R dependencies using conda: "conda install r-git2r".
 
 
 ## User Agreement

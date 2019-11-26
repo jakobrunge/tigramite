@@ -74,7 +74,7 @@ EXT_MODULES += define_extension("tigramite.tigramite_cython_code")
 # Run the setup
 setup(
     name='tigramite',
-    version='4.0.0-beta',
+    version='4.1.0',
     packages=['tigramite'],
     license='GNU General Public License v3.0',
     description='Tigramite causal discovery for time series',
@@ -82,7 +82,7 @@ setup(
     author_email='jakob@jakob-runge.com',
     url='https://github.com/jakobrunge/tigramite/',
     long_description=io.open('README.md', 'r', encoding='utf-8').read(),
-    keywords='causality time-series',
+    keywords='causality, time-series',
     cmdclass=CMDCLASS,
     ext_modules=EXT_MODULES,
     install_requires=INSTALL_REQUIRES,
@@ -90,7 +90,7 @@ setup(
     test_suite='tests',
     tests_require=TESTS_REQUIRE,
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 4',
         'Intended Audience :: Science/Research',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Scientific/Engineering :: Mathematics',
