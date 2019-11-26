@@ -1,33 +1,20 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>tigramite.data_processing &#8212; Tigramite 3.0 documentation</title>
-    
+    <meta charset="utf-8" />
+    <title>tigramite.data_processing &#8212; Tigramite 4.0 documentation</title>
     <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../../',
-        VERSION:     '3.0',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
-  </head>
-  <body role="document">
+  </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -37,20 +24,20 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 3.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 4.0 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="../../search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
     </form>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -64,14 +51,17 @@
   <h1>Source code for tigramite.data_processing</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Tigramite data processing functions.&quot;&quot;&quot;</span>
 
-<span class="c1"># Author: Jakob Runge &lt;jakobrunge@posteo.de&gt;</span>
+<span class="c1"># Author: Jakob Runge &lt;jakob@jakob-runge.com&gt;</span>
 <span class="c1">#</span>
 <span class="c1"># License: GNU General Public License v3.0</span>
-
-
-<span class="kn">import</span> <span class="nn">numpy</span>
-<span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">warnings</span>
-
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span><span class="p">,</span> <span class="n">OrderedDict</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.sparse</span>
+<span class="kn">import</span> <span class="nn">scipy.sparse.linalg</span>
 
 <div class="viewcode-block" id="DataFrame"><a class="viewcode-back" href="../../index.html#tigramite.data_processing.DataFrame">[docs]</a><span class="k">class</span> <span class="nc">DataFrame</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;Data object containing time series array and optional mask.</span>
@@ -90,7 +80,7 @@
 <span class="sd">    ----------</span>
 <span class="sd">    data : array-like</span>
 <span class="sd">        Numpy array of shape (observations T, variables N)</span>
-<span class="sd">    </span>
+
 <span class="sd">    mask : array-like, optional (default: None)</span>
 <span class="sd">        Optional mask array, must be of same shape as data</span>
 
@@ -100,27 +90,308 @@
 <span class="sd">        samples for all lags up to 2*tau_max. This avoids biases, see</span>
 <span class="sd">        section on masking in Supplement of [1]_.</span>
 
+<span class="sd">    var_names : list of strings, optional (default: range(N))</span>
+<span class="sd">        Names of variables, must match the number of variables. If None is</span>
+<span class="sd">        passed, variables are enumerated as [0, 1, ...]</span>
+
+<span class="sd">    datatime : array-like, optional (default: None)</span>
+<span class="sd">        Timelabel array. If None, range(T) is used.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span>
-                 <span class="n">mask</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">missing_flag</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">missing_flag</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">var_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">datatime</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">values</span> <span class="o">=</span> <span class="n">data</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span> <span class="o">=</span> <span class="n">missing_flag</span>
         <span class="n">T</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+        <span class="c1"># Set the variable names</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span> <span class="o">=</span> <span class="n">var_names</span>
+        <span class="c1"># Set the default variable names if none are set</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)}</span>
 
-        <span class="c1"># if type(self.values) != numpy.ndarray:</span>
+        <span class="c1"># Set datatime</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">datatime</span> <span class="o">=</span> <span class="n">datatime</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">datatime</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">datatime</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
+
+        <span class="c1"># if type(self.values) != np.ndarray:</span>
         <span class="c1">#     raise TypeError(&quot;data is of type %s, &quot; % type(self.values) +</span>
-        <span class="c1">#                     &quot;must be numpy.ndarray&quot;)</span>
+        <span class="c1">#                     &quot;must be np.ndarray&quot;)</span>
         <span class="k">if</span> <span class="n">N</span> <span class="o">&gt;</span> <span class="n">T</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;data.shape = </span><span class="si">%s</span><span class="s2">,&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span>
                           <span class="s2">&quot; is it of shape (observations, variables) ?&quot;</span><span class="p">)</span>
-        <span class="c1"># if numpy.isnan(data).sum() != 0:</span>
+        <span class="c1"># if np.isnan(data).sum() != 0:</span>
         <span class="c1">#     raise ValueError(&quot;NaNs in the data&quot;)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_mask</span><span class="p">()</span>
 
+    <span class="k">def</span> <span class="nf">_check_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">require_mask</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Checks that the mask is:</span>
+<span class="sd">            * The same shape as the data</span>
+<span class="sd">            * Is an numpy ndarray (or subtype)</span>
+<span class="sd">            * Does not contain any NaN entrie</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        require_mask : bool (default : False)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Check that there is a mask if required</span>
+        <span class="n">_use_mask</span> <span class="o">=</span> <span class="n">mask</span>
+        <span class="k">if</span> <span class="n">_use_mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_use_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span>
+        <span class="k">if</span> <span class="n">require_mask</span> <span class="ow">and</span> <span class="n">_use_mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expected a mask, but got nothing!&quot;</span><span class="p">)</span>
+        <span class="c1"># If we have a mask, check it</span>
+        <span class="k">if</span> <span class="n">_use_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Check the mask inherets from an ndarray</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_use_mask</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;mask is of type </span><span class="si">%s</span><span class="s2">, &quot;</span> <span class="o">%</span>
+                                <span class="nb">type</span><span class="p">(</span><span class="n">_use_mask</span><span class="p">)</span> <span class="o">+</span>
+                                <span class="s2">&quot;must be numpy.ndarray&quot;</span><span class="p">)</span>
+            <span class="c1"># Check if there is an nan-value in the mask</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">_use_mask</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;NaNs in the data mask&quot;</span><span class="p">)</span>
+            <span class="c1"># Check the mask and the values have the same shape</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">_use_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;shape mismatch: dataframe.values.shape = </span><span class="si">%s</span><span class="s2">&quot;</span>
+                                 <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span> \
+                                 <span class="s2">&quot; but mask.shape = </span><span class="si">%s</span><span class="s2">,&quot;</span>
+                                 <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">_use_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span> <span class="o">+</span> \
+                                 <span class="s2">&quot;must identical&quot;</span>
+
+<div class="viewcode-block" id="DataFrame.construct_array"><a class="viewcode-back" href="../../index.html#tigramite.data_processing.DataFrame.construct_array">[docs]</a>    <span class="k">def</span> <span class="nf">construct_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span>
+                        <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">mask_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">return_cleaned_xyz</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">do_checks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;2xtau_max&#39;</span><span class="p">,</span>
+                        <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Constructs array from variables X, Y, Z from data.</span>
+
+<span class="sd">        Data is of shape (T, N), where T is the time series length and N the</span>
+<span class="sd">        number of variables.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X, Y, Z : list of tuples</span>
+<span class="sd">            For a dependence measure I(X;Y|Z), Y is of the form [(varY, 0)],</span>
+<span class="sd">            where var specifies the variable index. X typically is of the form</span>
+<span class="sd">            [(varX, -tau)] with tau denoting the time lag and Z can be</span>
+<span class="sd">            multivariate [(var1, -lag), (var2, -lag), ...] .</span>
+
+<span class="sd">        tau_max : int</span>
+<span class="sd">            Maximum time lag. This may be used to make sure that estimates for</span>
+<span class="sd">            different lags in X and Z all have the same sample size.</span>
+
+<span class="sd">        mask : array-like, optional (default: None)</span>
+<span class="sd">            Optional mask array, must be of same shape as data.  If it is set,</span>
+<span class="sd">            then it overrides the self.mask assigned to the dataframe. If it is</span>
+<span class="sd">            None, then the self.mask is used, if it exists.</span>
+
+<span class="sd">        mask_type : {&#39;y&#39;,&#39;x&#39;,&#39;z&#39;,&#39;xy&#39;,&#39;xz&#39;,&#39;yz&#39;,&#39;xyz&#39;}</span>
+<span class="sd">            Masking mode: Indicators for which variables in the dependence</span>
+<span class="sd">            measure I(X; Y | Z) the samples should be masked. If None, &#39;y&#39; is</span>
+<span class="sd">            used, which excludes all time slices containing masked samples in Y.</span>
+<span class="sd">            Explained in [1]_.</span>
+
+<span class="sd">        return_cleaned_xyz : bool, optional (default: False)</span>
+<span class="sd">            Whether to return cleaned X,Y,Z, where possible duplicates are</span>
+<span class="sd">            removed.</span>
+
+<span class="sd">        do_checks : bool, optional (default: True)</span>
+<span class="sd">            Whether to perform sanity checks on input X,Y,Z</span>
+
+<span class="sd">        cut_off : {&#39;2xtau_max&#39;, &#39;max_lag&#39;, &#39;max_lag_or_tau_max&#39;}</span>
+<span class="sd">            How many samples to cutoff at the beginning. The default is</span>
+<span class="sd">            &#39;2xtau_max&#39;, which guarantees that MCI tests are all conducted on</span>
+<span class="sd">            the same samples. For modeling, &#39;max_lag_or_tau_max&#39; can be used,</span>
+<span class="sd">            which uses the maximum of tau_max and the conditions, which is</span>
+<span class="sd">            useful to compare multiple models on the same sample.  Last,</span>
+<span class="sd">            &#39;max_lag&#39; uses as much samples as possible.</span>
+
+<span class="sd">        verbosity : int, optional (default: 0)</span>
+<span class="sd">            Level of verbosity.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        array, xyz [,XYZ] : Tuple of data array of shape (dim, T) and xyz</span>
+<span class="sd">            identifier array of shape (dim,) identifying which row in array</span>
+<span class="sd">            corresponds to X, Y, and Z. For example::</span>
+<span class="sd">                X = [(0, -1)], Y = [(1, 0)], Z = [(1, -1), (0, -2)]</span>
+<span class="sd">                yields an array of shape (5, T) and xyz is</span>
+<span class="sd">                xyz = numpy.array([0,1,2,2])</span>
+<span class="sd">            If return_cleaned_xyz is True, also outputs the cleaned XYZ lists.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Get the length in time and the number of nodes</span>
+        <span class="n">T</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="c1"># Remove duplicates in X, Y, Z</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">OrderedDict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">OrderedDict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">Y</span><span class="p">))</span>
+        <span class="n">Z</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">OrderedDict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">Z</span><span class="p">))</span>
+
+        <span class="c1"># If a node in Z occurs already in X or Y, remove it from Z</span>
+        <span class="n">Z</span> <span class="o">=</span> <span class="p">[</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">Z</span> <span class="k">if</span> <span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">X</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">Y</span><span class="p">)]</span>
+
+        <span class="c1"># Check that all lags are non-positive and indices are in [0,N-1]</span>
+        <span class="n">XYZ</span> <span class="o">=</span> <span class="n">X</span> <span class="o">+</span> <span class="n">Y</span> <span class="o">+</span> <span class="n">Z</span>
+        <span class="n">dim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">XYZ</span><span class="p">)</span>
+
+        <span class="c1"># Ensure that XYZ makes sense</span>
+        <span class="k">if</span> <span class="n">do_checks</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_nodes</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">XYZ</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
+
+        <span class="c1"># Figure out what cut off we will be using</span>
+        <span class="k">if</span> <span class="n">cut_off</span> <span class="o">==</span> <span class="s1">&#39;2xtau_max&#39;</span><span class="p">:</span>
+            <span class="n">max_lag</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">tau_max</span>
+        <span class="k">elif</span> <span class="n">cut_off</span> <span class="o">==</span> <span class="s1">&#39;max_lag&#39;</span><span class="p">:</span>
+            <span class="n">max_lag</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">XYZ</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
+        <span class="k">elif</span> <span class="n">cut_off</span> <span class="o">==</span> <span class="s1">&#39;max_lag_or_tau_max&#39;</span><span class="p">:</span>
+            <span class="n">max_lag</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">XYZ</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()),</span> <span class="n">tau_max</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_lag must be in {&#39;2xtau_max&#39;, &#39;max_lag&#39;, &#39;max_lag_or_tau_max&#39;}&quot;</span><span class="p">)</span>
+
+
+        <span class="c1"># Setup XYZ identifier</span>
+        <span class="n">index_code</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;x&#39;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                      <span class="s1">&#39;y&#39;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                      <span class="s1">&#39;z&#39;</span> <span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+        <span class="n">xyz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">index_code</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+                        <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">])</span>
+                        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">var</span><span class="p">])</span>
+
+        <span class="c1"># Setup and fill array with lagged time series</span>
+        <span class="n">time_length</span> <span class="o">=</span> <span class="n">T</span> <span class="o">-</span> <span class="n">max_lag</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim</span><span class="p">,</span> <span class="n">time_length</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="c1"># Note, lags are negative here</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">lag</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">XYZ</span><span class="p">):</span>
+            <span class="n">array</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">max_lag</span> <span class="o">+</span> <span class="n">lag</span><span class="p">:</span><span class="n">T</span> <span class="o">+</span> <span class="n">lag</span><span class="p">,</span> <span class="n">var</span><span class="p">]</span>
+
+        <span class="c1"># Choose which indices to use</span>
+        <span class="n">use_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">time_length</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Remove all values that have missing value flag, as well as the time</span>
+        <span class="c1"># slices that occur up to max_lag after</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">missing_anywhere</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">tau</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_lag</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">use_indices</span><span class="p">[</span><span class="n">missing_anywhere</span><span class="p">[</span><span class="n">tau</span><span class="p">:</span><span class="n">T</span><span class="o">-</span><span class="n">max_lag</span><span class="o">+</span><span class="n">tau</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># Use the mask override if needed</span>
+        <span class="n">_use_mask</span> <span class="o">=</span> <span class="n">mask</span>
+        <span class="k">if</span> <span class="n">_use_mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_use_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_mask</span><span class="p">(</span><span class="n">mask</span><span class="o">=</span><span class="n">_use_mask</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">_use_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Remove samples with mask == 1 conditional on which mask_type is</span>
+            <span class="c1"># used Create an array selector that is the same shape as the output</span>
+            <span class="c1"># array</span>
+            <span class="n">array_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim</span><span class="p">,</span> <span class="n">time_length</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
+            <span class="c1"># Iterate over all nodes named in X, Y, or Z</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">lag</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">XYZ</span><span class="p">):</span>
+                <span class="c1"># Transform the mask into the output array shape, i.e. from data</span>
+                <span class="c1"># mask to array mask</span>
+                <span class="n">array_mask</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">(</span><span class="n">_use_mask</span><span class="p">[</span><span class="n">max_lag</span> <span class="o">+</span> <span class="n">lag</span><span class="p">:</span> <span class="n">T</span> <span class="o">+</span> <span class="n">lag</span><span class="p">,</span> <span class="n">var</span><span class="p">]</span> <span class="o">==</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="c1"># Iterate over defined mapping from letter index to number index,</span>
+            <span class="c1"># i.e. &#39;x&#39; -&gt; 0, &#39;y&#39; -&gt; 1, &#39;z&#39;-&gt; 2</span>
+            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">cde</span> <span class="ow">in</span> <span class="n">index_code</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="c1"># Check if the letter index is in the mask type</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">mask_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">idx</span> <span class="ow">in</span> <span class="n">mask_type</span><span class="p">):</span>
+                    <span class="c1"># If so, check if any of the data that correspond to the</span>
+                    <span class="c1"># letter index is masked by taking the product along the</span>
+                    <span class="c1"># node-data to return a time slice selection, where 0 means</span>
+                    <span class="c1"># the time slice will not be used</span>
+                    <span class="n">slice_select</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">array_mask</span><span class="p">[</span><span class="n">xyz</span> <span class="o">==</span> <span class="n">cde</span><span class="p">,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="n">use_indices</span> <span class="o">*=</span> <span class="n">slice_select</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">_use_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">use_indices</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No unmasked samples&quot;</span><span class="p">)</span>
+            <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="p">[:,</span> <span class="n">use_indices</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1"># Print information about the constructed array</span>
+        <span class="k">if</span> <span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">print_array_info</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span><span class="p">,</span> <span class="n">mask_type</span><span class="p">)</span>
+
+        <span class="c1"># Return the array and xyz and optionally (X, Y, Z)</span>
+        <span class="k">if</span> <span class="n">return_cleaned_xyz</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span></div>
+
+    <span class="k">def</span> <span class="nf">_check_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">XYZ</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks that:</span>
+<span class="sd">            * The requests XYZ nodes have the correct shape</span>
+<span class="sd">            * All lags are non-positive</span>
+<span class="sd">            * All indices are less than N</span>
+<span class="sd">            * One of the Y nodes has zero lag</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">            Y : list of tuples</span>
+<span class="sd">                Of the form [(var, -tau)], where var specifies the variable</span>
+<span class="sd">                index and tau the time lag.</span>
+
+<span class="sd">            XYZ : list of tuples</span>
+<span class="sd">                List of nodes chosen for current independence test</span>
+
+<span class="sd">            N : int</span>
+<span class="sd">                Total number of listed nodes</span>
+
+<span class="sd">            dim : int</span>
+<span class="sd">                Number of nodes excluding repeated nodes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">XYZ</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;X, Y, Z must be lists of tuples in format&quot;</span>
+                             <span class="s2">&quot; [(var, -lag),...], eg., [(2, -2), (1, 0), ...]&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">XYZ</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;nodes are </span><span class="si">%s</span><span class="s2">, &quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">XYZ</span><span class="p">)</span> <span class="o">+</span>
+                             <span class="s2">&quot;but all lags must be non-positive&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">XYZ</span><span class="p">)[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">N</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">XYZ</span><span class="p">)[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;var indices </span><span class="si">%s</span><span class="s2">,&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">XYZ</span><span class="p">)[:,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">+</span>
+                             <span class="s2">&quot; but must be in [0, </span><span class="si">%d</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Y</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Y-nodes are </span><span class="si">%s</span><span class="s2">, &quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span> <span class="o">+</span>
+                             <span class="s2">&quot;but one of the Y-nodes must have zero lag&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DataFrame.print_array_info"><a class="viewcode-back" href="../../index.html#tigramite.data_processing.DataFrame.print_array_info">[docs]</a>    <span class="k">def</span> <span class="nf">print_array_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">missing_flag</span><span class="p">,</span> <span class="n">mask_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Print info about the constructed array</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        array : Data array of shape (dim, T)</span>
+
+<span class="sd">        X, Y, Z : list of tuples</span>
+<span class="sd">            For a dependence measure I(X;Y|Z), Y is of the form [(varY, 0)],</span>
+<span class="sd">            where var specifies the variable index. X typically is of the form</span>
+<span class="sd">            [(varX, -tau)] with tau denoting the time lag and Z can be</span>
+<span class="sd">            multivariate [(var1, -lag), (var2, -lag), ...] .</span>
+
+<span class="sd">        missing_flag : number, optional (default: None)</span>
+<span class="sd">            Flag for missing values. Dismisses all time slices of samples where</span>
+<span class="sd">            missing values occur in any variable and also flags samples for all</span>
+<span class="sd">            lags up to 2*tau_max. This avoids biases, see section on masking in</span>
+<span class="sd">            Supplement of [1]_.</span>
+
+<span class="sd">        mask_type : {&#39;y&#39;,&#39;x&#39;,&#39;z&#39;,&#39;xy&#39;,&#39;xz&#39;,&#39;yz&#39;,&#39;xyz&#39;}</span>
+<span class="sd">            Masking mode: Indicators for which variables in the dependence</span>
+<span class="sd">            measure I(X; Y | Z) the samples should be masked. If None, &#39;y&#39; is</span>
+<span class="sd">            used, which excludes all time slices containing masked samples in Y.</span>
+<span class="sd">            Explained in [1]_.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">indt</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="mi">12</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">indt</span> <span class="o">+</span> <span class="s2">&quot;Constructed array of shape </span><span class="si">%s</span><span class="s2"> from&quot;</span><span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span>
+              <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">indt</span> <span class="o">+</span> <span class="s2">&quot;X = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="o">+</span>
+              <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">indt</span> <span class="o">+</span> <span class="s2">&quot;Y = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span> <span class="o">+</span>
+              <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">indt</span> <span class="o">+</span> <span class="s2">&quot;Z = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">Z</span><span class="p">))</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Mask array must of same shape as data array&quot;</span><span class="p">)</span></div>
+            <span class="nb">print</span><span class="p">(</span><span class="n">indt</span><span class="o">+</span><span class="s2">&quot;with masked samples in </span><span class="si">%s</span><span class="s2"> removed&quot;</span> <span class="o">%</span> <span class="n">mask_type</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">indt</span><span class="o">+</span><span class="s2">&quot;with missing values = </span><span class="si">%s</span><span class="s2"> removed&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span><span class="p">)</span></div></div>
 
 
 
@@ -135,7 +406,7 @@
 <span class="sd">    data : array</span>
 <span class="sd">        Data array of shape (time, variables).</span>
 
-<span class="sd">    cutperiod : int </span>
+<span class="sd">    cutperiod : int</span>
 <span class="sd">        Period of cutoff.</span>
 
 <span class="sd">    pass_periods : str, optional (default: &#39;low&#39;)</span>
@@ -155,7 +426,7 @@
     <span class="n">order</span> <span class="o">=</span> <span class="mi">3</span>
     <span class="n">ws</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">cutperiod</span> <span class="o">/</span> <span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">fs</span><span class="p">)</span>
     <span class="n">b</span><span class="p">,</span> <span class="n">a</span> <span class="o">=</span> <span class="n">butter</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">pass_periods</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">data</span> <span class="o">=</span> <span class="n">filtfilt</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
@@ -186,7 +457,7 @@
 
 <span class="sd">    kernel : str, optional (default: &#39;gaussian&#39;)</span>
 <span class="sd">        Smoothing kernel, &#39;gaussian&#39; or &#39;heaviside&#39; for a running mean.</span>
-<span class="sd">        </span>
+
 <span class="sd">    mask : bool array, optional (default: None)</span>
 <span class="sd">        Data mask where True labels masked samples.</span>
 
@@ -195,7 +466,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    data : array-like    </span>
+<span class="sd">    data : array-like</span>
 <span class="sd">        Smoothed/residual data.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -205,29 +476,29 @@
 
     <span class="n">totaltime</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">kernel</span> <span class="o">==</span> <span class="s1">&#39;gaussian&#39;</span><span class="p">:</span>
-        <span class="n">window</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">totaltime</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">totaltime</span><span class="p">))</span> <span class="o">-</span>
-                             <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">totaltime</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">totaltime</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">window</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">totaltime</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">totaltime</span><span class="p">))</span> <span class="o">-</span>
+                             <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">totaltime</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">totaltime</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
                              <span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="p">((</span><span class="mf">2.</span> <span class="o">*</span> <span class="n">smooth_width</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
     <span class="k">elif</span> <span class="n">kernel</span> <span class="o">==</span> <span class="s1">&#39;heaviside&#39;</span><span class="p">:</span>
         <span class="kn">import</span> <span class="nn">scipy.linalg</span>
-        <span class="n">wtmp</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">totaltime</span><span class="p">)</span>
-        <span class="n">wtmp</span><span class="p">[:</span><span class="n">numpy</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">smooth_width</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">wtmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">totaltime</span><span class="p">)</span>
+        <span class="n">wtmp</span><span class="p">[:</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">smooth_width</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="n">window</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">toeplitz</span><span class="p">(</span><span class="n">wtmp</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">smoothed_data</span> <span class="o">=</span> <span class="p">(</span><span class="n">data</span> <span class="o">*</span> <span class="n">window</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">window</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">smoothed_data</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="n">smoothed_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
                 <span class="n">smoothed_data</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
                     <span class="n">data</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">window</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">window</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">smoothed_data</span> <span class="o">=</span> <span class="p">((</span><span class="n">data</span> <span class="o">*</span> <span class="n">window</span> <span class="o">*</span> <span class="p">(</span><span class="n">mask</span><span class="o">==</span><span class="kc">False</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span>
                              <span class="p">(</span><span class="n">window</span> <span class="o">*</span> <span class="p">(</span><span class="n">mask</span><span class="o">==</span><span class="kc">False</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">smoothed_data</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="n">smoothed_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
                 <span class="n">smoothed_data</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span>
                     <span class="n">data</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">window</span> <span class="o">*</span> <span class="p">(</span><span class="n">mask</span><span class="o">==</span><span class="kc">False</span><span class="p">)[:,</span> <span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span>
@@ -259,16 +530,16 @@
 <span class="sd">        Tuple of weighted average and standard deviation along axis.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">values</span><span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">values</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">0.</span>
-    <span class="n">average</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">)</span>
+    <span class="n">values</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">values</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">0.</span>
+    <span class="n">average</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">)</span>
 
-    <span class="n">variance</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">weights</span> <span class="o">*</span> <span class="p">(</span><span class="n">values</span> <span class="o">-</span> <span class="n">numpy</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">average</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
+    <span class="n">variance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">weights</span> <span class="o">*</span> <span class="p">(</span><span class="n">values</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">average</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
                                     <span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span> <span class="o">/</span> <span class="n">weights</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="p">(</span><span class="n">average</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">variance</span><span class="p">))</span></div>
+    <span class="k">return</span> <span class="p">(</span><span class="n">average</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">variance</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="time_bin_with_mask"><a class="viewcode-back" href="../../index.html#tigramite.data_processing.time_bin_with_mask">[docs]</a><span class="k">def</span> <span class="nf">time_bin_with_mask</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">time_bin_length</span><span class="p">,</span> <span class="n">sample_selector</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="time_bin_with_mask"><a class="viewcode-back" href="../../index.html#tigramite.data_processing.time_bin_with_mask">[docs]</a><span class="k">def</span> <span class="nf">time_bin_with_mask</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">time_bin_length</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns time binned data where only about non-masked values is averaged.</span>
 
 <span class="sd">    Parameters</span>
@@ -292,14 +563,17 @@
 
     <span class="n">time_bin_length</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time_bin_length</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">sample_selector</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">sample_selector</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sample_selector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Invert mask</span>
+        <span class="n">sample_selector</span> <span class="o">=</span> <span class="p">(</span><span class="n">mask</span> <span class="o">==</span> <span class="kc">False</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="mf">1.</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="mf">1.</span><span class="p">:</span>
         <span class="n">data</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="n">sample_selector</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">mask</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
-    <span class="n">bindata</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+    <span class="n">bindata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
         <span class="p">(</span><span class="n">T</span> <span class="o">//</span> <span class="n">time_bin_length</span><span class="p">,)</span> <span class="o">+</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">T</span> <span class="o">-</span> <span class="n">time_bin_length</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
                                     <span class="n">time_bin_length</span><span class="p">)):</span>
@@ -315,7 +589,7 @@
     <span class="k">return</span> <span class="p">(</span><span class="n">bindata</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(),</span> <span class="n">T</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="ordinal_patt_array"><a class="viewcode-back" href="../../index.html#tigramite.data_processing.ordinal_patt_array">[docs]</a><span class="k">def</span> <span class="nf">ordinal_patt_array</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">array_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
+<div class="viewcode-block" id="ordinal_patt_array"><a class="viewcode-back" href="../../index.html#tigramite.data_processing.ordinal_patt_array">[docs]</a><span class="k">def</span> <span class="nf">ordinal_patt_array</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">array_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                         <span class="n">weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns symbolified array of ordinal patterns.</span>
 
@@ -345,7 +619,7 @@
 
 <span class="sd">    weights : bool, optional (default: False)</span>
 <span class="sd">        Whether to return array of variances of embedding vectors as weights.</span>
-<span class="sd">        </span>
+
 <span class="sd">    verbosity : int, optional (default: 0)</span>
 <span class="sd">        Level of verbosity.</span>
 
@@ -354,12 +628,11 @@
 <span class="sd">    patt, patt_mask [, patt_time] : tuple of arrays</span>
 <span class="sd">        Tuple of converted pattern array and new length</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">import</span> <span class="nn">scipy</span>
     <span class="kn">from</span> <span class="nn">scipy.misc</span> <span class="k">import</span> <span class="n">factorial</span>
 
     <span class="c1"># Import cython code</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="kn">import</span> <span class="nn">tigramite_cython_code</span>
+        <span class="kn">import</span> <span class="nn">tigramite.tigramite_cython_code</span> <span class="k">as</span> <span class="nn">tigramite_cython_code</span>
     <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;Could not import tigramite_cython_code, please&quot;</span>
                           <span class="s2">&quot; compile cython code first as described in Readme.&quot;</span><span class="p">)</span>
@@ -369,17 +642,17 @@
     <span class="k">if</span> <span class="n">array_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">assert</span> <span class="n">array_mask</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="s1">&#39;int32&#39;</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">array_mask</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
+        <span class="n">array_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
 
 
-    <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">array</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">array</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">T</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
         <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">array_mask</span> <span class="o">=</span> <span class="n">array_mask</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
     <span class="c1"># Add noise to destroy ties...</span>
     <span class="n">array</span> <span class="o">+=</span> <span class="p">(</span><span class="mf">1E-6</span> <span class="o">*</span> <span class="n">array</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-              <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float64&#39;</span><span class="p">))</span>
+              <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float64&#39;</span><span class="p">))</span>
 
 
     <span class="n">patt_time</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">step</span> <span class="o">*</span> <span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
@@ -389,26 +662,28 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Dim mist be &gt; 1 and length of delay vector smaller &quot;</span>
                          <span class="s2">&quot;array length.&quot;</span><span class="p">)</span>
 
-    <span class="n">patt</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">patt_time</span><span class="p">,</span> <span class="n">N</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
-    <span class="n">weights_array</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">patt_time</span><span class="p">,</span> <span class="n">N</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float64&#39;</span><span class="p">)</span>
+    <span class="n">patt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">patt_time</span><span class="p">,</span> <span class="n">N</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
+    <span class="n">weights_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">patt_time</span><span class="p">,</span> <span class="n">N</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float64&#39;</span><span class="p">)</span>
 
-    <span class="n">patt_mask</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">patt_time</span><span class="p">,</span> <span class="n">N</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
+    <span class="n">patt_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">patt_time</span><span class="p">,</span> <span class="n">N</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
 
-    <span class="c1"># Precompute factorial for c-code... patterns of dimension </span>
+    <span class="c1"># Precompute factorial for c-code... patterns of dimension</span>
     <span class="c1"># larger than 10 are not supported</span>
-    <span class="n">fac</span> <span class="o">=</span> <span class="n">factorial</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
+    <span class="n">fac</span> <span class="o">=</span> <span class="n">factorial</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
 
     <span class="c1"># _get_patterns_cython assumes mask=0 to be a masked value</span>
     <span class="n">array_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">array_mask</span> <span class="o">==</span> <span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
 
-    <span class="p">(</span><span class="n">patt</span><span class="p">,</span> <span class="n">patt_mask</span><span class="p">,</span> <span class="n">weights_array</span><span class="p">)</span> <span class="o">=</span> <span class="n">tigramite_cython_code</span><span class="o">.</span><span class="n">_get_patterns_cython</span><span class="p">(</span>
-        <span class="n">array</span><span class="p">,</span> <span class="n">array_mask</span><span class="p">,</span> <span class="n">patt</span><span class="p">,</span> <span class="n">patt_mask</span><span class="p">,</span> <span class="n">weights_array</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">fac</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> 
-        <span class="n">T</span><span class="p">)</span>
+    <span class="p">(</span><span class="n">patt</span><span class="p">,</span> <span class="n">patt_mask</span><span class="p">,</span> <span class="n">weights_array</span><span class="p">)</span> <span class="o">=</span> \
+            <span class="n">tigramite_cython_code</span><span class="o">.</span><span class="n">_get_patterns_cython</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">array_mask</span><span class="p">,</span>
+                                                       <span class="n">patt</span><span class="p">,</span> <span class="n">patt_mask</span><span class="p">,</span>
+                                                       <span class="n">weights_array</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span>
+                                                       <span class="n">step</span><span class="p">,</span> <span class="n">fac</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span>
 
-    <span class="n">weights_array</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">weights_array</span><span class="p">)</span>
-    <span class="n">patt</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">patt</span><span class="p">)</span>
+    <span class="n">weights_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">weights_array</span><span class="p">)</span>
+    <span class="n">patt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">patt</span><span class="p">)</span>
     <span class="c1"># Transform back to mask=1 implying a masked value</span>
-    <span class="n">patt_mask</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">patt_mask</span><span class="p">)</span> <span class="o">==</span> <span class="kc">False</span>
+    <span class="n">patt_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">patt_mask</span><span class="p">)</span> <span class="o">==</span> <span class="kc">False</span>
 
     <span class="k">if</span> <span class="n">weights</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">patt</span><span class="p">,</span> <span class="n">patt_mask</span><span class="p">,</span> <span class="n">patt_time</span><span class="p">,</span> <span class="n">weights_array</span><span class="p">)</span>
@@ -435,12 +710,12 @@
     <span class="n">T</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
 
     <span class="c1"># get the bin quantile steps</span>
-    <span class="n">bin_edge</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">T</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">bins</span><span class="p">)))</span>
+    <span class="n">bin_edge</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">T</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">bins</span><span class="p">)))</span>
 
-    <span class="n">symb_array</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">T</span><span class="p">,</span> <span class="n">N</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
+    <span class="n">symb_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">T</span><span class="p">,</span> <span class="n">N</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
 
     <span class="c1"># get the lower edges of the bins for every time series</span>
-    <span class="n">edges</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)[::</span><span class="n">bin_edge</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)[::</span><span class="n">bin_edge</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">T</span>
     <span class="n">bins</span> <span class="o">=</span> <span class="n">edges</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
     <span class="c1"># This gives the symbolic time series</span>
@@ -449,10 +724,114 @@
 
     <span class="k">return</span> <span class="n">symb_array</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span></div>
 
+<span class="k">def</span> <span class="nf">_generate_noise</span><span class="p">(</span><span class="n">covar_matrix</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">use_inverse</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate a multivariate normal distribution using correlated innovations.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    covar_matrix : array</span>
+<span class="sd">        Covariance matrix of the random variables</span>
+
+<span class="sd">    time : int</span>
+<span class="sd">        Sample size</span>
+
+<span class="sd">    use_inverse : bool, optional</span>
+<span class="sd">        Negate the off-diagonal elements and invert the covariance matrix</span>
+<span class="sd">        before use</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    noise : array</span>
+<span class="sd">        Random noise generated according to covar_matrix</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Pull out the number of nodes from the shape of the covar_matrix</span>
+    <span class="n">n_nodes</span> <span class="o">=</span> <span class="n">covar_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="c1"># Make a deep copy for use in the inverse case</span>
+    <span class="n">this_covar</span> <span class="o">=</span> <span class="n">covar_matrix</span>
+    <span class="c1"># Take the negative inverse if needed</span>
+    <span class="k">if</span> <span class="n">use_inverse</span><span class="p">:</span>
+        <span class="n">this_covar</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">covar_matrix</span><span class="p">)</span>
+        <span class="n">this_covar</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">this_covar</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">diag_indices_from</span><span class="p">(</span><span class="n">this_covar</span><span class="p">)]</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">this_covar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">this_covar</span><span class="p">)</span>
+    <span class="c1"># Return the noise distribution</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">multivariate_normal</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_nodes</span><span class="p">),</span>
+                                            <span class="n">cov</span><span class="o">=</span><span class="n">this_covar</span><span class="p">,</span>
+                                            <span class="n">size</span><span class="o">=</span><span class="n">time</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">_check_stability</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Raises an AssertionError if the input graph corresponds to a non-stationary</span>
+<span class="sd">    process.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    graph : array</span>
+<span class="sd">        Lagged connectivity matrices. Shape is (n_nodes, n_nodes, max_delay+1)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Get the shape from the input graph</span>
+    <span class="n">n_nodes</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">period</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">shape</span>
+    <span class="c1"># Set the top section as the horizontally stacked matrix of</span>
+    <span class="c1"># shape (n_nodes, n_nodes * period)</span>
+    <span class="n">stability_matrix</span> <span class="o">=</span> \
+        <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">lil_matrix</span><span class="p">(</span><span class="n">graph</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">t_slice</span><span class="p">])</span>
+                             <span class="k">for</span> <span class="n">t_slice</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">period</span><span class="p">)])</span>
+    <span class="c1"># Extend an identity matrix of shape</span>
+    <span class="c1"># (n_nodes * (period - 1), n_nodes * (period - 1)) to shape</span>
+    <span class="c1"># (n_nodes * (period - 1), n_nodes * period) and stack the top section on</span>
+    <span class="c1"># top to make the stability matrix of shape</span>
+    <span class="c1"># (n_nodes * period, n_nodes * period)</span>
+    <span class="n">stability_matrix</span> <span class="o">=</span> \
+        <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">stability_matrix</span><span class="p">,</span>
+                             <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n_nodes</span> <span class="o">*</span> <span class="p">(</span><span class="n">period</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span>
+                                              <span class="n">n_nodes</span> <span class="o">*</span> <span class="n">period</span><span class="p">)])</span>
+    <span class="c1"># Check the number of dimensions to see if we can afford to use a dense</span>
+    <span class="c1"># matrix</span>
+    <span class="n">n_eigs</span> <span class="o">=</span> <span class="n">stability_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">n_eigs</span> <span class="o">&lt;=</span> <span class="mi">25</span><span class="p">:</span>
+        <span class="c1"># If it is relatively low in dimensionality, use a dense array</span>
+        <span class="n">stability_matrix</span> <span class="o">=</span> <span class="n">stability_matrix</span><span class="o">.</span><span class="n">todense</span><span class="p">()</span>
+        <span class="n">eigen_values</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">stability_matrix</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># If it is a large dimensionality, convert to a compressed row sorted</span>
+        <span class="c1"># matrix, as it may be easier for the linear algebra package</span>
+        <span class="n">stability_matrix</span> <span class="o">=</span> <span class="n">stability_matrix</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+        <span class="c1"># Get the eigen values of the stability matrix</span>
+        <span class="n">eigen_values</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigs</span><span class="p">(</span><span class="n">stability_matrix</span><span class="p">,</span>
+                                                <span class="n">k</span><span class="o">=</span><span class="p">(</span><span class="n">n_eigs</span> <span class="o">-</span> <span class="mi">2</span><span class="p">),</span>
+                                                <span class="n">return_eigenvectors</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="c1"># Ensure they all have less than one magnitude</span>
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">eigen_values</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1.</span><span class="p">),</span> \
+        <span class="s2">&quot;Values given by time lagged connectivity matrix corresponds to a &quot;</span><span class="o">+</span>\
+        <span class="s2">&quot; non-stationary process!&quot;</span>
+
+<span class="k">def</span> <span class="nf">_check_initial_values</span><span class="p">(</span><span class="n">initial_values</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Raises a AssertionError if the input initial values:</span>
+<span class="sd">        * Are not a numpy array OR</span>
+<span class="sd">        * Do not have the shape (n_nodes, max_delay+1)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    graph : array</span>
+<span class="sd">        Lagged connectivity matrices. Shape is (n_nodes, n_nodes, max_delay+1)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Ensure it is a numpy array</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">initial_values</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">),</span>\
+        <span class="s2">&quot;User must provide initial_values as a numpy.ndarray&quot;</span>
+    <span class="c1"># Check the shape is correct</span>
+    <span class="k">assert</span> <span class="n">initial_values</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">shape</span><span class="p">,</span>\
+        <span class="s2">&quot;Initial values must be of shape (n_nodes, max_delay+1)&quot;</span><span class="o">+</span>\
+        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> current shape : &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">initial_values</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">+</span>\
+        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> desired shape : &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">_var_network</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span>
-                <span class="n">inv_inno_cov</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">inno_cov</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use</span><span class="o">=</span><span class="s1">&#39;inno_cov&#39;</span><span class="p">,</span>
-                <span class="n">T</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+                 <span class="n">add_noise</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">inno_cov</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">invert_inno</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">T</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                 <span class="n">initial_values</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns a vector-autoregressive process with correlated innovations.</span>
 
 <span class="sd">    Useful for testing.</span>
@@ -468,141 +847,382 @@
 
 <span class="sd">        with inv_inno_cov being the negative (except for diagonal) inverse</span>
 <span class="sd">        covariance matrix of (eps_1(t), eps_2(t)) OR inno_cov being</span>
-<span class="sd">        the covariance.</span>
+<span class="sd">        the covariance. Initial values can also be provided.</span>
+
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    graph : array</span>
-<span class="sd">        Lagged connectivity matrices.</span>
+<span class="sd">        Lagged connectivity matrices. Shape is (n_nodes, n_nodes, max_delay+1)</span>
 
-<span class="sd">    inv_inno_cov : array, optional (default: None)</span>
-<span class="sd">        Inverse covariance matrix of innovations.</span>
+<span class="sd">    add_noise : bool, optional (default: True)</span>
+<span class="sd">        Flag to add random noise or not</span>
 
 <span class="sd">    inno_cov : array, optional (default: None)</span>
 <span class="sd">        Covariance matrix of innovations.</span>
 
-<span class="sd">    use : str, optional (default: &#39;inno_cov&#39;)</span>
-<span class="sd">        Specifier, either &#39;inno_cov&#39; or &#39;inv_inno_cov&#39;.</span>
+<span class="sd">    invert_inno : bool, optional (defualt : False)</span>
+<span class="sd">        Flag to negate off-diagonal elements of inno_cov and invert it before</span>
+<span class="sd">        using it as the covariance matrix of innovations</span>
 
 <span class="sd">    T : int, optional (default: 100)</span>
 <span class="sd">        Sample size.</span>
+
+<span class="sd">    initial_values : array, optional (defult: None)</span>
+<span class="sd">        Initial values for each node. Shape is (n_nodes, max_delay+1), i.e. must</span>
+<span class="sd">        be of shape (graph.shape[1], graph.shape[2]).</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    X : array</span>
 <span class="sd">        Array of realization.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">P</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">n_nodes</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">period</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">shape</span>
 
+    <span class="n">time</span> <span class="o">=</span> <span class="n">T</span>
     <span class="c1"># Test stability</span>
-    <span class="n">stabmat</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span> <span class="o">*</span> <span class="n">P</span><span class="p">,</span> <span class="n">N</span> <span class="o">*</span> <span class="n">P</span><span class="p">))</span>
-    <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">N</span> <span class="o">*</span> <span class="n">P</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
-        <span class="n">stabmat</span><span class="p">[:</span><span class="n">N</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="n">N</span><span class="p">]</span> <span class="o">=</span> <span class="n">graph</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">index</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="n">P</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">stabmat</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">N</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">N</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="n">N</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+    <span class="n">_check_stability</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
 
-        <span class="n">index</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="c1"># Generate the returned data</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">n_nodes</span><span class="p">,</span> <span class="n">time</span><span class="p">)</span>
+    <span class="c1"># Load the initial values</span>
+    <span class="k">if</span> <span class="n">initial_values</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Check the shape of the initial values</span>
+        <span class="n">_check_initial_values</span><span class="p">(</span><span class="n">initial_values</span><span class="p">,</span> <span class="n">data</span><span class="p">[:,</span> <span class="p">:</span><span class="n">period</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="c1"># Input the initial values</span>
+        <span class="n">data</span><span class="p">[:,</span> <span class="p">:</span><span class="n">period</span><span class="p">]</span> <span class="o">=</span> <span class="n">initial_values</span>
 
-    <span class="n">eig</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">stabmat</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="k">assert</span> <span class="n">numpy</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">eig</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1.</span><span class="p">),</span> <span class="s2">&quot;Nonstationary process!&quot;</span>
+    <span class="c1"># Check if we are adding noise</span>
+    <span class="n">noise</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">add_noise</span><span class="p">:</span>
+        <span class="c1"># Use inno_cov if it was provided</span>
+        <span class="k">if</span> <span class="n">inno_cov</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">noise</span> <span class="o">=</span> <span class="n">_generate_noise</span><span class="p">(</span><span class="n">inno_cov</span><span class="p">,</span>
+                                    <span class="n">time</span><span class="o">=</span><span class="n">time</span><span class="p">,</span>
+                                    <span class="n">use_inverse</span><span class="o">=</span><span class="n">invert_inno</span><span class="p">)</span>
+        <span class="c1"># Otherwise just use uncorrelated random noise</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">)</span>
 
-    <span class="n">X</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">a_time</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">time</span><span class="p">):</span>
+        <span class="n">data_past</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span>
+            <span class="n">data</span><span class="p">[:,</span> <span class="n">a_time</span><span class="o">-</span><span class="n">period</span><span class="p">:</span><span class="n">a_time</span><span class="p">][:,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">,</span> <span class="n">period</span><span class="p">),</span>
+            <span class="n">n_nodes</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">data</span><span class="p">[:,</span> <span class="n">a_time</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">data_past</span><span class="o">*</span><span class="n">graph</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">add_noise</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[:,</span> <span class="n">a_time</span><span class="p">]</span> <span class="o">+=</span> <span class="n">noise</span><span class="p">[</span><span class="n">a_time</span><span class="p">]</span>
 
-    <span class="k">if</span> <span class="n">use</span> <span class="o">==</span> <span class="s1">&#39;inv_inno_cov&#39;</span> <span class="ow">and</span> <span class="n">inv_inno_cov</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">mult</span> <span class="o">=</span> <span class="o">-</span><span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">))</span>
-        <span class="n">mult</span><span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">diag_indices_from</span><span class="p">(</span><span class="n">mult</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">1</span>
-        <span class="n">inv_inno_cov</span> <span class="o">*=</span> <span class="n">mult</span>
-        <span class="n">noise</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">multivariate_normal</span><span class="p">(</span>
-            <span class="n">mean</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N</span><span class="p">),</span>
-            <span class="n">cov</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">inv_inno_cov</span><span class="p">),</span>
-            <span class="n">size</span><span class="o">=</span><span class="n">T</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">use</span> <span class="o">==</span> <span class="s1">&#39;inno_cov&#39;</span> <span class="ow">and</span> <span class="n">inno_cov</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">noise</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">multivariate_normal</span><span class="p">(</span>
-            <span class="n">mean</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N</span><span class="p">),</span> <span class="n">cov</span><span class="o">=</span><span class="n">inno_cov</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">T</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">noise</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
 
-    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
-        <span class="n">Xpast</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span>
-            <span class="n">X</span><span class="p">[:,</span> <span class="n">t</span> <span class="o">-</span> <span class="n">P</span><span class="p">:</span><span class="n">t</span><span class="p">][:,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">P</span><span class="p">),</span> <span class="n">N</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="n">X</span><span class="p">[:,</span> <span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">Xpast</span> <span class="o">*</span> <span class="n">graph</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">noise</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
-
-    <span class="k">return</span> <span class="n">X</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
-
-
-<div class="viewcode-block" id="var_process"><a class="viewcode-back" href="../../index.html#tigramite.data_processing.var_process">[docs]</a><span class="k">def</span> <span class="nf">var_process</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">use</span><span class="o">=</span><span class="s1">&#39;inv_inno_cov&#39;</span><span class="p">,</span>
-                <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Returns a vector-autoregressive process with correlated innovations.</span>
-
-<span class="sd">    Wrapper around var_network with more user-friendly input options.</span>
+<span class="k">def</span> <span class="nf">_iter_coeffs</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Iterator through the current parents_neighbors_coeffs structure.  Mainly to</span>
+<span class="sd">    save repeated code and make it easier to change this structure.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    parents_neighbors_coeffs : dict </span>
-<span class="sd">        Dictionary of format {..., j:[((var1, lag1), coeff), ...], ...} for all</span>
-<span class="sd">        variables where vars must be in [0..N-1] and lags &lt;= 0 with number of</span>
-<span class="sd">        variables N. Coeff refers to the coefficient in the linear model. If</span>
-<span class="sd">        lag=0, a nonzero value in the covariance matrix (or its inverse) is</span>
-<span class="sd">        implied. These should be the same for (i, j) and (j, i).</span>
+<span class="sd">    parents_neighbors_coeffs : dict</span>
+<span class="sd">        Dictionary of format:</span>
+<span class="sd">        {..., j:[((var1, lag1), coef1), ((var2, lag2), coef2), ...], ...} for</span>
+<span class="sd">        all variables where vars must be in [0..N-1] and lags &lt;= 0 with number</span>
+<span class="sd">        of variables N.</span>
 
-<span class="sd">    use : str, optional (default: &#39;inv_inno_cov&#39;) </span>
-<span class="sd">        Specifier, either &#39;inno_cov&#39; or &#39;inv_inno_cov&#39;. If &#39;inno_cov&#39;, lag=0</span>
-<span class="sd">        entries in parents_neighbors_coeffs are interpreted as entries of the</span>
-<span class="sd">        innovation noise term&#39;s covariance matrix. I &#39;inv_inno_cov&#39;, they are</span>
-<span class="sd">        interpreted as entries in the inverse covariance matrix.</span>
+<span class="sd">    Yields</span>
+<span class="sd">    -------</span>
+<span class="sd">    (node_id, parent_id, time_lag, coeff) : tuple</span>
+<span class="sd">        Tuple defining the relationship between nodes across time</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Iterate through all defined nodes</span>
+    <span class="k">for</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">):</span>
+        <span class="c1"># Iterate over parent nodes and unpack node and coeff</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">parent_id</span><span class="p">,</span> <span class="n">time_lag</span><span class="p">),</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">parents_neighbors_coeffs</span><span class="p">[</span><span class="n">node_id</span><span class="p">]:</span>
+            <span class="c1"># Yield the entry</span>
+            <span class="k">yield</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">parent_id</span><span class="p">,</span> <span class="n">time_lag</span><span class="p">,</span> <span class="n">coeff</span>
 
-<span class="sd">    T : int, optional (default: 1000) </span>
+<span class="k">def</span> <span class="nf">_check_parent_neighbor</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks to insure input parent-neighbor connectivity input is sane.  This</span>
+<span class="sd">    means that:</span>
+<span class="sd">        * all time lags are non-positive</span>
+<span class="sd">        * all parent nodes are included as nodes themselves</span>
+<span class="sd">        * all node indexing is contiguous</span>
+<span class="sd">        * all node indexing starts from zero</span>
+<span class="sd">    Raises a ValueError if any one of these conditions are not met.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    parents_neighbors_coeffs : dict</span>
+<span class="sd">        Dictionary of format:</span>
+<span class="sd">        {..., j:[((var1, lag1), coef1), ((var2, lag2), coef2), ...], ...} for</span>
+<span class="sd">        all variables where vars must be in [0..N-1] and lags &lt;= 0 with number</span>
+<span class="sd">        of variables N.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Initialize some lists for checking later</span>
+    <span class="n">all_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">all_parents</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="c1"># Iterate through variables</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">):</span>
+        <span class="c1"># Cache all node ids to ensure they are contiguous</span>
+        <span class="n">all_nodes</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+    <span class="c1"># Iterate through all nodes</span>
+    <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">_iter_coeffs</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">):</span>
+        <span class="c1"># Check all time lags are equal to or less than zero</span>
+        <span class="k">if</span> <span class="n">tau</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Lag between parent </span><span class="si">{}</span><span class="s2"> and node </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span><span class="o">+</span>\
+                             <span class="s2">&quot; is </span><span class="si">{}</span><span class="s2"> &gt; 0, must be &lt;= 0!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tau</span><span class="p">))</span>
+        <span class="c1"># Cache all parent ids to ensure they are mentioned as node ids</span>
+        <span class="n">all_parents</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    <span class="c1"># Check that all nodes are contiguous from zero</span>
+    <span class="n">all_nodes_list</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">all_nodes</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">all_nodes_list</span> <span class="o">!=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">all_nodes_list</span><span class="p">))):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Node IDs in input dictionary must be contiguous&quot;</span><span class="o">+</span>\
+                         <span class="s2">&quot; and start from zero!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span>\
+                         <span class="s2">&quot; Found IDs : [&quot;</span> <span class="o">+</span>\
+                         <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">all_nodes_list</span><span class="p">))</span><span class="o">+</span> <span class="s2">&quot;]&quot;</span><span class="p">)</span>
+    <span class="c1"># Check that all parent nodes are mentioned as a node ID</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">all_parents</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">all_nodes</span><span class="p">):</span>
+        <span class="n">missing_nodes</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">all_parents</span> <span class="o">-</span> <span class="n">all_nodes</span><span class="p">))</span>
+        <span class="n">all_parents_list</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">all_parents</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Parent IDs in input dictionary must also be in set&quot;</span><span class="o">+</span>\
+                         <span class="s2">&quot; of node IDs.&quot;</span><span class="o">+</span>\
+                         <span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> Parent IDs &quot;</span><span class="o">+</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">all_parents_list</span><span class="p">))</span><span class="o">+</span>\
+                         <span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> Node IDs &quot;</span><span class="o">+</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">all_nodes_list</span><span class="p">))</span> <span class="o">+</span>\
+                         <span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> Missing IDs &quot;</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">missing_nodes</span><span class="p">)))</span>
+
+<span class="k">def</span> <span class="nf">_check_symmetric_relations</span><span class="p">(</span><span class="n">a_matrix</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check if the argument matrix is symmetric.  Raise a value error with details</span>
+<span class="sd">    about the offending elements if it is not.  This is useful for checking the</span>
+<span class="sd">    instantaneously linked nodes have the same link strength.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    a_matrix : 2D numpy array</span>
+<span class="sd">        Relationships between nodes at tau = 0. Indexed such that first index is</span>
+<span class="sd">        node and second is parent, i.e. node j with parent i has strength</span>
+<span class="sd">        a_matrix[j,i]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Check it is symmetric</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">a_matrix</span><span class="p">,</span> <span class="n">a_matrix</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">):</span>
+        <span class="c1"># Store the disagreement elements</span>
+        <span class="n">bad_elems</span> <span class="o">=</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">a_matrix</span><span class="p">,</span> <span class="n">a_matrix</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">)</span>
+        <span class="n">bad_idxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">bad_elems</span><span class="p">)</span>
+        <span class="n">error_message</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">parent</span> <span class="ow">in</span> <span class="n">bad_idxs</span><span class="p">:</span>
+            <span class="c1"># Check that we haven&#39;t already printed about this pair</span>
+            <span class="k">if</span> <span class="n">bad_elems</span><span class="p">[</span><span class="n">node</span><span class="p">,</span> <span class="n">parent</span><span class="p">]:</span>
+                <span class="n">error_message</span> <span class="o">+=</span> \
+                    <span class="s2">&quot;Parent </span><span class="si">{:d}</span><span class="s2"> of node </span><span class="si">{:d}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span><span class="o">+</span>\
+                    <span class="s2">&quot; has coefficient </span><span class="si">{:f}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">a_matrix</span><span class="p">[</span><span class="n">node</span><span class="p">,</span> <span class="n">parent</span><span class="p">])</span><span class="o">+</span>\
+                    <span class="s2">&quot;Parent </span><span class="si">{:d}</span><span class="s2"> of node </span><span class="si">{:d}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span><span class="o">+</span>\
+                    <span class="s2">&quot; has coefficient </span><span class="si">{:f}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">a_matrix</span><span class="p">[</span><span class="n">parent</span><span class="p">,</span> <span class="n">node</span><span class="p">])</span>
+            <span class="c1"># Check if we already printed about this one</span>
+            <span class="n">bad_elems</span><span class="p">[</span><span class="n">node</span><span class="p">,</span> <span class="n">parent</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">bad_elems</span><span class="p">[</span><span class="n">parent</span><span class="p">,</span> <span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Relationships between nodes at tau=0 are not&quot;</span><span class="o">+</span>\
+                         <span class="s2">&quot; symmetric!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span><span class="n">error_message</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">_find_max_time_lag_and_node_id</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to find the maximum time lag in the parent-neighbors-coefficients</span>
+<span class="sd">    object, as well as the largest node ID</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    parents_neighbors_coeffs : dict</span>
+<span class="sd">        Dictionary of format:</span>
+<span class="sd">        {..., j:[((var1, lag1), coef1), ((var2, lag2), coef2), ...], ...} for</span>
+<span class="sd">        all variables where vars must be in [0..N-1] and lags &lt;= 0 with number</span>
+<span class="sd">        of variables N.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (max_time_lag, max_node_id) : tuple</span>
+<span class="sd">        Tuple of the maximum time lag and maximum node ID</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Default maximum lag and node ID</span>
+    <span class="n">max_time_lag</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">max_node_id</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># Iterate through the keys in parents_neighbors_coeffs</span>
+    <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">_iter_coeffs</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">):</span>
+        <span class="c1"># Find max lag time</span>
+        <span class="n">max_time_lag</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_time_lag</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">tau</span><span class="p">))</span>
+        <span class="c1"># Find the max node ID</span>
+        <span class="n">max_node_id</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_node_id</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+    <span class="c1"># Return these values</span>
+    <span class="k">return</span> <span class="n">max_time_lag</span><span class="p">,</span> <span class="n">max_node_id</span>
+
+<span class="k">def</span> <span class="nf">_get_true_parent_neighbor_dict</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to return the dictionary of true parent neighbor causal</span>
+<span class="sd">    connections in time.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    parents_neighbors_coeffs : dict</span>
+<span class="sd">        Dictionary of format:</span>
+<span class="sd">        {..., j:[((var1, lag1), coef1), ((var2, lag2), coef2), ...], ...} for</span>
+<span class="sd">        all variables where vars must be in [0..N-1] and lags &lt;= 0 with number</span>
+<span class="sd">        of variables N.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    true_parent_neighbor : dict</span>
+<span class="sd">        Dictionary of lists of tuples.  The dictionary is keyed by node ID, the</span>
+<span class="sd">        list stores the tuple values (parent_node_id, time_lag)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Initialize the returned dictionary of lists</span>
+    <span class="n">true_parents_neighbors</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">_iter_coeffs</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">):</span>
+        <span class="c1"># Add parent node id and lag if non-zero coeff</span>
+        <span class="k">if</span> <span class="n">coeff</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">:</span>
+            <span class="n">true_parents_neighbors</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">))</span>
+    <span class="c1"># Return the true relations</span>
+    <span class="k">return</span> <span class="n">true_parents_neighbors</span>
+
+<span class="k">def</span> <span class="nf">_get_covariance_matrix</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determines the covariance matrix for correlated innovations</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    parents_neighbors_coeffs : dict</span>
+<span class="sd">        Dictionary of format:</span>
+<span class="sd">        {..., j:[((var1, lag1), coef1), ((var2, lag2), coef2), ...], ...} for</span>
+<span class="sd">        all variables where vars must be in [0..N-1] and lags &lt;= 0 with number</span>
+<span class="sd">        of variables N.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    covar_matrix : numpy array</span>
+<span class="sd">        Covariance matrix implied by the parents_neighbors_coeffs.  Used to</span>
+<span class="sd">        generate correlated innovations.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Get the total number of nodes</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">max_node_id</span> <span class="o">=</span> \
+            <span class="n">_find_max_time_lag_and_node_id</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">)</span>
+    <span class="n">n_nodes</span> <span class="o">=</span> <span class="n">max_node_id</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="c1"># Initialize the covariance matrix</span>
+    <span class="n">covar_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">n_nodes</span><span class="p">)</span>
+    <span class="c1"># Iterate through all the node connections</span>
+    <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">_iter_coeffs</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">):</span>
+        <span class="c1"># Add to covar_matrix if node connection is instantaneous</span>
+        <span class="k">if</span> <span class="n">tau</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">covar_matrix</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">coeff</span>
+    <span class="k">return</span> <span class="n">covar_matrix</span>
+
+<span class="k">def</span> <span class="nf">_get_lag_connect_matrix</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates the lagged connectivity matrix from a parent-neighbor</span>
+<span class="sd">    connectivity dictionary.  Used to generate the input for _var_network</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    parents_neighbors_coeffs : dict</span>
+<span class="sd">        Dictionary of format:</span>
+<span class="sd">        {..., j:[((var1, lag1), coef1), ((var2, lag2), coef2), ...], ...} for</span>
+<span class="sd">        all variables where vars must be in [0..N-1] and lags &lt;= 0 with number</span>
+<span class="sd">        of variables N.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    connect_matrix : numpy array</span>
+<span class="sd">        Lagged connectivity matrix. Shape is (n_nodes, n_nodes, max_delay+1)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Get the total number of nodes and time lag</span>
+    <span class="n">max_time_lag</span><span class="p">,</span> <span class="n">max_node_id</span> <span class="o">=</span> \
+            <span class="n">_find_max_time_lag_and_node_id</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">)</span>
+    <span class="n">n_nodes</span> <span class="o">=</span> <span class="n">max_node_id</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">n_times</span> <span class="o">=</span> <span class="n">max_time_lag</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="c1"># Initialize full time graph</span>
+    <span class="n">connect_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_nodes</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">,</span> <span class="n">n_times</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">_iter_coeffs</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">):</span>
+        <span class="c1"># If there is a non-zero time lag, add the connection to the matrix</span>
+        <span class="k">if</span> <span class="n">tau</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">connect_matrix</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="p">(</span><span class="n">tau</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="n">coeff</span>
+    <span class="c1"># Return the connectivity matrix</span>
+    <span class="k">return</span> <span class="n">connect_matrix</span>
+
+<div class="viewcode-block" id="var_process"><a class="viewcode-back" href="../../index.html#tigramite.data_processing.var_process">[docs]</a><span class="k">def</span> <span class="nf">var_process</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">use</span><span class="o">=</span><span class="s1">&#39;inv_inno_cov&#39;</span><span class="p">,</span>
+                <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">initial_values</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a vector-autoregressive process with correlated innovations.</span>
+
+<span class="sd">    Wrapper around var_network with possibly more user-friendly input options.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    parents_neighbors_coeffs : dict</span>
+<span class="sd">        Dictionary of format:</span>
+<span class="sd">            {..., j:[((var1, lag1), coef1), ((var2, lag2), coef2), ...], ...}</span>
+<span class="sd">        for all variables where vars must be in [0..N-1] and lags &lt;= 0 with</span>
+<span class="sd">        number of variables N. If lag=0, a nonzero value in the covariance</span>
+<span class="sd">        matrix (or its inverse) is implied. These should be the same for (i, j)</span>
+<span class="sd">        and (j, i).</span>
+
+<span class="sd">    use : str, optional (default: &#39;inv_inno_cov&#39;)</span>
+<span class="sd">        Specifier, either &#39;inno_cov&#39; or &#39;inv_inno_cov&#39;.</span>
+<span class="sd">        Any other specifier will result in non-correlated noise.</span>
+<span class="sd">        For debugging, &#39;no_noise&#39; can also be specified, in which case random</span>
+<span class="sd">        noise will be disabled.</span>
+
+<span class="sd">    T : int, optional (default: 1000)</span>
 <span class="sd">        Sample size.</span>
 
 <span class="sd">    verbosity : int, optional (default: 0)</span>
 <span class="sd">        Level of verbosity.</span>
 
+<span class="sd">    initial_values : array, optional (default: None)</span>
+<span class="sd">        Initial values for each node. Shape must be (N, max_delay+1)</span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    X : array-like</span>
-<span class="sd">        Array of realization.</span>
-
-<span class="sd">    true_parents_neighbors : dict</span>
-<span class="sd">        Dictionary of true parents and neighbors</span>
+<span class="sd">    data : array-like</span>
+<span class="sd">        Data generated from this process</span>
+<span class="sd">    true_parent_neighbor : dict</span>
+<span class="sd">        Dictionary of lists of tuples.  The dictionary is keyed by node ID, the</span>
+<span class="sd">        list stores the tuple values (parent_node_id, time_lag)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">max_lag</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">parents_neighbors_coeffs</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
-            <span class="n">i</span><span class="p">,</span> <span class="n">tau</span> <span class="o">=</span> <span class="n">node</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="n">node</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-            <span class="n">max_lag</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_lag</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">tau</span><span class="p">))</span>
-    <span class="n">N</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span>
-    <span class="n">graph</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">max_lag</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
-
-    <span class="n">innos</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">))</span>
-    <span class="n">innos</span><span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">1.</span>
-    <span class="n">true_parents_neighbors</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="c1"># print graph.shape</span>
-    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">):</span>
-        <span class="n">true_parents_neighbors</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">parents_neighbors_coeffs</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
-            <span class="n">i</span><span class="p">,</span> <span class="n">tau</span> <span class="o">=</span> <span class="n">node</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="n">node</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">coeff</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">:</span>
-                <span class="n">true_parents_neighbors</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="n">tau</span><span class="p">))</span>
-            <span class="k">if</span> <span class="n">tau</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">innos</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">innos</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">coeff</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">graph</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">tau</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">coeff</span>
-
-    <span class="k">if</span> <span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;VAR graph =</span><span class="se">\n</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">graph</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">use</span> <span class="o">==</span> <span class="s1">&#39;inno_cov&#39;</span><span class="p">:</span>
+    <span class="c1"># Check the input parents_neighbors_coeffs dictionary for sanity</span>
+    <span class="n">_check_parent_neighbor</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">)</span>
+    <span class="c1"># Generate the true parent neighbors graph</span>
+    <span class="n">true_parents_neighbors</span> <span class="o">=</span> \
+        <span class="n">_get_true_parent_neighbor_dict</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">)</span>
+    <span class="c1"># Generate the correlated innovations</span>
+    <span class="n">innos</span> <span class="o">=</span> <span class="n">_get_covariance_matrix</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">)</span>
+    <span class="c1"># Generate the lagged connectivity matrix for _var_network</span>
+    <span class="n">connect_matrix</span> <span class="o">=</span> <span class="n">_get_lag_connect_matrix</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">)</span>
+    <span class="c1"># Default values as per &#39;inno_cov&#39;</span>
+    <span class="n">add_noise</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">invert_inno</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="c1"># Use the correlated innovations</span>
+    <span class="k">if</span> <span class="n">use</span> <span class="o">==</span> <span class="s1">&#39;inno_cov&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Innovation Cov =</span><span class="se">\n</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">innos</span><span class="p">))</span>
-        <span class="k">elif</span> <span class="n">use</span> <span class="o">==</span> <span class="s1">&#39;inv_inno_cov&#39;</span><span class="p">:</span>
+    <span class="c1"># Use the inverted correlated innovations</span>
+    <span class="k">elif</span> <span class="n">use</span> <span class="o">==</span> <span class="s1">&#39;inv_inno_cov&#39;</span><span class="p">:</span>
+        <span class="n">invert_inno</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Inverse Innovation Cov =</span><span class="se">\n</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">innos</span><span class="p">))</span>
-
-    <span class="n">data</span> <span class="o">=</span> <span class="n">_var_network</span><span class="p">(</span><span class="n">graph</span><span class="o">=</span><span class="n">graph</span><span class="p">,</span> <span class="n">inv_inno_cov</span><span class="o">=</span><span class="n">innos</span><span class="p">,</span>
-                       <span class="n">inno_cov</span><span class="o">=</span><span class="n">innos</span><span class="p">,</span>
-                       <span class="n">use</span><span class="o">=</span><span class="n">use</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">)</span>
-
+    <span class="c1"># Do not use any noise</span>
+    <span class="k">elif</span> <span class="n">use</span> <span class="o">==</span> <span class="s1">&#39;no_noise&#39;</span><span class="p">:</span>
+        <span class="n">add_noise</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Inverse Innovation Cov =</span><span class="se">\n</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">innos</span><span class="p">))</span>
+    <span class="c1"># Use decorrelated noise</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">innos</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1"># Ensure the innovation matrix is symmetric if it is used</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">innos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="n">add_noise</span><span class="p">:</span>
+        <span class="n">_check_symmetric_relations</span><span class="p">(</span><span class="n">innos</span><span class="p">)</span>
+    <span class="c1"># Generate the data using _var_network</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">_var_network</span><span class="p">(</span><span class="n">graph</span><span class="o">=</span><span class="n">connect_matrix</span><span class="p">,</span>
+                        <span class="n">add_noise</span><span class="o">=</span><span class="n">add_noise</span><span class="p">,</span>
+                        <span class="n">inno_cov</span><span class="o">=</span><span class="n">innos</span><span class="p">,</span>
+                        <span class="n">invert_inno</span><span class="o">=</span><span class="n">invert_inno</span><span class="p">,</span>
+                        <span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">,</span>
+                        <span class="n">initial_values</span><span class="o">=</span><span class="n">initial_values</span><span class="p">)</span>
+    <span class="c1"># Return the data</span>
     <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">true_parents_neighbors</span></div>
-
 
 <span class="k">class</span> <span class="nc">_Logger</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Class to append print output to a string which can be saved&quot;&quot;&quot;</span>
@@ -629,13 +1249,13 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 3.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 4.0 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2017, Jakob Runge.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.6.
+        &#169; Copyright 2018, Jakob Runge.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
     </div>
   </body>
 </html>
