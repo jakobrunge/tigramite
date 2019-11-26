@@ -34,7 +34,7 @@ install:
   - conda install r-git2r
   - ./install_r_packages.sh
   # Install the packages needed for testing
-  - pip install .['test']
+  - pip install .["test"]
 script: 
   # Run the tests
   - pytest -v

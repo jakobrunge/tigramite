@@ -11,6 +11,7 @@ import abc
 from scipy import special, stats, spatial
 import numpy as np
 import six
+import sys
 
 try:
     from sklearn import gaussian_process
@@ -1177,6 +1178,8 @@ class ParCorr(CondIndTest):
 
         if deg_f < 1:
             pval = np.nan
+        elif abs(abs(value) - 1.0) <= sys.float_info.min:
+            pval = 0.0
         else:
             trafo_val = value * np.sqrt(deg_f/(1. - value*value))
             # Two sided significance level
@@ -2578,11 +2581,11 @@ class RCOT(CondIndTest):
                                        num_f=self.num_f,
                                        approx=self.approx,
                                        seed=self.seed)
-        
+
         val = float(rcot.rx2('Sta')[0])
         # Cache the p-value for use later
-        self._pval = float(rcot.rx2('p')[0])       
-        
+        self._pval = float(rcot.rx2('p')[0])
+
         return val
 
     def get_analytic_significance(self, **args):
