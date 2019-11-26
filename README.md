@@ -1,5 +1,5 @@
 # TIGRAMITE – Causal discovery for time series datasets
-Version 4.0 described in http://arxiv.org/abs/1702.07007v2
+Version 4.1 described in https://advances.sciencemag.org/content/5/11/eaau4996
 
 (Python Package)
 
@@ -12,8 +12,9 @@ Version 4.0 described in http://arxiv.org/abs/1702.07007v2
 
 Tigramite is a causal time series analysis python package. It allows to efficiently reconstruct causal graphs from high-dimensional time series datasets and model the obtained causal dependencies for causal mediation and prediction analyses. Causal discovery is based on linear as well as non-parametric conditional independence tests applicable to discrete or continuously-valued time series. Currently, tigramite cannot identify causal directionality for contemporaneous links which are left undirected. Also includes functions for high-quality plots of the results. Please cite the following papers depending on which method you use:
 
-- PCMCI: J. Runge et al. (2018): Detecting Causal Associations in Large Nonlinear Time Series Datasets. https://arxiv.org/abs/1702.07007v2
+- PCMCI: J. Runge, P. Nowack, M. Kretschmer, S. Flaxman, D. Sejdinovic, Detecting and quantifying causal associations in large nonlinear time series datasets. Sci. Adv. 5, eaau4996 (2019) . https://advances.sciencemag.org/content/5/11/eaau4996
 - Generally: J. Runge (2018): Causal Network Reconstruction from Time Series: From Theoretical Assumptions to Practical Estimation. Chaos: An Interdisciplinary Journal of Nonlinear Science 28 (7): 075310. https://aip.scitation.org/doi/10.1063/1.5025050
+- Nature Communications Perspective paper: https://www.nature.com/articles/s41467-019-10105-3
 - Mediation class: J. Runge et al. (2015): Identifying causal gateways and mediators in complex spatio-temporal systems. Nature Communications, 6, 8502. http://doi.org/10.1038/ncomms9502
 - Mediation class: J. Runge (2015): Quantifying information transfer and mediation along causal pathways in complex systems. Phys. Rev. E, 92(6), 62829. http://doi.org/10.1103/PhysRevE.92.062829
 - CMIknn: J. Runge (2018): Conditional Independence Testing Based on a Nearest-Neighbor Estimator of Conditional Mutual Information. In Proceedings of the 21st International Conference on Artificial Intelligence and Statistics. http://proceedings.mlr.press/v84/runge18a.html
