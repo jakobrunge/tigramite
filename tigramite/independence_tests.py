@@ -12,6 +12,8 @@ from scipy import special, stats, spatial
 import numpy as np
 import six
 import sys
+from hashlib import sha1
+
 
 try:
     from sklearn import gaussian_process
@@ -127,6 +129,7 @@ class CondIndTest():
         self.sig_blocklength = sig_blocklength
         self.fixed_thres = fixed_thres
         self.verbosity = verbosity
+        self.cached_ci_results = {}
         # If we recycle residuals, then set up a residual cache
         self.recycle_residuals = recycle_residuals
         if self.recycle_residuals:
@@ -339,10 +342,27 @@ class CondIndTest():
         # Ensure it is a valid array
         if np.isnan(array).sum() != 0:
             raise ValueError("nans in the array!")
-        # Get the dependence measure, reycling residuals if need be
-        val = self._get_dependence_measure_recycle(X, Y, Z, xyz, array)
-        # Get the p-value
-        pval = self.get_significance(val, array, xyz, T, dim)
+
+        # First check whether CI result was already computed
+        # by checking whether hash of (xyz, array) already exists
+        x_hash = sha1(np.ascontiguousarray(array[xyz==0])).hexdigest()
+        y_hash = sha1(np.ascontiguousarray(array[xyz==1])).hexdigest()
+        z_hash = sha1(np.ascontiguousarray(array[xyz==2])).hexdigest()
+
+        combined_hash = (*sorted([x_hash, y_hash]), z_hash)
+        if combined_hash in self.cached_ci_results.keys():
+            cached = True
+            val, pval = self.cached_ci_results[combined_hash]
+        else:
+            cached = False
+            # Get the dependence measure, reycling residuals if need be
+            val = self._get_dependence_measure_recycle(X, Y, Z, xyz, array)
+            # Get the p-value
+            pval = self.get_significance(val, array, xyz, T, dim)
+            self.cached_ci_results[combined_hash] = (val, pval)
+
+        if self.verbosity > 0:
+            self._print_cond_ind_results(val=val, pval=pval, cached=cached, conf=None)
         # Return the value and the pvalue
         return val, pval
 
@@ -622,7 +642,7 @@ class CondIndTest():
         # Return the confidence interval
         return (conf_lower, conf_upper)
 
-    def _print_cond_ind_results(self, val, pval=None, conf=None):
+    def _print_cond_ind_results(self, val, pval=None, cached=None, conf=None):
         """Print results from conditional independence test.
 
         Parameters
@@ -636,18 +656,15 @@ class CondIndTest():
         conf : tuple of floats, optional (default: None)
             Confidence bounds.
         """
-
+        printstr = "        val = %.3f" % (val)      
         if pval is not None:
-            printstr = "        pval = %.5f | val = %.3f" % (
-                pval, val)
-            if conf is not None:
-                printstr += " | conf bounds = (%.3f, %.3f)" % (
-                    conf[0], conf[1])
-        else:
-            printstr = "        val = %.3f" % val
-            if conf is not None:
-                printstr += " | conf bounds = (%.3f, %.3f)" % (
-                    conf[0], conf[1])
+            printstr += " | pval = %.5f" % (pval)
+        if conf is not None:
+            printstr += " | conf bounds = (%.3f, %.3f)" % (
+                conf[0], conf[1])
+        if cached is not None:
+            printstr += " %s" % ({0:"", 1:"[cached]"}[cached])
+
         print(printstr)
 
     def get_bootstrap_confidence(self, array, xyz, dependence_measure=None,

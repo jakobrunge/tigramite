@@ -659,7 +659,8 @@ class LinearMediation(Models):
         -------
         ce : float
         """
-        return np.abs(self.psi[1:, j, i]).max()
+        argmax = np.abs(self.psi[1:, j, i]).argmax()
+        return self.psi[1:, j, i][argmax]
 
     def get_mce(self, i, tau, j, k):
         """Returns the mediated causal effect.

@@ -182,6 +182,11 @@ class DataFrame():
         # If a node in Z occurs already in X or Y, remove it from Z
         Z = [node for node in Z if (node not in X) and (node not in Y)]
 
+        # Sorting makes it easier to compare arrays
+        X = sorted(X)
+        Y = sorted(Y)
+        Z = sorted(Z)
+
         # Check that all lags are non-positive and indices are in [0,N-1]
         XYZ = X + Y + Z
         dim = len(XYZ)
@@ -1173,6 +1178,141 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
     # Return the data
     return data, true_parents_neighbors
 
+class Graph(): 
+    def __init__(self,vertices): 
+        self.graph = defaultdict(list) 
+        self.V = vertices 
+  
+    def addEdge(self,u,v): 
+        self.graph[u].append(v) 
+  
+    def isCyclicUtil(self, v, visited, recStack): 
+  
+        # Mark current node as visited and  
+        # adds to recursion stack 
+        visited[v] = True
+        recStack[v] = True
+  
+        # Recur for all neighbours 
+        # if any neighbour is visited and in  
+        # recStack then graph is cyclic 
+        for neighbour in self.graph[v]: 
+            if visited[neighbour] == False: 
+                if self.isCyclicUtil(neighbour, visited, recStack) == True: 
+                    return True
+            elif recStack[neighbour] == True: 
+                return True
+  
+        # The node needs to be poped from  
+        # recursion stack before function ends 
+        recStack[v] = False
+        return False
+  
+    # Returns true if graph is cyclic else false 
+    def isCyclic(self): 
+        visited = [False] * self.V 
+        recStack = [False] * self.V 
+        for node in range(self.V): 
+            if visited[node] == False: 
+                if self.isCyclicUtil(node,visited,recStack) == True: 
+                    return True
+        return False
+  
+    # A recursive function used by topologicalSort 
+    def topologicalSortUtil(self,v,visited,stack): 
+
+      # Mark the current node as visited. 
+      visited[v] = True
+
+      # Recur for all the vertices adjacent to this vertex 
+      for i in self.graph[v]: 
+          if visited[i] == False: 
+              self.topologicalSortUtil(i,visited,stack) 
+
+      # Push current vertex to stack which stores result 
+      stack.insert(0,v) 
+
+    # The function to do Topological Sort. It uses recursive  
+    # topologicalSortUtil() 
+    def topologicalSort(self): 
+        # Mark all the vertices as not visited 
+        visited = [False]*self.V 
+        stack =[] 
+
+        # Call the recursive helper function to store Topological 
+        # Sort starting from all vertices one by one 
+        for i in range(self.V): 
+          if visited[i] == False: 
+              self.topologicalSortUtil(i,visited,stack) 
+
+        return stack
+
+def structural_causal_process(links, T, noises=None, seed=None):
+
+    np.random.seed(seed)
+
+    # links must be {j:[((i, -tau), func), ...], ...}
+    # coeff is coefficient
+    # func is a function f(x) that should become linear in limit
+    # noises is a np.random.___ function
+    N = len(links.keys())
+    if noises is None:
+        noises = [np.random.randn for j in range(N)]
+
+    if N != max(links.keys())+1 or N != len(noises):
+        raise ValueError("links and noises keys must match N.")
+
+    # Check parameters
+    max_lag = 0
+    contemp = False
+    contemp_dag = Graph(N)
+    causal_order = list(range(N))
+    for j in range(N):
+        for link_props in links[j]:
+            var, lag = link_props[0]
+            coeff = link_props[1]
+            func = link_props[2]
+            if lag == 0: contemp = True
+            if var not in range(N):
+                raise ValueError("var must be in 0..{}.".format(N-1))
+            if 'float' not in str(type(coeff)):
+                raise ValueError("coeff must be float.")
+            if lag > 0 or type(lag) != int:
+                raise ValueError("lag must be non-positive int.")
+            max_lag = max(max_lag, abs(lag))
+
+            # Create contemp DAG
+            if var != j and lag == 0:
+                contemp_dag.addEdge(var, j)
+                # a, b = causal_order.index(var), causal_order.index(j)
+                # causal_order[b], causal_order[a] = causal_order[a], causal_order[b]
+
+    if contemp_dag.isCyclic() == 1: 
+        raise ValueError("Contemporaneous links must not contain cycle.")
+
+    causal_order = contemp_dag.topologicalSort() 
+
+    transient = int(.2*T)
+
+    X = np.zeros((T+transient, N), dtype='float32')
+    for j in range(N):
+        X[:, j] = noises[j](T+transient)
+
+    for t in range(max_lag, T+transient):
+        for j in causal_order:
+            for link_props in links[j]:
+                var, lag = link_props[0]
+                coeff = link_props[1]
+                func = link_props[2]
+
+                X[t, j] += coeff * func(X[t + lag, var])
+
+    X = X[transient:]
+
+    nonstationary = (np.any(np.isnan(X)) or np.any(np.isinf(X)))
+
+    return X, nonstationary
+
 class _Logger(object):
     """Class to append print output to a string which can be saved"""
     def __init__(self):
@@ -1182,3 +1322,19 @@ class _Logger(object):
     def write(self, message):
         self.terminal.write(message)
         self.log += message  # .write(message)
+
+
+if __name__ == '__main__':
+    
+    ## Generate some time series from a structural causal process
+    def lin_f(x): return x
+    def nonlin_f(x): return (x + 5. * x**2 * np.exp(-x**2 / 20.))
+
+    links = {0: [((0, -1), 0.9, lin_f)],
+             1: [((1, -1), 0.8, lin_f), ((0, -1), 0.3, nonlin_f)],
+             2: [((2, -1), 0.7, lin_f), ((1, 0), -0.2, lin_f)],
+             }
+    noises = [np.random.randn, np.random.randn, np.random.randn]
+    data, nonstat = structural_causal_process(links,
+     T=100, noises=noises)
+    print(data)

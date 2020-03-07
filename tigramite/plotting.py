@@ -747,7 +747,7 @@ def _draw_network_with_curved_edges(
     G, pos,
     node_rings,
     node_labels, node_label_size, node_alpha=1., standard_size=100,
-    standard_cmap='OrRd', standard_color='grey', log_sizes=False,
+    standard_cmap='OrRd', standard_color='lightgrey', log_sizes=False,
     cmap_links='YlOrRd', cmap_links_edges='YlOrRd', links_vmin=0.,
     links_vmax=1., links_edges_vmin=0., links_edges_vmax=1.,
     links_ticks=.2, links_edges_ticks=.2, link_label_fontsize=8,
@@ -1618,7 +1618,10 @@ def plot_time_series_graph(val_matrix,
     # Define graph links by absolute maximum (positive or negative like for
     # partial correlation)
     tsg = np.zeros((N * max_lag, N * max_lag))
-    tsg_attr = np.zeros((N * max_lag, N * max_lag))
+    tsg_val = np.zeros((N * max_lag, N * max_lag))
+    tsg_width = np.zeros((N * max_lag, N * max_lag))
+    if link_attribute is not None:
+        tsg_attr = np.zeros((N * max_lag, N * max_lag), dtype=link_attribute.dtype)
 
     for i, j, tau in np.column_stack(np.where(link_matrix)):
         # print( '\n',i, j, tau)
@@ -1631,9 +1634,14 @@ def plot_time_series_graph(val_matrix,
                 # print translate(i, t-tau), translate(j, t), val_matrix[i,j,tau]
                 tsg[translate(i, t - tau), translate(j, t)
                     ] = 1.  #val_matrix[i, j, tau]
-                tsg_attr[translate(i, t - tau), translate(j, t)
+                tsg_val[translate(i, t - tau), translate(j, t)
                          ] = val_matrix[i, j, tau]
-                # print(val_matrix[i, j, tau])
+                if link_width is not None:
+                    tsg_width[translate(i, t - tau), translate(j, t)
+                         ] = link_width[i, j, tau] / link_width.max() * arrow_linewidth               
+                if link_attribute is not None:
+                    tsg_attr[translate(i, t - tau), translate(j, t)
+                         ] = link_attribute[i, j, tau]               
 
     # print(tsg.round(1))
     G = networkx.DiGraph(tsg)
@@ -1644,12 +1652,10 @@ def plot_time_series_graph(val_matrix,
     # Add attributes, contemporaneous and directed links are handled separately
     for (u, v, dic) in G.edges(data=True):
 
-        dic['directed_attribute'] = None
-
         if u != v:
 
             if u % max_lag == v % max_lag:
-                if tsg[u, v] and tsg_attr[v, u]: 
+                if tsg[u, v] and tsg[v, u]: 
                     dic['undirected'] = True 
                     dic['directed'] = False
                 else:    
@@ -1661,20 +1667,37 @@ def plot_time_series_graph(val_matrix,
 
             dic['undirected_alpha'] = alpha
             dic['undirected_color'] = _get_absmax(
-                np.array([[[tsg_attr[u, v],
-                               tsg_attr[v, u]]]])
+                np.array([[[tsg_val[u, v],
+                               tsg_val[v, u]]]])
             ).squeeze()
-            dic['undirected_width'] = arrow_linewidth
+
+            if link_width is None:
+                dic['undirected_width'] = arrow_linewidth
+            else:
+                dic['undirected_width'] = tsg_width[u,v]
+
             all_strengths.append(dic['undirected_color'])
 
             dic['directed_alpha'] = alpha
 
-            dic['directed_width'] = arrow_linewidth
+            if link_width is None:
+                # fraction of nonzero values
+                dic['directed_width'] = dic['undirected_width'] = arrow_linewidth
+            else:
+                dic['directed_width'] = dic['undirected_width'] = tsg_width[u,v]
 
             # value at argmax of average
-            dic['directed_color'] = tsg_attr[u, v]
+            dic['directed_color'] = tsg_val[u, v]
+
             all_strengths.append(dic['directed_color'])
             dic['label'] = None
+
+
+            if link_attribute is None:
+                # fraction of nonzero values
+                dic['directed_attribute'] = dic['undirected_attribute'] = None
+            else:
+                dic['directed_attribute'] = dic['undirected_attribute'] = tsg_attr[u,v]
 
         dic['directed_edge'] = False
         dic['directed_edgecolor'] = None
@@ -1726,7 +1749,7 @@ def plot_time_series_graph(val_matrix,
         # 'vmin':float or None, 'vmax':float or None, 'label':string or None}}
         node_labels=node_labels, node_label_size=node_label_size,
         node_alpha=alpha, standard_size=node_size,
-        standard_cmap='OrRd', standard_color='grey',
+        standard_cmap='OrRd', standard_color='lightgrey',
         log_sizes=False,
         cmap_links=cmap_edges, links_vmin=vmin_edges,
         links_vmax=vmax_edges, links_ticks=edge_ticks,
@@ -1755,13 +1778,13 @@ def plot_time_series_graph(val_matrix,
             ax.transData, fig.transFigure)
         if tau == max_lag - 1:
             ax.text(pos[tau][0], 1.-label_space_top, r'$t$',
-                    fontsize=label_fontsize,
+                    fontsize=int(label_fontsize*0.7),
                     horizontalalignment='center',
                     verticalalignment='top', transform=trans)
         else:
             ax.text(pos[tau][0], 1.-label_space_top,
                     r'$t-%s$' % str(max_lag - tau - 1),
-                    fontsize=label_fontsize,
+                    fontsize=int(label_fontsize*0.7),
                     horizontalalignment='center', verticalalignment='top',
                     transform=trans)
 
@@ -2386,6 +2409,14 @@ if __name__ == '__main__':
 
     link_matrix[1,2,0] = 1
 
+    link_width = np.ones(val_matrix.shape)
+    link_width[1,2,0] = .8
+
+    link_attribute = np.ones(val_matrix.shape, dtype = 'object')
+    link_attribute[:] = ''
+    link_attribute[1,2,0] = 'spurious'
+
+
     # print link_matrix
     # data = np.random.randn(100,3)
     # mask = np.random.randint(0, 2, size=(100,3))
@@ -2451,6 +2482,8 @@ if __name__ == '__main__':
         val_matrix=val_matrix,
         sig_thres=None,
         link_matrix=link_matrix,
+        link_width=link_width,
+        link_attribute=link_attribute,
         var_names=range(len(val_matrix)),
         undirected_style='dashed',
         save_name='/home/rung_ja/Downloads/test.pdf',
