@@ -778,8 +778,6 @@ def _draw_network_with_curved_edges(
 
     def draw_edge(ax, u, v, d, seen, arrowstyle='simple', directed=True):
 
-
-
         # avoiding attribute error raised by changes in networkx
         if hasattr(G, 'node'):
             # works with networkx 1.10
@@ -823,7 +821,7 @@ def _draw_network_with_curved_edges(
             #     linestyle = 'dashed'
 
         else:
-            rad = undirected_curved * curved_radius
+            rad = -1. * undirected_curved * curved_radius
             if cmap_links is not None:
                 facecolor = data_to_rgb_links.to_rgba(d['undirected_color'])
             else:
@@ -844,7 +842,7 @@ def _draw_network_with_curved_edges(
             alpha = d['undirected_alpha']
             arrowstyle = 'simple,head_length=0.0001'
             link_edge = d['undirected_edge']
-            linestyle = undirected_style
+            linestyle = 'solid'
             linewidth = 0.
             if d.get('undirected_attribute', None) == 'spurious':
                 facecolor = 'grey'
@@ -852,20 +850,20 @@ def _draw_network_with_curved_edges(
 
             # print d['undirected_attribute']
 
-        if link_edge:
-            # Outer arrow
-            e = FancyArrowPatch(n1.center, n2.center,  # patchA=n1,patchB=n2,
-                                arrowstyle=arrowstyle,
-                                connectionstyle='arc3,rad=%s' % rad,
-                                mutation_scale=3 * width,
-                                lw=0.,
-                                alpha=alpha,
-                                color=edgecolor,
-                                #                                zorder = -1,
-                                clip_on=False,
-                                patchA=n1, patchB=n2)
+        # if link_edge:
+        #     # Outer arrow
+        #     e = FancyArrowPatch(n1.center, n2.center,  # patchA=n1,patchB=n2,
+        #                         arrowstyle=arrowstyle,
+        #                         connectionstyle='arc3,rad=%s' % rad,
+        #                         mutation_scale=3 * width,
+        #                         lw=0.,
+        #                         alpha=alpha,
+        #                         color=edgecolor,
+        #                         #                                zorder = -1,
+        #                         clip_on=False,
+        #                         patchA=n1, patchB=n2)
 
-            ax.add_patch(e)
+        #     ax.add_patch(e)
         # Inner arrow
         # print linestyle
         e = FancyArrowPatch(n1.center, n2.center,  # patchA=n1,patchB=n2,
@@ -1623,18 +1621,21 @@ def plot_time_series_graph(val_matrix,
     tsg_attr = np.zeros((N * max_lag, N * max_lag))
 
     for i, j, tau in np.column_stack(np.where(link_matrix)):
-        #                    print '\n',i, j, tau
+        # print( '\n',i, j, tau)
         #                    print np.where(nonmasked[:,j])[0]
 
         for t in range(max_lag):
+            # print(t)
             if (0 <= translate(i, t - tau) and
                 translate(i, t - tau) % max_lag <= translate(j, t) % max_lag):
                 # print translate(i, t-tau), translate(j, t), val_matrix[i,j,tau]
                 tsg[translate(i, t - tau), translate(j, t)
-                    ] = val_matrix[i, j, tau]
+                    ] = 1.  #val_matrix[i, j, tau]
                 tsg_attr[translate(i, t - tau), translate(j, t)
                          ] = val_matrix[i, j, tau]
+                # print(val_matrix[i, j, tau])
 
+    # print(tsg.round(1))
     G = networkx.DiGraph(tsg)
 
     # node_color = np.zeros(N)
@@ -1648,8 +1649,12 @@ def plot_time_series_graph(val_matrix,
         if u != v:
 
             if u % max_lag == v % max_lag:
-                dic['undirected'] = True
-                dic['directed'] = False
+                if tsg[u, v] and tsg_attr[v, u]: 
+                    dic['undirected'] = True 
+                    dic['directed'] = False
+                else:    
+                    dic['undirected'] = False
+                    dic['directed'] = True
             else:
                 dic['undirected'] = False
                 dic['directed'] = True
@@ -1697,6 +1702,7 @@ def plot_time_series_graph(val_matrix,
                                    posarray.min(axis=0)[1]) /
                                   (posarray.max(axis=0)[1] -
                                    posarray.min(axis=0)[1])])
+        pos_tmp[i][np.isnan(pos_tmp[i])] = 0.
 
     pos = {}
     for n in range(N):
@@ -1986,7 +1992,8 @@ def plot_mediation_time_series_graph(
                                    posarray.min(axis=0)[1]) /
                                   (posarray.max(axis=0)[1] -
                                    posarray.min(axis=0)[1])])
-#                    print pos[i]
+        pos_tmp[i][np.isnan(pos_tmp[i])] = 0.
+        
     pos = {}
     for n in range(N):
         for tau in range(max_lag):
@@ -2363,13 +2370,26 @@ if __name__ == '__main__':
 
     from tigramite.independence_tests import ParCorr
     import tigramite.data_processing as pp
-    np.random.seed(42)
-    val_matrix = np.random.rand(3,3,4)
-    link_matrix = np.abs(val_matrix) > .7
+    # np.random.seed(42)
+    val_matrix = 2.+np.random.rand(3, 3, 3)
+    # link_matrix = np.abs(val_matrix) > .9
+
+    link_matrix = np.zeros(val_matrix.shape)
+
+    # link_matrix[1,2,1] = 1
+    link_matrix[1,0,2] = 1
+
+
+    link_matrix[0,1,0] = 1
+    link_matrix[1,0,0] = 1
+
+
+    link_matrix[1,2,0] = 1
+
     # print link_matrix
-    data = np.random.randn(100,3)
-    mask = np.random.randint(0, 2, size=(100,3))
-    dataframe = pp.DataFrame(data, mask=mask)
+    # data = np.random.randn(100,3)
+    # mask = np.random.randint(0, 2, size=(100,3))
+    # dataframe = pp.DataFrame(data, mask=mask)
 
 
     # data = np.random.randn(100, 3)
@@ -2417,21 +2437,23 @@ if __name__ == '__main__':
     # fig = pyplot.figure(figsize=(4, 3), frameon=False)
     # ax = fig.add_subplot(111, frame_on=False)
 
-    plot_graph(
-        figsize=(3, 3),
-        val_matrix=val_matrix,
-        sig_thres=None,
-        link_matrix=link_matrix,
-        var_names=range(len(val_matrix)),
-        save_name='/home/rung_ja/Downloads/test.pdf',
-    )
-
-
-    # plot_time_series_graph(
+    # plot_graph(
+    #     figsize=(3, 3),
     #     val_matrix=val_matrix,
     #     sig_thres=None,
     #     link_matrix=link_matrix,
     #     var_names=range(len(val_matrix)),
-    #     undirected_style='dashed',
+    #     save_name='/home/rung_ja/Downloads/test.pdf',
     # )
+
+
+    plot_time_series_graph(
+        val_matrix=val_matrix,
+        sig_thres=None,
+        link_matrix=link_matrix,
+        var_names=range(len(val_matrix)),
+        undirected_style='dashed',
+        save_name='/home/rung_ja/Downloads/test.pdf',
+
+    )
     # pyplot.show()

@@ -192,10 +192,10 @@ class CondIndTest():
             info_str += "\nconf_blocklength = %s" %self.conf_blocklength
         # Check if we use a non-trivial mask type
         if self.mask_type is not None:
-            info_str += "mask_type = %s" % self.mask_type
+            info_str += "\nmask_type = %s" % self.mask_type
         # Check if we are recycling residuals or not
         if self.recycle_residuals:
-            info_str += "recycle_residuals = %s" % self.recycle_residuals
+            info_str += "\nrecycle_residuals = %s" % self.recycle_residuals
         # Print the information string
         print(info_str)
 
@@ -505,7 +505,7 @@ class CondIndTest():
         pval : float or numpy.nan
             P-value.
         """
-        # Defaults to the self.signficance memeber value
+        # Defaults to the self.significance member value
         use_sig = self.significance
         if sig_override is not None:
             use_sig = sig_override
