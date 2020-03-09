@@ -1183,6 +1183,9 @@ class Prediction(Models, PCMCI):
                                                mask_type=self.mask_type,
                                                cut_off=cut_off,
                                                verbosity=self.verbosity)
+        # Check that target has predictors
+        if self.fitted_model[target] is None:
+            raise ValueError("Target variable {} has no predictors".format(target))
         # Transform the data if needed
         a_transform = self.fitted_model[target]['data_transform']
         if a_transform is not None:
