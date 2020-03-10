@@ -1118,10 +1118,10 @@ class Prediction(Models, PCMCI):
                          return_data=return_data)
         return self
 
-    def predict(self, target,
-                new_data=None,
-                pred_params=None,
-                cut_off='max_lag_or_tau_max'):
+    def _predict(self, target,
+                 new_data=None,
+                 pred_params=None,
+                 cut_off='max_lag_or_tau_max'):
         r"""Predict target variable with fitted model.
 
         Uses the model.predict() function of the sklearn model.
@@ -1163,7 +1163,7 @@ class Prediction(Models, PCMCI):
             raise ValueError("Target %s not yet fitted" % target)
         # Construct the array form of the data
         Y = [(target, 0)]
-        X = [(target, 0)] # dummy
+        X = [(target, 0)]  # dummy
         Z = self.target_predictors[target]
         # Check if we've passed a new dataframe object
         test_array = None
@@ -1192,6 +1192,48 @@ class Prediction(Models, PCMCI):
         pred = self.fitted_model[target]['model'].predict(X=test_array[2:].T,
                                                           **pred_params)
         return pred
+
+    def predict(self, target,
+                new_data=None,
+                pred_params=None,
+                cut_off='max_lag_or_tau_max'):
+        r""" A wrapper around predict method to predict a set of target variables
+        Uses the model.predict() function of the sklearn model.
+        Parameters
+        ----------
+        target : int or list or tuple of int
+            Index of target variable(s).
+        new_data : data object, optional
+            New Tigramite dataframe object with optional new mask.
+        pred_params : dict, optional
+            Optional parameters passed on to sklearn prediction function.
+        cut_off : {'2xtau_max', 'max_lag', 'max_lag_or_tau_max'}
+            How many samples to cutoff at the beginning. The default is
+            '2xtau_max', which guarantees that MCI tests are all conducted on
+            the same samples.  For modeling, 'max_lag_or_tau_max' can be used,
+            which uses the maximum of tau_max and the conditions, which is
+            useful to compare multiple models on the same sample. Last,
+            'max_lag' uses as much samples as possible.
+        Returns
+        -------
+        Results from prediction. If more than one target, returns a numpy array
+            with shape samples x variables.
+        """
+
+        # Check if there is one variable
+        if type(target) == int:
+            return self._predict(target=target,
+                                 new_data=new_data,
+                                 pred_params=pred_params,
+                                 cut_off=cut_off)
+        if type(target) in [list, tuple]:
+            n_var = len(target)
+            prediction = [self._predict(var, new_data=new_data) for var in target]
+            prediction = np.concatenate(prediction).reshape(n_var, -1).transpose()
+            return prediction
+
+        else:
+            raise TypeError("Target variable type {} not valid, must be int, tuple or list".format(type(target)))
 
     def get_train_array(self, j):
         """Returns training array."""
