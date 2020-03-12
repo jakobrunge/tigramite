@@ -43,9 +43,10 @@ class PCMCI():
 
     PCMCI is a causal discovery framework for large-scale time series
     datasets. This class contains several algorithms. The standard PCMCI
-    algorithm addressed lagged causal discovery and is described in [1]_. 
+    algorithm addresses lagged causal discovery and is described in [1]_. 
     Lagged as well as contemporaneous causal discovery is implemented in
     PCMCIplus as described in [2]_.
+    
     TODO: update text below
 
     PCMCI allows:
@@ -136,6 +137,7 @@ class PCMCI():
            autocorrelated nonlinear time series datasets 
            Proceedings of the 35th Conference on Uncertainty in Artificial 
            Intelligence (2020)
+           https://arxiv.org/abs/2003.03685
 
            
 
@@ -1958,6 +1960,8 @@ class PCMCI():
                   fdr_method='none'  #TODO: implement this
                   ):
         """Run PCMCIplus causal discovery for time series datasets.
+
+        Method described in [1]_: https://arxiv.org/abs/2003.03685
 
         TODO: update docs
 
