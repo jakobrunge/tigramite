@@ -1794,12 +1794,20 @@ class PCMCI():
         if conf_key in return_dict:
             conf_matrix = return_dict[conf_key]
         # Wrap the already defined function
+        if 'graph' in return_dict:
+            graph = return_dict['graph']
+        else:
+            graph = None
+        if 'ambiguous_triples' in return_dict:
+            ambiguous_triples = return_dict['ambiguous_triples']
+        else:
+            ambiguous_triples = None
         self.print_significant_links(return_dict['p_matrix'],
                                      return_dict['val_matrix'],
                                      conf_matrix=conf_matrix,
                                      q_matrix=q_matrix,
-                                     graph = return_dict['graph'],
-                                     ambiguous_triples = return_dict['ambiguous_triples'],
+                                     graph = graph,
+                                     ambiguous_triples = ambiguous_triples,
                                      alpha_level=alpha_level)
 
     def run_pcmci(self,
