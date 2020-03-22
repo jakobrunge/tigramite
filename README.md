@@ -44,7 +44,6 @@ Tigramite is a causal time series analysis python package. It allows to efficien
 - networkx=1.10.0 (optional, only for plotting and mediation)
 - cython>=0.26   (optional, necessary for CMIknn and GPDC tests)
 - mpi4py>=2.0.0   (optional, necessary for using the parallelized implementation)
-- rpy2>=2.8   (optional, necessary for RCOT test)
 
 
 ## Installation
@@ -58,8 +57,6 @@ To use just the ParCorr and CMIsymb independence tests, only numpy and scipy are
 - CMIknn: cython can optionally be used for compilation, otherwise the provided ``*.c'' file is used 
 
 - GPDC: also based on cython, and additionally, scikit-learn is required for Gaussian Process regression
-
-- RCOT requires more work: Firstly, rpy2 is required to access R-packages. The required R-packages can be installed with the script ``install_r_packages.sh''. Due to R-related issues, the installation of R's devtools might fail when running "install_r_packages.sh". This can be solved e.g. by installing missing / not resolved R dependencies using conda: "conda install r-git2r".
 
 
 ## User Agreement

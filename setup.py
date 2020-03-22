@@ -53,14 +53,12 @@ EXTRAS_REQUIRE = {
     'all' : ['scikit-learn>=0.18',#Gaussian Process (GP) Regression
              'matplotlib>=1.5',   #plotting
              'networkx>=1.10',    #plotting
-             'rpy2'],             #R-based RCOT
-    'R'   : ['rpy2']              #R-based RCOT
+    ]
     }
 # Define the packages needed for testing
 TESTS_REQUIRE = ['nose',
                  'pytest',
-                 'scikit-learn>=0.18',
-                 'rpy2']
+                 'scikit-learn>=0.18']
 EXTRAS_REQUIRE['test'] = TESTS_REQUIRE
 # Define the extras needed for development
 EXTRAS_REQUIRE['dev'] = EXTRAS_REQUIRE['all'] + TESTS_REQUIRE + ['cython']
@@ -74,8 +72,8 @@ EXT_MODULES += define_extension("tigramite.tigramite_cython_code")
 # Run the setup
 setup(
     name='tigramite',
-    version='4.1.0',
-    packages=['tigramite'],
+    version='4.2.0',
+    packages=['tigramite', 'tigramite.independence_tests'],
     license='GNU General Public License v3.0',
     description='Tigramite causal discovery for time series',
     author='Jakob Runge',

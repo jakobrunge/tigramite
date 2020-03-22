@@ -5,6 +5,7 @@ from __future__ import print_function
 from collections import OrderedDict
 import numpy as np
 import pytest
+import sys
 
 import tigramite.data_processing as pp
 
@@ -108,6 +109,11 @@ def test_construct_array(cstrct_array_params):
     z_nds = list(OrderedDict.fromkeys(z_nds))
     z_nds = [node for node in z_nds
              if (node not in x_nds) and (node not in y_nds)]
+
+    # Sorting makes it easier to compare arrays
+    x_nds = sorted(x_nds)
+    y_nds = sorted(y_nds)
+    z_nds = sorted(z_nds)
 
     # Get the expected results
     expect_array = np.array([list(range(data[time-n_times, node],

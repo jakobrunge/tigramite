@@ -10,7 +10,6 @@ from matplotlib import pyplot, ticker
 from matplotlib.ticker import FormatStrFormatter
 
 from copy import deepcopy
-import os
 
 # TODO: Add proper docstrings to internal functions...
 
@@ -840,7 +839,10 @@ def _draw_network_with_curved_edges(
 
             width = d['undirected_width']
             alpha = d['undirected_alpha']
-            arrowstyle = 'simple,head_length=0.0001'
+            if 'oriented' in d and d['oriented']:
+                arrowstyle = arrowstyle
+            else:
+                arrowstyle = 'simple,head_length=0.0001'
             link_edge = d['undirected_edge']
             linestyle = 'solid'
             linewidth = 0.
@@ -1123,8 +1125,12 @@ def _draw_network_with_curved_edges(
         if u != v:
             if d['directed']:
                 seen[(u, v)] = draw_edge(ax, u, v, d, seen, arrowstyle, directed=True)
-            if d['undirected'] and (v, u) not in seen:
-                seen[(u, v)] = draw_edge(ax, u, v, d, seen, directed=False)
+            if d['undirected']:
+                if ('oriented' not in d or d['oriented'] == False) and (v, u) not in seen:
+                    seen[(u, v)] = draw_edge(ax, u, v, d, seen, directed=False)
+                elif 'oriented' in d and d['oriented'] == (u,v):
+                    seen[(u, v)] = draw_edge(ax, u, v, d, seen, directed=False)
+  
 
     # pyplot.tight_layout()
     pyplot.subplots_adjust(bottom=network_lower_bound)
@@ -1292,6 +1298,12 @@ def plot_graph(val_matrix,
     if link_width is not None and not np.all(link_width >= 0.):
         raise ValueError("link_width must be non-negative")
 
+    if link_width is not None and not np.all(link_width[:,:,0] == link_width[:,:,0].T):
+        raise ValueError("link_width must be symmetric for lag zero.")
+    
+    if link_attribute is not None and not np.all(link_attribute[:,:,0] == link_attribute[:,:,0].T):
+        raise ValueError("link_attribute must be symmetric for lag zero.")
+
     N, N, dummy = val_matrix.shape
     tau_max = dummy - 1
 
@@ -1326,7 +1338,18 @@ def plot_graph(val_matrix,
             #                       sig_thres[u, v][0]) or
             #                      (np.abs(val_matrix[v, u][0]) >=
             #                       sig_thres[v, u][0]))
+
+
             dic['undirected'] = (link_matrix[u,v,0] or link_matrix[v,u,0])
+            if link_matrix[u,v,0] and link_matrix[v,u,0]:
+                dic['oriented'] = False
+            else:
+                if link_matrix[u,v,0]:
+                    dic['oriented'] = (u, v)
+                else:
+                    dic['oriented'] = (v, u)
+   
+
             dic['undirected_alpha'] = alpha
             # value at argmax of average
             if np.abs(val_matrix[u, v][0] - val_matrix[v, u][0]) > .0001:
@@ -1338,6 +1361,7 @@ def plot_graph(val_matrix,
             dic['undirected_color'] = _get_absmax(
                 np.array([[[val_matrix[u, v][0],
                                val_matrix[v, u][0]]]])).squeeze()
+
             if link_width is None:
                 dic['undirected_width'] = arrow_linewidth
             else:
@@ -1474,6 +1498,7 @@ def plot_time_series_graph(val_matrix,
         link_colorbar_label='MCI',
         save_name=None,
         link_width=None,
+        link_attribute=None,
         arrow_linewidth=20.,
         vmin_edges=-1,
         vmax_edges=1.,
@@ -1623,6 +1648,11 @@ def plot_time_series_graph(val_matrix,
     if link_attribute is not None:
         tsg_attr = np.zeros((N * max_lag, N * max_lag), dtype=link_attribute.dtype)
 
+    if link_width is not None and not np.all(link_width[:,:,0] == link_width[:,:,0].T):
+        raise ValueError("link_width must be symmetric for lag zero.")
+    if link_attribute is not None and not np.all(link_attribute[:,:,0] == link_attribute[:,:,0].T):
+        raise ValueError("link_attribute must be symmetric for lag zero.")
+
     for i, j, tau in np.column_stack(np.where(link_matrix)):
         # print( '\n',i, j, tau)
         #                    print np.where(nonmasked[:,j])[0]
@@ -1638,10 +1668,10 @@ def plot_time_series_graph(val_matrix,
                          ] = val_matrix[i, j, tau]
                 if link_width is not None:
                     tsg_width[translate(i, t - tau), translate(j, t)
-                         ] = link_width[i, j, tau] / link_width.max() * arrow_linewidth               
+                         ] = link_width[i, j, tau] / link_width.max() * arrow_linewidth
                 if link_attribute is not None:
                     tsg_attr[translate(i, t - tau), translate(j, t)
-                         ] = link_attribute[i, j, tau]               
+                         ] = link_attribute[i, j, tau]
 
     # print(tsg.round(1))
     G = networkx.DiGraph(tsg)
@@ -1655,13 +1685,15 @@ def plot_time_series_graph(val_matrix,
         if u != v:
 
             if u % max_lag == v % max_lag:
-                if tsg[u, v] and tsg[v, u]: 
-                    dic['undirected'] = True 
+                lagzero = True
+                if tsg[u, v] and tsg[v, u]:
+                    dic['undirected'] = True
                     dic['directed'] = False
-                else:    
+                else:
                     dic['undirected'] = False
                     dic['directed'] = True
             else:
+                lagzero = False
                 dic['undirected'] = False
                 dic['directed'] = True
 
@@ -1675,6 +1707,11 @@ def plot_time_series_graph(val_matrix,
                 dic['undirected_width'] = arrow_linewidth
             else:
                 dic['undirected_width'] = tsg_width[u,v]
+
+            if link_attribute is None:
+                dic['undirected_attribute'] = dic['directed_attribute'] = None
+            else:
+                dic['undirected_attribute'] = dic['directed_attribute'] = tsg_attr[u,v]
 
             all_strengths.append(dic['undirected_color'])
 
@@ -1691,13 +1728,6 @@ def plot_time_series_graph(val_matrix,
 
             all_strengths.append(dic['directed_color'])
             dic['label'] = None
-
-
-            if link_attribute is None:
-                # fraction of nonzero values
-                dic['directed_attribute'] = dic['undirected_attribute'] = None
-            else:
-                dic['directed_attribute'] = dic['undirected_attribute'] = tsg_attr[u,v]
 
         dic['directed_edge'] = False
         dic['directed_edgecolor'] = None
@@ -1793,7 +1823,7 @@ def plot_time_series_graph(val_matrix,
     if save_name is not None:
         pyplot.savefig(save_name)
     else:
-        pyplot.show()
+        return fig, ax
 
 def plot_mediation_time_series_graph(
         path_node_array,
@@ -2016,7 +2046,7 @@ def plot_mediation_time_series_graph(
                                   (posarray.max(axis=0)[1] -
                                    posarray.min(axis=0)[1])])
         pos_tmp[i][np.isnan(pos_tmp[i])] = 0.
-        
+
     pos = {}
     for n in range(N):
         for tau in range(max_lag):
@@ -2390,7 +2420,7 @@ def plot_mediation_graph(
 
 if __name__ == '__main__':
 
-
+    import os
     from tigramite.independence_tests import ParCorr
     import tigramite.data_processing as pp
     # np.random.seed(42)
@@ -2400,21 +2430,21 @@ if __name__ == '__main__':
     link_matrix = np.zeros(val_matrix.shape)
 
     # link_matrix[1,2,1] = 1
-    link_matrix[1,0,2] = 1
+    link_matrix[0,1,2] = 1
 
 
-    link_matrix[0,1,0] = 1
-    link_matrix[1,0,0] = 1
+    link_matrix[0,1,0] = 2
+    link_matrix[1,0,0] = 2
 
 
     link_matrix[1,2,0] = 1
 
     link_width = np.ones(val_matrix.shape)
-    link_width[1,2,0] = .8
+    link_width[1,2,0] = link_width[2,1,0] = .5
 
     link_attribute = np.ones(val_matrix.shape, dtype = 'object')
     link_attribute[:] = ''
-    link_attribute[1,2,0] = 'spurious'
+    link_attribute[1,2,0] = link_attribute[2,1,0] = 'spurious'
 
 
     # print link_matrix
@@ -2468,25 +2498,26 @@ if __name__ == '__main__':
     # fig = pyplot.figure(figsize=(4, 3), frameon=False)
     # ax = fig.add_subplot(111, frame_on=False)
 
-    # plot_graph(
-    #     figsize=(3, 3),
-    #     val_matrix=val_matrix,
-    #     sig_thres=None,
-    #     link_matrix=link_matrix,
-    #     var_names=range(len(val_matrix)),
-    #     save_name='/home/rung_ja/Downloads/test.pdf',
-    # )
-
-
-    plot_time_series_graph(
+    plot_graph(
+        figsize=(3, 3),
         val_matrix=val_matrix,
         sig_thres=None,
         link_matrix=link_matrix,
         link_width=link_width,
         link_attribute=link_attribute,
         var_names=range(len(val_matrix)),
-        undirected_style='dashed',
         save_name='/home/rung_ja/Downloads/test.pdf',
-
     )
+
+
+    # plot_time_series_graph(
+    #     val_matrix=val_matrix,
+    #     sig_thres=None,
+    #     link_matrix=link_matrix,
+    #     link_width=link_width,
+    #     link_attribute=link_attribute,
+    #     var_names=range(len(val_matrix)),
+    #     undirected_style='dashed',
+    #     save_name='/home/rung_ja/Downloads/test.pdf',
+    # )
     # pyplot.show()

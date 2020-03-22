@@ -21,7 +21,6 @@ class DataFrame():
     ----------
     data : array-like
         Numpy array of shape (observations T, variables N)
-
     mask : array-like, optional (default: None)
         Optional mask array, must be of same shape as data
 
@@ -29,20 +28,16 @@ class DataFrame():
     ----------
     data : array-like
         Numpy array of shape (observations T, variables N)
-
     mask : array-like, optional (default: None)
         Optional mask array, must be of same shape as data
-
     missing_flag : number, optional (default: None)
         Flag for missing values in dataframe. Dismisses all time slices of
         samples where missing values occur in any variable and also flags
         samples for all lags up to 2*tau_max. This avoids biases, see
         section on masking in Supplement of [1]_.
-
     var_names : list of strings, optional (default: range(N))
         Names of variables, must match the number of variables. If None is
         passed, variables are enumerated as [0, 1, ...]
-
     datatime : array-like, optional (default: None)
         Timelabel array. If None, range(T) is used.
     """
@@ -127,29 +122,23 @@ class DataFrame():
             where var specifies the variable index. X typically is of the form
             [(varX, -tau)] with tau denoting the time lag and Z can be
             multivariate [(var1, -lag), (var2, -lag), ...] .
-
         tau_max : int
             Maximum time lag. This may be used to make sure that estimates for
             different lags in X and Z all have the same sample size.
-
         mask : array-like, optional (default: None)
             Optional mask array, must be of same shape as data.  If it is set,
             then it overrides the self.mask assigned to the dataframe. If it is
             None, then the self.mask is used, if it exists.
-
         mask_type : {'y','x','z','xy','xz','yz','xyz'}
             Masking mode: Indicators for which variables in the dependence
             measure I(X; Y | Z) the samples should be masked. If None, 'y' is
             used, which excludes all time slices containing masked samples in Y.
             Explained in [1]_.
-
         return_cleaned_xyz : bool, optional (default: False)
             Whether to return cleaned X,Y,Z, where possible duplicates are
             removed.
-
         do_checks : bool, optional (default: True)
             Whether to perform sanity checks on input X,Y,Z
-
         cut_off : {'2xtau_max', 'max_lag', 'max_lag_or_tau_max'}
             How many samples to cutoff at the beginning. The default is
             '2xtau_max', which guarantees that MCI tests are all conducted on
@@ -157,7 +146,6 @@ class DataFrame():
             which uses the maximum of tau_max and the conditions, which is
             useful to compare multiple models on the same sample.  Last,
             'max_lag' uses as much samples as possible.
-
         verbosity : int, optional (default: 0)
             Level of verbosity.
 
@@ -287,13 +275,10 @@ class DataFrame():
             Y : list of tuples
                 Of the form [(var, -tau)], where var specifies the variable
                 index and tau the time lag.
-
             XYZ : list of tuples
                 List of nodes chosen for current independence test
-
             N : int
                 Total number of listed nodes
-
             dim : int
                 Number of nodes excluding repeated nodes
         """
@@ -324,13 +309,11 @@ class DataFrame():
             where var specifies the variable index. X typically is of the form
             [(varX, -tau)] with tau denoting the time lag and Z can be
             multivariate [(var1, -lag), (var2, -lag), ...] .
-
         missing_flag : number, optional (default: None)
             Flag for missing values. Dismisses all time slices of samples where
             missing values occur in any variable and also flags samples for all
             lags up to 2*tau_max. This avoids biases, see section on masking in
             Supplement of [1]_.
-
         mask_type : {'y','x','z','xy','xz','yz','xyz'}
             Masking mode: Indicators for which variables in the dependence
             measure I(X; Y | Z) the samples should be masked. If None, 'y' is
@@ -359,10 +342,8 @@ def lowhighpass_filter(data, cutperiod, pass_periods='low'):
     ----------
     data : array
         Data array of shape (time, variables).
-
     cutperiod : int
         Period of cutoff.
-
     pass_periods : str, optional (default: 'low')
         Either 'low' or 'high' to act as a low- or high-pass filter
 
@@ -405,16 +386,12 @@ def smooth(data, smooth_width, kernel='gaussian',
     ----------
     data : array
         Data array of shape (time, variables).
-
     smooth_width : float
         Window width of smoothing, 2*sigma for a gaussian.
-
     kernel : str, optional (default: 'gaussian')
         Smoothing kernel, 'gaussian' or 'heaviside' for a running mean.
-
     mask : bool array, optional (default: None)
         Data mask where True labels masked samples.
-
     residuals : bool, optional (default: False)
         True if residuals should be returned instead of smoothed data.
 
@@ -471,10 +448,8 @@ def weighted_avg_and_std(values, axis, weights):
     ---------
     values : array
         Data array of shape (time, variables).
-
     axis : int
         Axis to average/std about
-
     weights : array
         Weight array of shape (time, variables).
 
@@ -500,10 +475,8 @@ def time_bin_with_mask(data, time_bin_length, mask=None):
     ----------
     data : array
         Data array of shape (time, variables).
-
     time_bin_length : int
         Length of time bin.
-
     mask : bool array, optional (default: None)
         Data mask where True labels masked samples.
 
@@ -561,19 +534,14 @@ def ordinal_patt_array(array, array_mask=None, dim=2, step=1,
     ----------
     array : array-like
         Data array of shape (time, variables).
-
     array_mask : bool array
         Data mask where True labels masked samples.
-
     dim : int, optional (default: 2)
         Pattern dimension
-
     step : int, optional (default: 1)
         Delay of pattern embedding vector.
-
     weights : bool, optional (default: False)
         Whether to return array of variances of embedding vectors as weights.
-
     verbosity : int, optional (default: 0)
         Level of verbosity.
 
@@ -652,7 +620,6 @@ def quantile_bin_array(data, bins=6):
     ----------
     data : array
         Data array of shape (time, variables).
-
     bins : int, optional (default: 6)
         Number of bins.
 
@@ -686,10 +653,8 @@ def _generate_noise(covar_matrix, time=1000, use_inverse=False):
     ----------
     covar_matrix : array
         Covariance matrix of the random variables
-
     time : int
         Sample size
-
     use_inverse : bool, optional
         Negate the off-diagonal elements and invert the covariance matrix
         before use
@@ -808,17 +773,13 @@ def _var_network(graph,
     ----------
     graph : array
         Lagged connectivity matrices. Shape is (n_nodes, n_nodes, max_delay+1)
-
     add_noise : bool, optional (default: True)
         Flag to add random noise or not
-
     inno_cov : array, optional (default: None)
         Covariance matrix of innovations.
-
     invert_inno : bool, optional (defualt : False)
         Flag to negate off-diagonal elements of inno_cov and invert it before
         using it as the covariance matrix of innovations
-
     T : int, optional (default: 100)
         Sample size.
 
@@ -1112,19 +1073,15 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
         number of variables N. If lag=0, a nonzero value in the covariance
         matrix (or its inverse) is implied. These should be the same for (i, j)
         and (j, i).
-
     use : str, optional (default: 'inv_inno_cov')
         Specifier, either 'inno_cov' or 'inv_inno_cov'.
         Any other specifier will result in non-correlated noise.
         For debugging, 'no_noise' can also be specified, in which case random
         noise will be disabled.
-
     T : int, optional (default: 1000)
         Sample size.
-
     verbosity : int, optional (default: 0)
         Level of verbosity.
-
     initial_values : array, optional (default: None)
         Initial values for each node. Shape must be (N, max_delay+1)
 
@@ -1178,17 +1135,25 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
     # Return the data
     return data, true_parents_neighbors
 
-class Graph(): 
+class Graph():
+    r"""Helper class to handle graph properties.
+
+    Parameters
+    ----------
+    vertices : list
+        List of nodes.
+    """
     def __init__(self,vertices): 
         self.graph = defaultdict(list) 
         self.V = vertices 
   
-    def addEdge(self,u,v): 
+    def addEdge(self,u,v):
+        """Adding edge to graph."""
         self.graph[u].append(v) 
   
     def isCyclicUtil(self, v, visited, recStack): 
-  
-        # Mark current node as visited and  
+        """Utility function to return whether graph is cyclic."""
+        # Mark current node as visited and
         # adds to recursion stack 
         visited[v] = True
         recStack[v] = True
@@ -1208,8 +1173,8 @@ class Graph():
         recStack[v] = False
         return False
   
-    # Returns true if graph is cyclic else false 
-    def isCyclic(self): 
+    def isCyclic(self):
+        """Returns whether graph is cyclic."""
         visited = [False] * self.V 
         recStack = [False] * self.V 
         for node in range(self.V): 
@@ -1218,23 +1183,21 @@ class Graph():
                     return True
         return False
   
-    # A recursive function used by topologicalSort 
-    def topologicalSortUtil(self,v,visited,stack): 
+    def topologicalSortUtil(self,v,visited,stack):
+        """A recursive function used by topologicalSort ."""
+        # Mark the current node as visited.
+        visited[v] = True
 
-      # Mark the current node as visited. 
-      visited[v] = True
+        # Recur for all the vertices adjacent to this vertex
+        for i in self.graph[v]:
+            if visited[i] == False:
+                self.topologicalSortUtil(i,visited,stack)
 
-      # Recur for all the vertices adjacent to this vertex 
-      for i in self.graph[v]: 
-          if visited[i] == False: 
-              self.topologicalSortUtil(i,visited,stack) 
+        # Push current vertex to stack which stores result
+        stack.insert(0,v)
 
-      # Push current vertex to stack which stores result 
-      stack.insert(0,v) 
-
-    # The function to do Topological Sort. It uses recursive  
-    # topologicalSortUtil() 
-    def topologicalSort(self): 
+    def topologicalSort(self):
+        """A sorting function. """
         # Mark all the vertices as not visited 
         visited = [False]*self.V 
         stack =[] 
@@ -1248,13 +1211,44 @@ class Graph():
         return stack
 
 def structural_causal_process(links, T, noises=None, seed=None):
+    """Returns a structural causal process with contemporaneous and lagged
+    dependencies.
 
+    Generates generalized additive noise model process of the form
+
+        .. math:: X^j_t = \eta^j_t + \sum_{X^i_{t-\tau}\in \mathcal{P}(X^j_t)}
+                            c^i_{\tau} f^i_{\tau}\left(X^i_{t-\tau}\right)
+
+    Links have the format ``{0:[((i, -tau), coeff, func),...], 1:[...],
+    ...}`` where ``func`` can be an arbitrary (nonlinear) function provided
+    as a python callable with one argument and coeff is the multiplication
+    factor. The noise distributions of :math:`\eta^j` can be specified in
+    ``noises``.
+
+    Parameters
+    ----------
+    links : dict
+        Dictionary of format:
+            {0:[((i, -tau), coeff, func),...], 1:[...], ...}
+        for all variables where i must be in [0..N-1] and tau >= 0 with
+        number of variables N. coeff must be a float and func a python
+        callable of one argument.
+    T : int
+        Sample size.
+    noises : list of callables, optional (default: 'np.random.randn')
+        Random distribution function that is called with noises[j](T).
+    seed : int, optional (default: None)
+        Random seed.
+
+    Returns
+    -------
+    data : array-like
+        Data generated from this process, shape (T, N).
+    nonstationary : bool
+        Indicates whether data has NaNs or infinities.
+    """
     np.random.seed(seed)
 
-    # links must be {j:[((i, -tau), func), ...], ...}
-    # coeff is coefficient
-    # func is a function f(x) that should become linear in limit
-    # noises is a np.random.___ function
     N = len(links.keys())
     if noises is None:
         noises = [np.random.randn for j in range(N)]
@@ -1264,9 +1258,7 @@ def structural_causal_process(links, T, noises=None, seed=None):
 
     # Check parameters
     max_lag = 0
-    contemp = False
     contemp_dag = Graph(N)
-    causal_order = list(range(N))
     for j in range(N):
         for link_props in links[j]:
             var, lag = link_props[0]
@@ -1284,8 +1276,6 @@ def structural_causal_process(links, T, noises=None, seed=None):
             # Create contemp DAG
             if var != j and lag == 0:
                 contemp_dag.addEdge(var, j)
-                # a, b = causal_order.index(var), causal_order.index(j)
-                # causal_order[b], causal_order[a] = causal_order[a], causal_order[b]
 
     if contemp_dag.isCyclic() == 1: 
         raise ValueError("Contemporaneous links must not contain cycle.")
@@ -1294,9 +1284,9 @@ def structural_causal_process(links, T, noises=None, seed=None):
 
     transient = int(.2*T)
 
-    X = np.zeros((T+transient, N), dtype='float32')
+    data = np.zeros((T+transient, N), dtype='float32')
     for j in range(N):
-        X[:, j] = noises[j](T+transient)
+        data[:, j] = noises[j](T+transient)
 
     for t in range(max_lag, T+transient):
         for j in causal_order:
@@ -1304,14 +1294,57 @@ def structural_causal_process(links, T, noises=None, seed=None):
                 var, lag = link_props[0]
                 coeff = link_props[1]
                 func = link_props[2]
+                data[t, j] += coeff * func(data[t + lag, var])
 
-                X[t, j] += coeff * func(X[t + lag, var])
+    data = data[transient:]
 
-    X = X[transient:]
+    nonstationary = (np.any(np.isnan(data)) or np.any(np.isinf(data)))
 
-    nonstationary = (np.any(np.isnan(X)) or np.any(np.isinf(X)))
+    return data, nonstationary
 
-    return X, nonstationary
+def links_to_graph(links, tau_max=None):
+    """Helper function to convert dictionary of links to graph array format.
+
+    Parameters
+    ---------
+    links : dict
+        Dictionary of form {0:[((0, -1), coeff, func), ...], 1:[...], ...}.
+    tau_max : int or None
+        Maximum lag. If None, the maximum lag in links is used.
+
+    Returns
+    -------
+    graph : array of shape (N, N, tau_max+1)
+        Matrix format of graph with 1 for true links and 0 else.
+    """
+    N = len(links)
+
+    # Get maximum time lag
+    max_lag = 0
+    for j in range(N):
+        for link_props in links[j]:
+            var, lag = link_props[0]
+            # coeff = link_props[1]
+            # func = link_props[2]
+            max_lag = max(max_lag, abs(lag))
+
+    # Set maximum lag
+    if tau_max is None:
+        tau_max = max_lag
+    else:
+        if max_lag > tau_max:
+            raise ValueError("tau_max is smaller than maximum lag = %d "
+                             "found in links, use tau_max=None or larger "
+                             "value" % max_lag)
+
+    graph = np.zeros((N, N, tau_max + 1), dtype='uint8')
+    for j in links.keys():
+        for link_props in links[j]:
+            var_lag, coeff, func = link_props
+            var, lag = link_props[0]
+            graph[var, j, abs(lag)] = 1
+
+    return graph
 
 class _Logger(object):
     """Class to append print output to a string which can be saved"""
