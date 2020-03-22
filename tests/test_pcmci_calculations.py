@@ -52,10 +52,10 @@ def _get_parents_from_results(pcmci, results, alpha_level):
     alpha_level
     """
     significant_parents = \
-        pcmci.return_significant_parents(pq_matrix=results['p_matrix'],
+        pcmci.return_significant_links(pq_matrix=results['p_matrix'],
                                          val_matrix=results['val_matrix'],
                                          alpha_level=alpha_level)
-    return significant_parents['parents']
+    return significant_parents['link_dict']
 
 def gen_data_frame(links_coeffs, time, seed_val):
     # Set the random seed
@@ -126,7 +126,7 @@ def a_common_params(request):
 def a_test(request):
     return ParCorr(verbosity=VERBOSITY)
 
-@pytest.fixture(params=[None, [1]])
+@pytest.fixture(params=[None])
     # Fixture to build and return a parameterized PCMCI.  Different selected
     # variables can be defined here.
 def a_pcmci(a_sample, a_test, a_common_params, request):
@@ -137,13 +137,9 @@ def a_pcmci(a_sample, a_test, a_common_params, request):
     # Get the parameters from this request
     select_vars = request.param
     # Build the PCMCI instance
-    pcmci = PCMCI(selected_variables=select_vars,
-                  dataframe=dataframe,
+    pcmci = PCMCI(dataframe=dataframe,
                   cond_ind_test=a_test,
                   verbosity=VERBOSITY)
-    # If there are selected variables, edit the true parents to reflect this
-    if select_vars is not None:
-        true_parents = {sel_v : true_parents[sel_v] for sel_v in select_vars}
     # Select the correct links if they are given
     select_links = _select_links(sel_link, true_parents)
     # Ensure we change the true parents to be the same as the selected links
@@ -159,8 +155,9 @@ def a_pcmci(a_sample, a_test, a_common_params, request):
      (None,      None,           3,        False),
      (0.05,      None,           1,        False),
      (0.05,      None,           10,       False),
-     (0.05,      None,           1,        True),
-     (0.05,      3,              1,        False)])
+     # (0.05,      None,           1,        True),
+     # (0.05,      3,              1,        False)
+    ])
 def a_pc_stable_params(request):
     # Return the parameters for the pc_stable test
     return request.param

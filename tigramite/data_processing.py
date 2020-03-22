@@ -170,11 +170,6 @@ class DataFrame():
         # If a node in Z occurs already in X or Y, remove it from Z
         Z = [node for node in Z if (node not in X) and (node not in Y)]
 
-        # Sorting makes it easier to compare arrays
-        X = sorted(X)
-        Y = sorted(Y)
-        Z = sorted(Z)
-
         # Check that all lags are non-positive and indices are in [0,N-1]
         XYZ = X + Y + Z
         dim = len(XYZ)
@@ -303,7 +298,7 @@ class DataFrame():
         Parameters
         ----------
         array : Data array of shape (dim, T)
-
+            Data array.
         X, Y, Z : list of tuples
             For a dependence measure I(X;Y|Z), Y is of the form [(varY, 0)],
             where var specifies the variable index. X typically is of the form

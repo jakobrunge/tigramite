@@ -445,8 +445,8 @@ class PCMCI():
         # Initialize the parents values from the selected links, copying to
         # ensure this initial argument is unchanged.
         parents = deepcopy(selected_links)
-        val_min = {(p[0], p[1]): np.inf for p in parents}
-        pval_max = {(p[0], p[1]): 0. for p in parents}
+        val_min = {(p[0], p[1]): None for p in parents}
+        pval_max = {(p[0], p[1]): None for p in parents}
 
         # Define a nested defaultdict of depth 4 to save all information about
         # iterations
@@ -498,7 +498,7 @@ class PCMCI():
                         min(np.abs(val), parents_values.get(parent,
                                                             float("inf")))
 
-                    if pval > pval_max[parent]:
+                    if pval_max[parent] is None or pval > pval_max[parent]:
                         pval_max[parent] = pval
                         val_min[parent] = val
 
@@ -1423,12 +1423,14 @@ class PCMCI():
             Boolean array with True entries for significant links at alpha_level
         """
         warnings.warn("return_significant_parents is DEPRECATED: use "
-              "return_significant_links() instead.")
+              "return_significant_links() instead and check updated key names.")
 
-        return self.return_significant_links(pq_matrix=pq_matrix,
+        siglinks = self.return_significant_links(pq_matrix=pq_matrix,
                                  val_matrix=val_matrix,
                                  alpha_level=alpha_level,
                                  include_lagzero_links=include_lagzero_links)
+        siglinks['parents'] = siglinks.pop('link_dict')
+        return siglinks
 
     def return_significant_links(self,
                                  pq_matrix,
@@ -3341,7 +3343,7 @@ if __name__ == '__main__':
     data, nonstat = pp.structural_causal_process(links,
                                                  T=1000, noises=noises, seed=7)
 
-    verbosity = 0
+    verbosity = 2
     dataframe = pp.DataFrame(data, )
     pcmci = PCMCI(dataframe=dataframe,
                   # cond_ind_test= CMIknn(verbosity=1),
@@ -3357,6 +3359,14 @@ if __name__ == '__main__':
                       2: [(2, -1), (1, 0)],
                       3: [(3, -1), (2, 0)],
                       }
+
+    results = pcmci.run_pc_stable(
+                selected_links=selected_links,
+                tau_min=1,
+                tau_max=2,
+                pc_alpha=0.05,
+                )
+    print(results)
 
     # results = pcmci.run_pcmci(
     #               selected_links=None,
@@ -3384,33 +3394,33 @@ if __name__ == '__main__':
 
     # print (results)
 
-    results = pcmci.run_pcmciplus(
-        selected_links=None,
-        tau_min=0,
-        tau_max=2,
-        pc_alpha=0.01,
-        contemp_collider_rule='majority',
-        conflict_resolution=True,
-        reset_lagged_links=False,
-        max_conds_dim=None,
-        max_conds_py=None,
-        max_conds_px=None,
-        fdr_method='none'
-    )
+    # results = pcmci.run_pcmciplus(
+    #     selected_links=None,
+    #     tau_min=0,
+    #     tau_max=2,
+    #     pc_alpha=0.01,
+    #     contemp_collider_rule='majority',
+    #     conflict_resolution=True,
+    #     reset_lagged_links=False,
+    #     max_conds_dim=None,
+    #     max_conds_py=None,
+    #     max_conds_px=None,
+    #     fdr_method='none'
+    # )
     # pcmci.print_results(results, alpha_level=0.01)
 
-    print("Graph")
-    print(results['graph'])
-    print("p_matrix")
-    print(results['p_matrix'].round(4))
-    print("val_matrix")
-    print(results['val_matrix'].round(2))
-    print("Contemp graph")
-    print(results['graph'][:, :, 0])
-    print("Contemp p_matrix")
-    print(results['p_matrix'][:, :, 0].round(4))
-    print("Contemp val_matrix")
-    print(results['val_matrix'][:, :, 0].round(2))
+    # print("Graph")
+    # print(results['graph'])
+    # print("p_matrix")
+    # print(results['p_matrix'].round(4))
+    # print("val_matrix")
+    # print(results['val_matrix'].round(2))
+    # print("Contemp graph")
+    # print(results['graph'][:, :, 0])
+    # print("Contemp p_matrix")
+    # print(results['p_matrix'][:, :, 0].round(4))
+    # print("Contemp val_matrix")
+    # print(results['val_matrix'][:, :, 0].round(2))
 
     # results = pcmci.run_pcalg(
     #             pc_alpha=pc_alpha,

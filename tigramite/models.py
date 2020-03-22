@@ -1184,3 +1184,28 @@ class Prediction(Models, PCMCI):
     def get_test_array(self):
         """Returns test array."""
         return self.test_array
+
+if __name__ == '__main__':
+   
+    import tigramite.data_processing as pp
+    np.random.seed(6)
+
+    def lin_f(x): return x
+ 
+    links = {0: [((0, -1), 0.8)],
+             1: [((1, -1), 0.8), ((0, -1), 0.5)],
+             2: [((2, -1), 0.8), ((1, -1), -0.6)]}
+    # noises = [np.random.randn for j in links.keys()]
+    data, nonstat = pp.var_process(links, T=10000)
+    true_parents = pp._get_true_parent_neighbor_dict(links)
+    dataframe = pp.DataFrame(data)
+ 
+    med = LinearMediation(dataframe=dataframe, data_transform=None)
+    # Fit the model
+    med.fit_model(all_parents=true_parents, tau_max=3)
+    for j, i, tau, coeff in pp._iter_coeffs(links):
+        print(i, j, tau, coeff, med.get_coeff(i=i, tau=tau, j=j))
+
+    for causal_coeff in [med.get_ce(i=0, tau=-2, j=2),
+                         med.get_mce(i=0, tau=-2, j=2, k=1)]:
+        print(causal_coeff)

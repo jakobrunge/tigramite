@@ -270,6 +270,51 @@ class CondIndTest():
                                               do_checks=False,
                                               cut_off=cut_off,
                                               verbosity=verbosity)
+    
+    def _get_array_hash(self, array, xyz, XYZ):
+        """Helper function to get hash or array.
+
+        For a CI test X _|_ Y | Z the order of variables within X or Y or Z 
+        does not matter and also the order X and Y can be swapped.
+        Hence, to compare hashes of the whole array, we order accordingly
+        to create a unique, order-independent hash. 
+
+        Parameters
+        ----------
+        array : Data array of shape (dim, T)
+            Data array.
+        xyz : array
+            Identifier array of shape (dim,) identifying which row in array
+            corresponds to X, Y, and Z
+        XYZ : list of tuples
+
+        Returns
+        -------
+        combined_hash : str
+            Hash that identifies uniquely an array of XYZ      
+        """
+
+        X, Y, Z = XYZ
+
+        # First check whether CI result was already computed
+        # by checking whether hash of (xyz, array) already exists
+        # Individually sort X, Y, Z since for a CI test it does not matter
+        # how they are aranged
+        x_orderd = sorted(range(len(X)), key=X.__getitem__)
+        arr_x = array[xyz==0][x_orderd]
+        x_hash = sha1(np.ascontiguousarray(arr_x)).hexdigest()
+
+        y_orderd = sorted(range(len(Y)), key=Y.__getitem__)
+        arr_y = array[xyz==1][y_orderd]
+        y_hash = sha1(np.ascontiguousarray(arr_y)).hexdigest()
+
+        z_orderd = sorted(range(len(Z)), key=Z.__getitem__)
+        arr_z = array[xyz==2][z_orderd]
+        z_hash = sha1(np.ascontiguousarray(arr_z)).hexdigest()
+
+        combined_hash = (*sorted([x_hash, y_hash]), z_hash)
+        return combined_hash
+
 
     def run_test(self, X, Y, Z=None, tau_max=0, cut_off='2xtau_max',
                  verbosity=0):
@@ -302,7 +347,6 @@ class CondIndTest():
         Returns
         -------
         val, pval : Tuple of floats
-
             The test statistic value and the p-value.
         """
 
@@ -312,16 +356,11 @@ class CondIndTest():
         # Record the dimensions
         dim, T = array.shape
         # Ensure it is a valid array
-        if np.isnan(array).sum() != 0:
+        if np.any(np.isnan(array)):
             raise ValueError("nans in the array!")
 
-        # First check whether CI result was already computed
-        # by checking whether hash of (xyz, array) already exists
-        x_hash = sha1(np.ascontiguousarray(array[xyz==0])).hexdigest()
-        y_hash = sha1(np.ascontiguousarray(array[xyz==1])).hexdigest()
-        z_hash = sha1(np.ascontiguousarray(array[xyz==2])).hexdigest()
+        combined_hash = self._get_array_hash(array, xyz, XYZ)
 
-        combined_hash = (*sorted([x_hash, y_hash]), z_hash)
         if combined_hash in self.cached_ci_results.keys():
             cached = True
             val, pval = self.cached_ci_results[combined_hash]

@@ -22,8 +22,8 @@ from test_pcmci_calculations import a_chain, gen_data_frame
     # Parameterize the sample by setting the autocorrelation value, coefficient
     # value, total time length, and random seed to different numbers
     # links_coeffs,               time, seed_val
-    (a_chain(0.5, 0.2), 10000, 21),
-    (a_chain(0.5, 0.2), 10000, 42)])
+    (a_chain(0.9, 0.7), 10000, 21),
+    (a_chain(0.9, 0.7), 10000, 42)])
 def data_frame_a(request):
     # Set the parameters
     links_coeffs, time, seed_val = request.param
@@ -34,7 +34,7 @@ def data_frame_a(request):
 def test_linear_mediation_coeffs(data_frame_a):
     # Build the dataframe and the model
     (dataframe, true_parents), links_coeffs = data_frame_a
-    med = LinearMediation(dataframe=dataframe)
+    med = LinearMediation(dataframe=dataframe, data_transform=None)
     # Fit the model
     med.fit_model(all_parents=true_parents, tau_max=3)
     # Ensure the results make sense
@@ -45,13 +45,13 @@ def test_linear_mediation_coeffs(data_frame_a):
 def test_linear_med_cause_coeffs(data_frame_a):
     # Build the dataframe and the model
     (dataframe, true_parents), _ = data_frame_a
-    med = LinearMediation(dataframe=dataframe)
+    med = LinearMediation(dataframe=dataframe, data_transform=None)
     # Fit the model
     med.fit_model(all_parents=true_parents, tau_max=3)
-    # Ensure the causal and mediated casual effects make sense
+    # Ensure the causal and mediated causal effects make sense
     for causal_coeff in [med.get_ce(i=0, tau=-2, j=2),
                          med.get_mce(i=0, tau=-2, j=2, k=1)]:
-        np.testing.assert_allclose(causal_coeff, 0.035, rtol=1e-1)
+        np.testing.assert_allclose(causal_coeff, 0.49, rtol=1e-1)
 
 # TEST PREDICTIONS #############################################################
 def test_predictions(data_frame_a):
@@ -71,7 +71,7 @@ def test_predictions(data_frame_a):
                       verbosity=0)
     # Load some parameters
     tau_max = 3
-    steps_ahead = 0
+    steps_ahead = 1
     target = 2
     # Get the predictors from pc_stable
     all_predictors = pred.get_predictors(selected_targets=[target],
