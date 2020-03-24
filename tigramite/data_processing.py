@@ -1297,6 +1297,44 @@ def structural_causal_process(links, T, noises=None, seed=None):
 
     return data, nonstationary
 
+def _get_minmax_lag(links):
+    """Helper function to retrieve tau_min and tau_max from links
+    """
+
+    N = len(links)
+
+    # Get maximum time lag
+    min_lag = np.inf
+    max_lag = 0
+    for j in range(N):
+        for link_props in links[j]:
+            var, lag = link_props[0]
+            coeff = link_props[1]
+            # func = link_props[2]
+            if coeff != 0.:
+                min_lag = min(min_lag, abs(lag))
+                max_lag = max(max_lag, abs(lag))
+    return min_lag, max_lag
+
+def _get_parents(links, exclude_contemp=False):
+    """Helper function to parents from links
+    """
+
+    N = len(links)
+
+    # Get maximum time lag
+    parents = {}
+    for j in range(N):
+        parents[j] = []
+        for link_props in links[j]:
+            var, lag = link_props[0]
+            coeff = link_props[1]
+            # func = link_props[2]
+            if coeff != 0.:
+                parents[j].append((var, lag))
+
+    return parents
+
 def links_to_graph(links, tau_max=None):
     """Helper function to convert dictionary of links to graph array format.
 
@@ -1315,13 +1353,7 @@ def links_to_graph(links, tau_max=None):
     N = len(links)
 
     # Get maximum time lag
-    max_lag = 0
-    for j in range(N):
-        for link_props in links[j]:
-            var, lag = link_props[0]
-            # coeff = link_props[1]
-            # func = link_props[2]
-            max_lag = max(max_lag, abs(lag))
+    min_lag, max_lag = _get_minmax_lag(links)
 
     # Set maximum lag
     if tau_max is None:
@@ -1335,9 +1367,10 @@ def links_to_graph(links, tau_max=None):
     graph = np.zeros((N, N, tau_max + 1), dtype='uint8')
     for j in links.keys():
         for link_props in links[j]:
-            var_lag, coeff, func = link_props
             var, lag = link_props[0]
-            graph[var, j, abs(lag)] = 1
+            coeff = link_props[1]
+            if coeff != 0.:
+                graph[var, j, abs(lag)] = 1
 
     return graph
 

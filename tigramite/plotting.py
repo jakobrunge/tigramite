@@ -1630,7 +1630,6 @@ def plot_time_series_graph(val_matrix,
     if var_names is None:
         var_names = range(N)
 
-
     if order is None:
         order = range(N)
 

@@ -2212,7 +2212,7 @@ class PCMCI():
                 i, tau = link
                 initial_graph[i, j, abs(tau)] = 1
 
-        skeleton_results = self._pcalg_skeleton_timeseries(
+        skeleton_results = self._pcalg_skeleton(
             initial_graph=initial_graph,
             lagged_parents=lagged_parents,
             mode=mode,
@@ -2228,7 +2228,7 @@ class PCMCI():
         skeleton_graph = skeleton_results['graph']
         sepset = skeleton_results['sepset']
 
-        colliders_step_results = self._pcalg_colliders_timeseries(
+        colliders_step_results = self._pcalg_colliders(
             graph=skeleton_graph,
             sepset=sepset,
             lagged_parents=lagged_parents,
@@ -2271,7 +2271,9 @@ class PCMCI():
         }
 
         if self.verbosity > 1:
+            print("\n-----------------------------")
             print("PCMCIplus algorithm finished.")
+            print("-----------------------------")
 
         return pc_results
 
@@ -2380,18 +2382,18 @@ class PCMCI():
 
         return pairs
 
-    def _pcalg_skeleton_timeseries(self,
-                                   initial_graph,
-                                   lagged_parents,
-                                   mode,
-                                   pc_alpha,
-                                   tau_min,
-                                   tau_max,
-                                   max_conds_dim,
-                                   max_combinations,
-                                   max_conds_py,
-                                   max_conds_px,
-                                   ):
+    def _pcalg_skeleton(self,
+                       initial_graph,
+                       lagged_parents,
+                       mode,
+                       pc_alpha,
+                       tau_min,
+                       tau_max,
+                       max_conds_dim,
+                       max_combinations,
+                       max_conds_py,
+                       max_conds_px,
+                       ):
         """Implements the skeleton discovery step of the PC algorithm for
         time series.
 
@@ -2724,18 +2726,18 @@ class PCMCI():
 
         return triples
 
-    def _pcalg_colliders_timeseries(self,
-                                    graph,
-                                    sepset,
-                                    lagged_parents,
-                                    mode,
-                                    pc_alpha,
-                                    tau_max,
-                                    max_conds_py,
-                                    max_conds_px,
-                                    contemp_collider_rule,
-                                    conflict_resolution,
-                                    ):
+    def _pcalg_colliders(self,
+                        graph,
+                        sepset,
+                        lagged_parents,
+                        mode,
+                        pc_alpha,
+                        tau_max,
+                        max_conds_py,
+                        max_conds_px,
+                        contemp_collider_rule,
+                        conflict_resolution,
+                        ):
         """Implements the collider orientation step of the PC algorithm for
         time series.
 
@@ -3264,6 +3266,8 @@ class PCMCI():
                     chains_left = True
                     # Orient as i_t --> j_t
                     (i, tau), k, j = itaukj
+                    _       , l, _ = itaulj
+
                     if (j, i) not in oriented_links and (
                             i, j) not in oriented_links:
                         if self.verbosity > 1:
