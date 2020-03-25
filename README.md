@@ -69,7 +69,7 @@ You commit to cite above papers in your reports or publications.
 
 ## License
 
-Copyright (C) 2014-2019 Jakob Runge
+Copyright (C) 2014-2020 Jakob Runge
 
 See license.txt for full text.
 
