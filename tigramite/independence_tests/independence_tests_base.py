@@ -312,7 +312,8 @@ class CondIndTest():
         arr_z = array[xyz==2][z_orderd]
         z_hash = sha1(np.ascontiguousarray(arr_z)).hexdigest()
 
-        combined_hash = (*sorted([x_hash, y_hash]), z_hash)
+        sorted_xy = sorted([x_hash, y_hash])
+        combined_hash = (sorted_xy[0], sorted_xy[1], z_hash)
         return combined_hash
 
 
