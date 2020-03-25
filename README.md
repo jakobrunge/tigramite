@@ -1,5 +1,5 @@
 # TIGRAMITE – Causal discovery for time series datasets
-Version 4.1 described in https://advances.sciencemag.org/content/5/11/eaau4996
+Version 4.2
 
 (Python Package)
 
@@ -10,9 +10,11 @@ Version 4.1 described in https://advances.sciencemag.org/content/5/11/eaau4996
 
 ## General Notes
 
-Tigramite is a causal time series analysis python package. It allows to efficiently reconstruct causal graphs from high-dimensional time series datasets and model the obtained causal dependencies for causal mediation and prediction analyses. Causal discovery is based on linear as well as non-parametric conditional independence tests applicable to discrete or continuously-valued time series. Currently, tigramite cannot identify causal directionality for contemporaneous links which are left undirected. Also includes functions for high-quality plots of the results. Please cite the following papers depending on which method you use:
+Tigramite is a causal time series analysis python package. It allows to
+ efficiently reconstruct causal graphs from high-dimensional time series datasets and model the obtained causal dependencies for causal mediation and prediction analyses. Causal discovery is based on linear as well as non-parametric conditional independence tests applicable to discrete or continuously-valued time series.  Also includes functions for high-quality plots of the results. Please cite the following papers depending on which method you use:
 
-- PCMCI: J. Runge, P. Nowack, M. Kretschmer, S. Flaxman, D. Sejdinovic, Detecting and quantifying causal associations in large nonlinear time series datasets. Sci. Adv. 5, eaau4996 (2019) . https://advances.sciencemag.org/content/5/11/eaau4996
+- PCMCI: J. Runge, P. Nowack, M. Kretschmer, S. Flaxman, D. Sejdinovic, Detecting and quantifying causal associations in large nonlinear time series datasets. Sci. Adv. 5, eaau4996 (2019). https://advances.sciencemag.org/content/5/11/eaau4996
+- PCMCI+: J. Runge (2020): Discovering contemporaneous and lagged causal relations in autocorrelated nonlinear time series datasets. https://arxiv.org/abs/2003.03685
 - Generally: J. Runge (2018): Causal Network Reconstruction from Time Series: From Theoretical Assumptions to Practical Estimation. Chaos: An Interdisciplinary Journal of Nonlinear Science 28 (7): 075310. https://aip.scitation.org/doi/10.1063/1.5025050
 - Nature Communications Perspective paper: https://www.nature.com/articles/s41467-019-10105-3
 - Mediation class: J. Runge et al. (2015): Identifying causal gateways and mediators in complex spatio-temporal systems. Nature Communications, 6, 8502. http://doi.org/10.1038/ncomms9502
@@ -32,7 +34,6 @@ Tigramite is a causal time series analysis python package. It allows to efficien
 - p-value correction and confidence interval estimation
 - causal mediation class to analyze causal pathways
 - prediction class based on sklearn models including causal feature selection
-- currently, tigramite cannot identify causal directionality for contemporaneous links which are left undirected
 
 
 ## Required python packages

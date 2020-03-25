@@ -31,7 +31,6 @@ https://advances.sciencemag.org/content/5/11/eaau4996
 in autocorrelated nonlinear time series datasets
 https://arxiv.org/abs/2003.03685
 
-
 3. J. Runge et al. (2015): Identifying causal gateways and mediators in
 complex spatio-temporal systems. Nature Communications, 6, 8502.
 http://doi.org/10.1038/ncomms9502
