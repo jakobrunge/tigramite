@@ -29,11 +29,6 @@ install:
   - conda install pip
   # Install numpy first to avoid headaches
   - pip install numpy
-  # Install the r_packages
-  - conda install rpy2
-  - conda install r-git2r
-  - ./install_r_packages.sh
-  # Install the packages needed for testing
   - pip install .["test"]
 script: 
   # Run the tests

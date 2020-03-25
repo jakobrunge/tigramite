@@ -8,6 +8,3 @@ dependencies:
     - networkx=1.10.0
     - cython>=0.26
     - mpi4py>=2.0.0
-    - pip
-    - pip:
-        - statsmodels >= 0.6.0
