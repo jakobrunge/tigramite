@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>tigramite.data_processing &#8212; Tigramite 4.1 documentation</title>
+    <title>tigramite.data_processing &#8212; Tigramite 4.2 documentation</title>
     <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
@@ -24,7 +24,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 4.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 4.2 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
       </ul>
     </div>
@@ -72,7 +72,6 @@
 <span class="sd">    ----------</span>
 <span class="sd">    data : array-like</span>
 <span class="sd">        Numpy array of shape (observations T, variables N)</span>
-
 <span class="sd">    mask : array-like, optional (default: None)</span>
 <span class="sd">        Optional mask array, must be of same shape as data</span>
 
@@ -80,20 +79,16 @@
 <span class="sd">    ----------</span>
 <span class="sd">    data : array-like</span>
 <span class="sd">        Numpy array of shape (observations T, variables N)</span>
-
 <span class="sd">    mask : array-like, optional (default: None)</span>
 <span class="sd">        Optional mask array, must be of same shape as data</span>
-
 <span class="sd">    missing_flag : number, optional (default: None)</span>
 <span class="sd">        Flag for missing values in dataframe. Dismisses all time slices of</span>
 <span class="sd">        samples where missing values occur in any variable and also flags</span>
 <span class="sd">        samples for all lags up to 2*tau_max. This avoids biases, see</span>
 <span class="sd">        section on masking in Supplement of [1]_.</span>
-
 <span class="sd">    var_names : list of strings, optional (default: range(N))</span>
 <span class="sd">        Names of variables, must match the number of variables. If None is</span>
 <span class="sd">        passed, variables are enumerated as [0, 1, ...]</span>
-
 <span class="sd">    datatime : array-like, optional (default: None)</span>
 <span class="sd">        Timelabel array. If None, range(T) is used.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -178,29 +173,23 @@
 <span class="sd">            where var specifies the variable index. X typically is of the form</span>
 <span class="sd">            [(varX, -tau)] with tau denoting the time lag and Z can be</span>
 <span class="sd">            multivariate [(var1, -lag), (var2, -lag), ...] .</span>
-
 <span class="sd">        tau_max : int</span>
 <span class="sd">            Maximum time lag. This may be used to make sure that estimates for</span>
 <span class="sd">            different lags in X and Z all have the same sample size.</span>
-
 <span class="sd">        mask : array-like, optional (default: None)</span>
 <span class="sd">            Optional mask array, must be of same shape as data.  If it is set,</span>
 <span class="sd">            then it overrides the self.mask assigned to the dataframe. If it is</span>
 <span class="sd">            None, then the self.mask is used, if it exists.</span>
-
 <span class="sd">        mask_type : {&#39;y&#39;,&#39;x&#39;,&#39;z&#39;,&#39;xy&#39;,&#39;xz&#39;,&#39;yz&#39;,&#39;xyz&#39;}</span>
 <span class="sd">            Masking mode: Indicators for which variables in the dependence</span>
 <span class="sd">            measure I(X; Y | Z) the samples should be masked. If None, &#39;y&#39; is</span>
 <span class="sd">            used, which excludes all time slices containing masked samples in Y.</span>
 <span class="sd">            Explained in [1]_.</span>
-
 <span class="sd">        return_cleaned_xyz : bool, optional (default: False)</span>
 <span class="sd">            Whether to return cleaned X,Y,Z, where possible duplicates are</span>
 <span class="sd">            removed.</span>
-
 <span class="sd">        do_checks : bool, optional (default: True)</span>
 <span class="sd">            Whether to perform sanity checks on input X,Y,Z</span>
-
 <span class="sd">        cut_off : {&#39;2xtau_max&#39;, &#39;max_lag&#39;, &#39;max_lag_or_tau_max&#39;}</span>
 <span class="sd">            How many samples to cutoff at the beginning. The default is</span>
 <span class="sd">            &#39;2xtau_max&#39;, which guarantees that MCI tests are all conducted on</span>
@@ -208,7 +197,6 @@
 <span class="sd">            which uses the maximum of tau_max and the conditions, which is</span>
 <span class="sd">            useful to compare multiple models on the same sample.  Last,</span>
 <span class="sd">            &#39;max_lag&#39; uses as much samples as possible.</span>
-
 <span class="sd">        verbosity : int, optional (default: 0)</span>
 <span class="sd">            Level of verbosity.</span>
 
@@ -216,12 +204,13 @@
 <span class="sd">        -------</span>
 <span class="sd">        array, xyz [,XYZ] : Tuple of data array of shape (dim, T) and xyz</span>
 <span class="sd">            identifier array of shape (dim,) identifying which row in array</span>
-<span class="sd">            corresponds to X, Y, and Z. For example::</span>
-<span class="sd">                X = [(0, -1)], Y = [(1, 0)], Z = [(1, -1), (0, -2)]</span>
-<span class="sd">                yields an array of shape (5, T) and xyz is</span>
-<span class="sd">                xyz = numpy.array([0,1,2,2])</span>
-<span class="sd">            If return_cleaned_xyz is True, also outputs the cleaned XYZ lists.</span>
+<span class="sd">            corresponds to X, Y, and Z. For example:: X = [(0, -1)], Y = [(1,</span>
+<span class="sd">            0)], Z = [(1, -1), (0, -2)] yields an array of shape (5, T) and</span>
+<span class="sd">            xyz is xyz = numpy.array([0,1,2,2]) If return_cleaned_xyz is</span>
+<span class="sd">            True, also outputs the cleaned XYZ lists.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="c1"># Get the length in time and the number of nodes</span>
         <span class="n">T</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">shape</span>
 
@@ -333,13 +322,10 @@
 <span class="sd">            Y : list of tuples</span>
 <span class="sd">                Of the form [(var, -tau)], where var specifies the variable</span>
 <span class="sd">                index and tau the time lag.</span>
-
 <span class="sd">            XYZ : list of tuples</span>
 <span class="sd">                List of nodes chosen for current independence test</span>
-
 <span class="sd">            N : int</span>
 <span class="sd">                Total number of listed nodes</span>
-
 <span class="sd">            dim : int</span>
 <span class="sd">                Number of nodes excluding repeated nodes</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -364,19 +350,17 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        array : Data array of shape (dim, T)</span>
-
+<span class="sd">            Data array.</span>
 <span class="sd">        X, Y, Z : list of tuples</span>
 <span class="sd">            For a dependence measure I(X;Y|Z), Y is of the form [(varY, 0)],</span>
 <span class="sd">            where var specifies the variable index. X typically is of the form</span>
 <span class="sd">            [(varX, -tau)] with tau denoting the time lag and Z can be</span>
 <span class="sd">            multivariate [(var1, -lag), (var2, -lag), ...] .</span>
-
 <span class="sd">        missing_flag : number, optional (default: None)</span>
 <span class="sd">            Flag for missing values. Dismisses all time slices of samples where</span>
 <span class="sd">            missing values occur in any variable and also flags samples for all</span>
 <span class="sd">            lags up to 2*tau_max. This avoids biases, see section on masking in</span>
 <span class="sd">            Supplement of [1]_.</span>
-
 <span class="sd">        mask_type : {&#39;y&#39;,&#39;x&#39;,&#39;z&#39;,&#39;xy&#39;,&#39;xz&#39;,&#39;yz&#39;,&#39;xyz&#39;}</span>
 <span class="sd">            Masking mode: Indicators for which variables in the dependence</span>
 <span class="sd">            measure I(X; Y | Z) the samples should be masked. If None, &#39;y&#39; is</span>
@@ -405,10 +389,8 @@
 <span class="sd">    ----------</span>
 <span class="sd">    data : array</span>
 <span class="sd">        Data array of shape (time, variables).</span>
-
 <span class="sd">    cutperiod : int</span>
 <span class="sd">        Period of cutoff.</span>
-
 <span class="sd">    pass_periods : str, optional (default: &#39;low&#39;)</span>
 <span class="sd">        Either &#39;low&#39; or &#39;high&#39; to act as a low- or high-pass filter</span>
 
@@ -451,16 +433,12 @@
 <span class="sd">    ----------</span>
 <span class="sd">    data : array</span>
 <span class="sd">        Data array of shape (time, variables).</span>
-
 <span class="sd">    smooth_width : float</span>
 <span class="sd">        Window width of smoothing, 2*sigma for a gaussian.</span>
-
 <span class="sd">    kernel : str, optional (default: &#39;gaussian&#39;)</span>
 <span class="sd">        Smoothing kernel, &#39;gaussian&#39; or &#39;heaviside&#39; for a running mean.</span>
-
 <span class="sd">    mask : bool array, optional (default: None)</span>
 <span class="sd">        Data mask where True labels masked samples.</span>
-
 <span class="sd">    residuals : bool, optional (default: False)</span>
 <span class="sd">        True if residuals should be returned instead of smoothed data.</span>
 
@@ -517,10 +495,8 @@
 <span class="sd">    ---------</span>
 <span class="sd">    values : array</span>
 <span class="sd">        Data array of shape (time, variables).</span>
-
 <span class="sd">    axis : int</span>
 <span class="sd">        Axis to average/std about</span>
-
 <span class="sd">    weights : array</span>
 <span class="sd">        Weight array of shape (time, variables).</span>
 
@@ -546,10 +522,8 @@
 <span class="sd">    ----------</span>
 <span class="sd">    data : array</span>
 <span class="sd">        Data array of shape (time, variables).</span>
-
 <span class="sd">    time_bin_length : int</span>
 <span class="sd">        Length of time bin.</span>
-
 <span class="sd">    mask : bool array, optional (default: None)</span>
 <span class="sd">        Data mask where True labels masked samples.</span>
 
@@ -607,19 +581,14 @@
 <span class="sd">    ----------</span>
 <span class="sd">    array : array-like</span>
 <span class="sd">        Data array of shape (time, variables).</span>
-
 <span class="sd">    array_mask : bool array</span>
 <span class="sd">        Data mask where True labels masked samples.</span>
-
 <span class="sd">    dim : int, optional (default: 2)</span>
 <span class="sd">        Pattern dimension</span>
-
 <span class="sd">    step : int, optional (default: 1)</span>
 <span class="sd">        Delay of pattern embedding vector.</span>
-
 <span class="sd">    weights : bool, optional (default: False)</span>
 <span class="sd">        Whether to return array of variances of embedding vectors as weights.</span>
-
 <span class="sd">    verbosity : int, optional (default: 0)</span>
 <span class="sd">        Level of verbosity.</span>
 
@@ -698,7 +667,6 @@
 <span class="sd">    ----------</span>
 <span class="sd">    data : array</span>
 <span class="sd">        Data array of shape (time, variables).</span>
-
 <span class="sd">    bins : int, optional (default: 6)</span>
 <span class="sd">        Number of bins.</span>
 
@@ -732,10 +700,8 @@
 <span class="sd">    ----------</span>
 <span class="sd">    covar_matrix : array</span>
 <span class="sd">        Covariance matrix of the random variables</span>
-
 <span class="sd">    time : int</span>
 <span class="sd">        Sample size</span>
-
 <span class="sd">    use_inverse : bool, optional</span>
 <span class="sd">        Negate the off-diagonal elements and invert the covariance matrix</span>
 <span class="sd">        before use</span>
@@ -854,17 +820,13 @@
 <span class="sd">    ----------</span>
 <span class="sd">    graph : array</span>
 <span class="sd">        Lagged connectivity matrices. Shape is (n_nodes, n_nodes, max_delay+1)</span>
-
 <span class="sd">    add_noise : bool, optional (default: True)</span>
 <span class="sd">        Flag to add random noise or not</span>
-
 <span class="sd">    inno_cov : array, optional (default: None)</span>
 <span class="sd">        Covariance matrix of innovations.</span>
-
 <span class="sd">    invert_inno : bool, optional (defualt : False)</span>
 <span class="sd">        Flag to negate off-diagonal elements of inno_cov and invert it before</span>
 <span class="sd">        using it as the covariance matrix of innovations</span>
-
 <span class="sd">    T : int, optional (default: 100)</span>
 <span class="sd">        Sample size.</span>
 
@@ -1152,25 +1114,20 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    parents_neighbors_coeffs : dict</span>
-<span class="sd">        Dictionary of format:</span>
-<span class="sd">            {..., j:[((var1, lag1), coef1), ((var2, lag2), coef2), ...], ...}</span>
-<span class="sd">        for all variables where vars must be in [0..N-1] and lags &lt;= 0 with</span>
-<span class="sd">        number of variables N. If lag=0, a nonzero value in the covariance</span>
-<span class="sd">        matrix (or its inverse) is implied. These should be the same for (i, j)</span>
-<span class="sd">        and (j, i).</span>
-
+<span class="sd">        Dictionary of format: {..., j:[((var1, lag1), coef1), ((var2, lag2),</span>
+<span class="sd">        coef2), ...], ...} for all variables where vars must be in [0..N-1]</span>
+<span class="sd">        and lags &lt;= 0 with number of variables N. If lag=0, a nonzero value</span>
+<span class="sd">        in the covariance matrix (or its inverse) is implied. These should be</span>
+<span class="sd">        the same for (i, j) and (j, i).</span>
 <span class="sd">    use : str, optional (default: &#39;inv_inno_cov&#39;)</span>
 <span class="sd">        Specifier, either &#39;inno_cov&#39; or &#39;inv_inno_cov&#39;.</span>
 <span class="sd">        Any other specifier will result in non-correlated noise.</span>
 <span class="sd">        For debugging, &#39;no_noise&#39; can also be specified, in which case random</span>
 <span class="sd">        noise will be disabled.</span>
-
 <span class="sd">    T : int, optional (default: 1000)</span>
 <span class="sd">        Sample size.</span>
-
 <span class="sd">    verbosity : int, optional (default: 0)</span>
 <span class="sd">        Level of verbosity.</span>
-
 <span class="sd">    initial_values : array, optional (default: None)</span>
 <span class="sd">        Initial values for each node. Shape must be (N, max_delay+1)</span>
 
@@ -1224,6 +1181,250 @@
     <span class="c1"># Return the data</span>
     <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">true_parents_neighbors</span></div>
 
+<div class="viewcode-block" id="Graph"><a class="viewcode-back" href="../../index.html#tigramite.data_processing.Graph">[docs]</a><span class="k">class</span> <span class="nc">Graph</span><span class="p">():</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Helper class to handle graph properties.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    vertices : list</span>
+<span class="sd">        List of nodes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">vertices</span><span class="p">):</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">V</span> <span class="o">=</span> <span class="n">vertices</span> 
+  
+<div class="viewcode-block" id="Graph.addEdge"><a class="viewcode-back" href="../../index.html#tigramite.data_processing.Graph.addEdge">[docs]</a>    <span class="k">def</span> <span class="nf">addEdge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adding edge to graph.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> </div>
+  
+<div class="viewcode-block" id="Graph.isCyclicUtil"><a class="viewcode-back" href="../../index.html#tigramite.data_processing.Graph.isCyclicUtil">[docs]</a>    <span class="k">def</span> <span class="nf">isCyclicUtil</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">visited</span><span class="p">,</span> <span class="n">recStack</span><span class="p">):</span> 
+        <span class="sd">&quot;&quot;&quot;Utility function to return whether graph is cyclic.&quot;&quot;&quot;</span>
+        <span class="c1"># Mark current node as visited and</span>
+        <span class="c1"># adds to recursion stack </span>
+        <span class="n">visited</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">recStack</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+  
+        <span class="c1"># Recur for all neighbours </span>
+        <span class="c1"># if any neighbour is visited and in  </span>
+        <span class="c1"># recStack then graph is cyclic </span>
+        <span class="k">for</span> <span class="n">neighbour</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="n">v</span><span class="p">]:</span> 
+            <span class="k">if</span> <span class="n">visited</span><span class="p">[</span><span class="n">neighbour</span><span class="p">]</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span> 
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isCyclicUtil</span><span class="p">(</span><span class="n">neighbour</span><span class="p">,</span> <span class="n">visited</span><span class="p">,</span> <span class="n">recStack</span><span class="p">)</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span> 
+                    <span class="k">return</span> <span class="kc">True</span>
+            <span class="k">elif</span> <span class="n">recStack</span><span class="p">[</span><span class="n">neighbour</span><span class="p">]</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span> 
+                <span class="k">return</span> <span class="kc">True</span>
+  
+        <span class="c1"># The node needs to be poped from  </span>
+        <span class="c1"># recursion stack before function ends </span>
+        <span class="n">recStack</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+  
+<div class="viewcode-block" id="Graph.isCyclic"><a class="viewcode-back" href="../../index.html#tigramite.data_processing.Graph.isCyclic">[docs]</a>    <span class="k">def</span> <span class="nf">isCyclic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns whether graph is cyclic.&quot;&quot;&quot;</span>
+        <span class="n">visited</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">V</span> 
+        <span class="n">recStack</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">V</span> 
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">V</span><span class="p">):</span> 
+            <span class="k">if</span> <span class="n">visited</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span> 
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isCyclicUtil</span><span class="p">(</span><span class="n">node</span><span class="p">,</span><span class="n">visited</span><span class="p">,</span><span class="n">recStack</span><span class="p">)</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span> 
+                    <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+  
+<div class="viewcode-block" id="Graph.topologicalSortUtil"><a class="viewcode-back" href="../../index.html#tigramite.data_processing.Graph.topologicalSortUtil">[docs]</a>    <span class="k">def</span> <span class="nf">topologicalSortUtil</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">visited</span><span class="p">,</span><span class="n">stack</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A recursive function used by topologicalSort .&quot;&quot;&quot;</span>
+        <span class="c1"># Mark the current node as visited.</span>
+        <span class="n">visited</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1"># Recur for all the vertices adjacent to this vertex</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="n">v</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">visited</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">topologicalSortUtil</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">visited</span><span class="p">,</span><span class="n">stack</span><span class="p">)</span>
+
+        <span class="c1"># Push current vertex to stack which stores result</span>
+        <span class="n">stack</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">v</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Graph.topologicalSort"><a class="viewcode-back" href="../../index.html#tigramite.data_processing.Graph.topologicalSort">[docs]</a>    <span class="k">def</span> <span class="nf">topologicalSort</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A sorting function. &quot;&quot;&quot;</span>
+        <span class="c1"># Mark all the vertices as not visited </span>
+        <span class="n">visited</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">V</span> 
+        <span class="n">stack</span> <span class="o">=</span><span class="p">[]</span> 
+
+        <span class="c1"># Call the recursive helper function to store Topological </span>
+        <span class="c1"># Sort starting from all vertices one by one </span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">V</span><span class="p">):</span> 
+          <span class="k">if</span> <span class="n">visited</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span> 
+              <span class="bp">self</span><span class="o">.</span><span class="n">topologicalSortUtil</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">visited</span><span class="p">,</span><span class="n">stack</span><span class="p">)</span> 
+
+        <span class="k">return</span> <span class="n">stack</span></div></div>
+
+<div class="viewcode-block" id="structural_causal_process"><a class="viewcode-back" href="../../index.html#tigramite.data_processing.structural_causal_process">[docs]</a><span class="k">def</span> <span class="nf">structural_causal_process</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">noises</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a structural causal process with contemporaneous and lagged</span>
+<span class="sd">    dependencies.</span>
+
+<span class="sd">    Generates generalized additive noise model process of the form</span>
+
+<span class="sd">    .. math:: X^j_t = \\eta^j_t + \\sum_{X^i_{t-\\tau}\\in \\mathcal{P}(X^j_t)}</span>
+<span class="sd">              c^i_{\\tau} f^i_{\\tau}(X^i_{t-\\tau})</span>
+
+<span class="sd">    Links have the format ``{0:[((i, -tau), coeff, func),...], 1:[...],</span>
+<span class="sd">    ...}`` where ``func`` can be an arbitrary (nonlinear) function provided</span>
+<span class="sd">    as a python callable with one argument and coeff is the multiplication</span>
+<span class="sd">    factor. The noise distributions of :math:`\\eta^j` can be specified in</span>
+<span class="sd">    ``noises``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    links : dict</span>
+<span class="sd">        Dictionary of format: {0:[((i, -tau), coeff, func),...], 1:[...],</span>
+<span class="sd">        ...} for all variables where i must be in [0..N-1] and tau &gt;= 0 with</span>
+<span class="sd">        number of variables N. coeff must be a float and func a python</span>
+<span class="sd">        callable of one argument.</span>
+<span class="sd">    T : int</span>
+<span class="sd">        Sample size.</span>
+<span class="sd">    noises : list of callables, optional (default: &#39;np.random.randn&#39;)</span>
+<span class="sd">        Random distribution function that is called with noises[j](T).</span>
+<span class="sd">    seed : int, optional (default: None)</span>
+<span class="sd">        Random seed.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    data : array-like</span>
+<span class="sd">        Data generated from this process, shape (T, N).</span>
+<span class="sd">    nonstationary : bool</span>
+<span class="sd">        Indicates whether data has NaNs or infinities.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">links</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">noises</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">noises</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)]</span>
+
+    <span class="k">if</span> <span class="n">N</span> <span class="o">!=</span> <span class="nb">max</span><span class="p">(</span><span class="n">links</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">+</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">N</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">noises</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;links and noises keys must match N.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Check parameters</span>
+    <span class="n">max_lag</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">contemp_dag</span> <span class="o">=</span> <span class="n">Graph</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">link_props</span> <span class="ow">in</span> <span class="n">links</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
+            <span class="n">var</span><span class="p">,</span> <span class="n">lag</span> <span class="o">=</span> <span class="n">link_props</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">coeff</span> <span class="o">=</span> <span class="n">link_props</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">func</span> <span class="o">=</span> <span class="n">link_props</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">lag</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="n">contemp</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="n">var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;var must be in 0..</span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">N</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+            <span class="k">if</span> <span class="s1">&#39;float&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">coeff</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;coeff must be float.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">lag</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="n">lag</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;lag must be non-positive int.&quot;</span><span class="p">)</span>
+            <span class="n">max_lag</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_lag</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">lag</span><span class="p">))</span>
+
+            <span class="c1"># Create contemp DAG</span>
+            <span class="k">if</span> <span class="n">var</span> <span class="o">!=</span> <span class="n">j</span> <span class="ow">and</span> <span class="n">lag</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">contemp_dag</span><span class="o">.</span><span class="n">addEdge</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">contemp_dag</span><span class="o">.</span><span class="n">isCyclic</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span> 
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Contemporaneous links must not contain cycle.&quot;</span><span class="p">)</span>
+
+    <span class="n">causal_order</span> <span class="o">=</span> <span class="n">contemp_dag</span><span class="o">.</span><span class="n">topologicalSort</span><span class="p">()</span> 
+
+    <span class="n">transient</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="o">.</span><span class="mi">2</span><span class="o">*</span><span class="n">T</span><span class="p">)</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">T</span><span class="o">+</span><span class="n">transient</span><span class="p">,</span> <span class="n">N</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+        <span class="n">data</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">noises</span><span class="p">[</span><span class="n">j</span><span class="p">](</span><span class="n">T</span><span class="o">+</span><span class="n">transient</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_lag</span><span class="p">,</span> <span class="n">T</span><span class="o">+</span><span class="n">transient</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">causal_order</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">link_props</span> <span class="ow">in</span> <span class="n">links</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
+                <span class="n">var</span><span class="p">,</span> <span class="n">lag</span> <span class="o">=</span> <span class="n">link_props</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">coeff</span> <span class="o">=</span> <span class="n">link_props</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">func</span> <span class="o">=</span> <span class="n">link_props</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">t</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">coeff</span> <span class="o">*</span> <span class="n">func</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">t</span> <span class="o">+</span> <span class="n">lag</span><span class="p">,</span> <span class="n">var</span><span class="p">])</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">transient</span><span class="p">:]</span>
+
+    <span class="n">nonstationary</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">data</span><span class="p">))</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">data</span><span class="p">)))</span>
+
+    <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">nonstationary</span></div>
+
+<span class="k">def</span> <span class="nf">_get_minmax_lag</span><span class="p">(</span><span class="n">links</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Helper function to retrieve tau_min and tau_max from links</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">links</span><span class="p">)</span>
+
+    <span class="c1"># Get maximum time lag</span>
+    <span class="n">min_lag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+    <span class="n">max_lag</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">link_props</span> <span class="ow">in</span> <span class="n">links</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
+            <span class="n">var</span><span class="p">,</span> <span class="n">lag</span> <span class="o">=</span> <span class="n">link_props</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">coeff</span> <span class="o">=</span> <span class="n">link_props</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="c1"># func = link_props[2]</span>
+            <span class="k">if</span> <span class="n">coeff</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">:</span>
+                <span class="n">min_lag</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">min_lag</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">lag</span><span class="p">))</span>
+                <span class="n">max_lag</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_lag</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">lag</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">min_lag</span><span class="p">,</span> <span class="n">max_lag</span>
+
+<span class="k">def</span> <span class="nf">_get_parents</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">exclude_contemp</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Helper function to parents from links</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">links</span><span class="p">)</span>
+
+    <span class="c1"># Get maximum time lag</span>
+    <span class="n">parents</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+        <span class="n">parents</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">link_props</span> <span class="ow">in</span> <span class="n">links</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
+            <span class="n">var</span><span class="p">,</span> <span class="n">lag</span> <span class="o">=</span> <span class="n">link_props</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">coeff</span> <span class="o">=</span> <span class="n">link_props</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="c1"># func = link_props[2]</span>
+            <span class="k">if</span> <span class="n">coeff</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">:</span>
+                <span class="n">parents</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">var</span><span class="p">,</span> <span class="n">lag</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">parents</span>
+
+<div class="viewcode-block" id="links_to_graph"><a class="viewcode-back" href="../../index.html#tigramite.data_processing.links_to_graph">[docs]</a><span class="k">def</span> <span class="nf">links_to_graph</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Helper function to convert dictionary of links to graph array format.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ---------</span>
+<span class="sd">    links : dict</span>
+<span class="sd">        Dictionary of form {0:[((0, -1), coeff, func), ...], 1:[...], ...}.</span>
+<span class="sd">    tau_max : int or None</span>
+<span class="sd">        Maximum lag. If None, the maximum lag in links is used.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    graph : array of shape (N, N, tau_max+1)</span>
+<span class="sd">        Matrix format of graph with 1 for true links and 0 else.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">links</span><span class="p">)</span>
+
+    <span class="c1"># Get maximum time lag</span>
+    <span class="n">min_lag</span><span class="p">,</span> <span class="n">max_lag</span> <span class="o">=</span> <span class="n">_get_minmax_lag</span><span class="p">(</span><span class="n">links</span><span class="p">)</span>
+
+    <span class="c1"># Set maximum lag</span>
+    <span class="k">if</span> <span class="n">tau_max</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">tau_max</span> <span class="o">=</span> <span class="n">max_lag</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">max_lag</span> <span class="o">&gt;</span> <span class="n">tau_max</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;tau_max is smaller than maximum lag = </span><span class="si">%d</span><span class="s2"> &quot;</span>
+                             <span class="s2">&quot;found in links, use tau_max=None or larger &quot;</span>
+                             <span class="s2">&quot;value&quot;</span> <span class="o">%</span> <span class="n">max_lag</span><span class="p">)</span>
+
+    <span class="n">graph</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;uint8&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">links</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">link_props</span> <span class="ow">in</span> <span class="n">links</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
+            <span class="n">var</span><span class="p">,</span> <span class="n">lag</span> <span class="o">=</span> <span class="n">link_props</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">coeff</span> <span class="o">=</span> <span class="n">link_props</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">coeff</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">:</span>
+                <span class="n">graph</span><span class="p">[</span><span class="n">var</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">lag</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">graph</span></div>
+
 <span class="k">class</span> <span class="nc">_Logger</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Class to append print output to a string which can be saved&quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1233,6 +1434,22 @@
     <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">terminal</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">+=</span> <span class="n">message</span>  <span class="c1"># .write(message)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    
+    <span class="c1">## Generate some time series from a structural causal process</span>
+    <span class="k">def</span> <span class="nf">lin_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span>
+    <span class="k">def</span> <span class="nf">nonlin_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mf">5.</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="mf">20.</span><span class="p">))</span>
+
+    <span class="n">links</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">[((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.9</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
+             <span class="mi">1</span><span class="p">:</span> <span class="p">[((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">nonlin_f</span><span class="p">)],</span>
+             <span class="mi">2</span><span class="p">:</span> <span class="p">[((</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.7</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="o">-</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
+             <span class="p">}</span>
+    <span class="n">noises</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">]</span>
+    <span class="n">data</span><span class="p">,</span> <span class="n">nonstat</span> <span class="o">=</span> <span class="n">structural_causal_process</span><span class="p">(</span><span class="n">links</span><span class="p">,</span>
+     <span class="n">T</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">noises</span><span class="o">=</span><span class="n">noises</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 </pre></div>
 
           </div>
@@ -1249,12 +1466,12 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 4.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 4.2 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2018, Jakob Runge.
+        &#169; Copyright 2020, Jakob Runge.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
     </div>
   </body>

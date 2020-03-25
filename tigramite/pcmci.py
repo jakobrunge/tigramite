@@ -49,18 +49,19 @@ class PCMCI():
     datasets. This class contains several methods. The standard PCMCI method
     addresses time-lagged causal discovery and is described in [1]_ where
     also further sub-variants are discussed. Lagged as well as contemporaneous
-    causal discovery is addressed with PCMCIplus and described in [2]_. See the
+    causal discovery is addressed with PCMCIplus and described in [5]_. See the
     tutorials for guidance in applying these methods.
 
     PCMCI has:
 
-       * different conditional independence tests adapted to linear or
-       nonlinear dependencies, and continuously-valued or discrete data (
-       implemented in ``tigramite.independence_tests``)
-       * (mostly) hyperparameter optimization
-       * easy parallelization (separate script)
-       * handling of masked time series data
-       * false discovery control and confidence interval estimation
+    * different conditional independence tests adapted to linear or
+      nonlinear dependencies, and continuously-valued or discrete data (
+      implemented in ``tigramite.independence_tests``)
+    * (mostly) hyperparameter optimization
+    * easy parallelization (separate script)
+    * handling of masked time series data
+    * false discovery control and confidence interval estimation
+
 
     Notes
     -----
@@ -74,7 +75,7 @@ class PCMCI():
     different times and a link indicates a conditional dependency that can be
     interpreted as a causal dependency under certain assumptions (see paper).
     Assuming stationarity, the links are repeated in time. The parents
-    :math:`\mathcal{P}` of a variable are defined as the set of all nodes
+    :math:`\\mathcal{P}` of a variable are defined as the set of all nodes
     with a link towards it (blue and red boxes in Figure).
 
     The different PCMCI methods estimate causal links by iterative
@@ -91,7 +92,7 @@ class PCMCI():
            series datasets. Sci. Adv. 5, eaau4996 (2019) 
            https://advances.sciencemag.org/content/5/11/eaau4996
 
-    .. [2] J. Runge,
+    .. [5] J. Runge,
            Discovering contemporaneous and lagged causal relations in 
            autocorrelated nonlinear time series datasets
            https://arxiv.org/abs/2003.03685
@@ -1573,7 +1574,7 @@ class PCMCI():
                 * 'p_matrix'
                 * 'val_matrix'
                 * 'conf_matrix'
-            'q_matrix' can also be included in keys, but is not necessary.
+                * 'q_matrix' can also be included in keys, but is not necessary.
 
         alpha_level : float, optional (default: 0.05)
             Significance level.
@@ -1624,9 +1625,6 @@ class PCMCI():
         Notes
         -----
 
-        .. image:: mci_schematic.*
-           :width: 200pt
-
         The PCMCI causal discovery method is comprehensively described in [
         1]_, where also analytical and numerical results are presented. Here
         we briefly summarize the method.
@@ -1634,15 +1632,15 @@ class PCMCI():
         PCMCI estimates time-lagged causal links by a two-step procedure:
 
         1.  Condition-selection: For each variable :math:`j`, estimate a
-        *superset*  of parents :math:`\tilde{\mathcal{P}}(X^j_t)` with the
-        iterative PC1 algorithm , implemented as ``run_pc_stable``. The
-        condition-selection step reduces the dimensionality and avoids
-        conditioning on irrelevant variables.
+            *superset* of parents :math:`\\tilde{\mathcal{P}}(X^j_t)` with the
+            iterative PC1 algorithm, implemented as ``run_pc_stable``. The
+            condition-selection step reduces the dimensionality and avoids
+            conditioning on irrelevant variables.
 
         2.  *Momentary conditional independence* (MCI)
 
-            .. math:: X^i_{t-\tau} ~\perp~ X^j_{t} ~|~ \tilde{\mathcal{P}}(
-            X^j_t), \tilde{\mathcal{P}}(X^i_{t-{\tau}})
+        .. math:: X^i_{t-\\tau} \perp X^j_{t} | \\tilde{\\mathcal{P}}(
+                  X^j_t), \\tilde{\mathcal{P}}(X^i_{t-\\tau})
 
         here implemented as ``run_mci``. This step estimates the p-values and
         test statistic values for all links accounting for common drivers,
@@ -1655,17 +1653,17 @@ class PCMCI():
 
         The main free parameters of PCMCI (in addition to free parameters of
         the conditional independence test statistic) are the maximum time
-        delay :math:`\tau_{\max}` (``tau_max``) and the significance
-        threshold in the condition-selection step :math:`\alpha` (
+        delay :math:`\\tau_{\\max}` (``tau_max``) and the significance
+        threshold in the condition-selection step :math:`\\alpha` (
         ``pc_alpha``). The maximum time delay depends on the application and
         should be chosen according to the maximum causal time lag expected in
         the complex system. We recommend a rather large choice that includes
-        peaks in the ``get_lagged_dependencies`` function. :math:`\alpha`
+        peaks in the ``get_lagged_dependencies`` function. :math:`\\alpha`
         should not be seen as a significance test level in the
         condition-selection step since the iterative hypothesis tests do not
-        allow for a precise assessment. :math:`\alpha` rather takes the role
+        allow for a precise assessment. :math:`\\alpha` rather takes the role
         of a regularization parameter in model-selection techniques. If a
-        list of values is given or ``pc_alpha=None``, :math:`\alpha` is
+        list of values is given or ``pc_alpha=None``, :math:`\\alpha` is
         optimized using model selection criteria implemented in the respective
         ``tigramite.independence_tests``.
 
@@ -1702,10 +1700,12 @@ class PCMCI():
 
             Variable 1 has 2 link(s):
                 (1 -1): pval = 0.00000 | val = 0.653
+
                 (0 -1): pval = 0.00000 | val = 0.444
 
             Variable 2 has 2 link(s):
                 (2 -1): pval = 0.00000 | val = 0.623
+
                 (1 -2): pval = 0.00000 | val = -0.533
 
         Parameters
@@ -1749,7 +1749,9 @@ class PCMCI():
             Estimated matrix of confidence intervals of test statistic values.
             Only computed if set in cond_ind_test, where also the percentiles
             are set.
+
         """
+
         # Get the parents from run_pc_stable
         all_parents = self.run_pc_stable(selected_links=selected_links,
                                          tau_min=tau_min,
@@ -1808,12 +1810,12 @@ class PCMCI():
         """Runs PCMCIplus time-lagged and contemporaneous causal discovery for
         time series.
 
-        Method described in [2]_: https://arxiv.org/abs/2003.03685
+        Method described in [5]_: https://arxiv.org/abs/2003.03685
 
         Notes
         -----
 
-        The PCMCIplus causal discovery method is described in [2]_, where
+        The PCMCIplus causal discovery method is described in [5]_, where
         also analytical and numerical results are presented. In contrast to
         PCMCI, PCMCIplus can identify the full, lagged and contemporaneous,
         causal graph (up to the Markov equivalence class for contemporaneous
@@ -1824,20 +1826,20 @@ class PCMCI():
         four-step procedure:
 
         1.  Condition-selection (same as for PCMCI): For each variable
-        :math:`j`, estimate a *superset* of lagged parents :math:`\widehat{
-        \mathcal{B}}_t^-( X^j_t)` with the iterative PC1 algorithm,
+        :math:`j`, estimate a *superset* of lagged parents :math:`\\widehat{
+        \\mathcal{B}}_t^-( X^j_t)` with the iterative PC1 algorithm,
         implemented as ``run_pc_stable``. The condition-selection step
         reduces the dimensionality and avoids conditioning on irrelevant
         variables.
 
         2.   PC skeleton phase with contemporaneous conditions and *Momentary
         conditional independence* (MCI) tests: Iterate through subsets
-        :math:`\mathcal{S}` of contemporaneous adjacencies and conduct MCI
+        :math:`\\mathcal{S}` of contemporaneous adjacencies and conduct MCI
         conditional independence tests:
 
-            .. math:: X^i_{t-\tau} ~\perp~ X^j_{t} ~|~ \mathcal{S},
-            \widehat{\mathcal{B}}_t^-(X^j_t),
-            \widehat{\mathcal{B}}_{t-\tau}^-(X^i_{t-{\tau}})
+        .. math:: X^i_{t-\\tau} ~\\perp~ X^j_{t} ~|~ \\mathcal{S},
+                  \\widehat{\\mathcal{B}}_t^-(X^j_t),
+                  \\widehat{\\mathcal{B}}_{t-\\tau}^-(X^i_{t-{\\tau}})
 
         here implemented as ``run_pcalg``. This step estimates the p-values and
         test statistic values for all lagged and contemporaneous adjacencies
@@ -1853,21 +1855,21 @@ class PCMCI():
         In contrast to PCMCI, the relevant output of PCMCIplus is the
         array ``graph``. Its entries are interpreted as follows:
 
-         * ``graph[i,j,tau]=1`` for :math:`\tau>0` denotes a directed,
-         lagged causal link from :math:`i` to :math:`j` at lag :math:`\tau`
+        * ``graph[i,j,tau]=1`` for :math:`\\tau>0` denotes a directed, lagged
+          causal link from :math:`i` to :math:`j` at lag :math:`\\tau`
 
-         * ``graph[i,j,0]=1`` and ``graph[j,i,0]=0`` denotes a directed,
-         contemporaneous causal link from :math:`i` to :math:`j`
+        * ``graph[i,j,0]=1`` and ``graph[j,i,0]=0`` denotes a directed,
+          contemporaneous causal link from :math:`i` to :math:`j`
 
-         * ``graph[i,j,0]=1`` and ``graph[j,i,0]=1`` denotes an unoriented,
-         contemporaneous adjacency between :math:`i` and :math:`j` indicating
-         that the collider and orientation rules could not be applied (Markov
-         equivalence)
+        * ``graph[i,j,0]=1`` and ``graph[j,i,0]=1`` denotes an unoriented,
+          contemporaneous adjacency between :math:`i` and :math:`j` indicating
+          that the collider and orientation rules could not be applied (Markov
+          equivalence)
 
-         * ``graph[i,j,0]=2`` and ``graph[j,i,0]=2`` denotes a conflicting,
-         contemporaneous adjacency between :math:`i` and :math:`j` indicating
-         that the directionality is undecided due to conflicting orientation
-         rules
+        * ``graph[i,j,0]=2`` and ``graph[j,i,0]=2`` denotes a conflicting,
+          contemporaneous adjacency between :math:`i` and :math:`j` indicating
+          that the directionality is undecided due to conflicting orientation
+          rules
 
         Importantly, ``p_matrix`` and ``val_matrix`` for PCMCIplus quantify
         the uncertainty and strength, respectively, only for the
@@ -1881,8 +1883,8 @@ class PCMCI():
 
         The main free parameters of PCMCIplus (in addition to free parameters
         of the conditional independence tests) are the maximum time delay
-        :math:`\tau_{\max}` (``tau_max``) and the significance threshold
-        :math:`\alpha` ( ``pc_alpha``). The maximum time delay depends on the
+        :math:`\\tau_{\\max}` (``tau_max``) and the significance threshold
+        :math:`\\alpha` ( ``pc_alpha``). The maximum time delay depends on the
         application and should be chosen according to the maximum causal time
         lag expected in the complex system. We recommend a rather large
         choice that includes peaks in the ``get_lagged_dependencies``
@@ -1892,12 +1894,12 @@ class PCMCI():
         meaning that the order of the N variables in the dataframe does not
         matter. Last, the default option ``reset_lagged_links=False``
         restricts the detection of lagged causal links in Step 2 to the
-        significant adjacencies found in Step 1, given by :math:`\widehat{
-        \mathcal{B}}_t^-( X^j_t)`. For ``reset_lagged_links=True``,
+        significant adjacencies found in Step 1, given by :math:`\\widehat{
+        \\mathcal{B}}_t^-( X^j_t)`. For ``reset_lagged_links=True``,
         *all* lagged links are considered again, which improves detection
         power for lagged links, but also leads to larger runtimes.
 
-        Further optional parameters are discussed in [2]_.
+        Further optional parameters are discussed in [5]_.
 
         Examples
         --------
@@ -1933,14 +1935,17 @@ class PCMCI():
 
                 Variable 1 has 2 link(s):
                     (1 -1): pval = 0.00000 | val = 0.602
+
                     (0 -1): pval = 0.00000 | val = 0.599
 
                 Variable 2 has 2 link(s):
                     (1 0): pval = 0.00000 | val = 0.486
+
                     (2 -1): pval = 0.00000 | val = 0.466
 
                 Variable 3 has 2 link(s):
                     (3 -1): pval = 0.00000 | val = 0.524
+
                     (2 0): pval = 0.00000 | val = -0.449
 
         Parameters
@@ -2121,7 +2126,7 @@ class PCMCI():
         discovery for time series.
 
         For ``mode='contemp_conds'`` this implements Steps 2-4 of the
-        PCMCIplus method described in [2]_. For ``mode='standard'`` this
+        PCMCIplus method described in [5]_. For ``mode='standard'`` this
         implements the standard PC algorithm adapted to time series.
 
         Parameters

@@ -153,12 +153,13 @@ class DataFrame():
         -------
         array, xyz [,XYZ] : Tuple of data array of shape (dim, T) and xyz
             identifier array of shape (dim,) identifying which row in array
-            corresponds to X, Y, and Z. For example::
-                X = [(0, -1)], Y = [(1, 0)], Z = [(1, -1), (0, -2)]
-                yields an array of shape (5, T) and xyz is
-                xyz = numpy.array([0,1,2,2])
-            If return_cleaned_xyz is True, also outputs the cleaned XYZ lists.
+            corresponds to X, Y, and Z. For example:: X = [(0, -1)], Y = [(1,
+            0)], Z = [(1, -1), (0, -2)] yields an array of shape (5, T) and
+            xyz is xyz = numpy.array([0,1,2,2]) If return_cleaned_xyz is
+            True, also outputs the cleaned XYZ lists.
+
         """
+
         # Get the length in time and the number of nodes
         T, N = self.values.shape
 
@@ -1062,12 +1063,11 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
     Parameters
     ----------
     parents_neighbors_coeffs : dict
-        Dictionary of format:
-            {..., j:[((var1, lag1), coef1), ((var2, lag2), coef2), ...], ...}
-        for all variables where vars must be in [0..N-1] and lags <= 0 with
-        number of variables N. If lag=0, a nonzero value in the covariance
-        matrix (or its inverse) is implied. These should be the same for (i, j)
-        and (j, i).
+        Dictionary of format: {..., j:[((var1, lag1), coef1), ((var2, lag2),
+        coef2), ...], ...} for all variables where vars must be in [0..N-1]
+        and lags <= 0 with number of variables N. If lag=0, a nonzero value
+        in the covariance matrix (or its inverse) is implied. These should be
+        the same for (i, j) and (j, i).
     use : str, optional (default: 'inv_inno_cov')
         Specifier, either 'inno_cov' or 'inv_inno_cov'.
         Any other specifier will result in non-correlated noise.
@@ -1211,21 +1211,20 @@ def structural_causal_process(links, T, noises=None, seed=None):
 
     Generates generalized additive noise model process of the form
 
-        .. math:: X^j_t = \eta^j_t + \sum_{X^i_{t-\tau}\in \mathcal{P}(X^j_t)}
-                            c^i_{\tau} f^i_{\tau}\left(X^i_{t-\tau}\right)
+    .. math:: X^j_t = \\eta^j_t + \\sum_{X^i_{t-\\tau}\\in \\mathcal{P}(X^j_t)}
+              c^i_{\\tau} f^i_{\\tau}(X^i_{t-\\tau})
 
     Links have the format ``{0:[((i, -tau), coeff, func),...], 1:[...],
     ...}`` where ``func`` can be an arbitrary (nonlinear) function provided
     as a python callable with one argument and coeff is the multiplication
-    factor. The noise distributions of :math:`\eta^j` can be specified in
+    factor. The noise distributions of :math:`\\eta^j` can be specified in
     ``noises``.
 
     Parameters
     ----------
     links : dict
-        Dictionary of format:
-            {0:[((i, -tau), coeff, func),...], 1:[...], ...}
-        for all variables where i must be in [0..N-1] and tau >= 0 with
+        Dictionary of format: {0:[((i, -tau), coeff, func),...], 1:[...],
+        ...} for all variables where i must be in [0..N-1] and tau >= 0 with
         number of variables N. coeff must be a float and func a python
         callable of one argument.
     T : int
@@ -1241,6 +1240,7 @@ def structural_causal_process(links, T, noises=None, seed=None):
         Data generated from this process, shape (T, N).
     nonstationary : bool
         Indicates whether data has NaNs or infinities.
+
     """
     np.random.seed(seed)
 
