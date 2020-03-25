@@ -22,7 +22,7 @@ install:
   # Useful for debugging any issues with conda
   - conda info -a
 
-  # Create and activate the environmenbt
+  # Create and activate the environment
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION
   - source activate test-environment
   # Ensure we will install all pip packages within conda

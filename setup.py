@@ -48,7 +48,7 @@ def define_extension(extension_name, source_files=None):
 
 # Define the minimal classes needed to install and run tigramite
 INSTALL_REQUIRES = ["numpy", "scipy", "six"]
-# Define the all the possible extras needed
+# Define all the possible extras needed
 EXTRAS_REQUIRE = {
     'all' : ['scikit-learn>=0.18',#Gaussian Process (GP) Regression
              'matplotlib>=1.5',   #plotting
@@ -58,6 +58,7 @@ EXTRAS_REQUIRE = {
 # Define the packages needed for testing
 TESTS_REQUIRE = ['nose',
                  'pytest',
+                 'networkx',
                  'scikit-learn>=0.18']
 EXTRAS_REQUIRE['test'] = TESTS_REQUIRE
 # Define the extras needed for development
