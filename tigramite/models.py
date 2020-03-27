@@ -192,7 +192,8 @@ class Models():
     def get_val_matrix(self):
         """Returns the coefficient array for different lags.
 
-        Requires fit_model() before.
+        Requires fit_model() before. An entry val_matrix[i,j,tau] gives the
+        coefficient of the link from i to j at lag tau, including tau=0.
 
         Returns
         -------
@@ -461,8 +462,10 @@ class LinearMediation(Models):
     def get_val_matrix(self, ):
         """Returns the matrix of linear coefficients.
 
-        Format is val_matrix[i, j, tau] denotes coefficient of link
-        i --tau--> j.
+        Requires fit_model() before. An entry val_matrix[i,j,tau] gives the
+        coefficient of the link from i to j at lag tau. Lag=0 is always set
+        to zero for LinearMediation, use Models class for contemporaneous 
+        models.
 
         Returns
         -------
