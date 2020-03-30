@@ -427,8 +427,8 @@ def a_random_process(
     (a_rule3(0., 0.7),          1000,  2),
     (a_rule3(0.5, 0.5),          1000,  2),
 
-    # Randomly genrated structural causal processes, NEED to check whether seed
-    # generates graph that has only ONE member in Markov equivalence class!
+    ## Randomly generated structural causal processes, NEED to check whether seed
+    ## generates graph that has only ONE member in Markov equivalence class!
     (a_random_process(
      N=5, L=5, coupling_coeffs=[0.7, -0.7],
      coupling_funcs=[lin_f, lin_f], auto_coeffs=[0., 0.5],
@@ -612,7 +612,7 @@ def a_pcmciplus_params_order_independence(request):
     return request.param
 
 # @pytest.fixture()
-def test_pcmciplus_order_independence(a_pcmciplus_order_independence,
+def test_order_independence_pcmciplus(a_pcmciplus_order_independence,
                     a_pcmciplus_params_order_independence):
     # Unpack the pcmci and the true parents, and common parameters
     dataframe, true_graph, links_coeffs, tau_min, tau_max = \

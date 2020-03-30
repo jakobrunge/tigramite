@@ -261,22 +261,22 @@ class DataFrame():
     def _check_nodes(self, Y, XYZ, N, dim):
         """
         Checks that:
-            * The requests XYZ nodes have the correct shape
-            * All lags are non-positive
-            * All indices are less than N
-            * One of the Y nodes has zero lag
+        * The requests XYZ nodes have the correct shape
+        * All lags are non-positive
+        * All indices are less than N
+        * One of the Y nodes has zero lag
 
         Parameters
         ----------
-            Y : list of tuples
-                Of the form [(var, -tau)], where var specifies the variable
-                index and tau the time lag.
-            XYZ : list of tuples
-                List of nodes chosen for current independence test
-            N : int
-                Total number of listed nodes
-            dim : int
-                Number of nodes excluding repeated nodes
+        Y : list of tuples
+            Of the form [(var, -tau)], where var specifies the variable
+            index and tau the time lag.
+        XYZ : list of tuples
+            List of nodes chosen for current independence test
+        N : int
+            Total number of listed nodes
+        dim : int
+            Number of nodes excluding repeated nodes
         """
         if np.array(XYZ).shape != (dim, 2):
             raise ValueError("X, Y, Z must be lists of tuples in format"
@@ -1334,9 +1334,24 @@ def _get_parents(links, exclude_contemp=False):
             coeff = link_props[1]
             # func = link_props[2]
             if coeff != 0.:
-                parents[j].append((var, lag))
+                if not (exclude_contemp and lag == 0):
+                    parents[j].append((var, lag))
 
     return parents
+
+def _get_children(parents):
+    """Helper function to children from parents
+    """
+
+    N = len(parents)
+    children = dict([(j, []) for j in range(N)])
+
+    for j in range(N):
+        for par in parents[j]:
+            i, tau = par
+            children[i].append((j, abs(tau)))
+
+    return children
 
 def links_to_graph(links, tau_max=None):
     """Helper function to convert dictionary of links to graph array format.

@@ -362,7 +362,7 @@ class LinearMediation(Models):
             raise ValueError("k must be in [0, N)")
 
     def _get_phi(self, coeffs):
-        """Returns the linear coefficient matrices for different lags.different
+        """Returns the linear coefficient matrices for different lags.
 
         Parameters
         ----------
