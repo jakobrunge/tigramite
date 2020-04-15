@@ -1531,7 +1531,7 @@ def plot_time_series_graph(val_matrix,
                 translate(i, t - tau) % max_lag <= translate(j, t) % max_lag):
                 # print translate(i, t-tau), translate(j, t), val_matrix[i,j,tau]
                 tsg[translate(i, t - tau), translate(j, t)
-                    ] = 1.  #val_matrix[i, j, tau]
+                    ] = link_matrix[i,j,tau]
                 tsg_val[translate(i, t - tau), translate(j, t)
                          ] = val_matrix[i, j, tau]
                 if link_width is not None:

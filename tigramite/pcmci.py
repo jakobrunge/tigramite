@@ -2282,6 +2282,75 @@ class PCMCI():
 
         return pc_results
 
+    def run_pcalg_non_timeseries_data(self, pc_alpha=0.01,
+                  max_conds_dim=None, max_combinations=None, 
+                  contemp_collider_rule='majority',
+                  conflict_resolution=True):
+
+        """Runs PC algorithm for non-time series data.
+
+        Simply calls run_pcalg with tau_min = tau_max = 0.
+
+        Parameters
+        ----------
+        pc_alpha : float, optional (default: 0.01)
+            Significance level.
+        contemp_collider_rule : {'majority', 'conservative', 'none'}
+            Rule for collider phase to use. See the paper for details. Only
+            'majority' and 'conservative' lead to an order-independent
+            algorithm.
+        conflict_resolution : bool, optional (default: True)
+            Whether to mark conflicts in orientation rules. Only for True
+            this leads to an order-independent algorithm.
+        max_conds_dim : int, optional (default: None)
+            Maximum number of conditions to test. If None is passed, this number
+            is unrestricted.
+        max_combinations : int
+            Maximum number of combinations of conditions of current cardinality
+            to test.
+
+        Returns
+        -------
+        graph : array of shape [N, N, 1]
+            Resulting causal graph, see description above for interpretation.
+        val_matrix : array of shape [N, N, 1]
+            Estimated matrix of test statistic values regarding adjacencies.
+        p_matrix : array of shape [N, N, 1]
+            Estimated matrix of p-values regarding adjacencies.
+        sepset : dictionary
+            Separating sets. See paper for details.
+        ambiguous_triples : list
+            List of ambiguous triples, only relevant for 'majority' and
+            'conservative' rules, see paper for details.
+        """
+
+        results = self.run_pcalg(pc_alpha=pc_alpha, tau_min=0, tau_max=0, 
+                    max_conds_dim=max_conds_dim, max_combinations=max_combinations,
+                  mode='standard', contemp_collider_rule=contemp_collider_rule,
+                  conflict_resolution=conflict_resolution)
+
+        # Remove tau-dimension
+        results['graph'] = results['graph'].squeeze()
+        results['val_matrix'] = results['val_matrix'].squeeze()
+        results['p_matrix'] = results['p_matrix'].squeeze()
+        old_sepsets = results['sepset'].copy()
+        results['sepset'] = {}
+        for old_sepset in old_sepsets:
+           new_sepset = (old_sepset[0][0], old_sepset[1])
+           conds = [cond[0] for cond in old_sepsets[old_sepset]]
+
+           results['sepset'][new_sepset] = conds
+
+        ambiguous_triples = results['ambiguous_triples'].copy()
+        results['ambiguous_triples'] = []
+        for triple in ambiguous_triples:
+           new_triple = (triple[0][0], triple[1], triple[2])
+
+           results['ambiguous_triples'].append(new_triple)
+
+        return results
+
+
     def _run_pcalg_test(self, i, abstau, j, S, lagged_parents, max_conds_py,
                         max_conds_px, tau_max):
         """MCI conditional independence tests within PCMCIplus or PC algorithm.
@@ -3350,31 +3419,36 @@ if __name__ == '__main__':
 
     noises = [np.random.randn for j in links.keys()]
     data, nonstat = pp.structural_causal_process(links,
-                                                 T=1000, noises=noises, seed=7)
+                                T=10, noises=noises, seed=7)
 
+    print("Start discovery")
     verbosity = 2
     dataframe = pp.DataFrame(data, )
     pcmci = PCMCI(dataframe=dataframe,
                   # cond_ind_test= CMIknn(verbosity=1),
                   cond_ind_test=ParCorr(
-                      recycle_residuals=True,
+                      recycle_residuals=False,
                       # confidence='analytic',
                       verbosity=0),
-                  verbosity=2,
+                  verbosity=0,
                   )
 
-    selected_links = {0: [(0, -1)],
-                      1: [(1, -1), (0, -1)],
-                      2: [(2, -1), (1, 0)],
-                      3: [(3, -1), (2, 0)],
-                      }
+    results = pcmci.run_pcalg_non_timeseries_data(pc_alpha=0.01,
+                  max_conds_dim=None, max_combinations=None, 
+                  contemp_collider_rule='conservative',
+                  conflict_resolution=True)
+    # selected_links = {0: [(0, -1)],
+    #                   1: [(1, -1), (0, -1)],
+    #                   2: [(2, -1), (1, 0)],
+    #                   3: [(3, -1), (2, 0)],
+    #                   }
 
-    results = pcmci.run_pc_stable(
-                selected_links=selected_links,
-                tau_min=1,
-                tau_max=2,
-                pc_alpha=0.05,
-                )
+    # results = pcmci.run_pc_stable(
+    #             selected_links=None,
+    #             tau_min=1,
+    #             tau_max=1,
+    #             pc_alpha=0.001,
+    #             )
     print(results)
 
     # results = pcmci.run_pcmci(

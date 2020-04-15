@@ -254,9 +254,10 @@ class ParCorr(CondIndTest):
     def get_model_selection_criterion(self, j, parents, tau_max=0):
         """Returns Akaike's Information criterion modulo constants.
 
-        Fits a linear model of the parents to variable j and returns the score.
-        I used to determine optimal hyperparameters in PCMCI, in particular
-        the pc_alpha value.
+        Fits a linear model of the parents to variable j and returns the
+        score. Leave-one-out cross-validation is asymptotically equivalent to
+        AIC for ordinary linear regression models. Here used to determine
+        optimal hyperparameters in PCMCI, in particular the pc_alpha value.
 
         Parameters
         ----------
