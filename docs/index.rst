@@ -62,6 +62,7 @@ https://aip.scitation.org/doi/10.1063/1.5025050
    tigramite.independence_tests.GPDC
    tigramite.independence_tests.CMIknn
    tigramite.independence_tests.CMIsymb  
+   tigramite.independence_tests.OracleCI
    tigramite.data_processing
    tigramite.models.Models
    tigramite.models.LinearMediation
@@ -95,6 +96,9 @@ Test statistics:
    :members:
    
 .. autoclass:: tigramite.independence_tests.CMIsymb
+   :members:
+
+.. autoclass:: tigramite.independence_tests.OracleCI
    :members:
 
 
