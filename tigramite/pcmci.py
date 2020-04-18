@@ -487,9 +487,11 @@ class PCMCI():
                         break
                     # Perform independence test
                     val, pval = self.cond_ind_test.run_test(X=[parent],
-                                                            Y=[(j, 0)],
-                                                            Z=Z,
-                                                            tau_max=tau_max)
+                                                    Y=[(j, 0)],
+                                                    Z=Z,
+                                                    tau_max=tau_max,
+                                                    # verbosity=self.verbosity
+                                                    )
                     # Print some information if needed
                     if self.verbosity > 1:
                         self._print_cond_info(Z, comb_index, pval, val)
@@ -1075,8 +1077,9 @@ class PCMCI():
                 # Run the independence tests and record the results
                 val, pval = self.cond_ind_test.run_test(X, Y, Z=Z,
                                                         tau_max=tau_max,
-                                                        verbosity=
-                                                        self.verbosity)
+                                                        # verbosity=
+                                                        # self.verbosity
+                                                        )
                 val_matrix[i, j, abs(tau)] = val
                 p_matrix[i, j, abs(tau)] = pval
             else:
@@ -1881,23 +1884,34 @@ class PCMCI():
         or discrete) and its assumed dependency types. These are available in
         ``tigramite.independence_tests``.
 
-        The main free parameters of PCMCIplus (in addition to free parameters
-        of the conditional independence tests) are the maximum time delay
+        The main free parameters of PCMCIplus (in addition to free parameters of
+        the conditional independence tests) are the maximum time delay
         :math:`\\tau_{\\max}` (``tau_max``) and the significance threshold
-        :math:`\\alpha` ( ``pc_alpha``). The maximum time delay depends on the
-        application and should be chosen according to the maximum causal time
-        lag expected in the complex system. We recommend a rather large
-        choice that includes peaks in the ``get_lagged_dependencies``
-        function. Another important parameter is ``contemp_collider_rule``.
-        Only if set to ``majority`` or ``conservative'' and together with
-        ``conflict_resolution=True``, PCMCIplus is fully *order independent*
-        meaning that the order of the N variables in the dataframe does not
-        matter. Last, the default option ``reset_lagged_links=False``
-        restricts the detection of lagged causal links in Step 2 to the
-        significant adjacencies found in Step 1, given by :math:`\\widehat{
-        \\mathcal{B}}_t^-( X^j_t)`. For ``reset_lagged_links=True``,
-        *all* lagged links are considered again, which improves detection
-        power for lagged links, but also leads to larger runtimes.
+        :math:`\\alpha` ( ``pc_alpha``). 
+
+        If a list or None is passed for ``pc_alpha``, the significance level is
+        optimized for every graph across the given ``pc_alpha`` values using the
+        score computed in ``cond_ind_test.get_model_selection_criterion()``.
+        Since PCMCIplus outputs not a DAG, but an equivalence class of DAGs,
+        first one member of this class is computed and then the score is
+        computed as the average over all models fits for each variable in ``[0,
+        ..., N]`` for that member. The score is the same for all members of the
+        class.
+
+        The maximum time delay depends on the application and should be chosen
+        according to the maximum causal time lag expected in the complex system.
+        We recommend a rather large choice that includes peaks in the
+        ``get_lagged_dependencies`` function. Another important parameter is
+        ``contemp_collider_rule``. Only if set to ``majority`` or
+        ``conservative'' and together with ``conflict_resolution=True``,
+        PCMCIplus is fully *order independent* meaning that the order of the N
+        variables in the dataframe does not matter. Last, the default option
+        ``reset_lagged_links=False`` restricts the detection of lagged causal
+        links in Step 2 to the significant adjacencies found in Step 1, given by
+        :math:`\\widehat{ \\mathcal{B}}_t^-( X^j_t)`. For
+        ``reset_lagged_links=True``, *all* lagged links are considered again,
+        which improves detection power for lagged links, but also leads to
+        larger runtimes.
 
         Further optional parameters are discussed in [5]_.
 
@@ -1958,8 +1972,11 @@ class PCMCI():
             Minimum time lag to test.
         tau_max : int, optional (default: 1)
             Maximum time lag. Must be larger or equal to tau_min.
-        pc_alpha : float, optional (default: 0.01)
-            Significance level in all steps of the PCMCIplus algorithm.
+        pc_alpha : float or list of floats, default: 0.01
+            Significance level in algorithm. If a list or None is passed, the
+            pc_alpha level is optimized for every graph across the given
+            pc_alpha values ([0.001, 0.005, 0.01, 0.025, 0.05] for None) using
+            the score computed in cond_ind_test.get_model_selection_criterion().
         contemp_collider_rule : {'majority', 'conservative', 'none'}
             Rule for collider phase to use. See the paper for details. Only
             'majority' and 'conservative' lead to an order-independent
@@ -2001,9 +2018,25 @@ class PCMCI():
             'conservative' rules, see paper for details.
         """
 
-        if pc_alpha is None:
-            raise ValueError("pc_alpha=None not supported in PCMCIplus, choose"
-                             " 0 < pc_alpha < 1 (e.g., 0.01)")
+        # Check if pc_alpha is chosen to optimze over a list
+        if pc_alpha is None or isinstance(pc_alpha, (list, tuple, np.ndarray)):
+            # Call optimizer wrapper around run_pcmciplus()
+            return self._optimize_pcmciplus_alpha(
+                                    selected_links=selected_links,
+                                    tau_min=tau_min,
+                                    tau_max=tau_max,
+                                    pc_alpha=pc_alpha,
+                                    contemp_collider_rule=contemp_collider_rule,
+                                    conflict_resolution=conflict_resolution,
+                                    reset_lagged_links=reset_lagged_links,
+                                    max_conds_dim=max_conds_dim,
+                                    max_conds_py=max_conds_py,
+                                    max_conds_px=max_conds_px,
+                                    fdr_method=fdr_method)
+
+        # else:
+        #     raise ValueError("pc_alpha=None not supported in PCMCIplus, choose"
+        #                      " 0 < pc_alpha < 1 (e.g., 0.01)")
 
         # For the lagged PC algorithm only the strongest conditions are tested
         max_combinations = 1
@@ -2401,7 +2434,9 @@ class PCMCI():
         Z += [node for node in conds_x_lagged if node not in Z]
 
         val, pval = self.cond_ind_test.run_test(X=[(i, -abstau)], Y=[(j, 0)],
-                                                Z=Z, tau_max=tau_max)
+                                                Z=Z, tau_max=tau_max,
+                                                # verbosity=self.verbosity
+                                                )
 
         return val, pval, Z
 
@@ -3392,6 +3427,216 @@ class PCMCI():
 
         return graph_new
 
+    def _get_simplicial_node(self, circle_cpdag):
+        """Find simplicial nodes in circle component CPDAG.
+
+        A vertex V is simplicial if all vertices adjacent to V are also adjacent
+        to each other (form a clique).
+
+        Parameters
+        ----------
+        circle_cpdag : array of shape (N, N, tau_max+1)
+            Circle component of PCMCIplus graph.
+
+        Returns
+        -------
+        (j, adj_j) or None
+            First found simplicial node and its adjacencies.
+        """
+
+        N, N, _ = circle_cpdag.shape
+
+        for j in range(N):
+            adj_j = np.where(circle_cpdag[:,j,0])[0].tolist()
+
+            # Make sure the node has any adjacencies
+            all_adjacent = len(adj_j) > 0
+
+            # If it has just one adjacency, it's also simplicial
+            if len(adj_j) == 1:
+                return (j, adj_j)  
+            else:
+                for (var1, var2) in itertools.combinations(adj_j, 2):
+                    if circle_pag[var1, var2, 0] == 0: 
+                        all_adjacent = False
+                        break
+
+                if all_adjacent:
+                    return (j, adj_j)
+
+        return None
+
+    def _get_dag_from_cpdag(self, cpdag_graph):
+        """Yields one member of the Markov equivalence class of a CPDAG.
+
+        Removes conflicting edges.
+
+        Used in PCMCI to run model selection on the output of PCMCIplus in order
+        to, e.g., optimize pc_alpha.
+
+        Based on Zhang 2008, Theorem 2 (simplified for CPDAGs): Let H be the
+        graph resulting from the following procedure applied to a CPDAG:
+ 
+        Consider the circle component of the CPDAG (sub graph consisting of all
+        (o-o edges, i.e., only for contemporaneous links), CPDAG^C and turn into
+        a DAG with no unshielded colliders. Then (H is a member of the Markov
+        equivalence class of the CPDAG.
+
+        We use the approach mentioned in Colombo and Maathuis (2015) Lemma 7.6:
+        First note that CPDAG^C is chordal, that is, any cycle of length four or
+        more has a chord, which is an edge joining two vertices that are not
+        adjacent in the cycle; see the proof of Lemma 4.1 of Zhang (2008b). Any
+        chordal graph with more than one vertex has two simplicial vertices,
+        that is, vertices V such that all vertices adjacent to V are also
+        adjacent to each other. We choose such a vertex V1 and orient any edges
+        incident to V1 into V1. Since V1 is simplicial, this does not create
+        unshielded colliders. We then remove V1 and these edges from the graph.
+        The resulting graph is again chordal and therefore again has at least
+        two simplicial vertices. Choose such a vertex V2 , and orient any edges
+        incident to V2 into V2. We continue this procedure until all edges are
+        oriented. The resulting ordering is called a perfect elimination scheme
+        for CPDAG^C. Then the combined graph with the directed edges already
+        contained in the CPDAG is returned.
+
+        Parameters
+        ----------
+        cpdag_graph : array of shape (N, N, tau_max+1)
+            Result of PCMCIplus, a CPDAG.
+
+        Returns
+        -------
+        dag : array of shape (N, N, tau_max+1)
+            One member of the Markov equivalence class of the CPDAG.
+        """
+
+        # TODO: Check whether CPDAG is chordal
+
+        # Initialize resulting MAG
+        dag = np.copy(cpdag_graph)
+
+        # Turn circle component CPDAG^C into a DAG with no unshielded colliders.
+        circle_cpdag = np.copy(cpdag_graph)
+        # All lagged links are directed by time, remove them here
+        circle_cpdag[:,:,1:] = 0
+        # Also remove conflicting links
+        circle_cpdag[circle_cpdag==2] = 0
+        # Find undirected links
+        for i, j, tau in zip(*np.where(circle_cpdag)):
+            if circle_cpdag[j,i,0] == 0:
+                circle_cpdag[i,j,0] = 0
+
+        # Iterate through simplicial nodes
+        simplicial_node = self._get_simplicial_node(circle_cpdag)
+        while simplicial_node is not None:
+
+            # Choose such a vertex V1 and orient any edges incident to V1 into
+            # V1 in the MAG And remove V1 and these edges from the circle
+            # component PAG
+            (j, adj_j) = simplicial_node
+            for var in adj_j:
+                dag[var, j, 0] = 1
+                dag[j, var, 0] = 0
+                circle_cpdag[var, j, 0] = circle_cpdag[j, var, 0] = 0 
+
+            # Iterate
+            simplicial_node = self._get_simplicial_node(circle_cpdag)
+
+        return dag
+
+    def _optimize_pcmciplus_alpha(self,
+                      selected_links,
+                      tau_min,
+                      tau_max,
+                      pc_alpha,
+                      contemp_collider_rule,
+                      conflict_resolution,
+                      reset_lagged_links,
+                      max_conds_dim,
+                      max_conds_py,
+                      max_conds_px,
+                      fdr_method,
+                      ):
+        """Optimzies pc_alpha in PCMCIplus.
+
+        If a list or None is passed for ``pc_alpha``, the significance level is
+        optimized for every graph across the given ``pc_alpha`` values using the
+        score computed in ``cond_ind_test.get_model_selection_criterion()``
+
+        Parameters
+        ----------
+        See those for run_pcmciplus()
+
+        Returns
+        -------
+        Results for run_pcmciplus() for the optimal pc_alpha.
+        """
+
+        if pc_alpha is None:
+            pc_alpha_list = [0.001, 0.005, 0.01, 0.025, 0.05]
+        else:
+            pc_alpha_list = pc_alpha
+
+        if self.verbosity > 0:
+            print("\n##\n## Optimizing pc_alpha over " + 
+                  "pc_alpha_list = %s" % str(pc_alpha_list) +
+                  "\n##")
+
+        results = {}
+        score = np.zeros_like(pc_alpha_list)
+        for iscore, pc_alpha_here in enumerate(pc_alpha_list):
+            # Print statement about the pc_alpha being tested
+            if self.verbosity > 0:
+                print("\n## pc_alpha = %s (%d/%d):" % (pc_alpha_here,
+                                                      iscore + 1,
+                                                      score.shape[0]))
+            # Get the results for this alpha value
+            results[pc_alpha_here] = \
+                self.run_pcmciplus(selected_links=selected_links,
+                                    tau_min=tau_min,
+                                    tau_max=tau_max,
+                                    pc_alpha=pc_alpha_here,
+                                    contemp_collider_rule=contemp_collider_rule,
+                                    conflict_resolution=conflict_resolution,
+                                    reset_lagged_links=reset_lagged_links,
+                                    max_conds_dim=max_conds_dim,
+                                    max_conds_py=max_conds_py,
+                                    max_conds_px=max_conds_px,
+                                    fdr_method=fdr_method)
+
+            # Get one member of the Markov equivalence class of the result
+            # of PCMCIplus, which is a CPDAG
+            dag = self._get_dag_from_cpdag(
+                            cpdag_graph=results[pc_alpha_here]['graph'])
+            parents = pcmci.return_significant_links(
+                    pq_matrix=results[pc_alpha_here]['p_matrix'],
+                    val_matrix=results[pc_alpha_here]['val_matrix'], 
+                    alpha_level=pc_alpha_here,
+                    include_lagzero_links=True)['link_dict']
+
+            # Figure out the best average score when the model selection
+            # is applied to all N variables
+            for j in range(self.N):
+                score[iscore] += \
+                    self.cond_ind_test.get_model_selection_criterion(
+                        j, parents[j], tau_max)
+            score[iscore] /= float(self.N)
+
+        # Record the optimal alpha value
+        optimal_alpha = pc_alpha_list[score.argmin()]
+
+        if self.verbosity > 0:
+            print("\n##\n## Returning results for optimal " +
+                  "pc_alpha = %s" % optimal_alpha + 
+                  "\n##"+
+                  "\n\n## Scores for individual pc_alpha values:\n")
+            for iscore, pc_alpha in enumerate(pc_alpha_list):
+                print("   pc_alpha = %7s yields score = %s" % (pc_alpha, 
+                                                                score[iscore]))
+
+        optimal_results = results[optimal_alpha]
+        optimal_results['optimal_alpha'] = optimal_alpha
+        return optimal_results
+
 
 if __name__ == '__main__':
     from tigramite.independence_tests import ParCorr, CMIknn
@@ -3408,10 +3653,10 @@ if __name__ == '__main__':
     def nonlin_f(x): return (x + 5. * x ** 2 * np.exp(-x ** 2 / 20.))
 
 
-    links = {0: [((0, -1), 0.9, lin_f)],
-             1: [((1, -1), 0.8, lin_f), ((0, -1), 0.8, lin_f)],
-             2: [((2, -1), 0.7, lin_f), ((1, 0), 0.6, lin_f)],
-             3: [((3, -1), 0.7, lin_f), ((2, 0), -0.5, lin_f)],
+    links = {0: [((0, -1), 0.8, lin_f), ((1, -1), 0.6, lin_f)],
+             1: [((1, -1), 0.6, lin_f)],
+             2: [((2, -1), 0.6, lin_f), ((1, 0), 0.6, lin_f)],
+             3: [((3, -1), 0.6, lin_f), ((2, 0), -0.5, lin_f)],
              }
     # links = {0: [((0, -1), 0.8, lin_f)],
     #          1: [((1, -1), 0.8, lin_f), ((0, -1), 0.5, lin_f)],
@@ -3419,9 +3664,8 @@ if __name__ == '__main__':
 
     noises = [np.random.randn for j in links.keys()]
     data, nonstat = pp.structural_causal_process(links,
-                                T=10, noises=noises, seed=7)
+                                T=100, noises=noises, seed=7)
 
-    print("Start discovery")
     verbosity = 2
     dataframe = pp.DataFrame(data, )
     pcmci = PCMCI(dataframe=dataframe,
@@ -3430,13 +3674,13 @@ if __name__ == '__main__':
                       recycle_residuals=False,
                       # confidence='analytic',
                       verbosity=0),
-                  verbosity=0,
+                  verbosity=1,
                   )
 
-    results = pcmci.run_pcalg_non_timeseries_data(pc_alpha=0.01,
-                  max_conds_dim=None, max_combinations=None, 
-                  contemp_collider_rule='conservative',
-                  conflict_resolution=True)
+    # results = pcmci.run_pcalg_non_timeseries_data(pc_alpha=0.01,
+    #               max_conds_dim=None, max_combinations=None, 
+    #               contemp_collider_rule='conservative',
+    #               conflict_resolution=True)
     # selected_links = {0: [(0, -1)],
     #                   1: [(1, -1), (0, -1)],
     #                   2: [(2, -1), (1, 0)],
@@ -3449,7 +3693,7 @@ if __name__ == '__main__':
     #             tau_max=1,
     #             pc_alpha=0.001,
     #             )
-    print(results)
+    # print(results)
 
     # results = pcmci.run_pcmci(
     #               selected_links=None,
@@ -3477,20 +3721,24 @@ if __name__ == '__main__':
 
     # print (results)
 
-    # results = pcmci.run_pcmciplus(
-    #     selected_links=None,
-    #     tau_min=0,
-    #     tau_max=2,
-    #     pc_alpha=0.01,
-    #     contemp_collider_rule='majority',
-    #     conflict_resolution=True,
-    #     reset_lagged_links=False,
-    #     max_conds_dim=None,
-    #     max_conds_py=None,
-    #     max_conds_px=None,
-    #     fdr_method='none'
-    # )
-    # pcmci.print_results(results, alpha_level=0.01)
+    results = pcmci.run_pcmciplus(
+        selected_links=None,
+        tau_min=0,
+        tau_max=1,
+        pc_alpha=None,
+        contemp_collider_rule='majority',
+        conflict_resolution=True,
+        reset_lagged_links=False,
+        max_conds_dim=None,
+        max_conds_py=None,
+        max_conds_px=None,
+        fdr_method='none'
+    )
+    pcmci.print_results(results, alpha_level=0.01)
+
+    dag_member = pcmci._get_dag_from_cpdag(cpdag_graph=results['graph'])
+    print(dag_member[:,:,0])
+    print(dag_member[:,:,1])
 
     # print("Graph")
     # print(results['graph'])

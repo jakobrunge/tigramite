@@ -317,8 +317,7 @@ class CondIndTest():
         return combined_hash
 
 
-    def run_test(self, X, Y, Z=None, tau_max=0, cut_off='2xtau_max',
-                 verbosity=0):
+    def run_test(self, X, Y, Z=None, tau_max=0, cut_off='2xtau_max'):
         """Perform conditional independence test.
 
         Calls the dependence measure and signficicance test functions. The child
@@ -373,7 +372,7 @@ class CondIndTest():
             pval = self.get_significance(val, array, xyz, T, dim)
             self.cached_ci_results[combined_hash] = (val, pval)
 
-        if verbosity > 1:
+        if self.verbosity > 1:
             self._print_cond_ind_results(val=val, pval=pval, cached=cached,
                                          conf=None)
         # Return the value and the pvalue

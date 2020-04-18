@@ -9,10 +9,8 @@ from nose.tools import assert_equal
 import pytest
 
 from tigramite.pcmci import PCMCI
-from tigramite.independence_tests import ParCorr
+from tigramite.independence_tests import ParCorr, OracleCI
 import tigramite.data_processing as pp
-
-from oracle_conditional_independence import OracleCI
 
 # Pylint settings
 # pylint: disable=redefined-outer-name
