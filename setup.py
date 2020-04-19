@@ -50,16 +50,16 @@ def define_extension(extension_name, source_files=None):
 INSTALL_REQUIRES = ["numpy", "scipy", "six"]
 # Define all the possible extras needed
 EXTRAS_REQUIRE = {
-    'all' : ['scikit-learn>=0.18',#Gaussian Process (GP) Regression
-             'matplotlib>=1.5',   #plotting
-             'networkx>=1.10',    #plotting
+    'all' : ['scikit-learn>=0.21',#Gaussian Process (GP) Regression
+             'matplotlib>=3.0',   #plotting
+             'networkx>=2.4',    #plotting
     ]
     }
 # Define the packages needed for testing
 TESTS_REQUIRE = ['nose',
                  'pytest',
-                 'networkx',
-                 'scikit-learn>=0.18']
+                 'networkx>=2.4',
+                 'scikit-learn>=0.21']
 EXTRAS_REQUIRE['test'] = TESTS_REQUIRE
 # Define the extras needed for development
 EXTRAS_REQUIRE['dev'] = EXTRAS_REQUIRE['all'] + TESTS_REQUIRE + ['cython']

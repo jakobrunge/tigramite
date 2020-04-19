@@ -668,7 +668,7 @@ class CondIndTest():
         conf : tuple of floats, optional (default: None)
             Confidence bounds.
         """
-        printstr = "        val = %.3f" % (val)      
+        printstr = "        val = % .3f" % (val)      
         if pval is not None:
             printstr += " | pval = %.5f" % (pval)
         if conf is not None:

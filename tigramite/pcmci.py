@@ -310,7 +310,7 @@ class PCMCI():
 
         abstau = abs(parent[1])
         if self.verbosity > 1:
-            print("\n    Link (%s %d) %s %s (%d/%d):" % (
+            print("\n    Link (%s % d) %s %s (%d/%d):" % (
                 self.var_names[parent[0]], parent[1], link_marker[abstau==0],
                 self.var_names[j],
                 index_parent + 1, num_parents))
@@ -334,9 +334,9 @@ class PCMCI():
         """
         var_name_z = ""
         for i, tau in Z:
-            var_name_z += "(%s %d) " % (self.var_names[i], tau)
+            var_name_z += "(%s % .2s) " % (self.var_names[i], tau)
         if len(Z) == 0: var_name_z = "()"
-        print("    Subset %d: %s gives pval = %.5f / val = %.3f" %
+        print("    Subset %d: %s gives pval = %.5f / val = % .3f" %
               (comb_index, var_name_z, pval, val))
 
     def _print_a_pc_result(self, nonsig, conds_dim, max_combinations):
@@ -593,7 +593,7 @@ class PCMCI():
         for iscore, pc_alpha_here in enumerate(pc_alpha):
             names_parents = "[ "
             for pari in results[pc_alpha_here]['parents']:
-                names_parents += "(%s %d) " % (
+                names_parents += "(%s % d) " % (
                     self.var_names[pari[0]], pari[1])
             names_parents += "]"
             print("    pc_alpha=%s got score %.4f with parents %s" %
@@ -808,11 +808,11 @@ class PCMCI():
                     self.iterations[j]['optimal_pc_alpha']))
             if val_min is None or pval_max is None:
                 for p in parents:
-                    print("        (%s %d)" % (
+                    print("        (%s % .d)" % (
                         self.var_names[p[0]], p[1]))
             else:
                 for p in parents:
-                    print("        (%s %d): max_pval = %.5f, min_val = %.3f" % (
+                    print("        (%s % .d): max_pval = %.5f, min_val = % .3f" % (
                         self.var_names[p[0]], p[1], pval_max[p],
                         val_min[p]))
         else:
@@ -852,7 +852,7 @@ class PCMCI():
         """
         cond_string = "[ "
         for k, tau_k in conds:
-            cond_string += "(%s %d) " % (self.var_names[k], tau_k)
+            cond_string += "(%s % d) " % (self.var_names[k], tau_k)
         cond_string += "]"
         return cond_string
 
@@ -885,7 +885,7 @@ class PCMCI():
         condx_str = self._mci_condition_to_string(conds_x_lagged)
         # Formate and print the information
         indent = "\n        "
-        print_str = indent + "link (%s %d) " % (self.var_names[i], tau)
+        print_str = indent + "link (%s % d) " % (self.var_names[i], tau)
         print_str += "--> %s (%d/%d):" % (
             self.var_names[j], count + 1, n_parents)
         print_str += indent + "with conds_y = %s" % (condy_str)
@@ -1535,13 +1535,13 @@ class PCMCI():
             string = ("\n    Variable %s has %d "
                       "link(s):" % (self.var_names[j], n_links))
             for p in sorted_links:
-                string += ("\n        (%s %d): pval = %.5f" %
+                string += ("\n        (%s % d): pval = %.5f" %
                            (self.var_names[p[0]], p[1],
                             p_matrix[p[0], j, abs(p[1])]))
                 if q_matrix is not None:
                     string += " | qval = %.5f" % (
                         q_matrix[p[0], j, abs(p[1])])
-                string += " | val = %.3f" % (
+                string += " | val = % .3f" % (
                     val_matrix[p[0], j, abs(p[1])])
                 if conf_matrix is not None:
                     string += " | conf = (%.3f, %.3f)" % (
@@ -1560,7 +1560,7 @@ class PCMCI():
             print("\n## Ambiguous triples:\n")
             for triple in ambiguous_triples:
                 (i, tau), k, j = triple
-                print("    (%s %d) %s %s o--o %s" % (
+                print("    (%s % d) %s %s o--o %s" % (
                     self.var_names[i], tau, link_marker[tau==0],
                     self.var_names[k],
                     self.var_names[j]))
@@ -2455,7 +2455,7 @@ class PCMCI():
         (i, tau), k, j = triple
         link_marker = {True:"o--o", False:"-->"}
 
-        print("\n    Triple (%s %d) %s %s o--o %s (%d/%d)" % (
+        print("\n    Triple (%s % d) %s %s o--o %s (%d/%d)" % (
             self.var_names[i], tau, link_marker[tau==0], self.var_names[k],
             self.var_names[j], index + 1, n_triples))
 
@@ -3090,7 +3090,7 @@ class PCMCI():
             (i, tau), k, j = itaukj
 
             if self.verbosity > 1:
-                print("\n    Collider (%s %d) %s %s o--o %s:" % (
+                print("\n    Collider (%s % d) %s %s o--o %s:" % (
                     self.var_names[i], tau, link_marker[
                         tau==0], self.var_names[k],
                     self.var_names[j]))
@@ -3297,7 +3297,7 @@ class PCMCI():
                             k, j) not in oriented_links:
                         if self.verbosity > 1:
                             print(
-                                "    R1: Found (%s %d) --> %s o--o %s, "
+                                "    R1: Found (%s % d) --> %s o--o %s, "
                                 "orient as %s --> %s" % (
                                     self.var_names[i], tau, self.var_names[k],
                                     self.var_names[j],
@@ -3630,7 +3630,7 @@ class PCMCI():
                   "\n##"+
                   "\n\n## Scores for individual pc_alpha values:\n")
             for iscore, pc_alpha in enumerate(pc_alpha_list):
-                print("   pc_alpha = %7s yields score = %s" % (pc_alpha, 
+                print("   pc_alpha = %7s yields score = %.5f" % (pc_alpha, 
                                                                 score[iscore]))
 
         optimal_results = results[optimal_alpha]
@@ -3648,23 +3648,50 @@ if __name__ == '__main__':
 
     ## Generate some time series from a structural causal process
     def lin_f(x): return x
-
-
     def nonlin_f(x): return (x + 5. * x ** 2 * np.exp(-x ** 2 / 20.))
 
+    auto_coeff = 0.95
+    coeff = 0.4
+    T = 500
 
-    links = {0: [((0, -1), 0.8, lin_f), ((1, -1), 0.6, lin_f)],
-             1: [((1, -1), 0.6, lin_f)],
-             2: [((2, -1), 0.6, lin_f), ((1, 0), 0.6, lin_f)],
-             3: [((3, -1), 0.6, lin_f), ((2, 0), -0.5, lin_f)],
-             }
+    links ={0: [((0, -1), auto_coeff, lin_f),
+            ((1, -1), coeff, lin_f)
+            ],
+        1: [((1, -1), auto_coeff, lin_f), 
+            ],
+        2: [((2, -1), auto_coeff, lin_f), 
+            ((3, 0), -coeff, lin_f), 
+            ],
+        3: [((3, -1), auto_coeff, lin_f), 
+            ((1, -2), coeff, lin_f), 
+            ],
+        4: [((4, -1), auto_coeff, lin_f), 
+            ((3, 0), coeff, lin_f), 
+            ],   
+        5: [((5, -1), 0.5*auto_coeff, lin_f), 
+            ((6, 0), coeff, lin_f), 
+            ],  
+        6: [((6, -1), 0.5*auto_coeff, lin_f), 
+            ((5, -1), -coeff, lin_f), 
+            ],  
+        7: [((7, -1), auto_coeff, lin_f), 
+            ((8, 0), -coeff, lin_f), 
+            ],  
+        8: [],                                     
+        }
+
+    # links = {0: [((0, -1), 0.8, lin_f), ((1, -1), 0.6, lin_f)],
+    #          1: [((1, -1), 0., lin_f)],
+    #          2: [((2, -1), 0., lin_f), ((1, 0), 0.6, lin_f)],
+    #          3: [((3, -1), 0., lin_f), ((2, 0), -0.5, lin_f)],
+    #          }
     # links = {0: [((0, -1), 0.8, lin_f)],
     #          1: [((1, -1), 0.8, lin_f), ((0, -1), 0.5, lin_f)],
     #          2: [((2, -1), 0.8, lin_f), ((1, -2), -0.6, lin_f)]}
 
     noises = [np.random.randn for j in links.keys()]
     data, nonstat = pp.structural_causal_process(links,
-                                T=100, noises=noises, seed=7)
+                                T=500, noises=noises, seed=7)
 
     verbosity = 2
     dataframe = pp.DataFrame(data, )
@@ -3724,7 +3751,7 @@ if __name__ == '__main__':
     results = pcmci.run_pcmciplus(
         selected_links=None,
         tau_min=0,
-        tau_max=1,
+        tau_max=3,
         pc_alpha=None,
         contemp_collider_rule='majority',
         conflict_resolution=True,
