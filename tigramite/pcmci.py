@@ -1401,7 +1401,7 @@ class PCMCI():
                                  pq_matrix,
                                  val_matrix,
                                  alpha_level=0.05,
-                                 include_lagzero_links=False):
+                                 include_lagzero_parents=False):
         """DEPRECATED: use return_significant_links() instead.
 
         Parameters
