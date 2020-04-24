@@ -37,6 +37,7 @@ class OracleCI:
 
     def __init__(self,
                  link_coeffs,
+                 observed_vars=None,
                  verbosity=0):
         self.verbosity = verbosity
         self._measure = 'oracle_ci'
@@ -46,6 +47,18 @@ class OracleCI:
 
         # Initialize already computed dsepsets of X, Y, Z
         self.dsepsets = {}
+
+        # Initialize observed vars
+        self.observed_vars = observed_vars
+        if self.observed_vars is None:
+            self.observed_vars = range(self.N)
+        else:
+            if not set(self.observed_vars).issubset(set(range(self.N))):
+                raise ValueError("observed_vars must be subset of range(N).")
+            if self.observed_vars != sorted(self.observed_vars):
+                raise ValueError("observed_vars must ordered.")
+            if len(self.observed_vars) != len(set(self.observed_vars)):
+                raise ValueError("observed_vars must not contain duplicates.")
 
     def set_dataframe(self, dataframe):
         """Dummy function."""
@@ -447,7 +460,7 @@ class OracleCI:
 
         return False
 
-    def is_dsep(self, X, Y, Z, tau_max=None, compute_ancestors=False):
+    def _is_dsep(self, X, Y, Z, max_lag=None, compute_ancestors=False):
         """Returns whether X and Y are d-separated given Z in the graph.
 
         X, Y, Z are of the form (var, lag) for lag <= 0. D-separation is
@@ -472,9 +485,9 @@ class OracleCI:
         ----------
         X, Y, Z : list of tuples
             List of variables chosen for current independence test.
-        tau_max : int, optional (default: None)
-            Used here to constrain the is_dsep function to the graph
-            truncated at tau_max instead of identifying the max_lag from
+        max_lag : int, optional (default: None)
+            Used here to constrain the _is_dsep function to the graph
+            truncated at max_lag instead of identifying the max_lag from
             ancestral search.
         compute_ancestors : bool
             Whether to also make available the ancestors for X, Y, Z as
@@ -491,10 +504,10 @@ class OracleCI:
         if self.verbosity > 0:
             print("Testing X=%s d-sep Y=%s given Z=%s in TSG" %(X, Y, Z))
 
-        if tau_max is not None:
-            max_lags = dict([(j, tau_max) for j in range(N)])
+        if max_lag is not None:
+            max_lags = dict([(j, max_lag) for j in range(N)])
             if self.verbosity > 0:
-                print("Set max. time lag to: ", tau_max)
+                print("Set max. time lag to: ", max_lag)
 
         else:
             # Get maximum non-repeated ancestral time lag
@@ -520,7 +533,7 @@ class OracleCI:
         self.max_lag = np.array(max_lags.values()).max()
 
 
-        # _has_any_path is the main function that searched open paths
+        # _has_any_path is the main function that searches open paths
         any_path = self._has_any_path(X, Y, conds=Z, max_lag=max_lags)
         if self.verbosity > 0:
             print("_has_any_path = ", any_path)
@@ -556,11 +569,9 @@ class OracleCI:
         ----------
         X, Y, Z : list of tuples
             X,Y,Z are of the form [(var, -tau)], where var specifies the
-            variable index and tau the time lag.
+            variable index in the observed_vars and tau the time lag.
         tau_max : int, optional (default: 0)
-            Used here to constrain the is_dsep function to the graph
-            truncated at tau_max instead of identifying the max_lag (see 
-            function is_dsep).
+            Not used here.
         cut_off : {'2xtau_max', 'max_lag', 'max_lag_or_tau_max'}
             Not used here.
 
@@ -570,12 +581,17 @@ class OracleCI:
             The test statistic value and the p-value.
         """
 
+        # Translate from observed_vars index to full variable set index
+        X = [(self.observed_vars[x[0]], x[1]) for x in X]
+        Y = [(self.observed_vars[y[0]], y[1]) for y in Y]
+        Z = [(self.observed_vars[z[0]], z[1]) for z in Z]
+
         # Get the array to test on
         X, Y, Z = self._check_XYZ(X, Y, Z)
 
         if not str((X, Y, Z)) in self.dsepsets:
-            self.dsepsets[str((X, Y, Z))] = self.is_dsep(X, Y, Z, 
-                tau_max=tau_max,
+            self.dsepsets[str((X, Y, Z))] = self._is_dsep(X, Y, Z, 
+                max_lag=None,
                 compute_ancestors=compute_ancestors)
 
         if self.dsepsets[str((X, Y, Z))]:
@@ -600,7 +616,7 @@ class OracleCI:
         ----------
         X, Y [, Z] : list of tuples
             X,Y,Z are of the form [(var, -tau)], where var specifies the
-            variable index and tau the time lag.
+            variable index in the observed_vars and tau the time lag.
 
         tau_max : int, optional (default: 0)
             Maximum time lag. This may be used to make sure that estimates for
@@ -612,11 +628,17 @@ class OracleCI:
             The test statistic value.
 
         """
+
+        # Translate from observed_vars index to full variable set index
+        X = [(self.observed_vars[x[0]], x[1]) for x in X]
+        Y = [(self.observed_vars[y[0]], y[1]) for y in Y]
+        Z = [(self.observed_vars[z[0]], z[1]) for z in Z]
+
         # Check XYZ
         X, Y, Z = _check_XYZ(X, Y, Z)
 
         if not str((X, Y, Z)) in self.dsepsets:
-            self.dsepsets[str((X, Y, Z))] = self.is_dsep(X, Y, Z, 
+            self.dsepsets[str((X, Y, Z))] = self._is_dsep(X, Y, Z, 
                 tau_max=tau_max)
 
         if self.dsepsets[str((X, Y, Z))]:
@@ -658,7 +680,6 @@ class OracleCI:
 if __name__ == '__main__':
 
     import tigramite.plotting as tp
-    import test_pcmci_calculations as tests
     from matplotlib import pyplot as plt
     def lin_f(x): return x
 
@@ -693,19 +714,19 @@ if __name__ == '__main__':
     #          3: [((3, -1), 0.7, lin_f), ((2, 0), -0.5, lin_f)],
     #          }
 
-    links = {0: [((0, -1), 0.5)],
-             1: [((0, -1), 0.5), ((2, -1), 0.5)],
-             2: [],
-             3: [((2, -1), 0.4), ((4, -1), -0.5)],
-             4: [((4, -1), 0.4)],
-             }
+    # links = {0: [((0, -1), 0.5)],
+    #          1: [((0, -1), 0.5), ((2, -1), 0.5)],
+    #          2: [],
+    #          3: [((2, -1), 0.4), ((4, -1), -0.5)],
+    #          4: [((4, -1), 0.4)],
+    #          }
 
-    def setup_nodes(auto_coeff, N):
-        link_coeffs = {}
-        for j in range(N):
-           link_coeffs[j] = [((j, -1), auto_coeff, lin_f)]
-        return link_coeffs
-    coeff = 0.5
+    # def setup_nodes(auto_coeff, N):
+    #     link_coeffs = {}
+    #     for j in range(N):
+    #        link_coeffs[j] = [((j, -1), auto_coeff, lin_f)]
+    #     return link_coeffs
+    # coeff = 0.5
 
     # link_coeffs = setup_nodes(0.7, N=3)
     # for i in [0, 2]:
@@ -718,18 +739,23 @@ if __name__ == '__main__':
     # links[2].append(((1, 0), coeff, lin_f))
     # links[2].append(((0, 0), coeff, lin_f))
 
+    links = {0: [((0, -1), 0.9, lin_f)],
+             1: [((1, -1), 0., lin_f), ((0, -1), 0.8, lin_f)],
+             2: [((2, -1), 0.7, lin_f), ((1, 0), 0.6, lin_f)],
+             3: [((3, -1), 0.7, lin_f), ((2, 0), -0.5, lin_f)],
+             }
 
-    oracle = OracleCI(links, verbosity=2)
+    oracle = OracleCI(links, observed_vars=[1, 1, 2, 3], verbosity=2)
     # print (oracle.max_lag)
 
-    X = [(0, 0)]
-    Y = [(4, 0)]
-    Z = [(1, 0), (3, 0)]  #(j, -2) for j in range(N)] + [(j, 0) for j in range(N)]
+    X = [(0, -5)]
+    Y = [(0, 0)]
+    Z = []  #(j, -2) for j in range(N)] + [(j, 0) for j in range(N)]
 
     # print(oracle._get_non_blocked_ancestors(Z, Z=None, mode='max_lag',
     #                                     max_lag=2))
 
-    oracle.run_test(X, Y, Z, tau_max=None, compute_ancestors=True, verbosity=2)
+    oracle.run_test(X, Y, Z, tau_max=None, compute_ancestors=False, verbosity=2)
    
     anc_x=None  #oracle.anc_all_x[X[0]]
     anc_y=None #oracle.anc_all_y[Y[0]]

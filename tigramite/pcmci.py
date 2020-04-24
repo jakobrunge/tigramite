@@ -2363,9 +2363,9 @@ class PCMCI():
                   conflict_resolution=conflict_resolution)
 
         # Remove tau-dimension
-        results['graph'] = results['graph'].squeeze()
-        results['val_matrix'] = results['val_matrix'].squeeze()
-        results['p_matrix'] = results['p_matrix'].squeeze()
+        # results['graph'] = results['graph'].squeeze()
+        # results['val_matrix'] = results['val_matrix'].squeeze()
+        # results['p_matrix'] = results['p_matrix'].squeeze()
         old_sepsets = results['sepset'].copy()
         results['sepset'] = {}
         for old_sepset in old_sepsets:
