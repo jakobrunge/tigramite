@@ -1401,7 +1401,7 @@ class PCMCI():
                                  pq_matrix,
                                  val_matrix,
                                  alpha_level=0.05,
-                                 include_lagzero_links=False):
+                                 include_lagzero_parents=False):
         """DEPRECATED: use return_significant_links() instead.
 
         Parameters
@@ -1414,8 +1414,8 @@ class PCMCI():
             1).
         alpha_level : float, optional (default: 0.05)
             Significance level.
-        include_lagzero_links : bool (default: False)
-            Whether the dictionary should also return links at lag
+        include_lagzero_parents : bool (default: False)
+            Whether the dictionary should also return parents at lag
             zero. Note that the link_matrix always contains those.
 
         Returns
@@ -1432,7 +1432,7 @@ class PCMCI():
         siglinks = self.return_significant_links(pq_matrix=pq_matrix,
                                  val_matrix=val_matrix,
                                  alpha_level=alpha_level,
-                                 include_lagzero_links=include_lagzero_links)
+                                 include_lagzero_links=include_lagzero_parents)
         siglinks['parents'] = siglinks.pop('link_dict')
         return siglinks
 

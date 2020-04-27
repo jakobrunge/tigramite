@@ -197,8 +197,7 @@ class OracleCI:
         t'-\tau_j} is not already part of the ancestors. The most lagged
         ancestor for every variable X^i defines the maximum ancestral time
         lag, which is also returned. In mode 'max_lag' ancestors are included
-        up to the maximum time lag max_lag[X^i] which is specific for every
-        variable X^i.
+        up to the maximum time lag max_lag.
 
         It's main use is to return the maximum ancestral time lag max_lag of
         y in Y for every variable in self.links_coeffs.
@@ -214,17 +213,15 @@ class OracleCI:
         mode : {'non_repeating', 'max_lag'}
             Whether repeating links should be excluded or ancestors should be
             followed up to max_lag.
-        max_lag : dict of ints for every N
-            Dictionary for every N indicating the maximum time lag to include
-            ancestors.
+        max_lag : int
+            Maximum time lag to include ancestors.
 
         Returns
         -------
         ancestors : dict
             Includes ancestors for every y in Y.
-        max_lag : dict
-            Dictionary for every N indicating the maximum time lag to include
-            ancestors.
+        max_lag : int
+            Maximum time lag to include ancestors.
         """
 
         def _repeating(link, seen_links):
@@ -251,18 +248,17 @@ class OracleCI:
 
         # Initialize max. ancestral time lag for every N
         if mode == 'non_repeating':
-            max_lag = dict([(j, 0) for j in range(N)])
+            max_lag = 0
         else:
             if max_lag is None:
-                raise ValueError("max_lag must be dictionary of max. time lag "
-                                 "for every variable in mode = 'max_lag'")
+                raise ValueError("max_lag must be set in mode = 'max_lag'")
 
         ancestors = dict([(y, []) for y in Y])
 
         for y in Y:
             j, tau = y   # tau <= 0
             if mode == 'non_repeating':
-                max_lag[j] = max(max_lag[j], abs(tau))
+                max_lag = max(max_lag, abs(tau))
             seen_links = []
             this_level = [y]
             while len(this_level) > 0:
@@ -274,10 +270,10 @@ class OracleCI:
                             if ((mode == 'non_repeating' and
                                 not _repeating((par, varlag), seen_links)) or
                                 (mode == 'max_lag' and
-                                 abs(tau) <= abs(max_lag[i]))):
+                                 abs(tau) <= abs(max_lag))):
                                     ancestors[y].append(par)
                                     if mode == 'non_repeating':
-                                        max_lag[i] = max(max_lag[i],
+                                        max_lag = max(max_lag,
                                                          abs(tau))
                                     next_level.append(par)
                                     seen_links.append((par, varlag))
@@ -293,7 +289,7 @@ class OracleCI:
         Paths are walked according to the d-separation rules where paths can
         only traverse motifs <-- v <-- or <-- v --> or --> v --> or
         --> [v] <-- where [.] indicates that v is conditioned on.
-        Furthermore, paths nodes (v, t) need to fulfill max_lag[v] <= t <= 0
+        Furthermore, paths nodes (v, t) need to fulfill max_lag <= t <= 0
         and links cannot be traversed backwards.
 
         Parameters
@@ -304,9 +300,9 @@ class OracleCI:
         conds : list of tuples
             Of the form [(var, -tau)], where var specifies the variable
             index and tau the time lag.
-        max_lag : dict of ints for every N
-            Dictionary for every N indicating the maximum time lag to include
-            ancestors.
+        max_lag : int
+            Maximum time lag.
+
         """
 
         def _walk_to_parents(v, fringe, this_path, other_path):
@@ -318,7 +314,7 @@ class OracleCI:
                 i, t = w
                 if (w not in conds and
                     # (w, v) not in seen_links and
-                    t <= 0 and abs(t) <= max_lag[i]):
+                    t <= 0 and abs(t) <= max_lag):
                     if ((w, 'tail') not in this_path and 
                         (w, None) not in this_path):
                         if self.verbosity > 1:
@@ -346,7 +342,7 @@ class OracleCI:
                 i, t = w
                 if (
                     # (w, v) not in seen_links and
-                    t <= 0 and abs(t) <= max_lag[i]):
+                    t <= 0 and abs(t) <= max_lag):
                     if ((w, 'arrowhead') not in this_path and 
                         (w, None) not in this_path):
                         if self.verbosity > 1:
@@ -458,6 +454,10 @@ class OracleCI:
                                                 pred)
                     if found_path: return True
 
+                if self.verbosity > 1:
+                    print("X_fringe = %s \n" % str(forward_fringe) +
+                          "Y_fringe = %s" % str(reverse_fringe))           
+
         return False
 
     def _is_dsep(self, X, Y, Z, max_lag=None, compute_ancestors=False):
@@ -466,19 +466,18 @@ class OracleCI:
         X, Y, Z are of the form (var, lag) for lag <= 0. D-separation is
         based on:
 
-        1. Assessing maximum time lag max_lag[j] for j in [0,...,N-1] of last
-        ancestor of any X, Y, Z with non-blocked (by Z), non-repeating
-        directed path towards X, Y, Z in the graph. 'non_repeating' means
-        that an ancestor X^i_{ t-\tau_i} with link X^i_{t-\tau_i} --> X^j_{
-        t-\tau_j} is only included if X^i_{t'-\tau_i} --> X^j_{ t'-\tau_j}
-        for t'!=t is not already part of the ancestors.
+        1. Assessing maximum time lag max_lag of last ancestor of any X, Y, Z
+        with non-blocked (by Z), non-repeating directed path towards X, Y, Z
+        in the graph. 'non_repeating' means that an ancestor X^i_{ t-\tau_i}
+        with link X^i_{t-\tau_i} --> X^j_{ t-\tau_j} is only included if
+        X^i_{t'-\tau_i} --> X^j_{ t'-\tau_j} for t'!=t is not already part of
+        the ancestors.
 
-        2. Using the time series graph truncated at max_lag[j] (different for
-        every j in [0,...,N-1]) we then test d-separation between X and Y
-        conditional on Z using breadth-first search of non-blocked paths
-        according to d-separation rules.
+        2. Using the time series graph truncated at max_lag we then test
+        d-separation between X and Y conditional on Z using breadth-first
+        search of non-blocked paths according to d-separation rules.
 
-        Optionally makes available the ancestors up to max_lag[j] of X, Y,
+        Optionally makes available the ancestors up to max_lag of X, Y,
         Z. This may take a very long time, however.
 
         Parameters
@@ -505,36 +504,31 @@ class OracleCI:
             print("Testing X=%s d-sep Y=%s given Z=%s in TSG" %(X, Y, Z))
 
         if max_lag is not None:
-            max_lags = dict([(j, max_lag) for j in range(N)])
+            # max_lags = dict([(j, max_lag) for j in range(N)])
             if self.verbosity > 0:
                 print("Set max. time lag to: ", max_lag)
 
         else:
             # Get maximum non-repeated ancestral time lag
-            _, max_lags_X = self._get_non_blocked_ancestors(X, conds=Z, 
+            _, max_lag_X = self._get_non_blocked_ancestors(X, conds=Z, 
                                                            mode='non_repeating')
-            _, max_lags_Y = self._get_non_blocked_ancestors(Y, conds=Z, 
+            _, max_lag_Y = self._get_non_blocked_ancestors(Y, conds=Z, 
                                                            mode='non_repeating')
-            _, max_lags_Z = self._get_non_blocked_ancestors(Z, conds=Z, 
+            _, max_lag_Z = self._get_non_blocked_ancestors(Z, conds=Z, 
                                                            mode='non_repeating')
 
-            # Get max time lag for each j in [0,...,N-1] among the ancestors of
-            # X, Y, Z
-            max_lags = dict([(j, 0) for j in range(N)])
-            for j in range(N):
-                max_lags[j] = max(max_lags_X[j], 
-                                  max_lags_Y[j], 
-                                  max_lags_Z[j])
+            # Get max time lag among the ancestors
+            max_lag = max(max_lag_X, max_lag_Y, max_lag_Z)
 
             if self.verbosity > 0:
-                print("Max. non-repeated ancestral time lags: ", max_lags)
+                print("Max. non-repeated ancestral time lag: ", max_lag)
 
-        # Also store overall max. lag (not used here, though)
-        self.max_lag = np.array(max_lags.values()).max()
+        # Store overall max. lag 
+        self.max_lag = max_lag
 
 
         # _has_any_path is the main function that searches open paths
-        any_path = self._has_any_path(X, Y, conds=Z, max_lag=max_lags)
+        any_path = self._has_any_path(X, Y, conds=Z, max_lag=max_lag)
         if self.verbosity > 0:
             print("_has_any_path = ", any_path)
 
@@ -550,11 +544,11 @@ class OracleCI:
             # Get ancestors up to maximum ancestral time lag incl. repeated
             # links
             self.anc_all_x, _ = self._get_non_blocked_ancestors(X, conds=Z,
-                                            mode='max_lag', max_lag=max_lags)
+                                            mode='max_lag', max_lag=max_lag)
             self.anc_all_y, _ = self._get_non_blocked_ancestors(Y, conds=Z,
-                                            mode='max_lag', max_lag=max_lags)
+                                            mode='max_lag', max_lag=max_lag)
             self.anc_all_z, _ = self._get_non_blocked_ancestors(Z, conds=Z,
-                                            mode='max_lag', max_lag=max_lags)
+                                            mode='max_lag', max_lag=max_lag)
 
         return dseparated
 
@@ -739,23 +733,21 @@ if __name__ == '__main__':
     # links[2].append(((1, 0), coeff, lin_f))
     # links[2].append(((0, 0), coeff, lin_f))
 
-    links = {0: [((0, -1), 0.9, lin_f)],
-             1: [((1, -1), 0., lin_f), ((0, -1), 0.8, lin_f)],
-             2: [((2, -1), 0.7, lin_f), ((1, 0), 0.6, lin_f)],
-             3: [((3, -1), 0.7, lin_f), ((2, 0), -0.5, lin_f)],
+    links = {0: [((0, -1), 0.9, lin_f), ((1, -1), 0.8, lin_f)],
+             1: [],
+             2: [((2, -1), 0.9, lin_f), ((1, -1), 0.8, lin_f)],
              }
+    observed_vars = [0,2]
 
-    oracle = OracleCI(links, observed_vars=[1, 1, 2, 3], verbosity=2)
-    # print (oracle.max_lag)
-
-    X = [(0, -5)]
-    Y = [(0, 0)]
+    X = [(0, -4)]
+    Y = [(1, 0)]
     Z = []  #(j, -2) for j in range(N)] + [(j, 0) for j in range(N)]
 
     # print(oracle._get_non_blocked_ancestors(Z, Z=None, mode='max_lag',
     #                                     max_lag=2))
+    cond_ind_test = OracleCI(links, observed_vars=observed_vars, verbosity=2)
 
-    oracle.run_test(X, Y, Z, tau_max=None, compute_ancestors=False, verbosity=2)
+    print(cond_ind_test.run_test(X=X, Y=Y, Z=Z))
    
     anc_x=None  #oracle.anc_all_x[X[0]]
     anc_y=None #oracle.anc_all_y[Y[0]]
@@ -763,7 +755,10 @@ if __name__ == '__main__':
     # for z in Z:
     #     anc_xy += oracle.anc_all_z[z]
     
-    fig, ax = tp.plot_tsg(links, X=X, Y=Y, Z=Z,
+    fig, ax = tp.plot_tsg(links, 
+                X=[(observed_vars[x[0]], x[1]) for x in X], 
+                Y=[(observed_vars[y[0]], y[1]) for y in Y], 
+                Z=[(observed_vars[z[0]], z[1]) for z in Z],
         anc_x=anc_x, anc_y=anc_y, 
         anc_xy=anc_xy)
 
