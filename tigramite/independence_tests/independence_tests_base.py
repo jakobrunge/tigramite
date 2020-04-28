@@ -272,7 +272,7 @@ class CondIndTest():
                                               verbosity=verbosity)
     
     def _get_array_hash(self, array, xyz, XYZ):
-        """Helper function to get hash or array.
+        """Helper function to get hash of array.
 
         For a CI test X _|_ Y | Z the order of variables within X or Y or Z 
         does not matter and also the order X and Y can be swapped.

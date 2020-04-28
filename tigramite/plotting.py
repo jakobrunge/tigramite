@@ -1062,8 +1062,7 @@ def _draw_network_with_curved_edges(
         data_to_rgb_links.set_array(np.array(all_links_weights))
         data_to_rgb_links.set_clim(vmin=links_vmin, vmax=links_vmax)
         # Create colorbars for links
-# cax_e = pyplot.axes([.8, ax.figbox.bounds[1]+0.5, 0.025, 0.35],
-# frameon=False) # setup colorbar axes.
+
         # setup colorbar axes.
         if show_colorbar:
             cax_e = pyplot.axes([0.55, ax.figbox.bounds[1] + 0.02, 0.4, 0.025 +
@@ -1083,41 +1082,6 @@ def _draw_network_with_curved_edges(
             # cb_n.set_ticks()
             cax_e.set_xlabel(
                 link_colorbar_label, labelpad=1, fontsize=label_fontsize)
-
-#     if cmap_links_edges is not None and len(all_links_edge_weights) > 0:
-#         if links_edges_vmin is None:
-#             links_edges_vmin = np.array(all_links_edge_weights).min()
-#         if links_edges_vmax is None:
-#             links_edges_vmax = np.array(all_links_edge_weights).max()
-#         data_to_rgb_links_edges = pyplot.cm.ScalarMappable(
-#             norm=None, cmap=pyplot.get_cmap(cmap_links_edges))
-#         data_to_rgb_links_edges.set_array(np.array(all_links_edge_weights))
-#         data_to_rgb_links_edges.set_clim(
-#             vmin=links_edges_vmin, vmax=links_edges_vmax)
-
-#         # Create colorbars for link edges
-# # cax_e = pyplot.axes([.8+.1, ax.figbox.bounds[1]+0.5, 0.025, 0.35],
-# # frameon=False) # setup colorbar axes.
-#         # setup colorbar axes.
-#         cax_e = pyplot.axes(
-#             [0.55, ax.figbox.bounds[1] + 0.05 + 0.1, 0.4, 0.025],
-#             frameon=False)
-
-#         cb_e = pyplot.colorbar(
-#             data_to_rgb_links_edges, cax=cax_e, orientation='horizontal')
-#         try:
-#             cb_e.set_ticks(np.arange(_myround(links_edges_vmin,
-#                                                 links_edges_ticks, 'down'),
-#                                         _myround(links_edges_vmax,
-#                                                 links_edges_ticks, 'up') +
-#                                         links_edges_ticks,
-#                                         links_edges_ticks))
-#         except:
-#             print ('no ticks given')
-#         cb_e.outline.remove()
-#         # cb_n.set_ticks()
-#         cax_e.set_xlabel(
-#             link_edge_colorbar_label, labelpad=1, fontsize=label_fontsize)
 
     # Draw edges
     seen = {}
@@ -1757,20 +1721,13 @@ def plot_time_series_graph(
     _draw_network_with_curved_edges(
         fig=fig, ax=ax,
         G=deepcopy(G), pos=pos,
-        # dictionary of rings: {0:{'sizes':(N,)-array, 'color_array':(N,)-array
-        # or None, 'cmap':string,
         node_rings=node_rings,
-        # 'vmin':float or None, 'vmax':float or None, 'label':string or None}}
         node_labels=node_labels, node_label_size=node_label_size,
         node_alpha=alpha, standard_size=node_size,
         standard_cmap='OrRd', standard_color='lightgrey',
         log_sizes=False,
         cmap_links=cmap_edges, links_vmin=vmin_edges,
         links_vmax=vmax_edges, links_ticks=edge_ticks,
-
-        # cmap_links_edges='YlOrRd', links_edges_vmin=-1., links_edges_vmax=1.,
-        # links_edges_ticks=.2, link_edge_colorbar_label='link_edge',
-
         arrowstyle='simple', arrowhead_size=arrowhead_size,
         curved_radius=curved_radius, label_fontsize=label_fontsize,
         label_fraction=.5,
@@ -2608,6 +2565,8 @@ if __name__ == '__main__':
     from tigramite.independence_tests import ParCorr
     import tigramite.data_processing as pp
     # np.random.seed(42)
+
+
     val_matrix = 2.+np.random.rand(4, 4, 2)
 
     # Complete test case
@@ -2635,11 +2594,11 @@ if __name__ == '__main__':
     link_attribute[0,1,0] = 'spurious'
     link_attribute[1,0,0] = 'spurious'
 
-    link_attribute[0,2,1] = 'spurious'
+    # link_attribute[0,2,1] = 'spurious'
 
     # link_matrix = np.random.randint(0, 2, size=val_matrix.shape)
 
-    print(link_matrix[:,:,1])
+    # print(link_matrix[:,:,1])
     print(link_matrix[:,:,0])
     plot_time_series_graph(
         # val_matrix=val_matrix,
@@ -2662,8 +2621,6 @@ if __name__ == '__main__':
         save_name='graph_test.pdf',
     )
     # pyplot.show()
-
-    print(matplotlib.__version__)
 
     # print link_matrix
     # data = np.random.randn(100,3)

@@ -69,6 +69,10 @@ class DataFrame():
         #     raise ValueError("NaNs in the data")
         self._check_mask()
 
+        # If PCMCI.run_bootstrap_of is called, then the
+        # bootstrap random draw can be set here
+        self.bootstrap = None
+
     def _check_mask(self, mask=None, require_mask=False):
         """Checks that the mask is:
             * The same shape as the data
@@ -189,7 +193,6 @@ class DataFrame():
         else:
             raise ValueError("max_lag must be in {'2xtau_max', 'max_lag', 'max_lag_or_tau_max'}")
 
-
         # Setup XYZ identifier
         index_code = {'x' : 0,
                       'y' : 1,
@@ -203,7 +206,10 @@ class DataFrame():
         array = np.zeros((dim, time_length), dtype=self.values.dtype)
         # Note, lags are negative here
         for i, (var, lag) in enumerate(XYZ):
-            array[i, :] = self.values[max_lag + lag:T + lag, var]
+            if self.bootstrap is None:
+                array[i, :] = self.values[max_lag + lag:T + lag, var]
+            else:
+                array[i, :] = self.values[self.bootstrap + lag, var]
 
         # Choose which indices to use
         use_indices = np.ones(time_length, dtype='int')
@@ -213,7 +219,10 @@ class DataFrame():
         if self.missing_flag is not None:
             missing_anywhere = np.any(self.values == self.missing_flag, axis=1)
             for tau in range(max_lag+1):
-                use_indices[missing_anywhere[tau:T-max_lag+tau]] = 0
+                if self.bootstrap is None:
+                    use_indices[missing_anywhere[tau:T-max_lag+tau]] = 0
+                else:
+                    use_indices[missing_anywhere[self.bootstrap - max_lag + tau]] = 0
 
         # Use the mask override if needed
         _use_mask = mask
@@ -231,7 +240,11 @@ class DataFrame():
             for i, (var, lag) in enumerate(XYZ):
                 # Transform the mask into the output array shape, i.e. from data
                 # mask to array mask
-                array_mask[i, :] = (_use_mask[max_lag + lag: T + lag, var] == False)
+                if self.bootstrap is None:
+                    array_mask[i, :] = (_use_mask[max_lag + lag: T + lag, var] == False)
+                else:
+                    array_mask[i, :] = (_use_mask[self.bootstrap + lag, var] == False)
+
             # Iterate over defined mapping from letter index to number index,
             # i.e. 'x' -> 0, 'y' -> 1, 'z'-> 2
             for idx, cde in index_code.items():

@@ -10,6 +10,7 @@ import itertools
 from collections import defaultdict
 from copy import deepcopy
 import numpy as np
+import scipy.stats
 
 
 def _create_nested_dictionary(depth=0, lowest_type=dict):
@@ -3556,7 +3557,7 @@ class PCMCI():
                       max_conds_px,
                       fdr_method,
                       ):
-        """Optimzies pc_alpha in PCMCIplus.
+        """Optimizes pc_alpha in PCMCIplus.
 
         If a list or None is passed for ``pc_alpha``, the significance level is
         optimized for every graph across the given ``pc_alpha`` values using the
@@ -3637,6 +3638,122 @@ class PCMCI():
         optimal_results['optimal_alpha'] = optimal_alpha
         return optimal_results
 
+    def run_bootstrap_of(self, method, method_args, boot_samples=100,
+                         conf_lev=0.95):
+        """Runs chosen method on bootstrap samples drawn from DataFrame.
+        
+        Bootstraps for tau=0 are drawn from [2xtau_max, ..., T] and all lagged
+        variables constructed in DataFrame.construct_array are consistently
+        shifted with respect to this bootsrap sample to ensure that lagged
+        relations in the bootstrap sample are preserved.
+
+        The function returns summary_results and all_results (containing the
+        individual bootstrap results). summary_results contains  val_matrix_mean
+        and val_matrix_interval, the latter containing the confidence bounds for
+        conf_lev. If the method also returns a graph, then 'most_frequent_links'
+        containing the most frequent link outcome (either 0 or 1 or a specific
+        link type) in each entry of graph, as well as 'link_frequency',
+        containing the occurence frequency of the most frequent link outcome,
+        are returned. 
+
+        Assumes that method uses cond_ind_test.run_test() function with cut_off
+        = '2xtau_max'.
+
+        Parameters
+        ----------
+        method : str
+            Chosen method among valid functions in PCMCI.
+        method_args : dict
+            Arguments passed to method.
+        boot_samples : int
+            Number of bootstrap samples to draw.
+        conf_lev : float, optional (default: 0.9)
+            Two-sided confidence interval for summary results.
+
+        Returns
+        -------
+        Dictionary of results for every bootstrap sample.
+        """
+
+        valid_methods = ['run_pc_stable',
+                          'run_mci',
+                          'get_lagged_dependencies',
+                          'run_fullci',
+                          'run_bivci',
+                          'run_pcmci',
+                          'run_pcalg',
+                          'run_pcalg_non_timeseries_data',
+                          'run_pcmciplus']
+
+        if method not in valid_methods:
+            raise ValueError("method must be one of %s" % str(valid_methods))
+
+        T = self.T
+
+        # Extract tau_max to construct bootstrap draws
+        if 'tau_max' not in method_args:
+            raise ValueError("tau_max must be explicitely set in method_args.")
+        tau_max = method_args['tau_max']
+
+        if self.cond_ind_test.recycle_residuals:
+            # recycle_residuals clashes with bootstrap draws...
+            raise ValueError("cond_ind_test.recycle_residuals must be False.")
+
+        if self.verbosity > 0:
+            print("\n##\n## Running Bootstrap of %s " % method +
+                  "\n##\n"
+                  "\nboot_samples = %s \n" % boot_samples
+                  )
+
+        boot_results = {}
+        for b in range(boot_samples):
+            boot_draw = np.random.randint(2*tau_max, T, size=T-2*tau_max)
+            self.dataframe.bootstrap = boot_draw
+            boot_results[b] = getattr(self, method)(**method_args)
+
+        # Aggregate val_matrix and other arrays to new arrays with
+        # boot_samples as first dimension. Lists and other objects
+        # are stored in dictionary
+        all_results = {}
+        for b in range(boot_samples):
+            for key in boot_results[b]:
+                res_item = boot_results[b][key]
+                if type(res_item) is np.ndarray:
+                    if b == 0:
+                        all_results[key] = np.empty((boot_samples,) 
+                                                     + res_item.shape,
+                                                     dtype=res_item.dtype) 
+                    all_results[key][b] = res_item
+                else:
+                    if b == 0:
+                        all_results[key] = {}
+                    all_results[key][b] = res_item
+
+        # Generate summary results
+        summary_results = {}
+
+        if 'graph' in all_results:
+            most_frequent_links, counts = scipy.stats.mode(
+                        all_results['graph'], axis=0)
+            summary_results['most_frequent_links'] =\
+                    most_frequent_links.squeeze()
+            summary_results['link_frequency'] =\
+                    counts.squeeze()/float(boot_samples)   
+
+        # Confidence intervals for val_matrix; interval is two-sided
+        c_int = (1. - (1. - conf_lev)/2.)
+        summary_results['val_matrix_mean'] = np.mean(
+                                    all_results['val_matrix'], axis=0)
+
+        summary_results['val_matrix_interval'] = np.stack(np.percentile(
+                                    all_results['val_matrix'], axis=0,
+                                    q = [100*(1. - c_int), 100*c_int]), axis=3)
+
+        return {'summary_results': summary_results, 
+                'all_results': all_results}
+
+
+
 
 if __name__ == '__main__':
     from tigramite.independence_tests import ParCorr, CMIknn
@@ -3654,55 +3771,113 @@ if __name__ == '__main__':
     coeff = 0.4
     T = 500
 
-    links ={0: [((0, -1), auto_coeff, lin_f),
-            ((1, -1), coeff, lin_f)
-            ],
-        1: [((1, -1), auto_coeff, lin_f), 
-            ],
-        2: [((2, -1), auto_coeff, lin_f), 
-            ((3, 0), -coeff, lin_f), 
-            ],
-        3: [((3, -1), auto_coeff, lin_f), 
-            ((1, -2), coeff, lin_f), 
-            ],
-        4: [((4, -1), auto_coeff, lin_f), 
-            ((3, 0), coeff, lin_f), 
-            ],   
-        5: [((5, -1), 0.5*auto_coeff, lin_f), 
-            ((6, 0), coeff, lin_f), 
-            ],  
-        6: [((6, -1), 0.5*auto_coeff, lin_f), 
-            ((5, -1), -coeff, lin_f), 
-            ],  
-        7: [((7, -1), auto_coeff, lin_f), 
-            ((8, 0), -coeff, lin_f), 
-            ],  
-        8: [],                                     
-        }
+    # links ={0: [((0, -1), auto_coeff, lin_f),
+    #         ((1, -1), coeff, lin_f)
+    #         ],
+    #     1: [((1, -1), auto_coeff, lin_f), 
+    #         ],
+    #     2: [((2, -1), auto_coeff, lin_f), 
+    #         ((3, 0), -coeff, lin_f), 
+    #         ],
+    #     3: [((3, -1), auto_coeff, lin_f), 
+    #         ((1, -2), coeff, lin_f), 
+    #         ],
+    #     4: [((4, -1), auto_coeff, lin_f), 
+    #         ((3, 0), coeff, lin_f), 
+    #         ],   
+    #     5: [((5, -1), 0.5*auto_coeff, lin_f), 
+    #         ((6, 0), coeff, lin_f), 
+    #         ],  
+    #     6: [((6, -1), 0.5*auto_coeff, lin_f), 
+    #         ((5, -1), -coeff, lin_f), 
+    #         ],  
+    #     7: [((7, -1), auto_coeff, lin_f), 
+    #         ((8, 0), -coeff, lin_f), 
+    #         ],  
+    #     8: [],                                     
+    #     }
 
     # links = {0: [((0, -1), 0.8, lin_f), ((1, -1), 0.6, lin_f)],
     #          1: [((1, -1), 0., lin_f)],
     #          2: [((2, -1), 0., lin_f), ((1, 0), 0.6, lin_f)],
     #          3: [((3, -1), 0., lin_f), ((2, 0), -0.5, lin_f)],
     #          }
-    # links = {0: [((0, -1), 0.8, lin_f)],
-    #          1: [((1, -1), 0.8, lin_f), ((0, -1), 0.5, lin_f)],
-    #          2: [((2, -1), 0.8, lin_f), ((1, -2), -0.6, lin_f)]}
+    links = {0: [((0, -1), 0., lin_f)],
+             1: [((1, -1), 0., lin_f), ((0, 0), 0.6, lin_f)],
+             # 2: [((2, -1), 0.8, lin_f), ((1, -1), -0.1, lin_f)]
+             }
+
 
     noises = [np.random.randn for j in links.keys()]
     data, nonstat = pp.structural_causal_process(links,
-                                T=500, noises=noises, seed=7)
+                                T=300, noises=noises, seed=7)
+
+    data[10, 1] = 999.
+    data_mask = data>0.4
 
     verbosity = 2
-    dataframe = pp.DataFrame(data, )
+    dataframe = pp.DataFrame(data, missing_flag=999., mask=data_mask,)
     pcmci = PCMCI(dataframe=dataframe,
-                  # cond_ind_test= CMIknn(verbosity=1),
-                  cond_ind_test=ParCorr(
-                      recycle_residuals=False,
-                      # confidence='analytic',
-                      verbosity=0),
-                  verbosity=1,
+                  cond_ind_test=ParCorr(verbosity=0),
+                  verbosity=0,
                   )
+
+
+    boot_samples = 100
+    conf_lev = 0.95
+    results = pcmci.run_bootstrap_of(
+            method='get_lagged_dependencies', 
+            method_args={'tau_max':1}, boot_samples=boot_samples, 
+            conf_lev=conf_lev)['summary_results']
+
+    val_matrix = results['val_matrix_mean']
+    conf_matrix = results['val_matrix_interval']
+    lagmat = tp.setup_matrix(val_matrix.shape[0], val_matrix.shape[2]-1,
+        figsize=(3, 3))
+    lagmat.add_lagfuncs(
+        val_matrix=val_matrix,
+        conf_matrix=conf_matrix,
+        color='red'
+        )
+
+    # pcmci = PCMCI(dataframe=dataframe,
+    #               cond_ind_test=ParCorr(verbosity=0, conf_lev=conf_lev, 
+    #                 confidence='bootstrap', 
+    #                 conf_samples=boot_samples,
+    #                 conf_blocklength=1),
+    #               verbosity=0,
+    #               )
+    # results = pcmci.get_lagged_dependencies(
+    #               tau_max=1,
+    #               val_only=True,
+    #               )
+    # lagmat.add_lagfuncs(
+    #     val_matrix=results['val_matrix'],
+    #     conf_matrix=results['conf_matrix'],
+    #     color='black'
+    #     )
+
+
+    lagmat.savefig("/home/rung_ja/work/sandbox/lags_final.pdf")
+
+
+    # print(results['graph'])
+
+    # link_matrix = results['most_frequent_links']
+    # link_width = results['link_frequency']
+    # print(link_matrix.shape, val_matrix.shape, link_width.shape, conf_matrix.shape)
+    # print(link_matrix[:,:,0])
+    # print(link_width[:,:,0])
+
+    # tp.plot_time_series_graph(
+    #     val_matrix=val_matrix,
+    #     link_matrix=link_matrix,
+    #     link_width = link_width,
+    #     link_colorbar_label='MCI',
+    #     cmap_edges='OrRd',
+    #     save_name="/home/rung_ja/work/sandbox/tsg_final.pdf",
+    #     )
+
 
     # results = pcmci.run_pcalg_non_timeseries_data(pc_alpha=0.01,
     #               max_conds_dim=None, max_combinations=None, 
@@ -3748,24 +3923,24 @@ if __name__ == '__main__':
 
     # print (results)
 
-    results = pcmci.run_pcmciplus(
-        selected_links=None,
-        tau_min=0,
-        tau_max=3,
-        pc_alpha=None,
-        contemp_collider_rule='majority',
-        conflict_resolution=True,
-        reset_lagged_links=False,
-        max_conds_dim=None,
-        max_conds_py=None,
-        max_conds_px=None,
-        fdr_method='none'
-    )
-    pcmci.print_results(results, alpha_level=0.01)
+    # results = pcmci.run_pcmciplus(
+    #     selected_links=None,
+    #     tau_min=0,
+    #     tau_max=3,
+    #     pc_alpha=None,
+    #     contemp_collider_rule='majority',
+    #     conflict_resolution=True,
+    #     reset_lagged_links=False,
+    #     max_conds_dim=None,
+    #     max_conds_py=None,
+    #     max_conds_px=None,
+    #     fdr_method='none'
+    # )
+    # pcmci.print_results(results, alpha_level=0.01)
 
-    dag_member = pcmci._get_dag_from_cpdag(cpdag_graph=results['graph'])
-    print(dag_member[:,:,0])
-    print(dag_member[:,:,1])
+    # dag_member = pcmci._get_dag_from_cpdag(cpdag_graph=results['graph'])
+    # print(dag_member[:,:,0])
+    # print(dag_member[:,:,1])
 
     # print("Graph")
     # print(results['graph'])
