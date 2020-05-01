@@ -1234,11 +1234,11 @@ def plot_graph(val_matrix=None,
 
     # Only draw link in one direction among contemp
     # Remove lower triangle
-    # link_matrix = np.copy(link_matrix)
-    link_matrix[:,:,0] = np.triu(link_matrix[:,:,0])
+    link_matrix_upper = np.copy(link_matrix)
+    link_matrix_upper[:,:,0] = np.triu(link_matrix_upper[:,:,0])
 
     # net = _get_absmax(link_matrix != "")
-    net = np.any(link_matrix != "", axis=2)
+    net = np.any(link_matrix_upper != "", axis=2)
     G = nx.DiGraph(net)
 
     node_color = np.zeros(N)
@@ -1265,18 +1265,9 @@ def plot_graph(val_matrix=None,
             #                       sig_thres[v, u][0]))
 
 
-            dic['inner_edge'] = link_matrix[u,v,0]
+            dic['inner_edge'] = link_matrix_upper[u,v,0]
             
-            dic['inner_edge_type'] = link_matrix[u,v, 0]
-
-            # if link_matrix[u,v,0] and link_matrix[v,u,0]:
-            #     dic['oriented'] = False
-            # else:
-            #     if link_matrix[u,v,0]:
-            #         dic['oriented'] = (u, v)
-            #     else:
-            #         dic['oriented'] = (v, u)
-
+            dic['inner_edge_type'] = link_matrix_upper[u,v, 0]
 
             dic['inner_edge_alpha'] = alpha
             dic['inner_edge_color'] = val_matrix[u, v, 0]
@@ -1315,11 +1306,11 @@ def plot_graph(val_matrix=None,
                 # True if ensemble mean at lags > 0 is nonzero
                 # dic['outer_edge'] = np.any(
                 #     np.abs(val_matrix[u, v][1:]) >= sig_thres[u, v][1:])
-                dic['outer_edge'] = np.any(link_matrix[u,v,1:] != "")
+                dic['outer_edge'] = np.any(link_matrix_upper[u,v,1:] != "")
             else:
                 dic['outer_edge'] = False
 
-            dic['outer_edge_type'] = link_matrix[u,v, argmax]
+            dic['outer_edge_type'] = link_matrix_upper[u,v, argmax]
 
 
             dic['outer_edge_alpha'] = alpha
@@ -1345,7 +1336,7 @@ def plot_graph(val_matrix=None,
             # d['min_ensemble_frac'])
             if tau_max > 0:
                 lags = np.abs(val_matrix[u, v][1:]).argsort()[::-1] + 1
-                sig_lags = (np.where(link_matrix[u, v,1:]!="")[0] + 1).tolist()
+                sig_lags = (np.where(link_matrix_upper[u, v,1:]!="")[0] + 1).tolist()
             else:
                 lags, sig_lags = [], []
             if lag_array is not None:

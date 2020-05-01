@@ -3458,7 +3458,7 @@ class PCMCI():
                 return (j, adj_j)  
             else:
                 for (var1, var2) in itertools.combinations(adj_j, 2):
-                    if circle_pag[var1, var2, 0] == 0: 
+                    if circle_cpdag[var1, var2, 0] == 0: 
                         all_adjacent = False
                         break
 
@@ -3608,7 +3608,7 @@ class PCMCI():
             # of PCMCIplus, which is a CPDAG
             dag = self._get_dag_from_cpdag(
                             cpdag_graph=results[pc_alpha_here]['graph'])
-            parents = pcmci.return_significant_links(
+            parents = self.return_significant_links(
                     pq_matrix=results[pc_alpha_here]['p_matrix'],
                     val_matrix=results[pc_alpha_here]['val_matrix'], 
                     alpha_level=pc_alpha_here,
@@ -3709,32 +3709,30 @@ class PCMCI():
         for b in range(boot_samples):
             boot_draw = np.random.randint(2*tau_max, T, size=T-2*tau_max)
             self.dataframe.bootstrap = boot_draw
-            boot_results[b] = getattr(self, method)(**method_args)
+            boot_res = getattr(self, method)(**method_args)
 
-        # Aggregate val_matrix and other arrays to new arrays with
-        # boot_samples as first dimension. Lists and other objects
-        # are stored in dictionary
-        all_results = {}
-        for b in range(boot_samples):
-            for key in boot_results[b]:
-                res_item = boot_results[b][key]
+            # Aggregate val_matrix and other arrays to new arrays with
+            # boot_samples as first dimension. Lists and other objects
+            # are stored in dictionary
+            for key in boot_res:
+                res_item = boot_res[key]
                 if type(res_item) is np.ndarray:
                     if b == 0:
-                        all_results[key] = np.empty((boot_samples,) 
+                        boot_results[key] = np.empty((boot_samples,) 
                                                      + res_item.shape,
                                                      dtype=res_item.dtype) 
-                    all_results[key][b] = res_item
+                    boot_results[key][b] = res_item
                 else:
                     if b == 0:
-                        all_results[key] = {}
-                    all_results[key][b] = res_item
+                        boot_results[key] = {}
+                    boot_results[key][b] = res_item
 
         # Generate summary results
         summary_results = {}
 
-        if 'graph' in all_results:
+        if 'graph' in boot_results:
             most_frequent_links, counts = scipy.stats.mode(
-                        all_results['graph'], axis=0)
+                        boot_results['graph'], axis=0)
             summary_results['most_frequent_links'] =\
                     most_frequent_links.squeeze()
             summary_results['link_frequency'] =\
@@ -3743,14 +3741,14 @@ class PCMCI():
         # Confidence intervals for val_matrix; interval is two-sided
         c_int = (1. - (1. - conf_lev)/2.)
         summary_results['val_matrix_mean'] = np.mean(
-                                    all_results['val_matrix'], axis=0)
+                                    boot_results['val_matrix'], axis=0)
 
         summary_results['val_matrix_interval'] = np.stack(np.percentile(
-                                    all_results['val_matrix'], axis=0,
+                                    boot_results['val_matrix'], axis=0,
                                     q = [100*(1. - c_int), 100*c_int]), axis=3)
 
         return {'summary_results': summary_results, 
-                'all_results': all_results}
+                'boot_results': boot_results}
 
 
 
