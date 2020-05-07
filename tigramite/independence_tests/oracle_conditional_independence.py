@@ -633,7 +633,7 @@ class OracleCI:
 
         if not str((X, Y, Z)) in self.dsepsets:
             self.dsepsets[str((X, Y, Z))] = self._is_dsep(X, Y, Z, 
-                tau_max=tau_max)
+                max_lag=None)
 
         if self.dsepsets[str((X, Y, Z))]:
             return 0.
@@ -733,15 +733,21 @@ if __name__ == '__main__':
     # links[2].append(((1, 0), coeff, lin_f))
     # links[2].append(((0, 0), coeff, lin_f))
 
-    links = {0: [((0, -1), 0.9, lin_f), ((1, -1), 0.8, lin_f)],
-             1: [],
-             2: [((2, -1), 0.9, lin_f), ((1, -1), 0.8, lin_f)],
-             }
-    observed_vars = [0,2]
+    links ={0: [((0, -1), 0.5, lin_f),
+                ((1, -1), 0.5, lin_f)
+                ],
+            1: [((1, -1), 0.5, lin_f), 
+                ],  
+            2: [((2, -1), 0.5, lin_f),
+                ((1, -1), 0.5, lin_f)
+                ],                                   
+            }
+    observed_vars = [0, 2]
 
-    X = [(0, -4)]
-    Y = [(1, 0)]
-    Z = []  #(j, -2) for j in range(N)] + [(j, 0) for j in range(N)]
+    X = [(1, -1)]
+    Y = [(0, 0)]
+    Z = [(1, -3), (1, -2), (0, -2), (0, -1), (0, -3)]
+  #(j, -2) for j in range(N)] + [(j, 0) for j in range(N)]
 
     # print(oracle._get_non_blocked_ancestors(Z, Z=None, mode='max_lag',
     #                                     max_lag=2))
