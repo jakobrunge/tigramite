@@ -604,7 +604,11 @@ def a_pcmciplus_order_independence(request):
     (0.2, 'conservative', True, False, 'par_corr'),
     (0.2, 'majority', True, True, 'par_corr'),
     (0.2, 'conservative', True, True, 'par_corr'),
-])
+    (None, 'majority', True, False, 'par_corr'),
+    (None, 'conservative', True, False, 'par_corr'),
+    (None, 'majority', True, True, 'par_corr'),
+    (None, 'conservative', True, True, 'par_corr'),
+    ])
 def a_pcmciplus_params_order_independence(request):
     # Return the parameters for the mci test
     return request.param

@@ -267,7 +267,7 @@ class CondIndTest():
                                               tau_max=tau_max,
                                               mask_type=self.mask_type,
                                               return_cleaned_xyz=True,
-                                              do_checks=False,
+                                              do_checks=True,
                                               cut_off=cut_off,
                                               verbosity=verbosity)
     

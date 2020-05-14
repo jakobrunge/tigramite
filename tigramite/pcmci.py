@@ -3428,7 +3428,7 @@ class PCMCI():
 
         return graph_new
 
-    def _get_simplicial_node(self, circle_cpdag):
+    def _get_simplicial_node(self, circle_cpdag, variable_order):
         """Find simplicial nodes in circle component CPDAG.
 
         A vertex V is simplicial if all vertices adjacent to V are also adjacent
@@ -3438,6 +3438,8 @@ class PCMCI():
         ----------
         circle_cpdag : array of shape (N, N, tau_max+1)
             Circle component of PCMCIplus graph.
+        variable_order : list of length N
+            Order of variables in which to search for simplicial nodes.
 
         Returns
         -------
@@ -3445,9 +3447,7 @@ class PCMCI():
             First found simplicial node and its adjacencies.
         """
 
-        N, N, _ = circle_cpdag.shape
-
-        for j in range(N):
+        for j in variable_order:
             adj_j = np.where(circle_cpdag[:,j,0])[0].tolist()
 
             # Make sure the node has any adjacencies
@@ -3467,7 +3467,7 @@ class PCMCI():
 
         return None
 
-    def _get_dag_from_cpdag(self, cpdag_graph):
+    def _get_dag_from_cpdag(self, cpdag_graph, variable_order):
         """Yields one member of the Markov equivalence class of a CPDAG.
 
         Removes conflicting edges.
@@ -3503,6 +3503,8 @@ class PCMCI():
         ----------
         cpdag_graph : array of shape (N, N, tau_max+1)
             Result of PCMCIplus, a CPDAG.
+        variable_order : list of length N
+            Order of variables in which to search for simplicial nodes.
 
         Returns
         -------
@@ -3527,7 +3529,8 @@ class PCMCI():
                 circle_cpdag[i,j,0] = 0
 
         # Iterate through simplicial nodes
-        simplicial_node = self._get_simplicial_node(circle_cpdag)
+        simplicial_node = self._get_simplicial_node(circle_cpdag,
+                                                    variable_order)
         while simplicial_node is not None:
 
             # Choose such a vertex V1 and orient any edges incident to V1 into
@@ -3540,7 +3543,8 @@ class PCMCI():
                 circle_cpdag[var, j, 0] = circle_cpdag[j, var, 0] = 0 
 
             # Iterate
-            simplicial_node = self._get_simplicial_node(circle_cpdag)
+            simplicial_node = self._get_simplicial_node(circle_cpdag,
+                                                    variable_order)
 
         return dag
 
@@ -3606,15 +3610,25 @@ class PCMCI():
 
             # Get one member of the Markov equivalence class of the result
             # of PCMCIplus, which is a CPDAG
+
+            # First create order that is based on some feature of the variables
+            # to avoid order-dependence of DAG, i.e., it should not matter
+            # in which order the variables appear in dataframe
+            # Here we use the sum of absolute val_matrix values incident at j
+            val_matrix = results[pc_alpha_here]['val_matrix']
+            variable_order = np.argsort(
+                                np.abs(val_matrix).sum(axis=(0,2)))[::-1]
+
             dag = self._get_dag_from_cpdag(
-                            cpdag_graph=results[pc_alpha_here]['graph'])
+                            cpdag_graph=results[pc_alpha_here]['graph'],
+                            variable_order=variable_order)
             parents = self.return_significant_links(
                     pq_matrix=results[pc_alpha_here]['p_matrix'],
                     val_matrix=results[pc_alpha_here]['val_matrix'], 
                     alpha_level=pc_alpha_here,
                     include_lagzero_links=True)['link_dict']
 
-            # Figure out the best average score when the model selection
+            # Compute the best average score when the model selection
             # is applied to all N variables
             for j in range(self.N):
                 score[iscore] += \

@@ -335,7 +335,7 @@ class GaussProcReg():
                     tau_max=tau_max,
                     mask_type=self.cond_ind_test.mask_type,
                     return_cleaned_xyz=False,
-                    do_checks=False,
+                    do_checks=True,
                     verbosity=self.verbosity)
 
         dim, T = array.shape

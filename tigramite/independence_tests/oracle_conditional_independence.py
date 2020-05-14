@@ -732,21 +732,20 @@ if __name__ == '__main__':
     # links[1].append(((0, 0), coeff, lin_f))
     # links[2].append(((1, 0), coeff, lin_f))
     # links[2].append(((0, 0), coeff, lin_f))
-
-    links ={0: [((0, -1), 0.5, lin_f),
-                ((1, -1), 0.5, lin_f)
-                ],
-            1: [((1, -1), 0.5, lin_f), 
-                ],  
-            2: [((2, -1), 0.5, lin_f),
-                ((1, -1), 0.5, lin_f)
-                ],                                   
+    coeff = 0.5
+    links ={
+            0: [((0, -1), coeff, lin_f) ],
+            1: [((1, -1), coeff, lin_f)],
+            2: [((2, -1), coeff, lin_f), ((5, 0), coeff, lin_f)],
+            3: [((3, -1), coeff, lin_f), ((0, -2), coeff, lin_f), ((5, -3), coeff, lin_f), ((1, -2), coeff, lin_f)],
+            4: [((4, -1), coeff, lin_f), ((2, 0), coeff, lin_f)],
+            5: [((5, -1), coeff, lin_f), ((4, -1), coeff, lin_f)]   ,                                
             }
-    observed_vars = [0, 2]
+    observed_vars = [0, 1, 2, 3, 5]
 
-    X = [(1, -1)]
-    Y = [(0, 0)]
-    Z = [(1, -3), (1, -2), (0, -2), (0, -1), (0, -3)]
+    X = [(3, -3)]
+    Y = [(4, 0)]
+    Z = [] #(1, -3), (1, -2), (0, -2), (0, -1), (0, -3)]
   #(j, -2) for j in range(N)] + [(j, 0) for j in range(N)]
 
     # print(oracle._get_non_blocked_ancestors(Z, Z=None, mode='max_lag',
