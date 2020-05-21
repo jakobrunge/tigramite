@@ -1258,11 +1258,11 @@ def structural_causal_process(links, T, noises=None, seed=None):
         Indicates whether data has NaNs or infinities.
 
     """
-    np.random.seed(seed)
+    random_state = np.random.RandomState(seed)
 
     N = len(links.keys())
     if noises is None:
-        noises = [np.random.randn for j in range(N)]
+        noises = [random_state.randn for j in range(N)]
 
     if N != max(links.keys())+1 or N != len(noises):
         raise ValueError("links and noises keys must match N.")
