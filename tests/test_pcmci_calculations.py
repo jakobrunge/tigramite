@@ -317,7 +317,7 @@ def a_random_process(
     
     def lin(x): return x
 
-    np.random.seed(model_seed)
+    random_state = np.random.RandomState(model_seed)
 
     # print links
     a_len = len(auto_coeffs)
@@ -332,7 +332,7 @@ def a_random_process(
         L_contemp = L - L_lagged
         if L==1: 
             # Randomly assign a lagged or contemp link
-            L_lagged = np.random.randint(0,2)
+            L_lagged = random_state.randint(0,2)
             L_contemp = int(L_lagged == False)
 
     else:
@@ -342,13 +342,13 @@ def a_random_process(
 
     # for ir in range(num_trials):
     # Random order
-    causal_order = list(np.random.permutation(N))
+    causal_order = list(random_state.permutation(N))
 
     links = dict([(i, []) for i in range(N)])
 
     # Generate auto-dependencies at lag 1
     for i in causal_order:
-        a = auto_coeffs[np.random.randint(0, a_len)]
+        a = auto_coeffs[random_state.randint(0, a_len)]
 
         if a != 0.:
             links[i].append(((int(i), -1), float(a), lin))
@@ -358,12 +358,12 @@ def a_random_process(
     contemp_links = []
     for l in range(L_contemp):
 
-        cause = np.random.choice(causal_order[:-1])
-        effect = np.random.choice(causal_order)
+        cause = random_state.choice(causal_order[:-1])
+        effect = random_state.choice(causal_order)
         while (causal_order.index(cause) >= causal_order.index(effect)
              or (cause, effect) in chosen_links):
-            cause = np.random.choice(causal_order[:-1])
-            effect = np.random.choice(causal_order)
+            cause = random_state.choice(causal_order[:-1])
+            effect = random_state.choice(causal_order)
         
         contemp_links.append((cause, effect))
         chosen_links.append((cause, effect))
@@ -372,11 +372,11 @@ def a_random_process(
     lagged_links = []
     for l in range(L_lagged):
 
-        cause = np.random.choice(causal_order)
-        effect = np.random.choice(causal_order)
+        cause = random_state.choice(causal_order)
+        effect = random_state.choice(causal_order)
         while (cause, effect) in chosen_links or cause == effect:
-            cause = np.random.choice(causal_order)
-            effect = np.random.choice(causal_order)
+            cause = random_state.choice(causal_order)
+            effect = random_state.choice(causal_order)
         
         lagged_links.append((cause, effect))
         chosen_links.append((cause, effect))
@@ -389,12 +389,12 @@ def a_random_process(
         if (i, j) in contemp_links:
             tau = 0
         else:
-            tau = int(np.random.randint(1, tau_max+1))
+            tau = int(random_state.randint(1, tau_max+1))
         # print tau
         # CHoose coupling
-        c = float(coupling_coeffs[np.random.randint(0, c_len)])
+        c = float(coupling_coeffs[random_state.randint(0, c_len)])
         if c != 0:
-            func = coupling_funcs[np.random.randint(0, func_len)]
+            func = coupling_funcs[random_state.randint(0, func_len)]
 
             links[j].append(((int(i), -tau), c, func))
 
