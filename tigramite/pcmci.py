@@ -894,7 +894,8 @@ class PCMCI():
         print(print_str)
 
     def _print_pcmciplus_conditions(self, lagged_parents, i, j, abstau,
-                                    max_conds_py, max_conds_px):
+                                    max_conds_py, max_conds_px, 
+                                    max_conds_px_lagged):
         """Print information about the conditions for PCMCIplus.
 
         Parameters
@@ -911,10 +912,20 @@ class PCMCI():
             Max number of parents for node j.
         max_conds_px : int
             Max number of parents for lagged node i.
+        max_conds_px_lagged : int
+            Maximum number of lagged conditions of X when X is lagged in MCI 
+            tests. If None is passed, this number is equal to max_conds_px.
         """
         conds_y = lagged_parents[j][:max_conds_py]
         conds_y_no_i = [node for node in conds_y if node != (i, -abstau)]
-        conds_x = lagged_parents[i][:max_conds_px]
+        if abstau == 0:
+            conds_x = lagged_parents[i][:max_conds_px]
+        else:
+            if max_conds_px_lagged is None:
+                conds_x = lagged_parents[i][:max_conds_px]
+            else:
+                conds_x = lagged_parents[i][:max_conds_px_lagged]
+
         # Shift the conditions for X by tau
         conds_x_lagged = [(k, -abstau + k_tau) for k, k_tau in conds_x]
         condy_str = self._mci_condition_to_string(conds_y_no_i)
@@ -1809,6 +1820,7 @@ class PCMCI():
                       max_conds_dim=None,
                       max_conds_py=None,
                       max_conds_px=None,
+                      max_conds_px_lagged=None,
                       fdr_method='none',
                       ):
         """Runs PCMCIplus time-lagged and contemporaneous causal discovery for
@@ -2000,6 +2012,9 @@ class PCMCI():
         max_conds_px : int, optional (default: None)
             Maximum number of lagged conditions of X to use in MCI tests. If
             None is passed, this number is unrestricted.
+        max_conds_px_lagged : int, optional (default: None)
+            Maximum number of lagged conditions of X when X is lagged in MCI 
+            tests. If None is passed, this number is equal to max_conds_px.
         fdr_method : str, optional (default: 'none')
             Correction method, default is Benjamini-Hochberg False Discovery
             Rate method.
@@ -2033,6 +2048,7 @@ class PCMCI():
                                     max_conds_dim=max_conds_dim,
                                     max_conds_py=max_conds_py,
                                     max_conds_px=max_conds_px,
+                                    max_conds_px_lagged=max_conds_px_lagged,
                                     fdr_method=fdr_method)
 
         # else:
@@ -2075,6 +2091,7 @@ class PCMCI():
                   + "\nmax_conds_dim = %s" % max_conds_dim
                   + "\nmax_conds_py = %s" % max_conds_py
                   + "\nmax_conds_px = %s" % max_conds_px
+                  + "\nmax_conds_px_lagged = %s" % max_conds_px_lagged
                   + "\nfdr_method = %s" % fdr_method
                   )
 
@@ -2108,6 +2125,7 @@ class PCMCI():
             lagged_parents=lagged_parents,
             max_conds_py=max_conds_py,
             max_conds_px=max_conds_px,
+            max_conds_px_lagged=max_conds_px_lagged,
             mode='contemp_conds',
             contemp_collider_rule=contemp_collider_rule,
             conflict_resolution=conflict_resolution)
@@ -2153,6 +2171,7 @@ class PCMCI():
     def run_pcalg(self, selected_links=None, pc_alpha=0.01, tau_min=0,
                   tau_max=1, max_conds_dim=None, max_combinations=None,
                   lagged_parents=None, max_conds_py=None, max_conds_px=None,
+                  max_conds_px_lagged=None,
                   mode='standard', contemp_collider_rule='majority',
                   conflict_resolution=True):
 
@@ -2203,6 +2222,9 @@ class PCMCI():
         max_conds_px : int, optional (default: None)
             Maximum number of lagged conditions of X to use in MCI tests. If
             None is passed, this number is unrestricted.
+        max_conds_px_lagged : int, optional (default: None)
+            Maximum number of lagged conditions of X when X is lagged in MCI 
+            tests. If None is passed, this number is equal to max_conds_px.
 
         Returns
         -------
@@ -2262,6 +2284,7 @@ class PCMCI():
             max_combinations=max_combinations,
             max_conds_py=max_conds_py,
             max_conds_px=max_conds_px,
+            max_conds_px_lagged=max_conds_px_lagged,
         )
 
         skeleton_graph = skeleton_results['graph']
@@ -2276,6 +2299,7 @@ class PCMCI():
             tau_max=tau_max,
             max_conds_py=max_conds_py,
             max_conds_px=max_conds_px,
+            max_conds_px_lagged=max_conds_px_lagged,
             conflict_resolution=conflict_resolution,
             contemp_collider_rule=contemp_collider_rule,
             )
@@ -2386,7 +2410,7 @@ class PCMCI():
 
 
     def _run_pcalg_test(self, i, abstau, j, S, lagged_parents, max_conds_py,
-                        max_conds_px, tau_max):
+                        max_conds_px, max_conds_px_lagged, tau_max):
         """MCI conditional independence tests within PCMCIplus or PC algorithm.
 
         Parameters
@@ -2405,6 +2429,9 @@ class PCMCI():
             Max number of lagged parents for node j.
         max_conds_px : int
             Max number of lagged parents for lagged node i.
+        max_conds_px_lagged : int
+            Maximum number of lagged conditions of X when X is lagged in MCI 
+            tests. If None is passed, this number is equal to max_conds_px.
         tau_max : int
             Maximum time lag.
 
@@ -2422,7 +2449,14 @@ class PCMCI():
         if lagged_parents is not None:
             conds_y = lagged_parents[j][:max_conds_py]
             # Get the conditions for node i
-            conds_x = lagged_parents[i][:max_conds_px]
+            if abstau == 0:
+                conds_x = lagged_parents[i][:max_conds_px]
+            else:
+                if max_conds_px_lagged is None:
+                    conds_x = lagged_parents[i][:max_conds_px]
+                else:
+                    conds_x = lagged_parents[i][:max_conds_px_lagged]
+
         else:
             conds_y = conds_x = []
         # Shift the conditions for X by tau
@@ -2503,6 +2537,7 @@ class PCMCI():
                        max_combinations,
                        max_conds_py,
                        max_conds_px,
+                       max_conds_px_lagged,
                        ):
         """Implements the skeleton discovery step of the PC algorithm for
         time series.
@@ -2538,6 +2573,9 @@ class PCMCI():
         max_conds_px : int, optional (default: None)
             Maximum number of lagged conditions of X to use in MCI tests. If
             None is passed, this number is unrestricted.
+        max_conds_px_lagged : int, optional (default: None)
+            Maximum number of lagged conditions of X when X is lagged in MCI 
+            tests. If None is passed, this number is equal to max_conds_px.
 
         Returns
         -------
@@ -2623,9 +2661,10 @@ class PCMCI():
                             % n_conditions)
                         if lagged_parents is not None:
                             self._print_pcmciplus_conditions(lagged_parents, i,
-                                                             j, abstau,
-                                                             max_conds_py,
-                                                             max_conds_px)
+                                                         j, abstau,
+                                                         max_conds_py,
+                                                         max_conds_px,
+                                                         max_conds_px_lagged)
                     nonsig = False
                     # Iterate through condition sets
                     for q, S in enumerate(conditions):
@@ -2635,7 +2674,7 @@ class PCMCI():
                         # Run MCI test
                         val, pval, Z = self._run_pcalg_test(
                             i, abstau, j, S, lagged_parents, max_conds_py,
-                            max_conds_px, tau_max)
+                            max_conds_px, max_conds_px_lagged, tau_max)
 
                         # Store minimum test statistic value for sorting adjt
                         # (only internally used)
@@ -2845,6 +2884,7 @@ class PCMCI():
                         tau_max,
                         max_conds_py,
                         max_conds_px,
+                        max_conds_px_lagged,
                         contemp_collider_rule,
                         conflict_resolution,
                         ):
@@ -2876,6 +2916,9 @@ class PCMCI():
         max_conds_px : int, optional (default: None)
             Maximum number of lagged conditions of X to use in MCI tests. If
             None is passed, this number is unrestricted.
+        max_conds_px_lagged : int, optional (default: None)
+            Maximum number of lagged conditions of X when X is lagged in MCI 
+            tests. If None is passed, this number is equal to max_conds_px.
         contemp_collider_rule : {'majority', 'conservative', 'none'}
             Rule for collider phase to use. See the paper for details. Only
             'majority' and 'conservative' lead to an order-independent
@@ -2967,14 +3010,15 @@ class PCMCI():
                         "neighbors: " % n_neighbors)
                     if lagged_parents is not None:
                         self._print_pcmciplus_conditions(lagged_parents, i, j,
-                                         abs(tau), max_conds_py, max_conds_px)
+                                         abs(tau), max_conds_py, max_conds_px,
+                                         max_conds_px_lagged)
 
                 # Test which neighbor subsets separate i and j
                 neighbor_sepsets = []
                 for iss, S in enumerate(neighbor_subsets):
                     val, pval, Z = self._run_pcalg_test(
                         i, abs(tau), j, S, lagged_parents, max_conds_py,
-                        max_conds_px, tau_max)
+                        max_conds_px, max_conds_px_lagged, tau_max)
 
                     if self.verbosity > 1:
                         self._print_cond_info(Z=S, comb_index=iss, pval=pval,
@@ -3559,6 +3603,7 @@ class PCMCI():
                       max_conds_dim,
                       max_conds_py,
                       max_conds_px,
+                      max_conds_px_lagged,
                       fdr_method,
                       ):
         """Optimizes pc_alpha in PCMCIplus.
@@ -3606,6 +3651,7 @@ class PCMCI():
                                     max_conds_dim=max_conds_dim,
                                     max_conds_py=max_conds_py,
                                     max_conds_px=max_conds_px,
+                                    max_conds_px_lagged=max_conds_px_lagged,
                                     fdr_method=fdr_method)
 
             # Get one member of the Markov equivalence class of the result
@@ -3701,9 +3747,9 @@ if __name__ == '__main__':
     #          2: [((2, -1), 0., lin_f), ((1, 0), 0.6, lin_f)],
     #          3: [((3, -1), 0., lin_f), ((2, 0), -0.5, lin_f)],
     #          }
-    links = {0: [((0, -1), 0., lin_f)],
-             1: [((1, -1), 0., lin_f), ((0, 0), 0.6, lin_f)],
-             # 2: [((2, -1), 0.8, lin_f), ((1, -1), -0.1, lin_f)]
+    links = {0: [((0, -1), 0., lin_f), ((1, 0), 0.6, lin_f)],
+             1: [((1, -1), 0., lin_f), ((2, 0), 0., lin_f), ((2, -1), 0.6, lin_f)],
+             2: [((2, -1), 0.8, lin_f), ((1, -1), -0.5, lin_f)]
              }
 
 
@@ -3711,19 +3757,19 @@ if __name__ == '__main__':
     data, nonstat = pp.structural_causal_process(links,
                                 T=300, noises=noises, seed=7)
 
-    data[10, 1] = 999.
-    data_mask = data>0.4
+    # data[10, 1] = 999.
+    # data_mask = data>0.4
 
     verbosity = 2
-    dataframe = pp.DataFrame(data, missing_flag=999., mask=data_mask,)
+    dataframe = pp.DataFrame(data) #, missing_flag=999., mask=data_mask,)
     pcmci = PCMCI(dataframe=dataframe,
                   cond_ind_test=ParCorr(verbosity=0),
-                  verbosity=0,
+                  verbosity=2,
                   )
 
 
 
-    lagmat.savefig("/home/rung_ja/work/sandbox/lags_final.pdf")
+    # lagmat.savefig("/home/rung_ja/work/sandbox/lags_final.pdf")
 
 
     # print(results['graph'])
@@ -3788,22 +3834,38 @@ if __name__ == '__main__':
 
     # print (results)
 
-    # results = pcmci.run_pcmciplus(
-    #     selected_links=None,
-    #     tau_min=0,
-    #     tau_max=3,
-    #     pc_alpha=None,
-    #     contemp_collider_rule='majority',
-    #     conflict_resolution=True,
-    #     reset_lagged_links=False,
-    #     max_conds_dim=None,
-    #     max_conds_py=None,
-    #     max_conds_px=None,
-    #     fdr_method='none'
-    # )
-    # pcmci.print_results(results, alpha_level=0.01)
+    results = pcmci.run_pcmciplus(
+        selected_links=None,
+        tau_min=0,
+        tau_max=3,
+        pc_alpha=None,
+        contemp_collider_rule='majority',
+        conflict_resolution=True,
+        reset_lagged_links=False,
+        max_conds_dim=None,
+        max_conds_py=None,
+        max_conds_px=None,
+        max_conds_px_lagged=0,
+        fdr_method='none'
+    )
+    pcmci.print_results(results, alpha_level=0.01)
 
-    # dag_member = pcmci._get_dag_from_cpdag(cpdag_graph=results['graph'])
+    graph_bool = results['graph']
+    print(graph_bool[:,:,0])
+    print(graph_bool[:,:,1])
+
+    graph = np.zeros(graph_bool.shape, dtype='<U3')
+    graph[:] = ""
+    graph[:,:,1:][graph_bool[:,:,1:]==1] = "-->"
+    graph[:,:,0][np.logical_and(graph_bool[:,:,0]==1, graph_bool[:,:,0].T==1)] = "o-o"
+    for (i,j) in zip(*np.where(np.logical_and(graph_bool[:,:,0]==1, graph_bool[:,:,0].T==0))):
+        graph[i,j,0] = "-->"
+        graph[j,i,0] = "<--"
+
+    # np.logical_or(true_graphs=="-->", true_graphs=="<--")
+
+    print(graph[:,:,0])
+    print(graph[:,:,1])    # dag_member = pcmci._get_dag_from_cpdag(cpdag_graph=results['graph'])
     # print(dag_member[:,:,0])
     # print(dag_member[:,:,1])
 

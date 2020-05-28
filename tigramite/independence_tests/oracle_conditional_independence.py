@@ -734,18 +734,16 @@ if __name__ == '__main__':
     # links[2].append(((0, 0), coeff, lin_f))
     coeff = 0.5
     links ={
-            0: [((0, -1), coeff, lin_f) ],
-            1: [((1, -1), coeff, lin_f)],
-            2: [((2, -1), coeff, lin_f), ((5, 0), coeff, lin_f)],
-            3: [((3, -1), coeff, lin_f), ((0, -2), coeff, lin_f), ((5, -3), coeff, lin_f), ((1, -2), coeff, lin_f)],
-            4: [((4, -1), coeff, lin_f), ((2, 0), coeff, lin_f)],
-            5: [((5, -1), coeff, lin_f), ((4, -1), coeff, lin_f)]   ,                                
+            0: [],
+            1: [((0, 0), coeff, lin_f), ((2, 0), coeff, lin_f)],
+            2: [],
+            3: [((1, 0), coeff, lin_f)],                                
             }
-    observed_vars = [0, 1, 2, 3, 5]
+    observed_vars = [0, 1, 2, 3]
 
-    X = [(3, -3)]
-    Y = [(4, 0)]
-    Z = [] #(1, -3), (1, -2), (0, -2), (0, -1), (0, -3)]
+    X = [(0, 0)]
+    Y = [(2, 0)]
+    Z = [(3, 0)] #(1, -3), (1, -2), (0, -2), (0, -1), (0, -3)]
   #(j, -2) for j in range(N)] + [(j, 0) for j in range(N)]
 
     # print(oracle._get_non_blocked_ancestors(Z, Z=None, mode='max_lag',
@@ -754,17 +752,17 @@ if __name__ == '__main__':
 
     print(cond_ind_test.run_test(X=X, Y=Y, Z=Z))
    
-    anc_x=None  #oracle.anc_all_x[X[0]]
-    anc_y=None #oracle.anc_all_y[Y[0]]
-    anc_xy=None # []
-    # for z in Z:
-    #     anc_xy += oracle.anc_all_z[z]
+    # anc_x=None  #oracle.anc_all_x[X[0]]
+    # anc_y=None #oracle.anc_all_y[Y[0]]
+    # anc_xy=None # []
+    # # for z in Z:
+    # #     anc_xy += oracle.anc_all_z[z]
     
-    fig, ax = tp.plot_tsg(links, 
-                X=[(observed_vars[x[0]], x[1]) for x in X], 
-                Y=[(observed_vars[y[0]], y[1]) for y in Y], 
-                Z=[(observed_vars[z[0]], z[1]) for z in Z],
-        anc_x=anc_x, anc_y=anc_y, 
-        anc_xy=anc_xy)
+    # fig, ax = tp.plot_tsg(links, 
+    #             X=[(observed_vars[x[0]], x[1]) for x in X], 
+    #             Y=[(observed_vars[y[0]], y[1]) for y in Y], 
+    #             Z=[(observed_vars[z[0]], z[1]) for z in Z],
+    #     anc_x=anc_x, anc_y=anc_y, 
+    #     anc_xy=anc_xy)
 
-    fig.savefig("/home/rung_ja/Downloads/tsg.pdf")
+    # fig.savefig("/home/rung_ja/Downloads/tsg.pdf")
