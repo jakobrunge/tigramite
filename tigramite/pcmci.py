@@ -1105,10 +1105,12 @@ class PCMCI():
             if self.cond_ind_test.confidence:
                 conf_matrix[i, j, abs(tau)] = conf
 
-        # Return the values as a dictionary
-        return {'val_matrix': val_matrix,
-                'p_matrix': p_matrix,
-                'conf_matrix': conf_matrix}
+        # Return the values as a dictionary and store in class
+        results = {'val_matrix': val_matrix,
+                   'p_matrix': p_matrix,
+                   'conf_matrix': conf_matrix}
+        self.results = results
+        return results
 
     def run_mci(self,
                 selected_links=None,
@@ -1807,6 +1809,7 @@ class PCMCI():
         if self.verbosity > 0:
             self.print_results(return_dict)
         # Return the dictionary
+        self.results = return_dict
         return return_dict
 
     def run_pcmciplus(self,
@@ -2166,6 +2169,7 @@ class PCMCI():
         if self.verbosity > 0:
             self.print_results(return_dict, alpha_level=pc_alpha)
         # Return the dictionary
+        self.results = return_dict
         return return_dict
 
     def run_pcalg(self, selected_links=None, pc_alpha=0.01, tau_min=0,
@@ -2338,6 +2342,7 @@ class PCMCI():
             print("PCMCIplus algorithm finished.")
             print("-----------------------------")
 
+        self.pc_results = pc_results
         return pc_results
 
     def run_pcalg_non_timeseries_data(self, pc_alpha=0.01,
@@ -2405,7 +2410,8 @@ class PCMCI():
            new_triple = (triple[0][0], triple[1], triple[2])
 
            results['ambiguous_triples'].append(new_triple)
-
+        
+        self.pc_results = results
         return results
 
 
@@ -3698,6 +3704,34 @@ class PCMCI():
         optimal_results['optimal_alpha'] = optimal_alpha
         return optimal_results
 
+    def convert_to_string_graph(self, graph_bool):
+        """Converts the 0,1-based graph returned by PCMCI to a string array
+        with links '-->'.
+
+        Parameters
+        ----------
+        graph_bool : array
+            0,1-based graph array output by PCMCI.
+
+        Returns
+        -------
+        graph : array
+            graph as string array with links '-->'.
+        """
+
+        graph = np.zeros(graph_bool.shape, dtype='<U3')
+        graph[:] = ""
+        # Lagged links
+        graph[:,:,1:][graph_bool[:,:,1:]==1] = "-->"
+        # Contemporaneous links
+        graph[:,:,0][np.logical_and(graph_bool[:,:,0]==1, 
+                                    graph_bool[:,:,0].T==1)] = "o-o"
+        for (i,j) in zip(*np.where(
+            np.logical_and(graph_bool[:,:,0]==1, graph_bool[:,:,0].T==0))):
+            graph[i,j,0] = "-->"
+            graph[j,i,0] = "<--"
+
+        return graph
 
 
 if __name__ == '__main__':
@@ -3766,7 +3800,12 @@ if __name__ == '__main__':
                   cond_ind_test=ParCorr(verbosity=0),
                   verbosity=2,
                   )
-
+    results = pcmci.run_mci(
+                  selected_links=None,
+                  tau_min=0,
+                  tau_max=2,
+                  )
+    print (pcmci.results)
 
 
     # lagmat.savefig("/home/rung_ja/work/sandbox/lags_final.pdf")
@@ -3834,38 +3873,38 @@ if __name__ == '__main__':
 
     # print (results)
 
-    results = pcmci.run_pcmciplus(
-        selected_links=None,
-        tau_min=0,
-        tau_max=3,
-        pc_alpha=None,
-        contemp_collider_rule='majority',
-        conflict_resolution=True,
-        reset_lagged_links=False,
-        max_conds_dim=None,
-        max_conds_py=None,
-        max_conds_px=None,
-        max_conds_px_lagged=0,
-        fdr_method='none'
-    )
-    pcmci.print_results(results, alpha_level=0.01)
+    # results = pcmci.run_pcmciplus(
+    #     selected_links=None,
+    #     tau_min=0,
+    #     tau_max=3,
+    #     pc_alpha=None,
+    #     contemp_collider_rule='majority',
+    #     conflict_resolution=True,
+    #     reset_lagged_links=False,
+    #     max_conds_dim=None,
+    #     max_conds_py=None,
+    #     max_conds_px=None,
+    #     max_conds_px_lagged=0,
+    #     fdr_method='none'
+    # )
+    # pcmci.print_results(results, alpha_level=0.01)
 
-    graph_bool = results['graph']
-    print(graph_bool[:,:,0])
-    print(graph_bool[:,:,1])
+    # graph_bool = results['graph']
+    # print(graph_bool[:,:,0])
+    # print(graph_bool[:,:,1])
 
-    graph = np.zeros(graph_bool.shape, dtype='<U3')
-    graph[:] = ""
-    graph[:,:,1:][graph_bool[:,:,1:]==1] = "-->"
-    graph[:,:,0][np.logical_and(graph_bool[:,:,0]==1, graph_bool[:,:,0].T==1)] = "o-o"
-    for (i,j) in zip(*np.where(np.logical_and(graph_bool[:,:,0]==1, graph_bool[:,:,0].T==0))):
-        graph[i,j,0] = "-->"
-        graph[j,i,0] = "<--"
+    # graph = np.zeros(graph_bool.shape, dtype='<U3')
+    # graph[:] = ""
+    # graph[:,:,1:][graph_bool[:,:,1:]==1] = "-->"
+    # graph[:,:,0][np.logical_and(graph_bool[:,:,0]==1, graph_bool[:,:,0].T==1)] = "o-o"
+    # for (i,j) in zip(*np.where(np.logical_and(graph_bool[:,:,0]==1, graph_bool[:,:,0].T==0))):
+    #     graph[i,j,0] = "-->"
+    #     graph[j,i,0] = "<--"
 
-    # np.logical_or(true_graphs=="-->", true_graphs=="<--")
+    # # np.logical_or(true_graphs=="-->", true_graphs=="<--")
 
-    print(graph[:,:,0])
-    print(graph[:,:,1])    # dag_member = pcmci._get_dag_from_cpdag(cpdag_graph=results['graph'])
+    # print(graph[:,:,0])
+    # print(graph[:,:,1])    # dag_member = pcmci._get_dag_from_cpdag(cpdag_graph=results['graph'])
     # print(dag_member[:,:,0])
     # print(dag_member[:,:,1])
 
