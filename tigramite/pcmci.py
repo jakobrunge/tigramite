@@ -1707,7 +1707,7 @@ class PCMCI():
         >>> cond_ind_test = ParCorr()
         >>> pcmci = PCMCI(dataframe=dataframe, cond_ind_test=cond_ind_test)
         >>> results = pcmci.run_pcmci(tau_max=2, pc_alpha=None)
-        >>> pcmci._print_significant_links(p_matrix=results['p_matrix'],
+        >>> pcmci.print_significant_links(p_matrix=results['p_matrix'],
                                              val_matrix=results['val_matrix'],
                                              alpha_level=0.05)
         ## Significant parents at alpha = 0.05:
