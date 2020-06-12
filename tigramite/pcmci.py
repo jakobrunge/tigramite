@@ -3723,9 +3723,13 @@ class PCMCI():
         graph[:] = ""
         # Lagged links
         graph[:,:,1:][graph_bool[:,:,1:]==1] = "-->"
-        # Contemporaneous links
+        # Unoriented contemporaneous links
         graph[:,:,0][np.logical_and(graph_bool[:,:,0]==1, 
                                     graph_bool[:,:,0].T==1)] = "o-o"
+        # Conflicting contemporaneous links
+        graph[:,:,0][np.logical_and(graph_bool[:,:,0]==2, 
+                                    graph_bool[:,:,0].T==2)] = "x-x"
+        # Directed contemporaneous links
         for (i,j) in zip(*np.where(
             np.logical_and(graph_bool[:,:,0]==1, graph_bool[:,:,0].T==0))):
             graph[i,j,0] = "-->"
