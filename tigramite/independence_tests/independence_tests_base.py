@@ -256,7 +256,7 @@ class CondIndTest():
 
     def _get_array(self, X, Y, Z, tau_max=0, cut_off='2xtau_max',
                    verbosity=0):
-        """Convencience wrapper around _construct_array."""
+        """Convencience wrapper around construct_array."""
 
         if self.measure in ['par_corr']:
             if len(X) > 1 or len(Y) > 1:
