@@ -865,9 +865,6 @@ def _draw_network_with_curved_edges(
                             linestyle=inner_edge_style,
                             color=facecolor,
                             clip_on=True,
-                            #patchA=n1, patchB=n2,
-                            #shrinkA=n1.get_pickradius()*shrinkageA,
-                            #shrinkB=n2.get_pickradius()*shrinkageB,
                             zorder=-1
                             )
         ax.add_patch(e_background)
@@ -881,7 +878,6 @@ def _draw_network_with_curved_edges(
                             linestyle=inner_edge_style,
                             color=facecolor,
                             clip_on=True,
-                            #patchA=n1, patchB=n2,
                             shrinkA=standard_size*shrinkageA,
                             shrinkB=standard_size*shrinkageB,
                             zorder=-1
@@ -947,15 +943,6 @@ def _draw_network_with_curved_edges(
                         horizontalalignment='center')
 
         return rad
-
-    # Fix lower left and upper right corner (networkx unfortunately rescales
-    # the positions...)
-    # c = Circle((0, 0), radius=.01, alpha=1., fill=False,
-    #            linewidth=0., transform=fig.transFigure)
-    # ax.add_patch(c)
-    # c = Circle((1, 1), radius=.01, alpha=1., fill=False,
-    #            linewidth=0., transform=fig.transFigure)
-    # ax.add_patch(c)
 
     ##
     # Draw nodes
@@ -2599,9 +2586,11 @@ if __name__ == '__main__':
     link_attribute[1, 0, 0] = 'spurious'
     link_attribute[0, 2, 1] = 'spurious'
 
+    
+    """
     plot_time_series_graph(
         #val_matrix=val_matrix,
-        #figsize=(12, 16),
+        figsize=None,
         sig_thres=None,
         link_matrix=link_matrix,
         link_width=link_width,
@@ -2610,9 +2599,9 @@ if __name__ == '__main__':
         node_size=5,
         var_names=range(len(val_matrix)),
         inner_edge_style='solid',
-        save_name="tsg_test.png",
+        save_name="test-output/tsg_test.png",
     )
-    pyplot.show()
+    """
 
     plot_graph(
         # val_matrix=val_matrix,
@@ -2621,9 +2610,10 @@ if __name__ == '__main__':
         link_matrix=link_matrix,
         link_attribute=link_attribute,
         arrow_linewidth=6,
-        node_size=.1,
+        node_size=4,
         var_names=range(len(val_matrix)),
         #inner_edge_style='dashed',
         save_name="pg_test.png",
     )
 
+    pyplot.show()
