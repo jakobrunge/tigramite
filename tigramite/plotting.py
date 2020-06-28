@@ -735,6 +735,8 @@ def _draw_network_with_curved_edges(
             n1 = G.nodes[u]['patch']
             n2 = G.nodes[v]['patch']
 
+        print(d.get("inner_edge_style"))
+
         if outer_edge:
             rad = -1. * curved_radius
             #            facecolor = d['outer_edge_color']
@@ -771,7 +773,8 @@ def _draw_network_with_curved_edges(
                 # linewidth = width*factor
             elif d.get('outer_edge_type') in ["o->", "-->", "<-o", "<--"]:
                 arrowstyle = '->, head_width=0.4, head_length=1'
-                # linewidth = width*factor
+            
+            linestyle = "solid"
 
         else:
             rad = -1. * inner_edge_curved * curved_radius
@@ -785,29 +788,23 @@ def _draw_network_with_curved_edges(
 
             width = d['inner_edge_width']
             alpha = d['inner_edge_alpha']
-            # if 'oriented' in d and d['oriented']:
-            #     arrowstyle = arrowstyle
-            # else:
-            # link_edge = d['inner_edge_edge']
-            linestyle = 'dashed'
 
             if d.get('inner_edge_attribute', None) == 'spurious':
                 facecolor = 'grey'
-                # linestyle = 'dashed'
-
             if d.get('inner_edge_type') in ['<-o', '<--']:
                 n1, n2 = n2, n1
-
-            if d.get('outer_edge_type') in ["o-o", "o--", "--o", "---"]:
-                # arrowstyle = 'simple,head_length=0.0001'
-                arrowstyle = '-'
-                # linewidth = width*factor
-            elif d.get('outer_edge_type') == '<->':
                 arrowstyle = '<->, head_width=0.4, head_length=1'
-                # linewidth = width*factor
-            elif d.get('outer_edge_type') in ["o->", "-->", "<-o", "<--"]:
+
+            if d.get('inner_edge_type') in ["o-o", "o--", "--o", "---"]:
+                arrowstyle = '-'
+            elif d.get('inner_edge_type') == '<->':
+                arrowstyle = '<->, head_width=0.4, head_length=1'
+            elif d.get('inner_edge_type') in ["o->", "-->", "<-o", "<--"]:
                 arrowstyle = '->, head_width=0.4, head_length=1'
-                # linewidth = width*factor
+
+            linestyle = d.get("inner_edge_style")
+
+
 
         if outer_edge:
             if d.get('outer_edge_type') in ["o--", "o->", "--o", "<-o"]:
@@ -829,25 +826,26 @@ def _draw_network_with_curved_edges(
                 shrinkageA = 3.5
                 shrinkageB = 3.5
         else:
-            if d.get('outer_edge_type') in ["o--", "o->", "--o", "<-o"]:
+            if d.get('inner_edge_type') in ["o--", "o->", "--o", "<-o"]:
                 shrinkageA = 4.0
                 shrinkageB = 1.8
-            elif d.get('outer_edge_type') == "o-o":
+            elif d.get('inner_edge_type') == "o-o":
                 shrinkageA = 4.0
                 shrinkageB = 4.0
-            elif d.get('outer_edge_type') == "---":
+            elif d.get('inner_edge_type') == "---":
                 shrinkageA = 0
                 shrinkageB = 0
-            elif d.get('outer_edge_type') in ["-->", "<--"]:
+            elif d.get('inner_edge_type') in ["-->", "<--"]:
                 shrinkageA = 1.0
                 shrinkageB = 2.5
-            elif d.get('outer_edge_type') == "<->":
+            elif d.get('inner_edge_type') == "<->":
                 shrinkageA = 1.8
                 shrinkageB = 1.8
             else:
                 shrinkageA = 3.5
                 shrinkageB = 3.5
 
+        print(inner_edge_style)
 
         # TODO: Avoid static value manipulation!
         rad *= 2.0
@@ -856,17 +854,23 @@ def _draw_network_with_curved_edges(
         coor1 = np.asarray(n1.get_offsets())[0]
         coor2 = np.asarray(n2.get_offsets())[0]
 
+        if linestyle == "dashed":
+            alpha_val = 0
+        else:
+            alpha_val = 1
+
         e_background = FancyArrowPatch(coor1, coor2,
                             arrowstyle="-",
                             connectionstyle=f'arc3,rad={rad}',
                             mutation_scale=width,
                             lw=width/2,
-                            alpha=1,
-                            linestyle=inner_edge_style,
+                            alpha=alpha_val,
+                            linestyle=linestyle,
                             color=facecolor,
                             clip_on=True,
                             zorder=-1
                             )
+
         ax.add_patch(e_background)
 
         e = FancyArrowPatch(coor1, coor2,
@@ -875,7 +879,7 @@ def _draw_network_with_curved_edges(
                             mutation_scale=width,
                             lw=width/2,
                             alpha=1,
-                            linestyle=inner_edge_style,
+                            linestyle=linestyle,
                             color=facecolor,
                             clip_on=True,
                             shrinkA=standard_size*shrinkageA,
@@ -1139,7 +1143,8 @@ def plot_graph(val_matrix=None,
                link_label_fontsize=6,
                lag_array=None,
                network_lower_bound=0.2,
-               show_colorbar=True
+               show_colorbar=True,
+               inner_edge_style='dashed'
                ):
     """Creates a network plot.
 
@@ -2612,7 +2617,7 @@ if __name__ == '__main__':
         arrow_linewidth=6,
         node_size=4,
         var_names=range(len(val_matrix)),
-        #inner_edge_style='dashed',
+        inner_edge_style='dashed',
         save_name="pg_test.png",
     )
 
