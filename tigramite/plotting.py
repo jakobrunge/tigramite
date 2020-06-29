@@ -661,7 +661,7 @@ class setup_matrix():
                             ).draw_frame(False)
 
             self.fig.subplots_adjust(left=self.label_space_left, right=1. -
-                                                                       self.legend_width,
+                                     self.legend_width,
                                      top=1. - self.label_space_top,
                                      hspace=0.35, wspace=0.35)
             pyplot.figtext(
@@ -681,7 +681,8 @@ class setup_matrix():
             for ij in list(self.axes_dict):
                 i = ij[0]
                 j = ij[1]
-                self.axes_dict[(i, j)].set_xticklabels(self.lag_array[::self.x_base])
+                self.axes_dict[(i, j)].set_xticklabels(
+                    self.lag_array[::self.x_base])
 
         if name is not None:
             self.fig.savefig(name)
@@ -759,7 +760,7 @@ def _draw_network_with_curved_edges(
             if d.get('outer_edge_attribute', None) == 'spurious':
                 facecolor = 'grey'
 
-            if d.get('outer_edge_type') in ['<-o', '<--']:
+            if d.get('outer_edge_type') in ['<-o', '<--', '<-X']:
                 n1, n2 = n2, n1
 
             if d.get('outer_edge_type') in ["o-o", "o--", "--o", "---", 'X-X', 'X--', '--X', 'o-X', 'X-o']:
@@ -798,43 +799,6 @@ def _draw_network_with_curved_edges(
 
             linestyle = d.get("inner_edge_style")
 
-
-
-        if outer_edge:
-            if d.get('outer_edge_type') in ["o--", "o->", "--o", "<-o", '<-X', 'X->', 'X--', '--X']:
-                shrinkageA = 4.0
-                shrinkageB = 1.8
-            elif d.get('outer_edge_type') in ["o-o", 'X-X', 'X-o', 'o-X']:
-                shrinkageA = 4.0
-                shrinkageB = 4.0
-            elif d.get('outer_edge_type') == "---":
-                shrinkageA = 0
-                shrinkageB = 0
-            elif d.get('outer_edge_type') in ["-->", "<--"]:
-                shrinkageA = 1.0
-                shrinkageB = 2.5
-            elif d.get('outer_edge_type') == "<->":
-                shrinkageA = 2.0
-                shrinkageB = 2.0
-
-        else:
-            if d.get('inner_edge_type') in ["o--", "o->", "--o", "<-o", 'X-o', 'o-X', '<-X', 'X->', 'X--', '--X']:
-                shrinkageA = 4.0
-                shrinkageB = 1.8
-            elif d.get('inner_edge_type') in ["o-o", 'X-X', 'X-o', 'o-X']:
-                shrinkageA = 4.0
-                shrinkageB = 4.0
-            elif d.get('inner_edge_type') == "---":
-                shrinkageA = 0
-                shrinkageB = 0
-            elif d.get('inner_edge_type') in ["-->", "<--"]:
-                shrinkageA = 1.0
-                shrinkageB = 2.5
-            elif d.get('inner_edge_type') == "<->":
-                shrinkageA = 2.0
-                shrinkageB = 2.0
-
-
         # TODO: Avoid static value manipulation!
         rad *= 1.5
 
@@ -847,40 +811,24 @@ def _draw_network_with_curved_edges(
         else:
             alpha_val = 1
 
-        e_background = FancyArrowPatch(coor1, coor2,
-                            arrowstyle="-",
-                            connectionstyle=f'arc3,rad={rad}',
-                            mutation_scale=width,
-                            lw=width/2,
-                            alpha=alpha_val,
-                            linestyle=linestyle,
-                            color=facecolor,
-                            clip_on=True,
-                            zorder=-1
-                            )
-
-        ax.add_patch(e_background)
-
         e = FancyArrowPatch(coor1, coor2,
                             arrowstyle=arrowstyle,
                             connectionstyle=f'arc3,rad={rad}',
                             mutation_scale=width,
-                            lw=width/2,
-                            alpha=1,
+                            lw=width / 2,
+                            alpha=0,
                             linestyle=linestyle,
                             color=facecolor,
                             clip_on=True,
-                            shrinkA=standard_size*shrinkageA,
-                            shrinkB=standard_size*shrinkageB,
+                            patchA=n1,
+                            patchB=n2,
                             zorder=-1
                             )
 
         ax.add_patch(e)
 
-        radius = np.sqrt(standard_size) * .005
-
         circlePath = e.get_path().deepcopy()
-        circlePath = circlePath.interpolated(50)
+        circlePath = circlePath.interpolated(500)
 
         vertices = circlePath.vertices
         m, n = vertices.shape
@@ -890,24 +838,40 @@ def _draw_network_with_curved_edges(
 
         marker_size = width ** 2
 
+        e_p = FancyArrowPatch(coor1, coor2,
+                              arrowstyle=arrowstyle,
+                              connectionstyle=f'arc3,rad={rad}',
+                              mutation_scale=width,
+                              lw=width / 2,
+                              alpha=1,
+                              linestyle=linestyle,
+                              color=facecolor,
+                              clip_on=True,
+                              shrinkA=standard_size * 2.0,
+                              shrinkB=standard_size * 2.0,
+                              zorder=-1
+                              )
+
+        ax.add_patch(e_p)
+
         if outer_edge:
             if d.get('outer_edge_type', "empty")[0] in ['o', 'X']:
                 circle_marker_start = ax.scatter(*start, marker=d.get('outer_edge_type')[0], s=marker_size,
-                    facecolor='w', edgecolor=facecolor, zorder=1)
+                                                 facecolor='w', edgecolor=facecolor, zorder=1)
                 ax.add_collection(circle_marker_start)
             if d.get('outer_edge_type', "empty")[-1] in ['o', 'X']:
                 circle_marker_end = ax.scatter(*end, marker=d.get('outer_edge_type')[-1], s=marker_size,
-                    facecolor='w', edgecolor=facecolor, zorder=1)
+                                               facecolor='w', edgecolor=facecolor, zorder=1)
                 ax.add_collection(circle_marker_end)
 
         else:
             if d.get('inner_edge_type', "empty")[0] in ['o', 'X']:
                 circle_marker_start = ax.scatter(*start, marker=d.get('inner_edge_type')[0], s=marker_size,
-                    facecolor='w', edgecolor=facecolor, zorder=1)
+                                                 facecolor='w', edgecolor=facecolor, zorder=1)
                 ax.add_collection(circle_marker_start)
             if d.get('inner_edge_type', "empty")[-1] in ['o', 'X']:
                 circle_marker_end = ax.scatter(*end, marker=d.get('inner_edge_type')[-1], s=marker_size,
-                    facecolor='w', edgecolor=facecolor, zorder=1)
+                                               facecolor='w', edgecolor=facecolor, zorder=1)
                 ax.add_collection(circle_marker_end)
 
         if d['label'] is not None and outer_edge:
@@ -984,7 +948,7 @@ def _draw_network_with_curved_edges(
                     cb_n.set_ticks(np.arange(_myround(vmin,
                                                       node_rings[ring]['ticks'], 'down'), _myround(
                         vmax, node_rings[ring]['ticks'], 'up') +
-                                             node_rings[ring]['ticks'], node_rings[ring]['ticks']))
+                        node_rings[ring]['ticks'], node_rings[ring]['ticks']))
                 except:
                     print('no ticks given')
                 cb_n.outline.remove()
@@ -1009,10 +973,10 @@ def _draw_network_with_curved_edges(
                         horizontalalignment='center',
                         verticalalignment='center', alpha=alpha)
 
-
     for n in G:
         # Plot variable nodes
-        c = ax.scatter(pos[n][0], pos[n][1], marker='o', s=standard_size*100, facecolor='darkgray', edgecolor='darkgray')
+        c = ax.scatter(pos[n][0], pos[n][1], marker='o', s=standard_size *
+                       100, facecolor='darkgray', edgecolor='darkgray')
         ax.add_collection(c)
 
         # avoiding attribute error raised by changes in networkx
@@ -1073,7 +1037,8 @@ def _draw_network_with_curved_edges(
     for (u, v, d) in G.edges(data=True):
         if u != v:
             if d['outer_edge']:
-                seen[(u, v)] = draw_edge(ax, u, v, d, seen, arrowstyle, outer_edge=True)
+                seen[(u, v)] = draw_edge(ax, u, v, d,
+                                         seen, arrowstyle, outer_edge=True)
             if d['inner_edge']:
                 # if ('oriented' not in d or d['oriented'] == False) and (v, u) not in seen:
                 #     seen[(u, v)] = draw_edge(ax, u, v, d, seen, outer_edge=False)
@@ -1277,7 +1242,8 @@ def plot_graph(val_matrix=None,
             if link_width is None:
                 dic['inner_edge_width'] = arrow_linewidth
             else:
-                dic['inner_edge_width'] = link_width[u, v, 0] / link_width.max() * arrow_linewidth
+                dic['inner_edge_width'] = link_width[
+                    u, v, 0] / link_width.max() * arrow_linewidth
 
             if link_attribute is None:
                 dic['inner_edge_attribute'] = None
@@ -1307,7 +1273,8 @@ def plot_graph(val_matrix=None,
                 # fraction of nonzero values
                 dic['outer_edge_width'] = arrow_linewidth
             else:
-                dic['outer_edge_width'] = link_width[u, v, argmax] / link_width.max() * arrow_linewidth
+                dic['outer_edge_width'] = link_width[
+                    u, v, argmax] / link_width.max() * arrow_linewidth
 
             if link_attribute is None:
                 # fraction of nonzero values
@@ -1323,11 +1290,13 @@ def plot_graph(val_matrix=None,
             # d['min_ensemble_frac'])
             if tau_max > 0:
                 lags = np.abs(val_matrix[u, v][1:]).argsort()[::-1] + 1
-                sig_lags = (np.where(link_matrix_upper[u, v, 1:] != "")[0] + 1).tolist()
+                sig_lags = (np.where(link_matrix_upper[
+                            u, v, 1:] != "")[0] + 1).tolist()
             else:
                 lags, sig_lags = [], []
             if lag_array is not None:
-                dic['label'] = str([lag_array[l] for l in lags if l in sig_lags])[1:-1]
+                dic['label'] = str([lag_array[l]
+                                    for l in lags if l in sig_lags])[1:-1]
             else:
                 dic['label'] = str([l for l in lags if l in sig_lags])[1:-1]
         else:
@@ -1435,14 +1404,16 @@ def _reverse_patt(patt):
 
 def _check_matrices(link_matrix, val_matrix, link_width, link_attribute):
     if link_matrix is None and (val_matrix is None or sig_thres is None):
-        raise ValueError("Need to specify either val_matrix together with sig_thres, or link_matrix")
+        raise ValueError(
+            "Need to specify either val_matrix together with sig_thres, or link_matrix")
 
     if link_matrix is not None:
         pass
     elif link_matrix is None and sig_thres is not None and val_matrix is not None:
         link_matrix = np.abs(val_matrix) >= sig_thres
     else:
-        raise ValueError("Need to specify either val_matrix together with sig_thres, or link_matrix")
+        raise ValueError(
+            "Need to specify either val_matrix together with sig_thres, or link_matrix")
 
     if link_matrix.dtype != '<U3':
         # Transform to new link_matrix data type U3
@@ -1468,11 +1439,14 @@ def _check_matrices(link_matrix, val_matrix, link_width, link_attribute):
                     raise ValueError("link_matrix needs to have consistent lag-zero patterns"
                                      " (eg link_matrix[i,j,0]='-->' requires link_matrix[j,i,0]='<--')")
                 if val_matrix is not None and val_matrix[i, j, 0] != val_matrix[j, i, 0]:
-                    raise ValueError("val_matrix needs to be symmetric for lag-zero")
+                    raise ValueError(
+                        "val_matrix needs to be symmetric for lag-zero")
                 if link_width is not None and link_width[i, j, 0] != link_width[j, i, 0]:
-                    raise ValueError("link_width needs to be symmetric for lag-zero")
+                    raise ValueError(
+                        "link_width needs to be symmetric for lag-zero")
                 if link_attribute is not None and link_attribute[i, j, 0] != link_attribute[j, i, 0]:
-                    raise ValueError("link_attribute needs to be symmetric for lag-zero")
+                    raise ValueError(
+                        "link_attribute needs to be symmetric for lag-zero")
 
             if link_matrix[i, j, tau] not in ['---', 'o--', '--o', 'o-o', 'o->', '<-o', '-->', '<--', '<->',
                                               'X-o', 'o-X', 'X--', '--X', 'X->', '<-X', 'X-X']:
@@ -1611,7 +1585,8 @@ def plot_time_series_graph(
     tsg_width = np.zeros((N * max_lag, N * max_lag))
     tsg_style = np.zeros((N * max_lag, N * max_lag), dtype=link_matrix.dtype)
     if link_attribute is not None:
-        tsg_attr = np.zeros((N * max_lag, N * max_lag), dtype=link_attribute.dtype)
+        tsg_attr = np.zeros((N * max_lag, N * max_lag),
+                            dtype=link_attribute.dtype)
 
     # Only draw link in one direction among contemp
     # Remove lower triangle
@@ -1622,14 +1597,18 @@ def plot_time_series_graph(
         for t in range(max_lag):
             if (0 <= translate(i, t - tau) and translate(i, t - tau) % max_lag <= translate(j, t) % max_lag):
 
-                tsg[translate(i, t - tau), translate(j, t)] = 1.  # val_matrix[i, j, tau]
-                tsg_val[translate(i, t - tau), translate(j, t)] = val_matrix[i, j, tau]
-                tsg_style[translate(i, t - tau), translate(j, t)] = link_matrix[i, j, tau]
+                tsg[translate(i, t - tau), translate(j, t)
+                    ] = 1.  # val_matrix[i, j, tau]
+                tsg_val[translate(i, t - tau), translate(j, t)
+                        ] = val_matrix[i, j, tau]
+                tsg_style[translate(i, t - tau), translate(j, t)
+                          ] = link_matrix[i, j, tau]
                 if link_width is not None:
                     tsg_width[translate(i, t - tau), translate(j, t)] = link_width[
-                                                                            i, j, tau] / link_width.max() * arrow_linewidth
+                        i, j, tau] / link_width.max() * arrow_linewidth
                 if link_attribute is not None:
-                    tsg_attr[translate(i, t - tau), translate(j, t)] = link_attribute[i, j, tau]
+                    tsg_attr[translate(i, t - tau), translate(j, t)
+                             ] = link_attribute[i, j, tau]
 
     G = nx.DiGraph(tsg)
 
@@ -1649,9 +1628,11 @@ def plot_time_series_graph(
 
             if link_width is None:
                 # fraction of nonzero values
-                dic['outer_edge_width'] = dic['inner_edge_width'] = arrow_linewidth
+                dic['outer_edge_width'] = dic[
+                    'inner_edge_width'] = arrow_linewidth
             else:
-                dic['outer_edge_width'] = dic['inner_edge_width'] = tsg_width[u, v]
+                dic['outer_edge_width'] = dic[
+                    'inner_edge_width'] = tsg_width[u, v]
 
             if link_attribute is None:
                 dic['outer_edge_attribute'] = None
@@ -2171,9 +2152,9 @@ def plot_mediation_graph(
             if np.abs(val_matrix[u, v][0] - val_matrix[v, u][0]) > .0001:
                 print("Contemporaneous I(%d; %d)=%.3f != I(%d; %d)=%.3f" % (
                     u, v, val_matrix[u, v][0], v, u, val_matrix[v, u][0]) +
-                      " due to conditions, finite sample effects or "
-                      "masking, here edge color = "
-                      "larger (absolute) value.")
+                    " due to conditions, finite sample effects or "
+                    "masking, here edge color = "
+                    "larger (absolute) value.")
             dic['inner_edge_color'] = _get_absmax(
                 np.array([[[val_matrix[u, v][0],
                             val_matrix[v, u][0]]]])).squeeze()
@@ -2181,7 +2162,7 @@ def plot_mediation_graph(
                 dic['inner_edge_width'] = arrow_linewidth
             else:
                 dic['inner_edge_width'] = link_width[
-                                              u, v, 0] / link_width.max() * arrow_linewidth
+                    u, v, 0] / link_width.max() * arrow_linewidth
 
             all_strengths.append(dic['inner_edge_color'])
 
@@ -2198,7 +2179,7 @@ def plot_mediation_graph(
                 dic['outer_edge_width'] = arrow_linewidth
             else:
                 dic['outer_edge_width'] = link_width[
-                                              u, v, argmax] / link_width.max() * arrow_linewidth
+                    u, v, argmax] / link_width.max() * arrow_linewidth
 
             # value at argmax of average
             dic['outer_edge_color'] = val_matrix[u, v][argmax]
@@ -2212,7 +2193,8 @@ def plot_mediation_graph(
             else:
                 lags, sig_lags = [], []
             if lag_array is not None:
-                dic['label'] = str([lag_array[l] for l in lags if l in sig_lags])[1:-1]
+                dic['label'] = str([lag_array[l]
+                                    for l in lags if l in sig_lags])[1:-1]
             else:
                 dic['label'] = str([l for l in lags if l in sig_lags])[1:-1]
         else:
@@ -2542,18 +2524,19 @@ if __name__ == '__main__':
     # Complete test case
     link_matrix = np.zeros(val_matrix.shape, dtype='U3')
 
-    link_matrix[0, 1, 0] = 'o-X'
-    link_matrix[1, 0, 0] = 'X-o'
+    link_matrix[0, 1, 0] = '<-X'
+    link_matrix[1, 0, 0] = 'X->'
 
     link_matrix[1, 2, 0] = 'o-o'
     link_matrix[2, 1, 0] = 'o-o'
-    link_matrix[0, 2, 0] = 'o--'
-    link_matrix[2, 0, 0] = '--o'
+    link_matrix[0, 2, 0] = 'X--'
+    link_matrix[2, 0, 0] = '--X'
     link_matrix[2, 3, 0] = '---'
     link_matrix[3, 2, 0] = '---'
     link_matrix[1, 3, 0] = '<->'
     link_matrix[3, 1, 0] = '<->'
 
+    #link_matrix[3, 1, 1] = 'o--'
 
     link_width = np.ones(val_matrix.shape)
     link_attribute = np.zeros(val_matrix.shape, dtype='object')
@@ -2562,10 +2545,8 @@ if __name__ == '__main__':
     link_attribute[1, 0, 0] = 'spurious'
     link_attribute[0, 2, 1] = 'spurious'
 
-
-
     plot_time_series_graph(
-        #val_matrix=val_matrix,
+        # val_matrix=val_matrix,
         figsize=None,
         sig_thres=None,
         link_matrix=link_matrix,
@@ -2578,7 +2559,7 @@ if __name__ == '__main__':
         save_name="tsg_test.png",
     )
 
-    
+    pyplot.show()
 
     plot_graph(
         # val_matrix=val_matrix,
@@ -2592,6 +2573,3 @@ if __name__ == '__main__':
         inner_edge_style='dashed',
         save_name="pg_test.png",
     )
-
-    pyplot.show()
-
