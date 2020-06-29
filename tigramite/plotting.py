@@ -836,7 +836,7 @@ def _draw_network_with_curved_edges(
 
 
         # TODO: Avoid static value manipulation!
-        rad *= 2.0
+        rad *= 1.5
 
         # Get coordinates of PathCollections (scatter)
         coor1 = np.asarray(n1.get_offsets())[0]
@@ -1696,7 +1696,6 @@ def plot_time_series_graph(
                       }
                   }
 
-    # ] for v in range(max_lag)]
     node_labels = ['' for i in range(N * max_lag)]
 
     _draw_network_with_curved_edges(
@@ -1721,7 +1720,7 @@ def plot_time_series_graph(
         trans = transforms.blended_transform_factory(
             fig.transFigure, ax.transData)
         ax.text(label_space_left, pos[order[i] * max_lag][1],
-                '%s' % str(var_names[order[i]]), fontsize=label_fontsize,
+                f"{var_names[order[i]]}", fontsize=label_fontsize,
                 horizontalalignment='left', verticalalignment='center',
                 transform=trans)
 
@@ -1739,10 +1738,6 @@ def plot_time_series_graph(
                     fontsize=int(label_fontsize * 0.7),
                     horizontalalignment='center', verticalalignment='top',
                     transform=trans)
-
-    #fig.subplots_adjust(left=0.1, right=.98, bottom=.25, top=.9)
-    # savestring = os.path.expanduser(save_name)
-
 
     if save_name is not None:
         pyplot.savefig(save_name, dpi=300)
@@ -2484,7 +2479,6 @@ def plot_tsg(links, X, Y, Z=None, anc_x=None, anc_y=None, anc_xy=None):
                       }
                   }
 
-    # ] for v in range(max_lag)]
     node_labels = ['' for i in range(N * max_lag)]
 
     _draw_network_with_curved_edges(
@@ -2494,7 +2488,7 @@ def plot_tsg(links, X, Y, Z=None, anc_x=None, anc_y=None, anc_xy=None):
         # or None, 'cmap':string,
         node_rings=node_rings,
         # 'vmin':float or None, 'vmax':float or None, 'label':string or None}}
-        node_labels=node_labels, node_label_size=node_label_size,
+        node_labels=node_labels, node_label_size=ode_label_size,
         node_alpha=alpha, standard_size=node_size,
         standard_cmap='OrRd', standard_color='lightgrey',
         log_sizes=False,
@@ -2577,11 +2571,11 @@ if __name__ == '__main__':
         link_matrix=link_matrix,
         link_width=link_width,
         link_attribute=link_attribute,
-        arrow_linewidth=3,
-        node_size=5,
+        arrow_linewidth=6,
+        node_size=4,
         var_names=range(len(val_matrix)),
         inner_edge_style='solid',
-        save_name="test-output/tsg_test.png",
+        save_name="tsg_test.png",
     )
 
     
@@ -2596,7 +2590,7 @@ if __name__ == '__main__':
         node_size=4,
         var_names=range(len(val_matrix)),
         inner_edge_style='dashed',
-        save_name="test-output/pg_test.png",
+        save_name="pg_test.png",
     )
 
     pyplot.show()
