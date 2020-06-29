@@ -762,7 +762,7 @@ def _draw_network_with_curved_edges(
             if d.get('outer_edge_type') in ['<-o', '<--']:
                 n1, n2 = n2, n1
 
-            if d.get('outer_edge_type') in ["o-o", "o--", "--o", "---", 'X-X', 'X--', '--X']:
+            if d.get('outer_edge_type') in ["o-o", "o--", "--o", "---", 'X-X', 'X--', '--X', 'o-X', 'X-o']:
                 arrowstyle = '-'
                 # linewidth = width*factor
             elif d.get('outer_edge_type') == '<->':
@@ -789,7 +789,7 @@ def _draw_network_with_curved_edges(
             if d.get('inner_edge_type') in ['<-o', '<--', '<-X']:
                 n1, n2 = n2, n1
 
-            if d.get('inner_edge_type') in ["o-o", "o--", "--o", "---", 'X-X', 'X--', '--X']:
+            if d.get('inner_edge_type') in ["o-o", "o--", "--o", "---", 'X-X', 'X--', '--X', 'o-X', 'X-o']:
                 arrowstyle = '-'
             elif d.get('inner_edge_type') == '<->':
                 arrowstyle = '<->, head_width=0.4, head_length=1'
@@ -801,10 +801,10 @@ def _draw_network_with_curved_edges(
 
 
         if outer_edge:
-            if d.get('outer_edge_type') in ["o--", "o->", "--o", "<-o", 'X-o', 'o-X', '<-X', 'X->', 'X--', '--X']:
+            if d.get('outer_edge_type') in ["o--", "o->", "--o", "<-o", '<-X', 'X->', 'X--', '--X']:
                 shrinkageA = 4.0
                 shrinkageB = 1.8
-            elif d.get('outer_edge_type') in["o-o", 'X-X']:
+            elif d.get('outer_edge_type') in ["o-o", 'X-X', 'X-o', 'o-X']:
                 shrinkageA = 4.0
                 shrinkageB = 4.0
             elif d.get('outer_edge_type') == "---":
@@ -813,15 +813,15 @@ def _draw_network_with_curved_edges(
             elif d.get('outer_edge_type') in ["-->", "<--"]:
                 shrinkageA = 1.0
                 shrinkageB = 2.5
-            elif d.get('outer_edge_type') in ["o-o", 'X-X']:
-                shrinkageA = 1.8
-                shrinkageB = 1.8
+            elif d.get('outer_edge_type') == "<->":
+                shrinkageA = 2.0
+                shrinkageB = 2.0
 
         else:
             if d.get('inner_edge_type') in ["o--", "o->", "--o", "<-o", 'X-o', 'o-X', '<-X', 'X->', 'X--', '--X']:
                 shrinkageA = 4.0
                 shrinkageB = 1.8
-            elif d.get('inner_edge_type') in ["o-o", 'X-X']:
+            elif d.get('inner_edge_type') in ["o-o", 'X-X', 'X-o', 'o-X']:
                 shrinkageA = 4.0
                 shrinkageB = 4.0
             elif d.get('inner_edge_type') == "---":
@@ -831,8 +831,8 @@ def _draw_network_with_curved_edges(
                 shrinkageA = 1.0
                 shrinkageB = 2.5
             elif d.get('inner_edge_type') == "<->":
-                shrinkageA = 1.8
-                shrinkageB = 1.8
+                shrinkageA = 2.0
+                shrinkageB = 2.0
 
 
         # TODO: Avoid static value manipulation!
@@ -2548,17 +2548,17 @@ if __name__ == '__main__':
     # Complete test case
     link_matrix = np.zeros(val_matrix.shape, dtype='U3')
 
-    link_matrix[0, 1, 0] = 'X-X'
-    link_matrix[1, 0, 0] = 'X-X'
+    link_matrix[0, 1, 0] = 'o-X'
+    link_matrix[1, 0, 0] = 'X-o'
 
-    #link_matrix[1, 2, 0] = 'o-o'
-    #link_matrix[2, 1, 0] = 'o-o'
-    #link_matrix[0, 2, 0] = 'o--'
-    #link_matrix[2, 0, 0] = '--o'
-    #link_matrix[2, 3, 0] = '---'
-    #link_matrix[3, 2, 0] = '---'
-    #link_matrix[1, 3, 0] = '<->'
-    #link_matrix[3, 1, 0] = '<->'
+    link_matrix[1, 2, 0] = 'o-o'
+    link_matrix[2, 1, 0] = 'o-o'
+    link_matrix[0, 2, 0] = 'o--'
+    link_matrix[2, 0, 0] = '--o'
+    link_matrix[2, 3, 0] = '---'
+    link_matrix[3, 2, 0] = '---'
+    link_matrix[1, 3, 0] = '<->'
+    link_matrix[3, 1, 0] = '<->'
 
 
     link_width = np.ones(val_matrix.shape)
@@ -2572,19 +2572,19 @@ if __name__ == '__main__':
 
     plot_time_series_graph(
         #val_matrix=val_matrix,
-        figsize=(10,10),
+        figsize=None,
         sig_thres=None,
         link_matrix=link_matrix,
         link_width=link_width,
         link_attribute=link_attribute,
-        arrow_linewidth=6,
+        arrow_linewidth=3,
         node_size=5,
         var_names=range(len(val_matrix)),
         inner_edge_style='solid',
         save_name="test-output/tsg_test.png",
     )
 
-    pyplot.show()
+    
 
     plot_graph(
         # val_matrix=val_matrix,
@@ -2596,7 +2596,8 @@ if __name__ == '__main__':
         node_size=4,
         var_names=range(len(val_matrix)),
         inner_edge_style='dashed',
-        save_name="pg_test.png",
+        save_name="test-output/pg_test.png",
     )
 
+    pyplot.show()
 
