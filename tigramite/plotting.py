@@ -762,17 +762,14 @@ def _draw_network_with_curved_edges(
             if d.get('outer_edge_type') in ['<-o', '<--']:
                 n1, n2 = n2, n1
 
-            if d.get('outer_edge_type') in ["o-o", "o--", "--o", "---"]:
-                # arrowstyle = 'simple,head_length=0.0001'
+            if d.get('outer_edge_type') in ["o-o", "o--", "--o", "---", 'X-X', 'X--', '--X']:
                 arrowstyle = '-'
                 # linewidth = width*factor
             elif d.get('outer_edge_type') == '<->':
                 arrowstyle = '<->, head_width=0.4, head_length=1'
                 # linewidth = width*factor
-            elif d.get('outer_edge_type') in ["o->", "-->", "<-o", "<--"]:
+            elif d.get('outer_edge_type') in ["o->", "-->", "<-o", "<--", '<-X', 'X->']:
                 arrowstyle = '->, head_width=0.4, head_length=1'
-
-            linestyle = "solid"
 
         else:
             rad = -1. * inner_edge_curved * curved_radius
@@ -789,15 +786,14 @@ def _draw_network_with_curved_edges(
 
             if d.get('inner_edge_attribute', None) == 'spurious':
                 facecolor = 'grey'
-            if d.get('inner_edge_type') in ['<-o', '<--']:
+            if d.get('inner_edge_type') in ['<-o', '<--', '<-X']:
                 n1, n2 = n2, n1
-                arrowstyle = '<->, head_width=0.4, head_length=1'
 
-            if d.get('inner_edge_type') in ["o-o", "o--", "--o", "---"]:
+            if d.get('inner_edge_type') in ["o-o", "o--", "--o", "---", 'X-X', 'X--', '--X']:
                 arrowstyle = '-'
             elif d.get('inner_edge_type') == '<->':
                 arrowstyle = '<->, head_width=0.4, head_length=1'
-            elif d.get('inner_edge_type') in ["o->", "-->", "<-o", "<--"]:
+            elif d.get('inner_edge_type') in ["o->", "-->", "<-o", "<--", '<-X', 'X->']:
                 arrowstyle = '->, head_width=0.4, head_length=1'
 
             linestyle = d.get("inner_edge_style")
@@ -805,10 +801,10 @@ def _draw_network_with_curved_edges(
 
 
         if outer_edge:
-            if d.get('outer_edge_type') in ["o--", "o->", "--o", "<-o"]:
+            if d.get('outer_edge_type') in ["o--", "o->", "--o", "<-o", 'X-o', 'o-X', '<-X', 'X->', 'X--', '--X']:
                 shrinkageA = 4.0
                 shrinkageB = 1.8
-            elif d.get('outer_edge_type') == "o-o":
+            elif d.get('outer_edge_type') in["o-o", 'X-X']:
                 shrinkageA = 4.0
                 shrinkageB = 4.0
             elif d.get('outer_edge_type') == "---":
@@ -817,17 +813,15 @@ def _draw_network_with_curved_edges(
             elif d.get('outer_edge_type') in ["-->", "<--"]:
                 shrinkageA = 1.0
                 shrinkageB = 2.5
-            elif d.get('outer_edge_type') == "<->":
+            elif d.get('outer_edge_type') in ["o-o", 'X-X']:
                 shrinkageA = 1.8
                 shrinkageB = 1.8
-            else:
-                shrinkageA = 3.5
-                shrinkageB = 3.5
+
         else:
-            if d.get('inner_edge_type') in ["o--", "o->", "--o", "<-o"]:
+            if d.get('inner_edge_type') in ["o--", "o->", "--o", "<-o", 'X-o', 'o-X', '<-X', 'X->', 'X--', '--X']:
                 shrinkageA = 4.0
                 shrinkageB = 1.8
-            elif d.get('inner_edge_type') == "o-o":
+            elif d.get('inner_edge_type') in ["o-o", 'X-X']:
                 shrinkageA = 4.0
                 shrinkageB = 4.0
             elif d.get('inner_edge_type') == "---":
@@ -839,9 +833,7 @@ def _draw_network_with_curved_edges(
             elif d.get('inner_edge_type') == "<->":
                 shrinkageA = 1.8
                 shrinkageB = 1.8
-            else:
-                shrinkageA = 3.5
-                shrinkageB = 3.5
+
 
         # TODO: Avoid static value manipulation!
         rad *= 2.0
@@ -904,7 +896,7 @@ def _draw_network_with_curved_edges(
                     facecolor='w', edgecolor=facecolor, zorder=1)
                 ax.add_collection(circle_marker_start)
             if d.get('outer_edge_type', "empty")[-1] in ['o', 'X']:
-                circle_marker_end = ax.scatter(*start, marker=d.get('outer_edge_type')[0], s=marker_size,
+                circle_marker_end = ax.scatter(*end, marker=d.get('outer_edge_type')[-1], s=marker_size,
                     facecolor='w', edgecolor=facecolor, zorder=1)
                 ax.add_collection(circle_marker_end)
 
@@ -914,7 +906,7 @@ def _draw_network_with_curved_edges(
                     facecolor='w', edgecolor=facecolor, zorder=1)
                 ax.add_collection(circle_marker_start)
             if d.get('inner_edge_type', "empty")[-1] in ['o', 'X']:
-                circle_marker_end = ax.scatter(*start, marker=d.get('inner_edge_type')[0], s=marker_size,
+                circle_marker_end = ax.scatter(*end, marker=d.get('inner_edge_type')[-1], s=marker_size,
                     facecolor='w', edgecolor=facecolor, zorder=1)
                 ax.add_collection(circle_marker_end)
 
@@ -1482,7 +1474,8 @@ def _check_matrices(link_matrix, val_matrix, link_width, link_attribute):
                 if link_attribute is not None and link_attribute[i, j, 0] != link_attribute[j, i, 0]:
                     raise ValueError("link_attribute needs to be symmetric for lag-zero")
 
-            if link_matrix[i, j, tau] not in ['---', 'o--', '--o', 'o-o', 'o->', '<-o', '-->', '<--', '<->']:
+            if link_matrix[i, j, tau] not in ['---', 'o--', '--o', 'o-o', 'o->', '<-o', '-->', '<--', '<->',
+                                              'X-o', 'o-X', 'X--', '--X', 'X->', '<-X', 'X-X']:
                 raise ValueError("Invalid link_matrix entry.")
 
     if val_matrix is None:
@@ -2555,17 +2548,17 @@ if __name__ == '__main__':
     # Complete test case
     link_matrix = np.zeros(val_matrix.shape, dtype='U3')
 
-    link_matrix[0, 1, 0] = 'o->'
-    link_matrix[1, 0, 0] = '<-o'
+    link_matrix[0, 1, 0] = 'X-X'
+    link_matrix[1, 0, 0] = 'X-X'
 
-    link_matrix[1, 2, 0] = 'o-o'
-    link_matrix[2, 1, 0] = 'o-o'
-    link_matrix[0, 2, 0] = 'o--'
-    link_matrix[2, 0, 0] = '--o'
-    link_matrix[2, 3, 0] = '---'
-    link_matrix[3, 2, 0] = '---'
-    link_matrix[1, 3, 0] = '<->'
-    link_matrix[3, 1, 0] = '<->'
+    #link_matrix[1, 2, 0] = 'o-o'
+    #link_matrix[2, 1, 0] = 'o-o'
+    #link_matrix[0, 2, 0] = 'o--'
+    #link_matrix[2, 0, 0] = '--o'
+    #link_matrix[2, 3, 0] = '---'
+    #link_matrix[3, 2, 0] = '---'
+    #link_matrix[1, 3, 0] = '<->'
+    #link_matrix[3, 1, 0] = '<->'
 
 
     link_width = np.ones(val_matrix.shape)
@@ -2579,7 +2572,7 @@ if __name__ == '__main__':
 
     plot_time_series_graph(
         #val_matrix=val_matrix,
-        figsize=(10,20),
+        figsize=(10,10),
         sig_thres=None,
         link_matrix=link_matrix,
         link_width=link_width,
