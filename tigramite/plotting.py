@@ -14,9 +14,8 @@ import matplotlib.patches as mpatches
 import sys
 import networkx as nx
 import tigramite.data_processing as pp
-import pprint
 from copy import deepcopy
-
+import matplotlib.path as mpath
 
 # TODO: Add proper docstrings to internal functions...
 
@@ -755,21 +754,21 @@ def _draw_network_with_curved_edges(
                 rad = (rad + np.sign(rad) * 0.1) * -1.
             arrowstyle = arrowstyle
             # link_edge = d['outer_edge_edge']
-            linestyle = 'solid'
+            linestyle = d.get("outer_edge_style")
 
             if d.get('outer_edge_attribute', None) == 'spurious':
                 facecolor = 'grey'
 
-            if d.get('outer_edge_type') in ['<-o', '<--', '<-X']:
+            if d.get('outer_edge_type') in ['<-o', '<--', '<-x']:
                 n1, n2 = n2, n1
 
-            if d.get('outer_edge_type') in ["o-o", "o--", "--o", "---", 'X-X', 'X--', '--X', 'o-X', 'X-o']:
+            if d.get('outer_edge_type') in ["o-o", "o--", "--o", "---", 'x-x', 'x--', '--x', 'o-x', 'x-o']:
                 arrowstyle = '-'
                 # linewidth = width*factor
             elif d.get('outer_edge_type') == '<->':
                 arrowstyle = '<->, head_width=0.4, head_length=1'
                 # linewidth = width*factor
-            elif d.get('outer_edge_type') in ["o->", "-->", "<-o", "<--", '<-X', 'X->']:
+            elif d.get('outer_edge_type') in ["o->", "-->", "<-o", "<--", '<-x', 'x->']:
                 arrowstyle = '->, head_width=0.4, head_length=1'
 
         else:
@@ -787,29 +786,24 @@ def _draw_network_with_curved_edges(
 
             if d.get('inner_edge_attribute', None) == 'spurious':
                 facecolor = 'grey'
-            if d.get('inner_edge_type') in ['<-o', '<--', '<-X']:
+            if d.get('inner_edge_type') in ['<-o', '<--', '<-x']:
                 n1, n2 = n2, n1
 
-            if d.get('inner_edge_type') in ["o-o", "o--", "--o", "---", 'X-X', 'X--', '--X', 'o-X', 'X-o']:
+            if d.get('inner_edge_type') in ["o-o", "o--", "--o", "---", 'x-x', 'x--', '--x', 'o-x', 'x-o']:
                 arrowstyle = '-'
             elif d.get('inner_edge_type') == '<->':
                 arrowstyle = '<->, head_width=0.4, head_length=1'
-            elif d.get('inner_edge_type') in ["o->", "-->", "<-o", "<--", '<-X', 'X->']:
+            elif d.get('inner_edge_type') in ["o->", "-->", "<-o", "<--", '<-x', 'x->']:
                 arrowstyle = '->, head_width=0.4, head_length=1'
 
             linestyle = d.get("inner_edge_style")
 
         # TODO: Avoid static value manipulation!
-        rad *= 1.5
+        rad *= 2.0
 
         # Get coordinates of PathCollections (scatter)
         coor1 = np.asarray(n1.get_offsets())[0]
         coor2 = np.asarray(n2.get_offsets())[0]
-
-        if linestyle == "dashed":
-            alpha_val = 0
-        else:
-            alpha_val = 1
 
         e = FancyArrowPatch(coor1, coor2,
                             arrowstyle=arrowstyle,
@@ -831,14 +825,25 @@ def _draw_network_with_curved_edges(
         circlePath = circlePath.interpolated(500)
 
         vertices = circlePath.vertices
+
         m, n = vertices.shape
 
         start = vertices[0]
         end = vertices[-1]
 
         marker_size = width ** 2
+        figuresize = fig.get_size_inches()
 
-        e_p = FancyArrowPatch(coor1, coor2,
+        Path = mpath.Path
+        pp1 = mpatches.PathPatch(Path([start, vertices[250],  end],
+                      [Path.MOVETO, Path.CURVE3, Path.CURVE3]), fc="none")
+
+        
+        shrinkageA = shrinkageB = standard_size*1.5
+        #shrinkageA = shrinkageB = 13
+
+        e_p = FancyArrowPatch(#path=pp1.get_path(),
+                              coor1, coor2,
                               arrowstyle=arrowstyle,
                               connectionstyle=f'arc3,rad={rad}',
                               mutation_scale=width,
@@ -847,33 +852,107 @@ def _draw_network_with_curved_edges(
                               linestyle=linestyle,
                               color=facecolor,
                               clip_on=True,
-                              shrinkA=standard_size * 2.0,
-                              shrinkB=standard_size * 2.0,
+                              shrinkA=shrinkageA,
+                              shrinkB=shrinkageB,
                               zorder=-1
                               )
 
         ax.add_patch(e_p)
 
+
         if outer_edge:
-            if d.get('outer_edge_type', "empty")[0] in ['o', 'X']:
-                circle_marker_start = ax.scatter(*start, marker=d.get('outer_edge_type')[0], s=marker_size,
+            if d.get('outer_edge_type') in ['o->', 'o--']:
+                circle_marker_start = ax.scatter(*start, marker='o', s=marker_size,
                                                  facecolor='w', edgecolor=facecolor, zorder=1)
                 ax.add_collection(circle_marker_start)
-            if d.get('outer_edge_type', "empty")[-1] in ['o', 'X']:
-                circle_marker_end = ax.scatter(*end, marker=d.get('outer_edge_type')[-1], s=marker_size,
-                                               facecolor='w', edgecolor=facecolor, zorder=1)
+            elif d.get('outer_edge_type') in ['--o', '<-o']:
+                circle_marker_end = ax.scatter(*end, marker='o', s=marker_size,
+                                                 facecolor='w', edgecolor=facecolor, zorder=1)
                 ax.add_collection(circle_marker_end)
+            elif d.get('outer_edge_type') in ['x--', 'x->']:
+                circle_marker_start = ax.scatter(*start, marker='X', s=marker_size,
+                                                 facecolor='w', edgecolor=facecolor, zorder=1)
+                ax.add_collection(circle_marker_start)    
+            elif d.get('outer_edge_type') in ['--x', '<-x']:
+                circle_marker_end = ax.scatter(*start, marker='X', s=marker_size,
+                                                 facecolor='w', edgecolor=facecolor, zorder=1)
+                ax.add_collection(circle_marker_end)        
+            elif d.get('outer_edge_type') == 'o-o':
+                circle_marker_start = ax.scatter(*start, marker='o', s=marker_size,
+                                                 facecolor='w', edgecolor=facecolor, zorder=1)
+                ax.add_collection(circle_marker_start)
+                circle_marker_end = ax.scatter(*end, marker='o', s=marker_size,
+                                                 facecolor='w', edgecolor=facecolor, zorder=1)
+                ax.add_collection(circle_marker_end)
+            elif d.get('outer_edge_type') == 'x-x':
+                circle_marker_start = ax.scatter(*start, marker='X', s=marker_size,
+                                                 facecolor='w', edgecolor=facecolor, zorder=1)
+                ax.add_collection(circle_marker_start)
+                circle_marker_end = ax.scatter(*end, marker='X', s=marker_size,
+                                                 facecolor='w', edgecolor=facecolor, zorder=1)
+                ax.add_collection(circle_marker_end)
+            elif d.get('outer_edge_type') == 'o-x':
+                circle_marker_start = ax.scatter(*start, marker='o', s=marker_size,
+                                                 facecolor='w', edgecolor=facecolor, zorder=1)
+                ax.add_collection(circle_marker_start)
+                circle_marker_end = ax.scatter(*end, marker='X', s=marker_size,
+                                                 facecolor='w', edgecolor=facecolor, zorder=1)
+                ax.add_collection(circle_marker_end)
+            elif d.get('outer_edge_type') == 'x-o':
+                circle_marker_start = ax.scatter(*start, marker='X', s=marker_size,
+                                                 facecolor='w', edgecolor=facecolor, zorder=1)
+                ax.add_collection(circle_marker_start)
+                circle_marker_end = ax.scatter(*end, marker='o', s=marker_size,
+                                                 facecolor='w', edgecolor=facecolor, zorder=1)
+                ax.add_collection(circle_marker_end)
+
 
         else:
-            if d.get('inner_edge_type', "empty")[0] in ['o', 'X']:
-                circle_marker_start = ax.scatter(*start, marker=d.get('inner_edge_type')[0], s=marker_size,
+            if d.get('inner_edge_type') in ['o->', 'o--']:
+                circle_marker_start = ax.scatter(*start, marker='o', s=marker_size,
                                                  facecolor='w', edgecolor=facecolor, zorder=1)
                 ax.add_collection(circle_marker_start)
-            if d.get('inner_edge_type', "empty")[-1] in ['o', 'X']:
-                circle_marker_end = ax.scatter(*end, marker=d.get('inner_edge_type')[-1], s=marker_size,
-                                               facecolor='w', edgecolor=facecolor, zorder=1)
+            elif d.get('inner_edge_type') in ['--o', '<-o']:
+                circle_marker_end = ax.scatter(*end, marker='o', s=marker_size,
+                                                 facecolor='w', edgecolor=facecolor, zorder=1)
                 ax.add_collection(circle_marker_end)
-
+            elif d.get('inner_edge_type') in ['x--', 'x->']:
+                circle_marker_start = ax.scatter(*start, marker='X', s=marker_size,
+                                                 facecolor='w', edgecolor=facecolor, zorder=1)
+                ax.add_collection(circle_marker_start)    
+            elif d.get('inner_edge_type') in ['--x', '<-x']:
+                circle_marker_end = ax.scatter(*start, marker='X', s=marker_size,
+                                                 facecolor='w', edgecolor=facecolor, zorder=1)
+                ax.add_collection(circle_marker_end)        
+            elif d.get('inner_edge_type') == 'o-o':
+                circle_marker_start = ax.scatter(*start, marker='o', s=marker_size,
+                                                 facecolor='w', edgecolor=facecolor, zorder=1)
+                ax.add_collection(circle_marker_start)
+                circle_marker_end = ax.scatter(*end, marker='o', s=marker_size,
+                                                 facecolor='w', edgecolor=facecolor, zorder=1)
+                ax.add_collection(circle_marker_end)
+            elif d.get('inner_edge_type') == 'x-x':
+                circle_marker_start = ax.scatter(*start, marker='X', s=marker_size,
+                                                 facecolor='w', edgecolor=facecolor, zorder=1)
+                ax.add_collection(circle_marker_start)
+                circle_marker_end = ax.scatter(*end, marker='X', s=marker_size,
+                                                 facecolor='w', edgecolor=facecolor, zorder=1)
+                ax.add_collection(circle_marker_end)
+            elif d.get('inner_edge_type') == 'o-x':
+                circle_marker_start = ax.scatter(*start, marker='o', s=marker_size,
+                                                 facecolor='w', edgecolor=facecolor, zorder=1)
+                ax.add_collection(circle_marker_start)
+                circle_marker_end = ax.scatter(*end, marker='X', s=marker_size,
+                                                 facecolor='w', edgecolor=facecolor, zorder=1)
+                ax.add_collection(circle_marker_end)
+            elif d.get('inner_edge_type') == 'x-o':
+                circle_marker_start = ax.scatter(*start, marker='X', s=marker_size,
+                                                 facecolor='w', edgecolor=facecolor, zorder=1)
+                ax.add_collection(circle_marker_start)
+                circle_marker_end = ax.scatter(*end, marker='o', s=marker_size,
+                                                 facecolor='w', edgecolor=facecolor, zorder=1)
+                ax.add_collection(circle_marker_end)
+    
         if d['label'] is not None and outer_edge:
             # Attach labels of lags
             trans = None  # patch.get_transform()
@@ -975,8 +1054,7 @@ def _draw_network_with_curved_edges(
 
     for n in G:
         # Plot variable nodes
-        c = ax.scatter(pos[n][0], pos[n][1], marker='o', s=standard_size *
-                       100, facecolor='darkgray', edgecolor='darkgray')
+        c = ax.scatter(pos[n][0], pos[n][1], marker='o', s=standard_size*100, facecolor='darkgray', edgecolor='darkgray')
         ax.add_collection(c)
 
         # avoiding attribute error raised by changes in networkx
@@ -1449,7 +1527,7 @@ def _check_matrices(link_matrix, val_matrix, link_width, link_attribute):
                         "link_attribute needs to be symmetric for lag-zero")
 
             if link_matrix[i, j, tau] not in ['---', 'o--', '--o', 'o-o', 'o->', '<-o', '-->', '<--', '<->',
-                                              'X-o', 'o-X', 'X--', '--X', 'X->', '<-X', 'X-X']:
+                                              'x-o', 'o-x', 'x--', '--x', 'x->', '<-x', 'x-x']:
                 raise ValueError("Invalid link_matrix entry.")
 
     if val_matrix is None:
@@ -2519,24 +2597,32 @@ def plot_tsg(links, X, Y, Z=None, anc_x=None, anc_y=None, anc_xy=None):
 
 if __name__ == '__main__':
 
-    val_matrix = 2. + np.random.rand(4, 4, 3)
+    val_matrix = np.ones((4, 4, 4))
+
+    val_matrix[1, 2, 0] = 0.6
+    val_matrix[2, 1, 0] = 0.6
+    val_matrix[0, 2, 0] = 0.8
+    val_matrix[2, 0, 0] = 0.8
+    val_matrix[2, 3, 0] = -0.7
+    val_matrix[3, 2, 0] = -0.7
+    val_matrix[1, 3, 0] = 0.4
+    val_matrix[3, 1, 0] = 0.4
+    val_matrix[3, 1, 1] = -0.9
 
     # Complete test case
     link_matrix = np.zeros(val_matrix.shape, dtype='U3')
 
-    link_matrix[0, 1, 0] = '<-X'
-    link_matrix[1, 0, 0] = 'X->'
-
+    link_matrix[0, 1, 0] = '<-x'
+    link_matrix[1, 0, 0] = 'x->'
     link_matrix[1, 2, 0] = 'o-o'
     link_matrix[2, 1, 0] = 'o-o'
-    link_matrix[0, 2, 0] = 'X--'
-    link_matrix[2, 0, 0] = '--X'
+    link_matrix[0, 2, 0] = 'x--'
+    link_matrix[2, 0, 0] = '--x'
     link_matrix[2, 3, 0] = '---'
     link_matrix[3, 2, 0] = '---'
     link_matrix[1, 3, 0] = '<->'
     link_matrix[3, 1, 0] = '<->'
-
-    #link_matrix[3, 1, 1] = 'o--'
+    link_matrix[3, 1, 2] = 'x-o'
 
     link_width = np.ones(val_matrix.shape)
     link_attribute = np.zeros(val_matrix.shape, dtype='object')
@@ -2546,20 +2632,19 @@ if __name__ == '__main__':
     link_attribute[0, 2, 1] = 'spurious'
 
     plot_time_series_graph(
-        # val_matrix=val_matrix,
-        figsize=None,
+        val_matrix=val_matrix,
+        figsize=(10,10),
         sig_thres=None,
         link_matrix=link_matrix,
         link_width=link_width,
         link_attribute=link_attribute,
-        arrow_linewidth=6,
+        arrow_linewidth=8,
         node_size=4,
         var_names=range(len(val_matrix)),
-        inner_edge_style='solid',
+        inner_edge_style='dashed',
         save_name="tsg_test.png",
     )
 
-    pyplot.show()
 
     plot_graph(
         # val_matrix=val_matrix,
@@ -2567,9 +2652,11 @@ if __name__ == '__main__':
         link_width=link_width,
         link_matrix=link_matrix,
         link_attribute=link_attribute,
-        arrow_linewidth=6,
+        arrow_linewidth=8,
         node_size=4,
         var_names=range(len(val_matrix)),
         inner_edge_style='dashed',
         save_name="pg_test.png",
     )
+
+    pyplot.show()
