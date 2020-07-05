@@ -52,8 +52,7 @@ INSTALL_REQUIRES = ["numpy", "scipy", "six"]
 EXTRAS_REQUIRE = {
     'all' : ['scikit-learn>=0.21',#Gaussian Process (GP) Regression
              'matplotlib>=3.0',   #plotting
-             'networkx>=2.4',    #plotting
-    ]
+             'networkx>=2.4']    #plotting
     }
 # Define the packages needed for testing
 TESTS_REQUIRE = ['nose',
