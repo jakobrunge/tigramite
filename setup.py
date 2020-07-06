@@ -80,6 +80,7 @@ setup(
     author_email='jakob@jakob-runge.com',
     url='https://github.com/jakobrunge/tigramite/',
     long_description=io.open('README.md', 'r', encoding='utf-8').read(),
+    long_description_content_type="text/markdown",
     keywords='causality, time-series',
     cmdclass=CMDCLASS,
     ext_modules=EXT_MODULES,
@@ -88,7 +89,7 @@ setup(
     test_suite='tests',
     tests_require=TESTS_REQUIRE,
     classifiers=[
-        'Development Status :: 4',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Science/Research',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Scientific/Engineering :: Mathematics',
