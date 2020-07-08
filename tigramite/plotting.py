@@ -11,6 +11,8 @@ import matplotlib.transforms as transforms
 from matplotlib import pyplot, ticker
 from matplotlib.ticker import FormatStrFormatter
 import matplotlib.patches as mpatches
+from matplotlib.collections import PatchCollection
+
 import sys
 import networkx as nx
 import tigramite.data_processing as pp
@@ -111,7 +113,6 @@ def _make_nice_axes(ax, where=None, skip=2, color=None):
 
 def _get_absmax(val_matrix):
     """Get value at absolute maximum in lag function array.
-
     For an (N, N, tau)-array this comutes the lag of the absolute maximum
     along the tau-axis and stores the (positive or negative) value in
     the (N,N)-array absmax."""
@@ -138,10 +139,8 @@ def _add_timeseries(fig, axes, i, time, dataseries, label,
                     grey_alpha=1.,
                     ):
     """Adds a time series plot to an axis.
-
     Plot of dataseries is added to axis. Allows for proper visualization of
     masked data.
-
     Parameters
     ----------
     fig : figure instance
@@ -270,7 +269,6 @@ def plot_timeseries(dataframe=None,
                     label_fontsize=8,
                     ):
     """Create and save figure of stacked panels with time series.
-
     Parameters
     ----------
     dataframe : data object, optional
@@ -355,10 +353,8 @@ def plot_timeseries(dataframe=None,
 
 def plot_lagfuncs(val_matrix, name=None, setup_args={}, add_lagfunc_args={}):
     """Wrapper helper function to plot lag functions.
-
     Sets up the matrix object and plots the lagfunction, see parameters in
     setup_matrix and add_lagfuncs.
-
     Parameters
     ----------
     val_matrix : array_like
@@ -370,7 +366,6 @@ def plot_lagfuncs(val_matrix, name=None, setup_args={}, add_lagfunc_args={}):
         setup_matrix.
     add_lagfunc_args : dict
         Arguments for adding a lag function matrix, see doc of add_lagfuncs.
-
     Returns
     -------
     matrix : object
@@ -392,11 +387,9 @@ def plot_lagfuncs(val_matrix, name=None, setup_args={}, add_lagfunc_args={}):
 
 class setup_matrix():
     """Create matrix of lag function panels.
-
     Class to setup figure object. The function add_lagfuncs(...) allows to plot
     the val_matrix of shape (N, N, tau_max+1). Multiple lagfunctions can be
     overlaid for comparison.
-
     Parameters
     ----------
     N : int
@@ -550,7 +543,6 @@ class setup_matrix():
                      alpha=1.,
                      ):
         """Add lag function plot from val_matrix array.
-
         Parameters
         ----------
         val_matrix : array_like
@@ -626,7 +618,6 @@ class setup_matrix():
 
     def savefig(self, name=None):
         """Save matrix figure.
-
         Parameters
         ----------
         name : str, optional (default: None)
@@ -705,9 +696,7 @@ def _draw_network_with_curved_edges(
         network_lower_bound=0.2, show_colorbar=True,
 ):
     """Function to draw a network from networkx graph instance.
-
     Various attributes are used to specify the graph's properties.
-
     This function is just a beta-template for now that can be further
     customized.
     """
@@ -799,65 +788,41 @@ def _draw_network_with_curved_edges(
             linestyle = d.get("inner_edge_style")
 
         # TODO: Avoid static value manipulation!
-        rad *= 2.0
+        #rad *= 2.0
 
-        # Get coordinates of PathCollections (scatter)
-        coor1 = np.asarray(n1.get_offsets())[0]
-        coor2 = np.asarray(n2.get_offsets())[0]
+        coor1 = n1.center
+        coor2 = n2.center
 
-        e = FancyArrowPatch(coor1, coor2,
-                            arrowstyle=arrowstyle,
-                            connectionstyle=f'arc3,rad={rad}',
-                            mutation_scale=width,
-                            lw=width / 2,
-                            alpha=0,
-                            linestyle=linestyle,
-                            color=facecolor,
-                            clip_on=True,
-                            patchA=n1,
-                            patchB=n2,
-                            zorder=-1
-                            )
-
-        ax.add_patch(e)
-
-        circlePath = e.get_path().deepcopy()
-        circlePath = circlePath.interpolated(500)
-
-        vertices = circlePath.vertices
-
-        m, n = vertices.shape
-
-        start = vertices[0]
-        end = vertices[-1]
 
         marker_size = width ** 2
         figuresize = fig.get_size_inches()
 
-        Path = mpath.Path
-        pp1 = mpatches.PathPatch(Path([start, vertices[250],  end],
-                      [Path.MOVETO, Path.CURVE3, Path.CURVE3]), fc="none")
-
-        
-        shrinkageA = shrinkageB = standard_size*1.5
-        #shrinkageA = shrinkageB = 13
 
         e_p = FancyArrowPatch(#path=pp1.get_path(),
                               coor1, coor2,
                               arrowstyle=arrowstyle,
                               connectionstyle=f'arc3,rad={rad}',
                               mutation_scale=width,
+                              # mutation_aspect = .5,
                               lw=width / 2,
                               alpha=1,
                               linestyle=linestyle,
                               color=facecolor,
-                              clip_on=True,
-                              shrinkA=shrinkageA,
-                              shrinkB=shrinkageB,
-                              zorder=-1
+                              clip_on=False,
+                              patchA=n1,
+                              patchB=n2,
+                              shrinkA=0, #shrinkageA,
+                              shrinkB=0, #shrinkageB,
+                              zorder=0
                               )
 
-        ax.add_patch(e_p)
+        ax.add_artist(e_p)
+        path = e_p.get_path()
+        vertices = path.vertices.copy()
+        m, n = vertices.shape
+
+        start = vertices[0]
+        end = vertices[-1]
 
 
         if outer_edge:
@@ -872,11 +837,11 @@ def _draw_network_with_curved_edges(
             elif d.get('outer_edge_type') in ['x--', 'x->']:
                 circle_marker_start = ax.scatter(*start, marker='X', s=marker_size,
                                                  facecolor='w', edgecolor=facecolor, zorder=1)
-                ax.add_collection(circle_marker_start)    
+                ax.add_collection(circle_marker_start)
             elif d.get('outer_edge_type') in ['--x', '<-x']:
                 circle_marker_end = ax.scatter(*start, marker='X', s=marker_size,
                                                  facecolor='w', edgecolor=facecolor, zorder=1)
-                ax.add_collection(circle_marker_end)        
+                ax.add_collection(circle_marker_end)
             elif d.get('outer_edge_type') == 'o-o':
                 circle_marker_start = ax.scatter(*start, marker='o', s=marker_size,
                                                  facecolor='w', edgecolor=facecolor, zorder=1)
@@ -919,11 +884,11 @@ def _draw_network_with_curved_edges(
             elif d.get('inner_edge_type') in ['x--', 'x->']:
                 circle_marker_start = ax.scatter(*start, marker='X', s=marker_size,
                                                  facecolor='w', edgecolor=facecolor, zorder=1)
-                ax.add_collection(circle_marker_start)    
+                ax.add_collection(circle_marker_start)
             elif d.get('inner_edge_type') in ['--x', '<-x']:
                 circle_marker_end = ax.scatter(*start, marker='X', s=marker_size,
                                                  facecolor='w', edgecolor=facecolor, zorder=1)
-                ax.add_collection(circle_marker_end)        
+                ax.add_collection(circle_marker_end)
             elif d.get('inner_edge_type') == 'o-o':
                 circle_marker_start = ax.scatter(*start, marker='o', s=marker_size,
                                                  facecolor='w', edgecolor=facecolor, zorder=1)
@@ -952,11 +917,11 @@ def _draw_network_with_curved_edges(
                 circle_marker_end = ax.scatter(*end, marker='o', s=marker_size,
                                                  facecolor='w', edgecolor=facecolor, zorder=1)
                 ax.add_collection(circle_marker_end)
-    
+
         if d['label'] is not None and outer_edge:
             # Attach labels of lags
             trans = None  # patch.get_transform()
-            path = e.get_path()
+            path = e_p.get_path()
             verts = path.to_polygons(trans)[0]
             if len(verts) > 2:
                 label_vert = verts[1, :]
@@ -965,7 +930,8 @@ def _draw_network_with_curved_edges(
                 ax.text(label_vert[0], label_vert[1], string,
                         fontsize=link_label_fontsize,
                         verticalalignment='center',
-                        horizontalalignment='center')
+                        horizontalalignment='center',
+                        zorder = -10)
 
         return rad
 
@@ -983,79 +949,25 @@ def _draw_network_with_curved_edges(
     total_max_size = node_sizes.sum(axis=0).max()
     node_sizes /= total_max_size
     node_sizes *= standard_size
-    #    print  'node_sizes ', node_sizes
 
-    # start drawing the outer ring first...
-    for ring in list(node_rings)[::-1]:
-        #        print ring
-        # dictionary of rings: {0:{'sizes':(N,)-array, 'color_array':(N,)-array
-        # or None, 'cmap':string, 'vmin':float or None, 'vmax':float or None}}
-        if node_rings[ring]['color_array'] is not None:
-            color_data = node_rings[ring]['color_array']
-            if node_rings[ring]['vmin'] is not None:
-                vmin = node_rings[ring]['vmin']
-            else:
-                vmin = node_rings[ring]['color_array'].min()
-            if node_rings[ring]['vmax'] is not None:
-                vmax = node_rings[ring]['vmax']
-            else:
-                vmax = node_rings[ring]['color_array'].max()
-            if node_rings[ring]['cmap'] is not None:
-                cmap = node_rings[ring]['cmap']
-            else:
-                cmap = standard_cmap
-            data_to_rgb = pyplot.cm.ScalarMappable(
-                norm=None, cmap=pyplot.get_cmap(cmap))
-            data_to_rgb.set_array(color_data)
-            data_to_rgb.set_clim(vmin=vmin, vmax=vmax)
-            colors = [data_to_rgb.to_rgba(color_data[n]) for n in G]
+    from operator import sub
+    def get_aspect(ax):
+        # Total figure size
+        figW, figH = ax.get_figure().get_size_inches()
+        # Axis size on figure
+        _, _, w, h = ax.get_position().bounds
+        # Ratio of display units
+        disp_ratio = (figH * h) / (figW * w)
+        # Ratio of data units
+        # Negative over negative because of the order of subtraction
+        data_ratio = sub(*ax.get_ylim()) / sub(*ax.get_xlim())
 
-            if node_rings[ring]['colorbar']:
-                # Create colorbars for nodes
-                # cax_n = pyplot.axes([.8 + ring*0.11,
-                # ax.figbox.bounds[1]+0.05, 0.025, 0.35], frameon=False) #
-                # setup colorbar axes.
-                # setup colorbar axes.
-                cax_n = pyplot.axes([0.05, ax.figbox.bounds[1] + 0.02 +
-                                     ring * 0.11,
-                                     0.4, 0.025 +
-                                     (len(node_rings) == 1) * 0.035],
-                                    frameon=False)
-                cb_n = pyplot.colorbar(
-                    data_to_rgb, cax=cax_n, orientation='horizontal')
-                try:
-                    cb_n.set_ticks(np.arange(_myround(vmin,
-                                                      node_rings[ring]['ticks'], 'down'), _myround(
-                        vmax, node_rings[ring]['ticks'], 'up') +
-                        node_rings[ring]['ticks'], node_rings[ring]['ticks']))
-                except:
-                    print('no ticks given')
-                cb_n.outline.remove()
-                # cb_n.set_ticks()
-                cax_n.set_xlabel(
-                    node_rings[ring]['label'], labelpad=1,
-                    fontsize=label_fontsize)
-        else:
-            colors = None
-            vmin = None
-            vmax = None
-
-        for n in G:
-            if type(node_alpha) == dict:
-                alpha = node_alpha[n]
-            else:
-                alpha = 1.
-
-            if ring == 0:
-                ax.text(pos[n][0], pos[n][1], node_labels[n],
-                        fontsize=node_label_size,
-                        horizontalalignment='center',
-                        verticalalignment='center', alpha=alpha)
+        return disp_ratio / data_ratio
 
     for n in G:
-        # Plot variable nodes
-        c = ax.scatter(pos[n][0], pos[n][1], marker='o', s=standard_size*100, facecolor='darkgray', edgecolor='darkgray')
-        ax.add_collection(c)
+        aspect = get_aspect(ax)
+        c = Ellipse(pos[n], width=standard_size*.01*aspect, height=standard_size*.01, facecolor='darkgray', edgecolor='darkgray', zorder=-10)
+        ax.add_patch(c)
 
         # avoiding attribute error raised by changes in networkx
         if hasattr(G, 'node'):
@@ -1108,7 +1020,7 @@ def _draw_network_with_curved_edges(
             cb_e.outline.remove()
             # cb_n.set_ticks()
             cax_e.set_xlabel(
-                link_colorbar_label, labelpad=1, fontsize=label_fontsize)
+                link_colorbar_label, labelpad=1, fontsize=label_fontsize, zorder=-10)
 
     # Draw edges
     seen = {}
@@ -1168,7 +1080,6 @@ def plot_graph(val_matrix=None,
                inner_edge_style='dashed'
                ):
     """Creates a network plot.
-
     This is still in beta. The network is defined either from True values in
     link_matrix, or from thresholding the val_matrix with sig_thres.  Nodes
     denote variables, straight links contemporaneous dependencies and curved
@@ -1178,7 +1089,6 @@ def plot_graph(val_matrix=None,
     dependency in order of absolute magnitude. The network can also be plotted
     over a map drawn before on the same axis. Then the node positions can be
     supplied in appropriate axis coordinates via node_pos.
-
     Parameters
     ----------
     val_matrix : array_like
@@ -1443,7 +1353,7 @@ def plot_graph(val_matrix=None,
 
     # TODO: Transform axes here.
     if save_name is not None:
-        pyplot.savefig(save_name)
+        pyplot.savefig(save_name, dpi=300)
     else:
         return fig, ax
 
@@ -1568,10 +1478,8 @@ def plot_time_series_graph(
         inner_edge_style='dashed'
 ):
     """Creates a time series graph.
-
     This is still in beta. The time series graph's links are colored by
     val_matrix.
-
     Parameters
     ----------
     val_matrix : array_like
@@ -1835,10 +1743,8 @@ def plot_mediation_time_series_graph(
         network_lower_bound=0.2
 ):
     """Creates a mediation time series graph plot.
-
     This is still in beta. The time series graph's links are colored by
     val_matrix.
-
     Parameters
     ----------
     tsg_path_val_matrix : array_like
@@ -2105,7 +2011,6 @@ def plot_mediation_graph(
         network_lower_bound=0.2,
 ):
     """Creates a network plot visualizing the pathways of a mediation analysis.
-
     This is still in beta. The network is defined from non-zero entries in
     ``path_val_matrix``.  Nodes denote variables, straight links contemporaneous
     dependencies and curved arrows lagged dependencies. The node color denotes
@@ -2114,7 +2019,6 @@ def plot_mediation_graph(
     significant dependency in order of absolute magnitude. The network can also
     be plotted over a map drawn before on the same axis. Then the node positions
     can be supplied in appropriate axis coordinates via node_pos.
-
     Parameters
     ----------
     path_val_matrix : array_like
@@ -2344,7 +2248,6 @@ def plot_mediation_graph(
 #
 def plot_tsg(links, X, Y, Z=None, anc_x=None, anc_y=None, anc_xy=None):
     """Plots TSG that is input in format (N*max_lag, N*max_lag).
-
        Compared to the tigramite plotting function here links
        X^i_{t-tau} --> X^j_t can be missing for different t'. Helpful to
        visualize the conditioned TSG.
@@ -2352,14 +2255,12 @@ def plot_tsg(links, X, Y, Z=None, anc_x=None, anc_y=None, anc_xy=None):
 
     def varlag2node(var, lag):
         """Translate from (var, lag) notation to node in TSG.
-
         lag must be <= 0.
         """
         return var * max_lag + lag
 
     def node2varlag(node):
         """Translate from node in TSG to (var, -tau) notation.
-
         Here tau is <= 0.
         """
         var = node // max_lag
@@ -2368,7 +2269,6 @@ def plot_tsg(links, X, Y, Z=None, anc_x=None, anc_y=None, anc_xy=None):
 
     def _links_to_tsg(link_coeffs, max_lag=None):
         """Transform link_coeffs to time series graph.
-
         TSG is of shape (N*max_lag, N*max_lag).
         """
         N = len(link_coeffs)
@@ -2597,6 +2497,8 @@ def plot_tsg(links, X, Y, Z=None, anc_x=None, anc_y=None, anc_xy=None):
 
 if __name__ == '__main__':
 
+    import time
+
     val_matrix = np.ones((4, 4, 4))
 
     val_matrix[1, 2, 0] = 0.6
@@ -2632,31 +2534,30 @@ if __name__ == '__main__':
     link_attribute[0, 2, 1] = 'spurious'
 
     plot_time_series_graph(
-        val_matrix=val_matrix,
-        figsize=(10,10),
-        sig_thres=None,
-        link_matrix=link_matrix,
-        link_width=link_width,
-        link_attribute=link_attribute,
-        arrow_linewidth=8,
-        node_size=4,
-        var_names=range(len(val_matrix)),
-        inner_edge_style='dashed',
-        save_name="tsg_test.png",
-    )
-
+         val_matrix=val_matrix,
+         figsize=None,
+         sig_thres=None,
+         link_matrix=link_matrix,
+         link_width=link_width,
+         link_attribute=link_attribute,
+         arrow_linewidth=8,
+         node_size=12,
+         var_names=range(len(val_matrix)),
+         inner_edge_style='dashed',
+         save_name="tsg_test.pdf",
+     )
 
     plot_graph(
-        # val_matrix=val_matrix,
-        sig_thres=None,
-        link_width=link_width,
-        link_matrix=link_matrix,
-        link_attribute=link_attribute,
-        arrow_linewidth=8,
-        node_size=4,
-        var_names=range(len(val_matrix)),
-        inner_edge_style='dashed',
-        save_name="pg_test.png",
-    )
+            # val_matrix=val_matrix,
+            sig_thres=None,
+            link_width=link_width,
+            link_matrix=link_matrix,
+            link_attribute=link_attribute,
+            arrow_linewidth=8,
+            node_size=25,
+            var_names=range(len(val_matrix)),
+            inner_edge_style='dashed',
+            save_name="pg_test.png",
+        )
 
     pyplot.show()
