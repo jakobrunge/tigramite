@@ -1129,6 +1129,8 @@ def plot_graph(val_matrix=None,
         Colormap for links.
     node_size : int, optional (default: 20)
         Node size.
+    node_aspect : float, optional (default: None)
+        Ratio between the heigth and width of the varible nodes.
     arrowhead_size : int, optional (default: 20)
         Size of link arrow head. Passed on to FancyArrowPatch object.
     curved_radius, float, optional (default: 0.2)
@@ -1500,6 +1502,8 @@ def plot_time_series_graph(
         Colormap for links.
     node_size : int, optional (default: 20)
         Node size.
+    node_aspect : float, optional (default: None)
+        Ratio between the heigth and width of the varible nodes.
     arrowhead_size : int, optional (default: 20)
         Size of link arrow head. Passed on to FancyArrowPatch object.
     curved_radius, float, optional (default: 0.2)
@@ -1772,6 +1776,8 @@ def plot_mediation_time_series_graph(
         Colormap for links.
     node_size : int, optional (default: 20)
         Node size.
+    node_aspect : float, optional (default: None)
+        Ratio between the heigth and width of the varible nodes.
     arrowhead_size : int, optional (default: 20)
         Size of link arrow head. Passed on to FancyArrowPatch object.
     curved_radius, float, optional (default: 0.2)
@@ -2049,6 +2055,8 @@ def plot_mediation_graph(
         Colormap for links.
     node_size : int, optional (default: 20)
         Node size.
+    node_aspect : float, optional (default: None)
+        Ratio between the heigth and width of the varible nodes.
     arrowhead_size : int, optional (default: 20)
         Size of link arrow head. Passed on to FancyArrowPatch object.
     curved_radius, float, optional (default: 0.2)
