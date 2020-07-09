@@ -14,10 +14,12 @@ import matplotlib.patches as mpatches
 from matplotlib.collections import PatchCollection
 
 import sys
+from operator import sub
 import networkx as nx
 import tigramite.data_processing as pp
 from copy import deepcopy
 import matplotlib.path as mpath
+import matplotlib.patheffects as PathEffects
 
 # TODO: Add proper docstrings to internal functions...
 
@@ -685,7 +687,7 @@ def _draw_network_with_curved_edges(
         G, pos,
         node_rings,
         node_labels, node_label_size, node_alpha=1., standard_size=100,
-        standard_cmap='OrRd', standard_color='lightgrey', log_sizes=False,
+        node_aspect=None, standard_cmap='OrRd', standard_color='lightgrey', log_sizes=False,
         cmap_links='YlOrRd', cmap_links_edges='YlOrRd', links_vmin=0.,
         links_vmax=1., links_edges_vmin=0., links_edges_vmax=1.,
         links_ticks=.2, links_edges_ticks=.2, link_label_fontsize=8,
@@ -805,7 +807,7 @@ def _draw_network_with_curved_edges(
             patchB=n2,
             shrinkA=0,
             shrinkB=0,
-            zorder=0
+            zorder=-1
         )
 
         ax.add_artist(e_p)
@@ -917,57 +919,16 @@ def _draw_network_with_curved_edges(
                 label_vert = verts[1, :]
                 l = d['label']
                 string = str(l)
-                ax.text(label_vert[0], label_vert[1], string,
-                        fontsize=link_label_fontsize,
-                        verticalalignment='center',
-                        horizontalalignment='center',
-                        zorder=-10)
+                txt = ax.text(label_vert[0], label_vert[1], string,
+                              fontsize=link_label_fontsize,
+                              verticalalignment='center',
+                              horizontalalignment='center',
+                              color='w',
+                              zorder=1)
+                txt.set_path_effects(
+                    [PathEffects.withStroke(linewidth=1, foreground='k')])
 
         return rad
-
-    ##
-    # Draw nodes
-    ##
-    node_sizes = np.zeros((len(node_rings), N))
-    for ring in list(node_rings):  # iterate through to get all node sizes
-        if node_rings[ring]['sizes'] is not None:
-            node_sizes[ring] = node_rings[ring]['sizes']
-
-        else:
-            node_sizes[ring] = standard_size
-    max_sizes = node_sizes.max(axis=1)
-    total_max_size = node_sizes.sum(axis=0).max()
-    node_sizes /= total_max_size
-    node_sizes *= standard_size
-
-    from operator import sub
-
-    def get_aspect(ax):
-        # Total figure size
-        figW, figH = ax.get_figure().get_size_inches()
-        # Axis size on figure
-        _, _, w, h = ax.get_position().bounds
-        # Ratio of display units
-        disp_ratio = (figH * h) / (figW * w)
-        # Ratio of data units
-        # Negative over negative because of the order of subtraction
-        data_ratio = sub(*ax.get_ylim()) / sub(*ax.get_xlim())
-
-        return disp_ratio / data_ratio
-
-    for n in G:
-        aspect = get_aspect(ax)
-        c = Ellipse(pos[n], width=standard_size * .01 * aspect, height=standard_size * .01,
-                    facecolor='darkgray', edgecolor='darkgray', zorder=-10)
-        ax.add_patch(c)
-
-        # avoiding attribute error raised by changes in networkx
-        if hasattr(G, 'node'):
-            # works with networkx 1.10
-            G.node[n]['patch'] = c
-        else:
-            # works with networkx 2.4
-            G.nodes[n]['patch'] = c
 
     # Collect all edge weights to get color scale
     all_links_weights = []
@@ -1009,6 +970,59 @@ def _draw_network_with_curved_edges(
             cax_e.set_xlabel(
                 link_colorbar_label, labelpad=1, fontsize=label_fontsize, zorder=-10)
 
+    pyplot.subplots_adjust(bottom=network_lower_bound)
+
+    ##
+    # Draw nodes
+    ##
+    node_sizes = np.zeros((len(node_rings), N))
+    for ring in list(node_rings):  # iterate through to get all node sizes
+        if node_rings[ring]['sizes'] is not None:
+            node_sizes[ring] = node_rings[ring]['sizes']
+
+        else:
+            node_sizes[ring] = standard_size
+    max_sizes = node_sizes.max(axis=1)
+    total_max_size = node_sizes.sum(axis=0).max()
+    node_sizes /= total_max_size
+    node_sizes *= standard_size
+
+    def get_aspect(ax):
+        # Total figure size
+        figW, figH = ax.get_figure().get_size_inches()
+        print(figW, figH)
+        # Axis size on figure
+        _, _, w, h = ax.get_position().bounds
+        # Ratio of display units
+        print(w, h)
+        disp_ratio = (figH * h) / (figW * w)
+        # Ratio of data units
+        # Negative over negative because of the order of subtraction
+        data_ratio = sub(*ax.get_ylim()) / sub(*ax.get_xlim())
+        print(data_ratio, disp_ratio)
+        return disp_ratio / data_ratio
+
+    if node_aspect is None:
+        node_aspect = get_aspect(ax)
+
+    for n in G:
+        c = Ellipse(pos[n], width=standard_size * node_aspect, height=standard_size,
+                    facecolor='darkgray', edgecolor='darkgray', zorder=0)
+        ax.add_patch(c)
+
+        # avoiding attribute error raised by changes in networkx
+        if hasattr(G, 'node'):
+            # works with networkx 1.10
+            G.node[n]['patch'] = c
+        else:
+            # works with networkx 2.4
+            G.nodes[n]['patch'] = c
+
+        ax.text(pos[n][0], pos[n][1], node_labels[n],
+                fontsize=node_label_size,
+                horizontalalignment='center',
+                verticalalignment='center', alpha=1.)
+
     # Draw edges
     seen = {}
     for (u, v, d) in G.edges(data=True):
@@ -1018,8 +1032,6 @@ def _draw_network_with_curved_edges(
                                          seen, arrowstyle, outer_edge=True)
             if d['inner_edge']:
                 seen[(u, v)] = draw_edge(ax, u, v, d, seen, outer_edge=False)
-
-    pyplot.subplots_adjust(bottom=network_lower_bound)
 
 
 def plot_graph(val_matrix=None,
@@ -1044,6 +1056,7 @@ def plot_graph(val_matrix=None,
                node_ticks=.4,
                cmap_nodes='OrRd',
                node_size=20,
+               node_aspect=None,
                arrowhead_size=20,
                curved_radius=.2,
                label_fontsize=10,
@@ -1280,7 +1293,6 @@ def plot_graph(val_matrix=None,
 
     if node_pos is None:
         pos = nx.circular_layout(deepcopy(G))
-    #            pos = nx.spring_layout(deepcopy(G))
     else:
         pos = {}
         for i in range(N):
@@ -1295,8 +1307,6 @@ def plot_graph(val_matrix=None,
                       'label': node_colorbar_label, 'colorbar': show_colorbar,
                       }
                   }
-    # Testing.
-    dic['inner_edge_style'] = 'dashed'
 
     _draw_network_with_curved_edges(
         fig=fig, ax=ax,
@@ -1306,7 +1316,7 @@ def plot_graph(val_matrix=None,
         node_rings=node_rings,
         # 'vmin':float or None, 'vmax':float or None, 'label':string or None}}
         node_labels=var_names, node_label_size=node_label_size,
-        node_alpha=alpha, standard_size=node_size,
+        node_alpha=alpha, standard_size=node_size, node_aspect=node_aspect,
         standard_cmap='OrRd', standard_color='orange',
         log_sizes=False,
         cmap_links=cmap_edges, links_vmin=vmin_edges,
@@ -1324,10 +1334,6 @@ def plot_graph(val_matrix=None,
         # label_fraction=label_fraction,
     )
 
-    # fig.subplots_adjust(left=0.1, right=.9, bottom=.25, top=.95)
-    # savestring = os.path.expanduser(save_name)
-
-    # TODO: Transform axes here.
     if save_name is not None:
         pyplot.savefig(save_name, dpi=300)
     else:
@@ -1443,6 +1449,7 @@ def plot_time_series_graph(
         cmap_edges='RdBu_r',
         order=None,
         node_size=10,
+        node_aspect=None,
         arrowhead_size=20,
         curved_radius=.2,
         label_fontsize=10,
@@ -1646,7 +1653,7 @@ def plot_time_series_graph(
         G=deepcopy(G), pos=pos,
         node_rings=node_rings,
         node_labels=node_labels, node_label_size=node_label_size,
-        node_alpha=alpha, standard_size=node_size,
+        node_alpha=alpha, standard_size=node_size, node_aspect=node_aspect,
         standard_cmap='OrRd', standard_color='lightgrey',
         log_sizes=False,
         cmap_links=cmap_edges, links_vmin=vmin_edges,
@@ -1709,6 +1716,7 @@ def plot_mediation_time_series_graph(
         node_ticks=.4,
         cmap_nodes='RdBu_r',
         node_size=10,
+        node_aspect=None,
         arrowhead_size=20,
         curved_radius=.2,
         label_fontsize=10,
@@ -1908,7 +1916,7 @@ def plot_mediation_time_series_graph(
         node_rings=node_rings,
         # 'vmin':float or None, 'vmax':float or None, 'label':string or None}}
         node_labels=node_labels, node_label_size=node_label_size,
-        node_alpha=alpha, standard_size=node_size,
+        node_alpha=alpha, standard_size=node_size, node_aspect=node_aspect,
         standard_cmap='OrRd', standard_color='grey',
         log_sizes=False,
         cmap_links=cmap_edges, links_vmin=vmin_edges,
@@ -1977,6 +1985,7 @@ def plot_mediation_graph(
         node_ticks=.4,
         cmap_nodes='RdBu_r',
         node_size=20,
+        node_aspect=None,
         arrowhead_size=20,
         curved_radius=.2,
         label_fontsize=10,
@@ -2193,7 +2202,7 @@ def plot_mediation_graph(
         node_rings=node_rings,
         # 'vmin':float or None, 'vmax':float or None, 'label':string or None}}
         node_labels=var_names, node_label_size=node_label_size,
-        node_alpha=alpha, standard_size=node_size,
+        node_alpha=alpha, standard_size=node_size, node_aspect=node_aspect,
         standard_cmap='OrRd', standard_color='orange',
         log_sizes=False,
         cmap_links=cmap_edges, links_vmin=vmin_edges,
@@ -2420,7 +2429,7 @@ def plot_tsg(links, X, Y, Z=None, anc_x=None, anc_y=None, anc_xy=None):
         node_rings=node_rings,
         # 'vmin':float or None, 'vmax':float or None, 'label':string or None}}
         node_labels=node_labels, node_label_size=ode_label_size,
-        node_alpha=alpha, standard_size=node_size,
+        node_alpha=alpha, standard_size=node_size, node_aspect=node_aspect,
         standard_cmap='OrRd', standard_color='lightgrey',
         log_sizes=False,
         cmap_links=cmap_edges, links_vmin=vmin_edges,
@@ -2461,8 +2470,6 @@ def plot_tsg(links, X, Y, Z=None, anc_x=None, anc_y=None, anc_xy=None):
 
 if __name__ == '__main__':
 
-    import time
-
     val_matrix = np.ones((4, 4, 4))
 
     val_matrix[1, 2, 0] = 0.6
@@ -2489,6 +2496,7 @@ if __name__ == '__main__':
     link_matrix[1, 3, 0] = '<->'
     link_matrix[3, 1, 0] = '<->'
     link_matrix[3, 1, 2] = 'x-o'
+    link_matrix[1, 3, 1] = '-->'
 
     link_width = np.ones(val_matrix.shape)
     link_attribute = np.zeros(val_matrix.shape, dtype='object')
@@ -2505,10 +2513,11 @@ if __name__ == '__main__':
         link_width=link_width,
         link_attribute=link_attribute,
         arrow_linewidth=8,
-        node_size=12,
+        node_size=0.1,
+        node_aspect=2,
         var_names=range(len(val_matrix)),
         inner_edge_style='dashed',
-        save_name="tsg_test.pdf",
+        save_name=None,
     )
 
     plot_graph(
@@ -2517,11 +2526,15 @@ if __name__ == '__main__':
         link_width=link_width,
         link_matrix=link_matrix,
         link_attribute=link_attribute,
-        arrow_linewidth=8,
-        node_size=12,
-        var_names=range(len(val_matrix)),
+        arrow_linewidth=10,
+        node_size=.3,
+        node_aspect=2,
+        var_names=[f"Node {i}"for i in range(len(val_matrix))],
+        label_fontsize=14,
+        curved_radius=.45,
         inner_edge_style='dashed',
-        save_name="pg_test.png",
+        save_name="pg_test.pdf",
+        link_label_fontsize=10,
     )
 
     pyplot.show()
