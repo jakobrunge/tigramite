@@ -72,7 +72,7 @@ EXT_MODULES += define_extension("tigramite.tigramite_cython_code")
 # Run the setup
 setup(
     name='tigramite',
-    version='4.2.0',
+    version='4.2.0.1',
     packages=['tigramite', 'tigramite.independence_tests'],
     license='GNU General Public License v3.0',
     description='Tigramite causal discovery for time series',
