@@ -25,8 +25,7 @@
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="nav-item nav-item-0"><a href="../../../index.html">Tigramite 4.2 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
-          <li class="nav-item nav-item-2"><a href="../independence_tests.html" accesskey="U">tigramite.independence_tests</a> &#187;</li> 
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -306,9 +305,10 @@
 <div class="viewcode-block" id="ParCorr.get_model_selection_criterion"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.ParCorr.get_model_selection_criterion">[docs]</a>    <span class="k">def</span> <span class="nf">get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns Akaike&#39;s Information criterion modulo constants.</span>
 
-<span class="sd">        Fits a linear model of the parents to variable j and returns the score.</span>
-<span class="sd">        I used to determine optimal hyperparameters in PCMCI, in particular</span>
-<span class="sd">        the pc_alpha value.</span>
+<span class="sd">        Fits a linear model of the parents to variable j and returns the</span>
+<span class="sd">        score. Leave-one-out cross-validation is asymptotically equivalent to</span>
+<span class="sd">        AIC for ordinary linear regression models. Here used to determine</span>
+<span class="sd">        optimal hyperparameters in PCMCI, in particular the pc_alpha value.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -334,7 +334,7 @@
                                                     <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
                                                     <span class="n">mask_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span><span class="p">,</span>
                                                     <span class="n">return_cleaned_xyz</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                                                    <span class="n">do_checks</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                                    <span class="n">do_checks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                                                     <span class="n">verbosity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
 
         <span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
@@ -364,8 +364,7 @@
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="nav-item nav-item-0"><a href="../../../index.html">Tigramite 4.2 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
-          <li class="nav-item nav-item-2"><a href="../independence_tests.html" >tigramite.independence_tests</a> &#187;</li> 
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

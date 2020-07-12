@@ -126,19 +126,22 @@ Journal of Nonlinear Science 28 (7): 075310.
 <tr class="row-even"><td><p><a class="reference internal" href="#tigramite.independence_tests.CMIsymb" title="tigramite.independence_tests.CMIsymb"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.independence_tests.CMIsymb</span></code></a>([…])</p></td>
 <td><p>Conditional mutual information test based on discrete estimator.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#module-tigramite.data_processing" title="tigramite.data_processing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.data_processing</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tigramite.independence_tests.OracleCI" title="tigramite.independence_tests.OracleCI"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.independence_tests.OracleCI</span></code></a>(…[, …])</p></td>
+<td><p>Oracle of conditional independence test X _|_ Y | Z given a graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#module-tigramite.data_processing" title="tigramite.data_processing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.data_processing</span></code></a></p></td>
 <td><p>Tigramite data processing functions.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#tigramite.models.Models" title="tigramite.models.Models"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.models.Models</span></code></a>(dataframe, model[, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tigramite.models.Models" title="tigramite.models.Models"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.models.Models</span></code></a>(dataframe, model[, …])</p></td>
 <td><p>Base class for time series models.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#tigramite.models.LinearMediation" title="tigramite.models.LinearMediation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.models.LinearMediation</span></code></a>(dataframe)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#tigramite.models.LinearMediation" title="tigramite.models.LinearMediation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.models.LinearMediation</span></code></a>(dataframe)</p></td>
 <td><p>Linear mediation analysis for time series models.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#tigramite.models.Prediction" title="tigramite.models.Prediction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.models.Prediction</span></code></a>(dataframe, …)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tigramite.models.Prediction" title="tigramite.models.Prediction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.models.Prediction</span></code></a>(dataframe, …)</p></td>
 <td><p>Prediction class for time series models.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#module-tigramite.plotting" title="tigramite.plotting"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.plotting</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#module-tigramite.plotting" title="tigramite.plotting"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.plotting</span></code></a></p></td>
 <td><p>Tigramite plotting package.</p></td>
 </tr>
 </tbody>
@@ -282,6 +285,24 @@ p-value for each link estimated in the PC algorithm.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="tigramite.pcmci.PCMCI.convert_to_string_graph">
+<code class="sig-name descname">convert_to_string_graph</code><span class="sig-paren">(</span><em class="sig-param">graph_bool</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/pcmci.html#PCMCI.convert_to_string_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.pcmci.PCMCI.convert_to_string_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts the 0,1-based graph returned by PCMCI to a string array
+with links ‘–&gt;’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>graph_bool</strong> (<em>array</em>) – 0,1-based graph array output by PCMCI.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>graph</strong> – graph as string array with links ‘–&gt;’.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="tigramite.pcmci.PCMCI.get_corrected_pvalues">
 <code class="sig-name descname">get_corrected_pvalues</code><span class="sig-paren">(</span><em class="sig-param">p_matrix</em>, <em class="sig-param">fdr_method='fdr_bh'</em>, <em class="sig-param">exclude_contemporaneous=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/pcmci.html#PCMCI.get_corrected_pvalues"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.pcmci.PCMCI.get_corrected_pvalues" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns p-values corrected for multiple testing.</p>
@@ -412,7 +433,7 @@ containing estimated links.</p></li>
 
 <dl class="method">
 <dt id="tigramite.pcmci.PCMCI.return_significant_parents">
-<code class="sig-name descname">return_significant_parents</code><span class="sig-paren">(</span><em class="sig-param">pq_matrix</em>, <em class="sig-param">val_matrix</em>, <em class="sig-param">alpha_level=0.05</em>, <em class="sig-param">include_lagzero_links=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/pcmci.html#PCMCI.return_significant_parents"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.pcmci.PCMCI.return_significant_parents" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">return_significant_parents</code><span class="sig-paren">(</span><em class="sig-param">pq_matrix</em>, <em class="sig-param">val_matrix</em>, <em class="sig-param">alpha_level=0.05</em>, <em class="sig-param">include_lagzero_parents=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/pcmci.html#PCMCI.return_significant_parents"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.pcmci.PCMCI.return_significant_parents" title="Permalink to this definition">¶</a></dt>
 <dd><p>DEPRECATED: use return_significant_links() instead.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -422,7 +443,7 @@ shape (N, N, tau_max + 1).</p></li>
 <li><p><strong>val_matrix</strong> (<em>array-like</em>) – Matrix of test statistic values. Must be of shape (N, N, tau_max +
 1).</p></li>
 <li><p><strong>alpha_level</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.05</em><em>)</em>) – Significance level.</p></li>
-<li><p><strong>include_lagzero_links</strong> (<em>bool</em><em> (</em><em>default: False</em><em>)</em>) – Whether the dictionary should also return links at lag
+<li><p><strong>include_lagzero_parents</strong> (<em>bool</em><em> (</em><em>default: False</em><em>)</em>) – Whether the dictionary should also return parents at lag
 zero. Note that the link_matrix always contains those.</p></li>
 </ul>
 </dd>
@@ -572,7 +593,7 @@ containing estimated parents.</p>
 
 <dl class="method">
 <dt id="tigramite.pcmci.PCMCI.run_pcalg">
-<code class="sig-name descname">run_pcalg</code><span class="sig-paren">(</span><em class="sig-param">selected_links=None</em>, <em class="sig-param">pc_alpha=0.01</em>, <em class="sig-param">tau_min=0</em>, <em class="sig-param">tau_max=1</em>, <em class="sig-param">max_conds_dim=None</em>, <em class="sig-param">max_combinations=None</em>, <em class="sig-param">lagged_parents=None</em>, <em class="sig-param">max_conds_py=None</em>, <em class="sig-param">max_conds_px=None</em>, <em class="sig-param">mode='standard'</em>, <em class="sig-param">contemp_collider_rule='majority'</em>, <em class="sig-param">conflict_resolution=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/pcmci.html#PCMCI.run_pcalg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.pcmci.PCMCI.run_pcalg" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run_pcalg</code><span class="sig-paren">(</span><em class="sig-param">selected_links=None</em>, <em class="sig-param">pc_alpha=0.01</em>, <em class="sig-param">tau_min=0</em>, <em class="sig-param">tau_max=1</em>, <em class="sig-param">max_conds_dim=None</em>, <em class="sig-param">max_combinations=None</em>, <em class="sig-param">lagged_parents=None</em>, <em class="sig-param">max_conds_py=None</em>, <em class="sig-param">max_conds_px=None</em>, <em class="sig-param">max_conds_px_lagged=None</em>, <em class="sig-param">mode='standard'</em>, <em class="sig-param">contemp_collider_rule='majority'</em>, <em class="sig-param">conflict_resolution=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/pcmci.html#PCMCI.run_pcalg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.pcmci.PCMCI.run_pcalg" title="Permalink to this definition">¶</a></dt>
 <dd><p>Runs PC algorithm for time-lagged and contemporaneous causal
 discovery for time series.</p>
 <p>For <code class="docutils literal notranslate"><span class="pre">mode='contemp_conds'</span></code> this implements Steps 2-4 of the
@@ -607,6 +628,8 @@ to test.</p></li>
 None is passed, this number is unrestricted.</p></li>
 <li><p><strong>max_conds_px</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Maximum number of lagged conditions of X to use in MCI tests. If
 None is passed, this number is unrestricted.</p></li>
+<li><p><strong>max_conds_px_lagged</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Maximum number of lagged conditions of X when X is lagged in MCI
+tests. If None is passed, this number is equal to max_conds_px.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -614,6 +637,40 @@ None is passed, this number is unrestricted.</p></li>
 <li><p><strong>graph</strong> (<em>array of shape [N, N, tau_max+1]</em>) – Resulting causal graph, see description above for interpretation.</p></li>
 <li><p><strong>val_matrix</strong> (<em>array of shape [N, N, tau_max+1]</em>) – Estimated matrix of test statistic values regarding adjacencies.</p></li>
 <li><p><strong>p_matrix</strong> (<em>array of shape [N, N, tau_max+1]</em>) – Estimated matrix of p-values regarding adjacencies.</p></li>
+<li><p><strong>sepset</strong> (<em>dictionary</em>) – Separating sets. See paper for details.</p></li>
+<li><p><strong>ambiguous_triples</strong> (<em>list</em>) – List of ambiguous triples, only relevant for ‘majority’ and
+‘conservative’ rules, see paper for details.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tigramite.pcmci.PCMCI.run_pcalg_non_timeseries_data">
+<code class="sig-name descname">run_pcalg_non_timeseries_data</code><span class="sig-paren">(</span><em class="sig-param">pc_alpha=0.01</em>, <em class="sig-param">max_conds_dim=None</em>, <em class="sig-param">max_combinations=None</em>, <em class="sig-param">contemp_collider_rule='majority'</em>, <em class="sig-param">conflict_resolution=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/pcmci.html#PCMCI.run_pcalg_non_timeseries_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.pcmci.PCMCI.run_pcalg_non_timeseries_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs PC algorithm for non-time series data.</p>
+<p>Simply calls run_pcalg with tau_min = tau_max = 0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pc_alpha</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.01</em><em>)</em>) – Significance level.</p></li>
+<li><p><strong>contemp_collider_rule</strong> (<em>{'majority'</em><em>, </em><em>'conservative'</em><em>, </em><em>'none'}</em>) – Rule for collider phase to use. See the paper for details. Only
+‘majority’ and ‘conservative’ lead to an order-independent
+algorithm.</p></li>
+<li><p><strong>conflict_resolution</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – Whether to mark conflicts in orientation rules. Only for True
+this leads to an order-independent algorithm.</p></li>
+<li><p><strong>max_conds_dim</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Maximum number of conditions to test. If None is passed, this number
+is unrestricted.</p></li>
+<li><p><strong>max_combinations</strong> (<em>int</em>) – Maximum number of combinations of conditions of current cardinality
+to test.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>graph</strong> (<em>array of shape [N, N, 1]</em>) – Resulting causal graph, see description above for interpretation.</p></li>
+<li><p><strong>val_matrix</strong> (<em>array of shape [N, N, 1]</em>) – Estimated matrix of test statistic values regarding adjacencies.</p></li>
+<li><p><strong>p_matrix</strong> (<em>array of shape [N, N, 1]</em>) – Estimated matrix of p-values regarding adjacencies.</p></li>
 <li><p><strong>sepset</strong> (<em>dictionary</em>) – Separating sets. See paper for details.</p></li>
 <li><p><strong>ambiguous_triples</strong> (<em>list</em>) – List of ambiguous triples, only relevant for ‘majority’ and
 ‘conservative’ rules, see paper for details.</p></li>
@@ -687,7 +744,7 @@ optimized using model selection criteria implemented in the respective
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cond_ind_test</span> <span class="o">=</span> <span class="n">ParCorr</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pcmci</span> <span class="o">=</span> <span class="n">PCMCI</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span> <span class="n">cond_ind_test</span><span class="o">=</span><span class="n">cond_ind_test</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">pcmci</span><span class="o">.</span><span class="n">run_pcmci</span><span class="p">(</span><span class="n">tau_max</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">pc_alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pcmci</span><span class="o">.</span><span class="n">_print_significant_links</span><span class="p">(</span><span class="n">p_matrix</span><span class="o">=</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;p_matrix&#39;</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pcmci</span><span class="o">.</span><span class="n">print_significant_links</span><span class="p">(</span><span class="n">p_matrix</span><span class="o">=</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;p_matrix&#39;</span><span class="p">],</span>
 <span class="go">                                     val_matrix=results[&#39;val_matrix&#39;],</span>
 <span class="go">                                     alpha_level=0.05)</span>
 <span class="go">## Significant parents at alpha = 0.05:</span>
@@ -743,7 +800,7 @@ are set.</p></li>
 
 <dl class="method">
 <dt id="tigramite.pcmci.PCMCI.run_pcmciplus">
-<code class="sig-name descname">run_pcmciplus</code><span class="sig-paren">(</span><em class="sig-param">selected_links=None</em>, <em class="sig-param">tau_min=0</em>, <em class="sig-param">tau_max=1</em>, <em class="sig-param">pc_alpha=0.01</em>, <em class="sig-param">contemp_collider_rule='majority'</em>, <em class="sig-param">conflict_resolution=True</em>, <em class="sig-param">reset_lagged_links=False</em>, <em class="sig-param">max_conds_dim=None</em>, <em class="sig-param">max_conds_py=None</em>, <em class="sig-param">max_conds_px=None</em>, <em class="sig-param">fdr_method='none'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/pcmci.html#PCMCI.run_pcmciplus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.pcmci.PCMCI.run_pcmciplus" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run_pcmciplus</code><span class="sig-paren">(</span><em class="sig-param">selected_links=None</em>, <em class="sig-param">tau_min=0</em>, <em class="sig-param">tau_max=1</em>, <em class="sig-param">pc_alpha=0.01</em>, <em class="sig-param">contemp_collider_rule='majority'</em>, <em class="sig-param">conflict_resolution=True</em>, <em class="sig-param">reset_lagged_links=False</em>, <em class="sig-param">max_conds_dim=None</em>, <em class="sig-param">max_conds_py=None</em>, <em class="sig-param">max_conds_px=None</em>, <em class="sig-param">max_conds_px_lagged=None</em>, <em class="sig-param">fdr_method='none'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/pcmci.html#PCMCI.run_pcmciplus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.pcmci.PCMCI.run_pcmciplus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Runs PCMCIplus time-lagged and contemporaneous causal discovery for
 time series.</p>
 <p>Method described in <a class="footnote-reference brackets" href="#id4" id="id10">5</a>: <a class="reference external" href="https://arxiv.org/abs/2003.03685">https://arxiv.org/abs/2003.03685</a></p>
@@ -802,23 +859,32 @@ Note that lagged links are always oriented due to time order.</p>
 independence test statistic adapted to the kind of data (continuous
 or discrete) and its assumed dependency types. These are available in
 <code class="docutils literal notranslate"><span class="pre">tigramite.independence_tests</span></code>.</p>
-<p>The main free parameters of PCMCIplus (in addition to free parameters
-of the conditional independence tests) are the maximum time delay
+<p>The main free parameters of PCMCIplus (in addition to free parameters of
+the conditional independence tests) are the maximum time delay
 <img class="math" src="_images/math/2bf86ca220f43e569c6c7aefaf32742919222e6e.png" alt="\tau_{\max}"/> (<code class="docutils literal notranslate"><span class="pre">tau_max</span></code>) and the significance threshold
-<img class="math" src="_images/math/2f5aa019312e1bbc969deab8dca8b00f76025404.png" alt="\alpha"/> ( <code class="docutils literal notranslate"><span class="pre">pc_alpha</span></code>). The maximum time delay depends on the
-application and should be chosen according to the maximum causal time
-lag expected in the complex system. We recommend a rather large
-choice that includes peaks in the <code class="docutils literal notranslate"><span class="pre">get_lagged_dependencies</span></code>
-function. Another important parameter is <code class="docutils literal notranslate"><span class="pre">contemp_collider_rule</span></code>.
-Only if set to <code class="docutils literal notranslate"><span class="pre">majority</span></code> or <code class="docutils literal notranslate"><span class="pre">conservative''</span> <span class="pre">and</span> <span class="pre">together</span> <span class="pre">with</span>
-<span class="pre">``conflict_resolution=True</span></code>, PCMCIplus is fully <em>order independent</em>
-meaning that the order of the N variables in the dataframe does not
-matter. Last, the default option <code class="docutils literal notranslate"><span class="pre">reset_lagged_links=False</span></code>
-restricts the detection of lagged causal links in Step 2 to the
-significant adjacencies found in Step 1, given by <img class="math" src="_images/math/15af846e07c93e1c0d4cdbba8f4cefca67a811cb.png" alt="\widehat{
-\mathcal{B}}_t^-( X^j_t)"/>. For <code class="docutils literal notranslate"><span class="pre">reset_lagged_links=True</span></code>,
-<em>all</em> lagged links are considered again, which improves detection
-power for lagged links, but also leads to larger runtimes.</p>
+<img class="math" src="_images/math/2f5aa019312e1bbc969deab8dca8b00f76025404.png" alt="\alpha"/> ( <code class="docutils literal notranslate"><span class="pre">pc_alpha</span></code>).</p>
+<p>If a list or None is passed for <code class="docutils literal notranslate"><span class="pre">pc_alpha</span></code>, the significance level is
+optimized for every graph across the given <code class="docutils literal notranslate"><span class="pre">pc_alpha</span></code> values using the
+score computed in <code class="docutils literal notranslate"><span class="pre">cond_ind_test.get_model_selection_criterion()</span></code>.
+Since PCMCIplus outputs not a DAG, but an equivalence class of DAGs,
+first one member of this class is computed and then the score is
+computed as the average over all models fits for each variable in <code class="docutils literal notranslate"><span class="pre">[0,</span>
+<span class="pre">...,</span> <span class="pre">N]</span></code> for that member. The score is the same for all members of the
+class.</p>
+<p>The maximum time delay depends on the application and should be chosen
+according to the maximum causal time lag expected in the complex system.
+We recommend a rather large choice that includes peaks in the
+<code class="docutils literal notranslate"><span class="pre">get_lagged_dependencies</span></code> function. Another important parameter is
+<code class="docutils literal notranslate"><span class="pre">contemp_collider_rule</span></code>. Only if set to <code class="docutils literal notranslate"><span class="pre">majority</span></code> or
+<code class="docutils literal notranslate"><span class="pre">conservative''</span> <span class="pre">and</span> <span class="pre">together</span> <span class="pre">with</span> <span class="pre">``conflict_resolution=True</span></code>,
+PCMCIplus is fully <em>order independent</em> meaning that the order of the N
+variables in the dataframe does not matter. Last, the default option
+<code class="docutils literal notranslate"><span class="pre">reset_lagged_links=False</span></code> restricts the detection of lagged causal
+links in Step 2 to the significant adjacencies found in Step 1, given by
+<img class="math" src="_images/math/6ecffdf6c6b31ddba452a834568233441411465b.png" alt="\widehat{ \mathcal{B}}_t^-( X^j_t)"/>. For
+<code class="docutils literal notranslate"><span class="pre">reset_lagged_links=True</span></code>, <em>all</em> lagged links are considered again,
+which improves detection power for lagged links, but also leads to
+larger runtimes.</p>
 <p>Further optional parameters are discussed in <a class="footnote-reference brackets" href="#id4" id="id12">5</a>.</p>
 <p class="rubric">Examples</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span>
@@ -872,7 +938,10 @@ specifying whether only selected links should be tested. If None is
 passed, all links are tested.</p></li>
 <li><p><strong>tau_min</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) – Minimum time lag to test.</p></li>
 <li><p><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) – Maximum time lag. Must be larger or equal to tau_min.</p></li>
-<li><p><strong>pc_alpha</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.01</em><em>)</em>) – Significance level in all steps of the PCMCIplus algorithm.</p></li>
+<li><p><strong>pc_alpha</strong> (<em>float</em><em> or </em><em>list of floats</em><em>, </em><em>default: 0.01</em>) – Significance level in algorithm. If a list or None is passed, the
+pc_alpha level is optimized for every graph across the given
+pc_alpha values ([0.001, 0.005, 0.01, 0.025, 0.05] for None) using
+the score computed in cond_ind_test.get_model_selection_criterion().</p></li>
 <li><p><strong>contemp_collider_rule</strong> (<em>{'majority'</em><em>, </em><em>'conservative'</em><em>, </em><em>'none'}</em>) – Rule for collider phase to use. See the paper for details. Only
 ‘majority’ and ‘conservative’ lead to an order-independent
 algorithm.</p></li>
@@ -889,6 +958,8 @@ is unrestricted.</p></li>
 None is passed, this number is unrestricted.</p></li>
 <li><p><strong>max_conds_px</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Maximum number of lagged conditions of X to use in MCI tests. If
 None is passed, this number is unrestricted.</p></li>
+<li><p><strong>max_conds_px_lagged</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Maximum number of lagged conditions of X when X is lagged in MCI
+tests. If None is passed, this number is equal to max_conds_px.</p></li>
 <li><p><strong>fdr_method</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'none'</em><em>)</em>) – Correction method, default is Benjamini-Hochberg False Discovery
 Rate method.</p></li>
 </ul>
@@ -1124,7 +1195,7 @@ function then specified by self.significance</p>
 
 <dl class="method">
 <dt id="tigramite.independence_tests.CondIndTest.run_test">
-<code class="sig-name descname">run_test</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">Y</em>, <em class="sig-param">Z=None</em>, <em class="sig-param">tau_max=0</em>, <em class="sig-param">cut_off='2xtau_max'</em>, <em class="sig-param">verbosity=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/independence_tests_base.html#CondIndTest.run_test"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.CondIndTest.run_test" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run_test</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">Y</em>, <em class="sig-param">Z=None</em>, <em class="sig-param">tau_max=0</em>, <em class="sig-param">cut_off='2xtau_max'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/independence_tests_base.html#CondIndTest.run_test"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.CondIndTest.run_test" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform conditional independence test.</p>
 <p>Calls the dependence measure and signficicance test functions. The child
 classes must specify a function get_dependence_measure and either or
@@ -1304,9 +1375,10 @@ OLS regression.</p>
 <dt id="tigramite.independence_tests.ParCorr.get_model_selection_criterion">
 <code class="sig-name descname">get_model_selection_criterion</code><span class="sig-paren">(</span><em class="sig-param">j</em>, <em class="sig-param">parents</em>, <em class="sig-param">tau_max=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/parcorr.html#ParCorr.get_model_selection_criterion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.ParCorr.get_model_selection_criterion" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns Akaike’s Information criterion modulo constants.</p>
-<p>Fits a linear model of the parents to variable j and returns the score.
-I used to determine optimal hyperparameters in PCMCI, in particular
-the pc_alpha value.</p>
+<p>Fits a linear model of the parents to variable j and returns the
+score. Leave-one-out cross-validation is asymptotically equivalent to
+AIC for ordinary linear regression models. Here used to determine
+optimal hyperparameters in PCMCI, in particular the pc_alpha value.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1747,6 +1819,89 @@ maximum value in the array (array.max() + 1).</p></li>
 <dt id="tigramite.independence_tests.CMIsymb.measure">
 <em class="property">property </em><code class="sig-name descname">measure</code><a class="headerlink" href="#tigramite.independence_tests.CMIsymb.measure" title="Permalink to this definition">¶</a></dt>
 <dd><p>Concrete property to return the measure of the independence test</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tigramite.independence_tests.OracleCI">
+<em class="property">class </em><code class="sig-prename descclassname">tigramite.independence_tests.</code><code class="sig-name descname">OracleCI</code><span class="sig-paren">(</span><em class="sig-param">link_coeffs</em>, <em class="sig-param">observed_vars=None</em>, <em class="sig-param">verbosity=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/oracle_conditional_independence.html#OracleCI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.OracleCI" title="Permalink to this definition">¶</a></dt>
+<dd><p>Oracle of conditional independence test X _|_ Y | Z given a graph.</p>
+<p>Class around link_coeff causal ground truth. X _|_ Y | Z is based on
+assessing whether X and Y are d-separated given Z in the graph.</p>
+<p>Class can be used just like a Tigramite conditional independence class
+(e.g., ParCorr). The main use is for unit testing of PCMCI methods.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>link_coeffs</strong> (<em>dict</em>) – Dictionary of form {0:[((0, -1), coeff, func), …], 1:[…], …}.</p></li>
+<li><p><strong>verbosity</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) – Level of verbosity.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="tigramite.independence_tests.OracleCI.get_measure">
+<code class="sig-name descname">get_measure</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">Y</em>, <em class="sig-param">Z=None</em>, <em class="sig-param">tau_max=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/oracle_conditional_independence.html#OracleCI.get_measure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.OracleCI.get_measure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns dependence measure.</p>
+<p>Returns 0 if X and Y are d-separated given Z in the graph and 1 else.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Y</strong><strong> [</strong><strong>, </strong><strong>Z</strong><strong>]</strong> (<em>X</em><em>,</em>) – X,Y,Z are of the form [(var, -tau)], where var specifies the
+variable index in the observed_vars and tau the time lag.</p></li>
+<li><p><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) – Maximum time lag. This may be used to make sure that estimates for
+different lags in X, Z, all have the same sample size.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>val</strong> – The test statistic value.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tigramite.independence_tests.OracleCI.get_model_selection_criterion">
+<code class="sig-name descname">get_model_selection_criterion</code><span class="sig-paren">(</span><em class="sig-param">j</em>, <em class="sig-param">parents</em>, <em class="sig-param">tau_max=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/oracle_conditional_independence.html#OracleCI.get_model_selection_criterion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.OracleCI.get_model_selection_criterion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class assumption that this is not implemented.  Concrete classes
+should override when possible.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tigramite.independence_tests.OracleCI.measure">
+<em class="property">property </em><code class="sig-name descname">measure</code><a class="headerlink" href="#tigramite.independence_tests.OracleCI.measure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Concrete property to return the measure of the independence test</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tigramite.independence_tests.OracleCI.run_test">
+<code class="sig-name descname">run_test</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">Y</em>, <em class="sig-param">Z=None</em>, <em class="sig-param">tau_max=0</em>, <em class="sig-param">cut_off='2xtau_max'</em>, <em class="sig-param">compute_ancestors=False</em>, <em class="sig-param">verbosity=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/oracle_conditional_independence.html#OracleCI.run_test"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.OracleCI.run_test" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform oracle conditional independence test.</p>
+<p>Calls the d-separation function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Y</strong><strong>, </strong><strong>Z</strong> (<em>X</em><em>,</em>) – X,Y,Z are of the form [(var, -tau)], where var specifies the
+variable index in the observed_vars and tau the time lag.</p></li>
+<li><p><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) – Not used here.</p></li>
+<li><p><strong>cut_off</strong> (<em>{'2xtau_max'</em><em>, </em><em>'max_lag'</em><em>, </em><em>'max_lag_or_tau_max'}</em>) – Not used here.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>val, pval</strong> – The test statistic value and the p-value.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Tuple of floats</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tigramite.independence_tests.OracleCI.set_dataframe">
+<code class="sig-name descname">set_dataframe</code><span class="sig-paren">(</span><em class="sig-param">dataframe</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/oracle_conditional_independence.html#OracleCI.set_dataframe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.independence_tests.OracleCI.set_dataframe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dummy function.</p>
 </dd></dl>
 
 </dd></dl>
@@ -2255,6 +2410,22 @@ transformation parameters.</p>
 </dl>
 </dd></dl>
 
+<dl class="method">
+<dt id="tigramite.models.Models.get_val_matrix">
+<code class="sig-name descname">get_val_matrix</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#Models.get_val_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.Models.get_val_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the coefficient array for different lags.</p>
+<p>Requires fit_model() before. An entry val_matrix[i,j,tau] gives the
+coefficient of the link from i to j at lag tau, including tau=0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>val_matrix</strong> – Array of coefficients for each time lag, including lag-zero.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>array-like, shape (N, N, tau_max + 1)</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <p>Derived classes:</p>
@@ -2654,8 +2825,10 @@ Either sig_thres or link_matrix has to be provided.</p></li>
 <dt id="tigramite.models.LinearMediation.get_val_matrix">
 <code class="sig-name descname">get_val_matrix</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#LinearMediation.get_val_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.LinearMediation.get_val_matrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the matrix of linear coefficients.</p>
-<p>Format is val_matrix[i, j, tau] denotes coefficient of link
-i –tau–&gt; j.</p>
+<p>Requires fit_model() before. An entry val_matrix[i,j,tau] gives the
+coefficient of the link from i to j at lag tau. Lag=0 is always set
+to zero for LinearMediation, use Models class for contemporaneous
+models.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p><strong>val_matrix</strong> – Matrix of linear coefficients, shape (N, N, tau_max + 1).</p>
@@ -2824,7 +2997,7 @@ useful to compare multiple models on the same sample. Last,
 <p>Tigramite plotting package.</p>
 <dl class="function">
 <dt id="tigramite.plotting.plot_graph">
-<code class="sig-prename descclassname">tigramite.plotting.</code><code class="sig-name descname">plot_graph</code><span class="sig-paren">(</span><em class="sig-param">val_matrix</em>, <em class="sig-param">var_names=None</em>, <em class="sig-param">fig_ax=None</em>, <em class="sig-param">figsize=None</em>, <em class="sig-param">sig_thres=None</em>, <em class="sig-param">link_matrix=None</em>, <em class="sig-param">save_name=None</em>, <em class="sig-param">link_colorbar_label='MCI'</em>, <em class="sig-param">node_colorbar_label='auto-MCI'</em>, <em class="sig-param">link_width=None</em>, <em class="sig-param">link_attribute=None</em>, <em class="sig-param">node_pos=None</em>, <em class="sig-param">arrow_linewidth=30.0</em>, <em class="sig-param">vmin_edges=-1</em>, <em class="sig-param">vmax_edges=1.0</em>, <em class="sig-param">edge_ticks=0.4</em>, <em class="sig-param">cmap_edges='RdBu_r'</em>, <em class="sig-param">vmin_nodes=0</em>, <em class="sig-param">vmax_nodes=1.0</em>, <em class="sig-param">node_ticks=0.4</em>, <em class="sig-param">cmap_nodes='OrRd'</em>, <em class="sig-param">node_size=20</em>, <em class="sig-param">arrowhead_size=20</em>, <em class="sig-param">curved_radius=0.2</em>, <em class="sig-param">label_fontsize=10</em>, <em class="sig-param">alpha=1.0</em>, <em class="sig-param">node_label_size=10</em>, <em class="sig-param">link_label_fontsize=6</em>, <em class="sig-param">lag_array=None</em>, <em class="sig-param">network_lower_bound=0.2</em>, <em class="sig-param">show_colorbar=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.plot_graph" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">tigramite.plotting.</code><code class="sig-name descname">plot_graph</code><span class="sig-paren">(</span><em class="sig-param">val_matrix=None</em>, <em class="sig-param">var_names=None</em>, <em class="sig-param">fig_ax=None</em>, <em class="sig-param">figsize=None</em>, <em class="sig-param">sig_thres=None</em>, <em class="sig-param">link_matrix=None</em>, <em class="sig-param">save_name=None</em>, <em class="sig-param">link_colorbar_label='MCI'</em>, <em class="sig-param">node_colorbar_label='auto-MCI'</em>, <em class="sig-param">link_width=None</em>, <em class="sig-param">link_attribute=None</em>, <em class="sig-param">node_pos=None</em>, <em class="sig-param">arrow_linewidth=30.0</em>, <em class="sig-param">vmin_edges=-1</em>, <em class="sig-param">vmax_edges=1.0</em>, <em class="sig-param">edge_ticks=0.4</em>, <em class="sig-param">cmap_edges='RdBu_r'</em>, <em class="sig-param">vmin_nodes=0</em>, <em class="sig-param">vmax_nodes=1.0</em>, <em class="sig-param">node_ticks=0.4</em>, <em class="sig-param">cmap_nodes='OrRd'</em>, <em class="sig-param">node_size=20</em>, <em class="sig-param">arrowhead_size=20</em>, <em class="sig-param">curved_radius=0.2</em>, <em class="sig-param">label_fontsize=10</em>, <em class="sig-param">alpha=1.0</em>, <em class="sig-param">node_label_size=10</em>, <em class="sig-param">link_label_fontsize=6</em>, <em class="sig-param">lag_array=None</em>, <em class="sig-param">network_lower_bound=0.2</em>, <em class="sig-param">show_colorbar=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.plot_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a network plot.</p>
 <p>This is still in beta. The network is defined either from True values in
 link_matrix, or from thresholding the val_matrix with sig_thres.  Nodes
@@ -2866,7 +3039,7 @@ coordinates could have been transformed before for basemap plots.</p></li>
 <li><p><strong>cmap_nodes</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'OrRd'</em><em>)</em>) – Colormap for links.</p></li>
 <li><p><strong>node_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 20</em><em>)</em>) – Node size.</p></li>
 <li><p><strong>arrowhead_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 20</em><em>)</em>) – Size of link arrow head. Passed on to FancyArrowPatch object.</p></li>
-<li><p><strong>float</strong><strong>, </strong><strong>optional</strong><strong> (</strong><strong>default</strong> (<em>curved_radius</em><em>,</em>) – Curvature of links. Passed on to FancyArrowPatch object.</p></li>
+<li><p><strong>curved_radius</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.2</em><em>)</em>) – Curvature of links. Passed on to FancyArrowPatch object.</p></li>
 <li><p><strong>label_fontsize</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em>) – Fontsize of colorbar labels.</p></li>
 <li><p><strong>alpha</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1.</em><em>)</em>) – Opacity.</p></li>
 <li><p><strong>node_label_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em>) – Fontsize of node labels.</p></li>
@@ -2883,8 +3056,8 @@ coordinates could have been transformed before for basemap plots.</p></li>
 <dt id="tigramite.plotting.plot_lagfuncs">
 <code class="sig-prename descclassname">tigramite.plotting.</code><code class="sig-name descname">plot_lagfuncs</code><span class="sig-paren">(</span><em class="sig-param">val_matrix</em>, <em class="sig-param">name=None</em>, <em class="sig-param">setup_args={}</em>, <em class="sig-param">add_lagfunc_args={}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_lagfuncs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.plot_lagfuncs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wrapper helper function to plot lag functions.</p>
-<p>Sets up the matrix object and plots the lagfunction, see parameters in setup_matrix
-and add_lagfuncs.</p>
+<p>Sets up the matrix object and plots the lagfunction, see parameters in
+setup_matrix and add_lagfuncs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -2896,8 +3069,8 @@ setup_matrix.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>matrix</strong> – Further lag functions can be overlaid using the matrix.add_lagfuncs(val_matrix)
-function.</p>
+<dd class="field-even"><p><strong>matrix</strong> – Further lag functions can be overlaid using the
+matrix.add_lagfuncs(val_matrix) function.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>object</p>
@@ -2944,7 +3117,7 @@ coordinates could have been transformed before for basemap plots.</p></li>
 <li><p><strong>cmap_nodes</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'OrRd'</em><em>)</em>) – Colormap for links.</p></li>
 <li><p><strong>node_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 20</em><em>)</em>) – Node size.</p></li>
 <li><p><strong>arrowhead_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 20</em><em>)</em>) – Size of link arrow head. Passed on to FancyArrowPatch object.</p></li>
-<li><p><strong>float</strong><strong>, </strong><strong>optional</strong><strong> (</strong><strong>default</strong> (<em>curved_radius</em><em>,</em>) – Curvature of links. Passed on to FancyArrowPatch object.</p></li>
+<li><p><strong>curved_radius</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.2</em><em>)</em>) – Curvature of links. Passed on to FancyArrowPatch object.</p></li>
 <li><p><strong>label_fontsize</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em>) – Fontsize of colorbar labels.</p></li>
 <li><p><strong>alpha</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1.</em><em>)</em>) – Opacity.</p></li>
 <li><p><strong>node_label_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em>) – Fontsize of node labels.</p></li>
@@ -2987,7 +3160,7 @@ given by arrow_linewidth. If None, all links have same width.</p></li>
 <li><p><strong>cmap_nodes</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'OrRd'</em><em>)</em>) – Colormap for links.</p></li>
 <li><p><strong>node_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 20</em><em>)</em>) – Node size.</p></li>
 <li><p><strong>arrowhead_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 20</em><em>)</em>) – Size of link arrow head. Passed on to FancyArrowPatch object.</p></li>
-<li><p><strong>float</strong><strong>, </strong><strong>optional</strong><strong> (</strong><strong>default</strong> (<em>curved_radius</em><em>,</em>) – Curvature of links. Passed on to FancyArrowPatch object.</p></li>
+<li><p><strong>curved_radius</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.2</em><em>)</em>) – Curvature of links. Passed on to FancyArrowPatch object.</p></li>
 <li><p><strong>label_fontsize</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em>) – Fontsize of colorbar labels.</p></li>
 <li><p><strong>alpha</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1.</em><em>)</em>) – Opacity.</p></li>
 <li><p><strong>node_label_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em>) – Fontsize of node labels.</p></li>
@@ -3002,7 +3175,7 @@ given by arrow_linewidth. If None, all links have same width.</p></li>
 
 <dl class="function">
 <dt id="tigramite.plotting.plot_time_series_graph">
-<code class="sig-prename descclassname">tigramite.plotting.</code><code class="sig-name descname">plot_time_series_graph</code><span class="sig-paren">(</span><em class="sig-param">val_matrix</em>, <em class="sig-param">var_names=None</em>, <em class="sig-param">fig_ax=None</em>, <em class="sig-param">figsize=None</em>, <em class="sig-param">sig_thres=None</em>, <em class="sig-param">link_matrix=None</em>, <em class="sig-param">link_colorbar_label='MCI'</em>, <em class="sig-param">save_name=None</em>, <em class="sig-param">link_width=None</em>, <em class="sig-param">link_attribute=None</em>, <em class="sig-param">arrow_linewidth=20.0</em>, <em class="sig-param">vmin_edges=-1</em>, <em class="sig-param">vmax_edges=1.0</em>, <em class="sig-param">edge_ticks=0.4</em>, <em class="sig-param">cmap_edges='RdBu_r'</em>, <em class="sig-param">order=None</em>, <em class="sig-param">node_size=10</em>, <em class="sig-param">arrowhead_size=20</em>, <em class="sig-param">curved_radius=0.2</em>, <em class="sig-param">label_fontsize=10</em>, <em class="sig-param">alpha=1.0</em>, <em class="sig-param">node_label_size=10</em>, <em class="sig-param">label_space_left=0.1</em>, <em class="sig-param">label_space_top=0.0</em>, <em class="sig-param">network_lower_bound=0.2</em>, <em class="sig-param">undirected_style='dashed'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_time_series_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.plot_time_series_graph" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">tigramite.plotting.</code><code class="sig-name descname">plot_time_series_graph</code><span class="sig-paren">(</span><em class="sig-param">link_matrix=None</em>, <em class="sig-param">val_matrix=None</em>, <em class="sig-param">var_names=None</em>, <em class="sig-param">fig_ax=None</em>, <em class="sig-param">figsize=None</em>, <em class="sig-param">sig_thres=None</em>, <em class="sig-param">link_colorbar_label='MCI'</em>, <em class="sig-param">save_name=None</em>, <em class="sig-param">link_width=None</em>, <em class="sig-param">link_attribute=None</em>, <em class="sig-param">arrow_linewidth=20.0</em>, <em class="sig-param">vmin_edges=-1</em>, <em class="sig-param">vmax_edges=1.0</em>, <em class="sig-param">edge_ticks=0.4</em>, <em class="sig-param">cmap_edges='RdBu_r'</em>, <em class="sig-param">order=None</em>, <em class="sig-param">node_size=10</em>, <em class="sig-param">arrowhead_size=20</em>, <em class="sig-param">curved_radius=0.2</em>, <em class="sig-param">label_fontsize=10</em>, <em class="sig-param">alpha=1.0</em>, <em class="sig-param">node_label_size=10</em>, <em class="sig-param">label_space_left=0.1</em>, <em class="sig-param">label_space_top=0.0</em>, <em class="sig-param">network_lower_bound=0.2</em>, <em class="sig-param">inner_edge_style='dashed'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_time_series_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.plot_time_series_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a time series graph.</p>
 <p>This is still in beta. The time series graph’s links are colored by
 val_matrix.</p>
@@ -3021,8 +3194,7 @@ sig_thres or link_matrix has to be provided.</p></li>
 <li><p><strong>link_colorbar_label</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'MCI'</em><em>)</em>) – Test statistic label.</p></li>
 <li><p><strong>link_width</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Array of val_matrix.shape specifying relative link width with maximum
 given by arrow_linewidth. If None, all links have same width.</p></li>
-<li><p><strong>order</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – </p></li>
-<li><p><strong>of variables from top to bottom.</strong> (<em>order</em>) – </p></li>
+<li><p><strong>order</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – order of variables from top to bottom.</p></li>
 <li><p><strong>arrow_linewidth</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 30</em><em>)</em>) – Linewidth.</p></li>
 <li><p><strong>vmin_edges</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: -1</em><em>)</em>) – Link colorbar scale lower bound.</p></li>
 <li><p><strong>vmax_edges</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) – Link colorbar scale upper bound.</p></li>
@@ -3030,7 +3202,7 @@ given by arrow_linewidth. If None, all links have same width.</p></li>
 <li><p><strong>cmap_edges</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'RdBu_r'</em><em>)</em>) – Colormap for links.</p></li>
 <li><p><strong>node_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 20</em><em>)</em>) – Node size.</p></li>
 <li><p><strong>arrowhead_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 20</em><em>)</em>) – Size of link arrow head. Passed on to FancyArrowPatch object.</p></li>
-<li><p><strong>float</strong><strong>, </strong><strong>optional</strong><strong> (</strong><strong>default</strong> (<em>curved_radius</em><em>,</em>) – Curvature of links. Passed on to FancyArrowPatch object.</p></li>
+<li><p><strong>curved_radius</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.2</em><em>)</em>) – Curvature of links. Passed on to FancyArrowPatch object.</p></li>
 <li><p><strong>label_fontsize</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em>) – Fontsize of colorbar labels.</p></li>
 <li><p><strong>alpha</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1.</em><em>)</em>) – Opacity.</p></li>
 <li><p><strong>node_label_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em>) – Fontsize of node labels.</p></li>
@@ -3038,7 +3210,7 @@ given by arrow_linewidth. If None, all links have same width.</p></li>
 <li><p><strong>label_space_left</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.1</em><em>)</em>) – Fraction of horizontal figure space to allocate left of plot for labels.</p></li>
 <li><p><strong>label_space_top</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.</em><em>)</em>) – Fraction of vertical figure space to allocate top of plot for labels.</p></li>
 <li><p><strong>network_lower_bound</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.2</em><em>)</em>) – Fraction of vertical space below graph plot.</p></li>
-<li><p><strong>undirected_style</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default: 'dashed'</em><em>)</em>) – Style of undirected contemporaneous links.</p></li>
+<li><p><strong>inner_edge_style</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default: 'dashed'</em><em>)</em>) – Style of inner_edge contemporaneous links.</p></li>
 </ul>
 </dd>
 </dl>
@@ -3062,7 +3234,8 @@ is used.</p></li>
 <li><p><strong>var_units</strong> (<em>list of str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Units of variables.</p></li>
 <li><p><strong>time_label</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: ''</em><em>)</em>) – Label of time axis.</p></li>
 <li><p><strong>use_mask</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – Whether to use masked data.</p></li>
-<li><p><strong>grey_masked_samples</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – Whether to mark masked samples by grey fills (‘fill’) or grey data (‘data’).</p></li>
+<li><p><strong>grey_masked_samples</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – Whether to mark masked samples by grey fills (‘fill’) or grey data
+(‘data’).</p></li>
 <li><p><strong>data_linewidth</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1.</em><em>)</em>) – Linewidth.</p></li>
 <li><p><strong>skip_ticks_data_x</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) – Skip every other tickmark.</p></li>
 <li><p><strong>skip_ticks_data_y</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 2</em><em>)</em>) – Skip every other tickmark.</p></li>
@@ -3070,6 +3243,15 @@ is used.</p></li>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="tigramite.plotting.plot_tsg">
+<code class="sig-prename descclassname">tigramite.plotting.</code><code class="sig-name descname">plot_tsg</code><span class="sig-paren">(</span><em class="sig-param">links</em>, <em class="sig-param">X</em>, <em class="sig-param">Y</em>, <em class="sig-param">Z=None</em>, <em class="sig-param">anc_x=None</em>, <em class="sig-param">anc_y=None</em>, <em class="sig-param">anc_xy=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_tsg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.plot_tsg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots TSG that is input in format (N*max_lag, N*max_lag).</p>
+<p>Compared to the tigramite plotting function here links
+X^i_{t-tau} –&gt; X^j_t can be missing for different t’. Helpful to
+visualize the conditioned TSG.</p>
 </dd></dl>
 
 <dl class="class">
