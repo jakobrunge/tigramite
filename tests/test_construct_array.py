@@ -5,6 +5,7 @@ from __future__ import print_function
 from collections import OrderedDict
 import numpy as np
 import pytest
+import sys
 
 import tigramite.data_processing as pp
 

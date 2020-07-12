@@ -5,7 +5,7 @@ from __future__ import print_function
 import numpy as np
 import pytest
 
-from tigramite.independence_tests import ParCorr, GPDC, CMIsymb, CMIknn, RCOT
+from tigramite.independence_tests import ParCorr, GPDC, CMIsymb, CMIknn
 import tigramite.data_processing as pp
 
 from test_pcmci_calculations import a_chain, gen_data_frame
@@ -508,98 +508,6 @@ def test_cmi_symb(cmi_symb, data_sample_d):
     np.testing.assert_allclose(np.array(_par_corr_to_cmi(corr_val)),
                                np.array(val_est),
                                atol=0.02)
-
-# RCOT TESTS ###################################################################
-@pytest.fixture()
-def rcot(request):
-    return RCOT(mask_type=None,
-                significance='analytic',
-                fixed_thres=None,
-                sig_samples=500,
-                sig_blocklength=3,
-                confidence='bootstrap',
-                conf_lev=0.9,
-                conf_samples=10000,
-                conf_blocklength=1,
-                num_f=25,
-                approx="lpd4",
-                seed=42)
-
-@pytest.fixture(params=[
-    # Generate the sample to be used for confidence interval comparison
-    #seed, corr_val, T
-    (5,    0.3,      500),  # Default
-    (6,    0.3,      500),  # New Seed
-    (1,    0.6,      500)]) # Strong Correlation
-def data_sample_e(request):
-    # Unpack the parameters
-    seed, corr_val, T = request.param
-    # Return the data sample
-    return gen_data_sample(seed, corr_val, T)
-
-@pytest.fixture(params=[
-    # Generate a test data sample
-    # Parameterize the sample by setting the autocorrelation value, coefficient
-    # value, total time length, and random seed to different numbers
-    # links_coeffs,               time, seed_val
-    (a_chain(0.1, 0.9),           100, 2),
-    (a_chain(0.5, 0.6),           100, 11),
-    (a_chain(0.5, 0.6, length=5), 100, 42)])
-def data_frame_e(request):
-    # Set the parameters
-    links_coeffs, time, seed_val = request.param
-    # Generate the dataframe
-    return gen_data_frame(links_coeffs, time, seed_val)
-
-def test_get_array_rcot(rcot, data_frame_e):
-    # Check the get_array function
-    check_get_array(rcot, data_frame_e)
-
-def test_run_test_rcot(rcot, data_frame_e):
-    # Check the run_test function
-    check_run_test(rcot, data_frame_e)
-
-def test_get_measure_rcot(rcot, data_frame_e):
-    # Check the get_measure function
-    check_get_measure(rcot, data_frame_e)
-
-def test_get_confidence_rcot(rcot, data_frame_e):
-    # Skip if just checking boostrap vs. bootstrap
-    if not rcot.confidence == 'bootstrap':
-        # Check the get_confidence function
-        check_get_confidence(rcot, data_frame_e)
-
-def test_shuffle_sig_rcot(rcot, data_sample_e):
-    # Get the data sample values
-    array, _, _, xyz, dim, T = data_sample_e
-    # Must call before running get_analytic_significance
-    val = rcot.get_dependence_measure(array, xyz)
-    # Get the analytic significance
-    pval_a = rcot.get_analytic_significance(value=val, T=T, dim=dim)
-    # Get the shuffle significance
-    pval_s = rcot.get_shuffle_significance(array, xyz, val)
-    # Adjust p-value for two-sided measures
-    np.testing.assert_allclose(np.array(pval_a), np.array(pval_s), atol=0.01)
-
-# TODO translate RCoT output to correlation scale
-#def test_rcot(rcot, data_sample_e):
-#    # Get the data sample values
-#    small_array, _, corr_val, xyz, dim, T = data_sample_e
-#    # Generate the full array
-#    dim = 5
-#    array = np.random.randn(dim, T)
-#    array[:2, :] = small_array
-#    # Generate some confounding
-#    array[0] += 0.5* array[2:].sum(axis=0)
-#    array[1] += 0.7* array[2:].sum(axis=0)
-#    # Reset the dimension
-#    xyz = np.array([0, 1, 2, 2, 2])
-#    # Get the estimated value
-#    val_est = rcot.get_dependence_measure(array, xyz)
-#    print(val_est, rcot.get_analytic_significance())
-#    np.testing.assert_allclose(np.array(corr_val),
-#                               np.array(val_est),
-#                               atol=0.02)
 
 # OTHER TESTS ##################################################################
 @pytest.mark.parametrize("mask_type,expected", [

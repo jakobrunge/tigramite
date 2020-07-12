@@ -48,19 +48,17 @@ def define_extension(extension_name, source_files=None):
 
 # Define the minimal classes needed to install and run tigramite
 INSTALL_REQUIRES = ["numpy", "scipy", "six"]
-# Define the all the possible extras needed
+# Define all the possible extras needed
 EXTRAS_REQUIRE = {
-    'all' : ['scikit-learn>=0.18',#Gaussian Process (GP) Regression
-             'matplotlib>=1.5',   #plotting
-             'networkx>=1.10',    #plotting
-             'rpy2'],             #R-based RCOT
-    'R'   : ['rpy2']              #R-based RCOT
+    'all' : ['scikit-learn>=0.21',#Gaussian Process (GP) Regression
+             'matplotlib>=3.0',   #plotting
+             'networkx>=2.4']    #plotting
     }
 # Define the packages needed for testing
 TESTS_REQUIRE = ['nose',
                  'pytest',
-                 'scikit-learn>=0.18',
-                 'rpy2']
+                 'networkx>=2.4',
+                 'scikit-learn>=0.21']
 EXTRAS_REQUIRE['test'] = TESTS_REQUIRE
 # Define the extras needed for development
 EXTRAS_REQUIRE['dev'] = EXTRAS_REQUIRE['all'] + TESTS_REQUIRE + ['cython']
@@ -74,14 +72,15 @@ EXT_MODULES += define_extension("tigramite.tigramite_cython_code")
 # Run the setup
 setup(
     name='tigramite',
-    version='4.1.0',
-    packages=['tigramite'],
+    version='4.2.0',
+    packages=['tigramite', 'tigramite.independence_tests'],
     license='GNU General Public License v3.0',
     description='Tigramite causal discovery for time series',
     author='Jakob Runge',
     author_email='jakob@jakob-runge.com',
     url='https://github.com/jakobrunge/tigramite/',
     long_description=io.open('README.md', 'r', encoding='utf-8').read(),
+    long_description_content_type="text/markdown",
     keywords='causality, time-series',
     cmdclass=CMDCLASS,
     ext_modules=EXT_MODULES,
@@ -90,7 +89,7 @@ setup(
     test_suite='tests',
     tests_require=TESTS_REQUIRE,
     classifiers=[
-        'Development Status :: 4',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Science/Research',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Scientific/Engineering :: Mathematics',
