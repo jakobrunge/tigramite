@@ -1,9 +1,18 @@
 import numpy
 cimport numpy
 import cython
-from libc.math cimport abs
+import unittest
+import timeit
+import sys
+import random
+import numpy as np
+cimport numpy as np
+import cython
+
 
 cdef inline double max(double a, double b): return a if a >= b else b
+cdef inline double abs(double a) : return a if a >= 0. else -1 * a
+
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -203,18 +212,7 @@ def _get_restricted_permutation_cython(
 that is not quadratic in space requirements (only in runtime)."""
 
 
-import unittest
-import timeit
-import sys
-import random
-import numpy as np
-cimport numpy as np
-import cython
-
 ctypedef np.double_t DTYPE_t
-
-#purely for speed reasons
-cdef inline double myabs(double a) : return a if a >= 0. else -1 * a
 
 def dcov_all(x, y):
     'Calculate distance covariance, distance correlation, distance variance of x sample and distance variance of y sample'
@@ -252,7 +250,7 @@ class D_N:
         cdef unsigned int jj
         for ii in range(dim):
             for jj in range(dim):
-                value = myabs(x[jj] - x[ii])
+                value = abs(x[jj] - x[ii])
                 sum_total += value
                 sum_1[jj] += value
                 sum_0[ii] += value
@@ -275,7 +273,7 @@ class D_N:
         cdef unsigned int jj
         for ii in range(dim):
             for jj in range(dim): 
-                dist = myabs(x[jj] - x[ii])
+                dist = abs(x[jj] - x[ii])
                 d = dist - mean_0[ii] - mean_1[jj] + mean
                 squared_sum += d * d
         return squared_sum
@@ -299,7 +297,7 @@ class D_N:
         cdef unsigned int jj
         for ii in range(dim):
             for jj in range(dim): 
-                d_here = myabs(x[jj] - x[ii]) - mean_0_here[ii] - mean_1_here[jj] + mean_here
-                d_there = myabs(y[jj] - y[ii]) - mean_0_there[ii] - mean_1_there[jj] + mean_there
+                d_here = abs(x[jj] - x[ii]) - mean_0_here[ii] - mean_1_here[jj] + mean_here
+                d_there = abs(y[jj] - y[ii]) - mean_0_there[ii] - mean_1_there[jj] + mean_there
                 product_sum += d_here * d_there
         return product_sum
