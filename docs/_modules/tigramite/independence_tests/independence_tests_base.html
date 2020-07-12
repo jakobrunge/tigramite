@@ -25,8 +25,7 @@
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="nav-item nav-item-0"><a href="../../../index.html">Tigramite 4.2 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
-          <li class="nav-item nav-item-2"><a href="../independence_tests.html" accesskey="U">tigramite.independence_tests</a> &#187;</li> 
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -308,7 +307,7 @@
 
     <span class="k">def</span> <span class="nf">_get_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;2xtau_max&#39;</span><span class="p">,</span>
                    <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Convencience wrapper around _construct_array.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Convencience wrapper around construct_array.&quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;par_corr&#39;</span><span class="p">]:</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
@@ -319,12 +318,12 @@
                                               <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
                                               <span class="n">mask_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span><span class="p">,</span>
                                               <span class="n">return_cleaned_xyz</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                                              <span class="n">do_checks</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                              <span class="n">do_checks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                                               <span class="n">cut_off</span><span class="o">=</span><span class="n">cut_off</span><span class="p">,</span>
                                               <span class="n">verbosity</span><span class="o">=</span><span class="n">verbosity</span><span class="p">)</span>
     
     <span class="k">def</span> <span class="nf">_get_array_hash</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">XYZ</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Helper function to get hash or array.</span>
+        <span class="sd">&quot;&quot;&quot;Helper function to get hash of array.</span>
 
 <span class="sd">        For a CI test X _|_ Y | Z the order of variables within X or Y or Z </span>
 <span class="sd">        does not matter and also the order X and Y can be swapped.</span>
@@ -364,12 +363,12 @@
         <span class="n">arr_z</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">xyz</span><span class="o">==</span><span class="mi">2</span><span class="p">][</span><span class="n">z_orderd</span><span class="p">]</span>
         <span class="n">z_hash</span> <span class="o">=</span> <span class="n">sha1</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">arr_z</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
 
-        <span class="n">combined_hash</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="nb">sorted</span><span class="p">([</span><span class="n">x_hash</span><span class="p">,</span> <span class="n">y_hash</span><span class="p">]),</span> <span class="n">z_hash</span><span class="p">)</span>
+        <span class="n">sorted_xy</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span><span class="n">x_hash</span><span class="p">,</span> <span class="n">y_hash</span><span class="p">])</span>
+        <span class="n">combined_hash</span> <span class="o">=</span> <span class="p">(</span><span class="n">sorted_xy</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">sorted_xy</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">z_hash</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">combined_hash</span>
 
 
-<div class="viewcode-block" id="CondIndTest.run_test"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.CondIndTest.run_test">[docs]</a>    <span class="k">def</span> <span class="nf">run_test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;2xtau_max&#39;</span><span class="p">,</span>
-                 <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<div class="viewcode-block" id="CondIndTest.run_test"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.CondIndTest.run_test">[docs]</a>    <span class="k">def</span> <span class="nf">run_test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;2xtau_max&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Perform conditional independence test.</span>
 
 <span class="sd">        Calls the dependence measure and signficicance test functions. The child</span>
@@ -424,7 +423,7 @@
             <span class="n">pval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_significance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">cached_ci_results</span><span class="p">[</span><span class="n">combined_hash</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">pval</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_print_cond_ind_results</span><span class="p">(</span><span class="n">val</span><span class="o">=</span><span class="n">val</span><span class="p">,</span> <span class="n">pval</span><span class="o">=</span><span class="n">pval</span><span class="p">,</span> <span class="n">cached</span><span class="o">=</span><span class="n">cached</span><span class="p">,</span>
                                          <span class="n">conf</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
         <span class="c1"># Return the value and the pvalue</span>
@@ -720,7 +719,7 @@
 <span class="sd">        conf : tuple of floats, optional (default: None)</span>
 <span class="sd">            Confidence bounds.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">printstr</span> <span class="o">=</span> <span class="s2">&quot;        val = </span><span class="si">%.3f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">val</span><span class="p">)</span>      
+        <span class="n">printstr</span> <span class="o">=</span> <span class="s2">&quot;        val = </span><span class="si">% .3f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">val</span><span class="p">)</span>      
         <span class="k">if</span> <span class="n">pval</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">printstr</span> <span class="o">+=</span> <span class="s2">&quot; | pval = </span><span class="si">%.5f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">pval</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">conf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1077,8 +1076,7 @@
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="nav-item nav-item-0"><a href="../../../index.html">Tigramite 4.2 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
-          <li class="nav-item nav-item-2"><a href="../independence_tests.html" >tigramite.independence_tests</a> &#187;</li> 
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

@@ -61,6 +61,7 @@
 <span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">deepcopy</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.stats</span>
 
 
 <span class="k">def</span> <span class="nf">_create_nested_dictionary</span><span class="p">(</span><span class="n">depth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">lowest_type</span><span class="o">=</span><span class="nb">dict</span><span class="p">):</span>
@@ -361,7 +362,7 @@
 
         <span class="n">abstau</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">parent</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">    Link (</span><span class="si">%s</span><span class="s2"> </span><span class="si">%d</span><span class="s2">) </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2">):&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">    Link (</span><span class="si">%s</span><span class="s2"> </span><span class="si">% d</span><span class="s2">) </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2">):&quot;</span> <span class="o">%</span> <span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">parent</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">parent</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">link_marker</span><span class="p">[</span><span class="n">abstau</span><span class="o">==</span><span class="mi">0</span><span class="p">],</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">],</span>
                 <span class="n">index_parent</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">num_parents</span><span class="p">))</span>
@@ -385,9 +386,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">var_name_z</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">tau</span> <span class="ow">in</span> <span class="n">Z</span><span class="p">:</span>
-            <span class="n">var_name_z</span> <span class="o">+=</span> <span class="s2">&quot;(</span><span class="si">%s</span><span class="s2"> </span><span class="si">%d</span><span class="s2">) &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">tau</span><span class="p">)</span>
+            <span class="n">var_name_z</span> <span class="o">+=</span> <span class="s2">&quot;(</span><span class="si">%s</span><span class="s2"> </span><span class="si">% .2s</span><span class="s2">) &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">tau</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="n">var_name_z</span> <span class="o">=</span> <span class="s2">&quot;()&quot;</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    Subset </span><span class="si">%d</span><span class="s2">: </span><span class="si">%s</span><span class="s2"> gives pval = </span><span class="si">%.5f</span><span class="s2"> / val = </span><span class="si">%.3f</span><span class="s2">&quot;</span> <span class="o">%</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    Subset </span><span class="si">%d</span><span class="s2">: </span><span class="si">%s</span><span class="s2"> gives pval = </span><span class="si">%.5f</span><span class="s2"> / val = </span><span class="si">% .3f</span><span class="s2">&quot;</span> <span class="o">%</span>
               <span class="p">(</span><span class="n">comb_index</span><span class="p">,</span> <span class="n">var_name_z</span><span class="p">,</span> <span class="n">pval</span><span class="p">,</span> <span class="n">val</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">_print_a_pc_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nonsig</span><span class="p">,</span> <span class="n">conds_dim</span><span class="p">,</span> <span class="n">max_combinations</span><span class="p">):</span>
@@ -538,9 +539,11 @@
                         <span class="k">break</span>
                     <span class="c1"># Perform independence test</span>
                     <span class="n">val</span><span class="p">,</span> <span class="n">pval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span><span class="o">.</span><span class="n">run_test</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="p">[</span><span class="n">parent</span><span class="p">],</span>
-                                                            <span class="n">Y</span><span class="o">=</span><span class="p">[(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">)],</span>
-                                                            <span class="n">Z</span><span class="o">=</span><span class="n">Z</span><span class="p">,</span>
-                                                            <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">)</span>
+                                                    <span class="n">Y</span><span class="o">=</span><span class="p">[(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">)],</span>
+                                                    <span class="n">Z</span><span class="o">=</span><span class="n">Z</span><span class="p">,</span>
+                                                    <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
+                                                    <span class="c1"># verbosity=self.verbosity</span>
+                                                    <span class="p">)</span>
                     <span class="c1"># Print some information if needed</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">_print_cond_info</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span> <span class="n">comb_index</span><span class="p">,</span> <span class="n">pval</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
@@ -642,7 +645,7 @@
         <span class="k">for</span> <span class="n">iscore</span><span class="p">,</span> <span class="n">pc_alpha_here</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pc_alpha</span><span class="p">):</span>
             <span class="n">names_parents</span> <span class="o">=</span> <span class="s2">&quot;[ &quot;</span>
             <span class="k">for</span> <span class="n">pari</span> <span class="ow">in</span> <span class="n">results</span><span class="p">[</span><span class="n">pc_alpha_here</span><span class="p">][</span><span class="s1">&#39;parents&#39;</span><span class="p">]:</span>
-                <span class="n">names_parents</span> <span class="o">+=</span> <span class="s2">&quot;(</span><span class="si">%s</span><span class="s2"> </span><span class="si">%d</span><span class="s2">) &quot;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="n">names_parents</span> <span class="o">+=</span> <span class="s2">&quot;(</span><span class="si">%s</span><span class="s2"> </span><span class="si">% d</span><span class="s2">) &quot;</span> <span class="o">%</span> <span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">pari</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">pari</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
             <span class="n">names_parents</span> <span class="o">+=</span> <span class="s2">&quot;]&quot;</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    pc_alpha=</span><span class="si">%s</span><span class="s2"> got score </span><span class="si">%.4f</span><span class="s2"> with parents </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span>
@@ -857,11 +860,11 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">iterations</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="s1">&#39;optimal_pc_alpha&#39;</span><span class="p">]))</span>
             <span class="k">if</span> <span class="n">val_min</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">pval_max</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parents</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;        (</span><span class="si">%s</span><span class="s2"> </span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;        (</span><span class="si">%s</span><span class="s2"> % .d)&quot;</span> <span class="o">%</span> <span class="p">(</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parents</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;        (</span><span class="si">%s</span><span class="s2"> </span><span class="si">%d</span><span class="s2">): max_pval = </span><span class="si">%.5f</span><span class="s2">, min_val = </span><span class="si">%.3f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;        (</span><span class="si">%s</span><span class="s2"> % .d): max_pval = </span><span class="si">%.5f</span><span class="s2">, min_val = </span><span class="si">% .3f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">pval_max</span><span class="p">[</span><span class="n">p</span><span class="p">],</span>
                         <span class="n">val_min</span><span class="p">[</span><span class="n">p</span><span class="p">]))</span>
         <span class="k">else</span><span class="p">:</span>
@@ -901,7 +904,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">cond_string</span> <span class="o">=</span> <span class="s2">&quot;[ &quot;</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">tau_k</span> <span class="ow">in</span> <span class="n">conds</span><span class="p">:</span>
-            <span class="n">cond_string</span> <span class="o">+=</span> <span class="s2">&quot;(</span><span class="si">%s</span><span class="s2"> </span><span class="si">%d</span><span class="s2">) &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">tau_k</span><span class="p">)</span>
+            <span class="n">cond_string</span> <span class="o">+=</span> <span class="s2">&quot;(</span><span class="si">%s</span><span class="s2"> </span><span class="si">% d</span><span class="s2">) &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">tau_k</span><span class="p">)</span>
         <span class="n">cond_string</span> <span class="o">+=</span> <span class="s2">&quot;]&quot;</span>
         <span class="k">return</span> <span class="n">cond_string</span>
 
@@ -934,7 +937,7 @@
         <span class="n">condx_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mci_condition_to_string</span><span class="p">(</span><span class="n">conds_x_lagged</span><span class="p">)</span>
         <span class="c1"># Formate and print the information</span>
         <span class="n">indent</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">        &quot;</span>
-        <span class="n">print_str</span> <span class="o">=</span> <span class="n">indent</span> <span class="o">+</span> <span class="s2">&quot;link (</span><span class="si">%s</span><span class="s2"> </span><span class="si">%d</span><span class="s2">) &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">tau</span><span class="p">)</span>
+        <span class="n">print_str</span> <span class="o">=</span> <span class="n">indent</span> <span class="o">+</span> <span class="s2">&quot;link (</span><span class="si">%s</span><span class="s2"> </span><span class="si">% d</span><span class="s2">) &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">tau</span><span class="p">)</span>
         <span class="n">print_str</span> <span class="o">+=</span> <span class="s2">&quot;--&gt; </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2">):&quot;</span> <span class="o">%</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">count</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_parents</span><span class="p">)</span>
         <span class="n">print_str</span> <span class="o">+=</span> <span class="n">indent</span> <span class="o">+</span> <span class="s2">&quot;with conds_y = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">condy_str</span><span class="p">)</span>
@@ -942,7 +945,8 @@
         <span class="nb">print</span><span class="p">(</span><span class="n">print_str</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_print_pcmciplus_conditions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lagged_parents</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">abstau</span><span class="p">,</span>
-                                    <span class="n">max_conds_py</span><span class="p">,</span> <span class="n">max_conds_px</span><span class="p">):</span>
+                                    <span class="n">max_conds_py</span><span class="p">,</span> <span class="n">max_conds_px</span><span class="p">,</span> 
+                                    <span class="n">max_conds_px_lagged</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Print information about the conditions for PCMCIplus.</span>
 
 <span class="sd">        Parameters</span>
@@ -959,10 +963,20 @@
 <span class="sd">            Max number of parents for node j.</span>
 <span class="sd">        max_conds_px : int</span>
 <span class="sd">            Max number of parents for lagged node i.</span>
+<span class="sd">        max_conds_px_lagged : int</span>
+<span class="sd">            Maximum number of lagged conditions of X when X is lagged in MCI </span>
+<span class="sd">            tests. If None is passed, this number is equal to max_conds_px.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">conds_y</span> <span class="o">=</span> <span class="n">lagged_parents</span><span class="p">[</span><span class="n">j</span><span class="p">][:</span><span class="n">max_conds_py</span><span class="p">]</span>
         <span class="n">conds_y_no_i</span> <span class="o">=</span> <span class="p">[</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">conds_y</span> <span class="k">if</span> <span class="n">node</span> <span class="o">!=</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="n">abstau</span><span class="p">)]</span>
-        <span class="n">conds_x</span> <span class="o">=</span> <span class="n">lagged_parents</span><span class="p">[</span><span class="n">i</span><span class="p">][:</span><span class="n">max_conds_px</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">abstau</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">conds_x</span> <span class="o">=</span> <span class="n">lagged_parents</span><span class="p">[</span><span class="n">i</span><span class="p">][:</span><span class="n">max_conds_px</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">max_conds_px_lagged</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">conds_x</span> <span class="o">=</span> <span class="n">lagged_parents</span><span class="p">[</span><span class="n">i</span><span class="p">][:</span><span class="n">max_conds_px</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">conds_x</span> <span class="o">=</span> <span class="n">lagged_parents</span><span class="p">[</span><span class="n">i</span><span class="p">][:</span><span class="n">max_conds_px_lagged</span><span class="p">]</span>
+
         <span class="c1"># Shift the conditions for X by tau</span>
         <span class="n">conds_x_lagged</span> <span class="o">=</span> <span class="p">[(</span><span class="n">k</span><span class="p">,</span> <span class="o">-</span><span class="n">abstau</span> <span class="o">+</span> <span class="n">k_tau</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">k_tau</span> <span class="ow">in</span> <span class="n">conds_x</span><span class="p">]</span>
         <span class="n">condy_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mci_condition_to_string</span><span class="p">(</span><span class="n">conds_y_no_i</span><span class="p">)</span>
@@ -1126,8 +1140,9 @@
                 <span class="c1"># Run the independence tests and record the results</span>
                 <span class="n">val</span><span class="p">,</span> <span class="n">pval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span><span class="o">.</span><span class="n">run_test</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="n">Z</span><span class="p">,</span>
                                                         <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
-                                                        <span class="n">verbosity</span><span class="o">=</span>
-                                                        <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
+                                                        <span class="c1"># verbosity=</span>
+                                                        <span class="c1"># self.verbosity</span>
+                                                        <span class="p">)</span>
                 <span class="n">val_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">tau</span><span class="p">)]</span> <span class="o">=</span> <span class="n">val</span>
                 <span class="n">p_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">tau</span><span class="p">)]</span> <span class="o">=</span> <span class="n">pval</span>
             <span class="k">else</span><span class="p">:</span>
@@ -1141,10 +1156,12 @@
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span><span class="o">.</span><span class="n">confidence</span><span class="p">:</span>
                 <span class="n">conf_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">tau</span><span class="p">)]</span> <span class="o">=</span> <span class="n">conf</span>
 
-        <span class="c1"># Return the values as a dictionary</span>
-        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;val_matrix&#39;</span><span class="p">:</span> <span class="n">val_matrix</span><span class="p">,</span>
-                <span class="s1">&#39;p_matrix&#39;</span><span class="p">:</span> <span class="n">p_matrix</span><span class="p">,</span>
-                <span class="s1">&#39;conf_matrix&#39;</span><span class="p">:</span> <span class="n">conf_matrix</span><span class="p">}</span>
+        <span class="c1"># Return the values as a dictionary and store in class</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;val_matrix&#39;</span><span class="p">:</span> <span class="n">val_matrix</span><span class="p">,</span>
+                   <span class="s1">&#39;p_matrix&#39;</span><span class="p">:</span> <span class="n">p_matrix</span><span class="p">,</span>
+                   <span class="s1">&#39;conf_matrix&#39;</span><span class="p">:</span> <span class="n">conf_matrix</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="o">=</span> <span class="n">results</span>
+        <span class="k">return</span> <span class="n">results</span>
 
 <div class="viewcode-block" id="PCMCI.run_mci"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.run_mci">[docs]</a>    <span class="k">def</span> <span class="nf">run_mci</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                 <span class="n">selected_links</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1449,7 +1466,7 @@
                                  <span class="n">pq_matrix</span><span class="p">,</span>
                                  <span class="n">val_matrix</span><span class="p">,</span>
                                  <span class="n">alpha_level</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
-                                 <span class="n">include_lagzero_links</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+                                 <span class="n">include_lagzero_parents</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;DEPRECATED: use return_significant_links() instead.</span>
 
 <span class="sd">        Parameters</span>
@@ -1462,8 +1479,8 @@
 <span class="sd">            1).</span>
 <span class="sd">        alpha_level : float, optional (default: 0.05)</span>
 <span class="sd">            Significance level.</span>
-<span class="sd">        include_lagzero_links : bool (default: False)</span>
-<span class="sd">            Whether the dictionary should also return links at lag</span>
+<span class="sd">        include_lagzero_parents : bool (default: False)</span>
+<span class="sd">            Whether the dictionary should also return parents at lag</span>
 <span class="sd">            zero. Note that the link_matrix always contains those.</span>
 
 <span class="sd">        Returns</span>
@@ -1480,7 +1497,7 @@
         <span class="n">siglinks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_significant_links</span><span class="p">(</span><span class="n">pq_matrix</span><span class="o">=</span><span class="n">pq_matrix</span><span class="p">,</span>
                                  <span class="n">val_matrix</span><span class="o">=</span><span class="n">val_matrix</span><span class="p">,</span>
                                  <span class="n">alpha_level</span><span class="o">=</span><span class="n">alpha_level</span><span class="p">,</span>
-                                 <span class="n">include_lagzero_links</span><span class="o">=</span><span class="n">include_lagzero_links</span><span class="p">)</span>
+                                 <span class="n">include_lagzero_links</span><span class="o">=</span><span class="n">include_lagzero_parents</span><span class="p">)</span>
         <span class="n">siglinks</span><span class="p">[</span><span class="s1">&#39;parents&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">siglinks</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;link_dict&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">siglinks</span></div>
 
@@ -1583,13 +1600,13 @@
             <span class="n">string</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">    Variable </span><span class="si">%s</span><span class="s2"> has </span><span class="si">%d</span><span class="s2"> &quot;</span>
                       <span class="s2">&quot;link(s):&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">n_links</span><span class="p">))</span>
             <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">sorted_links</span><span class="p">:</span>
-                <span class="n">string</span> <span class="o">+=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">        (</span><span class="si">%s</span><span class="s2"> </span><span class="si">%d</span><span class="s2">): pval = </span><span class="si">%.5f</span><span class="s2">&quot;</span> <span class="o">%</span>
+                <span class="n">string</span> <span class="o">+=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">        (</span><span class="si">%s</span><span class="s2"> </span><span class="si">% d</span><span class="s2">): pval = </span><span class="si">%.5f</span><span class="s2">&quot;</span> <span class="o">%</span>
                            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
                             <span class="n">p_matrix</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">j</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])]))</span>
                 <span class="k">if</span> <span class="n">q_matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">string</span> <span class="o">+=</span> <span class="s2">&quot; | qval = </span><span class="si">%.5f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
                         <span class="n">q_matrix</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">j</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])])</span>
-                <span class="n">string</span> <span class="o">+=</span> <span class="s2">&quot; | val = </span><span class="si">%.3f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="n">string</span> <span class="o">+=</span> <span class="s2">&quot; | val = </span><span class="si">% .3f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
                     <span class="n">val_matrix</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">j</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])])</span>
                 <span class="k">if</span> <span class="n">conf_matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">string</span> <span class="o">+=</span> <span class="s2">&quot; | conf = (</span><span class="si">%.3f</span><span class="s2">, </span><span class="si">%.3f</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span>
@@ -1608,7 +1625,7 @@
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">## Ambiguous triples:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">triple</span> <span class="ow">in</span> <span class="n">ambiguous_triples</span><span class="p">:</span>
                 <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">),</span> <span class="n">k</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="n">triple</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    (</span><span class="si">%s</span><span class="s2"> </span><span class="si">%d</span><span class="s2">) </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> o--o </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    (</span><span class="si">%s</span><span class="s2"> </span><span class="si">% d</span><span class="s2">) </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> o--o </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">tau</span><span class="p">,</span> <span class="n">link_marker</span><span class="p">[</span><span class="n">tau</span><span class="o">==</span><span class="mi">0</span><span class="p">],</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">k</span><span class="p">],</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">]))</span></div>
@@ -1741,7 +1758,7 @@
 <span class="sd">        &gt;&gt;&gt; cond_ind_test = ParCorr()</span>
 <span class="sd">        &gt;&gt;&gt; pcmci = PCMCI(dataframe=dataframe, cond_ind_test=cond_ind_test)</span>
 <span class="sd">        &gt;&gt;&gt; results = pcmci.run_pcmci(tau_max=2, pc_alpha=None)</span>
-<span class="sd">        &gt;&gt;&gt; pcmci._print_significant_links(p_matrix=results[&#39;p_matrix&#39;],</span>
+<span class="sd">        &gt;&gt;&gt; pcmci.print_significant_links(p_matrix=results[&#39;p_matrix&#39;],</span>
 <span class="sd">                                             val_matrix=results[&#39;val_matrix&#39;],</span>
 <span class="sd">                                             alpha_level=0.05)</span>
 <span class="sd">        ## Significant parents at alpha = 0.05:</span>
@@ -1843,6 +1860,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">print_results</span><span class="p">(</span><span class="n">return_dict</span><span class="p">)</span>
         <span class="c1"># Return the dictionary</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="o">=</span> <span class="n">return_dict</span>
         <span class="k">return</span> <span class="n">return_dict</span></div>
 
 <div class="viewcode-block" id="PCMCI.run_pcmciplus"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.run_pcmciplus">[docs]</a>    <span class="k">def</span> <span class="nf">run_pcmciplus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
@@ -1856,6 +1874,7 @@
                       <span class="n">max_conds_dim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                       <span class="n">max_conds_py</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                       <span class="n">max_conds_px</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">max_conds_px_lagged</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                       <span class="n">fdr_method</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span>
                       <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Runs PCMCIplus time-lagged and contemporaneous causal discovery for</span>
@@ -1932,23 +1951,34 @@
 <span class="sd">        or discrete) and its assumed dependency types. These are available in</span>
 <span class="sd">        ``tigramite.independence_tests``.</span>
 
-<span class="sd">        The main free parameters of PCMCIplus (in addition to free parameters</span>
-<span class="sd">        of the conditional independence tests) are the maximum time delay</span>
+<span class="sd">        The main free parameters of PCMCIplus (in addition to free parameters of</span>
+<span class="sd">        the conditional independence tests) are the maximum time delay</span>
 <span class="sd">        :math:`\\tau_{\\max}` (``tau_max``) and the significance threshold</span>
-<span class="sd">        :math:`\\alpha` ( ``pc_alpha``). The maximum time delay depends on the</span>
-<span class="sd">        application and should be chosen according to the maximum causal time</span>
-<span class="sd">        lag expected in the complex system. We recommend a rather large</span>
-<span class="sd">        choice that includes peaks in the ``get_lagged_dependencies``</span>
-<span class="sd">        function. Another important parameter is ``contemp_collider_rule``.</span>
-<span class="sd">        Only if set to ``majority`` or ``conservative&#39;&#39; and together with</span>
-<span class="sd">        ``conflict_resolution=True``, PCMCIplus is fully *order independent*</span>
-<span class="sd">        meaning that the order of the N variables in the dataframe does not</span>
-<span class="sd">        matter. Last, the default option ``reset_lagged_links=False``</span>
-<span class="sd">        restricts the detection of lagged causal links in Step 2 to the</span>
-<span class="sd">        significant adjacencies found in Step 1, given by :math:`\\widehat{</span>
-<span class="sd">        \\mathcal{B}}_t^-( X^j_t)`. For ``reset_lagged_links=True``,</span>
-<span class="sd">        *all* lagged links are considered again, which improves detection</span>
-<span class="sd">        power for lagged links, but also leads to larger runtimes.</span>
+<span class="sd">        :math:`\\alpha` ( ``pc_alpha``). </span>
+
+<span class="sd">        If a list or None is passed for ``pc_alpha``, the significance level is</span>
+<span class="sd">        optimized for every graph across the given ``pc_alpha`` values using the</span>
+<span class="sd">        score computed in ``cond_ind_test.get_model_selection_criterion()``.</span>
+<span class="sd">        Since PCMCIplus outputs not a DAG, but an equivalence class of DAGs,</span>
+<span class="sd">        first one member of this class is computed and then the score is</span>
+<span class="sd">        computed as the average over all models fits for each variable in ``[0,</span>
+<span class="sd">        ..., N]`` for that member. The score is the same for all members of the</span>
+<span class="sd">        class.</span>
+
+<span class="sd">        The maximum time delay depends on the application and should be chosen</span>
+<span class="sd">        according to the maximum causal time lag expected in the complex system.</span>
+<span class="sd">        We recommend a rather large choice that includes peaks in the</span>
+<span class="sd">        ``get_lagged_dependencies`` function. Another important parameter is</span>
+<span class="sd">        ``contemp_collider_rule``. Only if set to ``majority`` or</span>
+<span class="sd">        ``conservative&#39;&#39; and together with ``conflict_resolution=True``,</span>
+<span class="sd">        PCMCIplus is fully *order independent* meaning that the order of the N</span>
+<span class="sd">        variables in the dataframe does not matter. Last, the default option</span>
+<span class="sd">        ``reset_lagged_links=False`` restricts the detection of lagged causal</span>
+<span class="sd">        links in Step 2 to the significant adjacencies found in Step 1, given by</span>
+<span class="sd">        :math:`\\widehat{ \\mathcal{B}}_t^-( X^j_t)`. For</span>
+<span class="sd">        ``reset_lagged_links=True``, *all* lagged links are considered again,</span>
+<span class="sd">        which improves detection power for lagged links, but also leads to</span>
+<span class="sd">        larger runtimes.</span>
 
 <span class="sd">        Further optional parameters are discussed in [5]_.</span>
 
@@ -2009,8 +2039,11 @@
 <span class="sd">            Minimum time lag to test.</span>
 <span class="sd">        tau_max : int, optional (default: 1)</span>
 <span class="sd">            Maximum time lag. Must be larger or equal to tau_min.</span>
-<span class="sd">        pc_alpha : float, optional (default: 0.01)</span>
-<span class="sd">            Significance level in all steps of the PCMCIplus algorithm.</span>
+<span class="sd">        pc_alpha : float or list of floats, default: 0.01</span>
+<span class="sd">            Significance level in algorithm. If a list or None is passed, the</span>
+<span class="sd">            pc_alpha level is optimized for every graph across the given</span>
+<span class="sd">            pc_alpha values ([0.001, 0.005, 0.01, 0.025, 0.05] for None) using</span>
+<span class="sd">            the score computed in cond_ind_test.get_model_selection_criterion().</span>
 <span class="sd">        contemp_collider_rule : {&#39;majority&#39;, &#39;conservative&#39;, &#39;none&#39;}</span>
 <span class="sd">            Rule for collider phase to use. See the paper for details. Only</span>
 <span class="sd">            &#39;majority&#39; and &#39;conservative&#39; lead to an order-independent</span>
@@ -2033,6 +2066,9 @@
 <span class="sd">        max_conds_px : int, optional (default: None)</span>
 <span class="sd">            Maximum number of lagged conditions of X to use in MCI tests. If</span>
 <span class="sd">            None is passed, this number is unrestricted.</span>
+<span class="sd">        max_conds_px_lagged : int, optional (default: None)</span>
+<span class="sd">            Maximum number of lagged conditions of X when X is lagged in MCI </span>
+<span class="sd">            tests. If None is passed, this number is equal to max_conds_px.</span>
 <span class="sd">        fdr_method : str, optional (default: &#39;none&#39;)</span>
 <span class="sd">            Correction method, default is Benjamini-Hochberg False Discovery</span>
 <span class="sd">            Rate method.</span>
@@ -2052,9 +2088,26 @@
 <span class="sd">            &#39;conservative&#39; rules, see paper for details.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">if</span> <span class="n">pc_alpha</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;pc_alpha=None not supported in PCMCIplus, choose&quot;</span>
-                             <span class="s2">&quot; 0 &lt; pc_alpha &lt; 1 (e.g., 0.01)&quot;</span><span class="p">)</span>
+        <span class="c1"># Check if pc_alpha is chosen to optimze over a list</span>
+        <span class="k">if</span> <span class="n">pc_alpha</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pc_alpha</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+            <span class="c1"># Call optimizer wrapper around run_pcmciplus()</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimize_pcmciplus_alpha</span><span class="p">(</span>
+                                    <span class="n">selected_links</span><span class="o">=</span><span class="n">selected_links</span><span class="p">,</span>
+                                    <span class="n">tau_min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span>
+                                    <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
+                                    <span class="n">pc_alpha</span><span class="o">=</span><span class="n">pc_alpha</span><span class="p">,</span>
+                                    <span class="n">contemp_collider_rule</span><span class="o">=</span><span class="n">contemp_collider_rule</span><span class="p">,</span>
+                                    <span class="n">conflict_resolution</span><span class="o">=</span><span class="n">conflict_resolution</span><span class="p">,</span>
+                                    <span class="n">reset_lagged_links</span><span class="o">=</span><span class="n">reset_lagged_links</span><span class="p">,</span>
+                                    <span class="n">max_conds_dim</span><span class="o">=</span><span class="n">max_conds_dim</span><span class="p">,</span>
+                                    <span class="n">max_conds_py</span><span class="o">=</span><span class="n">max_conds_py</span><span class="p">,</span>
+                                    <span class="n">max_conds_px</span><span class="o">=</span><span class="n">max_conds_px</span><span class="p">,</span>
+                                    <span class="n">max_conds_px_lagged</span><span class="o">=</span><span class="n">max_conds_px_lagged</span><span class="p">,</span>
+                                    <span class="n">fdr_method</span><span class="o">=</span><span class="n">fdr_method</span><span class="p">)</span>
+
+        <span class="c1"># else:</span>
+        <span class="c1">#     raise ValueError(&quot;pc_alpha=None not supported in PCMCIplus, choose&quot;</span>
+        <span class="c1">#                      &quot; 0 &lt; pc_alpha &lt; 1 (e.g., 0.01)&quot;)</span>
 
         <span class="c1"># For the lagged PC algorithm only the strongest conditions are tested</span>
         <span class="n">max_combinations</span> <span class="o">=</span> <span class="mi">1</span>
@@ -2092,6 +2145,7 @@
                   <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">max_conds_dim = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">max_conds_dim</span>
                   <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">max_conds_py = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">max_conds_py</span>
                   <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">max_conds_px = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">max_conds_px</span>
+                  <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">max_conds_px_lagged = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">max_conds_px_lagged</span>
                   <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">fdr_method = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">fdr_method</span>
                   <span class="p">)</span>
 
@@ -2125,6 +2179,7 @@
             <span class="n">lagged_parents</span><span class="o">=</span><span class="n">lagged_parents</span><span class="p">,</span>
             <span class="n">max_conds_py</span><span class="o">=</span><span class="n">max_conds_py</span><span class="p">,</span>
             <span class="n">max_conds_px</span><span class="o">=</span><span class="n">max_conds_px</span><span class="p">,</span>
+            <span class="n">max_conds_px_lagged</span><span class="o">=</span><span class="n">max_conds_px_lagged</span><span class="p">,</span>
             <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;contemp_conds&#39;</span><span class="p">,</span>
             <span class="n">contemp_collider_rule</span><span class="o">=</span><span class="n">contemp_collider_rule</span><span class="p">,</span>
             <span class="n">conflict_resolution</span><span class="o">=</span><span class="n">conflict_resolution</span><span class="p">)</span>
@@ -2165,11 +2220,13 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">print_results</span><span class="p">(</span><span class="n">return_dict</span><span class="p">,</span> <span class="n">alpha_level</span><span class="o">=</span><span class="n">pc_alpha</span><span class="p">)</span>
         <span class="c1"># Return the dictionary</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="o">=</span> <span class="n">return_dict</span>
         <span class="k">return</span> <span class="n">return_dict</span></div>
 
 <div class="viewcode-block" id="PCMCI.run_pcalg"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.run_pcalg">[docs]</a>    <span class="k">def</span> <span class="nf">run_pcalg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selected_links</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pc_alpha</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">tau_min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                   <span class="n">tau_max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_conds_dim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_combinations</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                   <span class="n">lagged_parents</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_conds_py</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_conds_px</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="n">max_conds_px_lagged</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                   <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;standard&#39;</span><span class="p">,</span> <span class="n">contemp_collider_rule</span><span class="o">=</span><span class="s1">&#39;majority&#39;</span><span class="p">,</span>
                   <span class="n">conflict_resolution</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 
@@ -2220,6 +2277,9 @@
 <span class="sd">        max_conds_px : int, optional (default: None)</span>
 <span class="sd">            Maximum number of lagged conditions of X to use in MCI tests. If</span>
 <span class="sd">            None is passed, this number is unrestricted.</span>
+<span class="sd">        max_conds_px_lagged : int, optional (default: None)</span>
+<span class="sd">            Maximum number of lagged conditions of X when X is lagged in MCI </span>
+<span class="sd">            tests. If None is passed, this number is equal to max_conds_px.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -2279,6 +2339,7 @@
             <span class="n">max_combinations</span><span class="o">=</span><span class="n">max_combinations</span><span class="p">,</span>
             <span class="n">max_conds_py</span><span class="o">=</span><span class="n">max_conds_py</span><span class="p">,</span>
             <span class="n">max_conds_px</span><span class="o">=</span><span class="n">max_conds_px</span><span class="p">,</span>
+            <span class="n">max_conds_px_lagged</span><span class="o">=</span><span class="n">max_conds_px_lagged</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">skeleton_graph</span> <span class="o">=</span> <span class="n">skeleton_results</span><span class="p">[</span><span class="s1">&#39;graph&#39;</span><span class="p">]</span>
@@ -2293,6 +2354,7 @@
             <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
             <span class="n">max_conds_py</span><span class="o">=</span><span class="n">max_conds_py</span><span class="p">,</span>
             <span class="n">max_conds_px</span><span class="o">=</span><span class="n">max_conds_px</span><span class="p">,</span>
+            <span class="n">max_conds_px_lagged</span><span class="o">=</span><span class="n">max_conds_px_lagged</span><span class="p">,</span>
             <span class="n">conflict_resolution</span><span class="o">=</span><span class="n">conflict_resolution</span><span class="p">,</span>
             <span class="n">contemp_collider_rule</span><span class="o">=</span><span class="n">contemp_collider_rule</span><span class="p">,</span>
             <span class="p">)</span>
@@ -2331,10 +2393,81 @@
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;PCMCIplus algorithm finished.&quot;</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-----------------------------&quot;</span><span class="p">)</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">pc_results</span> <span class="o">=</span> <span class="n">pc_results</span>
         <span class="k">return</span> <span class="n">pc_results</span></div>
 
+<div class="viewcode-block" id="PCMCI.run_pcalg_non_timeseries_data"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.run_pcalg_non_timeseries_data">[docs]</a>    <span class="k">def</span> <span class="nf">run_pcalg_non_timeseries_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pc_alpha</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+                  <span class="n">max_conds_dim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_combinations</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                  <span class="n">contemp_collider_rule</span><span class="o">=</span><span class="s1">&#39;majority&#39;</span><span class="p">,</span>
+                  <span class="n">conflict_resolution</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;Runs PC algorithm for non-time series data.</span>
+
+<span class="sd">        Simply calls run_pcalg with tau_min = tau_max = 0.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pc_alpha : float, optional (default: 0.01)</span>
+<span class="sd">            Significance level.</span>
+<span class="sd">        contemp_collider_rule : {&#39;majority&#39;, &#39;conservative&#39;, &#39;none&#39;}</span>
+<span class="sd">            Rule for collider phase to use. See the paper for details. Only</span>
+<span class="sd">            &#39;majority&#39; and &#39;conservative&#39; lead to an order-independent</span>
+<span class="sd">            algorithm.</span>
+<span class="sd">        conflict_resolution : bool, optional (default: True)</span>
+<span class="sd">            Whether to mark conflicts in orientation rules. Only for True</span>
+<span class="sd">            this leads to an order-independent algorithm.</span>
+<span class="sd">        max_conds_dim : int, optional (default: None)</span>
+<span class="sd">            Maximum number of conditions to test. If None is passed, this number</span>
+<span class="sd">            is unrestricted.</span>
+<span class="sd">        max_combinations : int</span>
+<span class="sd">            Maximum number of combinations of conditions of current cardinality</span>
+<span class="sd">            to test.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        graph : array of shape [N, N, 1]</span>
+<span class="sd">            Resulting causal graph, see description above for interpretation.</span>
+<span class="sd">        val_matrix : array of shape [N, N, 1]</span>
+<span class="sd">            Estimated matrix of test statistic values regarding adjacencies.</span>
+<span class="sd">        p_matrix : array of shape [N, N, 1]</span>
+<span class="sd">            Estimated matrix of p-values regarding adjacencies.</span>
+<span class="sd">        sepset : dictionary</span>
+<span class="sd">            Separating sets. See paper for details.</span>
+<span class="sd">        ambiguous_triples : list</span>
+<span class="sd">            List of ambiguous triples, only relevant for &#39;majority&#39; and</span>
+<span class="sd">            &#39;conservative&#39; rules, see paper for details.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_pcalg</span><span class="p">(</span><span class="n">pc_alpha</span><span class="o">=</span><span class="n">pc_alpha</span><span class="p">,</span> <span class="n">tau_min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> 
+                    <span class="n">max_conds_dim</span><span class="o">=</span><span class="n">max_conds_dim</span><span class="p">,</span> <span class="n">max_combinations</span><span class="o">=</span><span class="n">max_combinations</span><span class="p">,</span>
+                  <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;standard&#39;</span><span class="p">,</span> <span class="n">contemp_collider_rule</span><span class="o">=</span><span class="n">contemp_collider_rule</span><span class="p">,</span>
+                  <span class="n">conflict_resolution</span><span class="o">=</span><span class="n">conflict_resolution</span><span class="p">)</span>
+
+        <span class="c1"># Remove tau-dimension</span>
+        <span class="c1"># results[&#39;graph&#39;] = results[&#39;graph&#39;].squeeze()</span>
+        <span class="c1"># results[&#39;val_matrix&#39;] = results[&#39;val_matrix&#39;].squeeze()</span>
+        <span class="c1"># results[&#39;p_matrix&#39;] = results[&#39;p_matrix&#39;].squeeze()</span>
+        <span class="n">old_sepsets</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;sepset&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">results</span><span class="p">[</span><span class="s1">&#39;sepset&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">old_sepset</span> <span class="ow">in</span> <span class="n">old_sepsets</span><span class="p">:</span>
+           <span class="n">new_sepset</span> <span class="o">=</span> <span class="p">(</span><span class="n">old_sepset</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">old_sepset</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+           <span class="n">conds</span> <span class="o">=</span> <span class="p">[</span><span class="n">cond</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">cond</span> <span class="ow">in</span> <span class="n">old_sepsets</span><span class="p">[</span><span class="n">old_sepset</span><span class="p">]]</span>
+
+           <span class="n">results</span><span class="p">[</span><span class="s1">&#39;sepset&#39;</span><span class="p">][</span><span class="n">new_sepset</span><span class="p">]</span> <span class="o">=</span> <span class="n">conds</span>
+
+        <span class="n">ambiguous_triples</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;ambiguous_triples&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">results</span><span class="p">[</span><span class="s1">&#39;ambiguous_triples&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">triple</span> <span class="ow">in</span> <span class="n">ambiguous_triples</span><span class="p">:</span>
+           <span class="n">new_triple</span> <span class="o">=</span> <span class="p">(</span><span class="n">triple</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">triple</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">triple</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+           <span class="n">results</span><span class="p">[</span><span class="s1">&#39;ambiguous_triples&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_triple</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">pc_results</span> <span class="o">=</span> <span class="n">results</span>
+        <span class="k">return</span> <span class="n">results</span></div>
+
+
     <span class="k">def</span> <span class="nf">_run_pcalg_test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">abstau</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">lagged_parents</span><span class="p">,</span> <span class="n">max_conds_py</span><span class="p">,</span>
-                        <span class="n">max_conds_px</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">):</span>
+                        <span class="n">max_conds_px</span><span class="p">,</span> <span class="n">max_conds_px_lagged</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;MCI conditional independence tests within PCMCIplus or PC algorithm.</span>
 
 <span class="sd">        Parameters</span>
@@ -2353,6 +2486,9 @@
 <span class="sd">            Max number of lagged parents for node j.</span>
 <span class="sd">        max_conds_px : int</span>
 <span class="sd">            Max number of lagged parents for lagged node i.</span>
+<span class="sd">        max_conds_px_lagged : int</span>
+<span class="sd">            Maximum number of lagged conditions of X when X is lagged in MCI </span>
+<span class="sd">            tests. If None is passed, this number is equal to max_conds_px.</span>
 <span class="sd">        tau_max : int</span>
 <span class="sd">            Maximum time lag.</span>
 
@@ -2370,7 +2506,14 @@
         <span class="k">if</span> <span class="n">lagged_parents</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">conds_y</span> <span class="o">=</span> <span class="n">lagged_parents</span><span class="p">[</span><span class="n">j</span><span class="p">][:</span><span class="n">max_conds_py</span><span class="p">]</span>
             <span class="c1"># Get the conditions for node i</span>
-            <span class="n">conds_x</span> <span class="o">=</span> <span class="n">lagged_parents</span><span class="p">[</span><span class="n">i</span><span class="p">][:</span><span class="n">max_conds_px</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">abstau</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">conds_x</span> <span class="o">=</span> <span class="n">lagged_parents</span><span class="p">[</span><span class="n">i</span><span class="p">][:</span><span class="n">max_conds_px</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">max_conds_px_lagged</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">conds_x</span> <span class="o">=</span> <span class="n">lagged_parents</span><span class="p">[</span><span class="n">i</span><span class="p">][:</span><span class="n">max_conds_px</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">conds_x</span> <span class="o">=</span> <span class="n">lagged_parents</span><span class="p">[</span><span class="n">i</span><span class="p">][:</span><span class="n">max_conds_px_lagged</span><span class="p">]</span>
+
         <span class="k">else</span><span class="p">:</span>
             <span class="n">conds_y</span> <span class="o">=</span> <span class="n">conds_x</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="c1"># Shift the conditions for X by tau</span>
@@ -2383,7 +2526,9 @@
         <span class="n">Z</span> <span class="o">+=</span> <span class="p">[</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">conds_x_lagged</span> <span class="k">if</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">Z</span><span class="p">]</span>
 
         <span class="n">val</span><span class="p">,</span> <span class="n">pval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span><span class="o">.</span><span class="n">run_test</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="n">abstau</span><span class="p">)],</span> <span class="n">Y</span><span class="o">=</span><span class="p">[(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">)],</span>
-                                                <span class="n">Z</span><span class="o">=</span><span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">)</span>
+                                                <span class="n">Z</span><span class="o">=</span><span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
+                                                <span class="c1"># verbosity=self.verbosity</span>
+                                                <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">val</span><span class="p">,</span> <span class="n">pval</span><span class="p">,</span> <span class="n">Z</span>
 
@@ -2402,7 +2547,7 @@
         <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">),</span> <span class="n">k</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="n">triple</span>
         <span class="n">link_marker</span> <span class="o">=</span> <span class="p">{</span><span class="kc">True</span><span class="p">:</span><span class="s2">&quot;o--o&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">:</span><span class="s2">&quot;--&gt;&quot;</span><span class="p">}</span>
 
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">    Triple (</span><span class="si">%s</span><span class="s2"> </span><span class="si">%d</span><span class="s2">) </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> o--o </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">    Triple (</span><span class="si">%s</span><span class="s2"> </span><span class="si">% d</span><span class="s2">) </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> o--o </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">tau</span><span class="p">,</span> <span class="n">link_marker</span><span class="p">[</span><span class="n">tau</span><span class="o">==</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">k</span><span class="p">],</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_triples</span><span class="p">))</span>
 
@@ -2449,6 +2594,7 @@
                        <span class="n">max_combinations</span><span class="p">,</span>
                        <span class="n">max_conds_py</span><span class="p">,</span>
                        <span class="n">max_conds_px</span><span class="p">,</span>
+                       <span class="n">max_conds_px_lagged</span><span class="p">,</span>
                        <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Implements the skeleton discovery step of the PC algorithm for</span>
 <span class="sd">        time series.</span>
@@ -2484,6 +2630,9 @@
 <span class="sd">        max_conds_px : int, optional (default: None)</span>
 <span class="sd">            Maximum number of lagged conditions of X to use in MCI tests. If</span>
 <span class="sd">            None is passed, this number is unrestricted.</span>
+<span class="sd">        max_conds_px_lagged : int, optional (default: None)</span>
+<span class="sd">            Maximum number of lagged conditions of X when X is lagged in MCI </span>
+<span class="sd">            tests. If None is passed, this number is equal to max_conds_px.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -2569,9 +2718,10 @@
                             <span class="o">%</span> <span class="n">n_conditions</span><span class="p">)</span>
                         <span class="k">if</span> <span class="n">lagged_parents</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                             <span class="bp">self</span><span class="o">.</span><span class="n">_print_pcmciplus_conditions</span><span class="p">(</span><span class="n">lagged_parents</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span>
-                                                             <span class="n">j</span><span class="p">,</span> <span class="n">abstau</span><span class="p">,</span>
-                                                             <span class="n">max_conds_py</span><span class="p">,</span>
-                                                             <span class="n">max_conds_px</span><span class="p">)</span>
+                                                         <span class="n">j</span><span class="p">,</span> <span class="n">abstau</span><span class="p">,</span>
+                                                         <span class="n">max_conds_py</span><span class="p">,</span>
+                                                         <span class="n">max_conds_px</span><span class="p">,</span>
+                                                         <span class="n">max_conds_px_lagged</span><span class="p">)</span>
                     <span class="n">nonsig</span> <span class="o">=</span> <span class="kc">False</span>
                     <span class="c1"># Iterate through condition sets</span>
                     <span class="k">for</span> <span class="n">q</span><span class="p">,</span> <span class="n">S</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">conditions</span><span class="p">):</span>
@@ -2581,7 +2731,7 @@
                         <span class="c1"># Run MCI test</span>
                         <span class="n">val</span><span class="p">,</span> <span class="n">pval</span><span class="p">,</span> <span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_pcalg_test</span><span class="p">(</span>
                             <span class="n">i</span><span class="p">,</span> <span class="n">abstau</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">lagged_parents</span><span class="p">,</span> <span class="n">max_conds_py</span><span class="p">,</span>
-                            <span class="n">max_conds_px</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">)</span>
+                            <span class="n">max_conds_px</span><span class="p">,</span> <span class="n">max_conds_px_lagged</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">)</span>
 
                         <span class="c1"># Store minimum test statistic value for sorting adjt</span>
                         <span class="c1"># (only internally used)</span>
@@ -2791,6 +2941,7 @@
                         <span class="n">tau_max</span><span class="p">,</span>
                         <span class="n">max_conds_py</span><span class="p">,</span>
                         <span class="n">max_conds_px</span><span class="p">,</span>
+                        <span class="n">max_conds_px_lagged</span><span class="p">,</span>
                         <span class="n">contemp_collider_rule</span><span class="p">,</span>
                         <span class="n">conflict_resolution</span><span class="p">,</span>
                         <span class="p">):</span>
@@ -2822,6 +2973,9 @@
 <span class="sd">        max_conds_px : int, optional (default: None)</span>
 <span class="sd">            Maximum number of lagged conditions of X to use in MCI tests. If</span>
 <span class="sd">            None is passed, this number is unrestricted.</span>
+<span class="sd">        max_conds_px_lagged : int, optional (default: None)</span>
+<span class="sd">            Maximum number of lagged conditions of X when X is lagged in MCI </span>
+<span class="sd">            tests. If None is passed, this number is equal to max_conds_px.</span>
 <span class="sd">        contemp_collider_rule : {&#39;majority&#39;, &#39;conservative&#39;, &#39;none&#39;}</span>
 <span class="sd">            Rule for collider phase to use. See the paper for details. Only</span>
 <span class="sd">            &#39;majority&#39; and &#39;conservative&#39; lead to an order-independent</span>
@@ -2913,14 +3067,15 @@
                         <span class="s2">&quot;neighbors: &quot;</span> <span class="o">%</span> <span class="n">n_neighbors</span><span class="p">)</span>
                     <span class="k">if</span> <span class="n">lagged_parents</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">_print_pcmciplus_conditions</span><span class="p">(</span><span class="n">lagged_parents</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span>
-                                         <span class="nb">abs</span><span class="p">(</span><span class="n">tau</span><span class="p">),</span> <span class="n">max_conds_py</span><span class="p">,</span> <span class="n">max_conds_px</span><span class="p">)</span>
+                                         <span class="nb">abs</span><span class="p">(</span><span class="n">tau</span><span class="p">),</span> <span class="n">max_conds_py</span><span class="p">,</span> <span class="n">max_conds_px</span><span class="p">,</span>
+                                         <span class="n">max_conds_px_lagged</span><span class="p">)</span>
 
                 <span class="c1"># Test which neighbor subsets separate i and j</span>
                 <span class="n">neighbor_sepsets</span> <span class="o">=</span> <span class="p">[]</span>
                 <span class="k">for</span> <span class="n">iss</span><span class="p">,</span> <span class="n">S</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">neighbor_subsets</span><span class="p">):</span>
                     <span class="n">val</span><span class="p">,</span> <span class="n">pval</span><span class="p">,</span> <span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_pcalg_test</span><span class="p">(</span>
                         <span class="n">i</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">tau</span><span class="p">),</span> <span class="n">j</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">lagged_parents</span><span class="p">,</span> <span class="n">max_conds_py</span><span class="p">,</span>
-                        <span class="n">max_conds_px</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">)</span>
+                        <span class="n">max_conds_px</span><span class="p">,</span> <span class="n">max_conds_px_lagged</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">)</span>
 
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">_print_cond_info</span><span class="p">(</span><span class="n">Z</span><span class="o">=</span><span class="n">S</span><span class="p">,</span> <span class="n">comb_index</span><span class="o">=</span><span class="n">iss</span><span class="p">,</span> <span class="n">pval</span><span class="o">=</span><span class="n">pval</span><span class="p">,</span>
@@ -3037,7 +3192,7 @@
             <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">),</span> <span class="n">k</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="n">itaukj</span>
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">    Collider (</span><span class="si">%s</span><span class="s2"> </span><span class="si">%d</span><span class="s2">) </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> o--o </span><span class="si">%s</span><span class="s2">:&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">    Collider (</span><span class="si">%s</span><span class="s2"> </span><span class="si">% d</span><span class="s2">) </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> o--o </span><span class="si">%s</span><span class="s2">:&quot;</span> <span class="o">%</span> <span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">tau</span><span class="p">,</span> <span class="n">link_marker</span><span class="p">[</span>
                         <span class="n">tau</span><span class="o">==</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">k</span><span class="p">],</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">]))</span>
@@ -3244,7 +3399,7 @@
                             <span class="n">k</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">oriented_links</span><span class="p">:</span>
                         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
                             <span class="nb">print</span><span class="p">(</span>
-                                <span class="s2">&quot;    R1: Found (</span><span class="si">%s</span><span class="s2"> </span><span class="si">%d</span><span class="s2">) --&gt; </span><span class="si">%s</span><span class="s2"> o--o </span><span class="si">%s</span><span class="s2">, &quot;</span>
+                                <span class="s2">&quot;    R1: Found (</span><span class="si">%s</span><span class="s2"> </span><span class="si">% d</span><span class="s2">) --&gt; </span><span class="si">%s</span><span class="s2"> o--o </span><span class="si">%s</span><span class="s2">, &quot;</span>
                                 <span class="s2">&quot;orient as </span><span class="si">%s</span><span class="s2"> --&gt; </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
                                     <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">tau</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">k</span><span class="p">],</span>
                                     <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">],</span>
@@ -3372,7 +3527,266 @@
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Updated adjacencies:&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_print_parents</span><span class="p">(</span><span class="n">all_parents</span><span class="o">=</span><span class="n">adjt</span><span class="p">,</span> <span class="n">val_min</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pval_max</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">graph_new</span></div>
+        <span class="k">return</span> <span class="n">graph_new</span>
+
+    <span class="k">def</span> <span class="nf">_get_simplicial_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">circle_cpdag</span><span class="p">,</span> <span class="n">variable_order</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Find simplicial nodes in circle component CPDAG.</span>
+
+<span class="sd">        A vertex V is simplicial if all vertices adjacent to V are also adjacent</span>
+<span class="sd">        to each other (form a clique).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        circle_cpdag : array of shape (N, N, tau_max+1)</span>
+<span class="sd">            Circle component of PCMCIplus graph.</span>
+<span class="sd">        variable_order : list of length N</span>
+<span class="sd">            Order of variables in which to search for simplicial nodes.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        (j, adj_j) or None</span>
+<span class="sd">            First found simplicial node and its adjacencies.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">variable_order</span><span class="p">:</span>
+            <span class="n">adj_j</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">circle_cpdag</span><span class="p">[:,</span><span class="n">j</span><span class="p">,</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+            <span class="c1"># Make sure the node has any adjacencies</span>
+            <span class="n">all_adjacent</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">adj_j</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+
+            <span class="c1"># If it has just one adjacency, it&#39;s also simplicial</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">adj_j</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">adj_j</span><span class="p">)</span>  
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="p">(</span><span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">)</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="n">adj_j</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">circle_cpdag</span><span class="p">[</span><span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> 
+                        <span class="n">all_adjacent</span> <span class="o">=</span> <span class="kc">False</span>
+                        <span class="k">break</span>
+
+                <span class="k">if</span> <span class="n">all_adjacent</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">adj_j</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_get_dag_from_cpdag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cpdag_graph</span><span class="p">,</span> <span class="n">variable_order</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Yields one member of the Markov equivalence class of a CPDAG.</span>
+
+<span class="sd">        Removes conflicting edges.</span>
+
+<span class="sd">        Used in PCMCI to run model selection on the output of PCMCIplus in order</span>
+<span class="sd">        to, e.g., optimize pc_alpha.</span>
+
+<span class="sd">        Based on Zhang 2008, Theorem 2 (simplified for CPDAGs): Let H be the</span>
+<span class="sd">        graph resulting from the following procedure applied to a CPDAG:</span>
+<span class="sd"> </span>
+<span class="sd">        Consider the circle component of the CPDAG (sub graph consisting of all</span>
+<span class="sd">        (o-o edges, i.e., only for contemporaneous links), CPDAG^C and turn into</span>
+<span class="sd">        a DAG with no unshielded colliders. Then (H is a member of the Markov</span>
+<span class="sd">        equivalence class of the CPDAG.</span>
+
+<span class="sd">        We use the approach mentioned in Colombo and Maathuis (2015) Lemma 7.6:</span>
+<span class="sd">        First note that CPDAG^C is chordal, that is, any cycle of length four or</span>
+<span class="sd">        more has a chord, which is an edge joining two vertices that are not</span>
+<span class="sd">        adjacent in the cycle; see the proof of Lemma 4.1 of Zhang (2008b). Any</span>
+<span class="sd">        chordal graph with more than one vertex has two simplicial vertices,</span>
+<span class="sd">        that is, vertices V such that all vertices adjacent to V are also</span>
+<span class="sd">        adjacent to each other. We choose such a vertex V1 and orient any edges</span>
+<span class="sd">        incident to V1 into V1. Since V1 is simplicial, this does not create</span>
+<span class="sd">        unshielded colliders. We then remove V1 and these edges from the graph.</span>
+<span class="sd">        The resulting graph is again chordal and therefore again has at least</span>
+<span class="sd">        two simplicial vertices. Choose such a vertex V2 , and orient any edges</span>
+<span class="sd">        incident to V2 into V2. We continue this procedure until all edges are</span>
+<span class="sd">        oriented. The resulting ordering is called a perfect elimination scheme</span>
+<span class="sd">        for CPDAG^C. Then the combined graph with the directed edges already</span>
+<span class="sd">        contained in the CPDAG is returned.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cpdag_graph : array of shape (N, N, tau_max+1)</span>
+<span class="sd">            Result of PCMCIplus, a CPDAG.</span>
+<span class="sd">        variable_order : list of length N</span>
+<span class="sd">            Order of variables in which to search for simplicial nodes.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dag : array of shape (N, N, tau_max+1)</span>
+<span class="sd">            One member of the Markov equivalence class of the CPDAG.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># TODO: Check whether CPDAG is chordal</span>
+
+        <span class="c1"># Initialize resulting MAG</span>
+        <span class="n">dag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">cpdag_graph</span><span class="p">)</span>
+
+        <span class="c1"># Turn circle component CPDAG^C into a DAG with no unshielded colliders.</span>
+        <span class="n">circle_cpdag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">cpdag_graph</span><span class="p">)</span>
+        <span class="c1"># All lagged links are directed by time, remove them here</span>
+        <span class="n">circle_cpdag</span><span class="p">[:,:,</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1"># Also remove conflicting links</span>
+        <span class="n">circle_cpdag</span><span class="p">[</span><span class="n">circle_cpdag</span><span class="o">==</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1"># Find undirected links</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">tau</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">circle_cpdag</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">circle_cpdag</span><span class="p">[</span><span class="n">j</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">circle_cpdag</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># Iterate through simplicial nodes</span>
+        <span class="n">simplicial_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_simplicial_node</span><span class="p">(</span><span class="n">circle_cpdag</span><span class="p">,</span>
+                                                    <span class="n">variable_order</span><span class="p">)</span>
+        <span class="k">while</span> <span class="n">simplicial_node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+            <span class="c1"># Choose such a vertex V1 and orient any edges incident to V1 into</span>
+            <span class="c1"># V1 in the MAG And remove V1 and these edges from the circle</span>
+            <span class="c1"># component PAG</span>
+            <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">adj_j</span><span class="p">)</span> <span class="o">=</span> <span class="n">simplicial_node</span>
+            <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">adj_j</span><span class="p">:</span>
+                <span class="n">dag</span><span class="p">[</span><span class="n">var</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">dag</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">circle_cpdag</span><span class="p">[</span><span class="n">var</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">circle_cpdag</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span> 
+
+            <span class="c1"># Iterate</span>
+            <span class="n">simplicial_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_simplicial_node</span><span class="p">(</span><span class="n">circle_cpdag</span><span class="p">,</span>
+                                                    <span class="n">variable_order</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">dag</span>
+
+    <span class="k">def</span> <span class="nf">_optimize_pcmciplus_alpha</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                      <span class="n">selected_links</span><span class="p">,</span>
+                      <span class="n">tau_min</span><span class="p">,</span>
+                      <span class="n">tau_max</span><span class="p">,</span>
+                      <span class="n">pc_alpha</span><span class="p">,</span>
+                      <span class="n">contemp_collider_rule</span><span class="p">,</span>
+                      <span class="n">conflict_resolution</span><span class="p">,</span>
+                      <span class="n">reset_lagged_links</span><span class="p">,</span>
+                      <span class="n">max_conds_dim</span><span class="p">,</span>
+                      <span class="n">max_conds_py</span><span class="p">,</span>
+                      <span class="n">max_conds_px</span><span class="p">,</span>
+                      <span class="n">max_conds_px_lagged</span><span class="p">,</span>
+                      <span class="n">fdr_method</span><span class="p">,</span>
+                      <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Optimizes pc_alpha in PCMCIplus.</span>
+
+<span class="sd">        If a list or None is passed for ``pc_alpha``, the significance level is</span>
+<span class="sd">        optimized for every graph across the given ``pc_alpha`` values using the</span>
+<span class="sd">        score computed in ``cond_ind_test.get_model_selection_criterion()``</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        See those for run_pcmciplus()</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Results for run_pcmciplus() for the optimal pc_alpha.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">pc_alpha</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">pc_alpha_list</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.001</span><span class="p">,</span> <span class="mf">0.005</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.025</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pc_alpha_list</span> <span class="o">=</span> <span class="n">pc_alpha</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">##</span><span class="se">\n</span><span class="s2">## Optimizing pc_alpha over &quot;</span> <span class="o">+</span> 
+                  <span class="s2">&quot;pc_alpha_list = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">pc_alpha_list</span><span class="p">)</span> <span class="o">+</span>
+                  <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">##&quot;</span><span class="p">)</span>
+
+        <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">score</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">pc_alpha_list</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">iscore</span><span class="p">,</span> <span class="n">pc_alpha_here</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pc_alpha_list</span><span class="p">):</span>
+            <span class="c1"># Print statement about the pc_alpha being tested</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">## pc_alpha = </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2">):&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">pc_alpha_here</span><span class="p">,</span>
+                                                      <span class="n">iscore</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                                                      <span class="n">score</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+            <span class="c1"># Get the results for this alpha value</span>
+            <span class="n">results</span><span class="p">[</span><span class="n">pc_alpha_here</span><span class="p">]</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">run_pcmciplus</span><span class="p">(</span><span class="n">selected_links</span><span class="o">=</span><span class="n">selected_links</span><span class="p">,</span>
+                                    <span class="n">tau_min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span>
+                                    <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
+                                    <span class="n">pc_alpha</span><span class="o">=</span><span class="n">pc_alpha_here</span><span class="p">,</span>
+                                    <span class="n">contemp_collider_rule</span><span class="o">=</span><span class="n">contemp_collider_rule</span><span class="p">,</span>
+                                    <span class="n">conflict_resolution</span><span class="o">=</span><span class="n">conflict_resolution</span><span class="p">,</span>
+                                    <span class="n">reset_lagged_links</span><span class="o">=</span><span class="n">reset_lagged_links</span><span class="p">,</span>
+                                    <span class="n">max_conds_dim</span><span class="o">=</span><span class="n">max_conds_dim</span><span class="p">,</span>
+                                    <span class="n">max_conds_py</span><span class="o">=</span><span class="n">max_conds_py</span><span class="p">,</span>
+                                    <span class="n">max_conds_px</span><span class="o">=</span><span class="n">max_conds_px</span><span class="p">,</span>
+                                    <span class="n">max_conds_px_lagged</span><span class="o">=</span><span class="n">max_conds_px_lagged</span><span class="p">,</span>
+                                    <span class="n">fdr_method</span><span class="o">=</span><span class="n">fdr_method</span><span class="p">)</span>
+
+            <span class="c1"># Get one member of the Markov equivalence class of the result</span>
+            <span class="c1"># of PCMCIplus, which is a CPDAG</span>
+
+            <span class="c1"># First create order that is based on some feature of the variables</span>
+            <span class="c1"># to avoid order-dependence of DAG, i.e., it should not matter</span>
+            <span class="c1"># in which order the variables appear in dataframe</span>
+            <span class="c1"># Here we use the sum of absolute val_matrix values incident at j</span>
+            <span class="n">val_matrix</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="n">pc_alpha_here</span><span class="p">][</span><span class="s1">&#39;val_matrix&#39;</span><span class="p">]</span>
+            <span class="n">variable_order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span>
+                                <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">val_matrix</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">)))[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="n">dag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dag_from_cpdag</span><span class="p">(</span>
+                            <span class="n">cpdag_graph</span><span class="o">=</span><span class="n">results</span><span class="p">[</span><span class="n">pc_alpha_here</span><span class="p">][</span><span class="s1">&#39;graph&#39;</span><span class="p">],</span>
+                            <span class="n">variable_order</span><span class="o">=</span><span class="n">variable_order</span><span class="p">)</span>
+            <span class="n">parents</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_significant_links</span><span class="p">(</span>
+                    <span class="n">pq_matrix</span><span class="o">=</span><span class="n">results</span><span class="p">[</span><span class="n">pc_alpha_here</span><span class="p">][</span><span class="s1">&#39;p_matrix&#39;</span><span class="p">],</span>
+                    <span class="n">val_matrix</span><span class="o">=</span><span class="n">results</span><span class="p">[</span><span class="n">pc_alpha_here</span><span class="p">][</span><span class="s1">&#39;val_matrix&#39;</span><span class="p">],</span> 
+                    <span class="n">alpha_level</span><span class="o">=</span><span class="n">pc_alpha_here</span><span class="p">,</span>
+                    <span class="n">include_lagzero_links</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="s1">&#39;link_dict&#39;</span><span class="p">]</span>
+
+            <span class="c1"># Compute the best average score when the model selection</span>
+            <span class="c1"># is applied to all N variables</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+                <span class="n">score</span><span class="p">[</span><span class="n">iscore</span><span class="p">]</span> <span class="o">+=</span> \
+                    <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span><span class="o">.</span><span class="n">get_model_selection_criterion</span><span class="p">(</span>
+                        <span class="n">j</span><span class="p">,</span> <span class="n">parents</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">tau_max</span><span class="p">)</span>
+            <span class="n">score</span><span class="p">[</span><span class="n">iscore</span><span class="p">]</span> <span class="o">/=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+
+        <span class="c1"># Record the optimal alpha value</span>
+        <span class="n">optimal_alpha</span> <span class="o">=</span> <span class="n">pc_alpha_list</span><span class="p">[</span><span class="n">score</span><span class="o">.</span><span class="n">argmin</span><span class="p">()]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">##</span><span class="se">\n</span><span class="s2">## Returning results for optimal &quot;</span> <span class="o">+</span>
+                  <span class="s2">&quot;pc_alpha = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">optimal_alpha</span> <span class="o">+</span> 
+                  <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">##&quot;</span><span class="o">+</span>
+                  <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">## Scores for individual pc_alpha values:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">iscore</span><span class="p">,</span> <span class="n">pc_alpha</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pc_alpha_list</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   pc_alpha = </span><span class="si">%7s</span><span class="s2"> yields score = </span><span class="si">%.5f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">pc_alpha</span><span class="p">,</span> 
+                                                                <span class="n">score</span><span class="p">[</span><span class="n">iscore</span><span class="p">]))</span>
+
+        <span class="n">optimal_results</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="n">optimal_alpha</span><span class="p">]</span>
+        <span class="n">optimal_results</span><span class="p">[</span><span class="s1">&#39;optimal_alpha&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">optimal_alpha</span>
+        <span class="k">return</span> <span class="n">optimal_results</span>
+
+<div class="viewcode-block" id="PCMCI.convert_to_string_graph"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.convert_to_string_graph">[docs]</a>    <span class="k">def</span> <span class="nf">convert_to_string_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_bool</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Converts the 0,1-based graph returned by PCMCI to a string array</span>
+<span class="sd">        with links &#39;--&gt;&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        graph_bool : array</span>
+<span class="sd">            0,1-based graph array output by PCMCI.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        graph : array</span>
+<span class="sd">            graph as string array with links &#39;--&gt;&#39;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">graph</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">graph_bool</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;&lt;U3&#39;</span><span class="p">)</span>
+        <span class="n">graph</span><span class="p">[:]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="c1"># Lagged links</span>
+        <span class="n">graph</span><span class="p">[:,:,</span><span class="mi">1</span><span class="p">:][</span><span class="n">graph_bool</span><span class="p">[:,:,</span><span class="mi">1</span><span class="p">:]</span><span class="o">==</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;--&gt;&quot;</span>
+        <span class="c1"># Unoriented contemporaneous links</span>
+        <span class="n">graph</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">][</span><span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">graph_bool</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">,</span> 
+                                    <span class="n">graph_bool</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="o">==</span><span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="s2">&quot;o-o&quot;</span>
+        <span class="c1"># Conflicting contemporaneous links</span>
+        <span class="n">graph</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">][</span><span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">graph_bool</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="mi">2</span><span class="p">,</span> 
+                                    <span class="n">graph_bool</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="o">==</span><span class="mi">2</span><span class="p">)]</span> <span class="o">=</span> <span class="s2">&quot;x-x&quot;</span>
+        <span class="c1"># Directed contemporaneous links</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">graph_bool</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">,</span> <span class="n">graph_bool</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="o">==</span><span class="mi">0</span><span class="p">))):</span>
+            <span class="n">graph</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;--&gt;&quot;</span>
+            <span class="n">graph</span><span class="p">[</span><span class="n">j</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&lt;--&quot;</span>
+
+        <span class="k">return</span> <span class="n">graph</span></div></div>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
@@ -3385,48 +3799,108 @@
 
     <span class="c1">## Generate some time series from a structural causal process</span>
     <span class="k">def</span> <span class="nf">lin_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span>
-
-
     <span class="k">def</span> <span class="nf">nonlin_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mf">5.</span> <span class="o">*</span> <span class="n">x</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="mf">20.</span><span class="p">))</span>
 
+    <span class="n">auto_coeff</span> <span class="o">=</span> <span class="mf">0.95</span>
+    <span class="n">coeff</span> <span class="o">=</span> <span class="mf">0.4</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="mi">500</span>
 
-    <span class="n">links</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">[((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.9</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
-             <span class="mi">1</span><span class="p">:</span> <span class="p">[((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
-             <span class="mi">2</span><span class="p">:</span> <span class="p">[((</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.7</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mf">0.6</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
-             <span class="mi">3</span><span class="p">:</span> <span class="p">[((</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.7</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
+    <span class="c1"># links ={0: [((0, -1), auto_coeff, lin_f),</span>
+    <span class="c1">#         ((1, -1), coeff, lin_f)</span>
+    <span class="c1">#         ],</span>
+    <span class="c1">#     1: [((1, -1), auto_coeff, lin_f), </span>
+    <span class="c1">#         ],</span>
+    <span class="c1">#     2: [((2, -1), auto_coeff, lin_f), </span>
+    <span class="c1">#         ((3, 0), -coeff, lin_f), </span>
+    <span class="c1">#         ],</span>
+    <span class="c1">#     3: [((3, -1), auto_coeff, lin_f), </span>
+    <span class="c1">#         ((1, -2), coeff, lin_f), </span>
+    <span class="c1">#         ],</span>
+    <span class="c1">#     4: [((4, -1), auto_coeff, lin_f), </span>
+    <span class="c1">#         ((3, 0), coeff, lin_f), </span>
+    <span class="c1">#         ],   </span>
+    <span class="c1">#     5: [((5, -1), 0.5*auto_coeff, lin_f), </span>
+    <span class="c1">#         ((6, 0), coeff, lin_f), </span>
+    <span class="c1">#         ],  </span>
+    <span class="c1">#     6: [((6, -1), 0.5*auto_coeff, lin_f), </span>
+    <span class="c1">#         ((5, -1), -coeff, lin_f), </span>
+    <span class="c1">#         ],  </span>
+    <span class="c1">#     7: [((7, -1), auto_coeff, lin_f), </span>
+    <span class="c1">#         ((8, 0), -coeff, lin_f), </span>
+    <span class="c1">#         ],  </span>
+    <span class="c1">#     8: [],                                     </span>
+    <span class="c1">#     }</span>
+
+    <span class="c1"># links = {0: [((0, -1), 0.8, lin_f), ((1, -1), 0.6, lin_f)],</span>
+    <span class="c1">#          1: [((1, -1), 0., lin_f)],</span>
+    <span class="c1">#          2: [((2, -1), 0., lin_f), ((1, 0), 0.6, lin_f)],</span>
+    <span class="c1">#          3: [((3, -1), 0., lin_f), ((2, 0), -0.5, lin_f)],</span>
+    <span class="c1">#          }</span>
+    <span class="n">links</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">[((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mf">0.6</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
+             <span class="mi">1</span><span class="p">:</span> <span class="p">[((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.6</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
+             <span class="mi">2</span><span class="p">:</span> <span class="p">[((</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)]</span>
              <span class="p">}</span>
-    <span class="c1"># links = {0: [((0, -1), 0.8, lin_f)],</span>
-    <span class="c1">#          1: [((1, -1), 0.8, lin_f), ((0, -1), 0.5, lin_f)],</span>
-    <span class="c1">#          2: [((2, -1), 0.8, lin_f), ((1, -2), -0.6, lin_f)]}</span>
+
 
     <span class="n">noises</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">links</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
     <span class="n">data</span><span class="p">,</span> <span class="n">nonstat</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">structural_causal_process</span><span class="p">(</span><span class="n">links</span><span class="p">,</span>
-                                                 <span class="n">T</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">noises</span><span class="o">=</span><span class="n">noises</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+                                <span class="n">T</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">noises</span><span class="o">=</span><span class="n">noises</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+
+    <span class="c1"># data[10, 1] = 999.</span>
+    <span class="c1"># data_mask = data&gt;0.4</span>
 
     <span class="n">verbosity</span> <span class="o">=</span> <span class="mi">2</span>
-    <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">)</span>
+    <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="c1">#, missing_flag=999., mask=data_mask,)</span>
     <span class="n">pcmci</span> <span class="o">=</span> <span class="n">PCMCI</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span>
-                  <span class="c1"># cond_ind_test= CMIknn(verbosity=1),</span>
-                  <span class="n">cond_ind_test</span><span class="o">=</span><span class="n">ParCorr</span><span class="p">(</span>
-                      <span class="n">recycle_residuals</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                      <span class="c1"># confidence=&#39;analytic&#39;,</span>
-                      <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+                  <span class="n">cond_ind_test</span><span class="o">=</span><span class="n">ParCorr</span><span class="p">(</span><span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
                   <span class="n">verbosity</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
                   <span class="p">)</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">pcmci</span><span class="o">.</span><span class="n">run_mci</span><span class="p">(</span>
+                  <span class="n">selected_links</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="n">tau_min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                  <span class="n">tau_max</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                  <span class="p">)</span>
+    <span class="nb">print</span> <span class="p">(</span><span class="n">pcmci</span><span class="o">.</span><span class="n">results</span><span class="p">)</span>
 
-    <span class="n">selected_links</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)],</span>
-                      <span class="mi">1</span><span class="p">:</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)],</span>
-                      <span class="mi">2</span><span class="p">:</span> <span class="p">[(</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)],</span>
-                      <span class="mi">3</span><span class="p">:</span> <span class="p">[(</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)],</span>
-                      <span class="p">}</span>
 
-    <span class="n">results</span> <span class="o">=</span> <span class="n">pcmci</span><span class="o">.</span><span class="n">run_pc_stable</span><span class="p">(</span>
-                <span class="n">selected_links</span><span class="o">=</span><span class="n">selected_links</span><span class="p">,</span>
-                <span class="n">tau_min</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                <span class="n">tau_max</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-                <span class="n">pc_alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
-                <span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+    <span class="c1"># lagmat.savefig(&quot;/home/rung_ja/work/sandbox/lags_final.pdf&quot;)</span>
+
+
+    <span class="c1"># print(results[&#39;graph&#39;])</span>
+
+    <span class="c1"># link_matrix = results[&#39;most_frequent_links&#39;]</span>
+    <span class="c1"># link_width = results[&#39;link_frequency&#39;]</span>
+    <span class="c1"># print(link_matrix.shape, val_matrix.shape, link_width.shape, conf_matrix.shape)</span>
+    <span class="c1"># print(link_matrix[:,:,0])</span>
+    <span class="c1"># print(link_width[:,:,0])</span>
+
+    <span class="c1"># tp.plot_time_series_graph(</span>
+    <span class="c1">#     val_matrix=val_matrix,</span>
+    <span class="c1">#     link_matrix=link_matrix,</span>
+    <span class="c1">#     link_width = link_width,</span>
+    <span class="c1">#     link_colorbar_label=&#39;MCI&#39;,</span>
+    <span class="c1">#     cmap_edges=&#39;OrRd&#39;,</span>
+    <span class="c1">#     save_name=&quot;/home/rung_ja/work/sandbox/tsg_final.pdf&quot;,</span>
+    <span class="c1">#     )</span>
+
+
+    <span class="c1"># results = pcmci.run_pcalg_non_timeseries_data(pc_alpha=0.01,</span>
+    <span class="c1">#               max_conds_dim=None, max_combinations=None, </span>
+    <span class="c1">#               contemp_collider_rule=&#39;conservative&#39;,</span>
+    <span class="c1">#               conflict_resolution=True)</span>
+    <span class="c1"># selected_links = {0: [(0, -1)],</span>
+    <span class="c1">#                   1: [(1, -1), (0, -1)],</span>
+    <span class="c1">#                   2: [(2, -1), (1, 0)],</span>
+    <span class="c1">#                   3: [(3, -1), (2, 0)],</span>
+    <span class="c1">#                   }</span>
+
+    <span class="c1"># results = pcmci.run_pc_stable(</span>
+    <span class="c1">#             selected_links=None,</span>
+    <span class="c1">#             tau_min=1,</span>
+    <span class="c1">#             tau_max=1,</span>
+    <span class="c1">#             pc_alpha=0.001,</span>
+    <span class="c1">#             )</span>
+    <span class="c1"># print(results)</span>
 
     <span class="c1"># results = pcmci.run_pcmci(</span>
     <span class="c1">#               selected_links=None,</span>
@@ -3457,17 +3931,37 @@
     <span class="c1"># results = pcmci.run_pcmciplus(</span>
     <span class="c1">#     selected_links=None,</span>
     <span class="c1">#     tau_min=0,</span>
-    <span class="c1">#     tau_max=2,</span>
-    <span class="c1">#     pc_alpha=0.01,</span>
+    <span class="c1">#     tau_max=3,</span>
+    <span class="c1">#     pc_alpha=None,</span>
     <span class="c1">#     contemp_collider_rule=&#39;majority&#39;,</span>
     <span class="c1">#     conflict_resolution=True,</span>
     <span class="c1">#     reset_lagged_links=False,</span>
     <span class="c1">#     max_conds_dim=None,</span>
     <span class="c1">#     max_conds_py=None,</span>
     <span class="c1">#     max_conds_px=None,</span>
+    <span class="c1">#     max_conds_px_lagged=0,</span>
     <span class="c1">#     fdr_method=&#39;none&#39;</span>
     <span class="c1"># )</span>
     <span class="c1"># pcmci.print_results(results, alpha_level=0.01)</span>
+
+    <span class="c1"># graph_bool = results[&#39;graph&#39;]</span>
+    <span class="c1"># print(graph_bool[:,:,0])</span>
+    <span class="c1"># print(graph_bool[:,:,1])</span>
+
+    <span class="c1"># graph = np.zeros(graph_bool.shape, dtype=&#39;&lt;U3&#39;)</span>
+    <span class="c1"># graph[:] = &quot;&quot;</span>
+    <span class="c1"># graph[:,:,1:][graph_bool[:,:,1:]==1] = &quot;--&gt;&quot;</span>
+    <span class="c1"># graph[:,:,0][np.logical_and(graph_bool[:,:,0]==1, graph_bool[:,:,0].T==1)] = &quot;o-o&quot;</span>
+    <span class="c1"># for (i,j) in zip(*np.where(np.logical_and(graph_bool[:,:,0]==1, graph_bool[:,:,0].T==0))):</span>
+    <span class="c1">#     graph[i,j,0] = &quot;--&gt;&quot;</span>
+    <span class="c1">#     graph[j,i,0] = &quot;&lt;--&quot;</span>
+
+    <span class="c1"># # np.logical_or(true_graphs==&quot;--&gt;&quot;, true_graphs==&quot;&lt;--&quot;)</span>
+
+    <span class="c1"># print(graph[:,:,0])</span>
+    <span class="c1"># print(graph[:,:,1])    # dag_member = pcmci._get_dag_from_cpdag(cpdag_graph=results[&#39;graph&#39;])</span>
+    <span class="c1"># print(dag_member[:,:,0])</span>
+    <span class="c1"># print(dag_member[:,:,1])</span>
 
     <span class="c1"># print(&quot;Graph&quot;)</span>
     <span class="c1"># print(results[&#39;graph&#39;])</span>
