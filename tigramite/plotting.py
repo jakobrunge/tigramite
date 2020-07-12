@@ -1071,7 +1071,8 @@ def _draw_network_with_curved_edges(
                             width=node_sizes[:ring + 1].sum(axis=0)[n] * node_aspect, 
                             height=node_sizes[:ring + 1].sum(axis=0)[n],
                             clip_on=False,
-                            facecolor=standard_color, edgecolor=standard_color, zorder=-ring)
+                            facecolor=standard_color, edgecolor=standard_color, 
+                            zorder=-ring-1)
 
                 # ax.scatter(pos[n][0], pos[n][1],
                 #            s=node_sizes[:ring + 1].sum(axis=0)[n] ** 2,
@@ -1083,7 +1084,8 @@ def _draw_network_with_curved_edges(
                             width=node_sizes[:ring + 1].sum(axis=0)[n] * node_aspect, 
                             height=node_sizes[:ring + 1].sum(axis=0)[n],
                             clip_on=False,
-                            facecolor=colors[n], edgecolor=colors[n], zorder=-ring)
+                            facecolor=colors[n], edgecolor=colors[n], 
+                            zorder=-ring-1)
 
                 # ax.scatter(pos[n][0], pos[n][1],
                 #            s=node_sizes[:ring + 1].sum(axis=0)[n] ** 2,
