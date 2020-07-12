@@ -1195,7 +1195,7 @@ def plot_graph(val_matrix=None,
         Node size.
     arrowhead_size : int, optional (default: 20)
         Size of link arrow head. Passed on to FancyArrowPatch object.
-    curved_radius, float, optional (default: 0.2)
+    curved_radius : float, optional (default: 0.2)
         Curvature of links. Passed on to FancyArrowPatch object.
     label_fontsize : int, optional (default: 10)
         Fontsize of colorbar labels.
@@ -1567,7 +1567,7 @@ def plot_time_series_graph(
         Node size.
     arrowhead_size : int, optional (default: 20)
         Size of link arrow head. Passed on to FancyArrowPatch object.
-    curved_radius, float, optional (default: 0.2)
+    curved_radius : float, optional (default: 0.2)
         Curvature of links. Passed on to FancyArrowPatch object.
     label_fontsize : int, optional (default: 10)
         Fontsize of colorbar labels.
@@ -1837,7 +1837,7 @@ def plot_mediation_time_series_graph(
         Node size.
     arrowhead_size : int, optional (default: 20)
         Size of link arrow head. Passed on to FancyArrowPatch object.
-    curved_radius, float, optional (default: 0.2)
+    curved_radius : float, optional (default: 0.2)
         Curvature of links. Passed on to FancyArrowPatch object.
     label_fontsize : int, optional (default: 10)
         Fontsize of colorbar labels.
@@ -2115,7 +2115,7 @@ def plot_mediation_graph(
         Node size.
     arrowhead_size : int, optional (default: 20)
         Size of link arrow head. Passed on to FancyArrowPatch object.
-    curved_radius, float, optional (default: 0.2)
+    curved_radius : float, optional (default: 0.2)
         Curvature of links. Passed on to FancyArrowPatch object.
     label_fontsize : int, optional (default: 10)
         Fontsize of colorbar labels.
