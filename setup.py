@@ -15,6 +15,7 @@ class UseNumpyHeadersBuildExt(build_ext):
     dependency.
     """
     def run(self):
+        self.distribution.fetch_build_eggs(['numpy'])
         # Import numpy here, only when headers are needed
         import numpy
         # Add numpy headers to include_dirs
@@ -72,7 +73,7 @@ EXT_MODULES += define_extension("tigramite.tigramite_cython_code")
 # Run the setup
 setup(
     name='tigramite',
-    version='4.2.0',
+    version='4.2.0.2',
     packages=['tigramite', 'tigramite.independence_tests'],
     license='GNU General Public License v3.0',
     description='Tigramite causal discovery for time series',

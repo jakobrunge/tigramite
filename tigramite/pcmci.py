@@ -3745,7 +3745,6 @@ if __name__ == '__main__':
 
     np.random.seed(43)
 
-
     ## Generate some time series from a structural causal process
     def lin_f(x): return x
     def nonlin_f(x): return (x + 5. * x ** 2 * np.exp(-x ** 2 / 20.))
@@ -3754,37 +3753,6 @@ if __name__ == '__main__':
     coeff = 0.4
     T = 500
 
-    # links ={0: [((0, -1), auto_coeff, lin_f),
-    #         ((1, -1), coeff, lin_f)
-    #         ],
-    #     1: [((1, -1), auto_coeff, lin_f), 
-    #         ],
-    #     2: [((2, -1), auto_coeff, lin_f), 
-    #         ((3, 0), -coeff, lin_f), 
-    #         ],
-    #     3: [((3, -1), auto_coeff, lin_f), 
-    #         ((1, -2), coeff, lin_f), 
-    #         ],
-    #     4: [((4, -1), auto_coeff, lin_f), 
-    #         ((3, 0), coeff, lin_f), 
-    #         ],   
-    #     5: [((5, -1), 0.5*auto_coeff, lin_f), 
-    #         ((6, 0), coeff, lin_f), 
-    #         ],  
-    #     6: [((6, -1), 0.5*auto_coeff, lin_f), 
-    #         ((5, -1), -coeff, lin_f), 
-    #         ],  
-    #     7: [((7, -1), auto_coeff, lin_f), 
-    #         ((8, 0), -coeff, lin_f), 
-    #         ],  
-    #     8: [],                                     
-    #     }
-
-    # links = {0: [((0, -1), 0.8, lin_f), ((1, -1), 0.6, lin_f)],
-    #          1: [((1, -1), 0., lin_f)],
-    #          2: [((2, -1), 0., lin_f), ((1, 0), 0.6, lin_f)],
-    #          3: [((3, -1), 0., lin_f), ((2, 0), -0.5, lin_f)],
-    #          }
     links = {0: [((0, -1), 0., lin_f), ((1, 0), 0.6, lin_f)],
              1: [((1, -1), 0., lin_f), ((2, 0), 0., lin_f), ((2, -1), 0.6, lin_f)],
              2: [((2, -1), 0.8, lin_f), ((1, -1), -0.5, lin_f)]
@@ -3793,179 +3761,15 @@ if __name__ == '__main__':
 
     noises = [np.random.randn for j in links.keys()]
     data, nonstat = pp.structural_causal_process(links,
-                                T=300, noises=noises, seed=7)
-
-    # data[10, 1] = 999.
-    # data_mask = data>0.4
+                                T=1000, noises=noises, seed=7)
 
     verbosity = 2
-    dataframe = pp.DataFrame(data) #, missing_flag=999., mask=data_mask,)
+    dataframe = pp.DataFrame(data)
     pcmci = PCMCI(dataframe=dataframe,
                   cond_ind_test=ParCorr(verbosity=0),
                   verbosity=2,
                   )
-    results = pcmci.run_mci(
-                  selected_links=None,
-                  tau_min=0,
-                  tau_max=2,
-                  )
+    results = pcmci.run_pcmci(tau_max=2)
     print (pcmci.results)
 
 
-    # lagmat.savefig("/home/rung_ja/work/sandbox/lags_final.pdf")
-
-
-    # print(results['graph'])
-
-    # link_matrix = results['most_frequent_links']
-    # link_width = results['link_frequency']
-    # print(link_matrix.shape, val_matrix.shape, link_width.shape, conf_matrix.shape)
-    # print(link_matrix[:,:,0])
-    # print(link_width[:,:,0])
-
-    # tp.plot_time_series_graph(
-    #     val_matrix=val_matrix,
-    #     link_matrix=link_matrix,
-    #     link_width = link_width,
-    #     link_colorbar_label='MCI',
-    #     cmap_edges='OrRd',
-    #     save_name="/home/rung_ja/work/sandbox/tsg_final.pdf",
-    #     )
-
-
-    # results = pcmci.run_pcalg_non_timeseries_data(pc_alpha=0.01,
-    #               max_conds_dim=None, max_combinations=None, 
-    #               contemp_collider_rule='conservative',
-    #               conflict_resolution=True)
-    # selected_links = {0: [(0, -1)],
-    #                   1: [(1, -1), (0, -1)],
-    #                   2: [(2, -1), (1, 0)],
-    #                   3: [(3, -1), (2, 0)],
-    #                   }
-
-    # results = pcmci.run_pc_stable(
-    #             selected_links=None,
-    #             tau_min=1,
-    #             tau_max=1,
-    #             pc_alpha=0.001,
-    #             )
-    # print(results)
-
-    # results = pcmci.run_pcmci(
-    #               selected_links=None,
-    #               tau_min=0,
-    #               tau_max=2,
-    #               pc_alpha=None,
-    #               max_conds_dim=None,
-    #               max_conds_py=None,
-    #               max_conds_px=None,
-    #               fdr_method='none',
-    #               )
-    # pcmci.print_significant_links(p_matrix=results['p_matrix'],
-    #                                          val_matrix=results['val_matrix'],
-    #                                          alpha_level=0.05)
-
-    # results = pcmci.get_lagged_dependencies(
-    #               selected_links=None,
-    #               tau_min=0,
-    #               tau_max=2,
-    #               val_only=True
-    #               # parents=None,
-    #               # max_conds_py=None,
-    #               # max_conds_px=None,
-    #               )
-
-    # print (results)
-
-    # results = pcmci.run_pcmciplus(
-    #     selected_links=None,
-    #     tau_min=0,
-    #     tau_max=3,
-    #     pc_alpha=None,
-    #     contemp_collider_rule='majority',
-    #     conflict_resolution=True,
-    #     reset_lagged_links=False,
-    #     max_conds_dim=None,
-    #     max_conds_py=None,
-    #     max_conds_px=None,
-    #     max_conds_px_lagged=0,
-    #     fdr_method='none'
-    # )
-    # pcmci.print_results(results, alpha_level=0.01)
-
-    # graph_bool = results['graph']
-    # print(graph_bool[:,:,0])
-    # print(graph_bool[:,:,1])
-
-    # graph = np.zeros(graph_bool.shape, dtype='<U3')
-    # graph[:] = ""
-    # graph[:,:,1:][graph_bool[:,:,1:]==1] = "-->"
-    # graph[:,:,0][np.logical_and(graph_bool[:,:,0]==1, graph_bool[:,:,0].T==1)] = "o-o"
-    # for (i,j) in zip(*np.where(np.logical_and(graph_bool[:,:,0]==1, graph_bool[:,:,0].T==0))):
-    #     graph[i,j,0] = "-->"
-    #     graph[j,i,0] = "<--"
-
-    # # np.logical_or(true_graphs=="-->", true_graphs=="<--")
-
-    # print(graph[:,:,0])
-    # print(graph[:,:,1])    # dag_member = pcmci._get_dag_from_cpdag(cpdag_graph=results['graph'])
-    # print(dag_member[:,:,0])
-    # print(dag_member[:,:,1])
-
-    # print("Graph")
-    # print(results['graph'])
-    # print("p_matrix")
-    # print(results['p_matrix'].round(4))
-    # print("val_matrix")
-    # print(results['val_matrix'].round(2))
-    # print("Contemp graph")
-    # print(results['graph'][:, :, 0])
-    # print("Contemp p_matrix")
-    # print(results['p_matrix'][:, :, 0].round(4))
-    # print("Contemp val_matrix")
-    # print(results['val_matrix'][:, :, 0].round(2))
-
-    # results = pcmci.run_pcalg(
-    #             pc_alpha=pc_alpha,
-    #             tau_min=0, tau_max=tau_max,
-    #           contemp_collider_rule='majority', #'conservative', #None, #'majority',
-    #           conflict_resolution=True,)
-    # results['val_matrix'] = results['graph']
-
-    # print(results['p_matrix'].round(2))
-    # link_matrix = pcmci.return_significant_parents(
-    #     pq_matrix=results['p_matrix'],
-    #     # val_matrix=results['val_matrix'], 
-    #     alpha_level=pc_alpha)['link_matrix']
-
-    # link_matrix[:,:,0] = 0
-    # print(link_matrix.astype('int'))
-    # print(contemp_pcmci_results['val_matrix'].round(2))
-    # tp.plot_time_series_graph(
-    #     val_matrix=results['val_matrix'],
-    #     link_matrix=link_matrix,
-    #     link_colorbar_label='MCI',
-    #     cmap_edges='OrRd',
-    #     save_name="/home/rung_ja/work/sandbox/tsg_final.pdf",
-    #     )
-    # pc_results = pcmci.run_pcalg( 
-    #             pc_alpha=pc_alpha,
-    #             tau_min=0, tau_max=5,
-    #            ci_test='par_corr',
-    # print(results['graph'])
-
-    # np.random.seed(42)
-    # val_matrix = np.random.rand(3,3,4)
-    # link_matrix = np.abs(val_matrix) > .9
-
-    # tp.plot_time_series_graph(
-    #     val_matrix=val_matrix,
-    #     sig_thres=None,
-    #     link_matrix=link_matrix,
-    #     var_names=range(len(val_matrix)),
-    #     undirected_style='dashed',
-    #     save_name="/home/rung_ja/work/sandbox/tsg_contemp.pdf",
-
-    # )
-
-    # Test order
