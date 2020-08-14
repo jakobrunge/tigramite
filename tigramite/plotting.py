@@ -696,7 +696,7 @@ def _draw_network_with_curved_edges(
         # link_edge_colorbar_label='link_edge',
         inner_edge_curved=False, inner_edge_style='solid',
         network_lower_bound=0.2, show_colorbar=True,
-):
+        ):
     """Function to draw a network from networkx graph instance.
     Various attributes are used to specify the graph's properties.
     This function is just a beta-template for now that can be further
@@ -949,6 +949,9 @@ def _draw_network_with_curved_edges(
                     [PathEffects.withStroke(linewidth=2, foreground='k')])
 
         return rad
+
+    # This must be added to avoid rescaling of the plot.
+    ax.scatter(0., 0., zorder=-10, alpha=0)
 
     # Collect all edge weights to get color scale
     all_links_weights = []
@@ -1504,9 +1507,15 @@ def _check_matrices(link_matrix, val_matrix, link_width, link_attribute):
         link_matrix[:] = ""
         for i, j, tau in zip(*np.where(old_matrix)):
             if tau == 0:
-                if old_matrix[j, i, 0] == 0:
+                if old_matrix[i, j, 0] == 1 and old_matrix[j, i, 0] == 0:
                     link_matrix[i, j, 0] = '-->'
                     link_matrix[j, i, 0] = '<--'
+                elif old_matrix[i, j, 0] == 0 and old_matrix[j, i, 0] == 1:
+                    link_matrix[i, j, 0] = '<--'
+                    link_matrix[j, i, 0] = '-->'
+                elif old_matrix[i, j, 0] == 2 and old_matrix[j, i, 0] == 2:
+                    link_matrix[i, j, 0] = 'x-x'
+                    link_matrix[j, i, 0] = 'x-x'
                 else:
                     link_matrix[i, j, 0] = 'o-o'
                     link_matrix[j, i, 0] = 'o-o'
@@ -2609,12 +2618,24 @@ if __name__ == '__main__':
     ax=fig.add_subplot(111)
 
     plot_graph(link_matrix=link_matrix, 
-    	arrow_linewidth=5, 
-    	fig_ax=(fig, ax),
-    	save_name='testgraph.pdf')
-    plot_time_series_graph(link_matrix=link_matrix,
-    	arrow_linewidth=10,
-    	save_name='testtsg.pdf'
-                           )
+      arrow_linewidth=5, 
+      fig_ax=(fig, ax),
+      save_name='testgraph.pdf')
+    
+    # plot_time_series_graph(link_matrix=link_matrix,
+    #   arrow_linewidth=10,
+    #   save_name='testtsg.pdf'
+    #                        )
+
+    nolinks = np.zeros(link_matrix.shape)
+    nolinks[range(4),range(4),1] = .5
+    plot_graph(link_matrix=nolinks, 
+        arrow_linewidth=5, 
+        fig_ax=(fig, ax),
+        save_name='testgraphzero.pdf')
+    # plot_time_series_graph(link_matrix=np.zeros(link_matrix.shape),
+    #   arrow_linewidth=10,
+    #   save_name='testtsgzero.pdf')
+
 
     # pyplot.show()

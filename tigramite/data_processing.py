@@ -1395,13 +1395,16 @@ def links_to_graph(links, tau_max=None):
                              "found in links, use tau_max=None or larger "
                              "value" % max_lag)
 
-    graph = np.zeros((N, N, tau_max + 1), dtype='uint8')
+    graph = np.zeros((N, N, tau_max + 1), dtype='<U3')
     for j in links.keys():
         for link_props in links[j]:
             var, lag = link_props[0]
             coeff = link_props[1]
             if coeff != 0.:
-                graph[var, j, abs(lag)] = 1
+                graph[var, j, abs(lag)] = "-->"
+                if lag == 0:
+                    graph[j, var, 0] = "<--"
+
 
     return graph
 
