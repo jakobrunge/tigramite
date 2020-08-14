@@ -268,7 +268,7 @@ def plot_timeseries(dataframe=None,
                     data_linewidth=1.,
                     skip_ticks_data_x=1,
                     skip_ticks_data_y=2,
-                    label_fontsize=8,
+                    label_fontsize=12,
                     ):
     """Create and save figure of stacked panels with time series.
     Parameters
@@ -691,7 +691,7 @@ def _draw_network_with_curved_edges(
         cmap_links='YlOrRd', cmap_links_edges='YlOrRd', links_vmin=0.,
         links_vmax=1., links_edges_vmin=0., links_edges_vmax=1.,
         links_ticks=.2, links_edges_ticks=.2, link_label_fontsize=8,
-        arrowstyle='simple', arrowhead_size=3., curved_radius=.2, label_fontsize=4,
+        arrowstyle='->, head_width=0.4, head_length=1', arrowhead_size=3., curved_radius=.2, label_fontsize=4,
         label_fraction=.5, link_colorbar_label='link',
         # link_edge_colorbar_label='link_edge',
         inner_edge_curved=False, inner_edge_style='solid',
@@ -714,7 +714,8 @@ def _draw_network_with_curved_edges(
 
     N = len(G)
 
-    def draw_edge(ax, u, v, d, seen, arrowstyle='simple', outer_edge=True):
+    def draw_edge(ax, u, v, d, seen, arrowstyle='->, head_width=0.4, head_length=1',
+                  outer_edge=True):
 
         # avoiding attribute error raised by changes in networkx
         if hasattr(G, 'node'):
@@ -818,12 +819,19 @@ def _draw_network_with_curved_edges(
         start = vertices[0]
         end = vertices[-1]
 
+        # This must be added to avoid rescaling of the plot.
+        ax.scatter(*start, zorder=-10, alpha=0)
+
         if outer_edge:
             if d.get('outer_edge_type') in ['o->', 'o--']:
                 circle_marker_start = ax.scatter(*start, marker='o', s=marker_size,
                                                  facecolor='w', edgecolor=facecolor, zorder=1)
                 ax.add_collection(circle_marker_start)
-            elif d.get('outer_edge_type') in ['--o', '<-o']:
+            elif d.get('outer_edge_type') == '<-o':
+                circle_marker_end = ax.scatter(*start, marker='o', s=marker_size,
+                                               facecolor='w', edgecolor=facecolor, zorder=1)
+                ax.add_collection(circle_marker_end)
+            elif d.get('outer_edge_type') == '--o':
                 circle_marker_end = ax.scatter(*end, marker='o', s=marker_size,
                                                facecolor='w', edgecolor=facecolor, zorder=1)
                 ax.add_collection(circle_marker_end)
@@ -831,8 +839,12 @@ def _draw_network_with_curved_edges(
                 circle_marker_start = ax.scatter(*start, marker='X', s=marker_size,
                                                  facecolor='w', edgecolor=facecolor, zorder=1)
                 ax.add_collection(circle_marker_start)
-            elif d.get('outer_edge_type') in ['--x', '<-x']:
+            elif d.get('outer_edge_type') == '<-x':
                 circle_marker_end = ax.scatter(*start, marker='X', s=marker_size,
+                                               facecolor='w', edgecolor=facecolor, zorder=1)
+                ax.add_collection(circle_marker_end)
+            elif d.get('outer_edge_type') == '--x':
+                circle_marker_end = ax.scatter(*end, marker='X', s=marker_size,
                                                facecolor='w', edgecolor=facecolor, zorder=1)
                 ax.add_collection(circle_marker_end)
             elif d.get('outer_edge_type') == 'o-o':
@@ -869,7 +881,11 @@ def _draw_network_with_curved_edges(
                 circle_marker_start = ax.scatter(*start, marker='o', s=marker_size,
                                                  facecolor='w', edgecolor=facecolor, zorder=1)
                 ax.add_collection(circle_marker_start)
-            elif d.get('inner_edge_type') in ['--o', '<-o']:
+            elif d.get('outer_edge_type') == '<-o':
+                circle_marker_end = ax.scatter(*start, marker='o', s=marker_size,
+                                               facecolor='w', edgecolor=facecolor, zorder=1)
+                ax.add_collection(circle_marker_end)
+            elif d.get('outer_edge_type') == '--o':
                 circle_marker_end = ax.scatter(*end, marker='o', s=marker_size,
                                                facecolor='w', edgecolor=facecolor, zorder=1)
                 ax.add_collection(circle_marker_end)
@@ -877,8 +893,12 @@ def _draw_network_with_curved_edges(
                 circle_marker_start = ax.scatter(*start, marker='X', s=marker_size,
                                                  facecolor='w', edgecolor=facecolor, zorder=1)
                 ax.add_collection(circle_marker_start)
-            elif d.get('inner_edge_type') in ['--x', '<-x']:
+            elif d.get('outer_edge_type') == '<-x':
                 circle_marker_end = ax.scatter(*start, marker='X', s=marker_size,
+                                               facecolor='w', edgecolor=facecolor, zorder=1)
+                ax.add_collection(circle_marker_end)
+            elif d.get('outer_edge_type') == '--x':
+                circle_marker_end = ax.scatter(*end, marker='X', s=marker_size,
                                                facecolor='w', edgecolor=facecolor, zorder=1)
                 ax.add_collection(circle_marker_end)
             elif d.get('inner_edge_type') == 'o-o':
@@ -926,7 +946,7 @@ def _draw_network_with_curved_edges(
                               color='w',
                               zorder=1)
                 txt.set_path_effects(
-                    [PathEffects.withStroke(linewidth=1, foreground='k')])
+                    [PathEffects.withStroke(linewidth=2, foreground='k')])
 
         return rad
 
@@ -961,15 +981,14 @@ def _draw_network_with_curved_edges(
                 data_to_rgb_links, cax=cax_e, orientation='horizontal')
             # try:
             cb_e.set_ticks(np.arange(_myround(links_vmin, links_ticks, 'down'),
-                                         _myround(links_vmax, links_ticks, 'up') +
-                                         links_ticks, links_ticks))
+                                     _myround(links_vmax, links_ticks, 'up') +
+                                     links_ticks, links_ticks))
             # except:
             #     print('no ticks given')
 
             cb_e.outline.remove()
             cax_e.set_xlabel(
                 link_colorbar_label, labelpad=1, fontsize=label_fontsize, zorder=-10)
-
 
     ##
     # Draw nodes
@@ -1003,7 +1022,6 @@ def _draw_network_with_curved_edges(
 
     if node_aspect is None:
         node_aspect = get_aspect(ax)
-
 
     # start drawing the outer ring first...
     for ring in list(node_rings)[::-1]:
@@ -1045,7 +1063,7 @@ def _draw_network_with_curved_edges(
                     data_to_rgb, cax=cax_n, orientation='horizontal')
                 # try:
                 cb_n.set_ticks(np.arange(_myround(vmin,
-                            node_rings[ring]['ticks'], 'down'), _myround(
+                                                  node_rings[ring]['ticks'], 'down'), _myround(
                     vmax, node_rings[ring]['ticks'], 'up') +
                     node_rings[ring]['ticks'], node_rings[ring]['ticks']))
                 # except:
@@ -1067,12 +1085,13 @@ def _draw_network_with_curved_edges(
                 alpha = 1.
 
             if colors is None:
-                c = Ellipse(pos[n], 
-                            width=node_sizes[:ring + 1].sum(axis=0)[n] * node_aspect, 
+                c = Ellipse(pos[n],
+                            width=node_sizes[
+                                :ring + 1].sum(axis=0)[n] * node_aspect,
                             height=node_sizes[:ring + 1].sum(axis=0)[n],
                             clip_on=False,
-                            facecolor=standard_color, edgecolor=standard_color, 
-                            zorder=-ring-1)
+                            facecolor=standard_color, edgecolor=standard_color,
+                            zorder=-ring - 1)
 
                 # ax.scatter(pos[n][0], pos[n][1],
                 #            s=node_sizes[:ring + 1].sum(axis=0)[n] ** 2,
@@ -1080,12 +1099,13 @@ def _draw_network_with_curved_edges(
                 #            edgecolors=standard_color, alpha=alpha,
                 #            clip_on=False, linewidth=.1, zorder=-ring)
             else:
-                c = Ellipse(pos[n], 
-                            width=node_sizes[:ring + 1].sum(axis=0)[n] * node_aspect, 
+                c = Ellipse(pos[n],
+                            width=node_sizes[
+                                :ring + 1].sum(axis=0)[n] * node_aspect,
                             height=node_sizes[:ring + 1].sum(axis=0)[n],
                             clip_on=False,
-                            facecolor=colors[n], edgecolor=colors[n], 
-                            zorder=-ring-1)
+                            facecolor=colors[n], edgecolor=colors[n],
+                            zorder=-ring - 1)
 
                 # ax.scatter(pos[n][0], pos[n][1],
                 #            s=node_sizes[:ring + 1].sum(axis=0)[n] ** 2,
@@ -1093,7 +1113,6 @@ def _draw_network_with_curved_edges(
                 #            alpha=alpha,
                 #            clip_on=False, linewidth=1., zorder=-ring)
 
-   
             # c = Ellipse(pos[n], width=standard_size * node_aspect, height=standard_size,
             #             facecolor='darkgray', edgecolor='darkgray', zorder=0)
             ax.add_patch(c)
@@ -1105,13 +1124,12 @@ def _draw_network_with_curved_edges(
             else:
                 # works with networkx 2.4
                 G.nodes[n]['patch'] = c
-            
+
             if ring == 0:
                 ax.text(pos[n][0], pos[n][1], node_labels[n],
-                    fontsize=node_label_size,
-                    horizontalalignment='center',
-                    verticalalignment='center', alpha=1.)
-   
+                        fontsize=node_label_size,
+                        horizontalalignment='center',
+                        verticalalignment='center', alpha=1.)
 
     # Draw edges
     seen = {}
@@ -1148,13 +1166,13 @@ def plot_graph(val_matrix=None,
                node_ticks=.4,
                cmap_nodes='OrRd',
                node_size=.3,
-               node_aspect=1,
+               node_aspect=None,
                arrowhead_size=20,
                curved_radius=.2,
                label_fontsize=10,
                alpha=1.,
                node_label_size=10,
-               link_label_fontsize=6,
+               link_label_fontsize=10,
                lag_array=None,
                network_lower_bound=0.2,
                show_colorbar=True,
@@ -1536,7 +1554,7 @@ def plot_time_series_graph(
         save_name=None,
         link_width=None,
         link_attribute=None,
-        arrow_linewidth=10.,
+        arrow_linewidth=8,
         vmin_edges=-1,
         vmax_edges=1.,
         edge_ticks=.4,
@@ -1546,9 +1564,9 @@ def plot_time_series_graph(
         node_aspect=None,
         arrowhead_size=20,
         curved_radius=.2,
-        label_fontsize=10,
+        label_fontsize=12,
         alpha=1.,
-        node_label_size=10,
+        node_label_size=12,
         label_space_left=0.1,
         label_space_top=0.,
         network_lower_bound=0.2,
@@ -1775,13 +1793,13 @@ def plot_time_series_graph(
             ax.transData, fig.transFigure)
         if tau == max_lag - 1:
             ax.text(pos[tau][0], 1. - label_space_top, r'$t$',
-                    fontsize=int(label_fontsize * 0.7),
+                    fontsize=int(label_fontsize * 0.8),
                     horizontalalignment='center',
                     verticalalignment='top', transform=trans)
         else:
             ax.text(pos[tau][0], 1. - label_space_top,
                     r'$t-%s$' % str(max_lag - tau - 1),
-                    fontsize=int(label_fontsize * 0.7),
+                    fontsize=int(label_fontsize * 0.8),
                     horizontalalignment='center', verticalalignment='top',
                     transform=trans)
 
@@ -1801,7 +1819,7 @@ def plot_mediation_time_series_graph(
         node_colorbar_label='MCE (node color)',
         save_name=None,
         link_width=None,
-        arrow_linewidth=20.,
+        arrow_linewidth=8,
         vmin_edges=-1,
         vmax_edges=1.,
         edge_ticks=.4,
@@ -1811,13 +1829,13 @@ def plot_mediation_time_series_graph(
         vmax_nodes=1.,
         node_ticks=.4,
         cmap_nodes='RdBu_r',
-        node_size=10,
+        node_size=.1,
         node_aspect=None,
         arrowhead_size=20,
         curved_radius=.2,
-        label_fontsize=10,
+        label_fontsize=12,
         alpha=1.,
-        node_label_size=10,
+        node_label_size=12,
         label_space_left=0.1,
         label_space_top=0.,
         network_lower_bound=0.2
@@ -2022,8 +2040,7 @@ def plot_mediation_time_series_graph(
 
         # cmap_links_edges='YlOrRd', links_edges_vmin=-1., links_edges_vmax=1.,
         # links_edges_ticks=.2, link_edge_colorbar_label='link_edge',
-
-        arrowstyle='simple', arrowhead_size=arrowhead_size,
+        arrowhead_size=arrowhead_size,
         curved_radius=curved_radius, label_fontsize=label_fontsize,
         label_fraction=.5,
         link_colorbar_label=link_colorbar_label, inner_edge_curved=True,
@@ -2073,7 +2090,7 @@ def plot_mediation_graph(
         node_colorbar_label='MCE (node color)',
         link_width=None,
         node_pos=None,
-        arrow_linewidth=30.,
+        arrow_linewidth=10.,
         vmin_edges=-1,
         vmax_edges=1.,
         edge_ticks=.4,
@@ -2082,7 +2099,7 @@ def plot_mediation_graph(
         vmax_nodes=1.,
         node_ticks=.4,
         cmap_nodes='RdBu_r',
-        node_size=20,
+        node_size=.3,
         node_aspect=None,
         arrowhead_size=20,
         curved_radius=.2,
@@ -2090,7 +2107,7 @@ def plot_mediation_graph(
         lag_array=None,
         alpha=1.,
         node_label_size=10,
-        link_label_fontsize=6,
+        link_label_fontsize=10,
         network_lower_bound=0.2,
 ):
     """Creates a network plot visualizing the pathways of a mediation analysis.
@@ -2311,7 +2328,7 @@ def plot_mediation_graph(
         # cmap_links_edges='YlOrRd', links_edges_vmin=-1., links_edges_vmax=1.,
         # links_edges_ticks=.2, link_edge_colorbar_label='link_edge',
 
-        arrowstyle='simple', arrowhead_size=arrowhead_size,
+        arrowhead_size=arrowhead_size,
         curved_radius=curved_radius, label_fontsize=label_fontsize,
         link_label_fontsize=link_label_fontsize,
         link_colorbar_label=link_colorbar_label,
@@ -2570,78 +2587,34 @@ def plot_tsg(links, X, Y, Z=None, anc_x=None, anc_y=None, anc_xy=None):
 
 if __name__ == '__main__':
 
-    val_matrix = np.zeros((4, 4, 4))
-
-    val_matrix[1, 1, 1] = 0.9
-    val_matrix[3, 3, 1] = 0.2
-
-    val_matrix[1, 2, 0] = 0.6
-    val_matrix[2, 1, 0] = 0.6
-    val_matrix[0, 2, 0] = 0.8
-    val_matrix[2, 0, 0] = 0.8
-    val_matrix[2, 3, 0] = -0.7
-    val_matrix[3, 2, 0] = -0.7
-    val_matrix[1, 3, 0] = 0.4
-    val_matrix[3, 1, 0] = 0.4
-    val_matrix[3, 1, 2] = -0.9
-    val_matrix[1, 3, 1] = 0.9
+    val_matrix = np.zeros((4, 4, 3))
 
     # Complete test case
     link_matrix = np.zeros(val_matrix.shape, dtype='U3')
 
-    link_matrix[1, 1, 1] = '-->'
-    link_matrix[3, 3, 1] = '-->'
-
-    link_matrix[0, 1, 0] = '<-x'
-    link_matrix[1, 0, 0] = 'x->'
+    link_matrix[0, 1, 0] = 'x-o'
+    link_matrix[1, 0, 0] = 'o-x'
     link_matrix[1, 2, 0] = 'o-o'
     link_matrix[2, 1, 0] = 'o-o'
-    link_matrix[0, 2, 0] = 'x--'
-    link_matrix[2, 0, 0] = '--x'
-    link_matrix[2, 3, 0] = '---'
-    link_matrix[3, 2, 0] = '---'
+    link_matrix[0, 2, 0] = '<-x'
+    link_matrix[2, 0, 0] = 'x->'
+    link_matrix[2, 3, 0] = '--o'
+    link_matrix[3, 2, 0] = 'o--'
     link_matrix[1, 3, 0] = '<->'
     link_matrix[3, 1, 0] = '<->'
     link_matrix[3, 1, 2] = 'x-o'
     link_matrix[1, 3, 1] = '-->'
 
-    link_width = np.ones(val_matrix.shape)
-    link_attribute = np.zeros(val_matrix.shape, dtype='object')
-    link_attribute[:] = ''
-    link_attribute[0, 1, 0] = 'spurious'
-    link_attribute[1, 0, 0] = 'spurious'
-    link_attribute[0, 2, 1] = 'spurious'
+    fig  = pyplot.figure(figsize=(12,6))
+    ax=fig.add_subplot(111)
 
-    # plot_time_series_graph(
-    #     val_matrix=val_matrix,
-    #     figsize=None,
-    #     sig_thres=None,
-    #     link_matrix=link_matrix,
-    #     link_width=link_width,
-    #     link_attribute=link_attribute,
-    #     # arrow_linewidth=8,
-    #     # node_size=0.1,
-    #     # node_aspect=2,
-    #     var_names=range(len(val_matrix)),
-    #     inner_edge_style='dashed',
-    #     save_name="ptsg_test.pdf",
-    # )
-
-    plot_graph(
-        # val_matrix=val_matrix,
-        # sig_thres=None,
-        # link_widt/h=link_width,
-        link_matrix=link_matrix,
-        # link_attribute=link_attribute,
-        # # arrow_linewidth=10,
-        # node_size=.3,
-        # node_aspect=2,
-        var_names=[f"Node {i}"for i in range(len(val_matrix))],
-        # label_fontsize=14,
-        # curved_radius=.45,
-        # inner_edge_style='dashed',
-        save_name="pg_test.pdf",
-        # link_label_fontsize=10,
-    )
+    plot_graph(link_matrix=link_matrix, 
+    	arrow_linewidth=5, 
+    	fig_ax=(fig, ax),
+    	save_name='testgraph.pdf')
+    plot_time_series_graph(link_matrix=link_matrix,
+    	arrow_linewidth=10,
+    	save_name='testtsg.pdf'
+                           )
 
     # pyplot.show()
