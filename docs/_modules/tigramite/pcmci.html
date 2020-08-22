@@ -55,11 +55,11 @@
 <span class="c1">#</span>
 <span class="c1"># License: GNU General Public License v3.0</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">itertools</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
-<span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">scipy.stats</span>
 
@@ -127,7 +127,7 @@
 <span class="sd">    different times and a link indicates a conditional dependency that can be</span>
 <span class="sd">    interpreted as a causal dependency under certain assumptions (see paper).</span>
 <span class="sd">    Assuming stationarity, the links are repeated in time. The parents</span>
-<span class="sd">    :math:`\\mathcal{P}` of a variable are defined as the set of all nodes</span>
+<span class="sd">    :math:`\mathcal{P}` of a variable are defined as the set of all nodes</span>
 <span class="sd">    with a link towards it (blue and red boxes in Figure).</span>
 
 <span class="sd">    The different PCMCI methods estimate causal links by iterative</span>
@@ -147,7 +147,7 @@
 <span class="sd">    .. [5] J. Runge,</span>
 <span class="sd">           Discovering contemporaneous and lagged causal relations in </span>
 <span class="sd">           autocorrelated nonlinear time series datasets</span>
-<span class="sd">           https://arxiv.org/abs/2003.03685</span>
+<span class="sd">           http://www.auai.org/~w-auai/uai2020/proceedings/579_main_paper.pdf</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -185,7 +185,7 @@
 <span class="sd">        Time series sample length.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">,</span>
                  <span class="n">cond_ind_test</span><span class="p">,</span>
                  <span class="n">selected_variables</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
@@ -358,7 +358,7 @@
 <span class="sd">        already_removed : bool</span>
 <span class="sd">            Whether parent was already removed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">link_marker</span> <span class="o">=</span> <span class="p">{</span><span class="kc">True</span><span class="p">:</span><span class="s2">&quot;o--o&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">:</span><span class="s2">&quot;--&gt;&quot;</span><span class="p">}</span>
+        <span class="n">link_marker</span> <span class="o">=</span> <span class="p">{</span><span class="kc">True</span><span class="p">:</span><span class="s2">&quot;o-o&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">:</span><span class="s2">&quot;--&gt;&quot;</span><span class="p">}</span>
 
         <span class="n">abstau</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">parent</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
@@ -1584,7 +1584,7 @@
 <span class="sd">            List of ambiguous triples.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">graph</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">sig_links</span> <span class="o">=</span> <span class="p">(</span><span class="n">graph</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">sig_links</span> <span class="o">=</span> <span class="p">(</span><span class="n">graph</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">graph</span> <span class="o">!=</span> <span class="s2">&quot;&lt;--&quot;</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">q_matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">sig_links</span> <span class="o">=</span> <span class="p">(</span><span class="n">q_matrix</span> <span class="o">&lt;=</span> <span class="n">alpha_level</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -1613,19 +1613,19 @@
                         <span class="n">conf_matrix</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">j</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])][</span><span class="mi">0</span><span class="p">],</span>
                         <span class="n">conf_matrix</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">j</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])][</span><span class="mi">1</span><span class="p">])</span>
                 <span class="k">if</span> <span class="n">graph</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">graph</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">graph</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;o-o&quot;</span><span class="p">:</span>
                         <span class="n">string</span> <span class="o">+=</span> <span class="s2">&quot; | unoriented link&quot;</span>
-                    <span class="k">if</span> <span class="n">graph</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">j</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">graph</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">j</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span> <span class="o">==</span> <span class="s2">&quot;x-x&quot;</span><span class="p">:</span>
                         <span class="n">string</span> <span class="o">+=</span> <span class="s2">&quot; | unclear orientation due to conflict&quot;</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
 
-        <span class="n">link_marker</span> <span class="o">=</span> <span class="p">{</span><span class="kc">True</span><span class="p">:</span><span class="s2">&quot;o--o&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">:</span><span class="s2">&quot;--&gt;&quot;</span><span class="p">}</span>
+        <span class="n">link_marker</span> <span class="o">=</span> <span class="p">{</span><span class="kc">True</span><span class="p">:</span><span class="s2">&quot;o-o&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">:</span><span class="s2">&quot;--&gt;&quot;</span><span class="p">}</span>
 
         <span class="k">if</span> <span class="n">ambiguous_triples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">ambiguous_triples</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">## Ambiguous triples:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">triple</span> <span class="ow">in</span> <span class="n">ambiguous_triples</span><span class="p">:</span>
                 <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">),</span> <span class="n">k</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="n">triple</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    (</span><span class="si">%s</span><span class="s2"> </span><span class="si">% d</span><span class="s2">) </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> o--o </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    (</span><span class="si">%s</span><span class="s2"> </span><span class="si">% d</span><span class="s2">) </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> o-o </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">tau</span><span class="p">,</span> <span class="n">link_marker</span><span class="p">[</span><span class="n">tau</span><span class="o">==</span><span class="mi">0</span><span class="p">],</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">k</span><span class="p">],</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">]))</span></div>
@@ -1752,7 +1752,7 @@
 <span class="sd">                            2: [((2, -1), 0.8), ((1, -2), -0.6)]}</span>
 <span class="sd">        &gt;&gt;&gt; data, _ = pp.var_process(links_coeffs, T=1000)</span>
 <span class="sd">        &gt;&gt;&gt; # Data must be array of shape (time, variables)</span>
-<span class="sd">        &gt;&gt;&gt; print data.shape</span>
+<span class="sd">        &gt;&gt;&gt; print (data.shape)</span>
 <span class="sd">        (1000, 3)</span>
 <span class="sd">        &gt;&gt;&gt; dataframe = pp.DataFrame(data)</span>
 <span class="sd">        &gt;&gt;&gt; cond_ind_test = ParCorr()</span>
@@ -1764,17 +1764,16 @@
 <span class="sd">        ## Significant parents at alpha = 0.05:</span>
 
 <span class="sd">            Variable 0 has 1 link(s):</span>
-<span class="sd">                (0 -1): pval = 0.00000 | val = 0.632</span>
+<span class="sd">                (0 -1): pval = 0.00000 | val =  0.588</span>
 
 <span class="sd">            Variable 1 has 2 link(s):</span>
-<span class="sd">                (1 -1): pval = 0.00000 | val = 0.653</span>
-
-<span class="sd">                (0 -1): pval = 0.00000 | val = 0.444</span>
+<span class="sd">                (1 -1): pval = 0.00000 | val =  0.606</span>
+<span class="sd">                (0 -1): pval = 0.00000 | val =  0.447</span>
 
 <span class="sd">            Variable 2 has 2 link(s):</span>
-<span class="sd">                (2 -1): pval = 0.00000 | val = 0.623</span>
+<span class="sd">                (2 -1): pval = 0.00000 | val =  0.618</span>
+<span class="sd">                (1 -2): pval = 0.00000 | val = -0.499</span>
 
-<span class="sd">                (1 -2): pval = 0.00000 | val = -0.533</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1880,7 +1879,8 @@
         <span class="sd">&quot;&quot;&quot;Runs PCMCIplus time-lagged and contemporaneous causal discovery for</span>
 <span class="sd">        time series.</span>
 
-<span class="sd">        Method described in [5]_: https://arxiv.org/abs/2003.03685</span>
+<span class="sd">        Method described in [5]_: </span>
+<span class="sd">        http://www.auai.org/~w-auai/uai2020/proceedings/579_main_paper.pdf</span>
 
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
@@ -1923,20 +1923,20 @@
 <span class="sd">        links based on PC rules.</span>
 
 <span class="sd">        In contrast to PCMCI, the relevant output of PCMCIplus is the</span>
-<span class="sd">        array ``graph``. Its entries are interpreted as follows:</span>
+<span class="sd">        array ``graph``. Its string entries are interpreted as follows:</span>
 
-<span class="sd">        * ``graph[i,j,tau]=1`` for :math:`\\tau&gt;0` denotes a directed, lagged</span>
+<span class="sd">        * ``graph[i,j,tau]=--&gt;`` for :math:`\\tau&gt;0` denotes a directed, lagged</span>
 <span class="sd">          causal link from :math:`i` to :math:`j` at lag :math:`\\tau`</span>
 
-<span class="sd">        * ``graph[i,j,0]=1`` and ``graph[j,i,0]=0`` denotes a directed,</span>
+<span class="sd">        * ``graph[i,j,0]=--&gt;`` (and ``graph[j,i,0]=&lt;--``) denotes a directed,</span>
 <span class="sd">          contemporaneous causal link from :math:`i` to :math:`j`</span>
 
-<span class="sd">        * ``graph[i,j,0]=1`` and ``graph[j,i,0]=1`` denotes an unoriented,</span>
+<span class="sd">        * ``graph[i,j,0]=o-o`` (and ``graph[j,i,0]=o-o``) denotes an unoriented,</span>
 <span class="sd">          contemporaneous adjacency between :math:`i` and :math:`j` indicating</span>
 <span class="sd">          that the collider and orientation rules could not be applied (Markov</span>
 <span class="sd">          equivalence)</span>
 
-<span class="sd">        * ``graph[i,j,0]=2`` and ``graph[j,i,0]=2`` denotes a conflicting,</span>
+<span class="sd">        * ``graph[i,j,0]=x-x`` and (``graph[j,i,0]=x-x``) denotes a conflicting,</span>
 <span class="sd">          contemporaneous adjacency between :math:`i` and :math:`j` indicating</span>
 <span class="sd">          that the directionality is undecided due to conflicting orientation</span>
 <span class="sd">          rules</span>
@@ -1984,7 +1984,7 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        &gt;&gt;&gt; import numpy</span>
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
 <span class="sd">        &gt;&gt;&gt; from tigramite.pcmci import PCMCI</span>
 <span class="sd">        &gt;&gt;&gt; from tigramite.independence_tests import ParCorr</span>
 <span class="sd">        &gt;&gt;&gt; import tigramite.data_processing as pp</span>
@@ -1997,12 +1997,10 @@
 <span class="sd">                     2: [((2, -1), 0.7, lin_f), ((1, 0), 0.6, lin_f)],</span>
 <span class="sd">                     3: [((3, -1), 0.7, lin_f), ((2, 0), -0.5, lin_f)],</span>
 <span class="sd">                     }</span>
-<span class="sd">        &gt;&gt;&gt; # Specify dynamical noise term distributions</span>
-<span class="sd">        &gt;&gt;&gt; noises = [np.random.randn for j in links.keys()]</span>
 <span class="sd">        &gt;&gt;&gt; data, nonstat = pp.structural_causal_process(links,</span>
-<span class="sd">                            T=1000, noises=noises, seed=7)</span>
+<span class="sd">                            T=1000, seed=7)</span>
 <span class="sd">        &gt;&gt;&gt; # Data must be array of shape (time, variables)</span>
-<span class="sd">        &gt;&gt;&gt; print data.shape</span>
+<span class="sd">        &gt;&gt;&gt; print (data.shape)</span>
 <span class="sd">        (1000, 4)</span>
 <span class="sd">        &gt;&gt;&gt; dataframe = pp.DataFrame(data)</span>
 <span class="sd">        &gt;&gt;&gt; cond_ind_test = ParCorr()</span>
@@ -2011,23 +2009,20 @@
 <span class="sd">        &gt;&gt;&gt; pcmci.print_results(results, alpha_level=0.01)</span>
 <span class="sd">            ## Significant links at alpha = 0.01:</span>
 
-<span class="sd">                Variable 0 has 1 link(s):</span>
-<span class="sd">                    (0 -1): pval = 0.00000 | val = 0.676</span>
+<span class="sd">            Variable 0 has 1 link(s):</span>
+<span class="sd">                (0 -1): pval = 0.00000 | val =  0.676</span>
 
-<span class="sd">                Variable 1 has 2 link(s):</span>
-<span class="sd">                    (1 -1): pval = 0.00000 | val = 0.602</span>
+<span class="sd">            Variable 1 has 2 link(s):</span>
+<span class="sd">                (1 -1): pval = 0.00000 | val =  0.602</span>
+<span class="sd">                (0 -1): pval = 0.00000 | val =  0.599</span>
 
-<span class="sd">                    (0 -1): pval = 0.00000 | val = 0.599</span>
+<span class="sd">            Variable 2 has 2 link(s):</span>
+<span class="sd">                (1  0): pval = 0.00000 | val =  0.486</span>
+<span class="sd">                (2 -1): pval = 0.00000 | val =  0.466</span>
 
-<span class="sd">                Variable 2 has 2 link(s):</span>
-<span class="sd">                    (1 0): pval = 0.00000 | val = 0.486</span>
-
-<span class="sd">                    (2 -1): pval = 0.00000 | val = 0.466</span>
-
-<span class="sd">                Variable 3 has 2 link(s):</span>
-<span class="sd">                    (3 -1): pval = 0.00000 | val = 0.524</span>
-
-<span class="sd">                    (2 0): pval = 0.00000 | val = -0.449</span>
+<span class="sd">            Variable 3 has 2 link(s):</span>
+<span class="sd">                (3 -1): pval = 0.00000 | val =  0.524</span>
+<span class="sd">                (2  0): pval = 0.00000 | val = -0.449 </span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -2209,6 +2204,7 @@
                                                   <span class="n">exclude_contemporaneous</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="c1"># Store the parents in the pcmci member</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">all_parents</span> <span class="o">=</span> <span class="n">lagged_parents</span>
+
         <span class="c1"># Cache the resulting values in the return dictionary</span>
         <span class="n">return_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;graph&#39;</span><span class="p">:</span> <span class="n">graph</span><span class="p">,</span>
                        <span class="s1">&#39;val_matrix&#39;</span><span class="p">:</span> <span class="n">val_matrix</span><span class="p">,</span>
@@ -2380,8 +2376,11 @@
                     <span class="n">skeleton_results</span><span class="p">[</span><span class="s1">&#39;val_matrix&#39;</span><span class="p">][</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> \
                         <span class="n">skeleton_results</span><span class="p">[</span><span class="s1">&#39;val_matrix&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
 
+        <span class="c1"># Convert numerical graph matrix to string</span>
+        <span class="n">graph_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_to_string_graph</span><span class="p">(</span><span class="n">final_graph</span><span class="p">)</span>
+
         <span class="n">pc_results</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s1">&#39;graph&#39;</span><span class="p">:</span> <span class="n">final_graph</span><span class="p">,</span>
+            <span class="s1">&#39;graph&#39;</span><span class="p">:</span> <span class="n">graph_str</span><span class="p">,</span>
             <span class="s1">&#39;p_matrix&#39;</span><span class="p">:</span> <span class="n">skeleton_results</span><span class="p">[</span><span class="s1">&#39;p_matrix&#39;</span><span class="p">],</span>
             <span class="s1">&#39;val_matrix&#39;</span><span class="p">:</span> <span class="n">skeleton_results</span><span class="p">[</span><span class="s1">&#39;val_matrix&#39;</span><span class="p">],</span>
             <span class="s1">&#39;sepset&#39;</span><span class="p">:</span> <span class="n">colliders_step_results</span><span class="p">[</span><span class="s1">&#39;sepset&#39;</span><span class="p">],</span>
@@ -2545,9 +2544,9 @@
 <span class="sd">            Total number of triples.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">),</span> <span class="n">k</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="n">triple</span>
-        <span class="n">link_marker</span> <span class="o">=</span> <span class="p">{</span><span class="kc">True</span><span class="p">:</span><span class="s2">&quot;o--o&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">:</span><span class="s2">&quot;--&gt;&quot;</span><span class="p">}</span>
+        <span class="n">link_marker</span> <span class="o">=</span> <span class="p">{</span><span class="kc">True</span><span class="p">:</span><span class="s2">&quot;o-o&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">:</span><span class="s2">&quot;--&gt;&quot;</span><span class="p">}</span>
 
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">    Triple (</span><span class="si">%s</span><span class="s2"> </span><span class="si">% d</span><span class="s2">) </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> o--o </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">    Triple (</span><span class="si">%s</span><span class="s2"> </span><span class="si">% d</span><span class="s2">) </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> o-o </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">tau</span><span class="p">,</span> <span class="n">link_marker</span><span class="p">[</span><span class="n">tau</span><span class="o">==</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">k</span><span class="p">],</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_triples</span><span class="p">))</span>
 
@@ -2744,7 +2743,7 @@
                                                             <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="n">abstau</span><span class="p">)))</span>
 
                         <span class="c1"># Store max. p-value and corresponding value to return</span>
-                        <span class="k">if</span> <span class="n">pval</span> <span class="o">&gt;</span> <span class="n">pvalues</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">abstau</span><span class="p">]:</span>
+                        <span class="k">if</span> <span class="n">pval</span> <span class="o">&gt;=</span> <span class="n">pvalues</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">abstau</span><span class="p">]:</span>
                             <span class="n">pvalues</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">abstau</span><span class="p">]</span> <span class="o">=</span> <span class="n">pval</span>
                             <span class="n">val_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">abstau</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
 
@@ -3184,7 +3183,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">v_structures</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Orienting links among colliders:&quot;</span><span class="p">)</span>
 
-        <span class="n">link_marker</span> <span class="o">=</span> <span class="p">{</span><span class="kc">True</span><span class="p">:</span><span class="s2">&quot;o--o&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">:</span><span class="s2">&quot;--&gt;&quot;</span><span class="p">}</span>
+        <span class="n">link_marker</span> <span class="o">=</span> <span class="p">{</span><span class="kc">True</span><span class="p">:</span><span class="s2">&quot;o-o&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">:</span><span class="s2">&quot;--&gt;&quot;</span><span class="p">}</span>
 
         <span class="c1"># Now go through list of v-structures and (optionally) detect conflicts</span>
         <span class="n">oriented_links</span> <span class="o">=</span> <span class="p">[]</span>
@@ -3192,14 +3191,14 @@
             <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">),</span> <span class="n">k</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="n">itaukj</span>
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">    Collider (</span><span class="si">%s</span><span class="s2"> </span><span class="si">% d</span><span class="s2">) </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> o--o </span><span class="si">%s</span><span class="s2">:&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">    Collider (</span><span class="si">%s</span><span class="s2"> </span><span class="si">% d</span><span class="s2">) </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> o-o </span><span class="si">%s</span><span class="s2">:&quot;</span> <span class="o">%</span> <span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">tau</span><span class="p">,</span> <span class="n">link_marker</span><span class="p">[</span>
                         <span class="n">tau</span><span class="o">==</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">k</span><span class="p">],</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">]))</span>
 
             <span class="k">if</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">oriented_links</span> <span class="ow">and</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">oriented_links</span><span class="p">:</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;      Orient </span><span class="si">%s</span><span class="s2"> o--o </span><span class="si">%s</span><span class="s2"> as </span><span class="si">%s</span><span class="s2"> --&gt; </span><span class="si">%s</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;      Orient </span><span class="si">%s</span><span class="s2"> o-o </span><span class="si">%s</span><span class="s2"> as </span><span class="si">%s</span><span class="s2"> --&gt; </span><span class="si">%s</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="p">(</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">],</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">k</span><span class="p">]))</span>
                 <span class="n">graph</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
@@ -3221,7 +3220,7 @@
                 <span class="k">if</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">oriented_links</span> <span class="ow">and</span> <span class="p">(</span>
                         <span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">oriented_links</span><span class="p">:</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;      Orient </span><span class="si">%s</span><span class="s2"> o--o </span><span class="si">%s</span><span class="s2"> as </span><span class="si">%s</span><span class="s2"> --&gt; </span><span class="si">%s</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="p">(</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;      Orient </span><span class="si">%s</span><span class="s2"> o-o </span><span class="si">%s</span><span class="s2"> as </span><span class="si">%s</span><span class="s2"> --&gt; </span><span class="si">%s</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="p">(</span>
                             <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">k</span><span class="p">],</span>
                             <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">k</span><span class="p">]))</span>
                     <span class="n">graph</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
@@ -3250,7 +3249,7 @@
                 <span class="p">}</span>
 
     <span class="k">def</span> <span class="nf">_find_triples_rule1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Find triples i_tau --&gt; k_t o--o j_t with i_tau -/- j_t.</span>
+        <span class="sd">&quot;&quot;&quot;Find triples i_tau --&gt; k_t o-o j_t with i_tau -/- j_t.</span>
 
 <span class="sd">        Excludes conflicting links.</span>
 
@@ -3312,8 +3311,8 @@
         <span class="k">return</span> <span class="n">triples</span>
 
     <span class="k">def</span> <span class="nf">_find_chains_rule3</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Find chains i_t o--o k_t --&gt; j_t and i_t o--o l_t --&gt; j_t with</span>
-<span class="sd">           i_t o--o j_t and k_t -/- l_t.</span>
+        <span class="sd">&quot;&quot;&quot;Find chains i_t o-o k_t --&gt; j_t and i_t o-o l_t --&gt; j_t with</span>
+<span class="sd">           i_t o-o j_t and k_t -/- l_t.</span>
 
 <span class="sd">        Excludes conflicting links.</span>
 
@@ -3384,7 +3383,7 @@
         <span class="n">N</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="k">def</span> <span class="nf">rule1</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">oriented_links</span><span class="p">):</span>
-            <span class="sd">&quot;&quot;&quot;Find (unambiguous) triples i_tau --&gt; k_t o--o j_t with</span>
+            <span class="sd">&quot;&quot;&quot;Find (unambiguous) triples i_tau --&gt; k_t o-o j_t with</span>
 <span class="sd">               i_tau -/- j_t and orient as i_tau --&gt; k_t --&gt; j_t.</span>
 <span class="sd">            &quot;&quot;&quot;</span>
             <span class="n">triples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_triples_rule1</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
@@ -3399,7 +3398,7 @@
                             <span class="n">k</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">oriented_links</span><span class="p">:</span>
                         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
                             <span class="nb">print</span><span class="p">(</span>
-                                <span class="s2">&quot;    R1: Found (</span><span class="si">%s</span><span class="s2"> </span><span class="si">% d</span><span class="s2">) --&gt; </span><span class="si">%s</span><span class="s2"> o--o </span><span class="si">%s</span><span class="s2">, &quot;</span>
+                                <span class="s2">&quot;    R1: Found (</span><span class="si">%s</span><span class="s2"> </span><span class="si">% d</span><span class="s2">) --&gt; </span><span class="si">%s</span><span class="s2"> o-o </span><span class="si">%s</span><span class="s2">, &quot;</span>
                                 <span class="s2">&quot;orient as </span><span class="si">%s</span><span class="s2"> --&gt; </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
                                     <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">tau</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">k</span><span class="p">],</span>
                                     <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">],</span>
@@ -3419,7 +3418,7 @@
             <span class="k">return</span> <span class="n">triples_left</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">oriented_links</span>
 
         <span class="k">def</span> <span class="nf">rule2</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">oriented_links</span><span class="p">):</span>
-            <span class="sd">&quot;&quot;&quot;Find (unambiguous) triples i_t --&gt; k_t --&gt; j_t with i_t o--o j_t</span>
+            <span class="sd">&quot;&quot;&quot;Find (unambiguous) triples i_t --&gt; k_t --&gt; j_t with i_t o-o j_t</span>
 <span class="sd">               and orient as i_t --&gt; j_t.</span>
 <span class="sd">            &quot;&quot;&quot;</span>
 
@@ -3439,7 +3438,7 @@
                         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
                             <span class="nb">print</span><span class="p">(</span>
                                 <span class="s2">&quot;    R2: Found </span><span class="si">%s</span><span class="s2"> --&gt; </span><span class="si">%s</span><span class="s2"> --&gt; </span><span class="si">%s</span><span class="s2">  with  </span><span class="si">%s</span><span class="s2"> &quot;</span>
-                                <span class="s2">&quot;o--o </span><span class="si">%s</span><span class="s2">, orient as </span><span class="si">%s</span><span class="s2"> --&gt; </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                                <span class="s2">&quot;o-o </span><span class="si">%s</span><span class="s2">, orient as </span><span class="si">%s</span><span class="s2"> --&gt; </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
                                     <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">k</span><span class="p">],</span>
                                     <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">],</span>
                                     <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">],</span>
@@ -3458,8 +3457,8 @@
             <span class="k">return</span> <span class="n">triples_left</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">oriented_links</span>
 
         <span class="k">def</span> <span class="nf">rule3</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">oriented_links</span><span class="p">):</span>
-            <span class="sd">&quot;&quot;&quot;Find (unambiguous) chains i_t o--o k_t --&gt; j_t</span>
-<span class="sd">               and i_t o--o l_t --&gt; j_t with i_t o--o j_t</span>
+            <span class="sd">&quot;&quot;&quot;Find (unambiguous) chains i_t o-o k_t --&gt; j_t</span>
+<span class="sd">               and i_t o-o l_t --&gt; j_t with i_t o-o j_t</span>
 <span class="sd">               and k_t -/- l_t: Orient as i_t --&gt; j_t.</span>
 <span class="sd">            &quot;&quot;&quot;</span>
             <span class="c1"># First find all chains i_t -- k_t --&gt; j_t with i_t -- j_t</span>
@@ -3483,8 +3482,8 @@
                             <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">oriented_links</span><span class="p">:</span>
                         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
                             <span class="nb">print</span><span class="p">(</span>
-                                <span class="s2">&quot;    R3: Found </span><span class="si">%s</span><span class="s2"> o--o </span><span class="si">%s</span><span class="s2"> --&gt; </span><span class="si">%s</span><span class="s2"> and </span><span class="si">%s</span><span class="s2"> o--o &quot;</span>
-                                <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> --&gt; </span><span class="si">%s</span><span class="s2"> with </span><span class="si">%s</span><span class="s2"> o--o </span><span class="si">%s</span><span class="s2"> and </span><span class="si">%s</span><span class="s2"> -/- </span><span class="si">%s</span><span class="s2">, &quot;</span>
+                                <span class="s2">&quot;    R3: Found </span><span class="si">%s</span><span class="s2"> o-o </span><span class="si">%s</span><span class="s2"> --&gt; </span><span class="si">%s</span><span class="s2"> and </span><span class="si">%s</span><span class="s2"> o-o &quot;</span>
+                                <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> --&gt; </span><span class="si">%s</span><span class="s2"> with </span><span class="si">%s</span><span class="s2"> o-o </span><span class="si">%s</span><span class="s2"> and </span><span class="si">%s</span><span class="s2"> -/- </span><span class="si">%s</span><span class="s2">, &quot;</span>
                                 <span class="s2">&quot;orient as </span><span class="si">%s</span><span class="s2"> --&gt; </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
                                     <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">k</span><span class="p">],</span>
                                     <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
@@ -3549,7 +3548,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">variable_order</span><span class="p">:</span>
-            <span class="n">adj_j</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">circle_cpdag</span><span class="p">[:,</span><span class="n">j</span><span class="p">,</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="n">adj_j</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">circle_cpdag</span><span class="p">[:,</span><span class="n">j</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;o-o&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
 
             <span class="c1"># Make sure the node has any adjacencies</span>
             <span class="n">all_adjacent</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">adj_j</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
@@ -3559,7 +3558,7 @@
                 <span class="k">return</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">adj_j</span><span class="p">)</span>  
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">for</span> <span class="p">(</span><span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">)</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="n">adj_j</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
-                    <span class="k">if</span> <span class="n">circle_cpdag</span><span class="p">[</span><span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> 
+                    <span class="k">if</span> <span class="n">circle_cpdag</span><span class="p">[</span><span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span> 
                         <span class="n">all_adjacent</span> <span class="o">=</span> <span class="kc">False</span>
                         <span class="k">break</span>
 
@@ -3621,13 +3620,13 @@
         <span class="c1"># Turn circle component CPDAG^C into a DAG with no unshielded colliders.</span>
         <span class="n">circle_cpdag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">cpdag_graph</span><span class="p">)</span>
         <span class="c1"># All lagged links are directed by time, remove them here</span>
-        <span class="n">circle_cpdag</span><span class="p">[:,:,</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">circle_cpdag</span><span class="p">[:,:,</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="c1"># Also remove conflicting links</span>
-        <span class="n">circle_cpdag</span><span class="p">[</span><span class="n">circle_cpdag</span><span class="o">==</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="c1"># Find undirected links</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">tau</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">circle_cpdag</span><span class="p">)):</span>
-            <span class="k">if</span> <span class="n">circle_cpdag</span><span class="p">[</span><span class="n">j</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">circle_cpdag</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">circle_cpdag</span><span class="p">[</span><span class="n">circle_cpdag</span><span class="o">==</span><span class="s2">&quot;x-x&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="c1"># Find undirected links, remove directed links</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">tau</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">circle_cpdag</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">circle_cpdag</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;--&gt;&quot;</span><span class="p">:</span>
+                <span class="n">circle_cpdag</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
 
         <span class="c1"># Iterate through simplicial nodes</span>
         <span class="n">simplicial_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_simplicial_node</span><span class="p">(</span><span class="n">circle_cpdag</span><span class="p">,</span>
@@ -3639,9 +3638,9 @@
             <span class="c1"># component PAG</span>
             <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">adj_j</span><span class="p">)</span> <span class="o">=</span> <span class="n">simplicial_node</span>
             <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">adj_j</span><span class="p">:</span>
-                <span class="n">dag</span><span class="p">[</span><span class="n">var</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-                <span class="n">dag</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-                <span class="n">circle_cpdag</span><span class="p">[</span><span class="n">var</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">circle_cpdag</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span> 
+                <span class="n">dag</span><span class="p">[</span><span class="n">var</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;--&gt;&quot;</span>
+                <span class="n">dag</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&lt;--&quot;</span>
+                <span class="n">circle_cpdag</span><span class="p">[</span><span class="n">var</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">circle_cpdag</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span> 
 
             <span class="c1"># Iterate</span>
             <span class="n">simplicial_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_simplicial_node</span><span class="p">(</span><span class="n">circle_cpdag</span><span class="p">,</span>
@@ -3725,18 +3724,22 @@
             <span class="n">dag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dag_from_cpdag</span><span class="p">(</span>
                             <span class="n">cpdag_graph</span><span class="o">=</span><span class="n">results</span><span class="p">[</span><span class="n">pc_alpha_here</span><span class="p">][</span><span class="s1">&#39;graph&#39;</span><span class="p">],</span>
                             <span class="n">variable_order</span><span class="o">=</span><span class="n">variable_order</span><span class="p">)</span>
-            <span class="n">parents</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_significant_links</span><span class="p">(</span>
-                    <span class="n">pq_matrix</span><span class="o">=</span><span class="n">results</span><span class="p">[</span><span class="n">pc_alpha_here</span><span class="p">][</span><span class="s1">&#39;p_matrix&#39;</span><span class="p">],</span>
-                    <span class="n">val_matrix</span><span class="o">=</span><span class="n">results</span><span class="p">[</span><span class="n">pc_alpha_here</span><span class="p">][</span><span class="s1">&#39;val_matrix&#39;</span><span class="p">],</span> 
-                    <span class="n">alpha_level</span><span class="o">=</span><span class="n">pc_alpha_here</span><span class="p">,</span>
-                    <span class="n">include_lagzero_links</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="s1">&#39;link_dict&#39;</span><span class="p">]</span>
+            
+            <span class="c1"># = self.return_significant_links(</span>
+            <span class="c1">#         pq_matrix=results[pc_alpha_here][&#39;p_matrix&#39;],</span>
+            <span class="c1">#         val_matrix=results[pc_alpha_here][&#39;val_matrix&#39;], </span>
+            <span class="c1">#         alpha_level=pc_alpha_here,</span>
+            <span class="c1">#         include_lagzero_links=True)[&#39;link_dict&#39;]</span>
 
             <span class="c1"># Compute the best average score when the model selection</span>
             <span class="c1"># is applied to all N variables</span>
             <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+                <span class="n">parents</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">tau</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">dag</span><span class="p">[:,</span><span class="n">j</span><span class="p">,:]</span> <span class="o">==</span> <span class="s2">&quot;--&gt;&quot;</span><span class="p">)):</span>
+                    <span class="n">parents</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="n">tau</span><span class="p">))</span>
                 <span class="n">score</span><span class="p">[</span><span class="n">iscore</span><span class="p">]</span> <span class="o">+=</span> \
                     <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span><span class="o">.</span><span class="n">get_model_selection_criterion</span><span class="p">(</span>
-                        <span class="n">j</span><span class="p">,</span> <span class="n">parents</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">tau_max</span><span class="p">)</span>
+                        <span class="n">j</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">)</span>
             <span class="n">score</span><span class="p">[</span><span class="n">iscore</span><span class="p">]</span> <span class="o">/=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
 
         <span class="c1"># Record the optimal alpha value</span>
@@ -3790,236 +3793,37 @@
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">tigramite.independence_tests</span> <span class="k">import</span> <span class="n">ParCorr</span><span class="p">,</span> <span class="n">CMIknn</span>
+    <span class="kn">from</span> <span class="nn">tigramite.independence_tests</span> <span class="kn">import</span> <span class="n">ParCorr</span><span class="p">,</span> <span class="n">CMIknn</span>
     <span class="kn">import</span> <span class="nn">tigramite.data_processing</span> <span class="k">as</span> <span class="nn">pp</span>
     <span class="kn">import</span> <span class="nn">tigramite.plotting</span> <span class="k">as</span> <span class="nn">tp</span>
 
     <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">43</span><span class="p">)</span>
 
-
-    <span class="c1">## Generate some time series from a structural causal process</span>
+    <span class="c1"># Example process to play around with</span>
+    <span class="c1"># Each key refers to a variable and the incoming links are supplied</span>
+    <span class="c1"># as a list of format [((var, -lag), coeff, function), ...]</span>
     <span class="k">def</span> <span class="nf">lin_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span>
     <span class="k">def</span> <span class="nf">nonlin_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mf">5.</span> <span class="o">*</span> <span class="n">x</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="mf">20.</span><span class="p">))</span>
 
-    <span class="n">auto_coeff</span> <span class="o">=</span> <span class="mf">0.95</span>
-    <span class="n">coeff</span> <span class="o">=</span> <span class="mf">0.4</span>
-    <span class="n">T</span> <span class="o">=</span> <span class="mi">500</span>
-
-    <span class="c1"># links ={0: [((0, -1), auto_coeff, lin_f),</span>
-    <span class="c1">#         ((1, -1), coeff, lin_f)</span>
-    <span class="c1">#         ],</span>
-    <span class="c1">#     1: [((1, -1), auto_coeff, lin_f), </span>
-    <span class="c1">#         ],</span>
-    <span class="c1">#     2: [((2, -1), auto_coeff, lin_f), </span>
-    <span class="c1">#         ((3, 0), -coeff, lin_f), </span>
-    <span class="c1">#         ],</span>
-    <span class="c1">#     3: [((3, -1), auto_coeff, lin_f), </span>
-    <span class="c1">#         ((1, -2), coeff, lin_f), </span>
-    <span class="c1">#         ],</span>
-    <span class="c1">#     4: [((4, -1), auto_coeff, lin_f), </span>
-    <span class="c1">#         ((3, 0), coeff, lin_f), </span>
-    <span class="c1">#         ],   </span>
-    <span class="c1">#     5: [((5, -1), 0.5*auto_coeff, lin_f), </span>
-    <span class="c1">#         ((6, 0), coeff, lin_f), </span>
-    <span class="c1">#         ],  </span>
-    <span class="c1">#     6: [((6, -1), 0.5*auto_coeff, lin_f), </span>
-    <span class="c1">#         ((5, -1), -coeff, lin_f), </span>
-    <span class="c1">#         ],  </span>
-    <span class="c1">#     7: [((7, -1), auto_coeff, lin_f), </span>
-    <span class="c1">#         ((8, 0), -coeff, lin_f), </span>
-    <span class="c1">#         ],  </span>
-    <span class="c1">#     8: [],                                     </span>
-    <span class="c1">#     }</span>
-
-    <span class="c1"># links = {0: [((0, -1), 0.8, lin_f), ((1, -1), 0.6, lin_f)],</span>
-    <span class="c1">#          1: [((1, -1), 0., lin_f)],</span>
-    <span class="c1">#          2: [((2, -1), 0., lin_f), ((1, 0), 0.6, lin_f)],</span>
-    <span class="c1">#          3: [((3, -1), 0., lin_f), ((2, 0), -0.5, lin_f)],</span>
-    <span class="c1">#          }</span>
-    <span class="n">links</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">[((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mf">0.6</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
-             <span class="mi">1</span><span class="p">:</span> <span class="p">[((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.6</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
-             <span class="mi">2</span><span class="p">:</span> <span class="p">[((</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)]</span>
+    <span class="n">links</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">[((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.9</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
+             <span class="mi">1</span><span class="p">:</span> <span class="p">[((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
+             <span class="mi">2</span><span class="p">:</span> <span class="p">[((</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.7</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mf">0.6</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
+             <span class="mi">3</span><span class="p">:</span> <span class="p">[((</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.7</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
              <span class="p">}</span>
 
-
-    <span class="n">noises</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">links</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
     <span class="n">data</span><span class="p">,</span> <span class="n">nonstat</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">structural_causal_process</span><span class="p">(</span><span class="n">links</span><span class="p">,</span>
-                                <span class="n">T</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">noises</span><span class="o">=</span><span class="n">noises</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+                        <span class="n">T</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
 
-    <span class="c1"># data[10, 1] = 999.</span>
-    <span class="c1"># data_mask = data&gt;0.4</span>
-
-    <span class="n">verbosity</span> <span class="o">=</span> <span class="mi">2</span>
-    <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="c1">#, missing_flag=999., mask=data_mask,)</span>
-    <span class="n">pcmci</span> <span class="o">=</span> <span class="n">PCMCI</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span>
-                  <span class="n">cond_ind_test</span><span class="o">=</span><span class="n">ParCorr</span><span class="p">(</span><span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
-                  <span class="n">verbosity</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-                  <span class="p">)</span>
-    <span class="n">results</span> <span class="o">=</span> <span class="n">pcmci</span><span class="o">.</span><span class="n">run_mci</span><span class="p">(</span>
-                  <span class="n">selected_links</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                  <span class="n">tau_min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                  <span class="n">tau_max</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-                  <span class="p">)</span>
-    <span class="nb">print</span> <span class="p">(</span><span class="n">pcmci</span><span class="o">.</span><span class="n">results</span><span class="p">)</span>
+    <span class="c1"># Data must be array of shape (time, variables)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">cond_ind_test</span> <span class="o">=</span> <span class="n">ParCorr</span><span class="p">()</span>
+    <span class="n">pcmci</span> <span class="o">=</span> <span class="n">PCMCI</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span> <span class="n">cond_ind_test</span><span class="o">=</span><span class="n">cond_ind_test</span><span class="p">)</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">pcmci</span><span class="o">.</span><span class="n">run_pcmciplus</span><span class="p">(</span><span class="n">tau_min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">pc_alpha</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+    <span class="n">pcmci</span><span class="o">.</span><span class="n">print_results</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">alpha_level</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
 
 
-    <span class="c1"># lagmat.savefig(&quot;/home/rung_ja/work/sandbox/lags_final.pdf&quot;)</span>
 
-
-    <span class="c1"># print(results[&#39;graph&#39;])</span>
-
-    <span class="c1"># link_matrix = results[&#39;most_frequent_links&#39;]</span>
-    <span class="c1"># link_width = results[&#39;link_frequency&#39;]</span>
-    <span class="c1"># print(link_matrix.shape, val_matrix.shape, link_width.shape, conf_matrix.shape)</span>
-    <span class="c1"># print(link_matrix[:,:,0])</span>
-    <span class="c1"># print(link_width[:,:,0])</span>
-
-    <span class="c1"># tp.plot_time_series_graph(</span>
-    <span class="c1">#     val_matrix=val_matrix,</span>
-    <span class="c1">#     link_matrix=link_matrix,</span>
-    <span class="c1">#     link_width = link_width,</span>
-    <span class="c1">#     link_colorbar_label=&#39;MCI&#39;,</span>
-    <span class="c1">#     cmap_edges=&#39;OrRd&#39;,</span>
-    <span class="c1">#     save_name=&quot;/home/rung_ja/work/sandbox/tsg_final.pdf&quot;,</span>
-    <span class="c1">#     )</span>
-
-
-    <span class="c1"># results = pcmci.run_pcalg_non_timeseries_data(pc_alpha=0.01,</span>
-    <span class="c1">#               max_conds_dim=None, max_combinations=None, </span>
-    <span class="c1">#               contemp_collider_rule=&#39;conservative&#39;,</span>
-    <span class="c1">#               conflict_resolution=True)</span>
-    <span class="c1"># selected_links = {0: [(0, -1)],</span>
-    <span class="c1">#                   1: [(1, -1), (0, -1)],</span>
-    <span class="c1">#                   2: [(2, -1), (1, 0)],</span>
-    <span class="c1">#                   3: [(3, -1), (2, 0)],</span>
-    <span class="c1">#                   }</span>
-
-    <span class="c1"># results = pcmci.run_pc_stable(</span>
-    <span class="c1">#             selected_links=None,</span>
-    <span class="c1">#             tau_min=1,</span>
-    <span class="c1">#             tau_max=1,</span>
-    <span class="c1">#             pc_alpha=0.001,</span>
-    <span class="c1">#             )</span>
-    <span class="c1"># print(results)</span>
-
-    <span class="c1"># results = pcmci.run_pcmci(</span>
-    <span class="c1">#               selected_links=None,</span>
-    <span class="c1">#               tau_min=0,</span>
-    <span class="c1">#               tau_max=2,</span>
-    <span class="c1">#               pc_alpha=None,</span>
-    <span class="c1">#               max_conds_dim=None,</span>
-    <span class="c1">#               max_conds_py=None,</span>
-    <span class="c1">#               max_conds_px=None,</span>
-    <span class="c1">#               fdr_method=&#39;none&#39;,</span>
-    <span class="c1">#               )</span>
-    <span class="c1"># pcmci.print_significant_links(p_matrix=results[&#39;p_matrix&#39;],</span>
-    <span class="c1">#                                          val_matrix=results[&#39;val_matrix&#39;],</span>
-    <span class="c1">#                                          alpha_level=0.05)</span>
-
-    <span class="c1"># results = pcmci.get_lagged_dependencies(</span>
-    <span class="c1">#               selected_links=None,</span>
-    <span class="c1">#               tau_min=0,</span>
-    <span class="c1">#               tau_max=2,</span>
-    <span class="c1">#               val_only=True</span>
-    <span class="c1">#               # parents=None,</span>
-    <span class="c1">#               # max_conds_py=None,</span>
-    <span class="c1">#               # max_conds_px=None,</span>
-    <span class="c1">#               )</span>
-
-    <span class="c1"># print (results)</span>
-
-    <span class="c1"># results = pcmci.run_pcmciplus(</span>
-    <span class="c1">#     selected_links=None,</span>
-    <span class="c1">#     tau_min=0,</span>
-    <span class="c1">#     tau_max=3,</span>
-    <span class="c1">#     pc_alpha=None,</span>
-    <span class="c1">#     contemp_collider_rule=&#39;majority&#39;,</span>
-    <span class="c1">#     conflict_resolution=True,</span>
-    <span class="c1">#     reset_lagged_links=False,</span>
-    <span class="c1">#     max_conds_dim=None,</span>
-    <span class="c1">#     max_conds_py=None,</span>
-    <span class="c1">#     max_conds_px=None,</span>
-    <span class="c1">#     max_conds_px_lagged=0,</span>
-    <span class="c1">#     fdr_method=&#39;none&#39;</span>
-    <span class="c1"># )</span>
-    <span class="c1"># pcmci.print_results(results, alpha_level=0.01)</span>
-
-    <span class="c1"># graph_bool = results[&#39;graph&#39;]</span>
-    <span class="c1"># print(graph_bool[:,:,0])</span>
-    <span class="c1"># print(graph_bool[:,:,1])</span>
-
-    <span class="c1"># graph = np.zeros(graph_bool.shape, dtype=&#39;&lt;U3&#39;)</span>
-    <span class="c1"># graph[:] = &quot;&quot;</span>
-    <span class="c1"># graph[:,:,1:][graph_bool[:,:,1:]==1] = &quot;--&gt;&quot;</span>
-    <span class="c1"># graph[:,:,0][np.logical_and(graph_bool[:,:,0]==1, graph_bool[:,:,0].T==1)] = &quot;o-o&quot;</span>
-    <span class="c1"># for (i,j) in zip(*np.where(np.logical_and(graph_bool[:,:,0]==1, graph_bool[:,:,0].T==0))):</span>
-    <span class="c1">#     graph[i,j,0] = &quot;--&gt;&quot;</span>
-    <span class="c1">#     graph[j,i,0] = &quot;&lt;--&quot;</span>
-
-    <span class="c1"># # np.logical_or(true_graphs==&quot;--&gt;&quot;, true_graphs==&quot;&lt;--&quot;)</span>
-
-    <span class="c1"># print(graph[:,:,0])</span>
-    <span class="c1"># print(graph[:,:,1])    # dag_member = pcmci._get_dag_from_cpdag(cpdag_graph=results[&#39;graph&#39;])</span>
-    <span class="c1"># print(dag_member[:,:,0])</span>
-    <span class="c1"># print(dag_member[:,:,1])</span>
-
-    <span class="c1"># print(&quot;Graph&quot;)</span>
-    <span class="c1"># print(results[&#39;graph&#39;])</span>
-    <span class="c1"># print(&quot;p_matrix&quot;)</span>
-    <span class="c1"># print(results[&#39;p_matrix&#39;].round(4))</span>
-    <span class="c1"># print(&quot;val_matrix&quot;)</span>
-    <span class="c1"># print(results[&#39;val_matrix&#39;].round(2))</span>
-    <span class="c1"># print(&quot;Contemp graph&quot;)</span>
-    <span class="c1"># print(results[&#39;graph&#39;][:, :, 0])</span>
-    <span class="c1"># print(&quot;Contemp p_matrix&quot;)</span>
-    <span class="c1"># print(results[&#39;p_matrix&#39;][:, :, 0].round(4))</span>
-    <span class="c1"># print(&quot;Contemp val_matrix&quot;)</span>
-    <span class="c1"># print(results[&#39;val_matrix&#39;][:, :, 0].round(2))</span>
-
-    <span class="c1"># results = pcmci.run_pcalg(</span>
-    <span class="c1">#             pc_alpha=pc_alpha,</span>
-    <span class="c1">#             tau_min=0, tau_max=tau_max,</span>
-    <span class="c1">#           contemp_collider_rule=&#39;majority&#39;, #&#39;conservative&#39;, #None, #&#39;majority&#39;,</span>
-    <span class="c1">#           conflict_resolution=True,)</span>
-    <span class="c1"># results[&#39;val_matrix&#39;] = results[&#39;graph&#39;]</span>
-
-    <span class="c1"># print(results[&#39;p_matrix&#39;].round(2))</span>
-    <span class="c1"># link_matrix = pcmci.return_significant_parents(</span>
-    <span class="c1">#     pq_matrix=results[&#39;p_matrix&#39;],</span>
-    <span class="c1">#     # val_matrix=results[&#39;val_matrix&#39;], </span>
-    <span class="c1">#     alpha_level=pc_alpha)[&#39;link_matrix&#39;]</span>
-
-    <span class="c1"># link_matrix[:,:,0] = 0</span>
-    <span class="c1"># print(link_matrix.astype(&#39;int&#39;))</span>
-    <span class="c1"># print(contemp_pcmci_results[&#39;val_matrix&#39;].round(2))</span>
-    <span class="c1"># tp.plot_time_series_graph(</span>
-    <span class="c1">#     val_matrix=results[&#39;val_matrix&#39;],</span>
-    <span class="c1">#     link_matrix=link_matrix,</span>
-    <span class="c1">#     link_colorbar_label=&#39;MCI&#39;,</span>
-    <span class="c1">#     cmap_edges=&#39;OrRd&#39;,</span>
-    <span class="c1">#     save_name=&quot;/home/rung_ja/work/sandbox/tsg_final.pdf&quot;,</span>
-    <span class="c1">#     )</span>
-    <span class="c1"># pc_results = pcmci.run_pcalg( </span>
-    <span class="c1">#             pc_alpha=pc_alpha,</span>
-    <span class="c1">#             tau_min=0, tau_max=5,</span>
-    <span class="c1">#            ci_test=&#39;par_corr&#39;,</span>
-    <span class="c1"># print(results[&#39;graph&#39;])</span>
-
-    <span class="c1"># np.random.seed(42)</span>
-    <span class="c1"># val_matrix = np.random.rand(3,3,4)</span>
-    <span class="c1"># link_matrix = np.abs(val_matrix) &gt; .9</span>
-
-    <span class="c1"># tp.plot_time_series_graph(</span>
-    <span class="c1">#     val_matrix=val_matrix,</span>
-    <span class="c1">#     sig_thres=None,</span>
-    <span class="c1">#     link_matrix=link_matrix,</span>
-    <span class="c1">#     var_names=range(len(val_matrix)),</span>
-    <span class="c1">#     undirected_style=&#39;dashed&#39;,</span>
-    <span class="c1">#     save_name=&quot;/home/rung_ja/work/sandbox/tsg_contemp.pdf&quot;,</span>
-
-    <span class="c1"># )</span>
-
-    <span class="c1"># Test order</span>
 </pre></div>
 
           </div>

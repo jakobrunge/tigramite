@@ -27,9 +27,12 @@ Detecting and quantifying causal associations in large nonlinear time series
 datasets. Sci. Adv. 5, eaau4996.
 https://advances.sciencemag.org/content/5/11/eaau4996
 
-2. J. Runge (2020): Discovering contemporaneous and lagged causal relations
-in autocorrelated nonlinear time series datasets
-https://arxiv.org/abs/2003.03685
+2. J. Runge (2020): 
+Discovering contemporaneous and lagged causal relations in autocorrelated 
+nonlinear time series datasets. Proceedings of the 36th Conference on 
+Uncertainty in Artificial Intelligence, UAI 2020,Toronto, Canada, 2019, 
+AUAI Press, 2020. 
+http://auai.org/uai2020/proceedings/579_main_paper.pdf
 
 3. J. Runge et al. (2015): Identifying causal gateways and mediators in
 complex spatio-temporal systems. Nature Communications, 6, 8502.

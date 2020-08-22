@@ -76,7 +76,7 @@ class PCMCI():
     different times and a link indicates a conditional dependency that can be
     interpreted as a causal dependency under certain assumptions (see paper).
     Assuming stationarity, the links are repeated in time. The parents
-    :math:`\\mathcal{P}` of a variable are defined as the set of all nodes
+    :math:`\mathcal{P}` of a variable are defined as the set of all nodes
     with a link towards it (blue and red boxes in Figure).
 
     The different PCMCI methods estimate causal links by iterative
@@ -96,7 +96,7 @@ class PCMCI():
     .. [5] J. Runge,
            Discovering contemporaneous and lagged causal relations in 
            autocorrelated nonlinear time series datasets
-           https://arxiv.org/abs/2003.03685
+           http://www.auai.org/~w-auai/uai2020/proceedings/579_main_paper.pdf
 
     Parameters
     ----------
@@ -307,7 +307,7 @@ class PCMCI():
         already_removed : bool
             Whether parent was already removed.
         """
-        link_marker = {True:"o--o", False:"-->"}
+        link_marker = {True:"o-o", False:"-->"}
 
         abstau = abs(parent[1])
         if self.verbosity > 1:
@@ -1533,7 +1533,7 @@ class PCMCI():
             List of ambiguous triples.
         """
         if graph is not None:
-            sig_links = (graph > 0)
+            sig_links = (graph != "")*(graph != "<--")
         elif q_matrix is not None:
             sig_links = (q_matrix <= alpha_level)
         else:
@@ -1562,19 +1562,19 @@ class PCMCI():
                         conf_matrix[p[0], j, abs(p[1])][0],
                         conf_matrix[p[0], j, abs(p[1])][1])
                 if graph is not None:
-                    if p[1] == 0 and graph[j, p[0], 0] == 1:
+                    if p[1] == 0 and graph[j, p[0], 0] == "o-o":
                         string += " | unoriented link"
-                    if graph[p[0], j, abs(p[1])] == 2:
+                    if graph[p[0], j, abs(p[1])] == "x-x":
                         string += " | unclear orientation due to conflict"
             print(string)
 
-        link_marker = {True:"o--o", False:"-->"}
+        link_marker = {True:"o-o", False:"-->"}
 
         if ambiguous_triples is not None and len(ambiguous_triples) > 0:
             print("\n## Ambiguous triples:\n")
             for triple in ambiguous_triples:
                 (i, tau), k, j = triple
-                print("    (%s % d) %s %s o--o %s" % (
+                print("    (%s % d) %s %s o-o %s" % (
                     self.var_names[i], tau, link_marker[tau==0],
                     self.var_names[k],
                     self.var_names[j]))
@@ -1701,7 +1701,7 @@ class PCMCI():
                             2: [((2, -1), 0.8), ((1, -2), -0.6)]}
         >>> data, _ = pp.var_process(links_coeffs, T=1000)
         >>> # Data must be array of shape (time, variables)
-        >>> print data.shape
+        >>> print (data.shape)
         (1000, 3)
         >>> dataframe = pp.DataFrame(data)
         >>> cond_ind_test = ParCorr()
@@ -1713,17 +1713,16 @@ class PCMCI():
         ## Significant parents at alpha = 0.05:
 
             Variable 0 has 1 link(s):
-                (0 -1): pval = 0.00000 | val = 0.632
+                (0 -1): pval = 0.00000 | val =  0.588
 
             Variable 1 has 2 link(s):
-                (1 -1): pval = 0.00000 | val = 0.653
-
-                (0 -1): pval = 0.00000 | val = 0.444
+                (1 -1): pval = 0.00000 | val =  0.606
+                (0 -1): pval = 0.00000 | val =  0.447
 
             Variable 2 has 2 link(s):
-                (2 -1): pval = 0.00000 | val = 0.623
+                (2 -1): pval = 0.00000 | val =  0.618
+                (1 -2): pval = 0.00000 | val = -0.499
 
-                (1 -2): pval = 0.00000 | val = -0.533
 
         Parameters
         ----------
@@ -1829,7 +1828,8 @@ class PCMCI():
         """Runs PCMCIplus time-lagged and contemporaneous causal discovery for
         time series.
 
-        Method described in [5]_: https://arxiv.org/abs/2003.03685
+        Method described in [5]_: 
+        http://www.auai.org/~w-auai/uai2020/proceedings/579_main_paper.pdf
 
         Notes
         -----
@@ -1872,20 +1872,20 @@ class PCMCI():
         links based on PC rules.
 
         In contrast to PCMCI, the relevant output of PCMCIplus is the
-        array ``graph``. Its entries are interpreted as follows:
+        array ``graph``. Its string entries are interpreted as follows:
 
-        * ``graph[i,j,tau]=1`` for :math:`\\tau>0` denotes a directed, lagged
+        * ``graph[i,j,tau]=-->`` for :math:`\\tau>0` denotes a directed, lagged
           causal link from :math:`i` to :math:`j` at lag :math:`\\tau`
 
-        * ``graph[i,j,0]=1`` and ``graph[j,i,0]=0`` denotes a directed,
+        * ``graph[i,j,0]=-->`` (and ``graph[j,i,0]=<--``) denotes a directed,
           contemporaneous causal link from :math:`i` to :math:`j`
 
-        * ``graph[i,j,0]=1`` and ``graph[j,i,0]=1`` denotes an unoriented,
+        * ``graph[i,j,0]=o-o`` (and ``graph[j,i,0]=o-o``) denotes an unoriented,
           contemporaneous adjacency between :math:`i` and :math:`j` indicating
           that the collider and orientation rules could not be applied (Markov
           equivalence)
 
-        * ``graph[i,j,0]=2`` and ``graph[j,i,0]=2`` denotes a conflicting,
+        * ``graph[i,j,0]=x-x`` and (``graph[j,i,0]=x-x``) denotes a conflicting,
           contemporaneous adjacency between :math:`i` and :math:`j` indicating
           that the directionality is undecided due to conflicting orientation
           rules
@@ -1933,7 +1933,7 @@ class PCMCI():
 
         Examples
         --------
-        >>> import numpy
+        >>> import numpy as np
         >>> from tigramite.pcmci import PCMCI
         >>> from tigramite.independence_tests import ParCorr
         >>> import tigramite.data_processing as pp
@@ -1946,12 +1946,10 @@ class PCMCI():
                      2: [((2, -1), 0.7, lin_f), ((1, 0), 0.6, lin_f)],
                      3: [((3, -1), 0.7, lin_f), ((2, 0), -0.5, lin_f)],
                      }
-        >>> # Specify dynamical noise term distributions
-        >>> noises = [np.random.randn for j in links.keys()]
         >>> data, nonstat = pp.structural_causal_process(links,
-                            T=1000, noises=noises, seed=7)
+                            T=1000, seed=7)
         >>> # Data must be array of shape (time, variables)
-        >>> print data.shape
+        >>> print (data.shape)
         (1000, 4)
         >>> dataframe = pp.DataFrame(data)
         >>> cond_ind_test = ParCorr()
@@ -1960,23 +1958,20 @@ class PCMCI():
         >>> pcmci.print_results(results, alpha_level=0.01)
             ## Significant links at alpha = 0.01:
 
-                Variable 0 has 1 link(s):
-                    (0 -1): pval = 0.00000 | val = 0.676
+            Variable 0 has 1 link(s):
+                (0 -1): pval = 0.00000 | val =  0.676
 
-                Variable 1 has 2 link(s):
-                    (1 -1): pval = 0.00000 | val = 0.602
+            Variable 1 has 2 link(s):
+                (1 -1): pval = 0.00000 | val =  0.602
+                (0 -1): pval = 0.00000 | val =  0.599
 
-                    (0 -1): pval = 0.00000 | val = 0.599
+            Variable 2 has 2 link(s):
+                (1  0): pval = 0.00000 | val =  0.486
+                (2 -1): pval = 0.00000 | val =  0.466
 
-                Variable 2 has 2 link(s):
-                    (1 0): pval = 0.00000 | val = 0.486
-
-                    (2 -1): pval = 0.00000 | val = 0.466
-
-                Variable 3 has 2 link(s):
-                    (3 -1): pval = 0.00000 | val = 0.524
-
-                    (2 0): pval = 0.00000 | val = -0.449
+            Variable 3 has 2 link(s):
+                (3 -1): pval = 0.00000 | val =  0.524
+                (2  0): pval = 0.00000 | val = -0.449 
 
         Parameters
         ----------
@@ -2158,6 +2153,7 @@ class PCMCI():
                                                   exclude_contemporaneous=False)
         # Store the parents in the pcmci member
         self.all_parents = lagged_parents
+
         # Cache the resulting values in the return dictionary
         return_dict = {'graph': graph,
                        'val_matrix': val_matrix,
@@ -2329,8 +2325,11 @@ class PCMCI():
                     skeleton_results['val_matrix'][j, i, 0] = \
                         skeleton_results['val_matrix'][i, j, 0]
 
+        # Convert numerical graph matrix to string
+        graph_str = self.convert_to_string_graph(final_graph)
+
         pc_results = {
-            'graph': final_graph,
+            'graph': graph_str,
             'p_matrix': skeleton_results['p_matrix'],
             'val_matrix': skeleton_results['val_matrix'],
             'sepset': colliders_step_results['sepset'],
@@ -2494,9 +2493,9 @@ class PCMCI():
             Total number of triples.
         """
         (i, tau), k, j = triple
-        link_marker = {True:"o--o", False:"-->"}
+        link_marker = {True:"o-o", False:"-->"}
 
-        print("\n    Triple (%s % d) %s %s o--o %s (%d/%d)" % (
+        print("\n    Triple (%s % d) %s %s o-o %s (%d/%d)" % (
             self.var_names[i], tau, link_marker[tau==0], self.var_names[k],
             self.var_names[j], index + 1, n_triples))
 
@@ -2693,7 +2692,7 @@ class PCMCI():
                                                             (i, -abstau)))
 
                         # Store max. p-value and corresponding value to return
-                        if pval > pvalues[i, j, abstau]:
+                        if pval >= pvalues[i, j, abstau]:
                             pvalues[i, j, abstau] = pval
                             val_matrix[i, j, abstau] = val
 
@@ -3133,7 +3132,7 @@ class PCMCI():
         if self.verbosity > 1 and len(v_structures) > 0:
             print("\nOrienting links among colliders:")
 
-        link_marker = {True:"o--o", False:"-->"}
+        link_marker = {True:"o-o", False:"-->"}
 
         # Now go through list of v-structures and (optionally) detect conflicts
         oriented_links = []
@@ -3141,14 +3140,14 @@ class PCMCI():
             (i, tau), k, j = itaukj
 
             if self.verbosity > 1:
-                print("\n    Collider (%s % d) %s %s o--o %s:" % (
+                print("\n    Collider (%s % d) %s %s o-o %s:" % (
                     self.var_names[i], tau, link_marker[
                         tau==0], self.var_names[k],
                     self.var_names[j]))
 
             if (k, j) not in oriented_links and (j, k) not in oriented_links:
                 if self.verbosity > 1:
-                    print("      Orient %s o--o %s as %s --> %s " % (
+                    print("      Orient %s o-o %s as %s --> %s " % (
                         self.var_names[j], self.var_names[k], self.var_names[j],
                         self.var_names[k]))
                 graph[k, j, 0] = 0
@@ -3170,7 +3169,7 @@ class PCMCI():
                 if (i, k) not in oriented_links and (
                         k, i) not in oriented_links:
                     if self.verbosity > 1:
-                        print("      Orient %s o--o %s as %s --> %s " % (
+                        print("      Orient %s o-o %s as %s --> %s " % (
                             self.var_names[i], self.var_names[k],
                             self.var_names[i], self.var_names[k]))
                     graph[k, i, 0] = 0
@@ -3199,7 +3198,7 @@ class PCMCI():
                 }
 
     def _find_triples_rule1(self, graph):
-        """Find triples i_tau --> k_t o--o j_t with i_tau -/- j_t.
+        """Find triples i_tau --> k_t o-o j_t with i_tau -/- j_t.
 
         Excludes conflicting links.
 
@@ -3261,8 +3260,8 @@ class PCMCI():
         return triples
 
     def _find_chains_rule3(self, graph):
-        """Find chains i_t o--o k_t --> j_t and i_t o--o l_t --> j_t with
-           i_t o--o j_t and k_t -/- l_t.
+        """Find chains i_t o-o k_t --> j_t and i_t o-o l_t --> j_t with
+           i_t o-o j_t and k_t -/- l_t.
 
         Excludes conflicting links.
 
@@ -3333,7 +3332,7 @@ class PCMCI():
         N = graph.shape[0]
 
         def rule1(graph, oriented_links):
-            """Find (unambiguous) triples i_tau --> k_t o--o j_t with
+            """Find (unambiguous) triples i_tau --> k_t o-o j_t with
                i_tau -/- j_t and orient as i_tau --> k_t --> j_t.
             """
             triples = self._find_triples_rule1(graph)
@@ -3348,7 +3347,7 @@ class PCMCI():
                             k, j) not in oriented_links:
                         if self.verbosity > 1:
                             print(
-                                "    R1: Found (%s % d) --> %s o--o %s, "
+                                "    R1: Found (%s % d) --> %s o-o %s, "
                                 "orient as %s --> %s" % (
                                     self.var_names[i], tau, self.var_names[k],
                                     self.var_names[j],
@@ -3368,7 +3367,7 @@ class PCMCI():
             return triples_left, graph, oriented_links
 
         def rule2(graph, oriented_links):
-            """Find (unambiguous) triples i_t --> k_t --> j_t with i_t o--o j_t
+            """Find (unambiguous) triples i_t --> k_t --> j_t with i_t o-o j_t
                and orient as i_t --> j_t.
             """
 
@@ -3388,7 +3387,7 @@ class PCMCI():
                         if self.verbosity > 1:
                             print(
                                 "    R2: Found %s --> %s --> %s  with  %s "
-                                "o--o %s, orient as %s --> %s" % (
+                                "o-o %s, orient as %s --> %s" % (
                                     self.var_names[i], self.var_names[k],
                                     self.var_names[j],
                                     self.var_names[i], self.var_names[j],
@@ -3407,8 +3406,8 @@ class PCMCI():
             return triples_left, graph, oriented_links
 
         def rule3(graph, oriented_links):
-            """Find (unambiguous) chains i_t o--o k_t --> j_t
-               and i_t o--o l_t --> j_t with i_t o--o j_t
+            """Find (unambiguous) chains i_t o-o k_t --> j_t
+               and i_t o-o l_t --> j_t with i_t o-o j_t
                and k_t -/- l_t: Orient as i_t --> j_t.
             """
             # First find all chains i_t -- k_t --> j_t with i_t -- j_t
@@ -3432,8 +3431,8 @@ class PCMCI():
                             i, j) not in oriented_links:
                         if self.verbosity > 1:
                             print(
-                                "    R3: Found %s o--o %s --> %s and %s o--o "
-                                "%s --> %s with %s o--o %s and %s -/- %s, "
+                                "    R3: Found %s o-o %s --> %s and %s o-o "
+                                "%s --> %s with %s o-o %s and %s -/- %s, "
                                 "orient as %s --> %s" % (
                                     self.var_names[i], self.var_names[k],
                                     self.var_names[j], self.var_names[i],
@@ -3498,7 +3497,7 @@ class PCMCI():
         """
 
         for j in variable_order:
-            adj_j = np.where(circle_cpdag[:,j,0])[0].tolist()
+            adj_j = np.where(circle_cpdag[:,j,0] == "o-o")[0].tolist()
 
             # Make sure the node has any adjacencies
             all_adjacent = len(adj_j) > 0
@@ -3508,7 +3507,7 @@ class PCMCI():
                 return (j, adj_j)  
             else:
                 for (var1, var2) in itertools.combinations(adj_j, 2):
-                    if circle_cpdag[var1, var2, 0] == 0: 
+                    if circle_cpdag[var1, var2, 0] == "": 
                         all_adjacent = False
                         break
 
@@ -3570,13 +3569,13 @@ class PCMCI():
         # Turn circle component CPDAG^C into a DAG with no unshielded colliders.
         circle_cpdag = np.copy(cpdag_graph)
         # All lagged links are directed by time, remove them here
-        circle_cpdag[:,:,1:] = 0
+        circle_cpdag[:,:,1:] = ""
         # Also remove conflicting links
-        circle_cpdag[circle_cpdag==2] = 0
-        # Find undirected links
-        for i, j, tau in zip(*np.where(circle_cpdag)):
-            if circle_cpdag[j,i,0] == 0:
-                circle_cpdag[i,j,0] = 0
+        circle_cpdag[circle_cpdag=="x-x"] = ""
+        # Find undirected links, remove directed links
+        for i, j, tau in zip(*np.where(circle_cpdag != "")):
+            if circle_cpdag[i,j,0] == "-->":
+                circle_cpdag[i,j,0] = ""
 
         # Iterate through simplicial nodes
         simplicial_node = self._get_simplicial_node(circle_cpdag,
@@ -3588,9 +3587,9 @@ class PCMCI():
             # component PAG
             (j, adj_j) = simplicial_node
             for var in adj_j:
-                dag[var, j, 0] = 1
-                dag[j, var, 0] = 0
-                circle_cpdag[var, j, 0] = circle_cpdag[j, var, 0] = 0 
+                dag[var, j, 0] = "-->"
+                dag[j, var, 0] = "<--"
+                circle_cpdag[var, j, 0] = circle_cpdag[j, var, 0] = "" 
 
             # Iterate
             simplicial_node = self._get_simplicial_node(circle_cpdag,
@@ -3674,18 +3673,22 @@ class PCMCI():
             dag = self._get_dag_from_cpdag(
                             cpdag_graph=results[pc_alpha_here]['graph'],
                             variable_order=variable_order)
-            parents = self.return_significant_links(
-                    pq_matrix=results[pc_alpha_here]['p_matrix'],
-                    val_matrix=results[pc_alpha_here]['val_matrix'], 
-                    alpha_level=pc_alpha_here,
-                    include_lagzero_links=True)['link_dict']
+            
+            # = self.return_significant_links(
+            #         pq_matrix=results[pc_alpha_here]['p_matrix'],
+            #         val_matrix=results[pc_alpha_here]['val_matrix'], 
+            #         alpha_level=pc_alpha_here,
+            #         include_lagzero_links=True)['link_dict']
 
             # Compute the best average score when the model selection
             # is applied to all N variables
             for j in range(self.N):
+                parents = []
+                for i, tau in zip(*np.where(dag[:,j,:] == "-->")):
+                    parents.append((i, -tau))
                 score[iscore] += \
                     self.cond_ind_test.get_model_selection_criterion(
-                        j, parents[j], tau_max)
+                        j, parents, tau_max)
             score[iscore] /= float(self.N)
 
         # Record the optimal alpha value
@@ -3745,31 +3748,28 @@ if __name__ == '__main__':
 
     np.random.seed(43)
 
-    ## Generate some time series from a structural causal process
+    # Example process to play around with
+    # Each key refers to a variable and the incoming links are supplied
+    # as a list of format [((var, -lag), coeff, function), ...]
     def lin_f(x): return x
     def nonlin_f(x): return (x + 5. * x ** 2 * np.exp(-x ** 2 / 20.))
 
-    auto_coeff = 0.95
-    coeff = 0.4
-    T = 500
-
-    links = {0: [((0, -1), 0., lin_f), ((1, 0), 0.6, lin_f)],
-             1: [((1, -1), 0., lin_f), ((2, 0), 0., lin_f), ((2, -1), 0.6, lin_f)],
-             2: [((2, -1), 0.8, lin_f), ((1, -1), -0.5, lin_f)]
+    links = {0: [((0, -1), 0.9, lin_f)],
+             1: [((1, -1), 0.8, lin_f), ((0, -1), 0.8, lin_f)],
+             2: [((2, -1), 0.7, lin_f), ((1, 0), 0.6, lin_f)],
+             3: [((3, -1), 0.7, lin_f), ((2, 0), -0.5, lin_f)],
              }
 
-
-    noises = [np.random.randn for j in links.keys()]
     data, nonstat = pp.structural_causal_process(links,
-                                T=1000, noises=noises, seed=7)
+                        T=1000, seed=7)
 
-    verbosity = 2
+    # Data must be array of shape (time, variables)
+    print(data.shape)
     dataframe = pp.DataFrame(data)
-    pcmci = PCMCI(dataframe=dataframe,
-                  cond_ind_test=ParCorr(verbosity=0),
-                  verbosity=2,
-                  )
-    results = pcmci.run_pcmci(tau_max=2)
-    print (pcmci.results)
+    cond_ind_test = ParCorr()
+    pcmci = PCMCI(dataframe=dataframe, cond_ind_test=cond_ind_test)
+    results = pcmci.run_pcmciplus(tau_min=0, tau_max=2, pc_alpha=0.01)
+    pcmci.print_results(results, alpha_level=0.01)
+
 
 

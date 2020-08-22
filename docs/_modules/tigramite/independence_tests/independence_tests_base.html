@@ -55,13 +55,13 @@
 <span class="c1">#</span>
 <span class="c1"># License: GNU General Public License v3.0</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">abc</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">six</span>
-<span class="kn">from</span> <span class="nn">hashlib</span> <span class="k">import</span> <span class="n">sha1</span>
+<span class="kn">from</span> <span class="nn">hashlib</span> <span class="kn">import</span> <span class="n">sha1</span>
 
 
 <div class="viewcode-block" id="CondIndTest"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.CondIndTest">[docs]</a><span class="nd">@six</span><span class="o">.</span><span class="n">add_metaclass</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABCMeta</span><span class="p">)</span>
@@ -133,7 +133,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">mask_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">significance</span><span class="o">=</span><span class="s1">&#39;analytic&#39;</span><span class="p">,</span>
                  <span class="n">fixed_thres</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
@@ -873,7 +873,7 @@
 <span class="sd">            Optimal block length.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Inject a dependency on siganal, optimize</span>
-        <span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">signal</span><span class="p">,</span> <span class="n">optimize</span>
+        <span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">signal</span><span class="p">,</span> <span class="n">optimize</span>
         <span class="c1"># Get the shape of the array</span>
         <span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
         <span class="c1"># Initiailize the indices</span>
