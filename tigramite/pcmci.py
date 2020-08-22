@@ -76,7 +76,7 @@ class PCMCI():
     different times and a link indicates a conditional dependency that can be
     interpreted as a causal dependency under certain assumptions (see paper).
     Assuming stationarity, the links are repeated in time. The parents
-    :math:`\\mathcal{P}` of a variable are defined as the set of all nodes
+    :math:`\mathcal{P}` of a variable are defined as the set of all nodes
     with a link towards it (blue and red boxes in Figure).
 
     The different PCMCI methods estimate causal links by iterative
@@ -1533,7 +1533,7 @@ class PCMCI():
             List of ambiguous triples.
         """
         if graph is not None:
-            sig_links = (graph != "")
+            sig_links = (graph != "")*(graph != "<--")
         elif q_matrix is not None:
             sig_links = (q_matrix <= alpha_level)
         else:
@@ -1701,7 +1701,7 @@ class PCMCI():
                             2: [((2, -1), 0.8), ((1, -2), -0.6)]}
         >>> data, _ = pp.var_process(links_coeffs, T=1000)
         >>> # Data must be array of shape (time, variables)
-        >>> print data.shape
+        >>> print (data.shape)
         (1000, 3)
         >>> dataframe = pp.DataFrame(data)
         >>> cond_ind_test = ParCorr()
@@ -1713,17 +1713,16 @@ class PCMCI():
         ## Significant parents at alpha = 0.05:
 
             Variable 0 has 1 link(s):
-                (0 -1): pval = 0.00000 | val = 0.632
+                (0 -1): pval = 0.00000 | val =  0.588
 
             Variable 1 has 2 link(s):
-                (1 -1): pval = 0.00000 | val = 0.653
-
-                (0 -1): pval = 0.00000 | val = 0.444
+                (1 -1): pval = 0.00000 | val =  0.606
+                (0 -1): pval = 0.00000 | val =  0.447
 
             Variable 2 has 2 link(s):
-                (2 -1): pval = 0.00000 | val = 0.623
+                (2 -1): pval = 0.00000 | val =  0.618
+                (1 -2): pval = 0.00000 | val = -0.499
 
-                (1 -2): pval = 0.00000 | val = -0.533
 
         Parameters
         ----------
@@ -1934,7 +1933,7 @@ class PCMCI():
 
         Examples
         --------
-        >>> import numpy
+        >>> import numpy as np
         >>> from tigramite.pcmci import PCMCI
         >>> from tigramite.independence_tests import ParCorr
         >>> import tigramite.data_processing as pp
@@ -1947,12 +1946,10 @@ class PCMCI():
                      2: [((2, -1), 0.7, lin_f), ((1, 0), 0.6, lin_f)],
                      3: [((3, -1), 0.7, lin_f), ((2, 0), -0.5, lin_f)],
                      }
-        >>> # Specify dynamical noise term distributions
-        >>> noises = [np.random.randn for j in links.keys()]
         >>> data, nonstat = pp.structural_causal_process(links,
-                            T=1000, noises=noises, seed=7)
+                            T=1000, seed=7)
         >>> # Data must be array of shape (time, variables)
-        >>> print data.shape
+        >>> print (data.shape)
         (1000, 4)
         >>> dataframe = pp.DataFrame(data)
         >>> cond_ind_test = ParCorr()
@@ -1961,23 +1958,20 @@ class PCMCI():
         >>> pcmci.print_results(results, alpha_level=0.01)
             ## Significant links at alpha = 0.01:
 
-                Variable 0 has 1 link(s):
-                    (0 -1): pval = 0.00000 | val = 0.676
+            Variable 0 has 1 link(s):
+                (0 -1): pval = 0.00000 | val =  0.676
 
-                Variable 1 has 2 link(s):
-                    (1 -1): pval = 0.00000 | val = 0.602
+            Variable 1 has 2 link(s):
+                (1 -1): pval = 0.00000 | val =  0.602
+                (0 -1): pval = 0.00000 | val =  0.599
 
-                    (0 -1): pval = 0.00000 | val = 0.599
+            Variable 2 has 2 link(s):
+                (1  0): pval = 0.00000 | val =  0.486
+                (2 -1): pval = 0.00000 | val =  0.466
 
-                Variable 2 has 2 link(s):
-                    (1 0): pval = 0.00000 | val = 0.486
-
-                    (2 -1): pval = 0.00000 | val = 0.466
-
-                Variable 3 has 2 link(s):
-                    (3 -1): pval = 0.00000 | val = 0.524
-
-                    (2 0): pval = 0.00000 | val = -0.449
+            Variable 3 has 2 link(s):
+                (3 -1): pval = 0.00000 | val =  0.524
+                (2  0): pval = 0.00000 | val = -0.449 
 
         Parameters
         ----------
@@ -2698,7 +2692,7 @@ class PCMCI():
                                                             (i, -abstau)))
 
                         # Store max. p-value and corresponding value to return
-                        if pval > pvalues[i, j, abstau]:
+                        if pval >= pvalues[i, j, abstau]:
                             pvalues[i, j, abstau] = pval
                             val_matrix[i, j, abstau] = val
 
@@ -3754,31 +3748,28 @@ if __name__ == '__main__':
 
     np.random.seed(43)
 
-    ## Generate some time series from a structural causal process
+    # Example process to play around with
+    # Each key refers to a variable and the incoming links are supplied
+    # as a list of format [((var, -lag), coeff, function), ...]
     def lin_f(x): return x
     def nonlin_f(x): return (x + 5. * x ** 2 * np.exp(-x ** 2 / 20.))
 
-    auto_coeff = 0.95
-    coeff = 0.4
-    T = 500
-
-    links = {0: [((0, -1), 0., lin_f), ((1, 0), 0.6, lin_f)],
-             1: [((1, -1), 0., lin_f), ((2, 0), 0., lin_f), ((2, -1), 0.6, lin_f)],
-             2: [((2, -1), 0.8, lin_f), ((1, -1), -0.5, lin_f)]
+    links = {0: [((0, -1), 0.9, lin_f)],
+             1: [((1, -1), 0.8, lin_f), ((0, -1), 0.8, lin_f)],
+             2: [((2, -1), 0.7, lin_f), ((1, 0), 0.6, lin_f)],
+             3: [((3, -1), 0.7, lin_f), ((2, 0), -0.5, lin_f)],
              }
 
-
-    noises = [np.random.randn for j in links.keys()]
     data, nonstat = pp.structural_causal_process(links,
-                                T=100, noises=noises, seed=7)
+                        T=1000, seed=7)
 
-    verbosity = 2
+    # Data must be array of shape (time, variables)
+    print(data.shape)
     dataframe = pp.DataFrame(data)
-    pcmci = PCMCI(dataframe=dataframe,
-                  cond_ind_test=ParCorr(verbosity=0),
-                  verbosity=2,
-                  )
-    results = pcmci.run_pcmciplus(tau_max=2, pc_alpha=None)
-    print (pcmci.results)
+    cond_ind_test = ParCorr()
+    pcmci = PCMCI(dataframe=dataframe, cond_ind_test=cond_ind_test)
+    results = pcmci.run_pcmciplus(tau_min=0, tau_max=2, pc_alpha=0.01)
+    pcmci.print_results(results, alpha_level=0.01)
+
 
 
