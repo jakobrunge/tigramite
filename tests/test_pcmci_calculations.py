@@ -541,14 +541,17 @@ def a_run_pcmciplus(a_pcmciplus, a_pcmciplus_params):
     # Print true links
     print("************************")
     print("\nTrue Graph")
-    pcmci.print_significant_links(
-                                p_matrix=(true_graph == 0),
-                                val_matrix=true_graph,
-                                conf_matrix=None,
-                                q_matrix=None,
-                                graph=true_graph,
-                                ambiguous_triples=None,
-                                alpha_level=0.05)
+    for lag in range(tau_max):
+        print("Lag %d = ", lag)
+        print(true_graph[:,:,lag])
+    # pcmci.print_significant_links(
+    #                             p_matrix=(true_graph != ""),
+    #                             val_matrix=true_graph,
+    #                             conf_matrix=None,
+    #                             q_matrix=None,
+    #                             graph=true_graph,
+    #                             ambiguous_triples=None,
+    #                             alpha_level=0.05)
     # Return the results and the expected result
     return results['graph'], true_graph
 
@@ -638,14 +641,17 @@ def test_order_independence_pcmciplus(a_pcmciplus_order_independence,
     pcmci = PCMCI(dataframe=dataframe, cond_ind_test=cond_ind_test, verbosity=1)
     print("************************")
     print("\nTrue Graph")
-    pcmci.print_significant_links(
-                                p_matrix=(true_graph == 0),
-                                val_matrix=true_graph,
-                                conf_matrix=None,
-                                q_matrix=None,
-                                graph=true_graph,
-                                ambiguous_triples=None,
-                                alpha_level=0.05)
+    for lag in range(tau_max):
+        print("Lag %d = ", lag)
+        print(true_graph[:,:,lag])
+    # pcmci.print_significant_links(
+    #                             p_matrix=(true_graph == 0),
+    #                             val_matrix=true_graph,
+    #                             conf_matrix=None,
+    #                             q_matrix=None,
+    #                             graph=true_graph,
+    #                             ambiguous_triples=None,
+    #                             alpha_level=0.05)
 
     results = pcmci.run_pcmciplus(
                       selected_links=None,
@@ -685,7 +691,7 @@ def test_order_independence_pcmciplus(a_pcmciplus_order_independence,
         back_converted_result = np.take(tmp, perm, axis=1)
 
         for tau in range(tau_max+1):
-            if not np.allclose(results['graph'][:,:,tau],
+            if not np.array_equal(results['graph'][:,:,tau],
                                back_converted_result[:,:,tau]):
                 print(tau)
                 print(results['graph'][:,:,tau])
