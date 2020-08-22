@@ -96,7 +96,7 @@ class PCMCI():
     .. [5] J. Runge,
            Discovering contemporaneous and lagged causal relations in 
            autocorrelated nonlinear time series datasets
-           https://arxiv.org/abs/2003.03685
+           http://www.auai.org/~w-auai/uai2020/proceedings/579_main_paper.pdf
 
     Parameters
     ----------
@@ -1829,7 +1829,8 @@ class PCMCI():
         """Runs PCMCIplus time-lagged and contemporaneous causal discovery for
         time series.
 
-        Method described in [5]_: https://arxiv.org/abs/2003.03685
+        Method described in [5]_: 
+        http://www.auai.org/~w-auai/uai2020/proceedings/579_main_paper.pdf
 
         Notes
         -----
