@@ -1584,7 +1584,7 @@
 <span class="sd">            List of ambiguous triples.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">graph</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">sig_links</span> <span class="o">=</span> <span class="p">(</span><span class="n">graph</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">sig_links</span> <span class="o">=</span> <span class="p">(</span><span class="n">graph</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">graph</span> <span class="o">!=</span> <span class="s2">&quot;&lt;--&quot;</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">q_matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">sig_links</span> <span class="o">=</span> <span class="p">(</span><span class="n">q_matrix</span> <span class="o">&lt;=</span> <span class="n">alpha_level</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -1752,7 +1752,7 @@
 <span class="sd">                            2: [((2, -1), 0.8), ((1, -2), -0.6)]}</span>
 <span class="sd">        &gt;&gt;&gt; data, _ = pp.var_process(links_coeffs, T=1000)</span>
 <span class="sd">        &gt;&gt;&gt; # Data must be array of shape (time, variables)</span>
-<span class="sd">        &gt;&gt;&gt; print data.shape</span>
+<span class="sd">        &gt;&gt;&gt; print (data.shape)</span>
 <span class="sd">        (1000, 3)</span>
 <span class="sd">        &gt;&gt;&gt; dataframe = pp.DataFrame(data)</span>
 <span class="sd">        &gt;&gt;&gt; cond_ind_test = ParCorr()</span>
@@ -1764,17 +1764,16 @@
 <span class="sd">        ## Significant parents at alpha = 0.05:</span>
 
 <span class="sd">            Variable 0 has 1 link(s):</span>
-<span class="sd">                (0 -1): pval = 0.00000 | val = 0.632</span>
+<span class="sd">                (0 -1): pval = 0.00000 | val =  0.588</span>
 
 <span class="sd">            Variable 1 has 2 link(s):</span>
-<span class="sd">                (1 -1): pval = 0.00000 | val = 0.653</span>
-
-<span class="sd">                (0 -1): pval = 0.00000 | val = 0.444</span>
+<span class="sd">                (1 -1): pval = 0.00000 | val =  0.606</span>
+<span class="sd">                (0 -1): pval = 0.00000 | val =  0.447</span>
 
 <span class="sd">            Variable 2 has 2 link(s):</span>
-<span class="sd">                (2 -1): pval = 0.00000 | val = 0.623</span>
+<span class="sd">                (2 -1): pval = 0.00000 | val =  0.618</span>
+<span class="sd">                (1 -2): pval = 0.00000 | val = -0.499</span>
 
-<span class="sd">                (1 -2): pval = 0.00000 | val = -0.533</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1985,7 +1984,7 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        &gt;&gt;&gt; import numpy</span>
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
 <span class="sd">        &gt;&gt;&gt; from tigramite.pcmci import PCMCI</span>
 <span class="sd">        &gt;&gt;&gt; from tigramite.independence_tests import ParCorr</span>
 <span class="sd">        &gt;&gt;&gt; import tigramite.data_processing as pp</span>
@@ -1998,12 +1997,10 @@
 <span class="sd">                     2: [((2, -1), 0.7, lin_f), ((1, 0), 0.6, lin_f)],</span>
 <span class="sd">                     3: [((3, -1), 0.7, lin_f), ((2, 0), -0.5, lin_f)],</span>
 <span class="sd">                     }</span>
-<span class="sd">        &gt;&gt;&gt; # Specify dynamical noise term distributions</span>
-<span class="sd">        &gt;&gt;&gt; noises = [np.random.randn for j in links.keys()]</span>
 <span class="sd">        &gt;&gt;&gt; data, nonstat = pp.structural_causal_process(links,</span>
-<span class="sd">                            T=1000, noises=noises, seed=7)</span>
+<span class="sd">                            T=1000, seed=7)</span>
 <span class="sd">        &gt;&gt;&gt; # Data must be array of shape (time, variables)</span>
-<span class="sd">        &gt;&gt;&gt; print data.shape</span>
+<span class="sd">        &gt;&gt;&gt; print (data.shape)</span>
 <span class="sd">        (1000, 4)</span>
 <span class="sd">        &gt;&gt;&gt; dataframe = pp.DataFrame(data)</span>
 <span class="sd">        &gt;&gt;&gt; cond_ind_test = ParCorr()</span>
@@ -2012,23 +2009,20 @@
 <span class="sd">        &gt;&gt;&gt; pcmci.print_results(results, alpha_level=0.01)</span>
 <span class="sd">            ## Significant links at alpha = 0.01:</span>
 
-<span class="sd">                Variable 0 has 1 link(s):</span>
-<span class="sd">                    (0 -1): pval = 0.00000 | val = 0.676</span>
+<span class="sd">            Variable 0 has 1 link(s):</span>
+<span class="sd">                (0 -1): pval = 0.00000 | val =  0.676</span>
 
-<span class="sd">                Variable 1 has 2 link(s):</span>
-<span class="sd">                    (1 -1): pval = 0.00000 | val = 0.602</span>
+<span class="sd">            Variable 1 has 2 link(s):</span>
+<span class="sd">                (1 -1): pval = 0.00000 | val =  0.602</span>
+<span class="sd">                (0 -1): pval = 0.00000 | val =  0.599</span>
 
-<span class="sd">                    (0 -1): pval = 0.00000 | val = 0.599</span>
+<span class="sd">            Variable 2 has 2 link(s):</span>
+<span class="sd">                (1  0): pval = 0.00000 | val =  0.486</span>
+<span class="sd">                (2 -1): pval = 0.00000 | val =  0.466</span>
 
-<span class="sd">                Variable 2 has 2 link(s):</span>
-<span class="sd">                    (1 0): pval = 0.00000 | val = 0.486</span>
-
-<span class="sd">                    (2 -1): pval = 0.00000 | val = 0.466</span>
-
-<span class="sd">                Variable 3 has 2 link(s):</span>
-<span class="sd">                    (3 -1): pval = 0.00000 | val = 0.524</span>
-
-<span class="sd">                    (2 0): pval = 0.00000 | val = -0.449</span>
+<span class="sd">            Variable 3 has 2 link(s):</span>
+<span class="sd">                (3 -1): pval = 0.00000 | val =  0.524</span>
+<span class="sd">                (2  0): pval = 0.00000 | val = -0.449 </span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -2749,7 +2743,7 @@
                                                             <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="n">abstau</span><span class="p">)))</span>
 
                         <span class="c1"># Store max. p-value and corresponding value to return</span>
-                        <span class="k">if</span> <span class="n">pval</span> <span class="o">&gt;</span> <span class="n">pvalues</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">abstau</span><span class="p">]:</span>
+                        <span class="k">if</span> <span class="n">pval</span> <span class="o">&gt;=</span> <span class="n">pvalues</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">abstau</span><span class="p">]:</span>
                             <span class="n">pvalues</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">abstau</span><span class="p">]</span> <span class="o">=</span> <span class="n">pval</span>
                             <span class="n">val_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">abstau</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
 
@@ -3805,32 +3799,29 @@
 
     <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">43</span><span class="p">)</span>
 
-    <span class="c1">## Generate some time series from a structural causal process</span>
+    <span class="c1"># Example process to play around with</span>
+    <span class="c1"># Each key refers to a variable and the incoming links are supplied</span>
+    <span class="c1"># as a list of format [((var, -lag), coeff, function), ...]</span>
     <span class="k">def</span> <span class="nf">lin_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span>
     <span class="k">def</span> <span class="nf">nonlin_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mf">5.</span> <span class="o">*</span> <span class="n">x</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="mf">20.</span><span class="p">))</span>
 
-    <span class="n">auto_coeff</span> <span class="o">=</span> <span class="mf">0.95</span>
-    <span class="n">coeff</span> <span class="o">=</span> <span class="mf">0.4</span>
-    <span class="n">T</span> <span class="o">=</span> <span class="mi">500</span>
-
-    <span class="n">links</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">[((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mf">0.6</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
-             <span class="mi">1</span><span class="p">:</span> <span class="p">[((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.6</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
-             <span class="mi">2</span><span class="p">:</span> <span class="p">[((</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)]</span>
+    <span class="n">links</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">[((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.9</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
+             <span class="mi">1</span><span class="p">:</span> <span class="p">[((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
+             <span class="mi">2</span><span class="p">:</span> <span class="p">[((</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.7</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mf">0.6</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
+             <span class="mi">3</span><span class="p">:</span> <span class="p">[((</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.7</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
              <span class="p">}</span>
 
-
-    <span class="n">noises</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">links</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
     <span class="n">data</span><span class="p">,</span> <span class="n">nonstat</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">structural_causal_process</span><span class="p">(</span><span class="n">links</span><span class="p">,</span>
-                                <span class="n">T</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">noises</span><span class="o">=</span><span class="n">noises</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+                        <span class="n">T</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
 
-    <span class="n">verbosity</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="c1"># Data must be array of shape (time, variables)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
     <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-    <span class="n">pcmci</span> <span class="o">=</span> <span class="n">PCMCI</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span>
-                  <span class="n">cond_ind_test</span><span class="o">=</span><span class="n">ParCorr</span><span class="p">(</span><span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
-                  <span class="n">verbosity</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-                  <span class="p">)</span>
-    <span class="n">results</span> <span class="o">=</span> <span class="n">pcmci</span><span class="o">.</span><span class="n">run_pcmciplus</span><span class="p">(</span><span class="n">tau_max</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">pc_alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-    <span class="nb">print</span> <span class="p">(</span><span class="n">pcmci</span><span class="o">.</span><span class="n">results</span><span class="p">)</span>
+    <span class="n">cond_ind_test</span> <span class="o">=</span> <span class="n">ParCorr</span><span class="p">()</span>
+    <span class="n">pcmci</span> <span class="o">=</span> <span class="n">PCMCI</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span> <span class="n">cond_ind_test</span><span class="o">=</span><span class="n">cond_ind_test</span><span class="p">)</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">pcmci</span><span class="o">.</span><span class="n">run_pcmciplus</span><span class="p">(</span><span class="n">tau_min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">pc_alpha</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+    <span class="n">pcmci</span><span class="o">.</span><span class="n">print_results</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">alpha_level</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+
 
 
 </pre></div>

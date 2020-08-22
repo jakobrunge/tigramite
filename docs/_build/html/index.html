@@ -741,7 +741,7 @@ optimized using model selection criteria implemented in the respective
 <span class="go">                    2: [((2, -1), 0.8), ((1, -2), -0.6)]}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">var_process</span><span class="p">(</span><span class="n">links_coeffs</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Data must be array of shape (time, variables)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 <span class="go">(1000, 3)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dataframe</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cond_ind_test</span> <span class="o">=</span> <span class="n">ParCorr</span><span class="p">()</span>
@@ -754,14 +754,14 @@ optimized using model selection criteria implemented in the respective
 </pre></div>
 </div>
 <blockquote>
-<div><dl>
-<dt>Variable 0 has 1 link(s):</dt><dd><p>(0 -1): pval = 0.00000 | val = 0.632</p>
+<div><dl class="simple">
+<dt>Variable 0 has 1 link(s):</dt><dd><p>(0 -1): pval = 0.00000 | val =  0.588</p>
 </dd>
-<dt>Variable 1 has 2 link(s):</dt><dd><p>(1 -1): pval = 0.00000 | val = 0.653</p>
-<p>(0 -1): pval = 0.00000 | val = 0.444</p>
+<dt>Variable 1 has 2 link(s):</dt><dd><p>(1 -1): pval = 0.00000 | val =  0.606
+(0 -1): pval = 0.00000 | val =  0.447</p>
 </dd>
-<dt>Variable 2 has 2 link(s):</dt><dd><p>(2 -1): pval = 0.00000 | val = 0.623</p>
-<p>(1 -2): pval = 0.00000 | val = -0.533</p>
+<dt>Variable 2 has 2 link(s):</dt><dd><p>(2 -1): pval = 0.00000 | val =  0.618
+(1 -2): pval = 0.00000 | val = -0.499</p>
 </dd>
 </dl>
 </div></blockquote>
@@ -891,7 +891,7 @@ which improves detection power for lagged links, but also leads to
 larger runtimes.</p>
 <p>Further optional parameters are discussed in <a class="footnote-reference brackets" href="#id4" id="id12">5</a>.</p>
 <p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">tigramite.pcmci</span> <span class="kn">import</span> <span class="n">PCMCI</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">tigramite.independence_tests</span> <span class="kn">import</span> <span class="n">ParCorr</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">tigramite.data_processing</span> <span class="k">as</span> <span class="nn">pp</span>
@@ -904,12 +904,10 @@ larger runtimes.</p>
 <span class="go">             2: [((2, -1), 0.7, lin_f), ((1, 0), 0.6, lin_f)],</span>
 <span class="go">             3: [((3, -1), 0.7, lin_f), ((2, 0), -0.5, lin_f)],</span>
 <span class="go">             }</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Specify dynamical noise term distributions</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">noises</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">links</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="p">,</span> <span class="n">nonstat</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">structural_causal_process</span><span class="p">(</span><span class="n">links</span><span class="p">,</span>
-<span class="go">                    T=1000, noises=noises, seed=7)</span>
+<span class="go">                    T=1000, seed=7)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Data must be array of shape (time, variables)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 <span class="go">(1000, 4)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dataframe</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cond_ind_test</span> <span class="o">=</span> <span class="n">ParCorr</span><span class="p">()</span>
@@ -920,17 +918,17 @@ larger runtimes.</p>
 </pre></div>
 </div>
 <blockquote>
-<div><dl>
-<dt>Variable 0 has 1 link(s):</dt><dd><p>(0 -1): pval = 0.00000 | val = 0.676</p>
+<div><dl class="simple">
+<dt>Variable 0 has 1 link(s):</dt><dd><p>(0 -1): pval = 0.00000 | val =  0.676</p>
 </dd>
-<dt>Variable 1 has 2 link(s):</dt><dd><p>(1 -1): pval = 0.00000 | val = 0.602</p>
-<p>(0 -1): pval = 0.00000 | val = 0.599</p>
+<dt>Variable 1 has 2 link(s):</dt><dd><p>(1 -1): pval = 0.00000 | val =  0.602
+(0 -1): pval = 0.00000 | val =  0.599</p>
 </dd>
-<dt>Variable 2 has 2 link(s):</dt><dd><p>(1 0): pval = 0.00000 | val = 0.486</p>
-<p>(2 -1): pval = 0.00000 | val = 0.466</p>
+<dt>Variable 2 has 2 link(s):</dt><dd><p>(1  0): pval = 0.00000 | val =  0.486
+(2 -1): pval = 0.00000 | val =  0.466</p>
 </dd>
-<dt>Variable 3 has 2 link(s):</dt><dd><p>(3 -1): pval = 0.00000 | val = 0.524</p>
-<p>(2 0): pval = 0.00000 | val = -0.449</p>
+<dt>Variable 3 has 2 link(s):</dt><dd><p>(3 -1): pval = 0.00000 | val =  0.524
+(2  0): pval = 0.00000 | val = -0.449</p>
 </dd>
 </dl>
 </div></blockquote>

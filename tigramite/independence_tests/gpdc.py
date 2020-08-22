@@ -685,7 +685,7 @@ class GPDC(CondIndTest):
         Returns
         -------
         pval : float or numpy.nan
-            P-value.
+            p-value.
         """
 
         # GP regression approximately doesn't cost degrees of freedom
