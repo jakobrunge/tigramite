@@ -1616,7 +1616,7 @@ def plot_graph(
         fig, ax = fig_ax
 
     (link_matrix, val_matrix, link_width, link_attribute) = _check_matrices(
-        link_matrix, val_matrix, link_width, link_attribute
+        link_matrix, val_matrix, link_width, link_attribute, sig_thres
     )
 
     N, N, dummy = val_matrix.shape
@@ -1862,7 +1862,7 @@ def _reverse_patt(patt):
     #     return '-->'
 
 
-def _check_matrices(link_matrix, val_matrix, link_width, link_attribute):
+def _check_matrices(link_matrix, val_matrix, link_width, link_attribute, sig_thres):
     if link_matrix is None and (val_matrix is None or sig_thres is None):
         raise ValueError(
             "Need to specify either val_matrix together with sig_thres, or link_matrix"
@@ -2049,7 +2049,7 @@ def plot_time_series_graph(
         fig, ax = fig_ax
 
     (link_matrix, val_matrix, link_width, link_attribute) = _check_matrices(
-        link_matrix, val_matrix, link_width, link_attribute
+        link_matrix, val_matrix, link_width, link_attribute, sig_thres
     )
 
     N, N, dummy = link_matrix.shape
