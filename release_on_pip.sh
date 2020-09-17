@@ -9,8 +9,8 @@
 
 # Run all those in Linux or Windows
 
-# Packages needed for setup
-pip install --upgrade setuptools wheel twine auditwheel
+# Packages needed for setup (the parameter "--use-feature=2020-resolver" may not be necessary anymore soon )
+pip install --use-feature=2020-resolver --upgrade setuptools wheel twine auditwheel
 
 # Install the package itself in the environment
 pip install -e .['dev']
