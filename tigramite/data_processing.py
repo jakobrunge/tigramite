@@ -155,10 +155,10 @@ class DataFrame():
 
         Returns
         -------
-        array, xyz [,XYZ] : Tuple of data array of shape (dim, T) and xyz
+        array, xyz [,XYZ] : Tuple of data array of shape (dim, time) and xyz
             identifier array of shape (dim,) identifying which row in array
             corresponds to X, Y, and Z. For example:: X = [(0, -1)], Y = [(1,
-            0)], Z = [(1, -1), (0, -2)] yields an array of shape (5, T) and
+            0)], Z = [(1, -1), (0, -2)] yields an array of shape (4, T) and
             xyz is xyz = numpy.array([0,1,2,2]) If return_cleaned_xyz is
             True, also outputs the cleaned XYZ lists.
 
