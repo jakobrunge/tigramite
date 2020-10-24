@@ -966,14 +966,13 @@ def _find_max_time_lag_and_node_id(parents_neighbors_coeffs):
     """
     # Default maximum lag and node ID
     max_time_lag = 0
-    max_node_id = 0
+    max_node_id = len(parents_neighbors_coeffs)
     # Iterate through the keys in parents_neighbors_coeffs
     for j, _, tau, _ in _iter_coeffs(parents_neighbors_coeffs):
-        print('here', j, tau)
         # Find max lag time
         max_time_lag = max(max_time_lag, abs(tau))
         # Find the max node ID
-        max_node_id = max(max_node_id, j)
+        # max_node_id = max(max_node_id, j)
     # Return these values
     return max_time_lag, max_node_id
 
@@ -1060,13 +1059,10 @@ def _get_lag_connect_matrix(parents_neighbors_coeffs):
     # Get the total number of nodes and time lag
     max_time_lag, max_node_id = \
             _find_max_time_lag_and_node_id(parents_neighbors_coeffs)
-    print(max_time_lag, max_node_id)
     n_nodes = max_node_id + 1
     n_times = max_time_lag + 1
     # Initialize full time graph
     connect_matrix = np.zeros((n_nodes, n_nodes, n_times))
-    print(parents_neighbors_coeffs)
-    print(connect_matrix.shape)
     for j, i, tau, coeff in _iter_coeffs(parents_neighbors_coeffs):
         # If there is a non-zero time lag, add the connection to the matrix
         if tau != 0:
@@ -1429,20 +1425,11 @@ if __name__ == '__main__':
     def lin_f(x): return x
     def nonlin_f(x): return (x + 5. * x**2 * np.exp(-x**2 / 20.))
 
-    # links = {0: [((0, -1), 0.9, lin_f)],
-    #          1: [((1, -1), 0.8, lin_f), ((0, -1), 0.3, nonlin_f)],
-    #          2: [((2, -1), 0.7, lin_f), ((1, 0), -0.2, lin_f)],
-    #          }
-    # noises = [np.random.randn, np.random.randn, np.random.randn]
-    # data, nonstat = structural_causal_process(links,
-    #  T=100, noises=noises)
-    # print(data)
-
-
-    links_coeffs = {0: [((2, -1), 0.7)],
-                    1: [((2, -1), 0.7)],
-                    2: [],
-                    }
-    T = 1000     # time series length
-    data, true_parents_neighbors = var_process(links_coeffs, T=T)
-    T, N = data.shape
+    links = {0: [((0, -1), 0.9, lin_f)],
+             1: [((1, -1), 0.8, lin_f), ((0, -1), 0.3, nonlin_f)],
+             2: [((2, -1), 0.7, lin_f), ((1, 0), -0.2, lin_f)],
+             }
+    noises = [np.random.randn, np.random.randn, np.random.randn]
+    data, nonstat = structural_causal_process(links,
+     T=100, noises=noises)
+    print(data)
