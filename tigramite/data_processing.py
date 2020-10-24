@@ -966,7 +966,7 @@ def _find_max_time_lag_and_node_id(parents_neighbors_coeffs):
     """
     # Default maximum lag and node ID
     max_time_lag = 0
-    max_node_id = len(parents_neighbors_coeffs)
+    max_node_id = len(parents_neighbors_coeffs.keys()) - 1
     # Iterate through the keys in parents_neighbors_coeffs
     for j, _, tau, _ in _iter_coeffs(parents_neighbors_coeffs):
         # Find max lag time
@@ -1432,4 +1432,4 @@ if __name__ == '__main__':
     noises = [np.random.randn, np.random.randn, np.random.randn]
     data, nonstat = structural_causal_process(links,
      T=100, noises=noises)
-    print(data)
+    print(data.shape)
