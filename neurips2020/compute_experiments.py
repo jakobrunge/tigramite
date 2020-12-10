@@ -20,6 +20,8 @@ import metrics_mod
 from lpcmci import LPCMCI
 from svarfci import SVARFCI
 from svarrfci import SVARRFCI
+from discG2 import DiscG2
+from simulate_discrete_scm import binomial_scp, discretized_scp
 
 
 # Directory to save results
@@ -164,7 +166,16 @@ def calculate(para_setup):
                 sigma = noise_sigma[0] + (noise_sigma[1]-noise_sigma[0])*random_state.rand()
                 noises.append(getattr(noise_model(sigma), noise_type))
 
-            data_all_check, nonstationary = mod.generate_nonlinear_contemp_timeseries(
+            if 'discretebinom' in model:
+                if 'binom2' in model:
+                    n_binom = 2
+                elif 'binom4' in model:
+                    n_binom = 4   
+
+                data_all_check, nonstationary = discretized_scp(links=links, T = T+10000, 
+                                n_binom = n_binom, random_state = random_state)
+            else:
+                data_all_check, nonstationary = mod.generate_nonlinear_contemp_timeseries(
                     links=links, T=T+10000, noises=noises, random_state=random_state)
 
             # If the model is stationary, break the loop
@@ -224,6 +235,8 @@ def calculate(para_setup):
     elif ci_test == 'gp_dc':             
         cond_ind_test = GPDC(
             recycle_residuals=True)
+    elif ci_test == 'discg2':
+        cond_ind_test = DiscG2()
     else:
         raise ValueError("CI test not recognized.")
 

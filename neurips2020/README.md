@@ -136,6 +136,13 @@ $ python plot_experiments.py par_corr autocorr
 
 This will create several PDF documents, one of which is the desired plot (the runtime estimates may deviate).
 
+## Discrete Examples
+
+To create the results for discrete models with the discrete G2 conditional independence test, run the following commands:
+
+$ python compute_experiments.py 500 0 'random_lineargaussian_discretebinom2-4-4-0.2-0.8-0.0-0.3-0.3-3-2000-discg2-svarfci-0.01-5'
+
+Here "binom2" implies a model with n_{bin} = 2 as described in the paper.
 
 ## Real data example
 
