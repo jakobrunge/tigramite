@@ -55,7 +55,7 @@ def define_extension(extension_name, source_files=None):
         source_files = [
             ".".join(f.split(".")[:-1] + ["pyx"]) for f in source_files
         ]
-        print(source_files)
+        # print(source_files)
         # Return the cythonized extension
         return cythonize(Extension(extension_name, source_files))
     except ImportError:
@@ -93,7 +93,7 @@ README_PATH = os.path.join(os.path.dirname(__file__), "README.md")
 # Run the setup
 setup(
     name="tigramite",
-    version="4.2.0.3",
+    version="4.2.1.0",
     packages=["tigramite", "tigramite.independence_tests"],
     license="GNU General Public License v3.0",
     description="Tigramite causal discovery for time series",
