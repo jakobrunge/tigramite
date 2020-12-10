@@ -2021,12 +2021,12 @@ useful to compare multiple models on the same sample.  Last,
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>array, xyz [,XYZ]</strong> – identifier array of shape (dim,) identifying which row in array
 corresponds to X, Y, and Z. For example:: X = [(0, -1)], Y = [(1,
-0)], Z = [(1, -1), (0, -2)] yields an array of shape (5, T) and
+0)], Z = [(1, -1), (0, -2)] yields an array of shape (4, T) and
 xyz is xyz = numpy.array([0,1,2,2]) If return_cleaned_xyz is
 True, also outputs the cleaned XYZ lists.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>Tuple of data array of shape (dim, T) and xyz</p>
+<dd class="field-odd"><p>Tuple of data array of shape (dim, time) and xyz</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2999,7 +2999,7 @@ useful to compare multiple models on the same sample. Last,
 <p>Tigramite plotting package.</p>
 <dl class="function">
 <dt id="tigramite.plotting.plot_graph">
-<code class="sig-prename descclassname">tigramite.plotting.</code><code class="sig-name descname">plot_graph</code><span class="sig-paren">(</span><em class="sig-param">val_matrix=None</em>, <em class="sig-param">var_names=None</em>, <em class="sig-param">fig_ax=None</em>, <em class="sig-param">figsize=None</em>, <em class="sig-param">sig_thres=None</em>, <em class="sig-param">link_matrix=None</em>, <em class="sig-param">save_name=None</em>, <em class="sig-param">link_colorbar_label='MCI'</em>, <em class="sig-param">node_colorbar_label='auto-MCI'</em>, <em class="sig-param">link_width=None</em>, <em class="sig-param">link_attribute=None</em>, <em class="sig-param">node_pos=None</em>, <em class="sig-param">arrow_linewidth=10.0</em>, <em class="sig-param">vmin_edges=-1</em>, <em class="sig-param">vmax_edges=1.0</em>, <em class="sig-param">edge_ticks=0.4</em>, <em class="sig-param">cmap_edges='RdBu_r'</em>, <em class="sig-param">vmin_nodes=0</em>, <em class="sig-param">vmax_nodes=1.0</em>, <em class="sig-param">node_ticks=0.4</em>, <em class="sig-param">cmap_nodes='OrRd'</em>, <em class="sig-param">node_size=0.3</em>, <em class="sig-param">node_aspect=None</em>, <em class="sig-param">arrowhead_size=20</em>, <em class="sig-param">curved_radius=0.2</em>, <em class="sig-param">label_fontsize=10</em>, <em class="sig-param">alpha=1.0</em>, <em class="sig-param">node_label_size=10</em>, <em class="sig-param">link_label_fontsize=10</em>, <em class="sig-param">lag_array=None</em>, <em class="sig-param">network_lower_bound=0.2</em>, <em class="sig-param">show_colorbar=True</em>, <em class="sig-param">inner_edge_style='dashed'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.plot_graph" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">tigramite.plotting.</code><code class="sig-name descname">plot_graph</code><span class="sig-paren">(</span><em class="sig-param">link_matrix=None</em>, <em class="sig-param">val_matrix=None</em>, <em class="sig-param">sig_thres=None</em>, <em class="sig-param">var_names=None</em>, <em class="sig-param">fig_ax=None</em>, <em class="sig-param">figsize=None</em>, <em class="sig-param">save_name=None</em>, <em class="sig-param">link_colorbar_label='MCI'</em>, <em class="sig-param">node_colorbar_label='auto-MCI'</em>, <em class="sig-param">link_width=None</em>, <em class="sig-param">link_attribute=None</em>, <em class="sig-param">node_pos=None</em>, <em class="sig-param">arrow_linewidth=10.0</em>, <em class="sig-param">vmin_edges=-1</em>, <em class="sig-param">vmax_edges=1.0</em>, <em class="sig-param">edge_ticks=0.4</em>, <em class="sig-param">cmap_edges='RdBu_r'</em>, <em class="sig-param">vmin_nodes=0</em>, <em class="sig-param">vmax_nodes=1.0</em>, <em class="sig-param">node_ticks=0.4</em>, <em class="sig-param">cmap_nodes='OrRd'</em>, <em class="sig-param">node_size=0.3</em>, <em class="sig-param">node_aspect=None</em>, <em class="sig-param">arrowhead_size=20</em>, <em class="sig-param">curved_radius=0.2</em>, <em class="sig-param">label_fontsize=10</em>, <em class="sig-param">alpha=1.0</em>, <em class="sig-param">node_label_size=10</em>, <em class="sig-param">link_label_fontsize=10</em>, <em class="sig-param">lag_array=None</em>, <em class="sig-param">network_lower_bound=0.2</em>, <em class="sig-param">show_colorbar=True</em>, <em class="sig-param">inner_edge_style='dashed'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.plot_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a network plot.
 This is still in beta. The network is defined either from True values in
 link_matrix, or from thresholding the val_matrix with sig_thres.  Nodes
@@ -3009,24 +3009,18 @@ auto-dependency and the link color the value at the lag with maximal
 absolute cross-dependency. The link label lists the lags with significant
 dependency in order of absolute magnitude. The network can also be plotted
 over a map drawn before on the same axis. Then the node positions can be
-supplied in appropriate axis coordinates via node_pos.
-:param val_matrix: Matrix of shape (N, N, tau_max+1) containing test statistic values.
-:type val_matrix: array_like
-:param var_names: List of variable names. If None, range(N) is used.
-:type var_names: list, optional (default: None)
-:param fig_ax: Figure and axes instance. If None they are created.
-:type fig_ax: tuple of figure and axis object, optional (default: None)
-:param figsize: Size of figure.
-:type figsize: tuple
-:param sig_thres: Matrix of significance thresholds. Must be of same shape as  val_matrix.</p>
-<blockquote>
-<div><p>Either sig_thres or link_matrix has to be provided.</p>
-</div></blockquote>
+supplied in appropriate axis coordinates via node_pos.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>link_matrix</strong> (<em>bool array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Matrix of significant links. Must be of same shape as val_matrix. Either
 sig_thres or link_matrix has to be provided.</p></li>
+<li><p><strong>val_matrix</strong> (<em>array_like</em>) – Matrix of shape (N, N, tau_max+1) containing test statistic values.</p></li>
+<li><p><strong>sig_thres</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Matrix of significance thresholds. Must be of same shape as  val_matrix.
+Either sig_thres or link_matrix has to be provided.</p></li>
+<li><p><strong>var_names</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – List of variable names. If None, range(N) is used.</p></li>
+<li><p><strong>fig_ax</strong> (<em>tuple of figure and axis object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Figure and axes instance. If None they are created.</p></li>
+<li><p><strong>figsize</strong> (<em>tuple</em>) – Size of figure.</p></li>
 <li><p><strong>save_name</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Name of figure file to save figure. If None, figure is shown in window.</p></li>
 <li><p><strong>link_colorbar_label</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'MCI'</em><em>)</em>) – Test statistic label.</p></li>
 <li><p><strong>node_colorbar_label</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'auto-MCI'</em><em>)</em>) – Test statistic label for auto-dependencies.</p></li>
@@ -3066,18 +3060,16 @@ coordinates could have been transformed before for basemap plots.</p></li>
 <code class="sig-prename descclassname">tigramite.plotting.</code><code class="sig-name descname">plot_lagfuncs</code><span class="sig-paren">(</span><em class="sig-param">val_matrix</em>, <em class="sig-param">name=None</em>, <em class="sig-param">setup_args={}</em>, <em class="sig-param">add_lagfunc_args={}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_lagfuncs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.plot_lagfuncs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wrapper helper function to plot lag functions.
 Sets up the matrix object and plots the lagfunction, see parameters in
-setup_matrix and add_lagfuncs.
-:param val_matrix: Matrix of shape (N, N, tau_max+1) containing test statistic values.
-:type val_matrix: array_like
-:param name: File name. If None, figure is shown in window.
-:type name: str, optional (default: None)
-:param setup_args: Arguments for setting up the lag function matrix, see doc of</p>
-<blockquote>
-<div><p>setup_matrix.</p>
-</div></blockquote>
+setup_matrix and add_lagfuncs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>add_lagfunc_args</strong> (<em>dict</em>) – Arguments for adding a lag function matrix, see doc of add_lagfuncs.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>val_matrix</strong> (<em>array_like</em>) – Matrix of shape (N, N, tau_max+1) containing test statistic values.</p></li>
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – File name. If None, figure is shown in window.</p></li>
+<li><p><strong>setup_args</strong> (<em>dict</em>) – Arguments for setting up the lag function matrix, see doc of
+setup_matrix.</p></li>
+<li><p><strong>add_lagfunc_args</strong> (<em>dict</em>) – Arguments for adding a lag function matrix, see doc of add_lagfuncs.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>matrix</strong> – Further lag functions can be overlaid using the
@@ -3100,30 +3092,20 @@ the mediated causal effect (MCE) and the link color the value at the lag
 with maximal link coefficient. The link label lists the lags with
 significant dependency in order of absolute magnitude. The network can also
 be plotted over a map drawn before on the same axis. Then the node positions
-can be supplied in appropriate axis coordinates via node_pos.
-:param path_val_matrix: Matrix of shape (N, N, tau_max+1) containing link weight values.
-:type path_val_matrix: array_like
-:param path_node_array: Array of shape (N,) containing node values.
-:type path_node_array: array_like
-:param var_names: List of variable names. If None, range(N) is used.
-:type var_names: list, optional (default: None)
-:param fig_ax: Figure and axes instance. If None they are created.
-:type fig_ax: tuple of figure and axis object, optional (default: None)
-:param figsize: Size of figure.
-:type figsize: tuple
-:param save_name: Name of figure file to save figure. If None, figure is shown in window.
-:type save_name: str, optional (default: None)
-:param link_colorbar_label: Link colorbar label.
-:type link_colorbar_label: str, optional (default: ‘link coeff. (edge color)’)
-:param node_colorbar_label: Node colorbar label.
-:type node_colorbar_label: str, optional (default: ‘MCE (node color)’)
-:param link_width: Array of val_matrix.shape specifying relative link width with maximum</p>
-<blockquote>
-<div><p>given by arrow_linewidth. If None, all links have same width.</p>
-</div></blockquote>
+can be supplied in appropriate axis coordinates via node_pos.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>path_val_matrix</strong> (<em>array_like</em>) – Matrix of shape (N, N, tau_max+1) containing link weight values.</p></li>
+<li><p><strong>path_node_array</strong> (<em>array_like</em>) – Array of shape (N,) containing node values.</p></li>
+<li><p><strong>var_names</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – List of variable names. If None, range(N) is used.</p></li>
+<li><p><strong>fig_ax</strong> (<em>tuple of figure and axis object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Figure and axes instance. If None they are created.</p></li>
+<li><p><strong>figsize</strong> (<em>tuple</em>) – Size of figure.</p></li>
+<li><p><strong>save_name</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Name of figure file to save figure. If None, figure is shown in window.</p></li>
+<li><p><strong>link_colorbar_label</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'link coeff.</em><em> (</em><em>edge color</em><em>)</em><em>'</em><em>)</em>) – Link colorbar label.</p></li>
+<li><p><strong>node_colorbar_label</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'MCE</em><em> (</em><em>node color</em><em>)</em><em>'</em><em>)</em>) – Node colorbar label.</p></li>
+<li><p><strong>link_width</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Array of val_matrix.shape specifying relative link width with maximum
+given by arrow_linewidth. If None, all links have same width.</p></li>
 <li><p><strong>node_pos</strong> (<em>dictionary</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Dictionary of node positions in axis coordinates of form
 node_pos = {‘x’:array of shape (N,), ‘y’:array of shape(N)}. These
 coordinates could have been transformed before for basemap plots.</p></li>
@@ -3156,30 +3138,20 @@ coordinates could have been transformed before for basemap plots.</p></li>
 <code class="sig-prename descclassname">tigramite.plotting.</code><code class="sig-name descname">plot_mediation_time_series_graph</code><span class="sig-paren">(</span><em class="sig-param">path_node_array</em>, <em class="sig-param">tsg_path_val_matrix</em>, <em class="sig-param">var_names=None</em>, <em class="sig-param">fig_ax=None</em>, <em class="sig-param">figsize=None</em>, <em class="sig-param">link_colorbar_label='link coeff. (edge color)'</em>, <em class="sig-param">node_colorbar_label='MCE (node color)'</em>, <em class="sig-param">save_name=None</em>, <em class="sig-param">link_width=None</em>, <em class="sig-param">arrow_linewidth=8</em>, <em class="sig-param">vmin_edges=-1</em>, <em class="sig-param">vmax_edges=1.0</em>, <em class="sig-param">edge_ticks=0.4</em>, <em class="sig-param">cmap_edges='RdBu_r'</em>, <em class="sig-param">order=None</em>, <em class="sig-param">vmin_nodes=-1.0</em>, <em class="sig-param">vmax_nodes=1.0</em>, <em class="sig-param">node_ticks=0.4</em>, <em class="sig-param">cmap_nodes='RdBu_r'</em>, <em class="sig-param">node_size=0.1</em>, <em class="sig-param">node_aspect=None</em>, <em class="sig-param">arrowhead_size=20</em>, <em class="sig-param">curved_radius=0.2</em>, <em class="sig-param">label_fontsize=12</em>, <em class="sig-param">alpha=1.0</em>, <em class="sig-param">node_label_size=12</em>, <em class="sig-param">label_space_left=0.1</em>, <em class="sig-param">label_space_top=0.0</em>, <em class="sig-param">network_lower_bound=0.2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_mediation_time_series_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.plot_mediation_time_series_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a mediation time series graph plot.
 This is still in beta. The time series graph’s links are colored by
-val_matrix.
-:param tsg_path_val_matrix: Matrix of shape (N*tau_max, N*tau_max) containing link weight values.
-:type tsg_path_val_matrix: array_like
-:param path_node_array: Array of shape (N,) containing node values.
-:type path_node_array: array_like
-:param var_names: List of variable names. If None, range(N) is used.
-:type var_names: list, optional (default: None)
-:param fig_ax: Figure and axes instance. If None they are created.
-:type fig_ax: tuple of figure and axis object, optional (default: None)
-:param figsize: Size of figure.
-:type figsize: tuple
-:param save_name: Name of figure file to save figure. If None, figure is shown in window.
-:type save_name: str, optional (default: None)
-:param link_colorbar_label: Link colorbar label.
-:type link_colorbar_label: str, optional (default: ‘link coeff. (edge color)’)
-:param node_colorbar_label: Node colorbar label.
-:type node_colorbar_label: str, optional (default: ‘MCE (node color)’)
-:param link_width: Array of val_matrix.shape specifying relative link width with maximum</p>
-<blockquote>
-<div><p>given by arrow_linewidth. If None, all links have same width.</p>
-</div></blockquote>
+val_matrix.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>tsg_path_val_matrix</strong> (<em>array_like</em>) – Matrix of shape (N*tau_max, N*tau_max) containing link weight values.</p></li>
+<li><p><strong>path_node_array</strong> (<em>array_like</em>) – Array of shape (N,) containing node values.</p></li>
+<li><p><strong>var_names</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – List of variable names. If None, range(N) is used.</p></li>
+<li><p><strong>fig_ax</strong> (<em>tuple of figure and axis object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Figure and axes instance. If None they are created.</p></li>
+<li><p><strong>figsize</strong> (<em>tuple</em>) – Size of figure.</p></li>
+<li><p><strong>save_name</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Name of figure file to save figure. If None, figure is shown in window.</p></li>
+<li><p><strong>link_colorbar_label</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'link coeff.</em><em> (</em><em>edge color</em><em>)</em><em>'</em><em>)</em>) – Link colorbar label.</p></li>
+<li><p><strong>node_colorbar_label</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'MCE</em><em> (</em><em>node color</em><em>)</em><em>'</em><em>)</em>) – Node colorbar label.</p></li>
+<li><p><strong>link_width</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Array of val_matrix.shape specifying relative link width with maximum
+given by arrow_linewidth. If None, all links have same width.</p></li>
 <li><p><strong>order</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – order of variables from top to bottom.</p></li>
 <li><p><strong>arrow_linewidth</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 30</em><em>)</em>) – Linewidth.</p></li>
 <li><p><strong>vmin_edges</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: -1</em><em>)</em>) – Link colorbar scale lower bound.</p></li>
@@ -3208,27 +3180,21 @@ val_matrix.
 
 <dl class="function">
 <dt id="tigramite.plotting.plot_time_series_graph">
-<code class="sig-prename descclassname">tigramite.plotting.</code><code class="sig-name descname">plot_time_series_graph</code><span class="sig-paren">(</span><em class="sig-param">link_matrix=None</em>, <em class="sig-param">val_matrix=None</em>, <em class="sig-param">var_names=None</em>, <em class="sig-param">fig_ax=None</em>, <em class="sig-param">figsize=None</em>, <em class="sig-param">sig_thres=None</em>, <em class="sig-param">link_colorbar_label='MCI'</em>, <em class="sig-param">save_name=None</em>, <em class="sig-param">link_width=None</em>, <em class="sig-param">link_attribute=None</em>, <em class="sig-param">arrow_linewidth=8</em>, <em class="sig-param">vmin_edges=-1</em>, <em class="sig-param">vmax_edges=1.0</em>, <em class="sig-param">edge_ticks=0.4</em>, <em class="sig-param">cmap_edges='RdBu_r'</em>, <em class="sig-param">order=None</em>, <em class="sig-param">node_size=0.1</em>, <em class="sig-param">node_aspect=None</em>, <em class="sig-param">arrowhead_size=20</em>, <em class="sig-param">curved_radius=0.2</em>, <em class="sig-param">label_fontsize=12</em>, <em class="sig-param">alpha=1.0</em>, <em class="sig-param">node_label_size=12</em>, <em class="sig-param">label_space_left=0.1</em>, <em class="sig-param">label_space_top=0.0</em>, <em class="sig-param">network_lower_bound=0.2</em>, <em class="sig-param">inner_edge_style='dashed'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_time_series_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.plot_time_series_graph" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">tigramite.plotting.</code><code class="sig-name descname">plot_time_series_graph</code><span class="sig-paren">(</span><em class="sig-param">link_matrix=None</em>, <em class="sig-param">val_matrix=None</em>, <em class="sig-param">sig_thres=None</em>, <em class="sig-param">var_names=None</em>, <em class="sig-param">fig_ax=None</em>, <em class="sig-param">figsize=None</em>, <em class="sig-param">link_colorbar_label='MCI'</em>, <em class="sig-param">save_name=None</em>, <em class="sig-param">link_width=None</em>, <em class="sig-param">link_attribute=None</em>, <em class="sig-param">arrow_linewidth=8</em>, <em class="sig-param">vmin_edges=-1</em>, <em class="sig-param">vmax_edges=1.0</em>, <em class="sig-param">edge_ticks=0.4</em>, <em class="sig-param">cmap_edges='RdBu_r'</em>, <em class="sig-param">order=None</em>, <em class="sig-param">node_size=0.1</em>, <em class="sig-param">node_aspect=None</em>, <em class="sig-param">arrowhead_size=20</em>, <em class="sig-param">curved_radius=0.2</em>, <em class="sig-param">label_fontsize=12</em>, <em class="sig-param">alpha=1.0</em>, <em class="sig-param">node_label_size=12</em>, <em class="sig-param">label_space_left=0.1</em>, <em class="sig-param">label_space_top=0.0</em>, <em class="sig-param">network_lower_bound=0.2</em>, <em class="sig-param">inner_edge_style='dashed'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_time_series_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.plot_time_series_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a time series graph.
 This is still in beta. The time series graph’s links are colored by
-val_matrix.
-:param val_matrix: Matrix of shape (N, N, tau_max+1) containing test statistic values.
-:type val_matrix: array_like
-:param var_names: List of variable names. If None, range(N) is used.
-:type var_names: list, optional (default: None)
-:param fig_ax: Figure and axes instance. If None they are created.
-:type fig_ax: tuple of figure and axis object, optional (default: None)
-:param figsize: Size of figure.
-:type figsize: tuple
-:param sig_thres: Matrix of significance thresholds. Must be of same shape as  val_matrix.</p>
-<blockquote>
-<div><p>Either sig_thres or link_matrix has to be provided.</p>
-</div></blockquote>
+val_matrix.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>link_matrix</strong> (<em>bool array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Matrix of significant links. Must be of same shape as val_matrix. Either
 sig_thres or link_matrix has to be provided.</p></li>
+<li><p><strong>val_matrix</strong> (<em>array_like</em>) – Matrix of shape (N, N, tau_max+1) containing test statistic values.</p></li>
+<li><p><strong>sig_thres</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Matrix of significance thresholds. Must be of same shape as  val_matrix.
+Either sig_thres or link_matrix has to be provided.</p></li>
+<li><p><strong>var_names</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – List of variable names. If None, range(N) is used.</p></li>
+<li><p><strong>fig_ax</strong> (<em>tuple of figure and axis object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Figure and axes instance. If None they are created.</p></li>
+<li><p><strong>figsize</strong> (<em>tuple</em>) – Size of figure.</p></li>
 <li><p><strong>save_name</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Name of figure file to save figure. If None, figure is shown in window.</p></li>
 <li><p><strong>link_colorbar_label</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'MCI'</em><em>)</em>) – Test statistic label.</p></li>
 <li><p><strong>link_width</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Array of val_matrix.shape specifying relative link width with maximum
@@ -3259,15 +3225,13 @@ given by arrow_linewidth. If None, all links have same width.</p></li>
 <dl class="function">
 <dt id="tigramite.plotting.plot_timeseries">
 <code class="sig-prename descclassname">tigramite.plotting.</code><code class="sig-name descname">plot_timeseries</code><span class="sig-paren">(</span><em class="sig-param">dataframe=None</em>, <em class="sig-param">save_name=None</em>, <em class="sig-param">fig_axes=None</em>, <em class="sig-param">figsize=None</em>, <em class="sig-param">var_units=None</em>, <em class="sig-param">time_label='time'</em>, <em class="sig-param">use_mask=False</em>, <em class="sig-param">grey_masked_samples=False</em>, <em class="sig-param">data_linewidth=1.0</em>, <em class="sig-param">skip_ticks_data_x=1</em>, <em class="sig-param">skip_ticks_data_y=2</em>, <em class="sig-param">label_fontsize=12</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_timeseries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.plot_timeseries" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create and save figure of stacked panels with time series.
-:param dataframe: This is the Tigramite dataframe object. It has the attributes</p>
-<blockquote>
-<div><p>dataframe.values yielding a np array of shape (observations T,
-variables N) and optionally a mask of the same shape.</p>
-</div></blockquote>
+<dd><p>Create and save figure of stacked panels with time series.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>dataframe</strong> (<em>data object</em><em>, </em><em>optional</em>) – This is the Tigramite dataframe object. It has the attributes
+dataframe.values yielding a np array of shape (observations T,
+variables N) and optionally a mask of the same shape.</p></li>
 <li><p><strong>save_name</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Name of figure file to save figure. If None, figure is shown in window.</p></li>
 <li><p><strong>fig_axes</strong> (<em>subplots instance</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Figure and axes instance. If None they are created as
 fig, axes = pyplot.subplots(N,…)</p></li>
@@ -3302,20 +3266,15 @@ visualize the conditioned TSG.</p>
 <dd><p>Create matrix of lag function panels.
 Class to setup figure object. The function add_lagfuncs(…) allows to plot
 the val_matrix of shape (N, N, tau_max+1). Multiple lagfunctions can be
-overlaid for comparison.
-:param N: Number of variables
-:type N: int
-:param tau_max: Maximum time lag.
-:type tau_max: int
-:param var_names: List of variable names. If None, range(N) is used.
-:type var_names: list, optional (default: None)
-:param figsize: Figure size if new figure is created. If None, default pyplot figsize</p>
-<blockquote>
-<div><p>is used.</p>
-</div></blockquote>
+overlaid for comparison.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>N</strong> (<em>int</em>) – Number of variables</p></li>
+<li><p><strong>tau_max</strong> (<em>int</em>) – Maximum time lag.</p></li>
+<li><p><strong>var_names</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – List of variable names. If None, range(N) is used.</p></li>
+<li><p><strong>figsize</strong> (<em>tuple of floats</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Figure size if new figure is created. If None, default pyplot figsize
+is used.</p></li>
 <li><p><strong>minimum</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: -1</em><em>)</em>) – Lower y-axis limit.</p></li>
 <li><p><strong>maximum</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) – Upper y-axis limit.</p></li>
 <li><p><strong>label_space_left</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.1</em><em>)</em>) – Fraction of horizontal figure space to allocate left of plot for labels.</p></li>
@@ -3334,16 +3293,13 @@ legend.</p></li>
 <dl class="method">
 <dt id="tigramite.plotting.setup_matrix.add_lagfuncs">
 <code class="sig-name descname">add_lagfuncs</code><span class="sig-paren">(</span><em class="sig-param">val_matrix</em>, <em class="sig-param">sig_thres=None</em>, <em class="sig-param">conf_matrix=None</em>, <em class="sig-param">color='black'</em>, <em class="sig-param">label=None</em>, <em class="sig-param">two_sided_thres=True</em>, <em class="sig-param">marker='.'</em>, <em class="sig-param">markersize=5</em>, <em class="sig-param">alpha=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#setup_matrix.add_lagfuncs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.setup_matrix.add_lagfuncs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add lag function plot from val_matrix array.
-:param val_matrix: Matrix of shape (N, N, tau_max+1) containing test statistic values.
-:type val_matrix: array_like
-:param sig_thres: Matrix of significance thresholds. Must be of same shape as</p>
-<blockquote>
-<div><p>val_matrix.</p>
-</div></blockquote>
+<dd><p>Add lag function plot from val_matrix array.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>val_matrix</strong> (<em>array_like</em>) – Matrix of shape (N, N, tau_max+1) containing test statistic values.</p></li>
+<li><p><strong>sig_thres</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Matrix of significance thresholds. Must be of same shape as
+val_matrix.</p></li>
 <li><p><strong>conf_matrix</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Matrix of shape (, N, tau_max+1, 2) containing confidence bounds.</p></li>
 <li><p><strong>color</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'black'</em><em>)</em>) – Line color.</p></li>
 <li><p><strong>label</strong> (<em>str</em>) – Test statistic label.</p></li>
@@ -3359,9 +3315,12 @@ legend.</p></li>
 <dl class="method">
 <dt id="tigramite.plotting.setup_matrix.savefig">
 <code class="sig-name descname">savefig</code><span class="sig-paren">(</span><em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#setup_matrix.savefig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.setup_matrix.savefig" title="Permalink to this definition">¶</a></dt>
-<dd><p>Save matrix figure.
-:param name: File name. If None, figure is shown in window.
-:type name: str, optional (default: None)</p>
+<dd><p>Save matrix figure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – File name. If None, figure is shown in window.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>

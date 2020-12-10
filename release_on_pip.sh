@@ -3,9 +3,23 @@
 # Steps to move from github to pip
 # (Make sure pypi token exists)
 
+# Make sure docs are updated on master
+# tigramite/docs$ make -C . html; cp -r _build/html/* .;
+# tigramite$ git add docs/*
+
+# Create folder for next version (e.g., version 4.2.1.0 as edited in setup.py)
+# mkdir v4210
+# cd v4210/
+
 # Make sure to be in a clean anaconda
+# conda create --name tigramite-release-4210 python=3.6
+# conda activate tigramite-release-4210
+
 # Pull tigramite github
+# git clone https://github.com/jakobrunge/tigramite.git
+
 # Checkout master
+# git checkout master
 
 # Run all those in Linux or Windows
 
