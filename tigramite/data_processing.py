@@ -155,10 +155,10 @@ class DataFrame():
 
         Returns
         -------
-        array, xyz [,XYZ] : Tuple of data array of shape (dim, T) and xyz
+        array, xyz [,XYZ] : Tuple of data array of shape (dim, time) and xyz
             identifier array of shape (dim,) identifying which row in array
             corresponds to X, Y, and Z. For example:: X = [(0, -1)], Y = [(1,
-            0)], Z = [(1, -1), (0, -2)] yields an array of shape (5, T) and
+            0)], Z = [(1, -1), (0, -2)] yields an array of shape (4, T) and
             xyz is xyz = numpy.array([0,1,2,2]) If return_cleaned_xyz is
             True, also outputs the cleaned XYZ lists.
 
@@ -966,13 +966,13 @@ def _find_max_time_lag_and_node_id(parents_neighbors_coeffs):
     """
     # Default maximum lag and node ID
     max_time_lag = 0
-    max_node_id = 0
+    max_node_id = len(parents_neighbors_coeffs.keys()) - 1
     # Iterate through the keys in parents_neighbors_coeffs
     for j, _, tau, _ in _iter_coeffs(parents_neighbors_coeffs):
         # Find max lag time
         max_time_lag = max(max_time_lag, abs(tau))
         # Find the max node ID
-        max_node_id = max(max_node_id, j)
+        # max_node_id = max(max_node_id, j)
     # Return these values
     return max_time_lag, max_node_id
 
@@ -1432,4 +1432,4 @@ if __name__ == '__main__':
     noises = [np.random.randn, np.random.randn, np.random.randn]
     data, nonstat = structural_causal_process(links,
      T=100, noises=noises)
-    print(data)
+    print(data.shape)

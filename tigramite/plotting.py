@@ -1492,12 +1492,12 @@ def _draw_network_with_curved_edges(
 
 
 def plot_graph(
+    link_matrix=None,
     val_matrix=None,
+    sig_thres=None,
     var_names=None,
     fig_ax=None,
     figsize=None,
-    sig_thres=None,
-    link_matrix=None,
     save_name=None,
     link_colorbar_label="MCI",
     node_colorbar_label="auto-MCI",
@@ -1538,20 +1538,20 @@ def plot_graph(
     supplied in appropriate axis coordinates via node_pos.
     Parameters
     ----------
+    link_matrix : bool array-like, optional (default: None)
+        Matrix of significant links. Must be of same shape as val_matrix. Either
+        sig_thres or link_matrix has to be provided.
     val_matrix : array_like
         Matrix of shape (N, N, tau_max+1) containing test statistic values.
+    sig_thres : array-like, optional (default: None)
+        Matrix of significance thresholds. Must be of same shape as  val_matrix.
+        Either sig_thres or link_matrix has to be provided.
     var_names : list, optional (default: None)
         List of variable names. If None, range(N) is used.
     fig_ax : tuple of figure and axis object, optional (default: None)
         Figure and axes instance. If None they are created.
     figsize : tuple
         Size of figure.
-    sig_thres : array-like, optional (default: None)
-        Matrix of significance thresholds. Must be of same shape as  val_matrix.
-        Either sig_thres or link_matrix has to be provided.
-    link_matrix : bool array-like, optional (default: None)
-        Matrix of significant links. Must be of same shape as val_matrix. Either
-        sig_thres or link_matrix has to be provided.
     save_name : str, optional (default: None)
         Name of figure file to save figure. If None, figure is shown in window.
     link_colorbar_label : str, optional (default: 'MCI')
@@ -1616,7 +1616,7 @@ def plot_graph(
         fig, ax = fig_ax
 
     (link_matrix, val_matrix, link_width, link_attribute) = _check_matrices(
-        link_matrix, val_matrix, link_width, link_attribute
+        link_matrix, val_matrix, link_width, link_attribute, sig_thres
     )
 
     N, N, dummy = val_matrix.shape
@@ -1862,7 +1862,7 @@ def _reverse_patt(patt):
     #     return '-->'
 
 
-def _check_matrices(link_matrix, val_matrix, link_width, link_attribute):
+def _check_matrices(link_matrix, val_matrix, link_width, link_attribute, sig_thres):
     if link_matrix is None and (val_matrix is None or sig_thres is None):
         raise ValueError(
             "Need to specify either val_matrix together with sig_thres, or link_matrix"
@@ -1952,10 +1952,10 @@ def _check_matrices(link_matrix, val_matrix, link_width, link_attribute):
 def plot_time_series_graph(
     link_matrix=None,
     val_matrix=None,
+    sig_thres=None,
     var_names=None,
     fig_ax=None,
     figsize=None,
-    sig_thres=None,
     link_colorbar_label="MCI",
     save_name=None,
     link_width=None,
@@ -1983,20 +1983,20 @@ def plot_time_series_graph(
     val_matrix.
     Parameters
     ----------
+    link_matrix : bool array-like, optional (default: None)
+        Matrix of significant links. Must be of same shape as val_matrix. Either
+        sig_thres or link_matrix has to be provided.
     val_matrix : array_like
         Matrix of shape (N, N, tau_max+1) containing test statistic values.
+    sig_thres : array-like, optional (default: None)
+        Matrix of significance thresholds. Must be of same shape as  val_matrix.
+        Either sig_thres or link_matrix has to be provided.
     var_names : list, optional (default: None)
         List of variable names. If None, range(N) is used.
     fig_ax : tuple of figure and axis object, optional (default: None)
         Figure and axes instance. If None they are created.
     figsize : tuple
         Size of figure.
-    sig_thres : array-like, optional (default: None)
-        Matrix of significance thresholds. Must be of same shape as  val_matrix.
-        Either sig_thres or link_matrix has to be provided.
-    link_matrix : bool array-like, optional (default: None)
-        Matrix of significant links. Must be of same shape as val_matrix. Either
-        sig_thres or link_matrix has to be provided.
     save_name : str, optional (default: None)
         Name of figure file to save figure. If None, figure is shown in window.
     link_colorbar_label : str, optional (default: 'MCI')
@@ -2049,7 +2049,7 @@ def plot_time_series_graph(
         fig, ax = fig_ax
 
     (link_matrix, val_matrix, link_width, link_attribute) = _check_matrices(
-        link_matrix, val_matrix, link_width, link_attribute
+        link_matrix, val_matrix, link_width, link_attribute, sig_thres
     )
 
     N, N, dummy = link_matrix.shape
@@ -3139,3 +3139,4 @@ if __name__ == "__main__":
     plot_graph(link_matrix=nolinks, save_name=None)
 
     pyplot.show()
+

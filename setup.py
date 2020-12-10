@@ -3,10 +3,13 @@ Install tigramite
 """
 from __future__ import print_function
 import io
+import os
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 
 # Handle building against numpy headers before installing numpy
+
+
 class UseNumpyHeadersBuildExt(build_ext):
     """
     Subclassed build_ext command.
@@ -14,14 +17,17 @@ class UseNumpyHeadersBuildExt(build_ext):
     This lets us use numpy.get_include() while listing numpy as a needed
     dependency.
     """
+
     def run(self):
-        self.distribution.fetch_build_eggs(['numpy'])
+        self.distribution.fetch_build_eggs(["numpy"])
         # Import numpy here, only when headers are needed
         import numpy
+
         # Add numpy headers to include_dirs
         self.include_dirs.append(numpy.get_include())
         # Call original build_ext command
         build_ext.run(self)
+
 
 # Handle cythonizing code only in development mode
 def define_extension(extension_name, source_files=None):
@@ -33,70 +39,84 @@ def define_extension(extension_name, source_files=None):
     """
     # Default source file
     if source_files is None:
-        source_files = [extension_name.replace(".", "/") + ".c"]
+        # Check if user is on windows operating system.
+        if os.name == "nt":
+            source_files = [os.path.dirname(os.path.abspath(
+                __file__)) + '\\' + extension_name.replace(".", "\\") + ".c"]
+        else:
+            source_files = [os.path.dirname(os.path.abspath(__file__)) + '/' +
+                            extension_name.replace(".", "/") + ".c"]
+
     # If we are, try to import and use cythonize
     try:
         from Cython.Build import cythonize
+
         # Replace any extension in the source file list with .pyx
-        source_files = [".".join(f.split(".")[:-1] + ["pyx"]) \
-                        for f in source_files]
+        source_files = [
+            ".".join(f.split(".")[:-1] + ["pyx"]) for f in source_files
+        ]
+        # print(source_files)
         # Return the cythonized extension
         return cythonize(Extension(extension_name, source_files))
     except ImportError:
-        print("Cython cannot be found.  Skipping generation of C code from"+\
-              " cython and using pre-compiled C code instead")
+        print(
+            "Cython cannot be found. Skipping generation of C code from"
+            + " cython and using pre-compiled C code instead"
+        )
         return [Extension(extension_name, source_files)]
+
 
 # Define the minimal classes needed to install and run tigramite
 INSTALL_REQUIRES = ["numpy", "scipy", "six"]
 # Define all the possible extras needed
 EXTRAS_REQUIRE = {
-    'all' : ['scikit-learn>=0.21',#Gaussian Process (GP) Regression
-             'matplotlib>=3.0',   #plotting
-             'networkx>=2.4']    #plotting
-    }
+    "all": [
+        "scikit-learn>=0.21",  # Gaussian Process (GP) Regression
+        "matplotlib>=3.0",  # plotting
+        "networkx>=2.4",  # plotting
+    ]
+}
+
 # Define the packages needed for testing
-TESTS_REQUIRE = ['nose',
-                 'pytest',
-                 'networkx>=2.4',
-                 'scikit-learn>=0.21']
-EXTRAS_REQUIRE['test'] = TESTS_REQUIRE
+TESTS_REQUIRE = ["nose", "pytest", "networkx>=2.4", "scikit-learn>=0.21"]
+EXTRAS_REQUIRE["test"] = TESTS_REQUIRE
 # Define the extras needed for development
-EXTRAS_REQUIRE['dev'] = EXTRAS_REQUIRE['all'] + TESTS_REQUIRE + ['cython']
+EXTRAS_REQUIRE["dev"] = EXTRAS_REQUIRE["all"] + TESTS_REQUIRE + ["cython"]
 
 # Use a custom build to handle numpy.include_dirs() when building
-CMDCLASS = {'build_ext': UseNumpyHeadersBuildExt}
+CMDCLASS = {"build_ext": UseNumpyHeadersBuildExt}
 # Define the external modules to build
 EXT_MODULES = []
 EXT_MODULES += define_extension("tigramite.tigramite_cython_code")
+README_PATH = os.path.join(os.path.dirname(__file__), "README.md")
 
 # Run the setup
 setup(
-    name='tigramite',
-    version='4.2.0.3',
-    packages=['tigramite', 'tigramite.independence_tests'],
-    license='GNU General Public License v3.0',
-    description='Tigramite causal discovery for time series',
-    author='Jakob Runge',
-    author_email='jakob@jakob-runge.com',
-    url='https://github.com/jakobrunge/tigramite/',
-    long_description=io.open('README.md', 'r', encoding='utf-8').read(),
+    name="tigramite",
+    version="4.2.1.0",
+    packages=["tigramite", "tigramite.independence_tests"],
+    license="GNU General Public License v3.0",
+    description="Tigramite causal discovery for time series",
+    author="Jakob Runge",
+    author_email="jakob@jakob-runge.com",
+    url="https://github.com/jakobrunge/tigramite/",
+    long_description=io.open(README_PATH, "r", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
-    keywords='causality, time-series',
+    keywords="causality, time-series",
     cmdclass=CMDCLASS,
     ext_modules=EXT_MODULES,
     install_requires=INSTALL_REQUIRES,
     extras_require=EXTRAS_REQUIRE,
-    test_suite='tests',
+    test_suite="tests",
     tests_require=TESTS_REQUIRE,
     classifiers=[
-        'Development Status :: 4 - Beta',
-        'Intended Audience :: Science/Research',
-        'Topic :: Scientific/Engineering :: Artificial Intelligence',
-        'Topic :: Scientific/Engineering :: Mathematics',
-        'License '\
-            ':: OSI Approved '\
-            ':: GNU General Public License v3 or later (GPLv3+)',
-        'Programming Language :: Python',
-    ]
+        "Development Status :: 4 - Beta",
+        "Intended Audience :: Science/Research",
+        "Topic :: Scientific/Engineering :: Artificial Intelligence",
+        "Topic :: Scientific/Engineering :: Mathematics",
+        "License "
+        ":: OSI Approved "
+        ":: GNU General Public License v3 or later (GPLv3+)",
+        "Programming Language :: Python",
+    ],
 )
