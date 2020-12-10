@@ -206,10 +206,10 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        array, xyz [,XYZ] : Tuple of data array of shape (dim, T) and xyz</span>
+<span class="sd">        array, xyz [,XYZ] : Tuple of data array of shape (dim, time) and xyz</span>
 <span class="sd">            identifier array of shape (dim,) identifying which row in array</span>
 <span class="sd">            corresponds to X, Y, and Z. For example:: X = [(0, -1)], Y = [(1,</span>
-<span class="sd">            0)], Z = [(1, -1), (0, -2)] yields an array of shape (5, T) and</span>
+<span class="sd">            0)], Z = [(1, -1), (0, -2)] yields an array of shape (4, T) and</span>
 <span class="sd">            xyz is xyz = numpy.array([0,1,2,2]) If return_cleaned_xyz is</span>
 <span class="sd">            True, also outputs the cleaned XYZ lists.</span>
 
@@ -1017,13 +1017,13 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Default maximum lag and node ID</span>
     <span class="n">max_time_lag</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">max_node_id</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">max_node_id</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">-</span> <span class="mi">1</span>
     <span class="c1"># Iterate through the keys in parents_neighbors_coeffs</span>
     <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">_iter_coeffs</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">):</span>
         <span class="c1"># Find max lag time</span>
         <span class="n">max_time_lag</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_time_lag</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">tau</span><span class="p">))</span>
         <span class="c1"># Find the max node ID</span>
-        <span class="n">max_node_id</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_node_id</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+        <span class="c1"># max_node_id = max(max_node_id, j)</span>
     <span class="c1"># Return these values</span>
     <span class="k">return</span> <span class="n">max_time_lag</span><span class="p">,</span> <span class="n">max_node_id</span>
 
@@ -1483,7 +1483,7 @@
     <span class="n">noises</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">]</span>
     <span class="n">data</span><span class="p">,</span> <span class="n">nonstat</span> <span class="o">=</span> <span class="n">structural_causal_process</span><span class="p">(</span><span class="n">links</span><span class="p">,</span>
      <span class="n">T</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">noises</span><span class="o">=</span><span class="n">noises</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 </pre></div>
 
           </div>

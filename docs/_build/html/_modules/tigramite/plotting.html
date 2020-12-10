@@ -200,6 +200,7 @@
     <span class="sd">&quot;&quot;&quot;Adds a time series plot to an axis.</span>
 <span class="sd">    Plot of dataseries is added to axis. Allows for proper visualization of</span>
 <span class="sd">    masked data.</span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    fig : figure instance</span>
@@ -352,6 +353,7 @@
     <span class="n">label_fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Create and save figure of stacked panels with time series.</span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    dataframe : data object, optional</span>
@@ -440,6 +442,7 @@
     <span class="sd">&quot;&quot;&quot;Wrapper helper function to plot lag functions.</span>
 <span class="sd">    Sets up the matrix object and plots the lagfunction, see parameters in</span>
 <span class="sd">    setup_matrix and add_lagfuncs.</span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    val_matrix : array_like</span>
@@ -451,6 +454,7 @@
 <span class="sd">        setup_matrix.</span>
 <span class="sd">    add_lagfunc_args : dict</span>
 <span class="sd">        Arguments for adding a lag function matrix, see doc of add_lagfuncs.</span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    matrix : object</span>
@@ -475,6 +479,7 @@
 <span class="sd">    Class to setup figure object. The function add_lagfuncs(...) allows to plot</span>
 <span class="sd">    the val_matrix of shape (N, N, tau_max+1). Multiple lagfunctions can be</span>
 <span class="sd">    overlaid for comparison.</span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    N : int</span>
@@ -656,6 +661,7 @@
         <span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add lag function plot from val_matrix array.</span>
+
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        val_matrix : array_like</span>
@@ -751,6 +757,7 @@
 
 <div class="viewcode-block" id="setup_matrix.savefig"><a class="viewcode-back" href="../../index.html#tigramite.plotting.setup_matrix.savefig">[docs]</a>    <span class="k">def</span> <span class="nf">savefig</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Save matrix figure.</span>
+
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        name : str, optional (default: None)</span>
@@ -1543,12 +1550,12 @@
 
 
 <div class="viewcode-block" id="plot_graph"><a class="viewcode-back" href="../../index.html#tigramite.plotting.plot_graph">[docs]</a><span class="k">def</span> <span class="nf">plot_graph</span><span class="p">(</span>
+    <span class="n">link_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">val_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">sig_thres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">var_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">fig_ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">figsize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">sig_thres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">link_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">save_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">link_colorbar_label</span><span class="o">=</span><span class="s2">&quot;MCI&quot;</span><span class="p">,</span>
     <span class="n">node_colorbar_label</span><span class="o">=</span><span class="s2">&quot;auto-MCI&quot;</span><span class="p">,</span>
@@ -1587,22 +1594,23 @@
 <span class="sd">    dependency in order of absolute magnitude. The network can also be plotted</span>
 <span class="sd">    over a map drawn before on the same axis. Then the node positions can be</span>
 <span class="sd">    supplied in appropriate axis coordinates via node_pos.</span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
+<span class="sd">    link_matrix : bool array-like, optional (default: None)</span>
+<span class="sd">        Matrix of significant links. Must be of same shape as val_matrix. Either</span>
+<span class="sd">        sig_thres or link_matrix has to be provided.</span>
 <span class="sd">    val_matrix : array_like</span>
 <span class="sd">        Matrix of shape (N, N, tau_max+1) containing test statistic values.</span>
+<span class="sd">    sig_thres : array-like, optional (default: None)</span>
+<span class="sd">        Matrix of significance thresholds. Must be of same shape as  val_matrix.</span>
+<span class="sd">        Either sig_thres or link_matrix has to be provided.</span>
 <span class="sd">    var_names : list, optional (default: None)</span>
 <span class="sd">        List of variable names. If None, range(N) is used.</span>
 <span class="sd">    fig_ax : tuple of figure and axis object, optional (default: None)</span>
 <span class="sd">        Figure and axes instance. If None they are created.</span>
 <span class="sd">    figsize : tuple</span>
 <span class="sd">        Size of figure.</span>
-<span class="sd">    sig_thres : array-like, optional (default: None)</span>
-<span class="sd">        Matrix of significance thresholds. Must be of same shape as  val_matrix.</span>
-<span class="sd">        Either sig_thres or link_matrix has to be provided.</span>
-<span class="sd">    link_matrix : bool array-like, optional (default: None)</span>
-<span class="sd">        Matrix of significant links. Must be of same shape as val_matrix. Either</span>
-<span class="sd">        sig_thres or link_matrix has to be provided.</span>
 <span class="sd">    save_name : str, optional (default: None)</span>
 <span class="sd">        Name of figure file to save figure. If None, figure is shown in window.</span>
 <span class="sd">    link_colorbar_label : str, optional (default: &#39;MCI&#39;)</span>
@@ -1667,7 +1675,7 @@
         <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">fig_ax</span>
 
     <span class="p">(</span><span class="n">link_matrix</span><span class="p">,</span> <span class="n">val_matrix</span><span class="p">,</span> <span class="n">link_width</span><span class="p">,</span> <span class="n">link_attribute</span><span class="p">)</span> <span class="o">=</span> <span class="n">_check_matrices</span><span class="p">(</span>
-        <span class="n">link_matrix</span><span class="p">,</span> <span class="n">val_matrix</span><span class="p">,</span> <span class="n">link_width</span><span class="p">,</span> <span class="n">link_attribute</span>
+        <span class="n">link_matrix</span><span class="p">,</span> <span class="n">val_matrix</span><span class="p">,</span> <span class="n">link_width</span><span class="p">,</span> <span class="n">link_attribute</span><span class="p">,</span> <span class="n">sig_thres</span>
     <span class="p">)</span>
 
     <span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">dummy</span> <span class="o">=</span> <span class="n">val_matrix</span><span class="o">.</span><span class="n">shape</span>
@@ -1913,7 +1921,7 @@
     <span class="c1">#     return &#39;--&gt;&#39;</span>
 
 
-<span class="k">def</span> <span class="nf">_check_matrices</span><span class="p">(</span><span class="n">link_matrix</span><span class="p">,</span> <span class="n">val_matrix</span><span class="p">,</span> <span class="n">link_width</span><span class="p">,</span> <span class="n">link_attribute</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_check_matrices</span><span class="p">(</span><span class="n">link_matrix</span><span class="p">,</span> <span class="n">val_matrix</span><span class="p">,</span> <span class="n">link_width</span><span class="p">,</span> <span class="n">link_attribute</span><span class="p">,</span> <span class="n">sig_thres</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">link_matrix</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="n">val_matrix</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">sig_thres</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="s2">&quot;Need to specify either val_matrix together with sig_thres, or link_matrix&quot;</span>
@@ -2003,10 +2011,10 @@
 <div class="viewcode-block" id="plot_time_series_graph"><a class="viewcode-back" href="../../index.html#tigramite.plotting.plot_time_series_graph">[docs]</a><span class="k">def</span> <span class="nf">plot_time_series_graph</span><span class="p">(</span>
     <span class="n">link_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">val_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">sig_thres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">var_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">fig_ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">figsize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">sig_thres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">link_colorbar_label</span><span class="o">=</span><span class="s2">&quot;MCI&quot;</span><span class="p">,</span>
     <span class="n">save_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">link_width</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -2032,22 +2040,23 @@
     <span class="sd">&quot;&quot;&quot;Creates a time series graph.</span>
 <span class="sd">    This is still in beta. The time series graph&#39;s links are colored by</span>
 <span class="sd">    val_matrix.</span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
+<span class="sd">    link_matrix : bool array-like, optional (default: None)</span>
+<span class="sd">        Matrix of significant links. Must be of same shape as val_matrix. Either</span>
+<span class="sd">        sig_thres or link_matrix has to be provided.</span>
 <span class="sd">    val_matrix : array_like</span>
 <span class="sd">        Matrix of shape (N, N, tau_max+1) containing test statistic values.</span>
+<span class="sd">    sig_thres : array-like, optional (default: None)</span>
+<span class="sd">        Matrix of significance thresholds. Must be of same shape as  val_matrix.</span>
+<span class="sd">        Either sig_thres or link_matrix has to be provided.</span>
 <span class="sd">    var_names : list, optional (default: None)</span>
 <span class="sd">        List of variable names. If None, range(N) is used.</span>
 <span class="sd">    fig_ax : tuple of figure and axis object, optional (default: None)</span>
 <span class="sd">        Figure and axes instance. If None they are created.</span>
 <span class="sd">    figsize : tuple</span>
 <span class="sd">        Size of figure.</span>
-<span class="sd">    sig_thres : array-like, optional (default: None)</span>
-<span class="sd">        Matrix of significance thresholds. Must be of same shape as  val_matrix.</span>
-<span class="sd">        Either sig_thres or link_matrix has to be provided.</span>
-<span class="sd">    link_matrix : bool array-like, optional (default: None)</span>
-<span class="sd">        Matrix of significant links. Must be of same shape as val_matrix. Either</span>
-<span class="sd">        sig_thres or link_matrix has to be provided.</span>
 <span class="sd">    save_name : str, optional (default: None)</span>
 <span class="sd">        Name of figure file to save figure. If None, figure is shown in window.</span>
 <span class="sd">    link_colorbar_label : str, optional (default: &#39;MCI&#39;)</span>
@@ -2100,7 +2109,7 @@
         <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">fig_ax</span>
 
     <span class="p">(</span><span class="n">link_matrix</span><span class="p">,</span> <span class="n">val_matrix</span><span class="p">,</span> <span class="n">link_width</span><span class="p">,</span> <span class="n">link_attribute</span><span class="p">)</span> <span class="o">=</span> <span class="n">_check_matrices</span><span class="p">(</span>
-        <span class="n">link_matrix</span><span class="p">,</span> <span class="n">val_matrix</span><span class="p">,</span> <span class="n">link_width</span><span class="p">,</span> <span class="n">link_attribute</span>
+        <span class="n">link_matrix</span><span class="p">,</span> <span class="n">val_matrix</span><span class="p">,</span> <span class="n">link_width</span><span class="p">,</span> <span class="n">link_attribute</span><span class="p">,</span> <span class="n">sig_thres</span>
     <span class="p">)</span>
 
     <span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">dummy</span> <span class="o">=</span> <span class="n">link_matrix</span><span class="o">.</span><span class="n">shape</span>
@@ -2333,6 +2342,7 @@
     <span class="sd">&quot;&quot;&quot;Creates a mediation time series graph plot.</span>
 <span class="sd">    This is still in beta. The time series graph&#39;s links are colored by</span>
 <span class="sd">    val_matrix.</span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    tsg_path_val_matrix : array_like</span>
@@ -2649,6 +2659,7 @@
 <span class="sd">    significant dependency in order of absolute magnitude. The network can also</span>
 <span class="sd">    be plotted over a map drawn before on the same axis. Then the node positions</span>
 <span class="sd">    can be supplied in appropriate axis coordinates via node_pos.</span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    path_val_matrix : array_like</span>
@@ -3190,6 +3201,7 @@
     <span class="n">plot_graph</span><span class="p">(</span><span class="n">link_matrix</span><span class="o">=</span><span class="n">nolinks</span><span class="p">,</span> <span class="n">save_name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
     <span class="n">pyplot</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
 </pre></div>
 
           </div>

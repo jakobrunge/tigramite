@@ -149,6 +149,7 @@ def _add_timeseries(
     """Adds a time series plot to an axis.
     Plot of dataseries is added to axis. Allows for proper visualization of
     masked data.
+
     Parameters
     ----------
     fig : figure instance
@@ -301,6 +302,7 @@ def plot_timeseries(
     label_fontsize=12,
 ):
     """Create and save figure of stacked panels with time series.
+
     Parameters
     ----------
     dataframe : data object, optional
@@ -389,6 +391,7 @@ def plot_lagfuncs(val_matrix, name=None, setup_args={}, add_lagfunc_args={}):
     """Wrapper helper function to plot lag functions.
     Sets up the matrix object and plots the lagfunction, see parameters in
     setup_matrix and add_lagfuncs.
+
     Parameters
     ----------
     val_matrix : array_like
@@ -400,6 +403,7 @@ def plot_lagfuncs(val_matrix, name=None, setup_args={}, add_lagfunc_args={}):
         setup_matrix.
     add_lagfunc_args : dict
         Arguments for adding a lag function matrix, see doc of add_lagfuncs.
+
     Returns
     -------
     matrix : object
@@ -424,6 +428,7 @@ class setup_matrix:
     Class to setup figure object. The function add_lagfuncs(...) allows to plot
     the val_matrix of shape (N, N, tau_max+1). Multiple lagfunctions can be
     overlaid for comparison.
+
     Parameters
     ----------
     N : int
@@ -605,6 +610,7 @@ class setup_matrix:
         alpha=1.0,
     ):
         """Add lag function plot from val_matrix array.
+
         Parameters
         ----------
         val_matrix : array_like
@@ -700,6 +706,7 @@ class setup_matrix:
 
     def savefig(self, name=None):
         """Save matrix figure.
+
         Parameters
         ----------
         name : str, optional (default: None)
@@ -1536,6 +1543,7 @@ def plot_graph(
     dependency in order of absolute magnitude. The network can also be plotted
     over a map drawn before on the same axis. Then the node positions can be
     supplied in appropriate axis coordinates via node_pos.
+
     Parameters
     ----------
     link_matrix : bool array-like, optional (default: None)
@@ -1981,6 +1989,7 @@ def plot_time_series_graph(
     """Creates a time series graph.
     This is still in beta. The time series graph's links are colored by
     val_matrix.
+
     Parameters
     ----------
     link_matrix : bool array-like, optional (default: None)
@@ -2282,6 +2291,7 @@ def plot_mediation_time_series_graph(
     """Creates a mediation time series graph plot.
     This is still in beta. The time series graph's links are colored by
     val_matrix.
+
     Parameters
     ----------
     tsg_path_val_matrix : array_like
@@ -2598,6 +2608,7 @@ def plot_mediation_graph(
     significant dependency in order of absolute magnitude. The network can also
     be plotted over a map drawn before on the same axis. Then the node positions
     can be supplied in appropriate axis coordinates via node_pos.
+
     Parameters
     ----------
     path_val_matrix : array_like
