@@ -39,7 +39,7 @@ python setup.py sdist bdist_wheel
 # Linux:
 auditwheel repair --plat manylinux2014_x86_64 ./dist/*linux_x86_64.whl -w ./dist/
 # Upload the distro
-twine upload dist/*manylinux*.whl dist/*tar.gz
+twine upload dist/*tar.gz
 
 # Windows (EDIT names to upload all things .whl and tat.gz in dist/ !!!):
 # twine upload dist/*manylinux*.whl dist/*tar.gz
