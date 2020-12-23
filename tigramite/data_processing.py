@@ -103,9 +103,8 @@ class DataFrame():
             if self.values.shape != _use_mask.shape:
                 raise ValueError("shape mismatch: dataframe.values.shape = %s"
                                  % str(self.values.shape) + \
-                                 " but mask.shape = %s,"
-                                 % str(_use_mask.shape)) + \
-                                 "must identical"
+                                 " but mask.shape = %s, must be identical"
+                                 % str(_use_mask.shape))
 
     def construct_array(self, X, Y, Z, tau_max,
                         mask=None,
