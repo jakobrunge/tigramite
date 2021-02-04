@@ -4,6 +4,7 @@
 # (Make sure pypi token exists)
 
 # Change version number in setup.py
+# Merge developer into Master on github
 
 # Make sure docs are updated on master
 # tigramite/docs$ make -C . html; cp -r _build/html/* .;
