@@ -2318,7 +2318,7 @@ class PCMCI():
         for i in range(self.N):
             for j in range(self.N):
                 if (skeleton_results['p_matrix'][i, j, 0]
-                        > skeleton_results['p_matrix'][j, i, 0]
+                        >= skeleton_results['p_matrix'][j, i, 0]
                         and (i, 0) in _int_sel_links[j]):
                     skeleton_results['p_matrix'][j, i, 0] = skeleton_results[
                         'p_matrix'][i, j, 0]
