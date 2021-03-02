@@ -68,12 +68,13 @@ EXTRAS_REQUIRE = {
         "scikit-learn>=0.21",  # Gaussian Process (GP) Regression
         "matplotlib>=3.0",  # plotting
         "networkx>=2.4",  # plotting
-        "torch>=1.7"
+        "torch>=1.7",
+        "gpytorch>=1.4"
     ]
 }
 
 # Define the packages needed for testing
-TESTS_REQUIRE = ["nose", "pytest", "networkx>=2.4", "scikit-learn>=0.21", "torch>=1.7"]
+TESTS_REQUIRE = ["nose", "pytest", "networkx>=2.4", "scikit-learn>=0.21", "torch>=1.7", "gpytorch>=1.4"]
 EXTRAS_REQUIRE["test"] = TESTS_REQUIRE
 # Define the extras needed for development
 EXTRAS_REQUIRE["dev"] = EXTRAS_REQUIRE["all"] + TESTS_REQUIRE + ["cython"]

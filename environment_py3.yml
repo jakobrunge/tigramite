@@ -8,3 +8,4 @@ dependencies:
     - networkx>=2.4
     - cython>=0.26
     - torch>=1.7
+    - gpytorch>=1.4
