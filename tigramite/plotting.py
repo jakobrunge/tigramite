@@ -2952,13 +2952,13 @@ def plot_tsg(links, X, Y, Z=None, anc_x=None, anc_y=None, anc_xy=None):
 
     figsize = (3, 3)
     link_colorbar_label = "MCI"
-    arrow_linewidth = 20.0
+    arrow_linewidth = 8.0
     vmin_edges = -1
     vmax_edges = 1.0
     edge_ticks = 0.4
     cmap_edges = "RdBu_r"
     order = None
-    node_size = 10
+    node_size = .1
     arrowhead_size = 20
     curved_radius = 0.2
     label_fontsize = 10
@@ -3067,15 +3067,12 @@ def plot_tsg(links, X, Y, Z=None, anc_x=None, anc_y=None, anc_xy=None):
         ax=ax,
         G=deepcopy(G),
         pos=pos,
-        # dictionary of rings: {0:{'sizes':(N,)-array, 'color_array':(N,)-array
-        # or None, 'cmap':string,
         node_rings=node_rings,
-        # 'vmin':float or None, 'vmax':float or None, 'label':string or None}}
         node_labels=node_labels,
-        node_label_size=ode_label_size,
+        node_label_size=node_label_size,
         node_alpha=alpha,
         standard_size=node_size,
-        node_aspect=node_aspect,
+        node_aspect=None,
         standard_cmap="OrRd",
         standard_color="lightgrey",
         log_sizes=False,
@@ -3092,8 +3089,39 @@ def plot_tsg(links, X, Y, Z=None, anc_x=None, anc_y=None, anc_xy=None):
         inner_edge_curved=True,
         network_lower_bound=network_lower_bound,
         inner_edge_style=inner_edge_style,
-        show_colorbar=False,
     )
+    # _draw_network_with_curved_edges(
+    #     fig=fig,
+    #     ax=ax,
+    #     G=deepcopy(G),
+    #     pos=pos,
+    #     # dictionary of rings: {0:{'sizes':(N,)-array, 'color_array':(N,)-array
+    #     # or None, 'cmap':string,
+    #     node_rings=node_rings,
+    #     # 'vmin':float or None, 'vmax':float or None, 'label':string or None}}
+    #     node_labels=node_labels,
+    #     node_label_size=node_label_size,
+    #     node_alpha=alpha,
+    #     standard_size=node_size,
+    #     node_aspect=None,
+    #     standard_cmap="OrRd",
+    #     standard_color="lightgrey",
+    #     log_sizes=False,
+    #     cmap_links=cmap_edges,
+    #     links_vmin=vmin_edges,
+    #     links_vmax=vmax_edges,
+    #     links_ticks=edge_ticks,
+    #     arrowstyle="simple",
+    #     arrowhead_size=arrowhead_size,
+    #     curved_radius=curved_radius,
+    #     label_fontsize=label_fontsize,
+    #     label_fraction=0.5,
+    #     link_colorbar_label=link_colorbar_label,
+    #     inner_edge_curved=True,
+    #     network_lower_bound=network_lower_bound,
+    #     inner_edge_style=inner_edge_style,
+    #     show_colorbar=False,
+    # )
 
     for i in range(N):
         trans = transforms.blended_transform_factory(fig.transFigure, ax.transData)

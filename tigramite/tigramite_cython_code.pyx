@@ -8,19 +8,19 @@ import random
 import numpy as np
 cimport numpy as np
 import cython
+from cython.parallel import prange, parallel
 
-
-cdef inline double max(double a, double b): return a if a >= b else b
-cdef inline double abs(double a) : return a if a >= 0. else -1 * a
+cdef inline double max(double a, double b) nogil: return a if a >= b else b
+cdef inline double abs(double a) nogil: return a if a >= 0. else -1 * a
 
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def _get_neighbors_within_eps_cython(
-            double[:,:] array, 
-            int T, 
-            int dim_x, 
-            int dim_y, 
+            double[:,:] array,
+            int T,
+            int dim_x,
+            int dim_y,
             double[:] epsarray,
             int k,
             int dim):
@@ -49,7 +49,7 @@ def _get_neighbors_within_eps_cython(
             dz = 0.
             for d in range(dim_x+dim_y, dim):
                 dz = max( abs(array[d, i] - array[d, j]), dz)
- 
+
             # For no conditions, kz is counted up to T
             if (dz < epsmax):
                 kz += 1
@@ -60,7 +60,7 @@ def _get_neighbors_within_eps_cython(
                 dy = abs(array[dim_x, i] - array[dim_x, j])
                 for d in range(dim_x+1, dim_x+dim_y):
                     dy = max( abs(array[d, i] - array[d, j]), dy)
-                
+
                 if (dy < epsmax):
                     kyz += 1
 
@@ -68,10 +68,10 @@ def _get_neighbors_within_eps_cython(
                 dx = abs(array[0, i] - array[0, j])
                 for d in range(1, dim_x):
                     dx = max( abs(array[d, i] - array[d, j]), dx)
-   
+
                 if (dx < epsmax):
                     kxz += 1
-               
+
         # Write to arrays
         k_xz[i] = kxz
         k_yz[i] = kyz
@@ -92,7 +92,7 @@ def _get_patterns_cython(
     int dim,
     int step,
     int[:] fac,
-    int N, 
+    int N,
     int T):
 
     cdef int n, t, k, i, j, p, tau, start, mask
@@ -173,7 +173,7 @@ def _get_restricted_permutation_cython(
             use = neighbors[index, count]
 
         restricted_permutation[index] = use
-        
+
         used[i] = use
 
     return numpy.asarray(restricted_permutation)
@@ -207,7 +207,7 @@ def _get_restricted_permutation_cython(
 ## THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 ## (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ## OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- 
+
 """An implementation of Distance Correlation (see http://en.wikipedia.org/wiki/Distance_correlation )
 that is not quadratic in space requirements (only in runtime)."""
 
@@ -229,8 +229,8 @@ def dcov_all(x, y):
     return dc, dr, dvx, dvy
 
 
-class D_N: 
-    """Inner helper of dcov_all. Cache different means that are required for calculating 
+class D_N:
+    """Inner helper of dcov_all. Cache different means that are required for calculating
     the matrix members on the fly"""
 
     def __init__(self, x):
@@ -239,6 +239,7 @@ class D_N:
         self.calculate_means()
 
     @cython.boundscheck(False)
+    @cython.wraparound(False)
     def calculate_means(self):
         cdef int dim = self.dim
         cdef DTYPE_t value
@@ -248,6 +249,8 @@ class D_N:
         cdef np.ndarray[DTYPE_t, ndim=1] x = self.x
         cdef unsigned int ii
         cdef unsigned int jj
+
+        # Adding prange() here leads to erros. Why?
         for ii in range(dim):
             for jj in range(dim):
                 value = abs(x[jj] - x[ii])
@@ -257,9 +260,11 @@ class D_N:
         self.mean = sum_total / (self.dim**2)
         self.mean_0 = sum_0 / (self.dim)
         self.mean_1 = sum_1 / (self.dim)
+
         return
 
     @cython.boundscheck(False)
+    @cython.wraparound(False)
     def squared_sum(self):
         cdef np.ndarray[DTYPE_t, ndim=1] mean_0 = self.mean_0
         cdef np.ndarray[DTYPE_t, ndim=1] mean_1 = self.mean_1
@@ -271,14 +276,15 @@ class D_N:
         cdef unsigned int dim = self.dim
         cdef unsigned int ii
         cdef unsigned int jj
-        for ii in range(dim):
-            for jj in range(dim): 
+        for ii in prange(dim, nogil=True):
+            for jj in range(dim):
                 dist = abs(x[jj] - x[ii])
                 d = dist - mean_0[ii] - mean_1[jj] + mean
                 squared_sum += d * d
         return squared_sum
-   
+
     @cython.boundscheck(False)
+    @cython.wraparound(False)
     def product_sum(self, other):
         cdef np.ndarray[DTYPE_t, ndim=1] mean_0_here = self.mean_0
         cdef np.ndarray[DTYPE_t, ndim=1] mean_1_here = self.mean_1
@@ -295,8 +301,8 @@ class D_N:
         cdef unsigned int dim = self.dim
         cdef unsigned int ii
         cdef unsigned int jj
-        for ii in range(dim):
-            for jj in range(dim): 
+        for ii in prange(dim, nogil=True):
+            for jj in range(dim):
                 d_here = abs(x[jj] - x[ii]) - mean_0_here[ii] - mean_1_here[jj] + mean_here
                 d_there = abs(y[jj] - y[ii]) - mean_0_there[ii] - mean_1_there[jj] + mean_there
                 product_sum += d_here * d_there

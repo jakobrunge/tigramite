@@ -74,6 +74,176 @@ class Models():
         self.tau_max = None
         self.fit_results = None
 
+    def get_general_fitted_model(self, 
+                Y, X, Z=None,
+                tau_max=None,
+                cut_off='max_lag_or_tau_max',
+                return_data=False):
+        """Fit time series model.
+
+        For each variable in selected_variables, the sklearn model is fitted
+        with :math:`y` given by the target variable, and :math:`X` given by its
+        parents. The fitted model class is returned for later use.
+
+        Parameters
+        ----------
+        X, Y, Z : lists of tuples
+            List of variables for estimating model Y = f(X,Z)
+        tau_max : int, optional (default: None)
+            Maximum time lag. If None, the maximum lag in all_parents is used.
+        cut_off : {'max_lag_or_tau_max', '2xtau_max', 'max_lag'}
+            How many samples to cutoff at the beginning. The default is
+            'max_lag_or_tau_max', which uses the maximum of tau_max and the
+            conditions. This is useful to compare multiple models on the same
+            sample. Other options are '2xtau_max', which guarantees that MCI
+            tests are all conducted on the same samples. Last, 'max_lag' uses
+            as much samples as possible.
+        return_data : bool, optional (default: False)
+            Whether to save the data array.
+
+        Returns
+        -------
+        fit_results : dictionary of sklearn model objects for each variable
+            Returns the sklearn model after fitting. Also returns the data
+            transformation parameters.
+        """
+
+        XZ = X + Z
+
+        # Find the maximal conditions lag
+        max_lag = 0
+        for j in Y:
+            this_lag = np.abs(np.array(XZ)[:, 1]).max()
+            max_lag = max(max_lag, this_lag)
+        # Set the default tau max and check if it shoudl be overwritten
+        self.tau_max = max_lag
+        if tau_max is not None:
+            self.tau_max = tau_max
+            if self.tau_max < max_lag:
+                raise ValueError("tau_max = %d, but must be at least "
+                                 " max_lag = %d"
+                                 "" % (self.tau_max, max_lag))
+        # Initialize the fit results
+        fit_results = {}
+        for y in Y:
+            # Construct array of shape (var, time) with first entry being
+            # a dummy, second is y followed by joint X and Z (ignore the notation in construct_array)
+            array, xyz = \
+                self.dataframe.construct_array(X=[y], Y=[y], Z=XZ,
+                                               tau_max=self.tau_max,
+                                               mask_type=self.mask_type,
+                                               cut_off=cut_off,
+                                               verbosity=self.verbosity)
+            # Get the dimensions out of the constructed array
+            dim, T = array.shape
+            dim_z = dim - 2
+            # Transform the data if needed
+            if self.data_transform is not None:
+                array = self.data_transform.fit_transform(X=array.T).T
+            # Fit the model if there are any parents for this variable to fit
+            if dim_z > 0:
+                # Copy and fit the model
+                a_model = deepcopy(self.model)
+                a_model.fit(X=array[2:].T, y=array[1])
+                # Cache the results
+                fit_results[y] = {}
+                fit_results[y]['model'] = a_model
+                # Cache the data transform
+                fit_results[y]['data_transform'] = deepcopy(self.data_transform)
+                # Cache the data if needed
+                if return_data:
+                    fit_results[y]['data'] = array
+            # If there are no parents, skip this variable
+            else:
+                fit_results[y] = None
+
+        # Cache and return the fit results
+        self.fit_results = fit_results
+        return fit_results
+
+    def get_general_prediction(self,
+                Y, X, Z=None,
+                intervention_data=None,
+                pred_params=None,
+                cut_off='max_lag_or_tau_max'):
+        r"""Predict effect of intervention with fitted model.
+
+        Uses the model.predict() function of the sklearn model.
+
+        Parameters
+        ----------
+        X, Y, Z : lists of tuples
+            List of variables for estimating model Y = f(X,Z)
+        intervention_data : data object, optional
+            New Tigramite dataframe object with optional new mask.
+        pred_params : dict, optional
+            Optional parameters passed on to sklearn prediction function.
+        cut_off : {'2xtau_max', 'max_lag', 'max_lag_or_tau_max'}
+            How many samples to cutoff at the beginning. The default is
+            '2xtau_max', which guarantees that MCI tests are all conducted on
+            the same samples.  For modeling, 'max_lag_or_tau_max' can be used,
+            which uses the maximum of tau_max and the conditions, which is
+            useful to compare multiple models on the same sample. Last,
+            'max_lag' uses as much samples as possible.
+
+        Returns
+        -------
+        Results from prediction.
+        """
+
+        XZ = X + Z
+
+        return_type = 'list'
+
+        pred_dict = {}
+        for y in Y:
+            # Print message
+            if self.verbosity > 0:
+                print("\n##\n## Predicting target %s\n##" % str(y))
+                if pred_params is not None:
+                    for key in list(pred_params):
+                        print("%s = %s" % (key, pred_params[key]))
+            # Default value for pred_params
+            if pred_params is None:
+                pred_params = {}
+            # Check this is a valid target
+            if y not in self.fit_results:
+                raise ValueError("y = %s not yet fitted" % str(y))
+            # Construct the array form of the data
+            # Check if we've passed a new dataframe object
+            observation_array, _ = \
+                self.dataframe.construct_array(X=[y], Y=[y], Z=XZ,
+                                               tau_max=self.tau_max,
+                                               # mask=self.test_mask,
+                                               mask_type=self.mask_type,
+                                               cut_off=cut_off,
+                                               verbosity=self.verbosity)
+            intervention_array = observation_array
+            if intervention_data is not None:
+                tmp_array, _ = intervention_data.construct_array(X, Y, Z,
+                                                         tau_max=self.tau_max,
+                                                         mask_type=self.mask_type,
+                                                         cut_off=cut_off,
+                                                         verbosity=self.verbosity)
+
+                # Only replace X-variables in intervention_array (necessary if lags of
+                # X are in Z...)
+                for ix in enumerate(X):
+                    index = ix + 2
+                    intervention_array[index] = tmp_array[index]
+
+            # Transform the data if needed
+            a_transform = self.fit_results[y]['data_transform']
+            if a_transform is not None:
+                intervention_array = a_transform.transform(X=intervention_array.T).T
+            # Cache the test array
+            self.intervention_array = intervention_array
+            # Run the predictor
+            pred_dict[y] = self.fit_results[y]['model'].predict(
+                X=intervention_array[2:].T, **pred_params)
+
+        return pred_dict
+
     def get_fit(self, all_parents,
                 selected_variables=None,
                 tau_max=None,
@@ -190,7 +360,7 @@ class Models():
         return coeffs
 
     def get_val_matrix(self):
-        """Returns the coefficient array for different lags.
+        """Returns the coefficient array for different lags for linear model.
 
         Requires fit_model() before. An entry val_matrix[i,j,tau] gives the
         coefficient of the link from i to j at lag tau, including tau=0.

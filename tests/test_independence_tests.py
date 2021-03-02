@@ -5,7 +5,7 @@ from __future__ import print_function
 import numpy as np
 import pytest
 
-from tigramite.independence_tests import ParCorr, GPDC, CMIsymb, CMIknn
+from tigramite.independence_tests import ParCorr, GPDC, GPDCtorch, CMIsymb, CMIknn
 import tigramite.data_processing as pp
 
 from test_pcmci_calculations import a_chain, gen_data_frame
@@ -348,6 +348,114 @@ def test_trafo2uniform(gpdc, data_sample_a):
     array, _, _, _, _, T = data_sample_a
     # Make the transformation
     uniform = gpdc._trafo2uniform(array)
+    # Set the number of bins
+    bins = 10
+    for i in range(array.shape[0]):
+        hist, _ = np.histogram(uniform[i], bins=bins, density=True)
+        np.testing.assert_allclose(np.ones(bins)/float(bins),
+                                   hist/float(bins),
+                                   atol=0.01)
+
+# GPDCtorch TESTING #################################################################
+@pytest.fixture()
+def gpdc_torch(request):
+    return GPDCtorch(mask_type=None,
+                significance='analytic',
+                fixed_thres=0.1,
+                sig_samples=1000,
+                sig_blocklength=1,
+                confidence='bootstrap',
+                conf_lev=0.9,
+                conf_samples=100,
+                conf_blocklength=None,
+                recycle_residuals=False,
+                verbosity=0)
+
+# RE-USING SETUP FROM GPDC
+
+# @pytest.fixture(params=[
+#     # Generate the sample to be used for confidence interval comparison
+#     #seed, corr_val, T
+#     (5,    0.3,      200),  # Default
+#     (6,    0.3,      200),  # New Seed
+#     (1,    0.9,      200)]) # Strong Correlation
+# def data_sample_b(request):
+#     # Unpack the parameters
+#     seed, corr_val, T = request.param
+#     # Return the data sample
+#     return gen_data_sample(seed, corr_val, T)
+
+# @pytest.fixture(params=[
+#     # Generate a test data sample
+#     # Parameterize the sample by setting the autocorrelation value, coefficient
+#     # value, total time length, and random seed to different numbers
+#     # links_coeffs,               time, seed_val
+#     (a_chain(0.1, 0.9),           250, 2),
+#     (a_chain(0.5, 0.6),           250, 11),
+#     (a_chain(0.5, 0.6, length=5), 250, 42)])
+# def data_frame_b(request):
+#     # Set the parameters
+#     links_coeffs, time, seed_val = request.param
+#     # Generate the dataframe
+#     return gen_data_frame(links_coeffs, time, seed_val)
+
+def test_get_array_gpdc_torch(gpdc_torch, data_frame_b):
+    # Check the get_array function
+    check_get_array(gpdc_torch, data_frame_b)
+
+def test_get_measure_gpdc_torch(gpdc_torch, data_frame_b):
+    # Check the get_measure function
+    check_get_measure(gpdc_torch, data_frame_b)
+
+def test_get_confidence_gpdc_torch(gpdc_torch, data_frame_b):
+    # Skip if just checking boostrap vs. bootstrap
+    if not gpdc_torch.confidence == 'bootstrap':
+        # Check the get_confidence function
+        check_get_confidence(gpdc_torch, data_frame_b)
+
+@pytest.mark.parametrize("seed", list(range(10)))
+def test_gpdc_torch_residuals(gpdc_torch, seed):
+    # Set the random seed
+    np.random.seed(seed)
+    c_val = .3
+    T = 1000
+    # Define the function to check against
+    def func(x_arr, c_val=1.):
+        return c_val*x_arr*(1. - 4.*np.exp(-x_arr*x_arr/2.))
+    # Generate the array
+    array = np.random.randn(3, T)
+    # Manipulate the array
+    array[1] += func(array[2], c_val)
+    # Set the target value and the target results
+    target_var = 1
+    target_res = np.copy(array[2])
+    # Calculate the residuals
+    (_, pred) = gpdc_torch._get_single_residuals(array, target_var,
+                                           standardize=False,
+                                           return_means=True)
+    # Testing that the fit matches in the centre
+    cntr = np.where(np.abs(target_res) < .7)[0]
+    np.testing.assert_allclose(pred[cntr],
+                               func(target_res[cntr], c_val),
+                               atol=0.2)
+
+def test_shuffle_sig_gpdc_torch(gpdc_torch, data_sample_b):
+    # Get the data sample
+    array, _, _, xyz, dim, T = data_sample_b
+    # Trim the data sample down, time goes as T^2
+    T = int(T/4.)
+    array = array[:, :T]
+    # Get the value of the dependence measurement
+    val = gpdc_torch.get_dependence_measure(array, xyz)
+    pval_a = gpdc_torch.get_analytic_significance(value=val, T=T, dim=dim)
+    pval_s = gpdc_torch.get_shuffle_significance(array, xyz, val)
+    np.testing.assert_allclose(np.array(pval_a), np.array(pval_s), atol=0.05)
+
+def test_trafo2uniform_torch(gpdc_torch, data_sample_a):
+    # Get the data sample
+    array, _, _, _, _, T = data_sample_a
+    # Make the transformation
+    uniform = gpdc_torch._trafo2uniform(array)
     # Set the number of bins
     bins = 10
     for i in range(array.shape[0]):

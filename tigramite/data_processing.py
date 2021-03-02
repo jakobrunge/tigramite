@@ -121,10 +121,9 @@ class DataFrame():
         Parameters
         ----------
         X, Y, Z : list of tuples
-            For a dependence measure I(X;Y|Z), Y is of the form [(varY, 0)],
-            where var specifies the variable index. X typically is of the form
-            [(varX, -tau)] with tau denoting the time lag and Z can be
-            multivariate [(var1, -lag), (var2, -lag), ...] .
+            For a dependence measure I(X;Y|Z), X, Y, Z can be multivariate of
+            the form [(var1, -lag), (var2, -lag), ...]. At least one varlag in Y 
+            has to be at lag zero.
         tau_max : int
             Maximum time lag. This may be used to make sure that estimates for
             different lags in X and Z all have the same sample size.
