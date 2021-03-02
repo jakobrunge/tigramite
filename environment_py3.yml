@@ -7,3 +7,4 @@ dependencies:
     - matplotlib>=3.1.1
     - networkx>=2.4
     - cython>=0.26
+    - torch>=1.7
