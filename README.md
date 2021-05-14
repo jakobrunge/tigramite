@@ -8,6 +8,25 @@ Version 4.2
 [Documentation](https://jakobrunge.github.io/tigramite/)
 
 
+## Overview
+
+Tigramite provides several causal discovery methods that can be used under different sets of assumptions. An application always consists of a method and a chosen conditional independence test, e.g. PCMCI together with ParCorr. The following two tables give an overview of the assumptions involved:
+
+| Method | Assumptions         | Output |
+|--------|---------------------------------------------------------------------------|----|
+|         |   (in addition to Causal Markov Condition and Faithfulness)   |    |
+| PCMCI  | Causal stationarity, no contemporaneous causal links, no hidden variables |  Directed lagged links, undirected contemporaneous links (for tau_min=0)  |
+| PCMCIplus | Causal stationarity, no hidden variables    | Directed lagged links, directed and undirected contemp. links (Time series CPDAG) |
+| LPCMCI | Causal stationarity    | Time series PAG |
+
+
+| Conditional independence test | Assumptions                                  |
+|--------|---------------------------------------------------------------------------|
+| ParCorr  | univariate, continuous, linear Gaussian dependencies |
+| GPDC / GPDCtorch | univariate, continuous, additive dependencies        |
+| CMIknn | multivariate, continuous, general dependencies           |
+| CMIsymb | univariate, discrete/categorical dependencies           |
+
 ## General Notes
 
 Tigramite is a causal time series analysis python package. It allows to

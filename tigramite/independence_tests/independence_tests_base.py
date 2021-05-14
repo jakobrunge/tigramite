@@ -23,6 +23,9 @@ class CondIndTest():
 
     Parameters
     ----------
+    seed : int, optional(default = 42)
+        Seed for RandomState (default_rng)
+
     mask_type : str, optional (default = None)
         Must be in {'y','x','z','xy','xz','yz','xyz'}
         Masking mode: Indicators for which variables in the dependence measure
@@ -83,6 +86,7 @@ class CondIndTest():
         pass
 
     def __init__(self,
+                 seed=42,
                  mask_type=None,
                  significance='analytic',
                  fixed_thres=0.1,
@@ -97,6 +101,7 @@ class CondIndTest():
         # Set the dataframe to None for now, will be reset during pcmci call
         self.dataframe = None
         # Set the options
+        self.random_state = np.random.default_rng(seed)
         self.significance = significance
         self.sig_samples = sig_samples
         self.sig_blocklength = sig_blocklength
@@ -743,7 +748,7 @@ class CondIndTest():
         bootdist = np.zeros(conf_samples)
         for smpl in range(conf_samples):
             # Get the starting indecies for the blocks
-            blk_strt = np.random.randint(0, T - conf_blocklength + 1, n_blks)
+            blk_strt = self.random_state.integers(0, T - conf_blocklength + 1, n_blks)
             # Get the empty array of block resampled values
             array_bootstrap = \
                     np.zeros((dim, n_blks*conf_blocklength), dtype=array.dtype)
@@ -927,7 +932,7 @@ class CondIndTest():
         null_dist = np.zeros(sig_samples)
         for sam in range(sig_samples):
 
-            blk_starts = np.random.permutation(block_starts)[:n_blks]
+            blk_starts = self.random_state.permutation(block_starts)[:n_blks]
 
             x_shuffled = np.zeros((dim_x, n_blks*sig_blocklength),
                                   dtype=array.dtype)
@@ -939,7 +944,7 @@ class CondIndTest():
 
             # Insert tail randomly somewhere
             if tail.shape[1] > 0:
-                insert_tail_at = np.random.choice(block_starts)
+                insert_tail_at = self.random_state.choice(block_starts)
                 x_shuffled = np.insert(x_shuffled, insert_tail_at,
                                        tail.T, axis=1)
 

@@ -66,15 +66,17 @@ INSTALL_REQUIRES = ["numpy", "scipy", "six"]
 EXTRAS_REQUIRE = {
     "all": [
         "scikit-learn>=0.21",  # Gaussian Process (GP) Regression
-        "matplotlib>=3.0",  # plotting
-        "networkx>=2.4",  # plotting
-        "torch>=1.7",
-        "gpytorch>=1.4"
+        "matplotlib>=3.0",     # plotting
+        "networkx>=2.4",       # plotting
+        "torch>=1.7",          # GPDC torch version
+        "gpytorch>=1.4",       # GPDC torch version
+        "dcor>=0.5.3",         # GPDC
     ]
 }
 
 # Define the packages needed for testing
-TESTS_REQUIRE = ["nose", "pytest", "networkx>=2.4", "scikit-learn>=0.21", "torch>=1.7", "gpytorch>=1.4"]
+TESTS_REQUIRE = ["nose", "pytest", "networkx>=2.4", "scikit-learn>=0.21", 
+                 "torch>=1.7", "gpytorch>=1.4", "dcor>=0.5.3"]
 EXTRAS_REQUIRE["test"] = TESTS_REQUIRE
 # Define the extras needed for development
 EXTRAS_REQUIRE["dev"] = EXTRAS_REQUIRE["all"] + TESTS_REQUIRE + ["cython"]

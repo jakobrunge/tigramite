@@ -9,21 +9,17 @@
 from __future__ import print_function
 import numpy as np
 import gpytorch
-from gpytorch.kernels import RBFKernel
 import torch
+import dcor
+import gc
 
 from .independence_tests_base import CondIndTest
-
-try:
-    from tigramite import tigramite_cython_code
-except:
-    print("Could not import packages for CMIknn and GPDC estimation")
-
+from .LBFGS import FullBatchLBFGS
 
 class GaussProcRegTorch():
     r"""Gaussian processes abstract base class.
 
-    GP is estimated with gpytorch. Note that the kernel's hyperparameters are 
+    GP is estimated with gpytorch. Note that the kernel's hyperparameters are
     optimized during fitting.
 
     When the null distribution is not analytically available, but can be
@@ -65,6 +61,8 @@ class GaussProcRegTorch():
         if self.null_dist_filename is not None:
             self.null_dists, self.null_samples = \
                 self._load_nulldist(self.null_dist_filename)
+        # Size for batching
+        self.checkpoint_size = None
 
     def _load_nulldist(self, filename):
         r"""
@@ -123,7 +121,7 @@ class GaussProcRegTorch():
 
         null_dist = np.zeros(self.null_samples)
         for i in range(self.null_samples):
-            array = np.random.rand(2, df)
+            array = self.cond_ind_test.random_state.random((2, df))
             null_dist[i] = self.cond_ind_test.get_dependence_measure(
                 array, xyz)
 
@@ -168,7 +166,7 @@ class GaussProcRegTorch():
                                     return_means=False,
                                     standardize=True,
                                     return_likelihood=False,
-                                    training_iter=25,
+                                    training_iter=50,
                                     lr=0.1):
         """Returns residuals of Gaussian process regression.
 
@@ -192,7 +190,13 @@ class GaussProcRegTorch():
             Whether to return the estimated regression line.
 
         return_likelihood : bool, optional (default: False)
-            Whether to return the log_marginal_likelihood of the fitted GP
+            Whether to return the log_marginal_likelihood of the fitted GP.
+
+        training_iter : int, optional (default: 50)
+            Number of training iterations.
+
+        lr : float, optional (default: 0.1)
+            Learning rate (default: 0.1).
 
         Returns
         -------
@@ -201,9 +205,6 @@ class GaussProcRegTorch():
             and/or the likelihood.
         """
 
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-        GPU = torch.cuda.is_available()
         dim, T = array.shape
 
         if dim <= 2:
@@ -228,69 +229,185 @@ class GaussProcRegTorch():
         train_x = torch.tensor(z).float()
         train_y = torch.tensor(target_series).float()
 
-        if GPU:
-            train_x = train_x.cuda()
-            train_y = train_y.cuda()
+        device_type = 'cuda' if torch.cuda.is_available() else 'cpu'
+        output_device = torch.device(device_type)
+        train_x, train_y = train_x.to(output_device), train_y.to(output_device)
 
-        # We will use the simplest form of GP model, exact inference
-        class ExactGPModel(gpytorch.models.ExactGP):
-            def __init__(self, train_x, train_y, likelihood):
-                super(ExactGPModel, self).__init__(
-                    train_x, train_y, likelihood)
-                self.mean_module = gpytorch.means.ConstantMean()
+        if device_type == 'cuda':
+            # If GPU is available, use MultiGPU with Kernel Partitioning
+            n_devices = torch.cuda.device_count()
+            class mExactGPModel(gpytorch.models.ExactGP):
+                def __init__(self, train_x, train_y, likelihood, n_devices):
+                    super(mExactGPModel, self).__init__(train_x, train_y, likelihood)
+                    self.mean_module = gpytorch.means.ConstantMean()
+                    base_covar_module = gpytorch.kernels.ScaleKernel(gpytorch.kernels.RBFKernel())
 
-                # We only use the RBF kernel here, the WhiteNoiseKernel is deprecated
-                # and its featured integrated into the Likelihood-Module.
-                self.covar_module = gpytorch.kernels.ScaleKernel(RBFKernel())
+                    self.covar_module = gpytorch.kernels.MultiDeviceKernel(
+                        base_covar_module, device_ids=range(n_devices),
+                        output_device=output_device
+                    )
 
-            def forward(self, x):
-                mean_x = self.mean_module(x)
-                covar_x = self.covar_module(x)
-                return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
+                def forward(self, x):
+                    mean_x = self.mean_module(x)
+                    covar_x = self.covar_module(x)
+                    return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
 
-        # initialize likelihood and model
-        likelihood = gpytorch.likelihoods.GaussianLikelihood()
-        model = ExactGPModel(train_x, train_y, likelihood)
+            def mtrain(train_x,
+                      train_y,
+                      n_devices,
+                      output_device,
+                      checkpoint_size,
+                      preconditioner_size,
+                      n_training_iter,
+                      ):
+                likelihood = gpytorch.likelihoods.GaussianLikelihood().to(output_device)
+                model = mExactGPModel(train_x, train_y, likelihood, n_devices).to(output_device)
+                model.train()
+                likelihood.train()
 
-        if GPU:
-            likelihood = likelihood.cuda()
-            model = model.cuda()
+                optimizer = FullBatchLBFGS(model.parameters(), lr=lr)
+                # "Loss" for GPs - the marginal log likelihood
+                mll = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model)
 
-        # Find optimal model hyperparameters
-        model.train()
-        likelihood.train()
+                with gpytorch.beta_features.checkpoint_kernel(checkpoint_size), \
+                        gpytorch.settings.max_preconditioner_size(preconditioner_size):
 
-        # Use the adam optimizer
-        # Includes GaussianLikelihood parameters
-        optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+                    def closure():
+                        optimizer.zero_grad()
+                        output = model(train_x)
+                        loss = -mll(output, train_y)
+                        return loss
 
-        # "Loss" for GPs - the marginal log likelihood
-        mll = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model)
+                    loss = closure()
+                    loss.backward()
 
-        for i in range(training_iter):
-            # Zero gradients from previous iteration
-            optimizer.zero_grad()
-            # Output from model
-            output = model(train_x)
+                    for i in range(n_training_iter):
+                        options = {'closure': closure, 'current_loss': loss, 'max_ls': 10}
+                        loss, _, _, _, _, _, _, fail = optimizer.step(options)
 
-            # Calc loss and backprop gradients
-            loss = -mll(output, train_y)
-            loss.backward()
-            optimizer.step()
+                        '''print('Iter %d/%d - Loss: %.3f   lengthscale: %.3f   noise: %.3f' % (
+                            i + 1, n_training_iter, loss.item(),
+                            model.covar_module.module.base_kernel.lengthscale.item(),
+                            model.likelihood.noise.item()
+                        ))'''
 
-        # Get into evaluation (predictive posterior) mode
-        model.eval()
-        likelihood.eval()
+                        if fail:
+                            # print('Convergence reached!')
+                            break
 
-        # Make predictions by feeding model through likelihood
-        with torch.no_grad(), gpytorch.settings.fast_pred_var():
-            mean = model(train_x).loc.detach()
-            loglik = mll(model(train_x), train_y)*T
+                return model, likelihood, mll
 
-        if GPU:
+            def find_best_gpu_setting(train_x,
+                                      train_y,
+                                      n_devices,
+                                      output_device,
+                                      preconditioner_size
+                                      ):
+                N = train_x.size(0)
+
+                # Find the optimum partition/checkpoint size by decreasing in powers of 2
+                # Start with no partitioning (size = 0)
+                settings = [0] + [int(n) for n in np.ceil(N / 2 ** np.arange(1, np.floor(np.log2(N))))]
+
+                for checkpoint_size in settings:
+                    print('Number of devices: {} -- Kernel partition size: {}'.format(n_devices, checkpoint_size))
+                    try:
+                        # Try a full forward and backward pass with this setting to check memory usage
+                        _, _, _ = mtrain(train_x, train_y,
+                                     n_devices=n_devices, output_device=output_device,
+                                     checkpoint_size=checkpoint_size,
+                                     preconditioner_size=preconditioner_size, n_training_iter=1)
+
+                        # when successful, break out of for-loop and jump to finally block
+                        break
+                    except RuntimeError as e:
+                        pass
+                    except AttributeError as e:
+                        pass
+                    finally:
+                        # handle CUDA OOM error
+                        gc.collect()
+                        torch.cuda.empty_cache()
+                return checkpoint_size
+
+            # Set a large enough preconditioner size to reduce the number of CG iterations run
+            preconditioner_size = 100
+            if self.checkpoint_size is None:
+                self.checkpoint_size = find_best_gpu_setting(train_x, train_y,
+                                                        n_devices=n_devices,
+                                                        output_device=output_device,
+                                                        preconditioner_size=preconditioner_size)
+
+            model, likelihood, mll = mtrain(train_x, train_y,
+                                      n_devices=n_devices, output_device=output_device,
+                                      checkpoint_size=self.checkpoint_size,
+                                      preconditioner_size=100,
+                                      n_training_iter=training_iter)
+
+            # Get into evaluation (predictive posterior) mode
+            model.eval()
+            likelihood.eval()
+
+            # Make predictions by feeding model through likelihood
+            with torch.no_grad(), gpytorch.settings.fast_pred_var(), gpytorch.beta_features.checkpoint_kernel(1000):
+                mean = model(train_x).loc.detach()
+                loglik = mll(model(train_x), train_y)*T
+
             resid = (train_y - mean).detach().cpu().numpy()
             mean = mean.detach().cpu().numpy()
+
         else:
+            # If only CPU is available, we will use the simplest form of GP model, exact inference
+            class ExactGPModel(gpytorch.models.ExactGP):
+                def __init__(self, train_x, train_y, likelihood):
+                    super(ExactGPModel, self).__init__(
+                        train_x, train_y, likelihood)
+                    self.mean_module = gpytorch.means.ConstantMean()
+
+                    # We only use the RBF kernel here, the WhiteNoiseKernel is deprecated
+                    # and its featured integrated into the Likelihood-Module.
+                    self.covar_module = gpytorch.kernels.ScaleKernel(gpytorch.kernels.RBFKernel())
+
+                def forward(self, x):
+                    mean_x = self.mean_module(x)
+                    covar_x = self.covar_module(x)
+                    return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
+
+            # initialize likelihood and model
+            likelihood = gpytorch.likelihoods.GaussianLikelihood()
+            model = ExactGPModel(train_x, train_y, likelihood)
+
+            # Find optimal model hyperparameters
+            model.train()
+            likelihood.train()
+
+            # Use the adam optimizer
+            # Includes GaussianLikelihood parameters
+            optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+
+            # "Loss" for GPs - the marginal log likelihood
+            mll = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model)
+
+            for i in range(training_iter):
+                # Zero gradients from previous iteration
+                optimizer.zero_grad()
+                # Output from model
+                output = model(train_x)
+
+                # Calc loss and backprop gradients
+                loss = -mll(output, train_y)
+                loss.backward()
+                optimizer.step()
+
+            # Get into evaluation (predictive posterior) mode
+            model.eval()
+            likelihood.eval()
+
+            # Make predictions by feeding model through likelihood
+            with torch.no_grad(), gpytorch.settings.fast_pred_var():
+                mean = model(train_x).loc.detach()
+                loglik = mll(model(train_x), train_y) * T
+
             resid = (train_y - mean).detach().numpy()
             mean = mean.detach().numpy()
 
@@ -491,7 +608,7 @@ class GPDCtorch(CondIndTest):
                                     return_means=False,
                                     standardize=True,
                                     return_likelihood=False,
-                                    training_iter=25,
+                                    training_iter=50,
                                     lr=0.1):
         """Returns residuals of Gaussian process regression.
 
@@ -516,6 +633,12 @@ class GPDCtorch(CondIndTest):
 
         return_likelihood : bool, optional (default: False)
             Whether to return the log_marginal_likelihood of the fitted GP
+
+        training_iter : int, optional (default: 50)
+            Number of training iterations.
+
+        lr : float, optional (default: 0.1)
+            Learning rate (default: 0.1).
 
         Returns
         -------
@@ -604,8 +727,7 @@ class GPDCtorch(CondIndTest):
         # Remove ties before applying transformation to uniform marginals
         # array_resid = self._remove_ties(array_resid, verbosity=4)
         x_vals, y_vals = self._trafo2uniform(array_resid)
-
-        _, val, _, _ = tigramite_cython_code.dcov_all(x_vals, y_vals)
+        val = dcor.distance_correlation(x_vals, y_vals, method='AVL')
         return val
 
     def get_shuffle_significance(self, array, xyz, value,
@@ -692,173 +814,4 @@ class GPDCtorch(CondIndTest):
             null_dist_here = self.gauss_pr.null_dists[int(df)]
             pval = np.mean(null_dist_here > np.abs(value))
         return pval
-
-# def dcov_all(x, y):
-#     """Calculate distance covariance, distance correlation,
-#     distance variance of x sample and distance variance of y sample"""
-
-#     GPU_FLAG = torch.cuda.is_available()
-
-
-#     x = np.reshape(x, (x.shape[0], 1))
-#     y = np.reshape(y, (y.shape[0], 1))
-
-#     x = torch.tensor(x)
-#     y = torch.tensor(y)
-
-#     mean_x_0 = torch.zeros(x.shape[0],1)
-#     mean_x_1 = torch.zeros(x.shape[0],1)
-#     mean_y_0 = torch.zeros(x.shape[0],1)
-#     mean_y_1 = torch.zeros(x.shape[0],1)
-#     x_abs_diff = torch.zeros(x.shape[0],1)
-#     y_abs_diff = torch.zeros(x.shape[0],1)
-#     x_all_mean = 0
-#     y_all_mean = 0
-#     SUM_VAL = 0
-
-#     if GPU_FLAG:
-#         x = x.cuda()
-#         y = y.cuda()
-#         mean_x_0 = mean_x_0.cuda()
-#         mean_x_1 = mean_x_1.cuda()
-#         mean_y_0 = mean_y_0.cuda()
-#         mean_y_1 = mean_y_1.cuda()
-#         x_abs_diff = x_abs_diff.cuda()
-#         y_abs_diff = y_abs_diff.cuda()
-
-
-#     # Calculate means
-#     for i in range(x.shape[0]):
-#         x_abs_diff = torch.abs(x - x[i,:])
-#         y_abs_diff = torch.abs(y - y[i,:])
-#         mean_x_0 += x_abs_diff
-#         mean_y_0 += y_abs_diff
-
-#         x_all_mean += torch.sum(mean_x_0)
-#         y_all_mean += torch.sum(mean_y_0)
-
-#         mean_x_1[i] = torch.mean(x_abs_diff)
-#         mean_y_1[i] = torch.mean(y_abs_diff)
-
-#     mean_x_0 = mean_x_0/mean_x_0.shape[0]
-#     mean_y_0 = mean_y_0/mean_y_0.shape[0]
-
-#     x_all_mean = x_all_mean/mean_x_0.shape[0]**2
-#     y_all_mean = y_all_mean/mean_y_0.shape[0]**2
-
-
-#     for i in range(x.shape[0]):
-#         X_i = torch.abs(x - x[i,:]) - mean_x_0 - mean_x_1[i] + x_all_mean
-#         Y_i = torch.abs(y - y[i,:]) - mean_y_0 - mean_y_1[i] + y_all_mean
-#         SUM_VAL += torch.sum(torch.mul(X_i, Y_i))
-
-#     SUM_VAL = SUM_VAL/X_i.shape[0]**2
-
-#     # Todo: dCor, dVarX, dVarY
-#     # Todo: Better batching?
-
-#     if GPU_FLAG:
-#         dCov = 1 # dCov.cpu()
-
-#     return 1 #dCov.numpy()
-
-
-if __name__ == "__main__":
-    import tigramite.data_processing as pp
-    import tigramite.plotting as tp
-    import matplotlib.pyplot as plt
-    from time import time
-    import sys
-
-
-    # Example process to play around with
-    # Each key refers to a variable and the incoming links are supplied
-    # as a list of format [((var, -lag), coeff, function), ...]
-
-    def lin_f(x):
-        return x
-
-    def nonlin_f(x):
-        return x + 5.0 * x ** 2 * np.exp(-(x ** 2) / 20.0)
-
-    print(torch.cuda.is_available())
-
-    for samples in [10000, 20000, 50000, 100000]:
-        torch.cuda.empty_cache()
-        test_a = np.random.normal(0,1, samples)
-        test_b = np.random.normal(0,1, samples)
-
-        start = time()
-        distance_corr = dcov_all(test_a, test_b)
-        end_torch = time() - start
-
-        print("###################", flush=True)
-        print(f"T={samples}.", flush=True)
-        print(f"PyTorch (GPU) took {end_torch} seconds.\n", flush=True)
-
-
-        start = time()
-        distance_corr = tigramite_cython_code.dcov_all(test_a, test_b)
-        end_cython = time() - start
-
-        print(f"Cython took {end_cython} seconds.\n", flush=True)
-
-    sys.exit(0)
-
-    N = 50
-
-    links = {i: [((i, -1),
-                    np.random.uniform(low=0.4, high=0.9, size=None),
-                    np.random.choice([lin_f, nonlin_f], p=[0.7, 0.3]))]
-                for i in range(N)}
-
-    for i in range(1,N):
-        links[i].append(((i-1, -1),
-                np.random.uniform(low=0.4, high=0.9, size=None),
-                np.random.choice([lin_f, nonlin_f], p=[0.7, 0.3])))
-
-    torch_time_lst = []
-    sklearn_time_lst = []
-
-    for T in [25000, 40000, 55000]:
-
-        #torch.cuda.empty_cache()
-        data, nonstat = pp.structural_causal_process(links, T=T)
-        data = data.T
-        gpdc = GPDC()
-
-
-        #start_sklearn = time()
-        #get_resid_sklearn = gpdc._get_single_residuals(data, 0,
-        #                                               return_means=True,
-        #                                               standardize=True,
-        #                                               return_likelihood=True)
-        #end_sklearn = time() - start_sklearn
-        #sklearn_time_lst.append(end_sklearn)
-
-        start_torch = time()
-        get_resid_torch = gpdc._get_single_residuals(data, 0,
-                                                           return_means=True,
-                                                           standardize=True,
-                                                           return_likelihood=True)
-
-        end_torch = time() - start_torch
-        torch_time_lst.append(end_torch)
-
-        print("###################", flush=True)
-        print(f"Data shape: {data.shape}", flush=True)
-        #print(f"Sklearn took {end_sklearn} seconds.", flush=True)
-        print(f"Torch took {end_torch} seconds.", flush=True)
-
-        print("\n")
-
-        try:
-            #print(f"Sklearn loglik: {get_resid_sklearn[2]}")
-            print(f"Torch loglik: {get_resid_torch[2]}")
-            print(f"\n")
-        except IndexError:
-            print("The likelihood was not returned.")
-
-    #print(f"Sklearn times: {sklearn_time_lst}")
-    print(f"Torch times: {torch_time_lst}")
 

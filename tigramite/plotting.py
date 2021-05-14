@@ -902,13 +902,15 @@ def _draw_network_with_curved_edges(
                 "--x",
                 "o-x",
                 "x-o",
+                # "+->",
+                # "<-+",
             ]:
                 arrowstyle = "-"
                 # linewidth = width*factor
             elif d.get("outer_edge_type") == "<->":
                 arrowstyle = "<->, head_width=0.4, head_length=1"
                 # linewidth = width*factor
-            elif d.get("outer_edge_type") in ["o->", "-->", "<-o", "<--", "<-x", "x->"]:
+            elif d.get("outer_edge_type") in ["o->", "-->", "<-o", "<--", "<-x", "x->", "+->", "<-+"]:
                 arrowstyle = "->, head_width=0.4, head_length=1"
 
         else:
@@ -926,7 +928,7 @@ def _draw_network_with_curved_edges(
 
             if d.get("inner_edge_attribute", None) == "spurious":
                 facecolor = "grey"
-            if d.get("inner_edge_type") in ["<-o", "<--", "<-x"]:
+            if d.get("inner_edge_type") in ["<-o", "<--", "<-x", "<-+"]:
                 n1, n2 = n2, n1
 
             if d.get("inner_edge_type") in [
@@ -943,7 +945,7 @@ def _draw_network_with_curved_edges(
                 arrowstyle = "-"
             elif d.get("inner_edge_type") == "<->":
                 arrowstyle = "<->, head_width=0.4, head_length=1"
-            elif d.get("inner_edge_type") in ["o->", "-->", "<-o", "<--", "<-x", "x->"]:
+            elif d.get("inner_edge_type") in ["o->", "-->", "<-o", "<--", "<-x", "x->", "+->"]:
                 arrowstyle = "->, head_width=0.4, head_length=1"
 
             linestyle = d.get("inner_edge_style")
@@ -1025,10 +1027,30 @@ def _draw_network_with_curved_edges(
                     zorder=1,
                 )
                 ax.add_collection(circle_marker_start)
+            elif d.get("outer_edge_type") in ["+--", "+->"]:
+                circle_marker_start = ax.scatter(
+                    *start,
+                    marker="P",
+                    s=marker_size,
+                    facecolor="w",
+                    edgecolor=facecolor,
+                    zorder=1,
+                )
+                ax.add_collection(circle_marker_start)
             elif d.get("outer_edge_type") == "<-x":
                 circle_marker_end = ax.scatter(
                     *start,
                     marker="X",
+                    s=marker_size,
+                    facecolor="w",
+                    edgecolor=facecolor,
+                    zorder=1,
+                )
+                ax.add_collection(circle_marker_end)
+            elif d.get("outer_edge_type") == "<-+":
+                circle_marker_end = ax.scatter(
+                    *start,
+                    marker="P",
                     s=marker_size,
                     facecolor="w",
                     edgecolor=facecolor,
@@ -1163,10 +1185,30 @@ def _draw_network_with_curved_edges(
                     zorder=1,
                 )
                 ax.add_collection(circle_marker_start)
+            elif d.get("inner_edge_type") in ["+--", "+->"]:
+                circle_marker_start = ax.scatter(
+                    *start,
+                    marker="P",
+                    s=marker_size,
+                    facecolor="w",
+                    edgecolor=facecolor,
+                    zorder=1,
+                )
+                ax.add_collection(circle_marker_start)
             elif d.get("outer_edge_type") == "<-x":
                 circle_marker_end = ax.scatter(
                     *start,
                     marker="X",
+                    s=marker_size,
+                    facecolor="w",
+                    edgecolor=facecolor,
+                    zorder=1,
+                )
+                ax.add_collection(circle_marker_end)
+            elif d.get("outer_edge_type") == "<-+":
+                circle_marker_end = ax.scatter(
+                    *start,
+                    marker="P",
                     s=marker_size,
                     facecolor="w",
                     edgecolor=facecolor,
@@ -1945,6 +1987,8 @@ def _check_matrices(link_matrix, val_matrix, link_width, link_attribute, sig_thr
                 "x->",
                 "<-x",
                 "x-x",
+                "<-+",
+                "+->",
             ]:
                 raise ValueError("Invalid link_matrix entry.")
 
@@ -3166,16 +3210,22 @@ if __name__ == "__main__":
     val_matrix = np.zeros((4, 4, 3))
 
     # Complete test case
-    link_matrix = np.zeros(val_matrix.shape)
+    link_matrix = np.zeros((3,3,2), dtype='<U3')
 
-    link_matrix[0, 1, 0] = 0
-    link_matrix[1, 0, 0] = 1
+    link_matrix[0, 1, 0] = "x->"
+    link_matrix[1, 0, 0] = "<-x"
 
+    link_matrix[1, 2, 0] = "x->"
+    link_matrix[2, 1, 0] = "<-x"
+
+    link_matrix[0, 2, 0] = "x->"
+    link_matrix[2, 0, 0] = "<-x"
     nolinks = np.zeros(link_matrix.shape)
     # nolinks[range(4), range(4), 1] = 1
 
-    plot_time_series_graph(link_matrix=nolinks)
-    plot_graph(link_matrix=nolinks, save_name=None)
+    # plot_time_series_graph(link_matrix=nolinks)
+    plot_graph(link_matrix=link_matrix, 
+        save_name="/home/rung_ja/Downloads/tsg_test.pdf")
 
-    pyplot.show()
+    # pyplot.show()
 

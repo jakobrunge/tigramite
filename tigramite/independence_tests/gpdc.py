@@ -6,6 +6,7 @@
 
 from __future__ import print_function
 import numpy as np
+import dcor
 
 from .independence_tests_base import CondIndTest
 
@@ -13,12 +14,6 @@ try:
     from sklearn import gaussian_process
 except:
     print("Could not import sklearn for Gaussian process tests")
-
-try:
-    from tigramite import tigramite_cython_code
-except:
-    print("Could not import packages for CMIknn and GPDC estimation")
-
 
 class GaussProcReg():
     r"""Gaussian processes abstract base class.
@@ -46,11 +41,6 @@ class GaussProcReg():
         calculate the null distribution for.  This is used to grab the
         get_dependence_measure function.
 
-    gp_version : {'new', 'old'}, optional (default: 'new')
-        The older GP version from scikit-learn 0.17 was used for the numerical
-        simulations in [1]_. The newer version from scikit-learn 0.19 is faster
-        and allows more flexibility regarding kernels etc.
-
     gp_params : dictionary, optional (default: None)
         Dictionary with parameters for ``GaussianProcessRegressor``.
 
@@ -63,14 +53,12 @@ class GaussProcReg():
     def __init__(self,
                  null_samples,
                  cond_ind_test,
-                 gp_version='new',
                  gp_params=None,
                  null_dist_filename=None,
                  verbosity=0):
         # Set the dependence measure function
         self.cond_ind_test = cond_ind_test
         # Set member variables
-        self.gp_version = gp_version
         self.gp_params = gp_params
         self.verbosity = verbosity
         # Set the null distribution defaults
@@ -139,7 +127,7 @@ class GaussProcReg():
 
         null_dist = np.zeros(self.null_samples)
         for i in range(self.null_samples):
-            array = np.random.rand(2, df)
+            array = self.cond_ind_test.random_state.random((2, df))
             null_dist[i] = self.cond_ind_test.get_dependence_measure(array, xyz)
 
         null_dist.sort()
@@ -234,58 +222,30 @@ class GaussProcReg():
         if np.ndim(z) == 1:
             z = z.reshape(-1, 1)
 
-        if self.gp_version == 'old':
-            # Old GP failed for ties in the data
-            def remove_ties(series, verbosity=0):
-                # Test whether ties exist and add noise to destroy ties...
-                cnt = 0
-                while len(np.unique(series)) < np.size(series):
-                    series += 1E-6 * np.random.rand(*series.shape)
-                    cnt += 1
-                    if cnt > 100:
-                        break
-                return series
 
-            z = remove_ties(z)
-            target_series = remove_ties(target_series)
+        # Overwrite default kernel and alpha values
+        params = self.gp_params.copy()
+        if 'kernel' not in list(self.gp_params):
+            kernel = gaussian_process.kernels.RBF() +\
+             gaussian_process.kernels.WhiteKernel()
+        else:
+            kernel = self.gp_params['kernel']
+            del params['kernel']
 
-            gp = gaussian_process.GaussianProcess(
-                nugget=1E-1,
-                thetaL=1E-16,
-                thetaU=np.inf,
-                corr='squared_exponential',
-                optimizer='fmin_cobyla',
-                regr='constant',
-                normalize=False,
-                storage_mode='light')
+        if 'alpha' not in list(self.gp_params):
+            alpha = 0.
+        else:
+            alpha = self.gp_params['alpha']
+            del params['alpha']
 
-        elif self.gp_version == 'new':
-            # Overwrite default kernel and alpha values
-            params = self.gp_params.copy()
-            if 'kernel' not in list(self.gp_params):
-                kernel = gaussian_process.kernels.RBF() +\
-                         gaussian_process.kernels.WhiteKernel()
-            else:
-                kernel = self.gp_params['kernel']
-                del params['kernel']
-
-            if 'alpha' not in list(self.gp_params):
-                alpha = 0.
-            else:
-                alpha = self.gp_params['alpha']
-                del params['alpha']
-
-            gp = gaussian_process.GaussianProcessRegressor(kernel=kernel,
-                                                           alpha=alpha,
-                                                           **params)
+        gp = gaussian_process.GaussianProcessRegressor(kernel=kernel,
+                                               alpha=alpha,
+                                               **params)
 
         gp.fit(z, target_series.reshape(-1, 1))
 
-        if self.verbosity > 3 and self.gp_version == 'new':
+        if self.verbosity > 3:
             print(kernel, alpha, gp.kernel_, gp.alpha)
-
-        if self.verbosity > 3 and self.gp_version == 'old':
-            print(gp.get_params)
 
         if return_likelihood:
             likelihood = gp.log_marginal_likelihood()
@@ -395,11 +355,6 @@ class GPDC(CondIndTest):
     null_dist_filename : str, otional (default: None)
         Path to file containing null distribution.
 
-    gp_version : {'new', 'old'}, optional (default: 'new')
-        The older GP version from scikit-learn 0.17 was used for the numerical
-        simulations in [1]_. The newer version from scikit-learn 0.19 is faster
-        and allows more flexibility regarding kernels etc.
-
     gp_params : dictionary, optional (default: None)
         Dictionary with parameters for ``GaussianProcessRegressor``.
 
@@ -416,7 +371,6 @@ class GPDC(CondIndTest):
 
     def __init__(self,
                  null_dist_filename=None,
-                 gp_version='new',
                  gp_params=None,
                  **kwargs):
         self._measure = 'gp_dc'
@@ -427,14 +381,12 @@ class GPDC(CondIndTest):
         # Build the regressor
         self.gauss_pr = GaussProcReg(self.sig_samples,
                                      self,
-                                     gp_version=gp_version,
                                      gp_params=gp_params,
                                      null_dist_filename=null_dist_filename,
                                      verbosity=self.verbosity)
 
         if self.verbosity > 0:
             print("null_dist_filename = %s" % self.gauss_pr.null_dist_filename)
-            print("gp_version = %s" % self.gauss_pr.gp_version)
             if self.gauss_pr.gp_params is not None:
                 for key in  list(self.gauss_pr.gp_params):
                     print("%s = %s" % (key, self.gauss_pr.gp_params[key]))
@@ -616,8 +568,7 @@ class GPDC(CondIndTest):
         # Remove ties before applying transformation to uniform marginals
         # array_resid = self._remove_ties(array_resid, verbosity=4)
         x_vals, y_vals = self._trafo2uniform(array_resid)
-
-        _, val, _, _ = tigramite_cython_code.dcov_all(x_vals, y_vals)
+        val = dcor.distance_correlation(x_vals, y_vals, method='AVL')
         return val
 
     def get_shuffle_significance(self, array, xyz, value,

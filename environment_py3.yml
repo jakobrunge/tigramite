@@ -9,3 +9,4 @@ dependencies:
     - cython>=0.26
     - torch>=1.7
     - gpytorch>=1.4
+    - dcor>=0.5.3

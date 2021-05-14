@@ -159,7 +159,7 @@ class CMIknn(CondIndTest):
 
         # Add noise to destroy ties...
         array += (1E-6 * array.std(axis=1).reshape(dim, 1)
-                  * np.random.rand(array.shape[0], array.shape[1]))
+                  * self.random_state.random((array.shape[0], array.shape[1])))
 
         if self.transform == 'standardize':
             # Standardize
@@ -291,8 +291,11 @@ class CMIknn(CondIndTest):
 
                 # Generate random order in which to go through indices loop in
                 # next step
-                order = np.random.permutation(T).astype('int32')
+                order = self.random_state.permutation(T).astype('int32')
                 # print(order[:5])
+                # Shuffle neighbor indices for each sample index
+                for i in range(T):
+                    self.random_state.shuffle(neighbors[i])
                 # Select a series of neighbor indices that contains as few as
                 # possible duplicates
                 restricted_permutation = \
@@ -325,3 +328,85 @@ class CMIknn(CondIndTest):
             return pval, null_dist
         return pval
 
+
+    def get_conditional_entropy(self, array, xyz):
+        """Returns the nearest-neighbor conditional entropy estimate of H(X|Y).
+
+        Parameters
+        ---------- 
+        array : array-like
+            data array with X, Y in rows and observations in columns
+
+        xyz : array of ints
+            XYZ identifier array of shape (dim,). Here only uses 0 for X and 
+            1 for Y.
+
+        Returns
+        -------
+        val : float
+            Entropy estimate.
+        """
+
+
+        dim, T = array.shape
+
+        if self.knn < 1:
+            knn_here = max(1, int(self.knn*T))
+        else:
+            knn_here = max(1, int(self.knn))
+
+
+        array = array.astype('float')
+
+        # Add noise to destroy ties...
+        array += (1E-6 * array.std(axis=1).reshape(dim, 1)
+                  * np.random.rand(array.shape[0], array.shape[1]))
+
+        if self.transform == 'standardize':
+            # Standardize
+            array = array.astype('float')
+            array -= array.mean(axis=1).reshape(dim, 1)
+            array /= array.std(axis=1).reshape(dim, 1)
+            # FIXME: If the time series is constant, return nan rather than
+            # raising Exception
+            if np.isnan(array).sum() != 0:
+                raise ValueError("nans after standardizing, "
+                                 "possibly constant array!")
+        elif self.transform == 'uniform':
+            array = self._trafo2uniform(array)
+        elif self.transform == 'ranks':
+            array = array.argsort(axis=1).argsort(axis=1).astype('float')
+
+        # Compute conditional entropy as H(X|Y) = H(X) - I(X;Y)
+
+        # First compute H(X)
+        # Use cKDTree to get distances eps to the k-th nearest neighbors for
+        # every sample in joint space X with maximum norm
+        x_indices = np.where(xyz == 0)[0]
+        y_indices = np.where(xyz == 1)[0]
+
+        dim_x = int(np.where(xyz == 0)[0][-1] + 1)
+        if 1 in xyz:
+            dim_y = int(np.where(xyz == 1)[0][-1] + 1 - dim_x)
+        else:
+            dim_y = 0
+
+
+        x_array = np.fastCopyAndTranspose(array[x_indices, :])
+        tree_xyz = spatial.cKDTree(x_array)
+        epsarray = tree_xyz.query(x_array, k=knn_here+1, p=np.inf,
+                                  eps=0., n_jobs=self.n_jobs)[0][:, knn_here].astype('float')
+
+        h_x = - special.digamma(knn_here) + special.digamma(T) + dim_x * np.log(2.*epsarray).mean()
+
+        # Then compute MI(X;Y)
+        if dim_y > 0:
+            xyz_here = np.array([index for index in xyz if index == 0 or index == 1])
+            array_xy = array[list(x_indices) + list(y_indices), :]
+            i_xy = self.get_dependence_measure(array_xy, xyz_here)
+        else:
+            i_xy = 0.
+
+        h_x_y = h_x - i_xy
+
+        return h_x_y

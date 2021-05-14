@@ -437,7 +437,7 @@ def test_gpdc_torch_residuals(gpdc_torch, seed):
     cntr = np.where(np.abs(target_res) < .7)[0]
     np.testing.assert_allclose(pred[cntr],
                                func(target_res[cntr], c_val),
-                               atol=0.2)
+                               atol=0.2, rtol=1e-01)
 
 def test_shuffle_sig_gpdc_torch(gpdc_torch, data_sample_b):
     # Get the data sample

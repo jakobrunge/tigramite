@@ -76,6 +76,7 @@ class Models():
 
     def get_general_fitted_model(self, 
                 Y, X, Z=None,
+                conditions=None,
                 tau_max=None,
                 cut_off='max_lag_or_tau_max',
                 return_data=False):
@@ -108,12 +109,13 @@ class Models():
             transformation parameters.
         """
 
-        XZ = X + Z
+        if conditions is None:
+            conditions = []
 
         # Find the maximal conditions lag
         max_lag = 0
         for j in Y:
-            this_lag = np.abs(np.array(XZ)[:, 1]).max()
+            this_lag = np.abs(np.array(X + Z + conditions)[:, 1]).max()
             max_lag = max(max_lag, this_lag)
         # Set the default tau max and check if it shoudl be overwritten
         self.tau_max = max_lag
@@ -129,33 +131,35 @@ class Models():
             # Construct array of shape (var, time) with first entry being
             # a dummy, second is y followed by joint X and Z (ignore the notation in construct_array)
             array, xyz = \
-                self.dataframe.construct_array(X=[y], Y=[y], Z=XZ,
+                self.dataframe.construct_array(X=X, Y=[y] + Z, Z=conditions,
                                                tau_max=self.tau_max,
                                                mask_type=self.mask_type,
                                                cut_off=cut_off,
                                                verbosity=self.verbosity)
-            # Get the dimensions out of the constructed array
-            dim, T = array.shape
-            dim_z = dim - 2
+
+
             # Transform the data if needed
             if self.data_transform is not None:
                 array = self.data_transform.fit_transform(X=array.T).T
-            # Fit the model if there are any parents for this variable to fit
-            if dim_z > 0:
-                # Copy and fit the model
-                a_model = deepcopy(self.model)
-                a_model.fit(X=array[2:].T, y=array[1])
-                # Cache the results
-                fit_results[y] = {}
-                fit_results[y]['model'] = a_model
-                # Cache the data transform
-                fit_results[y]['data_transform'] = deepcopy(self.data_transform)
-                # Cache the data if needed
-                if return_data:
-                    fit_results[y]['data'] = array
-            # If there are no parents, skip this variable
-            else:
-                fit_results[y] = None
+            # Fit the model 
+            # Copy and fit the model
+            a_model = deepcopy(self.model)
+
+            predictor_indices = list(np.where(xyz==0)[0]) \
+                                + list(np.where(xyz==1)[0][1:]) \
+                                +  list(np.where(xyz==2)[0])
+            predictor_array = array[predictor_indices, :].T
+            target_array = array[np.where(xyz==1)[0][0], :]
+
+            a_model.fit(X=predictor_array, y=target_array)
+            # Cache the results
+            fit_results[y] = {}
+            fit_results[y]['model'] = a_model
+            # Cache the data transform
+            fit_results[y]['data_transform'] = deepcopy(self.data_transform)
+            # Cache the data if needed
+            if return_data:
+                fit_results[y]['data'] = array
 
         # Cache and return the fit results
         self.fit_results = fit_results
@@ -164,6 +168,8 @@ class Models():
     def get_general_prediction(self,
                 Y, X, Z=None,
                 intervention_data=None,
+                conditions=None,
+                conditions_data=None,
                 pred_params=None,
                 cut_off='max_lag_or_tau_max'):
         r"""Predict effect of intervention with fitted model.
@@ -191,7 +197,10 @@ class Models():
         Results from prediction.
         """
 
-        XZ = X + Z
+        if conditions is None:
+            conditions = []
+
+        # XZS = X + Z + conditions
 
         return_type = 'list'
 
@@ -211,16 +220,17 @@ class Models():
                 raise ValueError("y = %s not yet fitted" % str(y))
             # Construct the array form of the data
             # Check if we've passed a new dataframe object
-            observation_array, _ = \
-                self.dataframe.construct_array(X=[y], Y=[y], Z=XZ,
+            observation_array, xyz = \
+                self.dataframe.construct_array(X=X, Y=[y] + Z, Z=conditions,
                                                tau_max=self.tau_max,
                                                # mask=self.test_mask,
                                                mask_type=self.mask_type,
                                                cut_off=cut_off,
                                                verbosity=self.verbosity)
-            intervention_array = observation_array
+
+            intervention_array = np.copy(observation_array)
             if intervention_data is not None:
-                tmp_array, _ = intervention_data.construct_array(X, Y, Z,
+                tmp_array, _ = intervention_data.construct_array(X=X, Y=[y] + Z, Z=conditions,
                                                          tau_max=self.tau_max,
                                                          mask_type=self.mask_type,
                                                          cut_off=cut_off,
@@ -228,8 +238,19 @@ class Models():
 
                 # Only replace X-variables in intervention_array (necessary if lags of
                 # X are in Z...)
-                for ix in enumerate(X):
-                    index = ix + 2
+                for index in np.where(xyz==0)[0]:
+                    intervention_array[index] = tmp_array[index]
+
+            if conditions is not None and conditions_data is not None:
+                tmp_array, _ = conditions_data.construct_array(X=X, Y=[y] + Z, Z=conditions,
+                                                         tau_max=self.tau_max,
+                                                         mask_type=self.mask_type,
+                                                         cut_off=cut_off,
+                                                         verbosity=self.verbosity)
+
+                # Only replace condition-variables in intervention_array 
+                # (necessary if lags of X are in Z...)
+                for index in np.where(xyz==2)[0]:
                     intervention_array[index] = tmp_array[index]
 
             # Transform the data if needed
@@ -238,9 +259,13 @@ class Models():
                 intervention_array = a_transform.transform(X=intervention_array.T).T
             # Cache the test array
             self.intervention_array = intervention_array
-            # Run the predictor
+            # Run the predictor, for Y only the Z-part is used, the first index is y
+            predictor_indices = list(np.where(xyz==0)[0]) \
+                                + list(np.where(xyz==1)[0][1:]) \
+                                +  list(np.where(xyz==2)[0])
+            predictor_array = intervention_array[predictor_indices, :].T
             pred_dict[y] = self.fit_results[y]['model'].predict(
-                X=intervention_array[2:].T, **pred_params)
+                X=predictor_array, **pred_params)
 
         return pred_dict
 

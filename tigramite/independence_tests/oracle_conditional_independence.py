@@ -51,22 +51,32 @@ class OracleCI:
                  observed_vars=None,
                  selection_vars=None,
                  graph=None,
+                 graph_is_mag=False,
+                 # tau_max=None,
                  verbosity=0):
+
+        # self.tau_max = tau_max
+        self.graph_is_mag = graph_is_mag
 
         if links is None:
             if graph is None:
                 raise ValueError("Either links or graph must be specified!")
             else:
+                # Get canonical DAG from graph, potentially interpreted as MAG
+                # self.tau_max = graph.shape[2]
                 (links, 
                  observed_vars, 
                  selection_vars) = self.get_links_from_graph(graph)
+                # # TODO make checks and tau_max?
+                # self.graph = graph
 
-        self.graph = graph
+
         self.verbosity = verbosity
         self._measure = 'oracle_ci'
         self.confidence = None
         self.links = links
         self.N = len(links)
+        # self.tau_max = self._get_minmax_lag(self.links)
 
         # Initialize already computed dsepsets of X, Y, Z
         self.dsepsets = {}
@@ -94,6 +104,9 @@ class OracleCI:
                 raise ValueError("selection_vars must not contain duplicates.")
         else:
             self.selection_vars = []
+
+        # ToDO: maybe allow to use user-tau_max, otherwise deduced from links
+        self.graph = self.get_graph_from_links(tau_max=None)
 
     def set_dataframe(self, dataframe):
         """Dummy function."""
@@ -146,7 +159,8 @@ class OracleCI:
 
         return (X, Y, Z)
 
-    def _get_lagged_parents(self, var_lag, exclude_contemp=False):
+    def _get_lagged_parents(self, var_lag, exclude_contemp=False,
+                only_non_causal_paths=False, X=None, causal_children=None):
         """Helper function to yield lagged parents for var_lag from
         self.links_coeffs.
 
@@ -173,7 +187,11 @@ class OracleCI:
                 coeff = 1.
             if coeff != 0.:
                 if not (exclude_contemp and lag == 0):
-                    yield (i, lag + tau)
+                    if only_non_causal_paths:
+                        if not ((i, lag + tau) in X and var_lag in causal_children):
+                            yield (i, lag + tau)
+                    else:
+                        yield (i, lag + tau)
 
     def _get_children(self):
         """Helper function to get children from links.
@@ -202,7 +220,8 @@ class OracleCI:
 
         return children
 
-    def _get_lagged_children(self, var_lag, children, exclude_contemp=False):
+    def _get_lagged_children(self, var_lag, children, exclude_contemp=False,
+           only_non_causal_paths=False, X=None, causal_children=None):
         """Helper function to yield lagged children for var_lag from children.
 
         Parameters
@@ -226,7 +245,11 @@ class OracleCI:
             k, tau = child
             if not (exclude_contemp and tau == 0):
                 # lagged_parents.append((i, lag + tau))
-                yield (k, lag + tau)
+                if only_non_causal_paths:
+                    if not (var_lag in X and (k, lag + tau) in causal_children):
+                        yield (k, lag + tau)
+                else:
+                    yield (k, lag + tau)
 
     def _get_non_blocked_ancestors(self, Y, conds=None, mode='non_repeating',
                                     max_lag=None):
@@ -285,6 +308,7 @@ class OracleCI:
 
         if conds is None:
             conds = []
+
         conds = [z for z in conds if z not in Y]
 
         N = len(self.links)
@@ -331,7 +355,42 @@ class OracleCI:
 
         return ancestors, max_lag
 
-    def _has_any_path(self, X, Y, conds, max_lag, backdoor=False):
+    def _get_descendants(self, W, children, max_lag, ignore_time_bounds=False):
+        """Get descendants of nodes in W up to time t.
+        
+        Includes the nodes themselves.
+        """
+
+        descendants = set(W)
+
+        for w in W:
+            j, tau = w 
+            this_level = [w]
+            while len(this_level) > 0:
+                next_level = []
+                for varlag in this_level:
+                    for child in self._get_lagged_children(varlag, children):
+                        i, tau = child
+                        if (child not in descendants 
+                            and (-max_lag <= tau <= 0 or ignore_time_bounds)):
+                            descendants = descendants.union(set([child]))
+                            next_level.append(child)
+
+                this_level = next_level       
+
+        return list(descendants)
+
+    def _has_any_path(self, X, Y, conds, max_lag=None, 
+        starts_with=None, ends_with=None,
+        directed=False,
+        forbidden_nodes=None,
+        only_non_causal_paths=False,
+        check_optimality_cond=False,
+        optimality_cond_des_YM=None,
+        optimality_cond_Y=None,
+        only_collider_paths_with_vancs=False,
+        XYS=None,
+        return_path=False):
         """Returns True if X and Y are d-connected by any open path.
 
         Does breadth-first search from both X and Y and meets in the middle.
@@ -351,22 +410,31 @@ class OracleCI:
             index and tau the time lag.
         max_lag : int
             Maximum time lag.
-        backdoor : bool
-            Whether to only consider paths starting with an arrowhead in X.
+        starts_with : {None, 'tail', 'arrohead'}
+            Whether to only consider paths starting with particular mark at X.
+        ends_with : {None, 'tail', 'arrohead'}
+            Whether to only consider paths ending with particular mark at Y.
         """
+        if max_lag is None:
+            max_lag = self._get_max_lag_from_XYZ(X, Y, conds)
 
         def _walk_to_parents(v, fringe, this_path, other_path):
             """Helper function to update paths when walking to parents."""
             found_connection = False
-            for w in self._get_lagged_parents(v):
+            for w in self._get_lagged_parents(v, 
+                only_non_causal_paths=only_non_causal_paths, X=X, 
+                causal_children=causal_children):
                 # Cannot walk into conditioned parents and
                 # cannot walk beyond t or max_lag
                 i, t = w
 
-                if backdoor and w == x:
+                if w == x and starts_with == 'arrowhead':
                     continue
 
-                if (w not in conds and
+                if w == y and ends_with == 'arrowhead':
+                    continue
+
+                if (w not in conds and w not in forbidden_nodes and
                     # (w, v) not in seen_links and
                     t <= 0 and abs(t) <= max_lag):
                     # if ((w, 'tail') not in this_path and 
@@ -396,11 +464,20 @@ class OracleCI:
         def _walk_to_children(v, fringe, this_path, other_path):
             """Helper function to update paths when walking to children."""
             found_connection = False
-            for w in self._get_lagged_children(v, children):
+            for w in self._get_lagged_children(v, children, 
+                only_non_causal_paths=only_non_causal_paths, X=X, 
+                causal_children=causal_children):
                 # You can also walk into conditioned children,
                 # but cannot walk beyond t or max_lag
                 i, t = w
-                if (
+
+                if w == x and starts_with == 'tail':
+                    continue
+
+                if w == y and ends_with == 'tail':
+                    continue
+
+                if (w not in forbidden_nodes and
                     # (w, v) not in seen_links and
                     t <= 0 and abs(t) <= max_lag):
                     # if ((w, 'arrowhead') not in this_path and 
@@ -439,16 +516,37 @@ class OracleCI:
             respectively."""
             found_connection = False
 
-            if backdoor:
+            if starts_with == 'arrowhead':
                 if len(this_level) == 1 and this_level[0] == (x, None):
                     (found_connection, fringe,
                          this_path) = _walk_to_parents(x, fringe, 
                                                        this_path, other_path)
                     return found_connection, fringe, this_path, other_path
- 
+
+            elif starts_with == 'tail':
+                if len(this_level) == 1 and this_level[0] == (x, None):
+                    (found_connection, fringe,
+                         this_path) = _walk_to_children(x, fringe, 
+                                                       this_path, other_path)
+                    return found_connection, fringe, this_path, other_path 
+
+            if ends_with == 'arrowhead':
+                if len(this_level) == 1 and this_level[0] == (y, None):
+                    (found_connection, fringe,
+                         this_path) = _walk_to_parents(y, fringe, 
+                                                       this_path, other_path)
+                    return found_connection, fringe, this_path, other_path
+
+            elif ends_with == 'tail':
+                if len(this_level) == 1 and this_level[0] == (y, None):
+                    (found_connection, fringe,
+                         this_path) = _walk_to_children(y, fringe, 
+                                                       this_path, other_path)
+                    return found_connection, fringe, this_path, other_path 
+
             for v, mark in this_level:
                 if v in conds:
-                    if (mark == 'arrowhead' or mark == None):
+                    if (mark == 'arrowhead' or mark == None) and directed is False:
                         # Motif: --> [v] <--
                         # If standing on a condition and coming from an
                         # arrowhead, you can only walk into parents
@@ -457,6 +555,9 @@ class OracleCI:
                                                        this_path, other_path)
                         if found_connection: break            
                 else:
+                    if only_collider_paths_with_vancs:
+                        continue
+
                     if (mark == 'tail' or mark == None):
                         # Motif: <-- v <-- or <-- v -->
                         # If NOT standing on a condition and coming from
@@ -467,10 +568,11 @@ class OracleCI:
                                                        this_path, other_path)
                         if found_connection: break 
                         
-                        (found_connection, fringe,
-                         this_path) = _walk_to_children(v, fringe, 
-                                                       this_path, other_path)
-                        if found_connection: break 
+                        if not directed:
+                            (found_connection, fringe,
+                             this_path) = _walk_to_children(v, fringe, 
+                                                           this_path, other_path)
+                            if found_connection: break 
                       
                     elif mark == 'arrowhead':
                         # Motif: --> v -->
@@ -481,6 +583,26 @@ class OracleCI:
                          this_path) = _walk_to_children(v, fringe, 
                                                        this_path, other_path)
                         if found_connection: break
+
+                        if check_optimality_cond and v[0] in self.observed_vars:
+                            # if v is not descendant of YM
+                            # and v is not connected to Y given X OS\Cu
+                            # print("v = ", v)
+                            cond4a = v not in optimality_cond_des_YM
+                            cond4b = not self._has_any_path(X=[v], Y=optimality_cond_Y, 
+                                conds=conds + X, 
+                                max_lag=None, 
+                                starts_with=None,
+                                ends_with=None,  
+                                forbidden_nodes=None, #list(prelim_Oset), 
+                                return_path=False)
+                            # print(cond4a, cond4b)
+                            if cond4a and cond4b:
+                                (found_connection, fringe,
+                                 this_path) = _walk_to_parents(v, fringe, 
+                                                               this_path, other_path)
+                                # print(found_connection)
+                                if found_connection: break
 
             if self.verbosity > 1:
                 print("Updated fringe: ", fringe)
@@ -497,13 +619,20 @@ class OracleCI:
                 mark = 'tail'
             else:
                 mark = 'arrowhead'
-
+            # print(found_connection)
             while path[-1] != x:
+                # print(path, node, mark, pred[node])
                 prev_node, prev_mark = pred[node][mark]
                 path.append(prev_node)
                 if prev_mark == 'arrowhead':
                     if prev_node not in conds:
-                        mark = 'tail'
+                        # if pass_through_colliders:
+                        #     if 'tail' in pred[prev_node] and pred[prev_node]['tail'] != (node, mark):
+                        #         mark = 'tail'
+                        #     else:
+                        #         mark = 'arrowhead'
+                        # else:
+                            mark = 'tail'
                     elif prev_node in conds:
                         mark = 'arrowhead'
                 elif prev_mark == 'tail':
@@ -526,7 +655,13 @@ class OracleCI:
                 path.append(next_node)
                 if next_mark == 'arrowhead':
                     if next_node not in conds:
-                        mark = 'tail'
+                        # if pass_through_colliders:
+                        #     if 'tail' in succ[next_node] and succ[next_node]['tail'] != (node, mark):
+                        #         mark = 'tail'
+                        #     else:
+                        #         mark = 'arrowhead'
+                        # else:
+                            mark = 'tail'
                     elif next_node in conds:
                         mark = 'arrowhead'
                 elif next_mark == 'tail':
@@ -541,7 +676,12 @@ class OracleCI:
 
         if conds is None:
             conds = []
+
+        if forbidden_nodes is None:
+            forbidden_nodes = []
+
         conds = [z for z in conds if z not in Y and z not in X]
+        # print(X, Y, conds)
 
         if self.selection_vars is not None:
             for selection_var in self.selection_vars:
@@ -550,6 +690,31 @@ class OracleCI:
 
         N = len(self.links)
         children = self._get_children()
+
+        if only_non_causal_paths:
+            anc_Y_dict = self._get_non_blocked_ancestors(Y=Y, conds=None, mode='max_lag',
+                                    max_lag=max_lag)[0]
+            # print(anc_Y_dict)
+            anc_Y = []
+            for y in Y:
+                anc_Y += anc_Y_dict[y]
+            des_X = self._get_descendants(X, children=children, max_lag=max_lag)
+            mediators = set(anc_Y).intersection(set(des_X)) - set(Y) - set(X)
+
+            causal_children = list(mediators) + Y
+        else:
+            causal_children = None
+
+        if only_collider_paths_with_vancs:
+            vancs_dict = self._get_non_blocked_ancestors(Y=XYS, conds=None, mode='max_lag',
+                                    max_lag=max_lag)[0]
+            vancs = set()
+            for xys in XYS:
+                vancs = vancs.union(set(vancs_dict[xys]))
+            vancs = list(vancs) + XYS
+            conds = vancs
+        # else:
+        #     vancs = None
 
         # Iterate through nodes in X and Y
         for x in X:
@@ -580,8 +745,13 @@ class OracleCI:
 
                     # print(pred)
                     if found_connection: 
-                        path = backtrace_path()
-                        return path
+                        if return_path:
+                            backtraced_path = backtrace_path()
+                            return [(self.observed_vars.index(node[0]), node[1]) 
+                                    for node in backtraced_path 
+                                    if node[0] in self.observed_vars]
+                        else: 
+                            return True
                 else:
                     if self.verbosity > 1:
                         print("Walk from Y since len(X_fringe)=%d "
@@ -594,8 +764,13 @@ class OracleCI:
                                                 pred)
 
                     if found_connection: 
-                        path = backtrace_path()
-                        return path
+                        if return_path:
+                            backtraced_path = backtrace_path()
+                            return [(self.observed_vars.index(node[0]), node[1]) 
+                                    for node in backtraced_path 
+                                    if node[0] in self.observed_vars]
+                        else: 
+                            return True
 
                 if self.verbosity > 1:
                     print("X_fringe = %s \n" % str(forward_fringe) +
@@ -680,9 +855,16 @@ class OracleCI:
 
         return dseparated
 
-    def get_shortest_path(self, X, Y, Z,
-                 max_lag=None, compute_ancestors=False, 
-                 backdoor=False):
+    def check_shortest_path(self, X, Y, Z,
+                 max_lag=None,  # compute_ancestors=False, 
+                 starts_with=None, ends_with=None, 
+                 forbidden_nodes=None,
+                 directed=False,
+                 only_non_causal_paths=False,
+                 check_optimality_cond=False,
+                 optimality_cond_des_YM=None,
+                 optimality_cond_Y=None,
+                 return_path=False):
         """Returns path between X and Y given Z in the graph.
 
         X, Y, Z are of the form (var, lag) for lag <= 0. D-separation is
@@ -700,7 +882,7 @@ class OracleCI:
         search of non-blocked paths according to d-separation rules including
         selection variables.
 
-        Optionally only considers backdoor paths (starting with an arrowhead in X)
+        Optionally only considers paths starting/ending with specific marks)
         and makes available the ancestors up to max_lag of X, Y, Z. This may take 
         a very long time, however.
 
@@ -715,8 +897,10 @@ class OracleCI:
         compute_ancestors : bool
             Whether to also make available the ancestors for X, Y, Z as
             self.anc_all_x, self.anc_all_y, and self.anc_all_z, respectively.
-        backdoor : bool
-            Whether to only consider paths starting with an arrowhead in X.
+        starts_with : {None, 'tail', 'arrohead'}
+            Whether to only consider paths starting with particular mark at X.
+        ends_with : {None, 'tail', 'arrohead'}
+            Whether to only consider paths ending with particular mark at Y.
 
         Returns
         -------
@@ -730,6 +914,16 @@ class OracleCI:
         X = [(self.observed_vars[x[0]], x[1]) for x in X]
         Y = [(self.observed_vars[y[0]], y[1]) for y in Y]
         Z = [(self.observed_vars[z[0]], z[1]) for z in Z]
+
+        # print(X)
+        # print(Y)
+        # print(Z)
+
+        if check_optimality_cond:
+            optimality_cond_des_YM = [(self.observed_vars[x[0]], x[1]) 
+                                        for x in optimality_cond_des_YM]
+            optimality_cond_Y = [(self.observed_vars[x[0]], x[1]) 
+                                    for x in optimality_cond_Y]
 
         # Get the array to test on
         X, Y, Z = self._check_XYZ(X, Y, Z)
@@ -749,11 +943,21 @@ class OracleCI:
 
         # _has_any_path is the main function that searches open paths
         any_path = self._has_any_path(X, Y, conds=Z, max_lag=max_lag, 
-                                      backdoor=backdoor)
+                                      starts_with=starts_with, ends_with=ends_with,
+                                      return_path=return_path,
+                                      directed=directed,
+                                      only_non_causal_paths=only_non_causal_paths,
+                                      check_optimality_cond=check_optimality_cond,
+                                      optimality_cond_des_YM=optimality_cond_des_YM,
+                                      optimality_cond_Y=optimality_cond_Y,
+                                      forbidden_nodes=forbidden_nodes)
 
         if any_path:
-            any_path_observed = [node for node in any_path 
+            if return_path:
+                any_path_observed = [(self.observed_vars.index(node[0]), node[1]) for node in any_path 
                              if node[0] in self.observed_vars]
+            else:
+                any_path_observed = True
         else: 
             any_path_observed = False
 
@@ -762,18 +966,18 @@ class OracleCI:
             print("_has_any_path_obs = ", any_path_observed)
 
 
-        if compute_ancestors:
-            if self.verbosity > 0:
-                print("Compute ancestors.")
+        # if compute_ancestors:
+        #     if self.verbosity > 0:
+        #         print("Compute ancestors.")
 
-            # Get ancestors up to maximum ancestral time lag incl. repeated
-            # links
-            self.anc_all_x, _ = self._get_non_blocked_ancestors(X, conds=Z,
-                                            mode='max_lag', max_lag=max_lag)
-            self.anc_all_y, _ = self._get_non_blocked_ancestors(Y, conds=Z,
-                                            mode='max_lag', max_lag=max_lag)
-            self.anc_all_z, _ = self._get_non_blocked_ancestors(Z, conds=Z,
-                                            mode='max_lag', max_lag=max_lag)
+        #     # Get ancestors up to maximum ancestral time lag incl. repeated
+        #     # links
+        #     self.anc_all_x, _ = self._get_non_blocked_ancestors(X, conds=Z,
+        #                                     mode='max_lag', max_lag=max_lag)
+        #     self.anc_all_y, _ = self._get_non_blocked_ancestors(Y, conds=Z,
+        #                                     mode='max_lag', max_lag=max_lag)
+        #     self.anc_all_z, _ = self._get_non_blocked_ancestors(Z, conds=Z,
+        #                                     mode='max_lag', max_lag=max_lag)
 
         return any_path_observed
 
@@ -920,6 +1124,9 @@ class OracleCI:
         latent and selection variables, respectively, are added.
         This corresponds to a canonical DAG (Richardson Spirtes 2002).
 
+        For ADMGs "---" are not supported, but also links of type "+->"
+        exist, which corresponds to having both "-->" and "<->".
+
         Can be used to evaluate d-separation in MAG/DAGs.
 
         """
@@ -927,7 +1134,11 @@ class OracleCI:
         if "U3" not in str(graph.dtype):
             raise ValueError("graph must be of type '<U3'!")
 
-        edge_types = ["-->", "<--", "<->", "---"]
+        if self.graph_is_mag:
+            edge_types = ["-->", "<--", "<->", "---"]
+        else:
+            edge_types = ["-->", "<--", "<->", "+->", "<-+"] #, "--+", "+--"]
+
 
         N, N, tau_maxplusone = graph.shape
         tau_max = tau_maxplusone - 1
@@ -942,8 +1153,15 @@ class OracleCI:
         latent_index = N
         for i, j, tau in zip(*np.where(graph)):
 
+            edge_type = graph[i, j, tau]
+
+            if edge_type not in edge_types:
+                raise ValueError(
+                    "Links can only be in %s " %str(edge_types)
+                )
+
             if tau == 0:
-                if graph[i, j, 0] != self._reverse_patt(graph[j, i, 0]):
+                if edge_type != self._reverse_patt(graph[j, i, 0]):
                     raise ValueError(
                         "graph needs to have consistent lag-zero patterns (eg"
                         " graph[i,j,0]='-->' requires graph[j,i,0]='<--')"
@@ -955,12 +1173,10 @@ class OracleCI:
 
             # Restrict lagged links
             else: 
-                if graph[i, j, tau] not in ["-->", "<->", "---"]:
+                if edge_type not in ["-->", "<->", "---", "+->"]: #, "--+"]:
                     raise ValueError(
-                        "Lagged links can only be in ['-->', '<->', '---']"
+                        "Lagged links can only be in ['-->', '<->', '---', '+->']"
                     )
-
-            edge_type = graph[i, j, tau]
 
             if edge_type == "-->":
                 links[j].append((i, -tau))
@@ -977,9 +1193,216 @@ class OracleCI:
                 links[latent_index].append((i, -tau))
                 links[latent_index].append((j, 0))
                 latent_index += 1
+            elif edge_type == "+->":
+                links[j].append((i, -tau))
+                links[latent_index] = []
+                links[i].append((latent_index, 0))
+                links[j].append((latent_index, -tau))
+                latent_index += 1
+            elif edge_type == "<-+":
+                links[i].append((j, -tau))
+                links[latent_index] = []
+                links[i].append((latent_index, 0))
+                links[j].append((latent_index, -tau))
+                latent_index += 1
+            # elif edge_type == "+--":
+            #     links[i].append((j, -tau))
+            #     links[latent_index] = []
+            #     selection_vars.append(latent_index)
+            #     links[latent_index].append((i, -tau))
+            #     links[latent_index].append((j, 0))
+            #     latent_index += 1
+            # elif edge_type == "--+":
+            #     links[j].append((i, -tau))
+            #     links[latent_index] = []
+            #     selection_vars.append(latent_index)
+            #     links[latent_index].append((i, -tau))
+            #     links[latent_index].append((j, 0))
+            #     latent_index += 1
 
         return links, observed_vars, selection_vars
 
+    def _get_minmax_lag(self, links):
+        """Helper function to retrieve tau_min and tau_max from links
+        """
+
+        N = len(links)
+
+        # Get maximum time lag
+        min_lag = np.inf
+        max_lag = 0
+        for j in range(N):
+            for link_props in links[j]:
+                if len(link_props) == 3:
+                    i, lag = link_props[0]
+                    coeff = link_props[1]
+                else:
+                    i, lag = link_props
+                    coeff = 1.                
+                # func = link_props[2]
+                if coeff != 0.:
+                    min_lag = min(min_lag, abs(lag))
+                    max_lag = max(max_lag, abs(lag))
+        return min_lag, max_lag
+
+    def get_graph_from_links(self, tau_max=None):
+        """
+        Constructs graph (DAG or MAG or ADMG) from links, observed_vars, 
+        and selection_vars.
+
+        For ADMGs uses the Latent projection operation (Pearl 2009).
+
+        """
+
+        # TODO: use MAG from DAG construction procedure (lecture notes)
+        # issues with tau_max?
+        if self.graph_is_mag is False and len(self.selection_vars) > 0:
+            raise ValueError("ADMG do not support selection_vars.")
+
+        N_all = len(self.links)
+
+        # If tau_max is None, compute from links_coeffs
+        _, max_lag_links = self._get_minmax_lag(self.links)
+        if tau_max is None:
+            tau_max = max_lag_links
+        else:
+            if max_lag_links > tau_max:
+                raise ValueError("tau_max must be >= maximum lag in links_coeffs; choose tau_max=None")
+
+        N = len(self.observed_vars)
+
+        # Init graph
+        graph = np.zeros((N, N, tau_max + 1), dtype='<U3')
+        graph[:] = ""
+        # We will enumerate the observed variables with (i,j) which refers to the index in MAG graph
+        # while x, y iterates through the variables in the underlying DAG
+
+        # Loop over the observed variables
+        for j, y in enumerate(self.observed_vars):
+          for i, x in enumerate(self.observed_vars):
+            for tau in range(0, tau_max + 1):
+              if (x, -tau) != (y, 0):
+
+                if self.graph_is_mag:
+                    dag_anc_y, _ = self._get_non_blocked_ancestors(Y=[(y, 0)], conds=None, 
+                                            mode='max_lag',
+                                            max_lag=tau_max)
+                    # Only consider observed ancestors
+                    mag_anc_y = [anc for anc in dag_anc_y[(y, 0)] 
+                                if anc[0] in self.observed_vars]
+
+                    dag_anc_x, _ = self._get_non_blocked_ancestors(Y=[(x, -tau)], 
+                                    conds=None, mode='max_lag',
+                                    max_lag=tau_max)
+                    
+                    # Only consider observed ancestors
+                    mag_anc_x = [anc for anc in dag_anc_x[(x, -tau)] 
+                                if anc[0] in self.observed_vars]   
+
+                    # Add selection variable ancestors
+                    dag_anc_s = set()
+                    for s in self.selection_vars:
+                        dag_anc_s_here, _ = self._get_non_blocked_ancestors(Y=[(s, 0)], 
+                                    conds=None, mode='max_lag',
+                                    max_lag=tau_max)
+                        dag_anc_s = dag_anc_s.union(set(dag_anc_s_here[(s, 0)]))
+                    
+                    dag_anc_s = list(dag_anc_s)
+                    # Only consider observed ancestors
+                    mag_anc_s = [anc for anc in dag_anc_s 
+                                if anc[0] in self.observed_vars]
+
+                    Z = set([z for z in mag_anc_y + mag_anc_x + mag_anc_s if z != (y, 0) and z != (x, -tau)])
+                    Z = list(Z)
+                    
+                    separated = self._is_dsep(X=[(x, -tau)], Y=[(y, 0)], Z=Z, max_lag=None)
+                    
+                    # If X and Y are connected given Z, mark a link
+                    if not separated:
+                        # (i, -tau) --> j
+                        if (x, -tau) in dag_anc_y[(y, 0)] + dag_anc_s and (y, 0) not in dag_anc_x[(x, -tau)] + dag_anc_s:
+                            graph[i, j, tau] = "-->"
+                            if tau == 0:
+                                graph[j, i, 0] = "<--"
+
+                        elif (x, -tau) not in dag_anc_y[(y, 0)] + dag_anc_s and (y, 0) not in dag_anc_x[(x, -tau)] + dag_anc_s:
+                            graph[i, j, tau] = "<->"
+                            if tau == 0:
+                                graph[j, i, 0] = "<->"
+
+                        elif (x, -tau) in dag_anc_y[(y, 0)] + dag_anc_s and (y, 0) in dag_anc_x[(x, -tau)] + dag_anc_s:
+                            graph[i, j, tau] = "---"
+                            if tau == 0:
+                                graph[j, i, 0] = "---"
+                else:
+                    if tau == 0 and j >= i:
+                        continue
+                    # edge_types = ["-->", "<->", "+->"]
+                    # Latent projection operation:
+                    # (i)  ADMG contains i --> j iff there is a directed path x --> ... --> y on which
+                    #      every non-endpoint vertex is in hidden variables (= not in observed_vars)
+                    # (ii) ADMG contains i <-> j iff there exists a path of the form x <-- ... --> y on
+                    #      which every non-endpoint vertex is non-collider AND in L (=not in observed_vars)
+                    observed_varslags = set([(v, -lag) for v in self.observed_vars
+                                                   for lag in range(0, tau_max + 1)]) - set([(x, -tau), (y, 0)])
+                    cond_one_xy = self._has_any_path(X=[(x, -tau)], Y=[(y, 0)], 
+                        conds=[], 
+                        max_lag=None, 
+                        starts_with='tail',
+                        ends_with='arrowhead',
+                        directed=True,  
+                        forbidden_nodes=list(observed_varslags), 
+                        return_path=False)
+                    if tau == 0:
+                        cond_one_yx = self._has_any_path(X=[(y, 0)], Y=[(x, 0)], 
+                            conds=[], 
+                            max_lag=None, 
+                            starts_with='tail',
+                            ends_with='arrowhead',
+                            directed=True,  
+                            forbidden_nodes=list(observed_varslags), 
+                            return_path=False)
+                    else:
+                        cond_one_yx = False
+                    cond_two = self._has_any_path(X=[(x, -tau)], Y=[(y, 0)], 
+                        conds=[], 
+                        max_lag=None, 
+                        starts_with='arrowhead',
+                        ends_with='arrowhead',
+                        directed=False,  
+                        forbidden_nodes=list(observed_varslags), 
+                        return_path=False)
+                    if cond_one_xy and cond_one_yx:
+                        raise ValueError("Cyclic graph!")
+                    # print((x, -tau), y, cond_one_xy, cond_one_yx, cond_two)
+
+                    # Only (i) holds: i --> j
+                    if cond_one_xy and not cond_two:
+                        graph[i, j, tau] = "-->"
+                        if tau == 0:
+                            graph[j, i, 0] = "<--"
+                    elif cond_one_yx and not cond_two:
+                        graph[i, j, tau] = "<--"
+                        if tau == 0:
+                            graph[j, i, 0] = "-->"
+
+                    # Only (ii) holds: i <-> j
+                    elif not cond_one_xy and not cond_one_yx and cond_two:
+                        graph[i, j, tau] = "<->"
+                        if tau == 0:
+                            graph[j, i, 0] = "<->"
+
+                    # Both (i) and (ii) hold: i +-> j
+                    elif cond_one_xy and cond_two:
+                        graph[i, j, tau] = "+->"
+                        if tau == 0:
+                            graph[j, i, 0] = "<-+"
+                    elif cond_one_yx and cond_two:
+                        graph[i, j, tau] = "<-+"
+                        if tau == 0:
+                            graph[j, i, 0] = "+->"
+
+        return graph
 
 if __name__ == '__main__':
 
@@ -1043,29 +1466,74 @@ if __name__ == '__main__':
     # links[2].append(((1, 0), coeff, lin_f))
     # links[2].append(((0, 0), coeff, lin_f))
 
-    # coeff = 0.5
-    # links ={
-    #         0: [((0, -1), coeff, lin_f)],
-    #         1: [((0, 0), coeff, lin_f), ((2, 0), coeff, lin_f)],
-    #         2: [],
-    #         3: [((1, 0), coeff, lin_f)],                                
-    #         }
-    # observed_vars = [0, 1, 2, 3]
+    coeff = 0.5
+    links ={
+            0: [((4, 0), coeff, lin_f), ((2, 0), coeff, lin_f)],
+            1: [((4, 0), coeff, lin_f)],
+            2: [],
+            3: [], 
+            4: [],
+            5: [((2, 0), coeff, lin_f), ((3, 0), coeff, lin_f)]                               
+            }
+    observed_vars = [0, 1, 2, 3]
+    selection_vars = [5]
 
-    graph = np.zeros((8, 8, 4), dtype='<U3')
-    # EXample C from paper plus M
-    # X = 0, M = 1, Y = 2, Z1 = 3, etc
-    var_names = ['X-0', 'M-1', 'Y-2', 'Z1-3', 'Z2-4', 'Z3-5', 'Z4-6', 'Z5-7']
+    # graph = np.zeros((8, 8, 4), dtype='<U3')
+    # # EXample C from paper plus M
+    # # X = 0, M = 1, Y = 2, Z1 = 3, etc
+    # var_names = ['X-0', 'M-1', 'Y-2', 'Z1-3', 'Z2-4', 'Z3-5', 'Z4-6', 'Z5-7']
+    # # Causal paths
+    # graph[0, 1, 0] = '-->'
+    # graph[1, 0, 0] = '<--'
+    # graph[1, 2, 0] = '-->'
+    # graph[2, 1, 0] = '<--'
+    # graph[0, 2, 0] = '-->'
+    # graph[2, 0, 0] = '<--'
+
+
+    # # Others
+    # # Z1 = 3
+    # graph[0, 3, 0] = '<->'
+    # graph[3, 0, 0] = '<->'
+    # graph[3, 2, 0] = '-->'
+    # graph[2, 3, 0] = '<--'
+    # graph[3, 4, 0] = '<->'    
+    # graph[4, 3, 0] = '<->'    
+
+    # # Z2 = 4
+    # graph[2, 4, 0] = '<->'
+    # graph[4, 2, 0] = '<->'    
+    # graph[4, 3, 0] = '<->'    
+    # graph[4, 5, 0] = '<->'    
+
+    # # Z3 = 5
+    # graph[5, 4, 0] = '<->'    
+
+    # # Z4 = 6
+    # graph[6, 5, 0] = '-->'
+    # graph[5, 6, 0] = '<--'
+    # graph[6, 0, 0] = '-->'
+    # graph[0, 6, 0] = '<--'
+
+    # # Z5 = 7
+    # graph[7, 2, 0] = '<->'  
+    # graph[2, 7, 0] = '<->'    
+    # graph[7, 0, 0] = '-->'    
+    # graph[0, 7, 0] = '<--'  
+
+    graph = np.zeros((16, 16, 1), dtype='<U3')
+    # EXample B from paper
+    # X = 0, M = 1, Y = 2, Z1 = 3, etc (S is last)
+    var_names = ['X-0', 'M-1', 'Y-2', 'Z1-3', 'Z2-4', 
+    'Z3-5', 'Z4-6', 'Z5-7', 'Z6-8', 'Z7-9', 'Z8-10', 
+    'Z9-11', 'Z10-12', 'Z11-13', 'Z12-14', 'S-15']
     # Causal paths
     graph[0, 1, 0] = '-->'
     graph[1, 0, 0] = '<--'
-
     graph[1, 2, 0] = '-->'
     graph[2, 1, 0] = '<--'
-
     graph[0, 2, 0] = '-->'
     graph[2, 0, 0] = '<--'
-
 
     # Others
     # Z1 = 3
@@ -1073,32 +1541,68 @@ if __name__ == '__main__':
     graph[3, 0, 0] = '<->'
     graph[3, 2, 0] = '-->'
     graph[2, 3, 0] = '<--'
-    graph[3, 4, 0] = '<->'    
-    graph[4, 3, 0] = '<->'    
+    graph[3, 1, 0] = '-->'    
+    graph[1, 3, 0] = '<--'    
+    graph[3, 7, 0] = '-->'    
+    graph[7, 3, 0] = '<--'  
+    graph[3, 8, 0] = '-->'    
+    graph[8, 3, 0] = '<--'  
 
     # Z2 = 4
-    graph[2, 4, 0] = '<->'
-    graph[4, 2, 0] = '<->'    
-    graph[4, 3, 0] = '<->'    
-    graph[4, 5, 0] = '<->'    
+    graph[4, 2, 0] = '-->'
+    graph[2, 4, 0] = '<--'    
 
     # Z3 = 5
-    graph[5, 4, 0] = '<->'    
+    graph[5, 1, 0] = '-->'    
+    graph[1, 5, 0] = '<--'    
 
     # Z4 = 6
-    graph[6, 5, 0] = '-->'
-    graph[5, 6, 0] = '<--'
-
-    graph[6, 0, 0] = '-->'
-    graph[0, 6, 0] = '<--'
-
+    graph[6, 2, 0] = '-->'
+    graph[2, 6, 0] = '<--'
 
     # Z5 = 7
     graph[7, 2, 0] = '<->'  
     graph[2, 7, 0] = '<->'    
-  
-    graph[7, 0, 0] = '-->'    
-    graph[0, 7, 0] = '<--'  
+    graph[7, 8, 0] = '<->'    
+    graph[8, 7, 0] = '<->' 
+    graph[7, 10, 0] = '<->'    
+    graph[10, 7, 0] = '<->' 
+
+    # Z6 = 8
+    graph[8, 12, 0] = '-->'
+    graph[12, 8, 0] = '<--'
+
+    # Z7 = 9
+    graph[9, 8, 0] = '-->'
+    graph[8, 9, 0] = '<--'
+
+    # Z8 = 10
+    graph[10, 11, 0] = '<->'  
+    graph[11, 10, 0] = '<->'  
+
+    # Z9 = 11
+    graph[2, 11, 0] = '-->'  
+    graph[11, 2, 0] = '<--'  
+
+    # Z10 = 12
+    graph[1, 12, 0] = '-->'  
+    graph[12, 1, 0] = '<--'  
+
+    # Z11 = 13
+    graph[13, 0, 0] = '-->'  
+    graph[0, 13, 0] = '<--'  
+    graph[13, 4, 0] = '-->'  
+    graph[4, 13, 0] = '<--'  
+
+    # Z12 = 14
+    # No links 
+
+    # S = 15
+    graph[15, 0, 0] = '-->'  
+    graph[0, 15, 0] = '<--'  
+    graph[15, 13, 0] = '-->'  
+    graph[13, 15, 0] = '<--'  
+
 
     # tp.plot_time_series_graph(link_matrix=graph, save_name="/home/rung_ja/Downloads/tsg.pdf")
 
@@ -1106,23 +1610,92 @@ if __name__ == '__main__':
     #          1: [((1, -1), 0.8, lin_f), ((0, -1), 0.5, lin_f)],
     #          2: [((2, -1), 0.8, lin_f), ((1, 0), -0.6, lin_f)]}
     
-    # cond_ind_test = OracleCI(links=links, verbosity=2)
+    # oracle = OracleCI(links=links, observed_vars=observed_vars, 
+    #         selection_vars=selection_vars,
+    #     verbosity=2)
 
+    # print(cond_ind_test.get_graph_from_links()[:,:,0])
 
-    cond_ind_test = OracleCI(graph=graph, verbosity=2)
+    # Example C
+    links ={
+        0: [((8, 0), coeff, lin_f), ((6, 0), coeff, lin_f), ((7, 0), coeff, lin_f)], 
+        1: [((0, 0), coeff, lin_f)], 
+        2: [((0, 0), coeff, lin_f), ((1, 0), coeff, lin_f), ((3, 0), coeff, lin_f), ((9, 0), coeff, lin_f), ((12, 0), coeff, lin_f)], 
+        3: [((8, 0), coeff, lin_f), ((10, 0), coeff, lin_f)], 
+        4: [((9, 0), coeff, lin_f), ((10, 0), coeff, lin_f), ((11, 0), coeff, lin_f)], 
+        5: [((11, 0), coeff, lin_f), ((6, 0), coeff, lin_f)], 
+        6: [], 
+        7: [((12, 0), coeff, lin_f)], 
+        8: [], 
+        9: [], 
+        10: [], 
+        11: [], 
+        12: []}
+    observed_vars = [0, 1, 2, 3, 4, 5, 6, 7]
 
-    X = [(0, 0)]
-    Y = [(2, 0)]
-    Z = [(7, 0), (3, 0), (6, 0), (5, 0), (4, 0)] #(1, -3), (1, -2), (0, -2), (0, -1), (0, -3)]
-    #(j, -2) for j in range(N)] + [(j, 0) for j in range(N)]
+    # links ={
+    # 0: [((2, 0), coeff, lin_f)], 
+    # 1: [((0, 0), coeff, lin_f), ((3, 0), coeff, lin_f)], 
+    # 2: [], 
+    # 3: [((2, 0), coeff, lin_f)], }
+    # observed_vars = [0, 1, 2, 3]
 
-    # print(oracle._get_non_blocked_ancestors(Z, Z=None, mode='max_lag',
-    #                                     max_lag=2))
-    # cond_ind_test = OracleCI(links, observed_vars=observed_vars, verbosity=2)
+    # links ={
+    # 0: [((3, 0), coeff, lin_f)], 
+    # 1: [((2, 0), coeff, lin_f), ((4, 0), coeff, lin_f)], 
+    # 2: [((3, 0), coeff, lin_f), ((4, 0), coeff, lin_f)], 
+    # 3: [],
+    # 4: []}
+    # observed_vars = [0, 1, 2]
 
-    print(cond_ind_test.get_shortest_path(X=X, Y=Y, Z=Z,
-                 max_lag=None, compute_ancestors=False, 
-                 backdoor=True))
+    oracle = OracleCI(links=links, 
+        observed_vars=observed_vars, 
+        graph_is_mag=True,
+        #         selection_vars=selection_vars,
+        #     verbosity=2
+        )
+    graph = oracle.graph
+    print(graph[:,:,0])
+
+    tp.plot_graph(link_matrix=graph, var_names=var_names, figsize=(5, 5),
+                save_name="/home/rung_ja/Downloads/tsg.pdf")
+
+    # X = [(0, 0)]
+    # Y = [(2, 0)]
+    # node = (3, 0)
+    # prelim_Oset = set([(3, 0)])
+    # S = set([])
+    # collider_path_nodes = set([])
+    # path = oracle._has_any_path(X=X, Y=Y, 
+    #                         conds=list(prelim_Oset), 
+    #                         max_lag=None, 
+    #                         starts_with='arrowhead',
+    #                         ends_with='arrowhead',  
+    #                         forbidden_nodes=None, 
+    #                         return_path=True)
+    # print(path)
+
+    # cond_ind_test = OracleCI(graph=graph)
+    # links, observed_vars, selection_vars = cond_ind_test.get_links_from_graph(graph)
+    # print("{")
+    # for j in links.keys():
+    #     parents = repr([(p, 'coeff', 'lin_f') for p in links[j]])
+    #     print(f"{j: 1d}" ":"  f"{parents:s},")
+    # print(repr(observed_vars))
+    # cond_ind_test = OracleCI(graph=graph, verbosity=2)
+
+    # X = [(0, 0)]
+    # Y = [(2, 0)]
+    # Z = [(7, 0), (3, 0), (6, 0), (5, 0), (4, 0)] #(1, -3), (1, -2), (0, -2), (0, -1), (0, -3)]
+    # #(j, -2) for j in range(N)] + [(j, 0) for j in range(N)]
+
+    # # print(oracle._get_non_blocked_ancestors(Z, Z=None, mode='max_lag',
+    # #                                     max_lag=2))
+    # # cond_ind_test = OracleCI(links, observed_vars=observed_vars, verbosity=2)
+
+    # print(cond_ind_test.get_shortest_path(X=X, Y=Y, Z=Z,
+    #              max_lag=None, compute_ancestors=False, 
+    #              backdoor=True))
    
     # anc_x=None  #oracle.anc_all_x[X[0]]
     # anc_y=None #oracle.anc_all_y[Y[0]]
