@@ -1,20 +1,30 @@
 
-<!DOCTYPE html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>tigramite.models &#8212; Tigramite 4.2 documentation</title>
     <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '4.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script type="text/javascript" src="../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
-  </head><body>
+  </head>
+  <body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -31,13 +41,13 @@
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
 <div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
+  <h3>Quick search</h3>
     <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
-      <input type="submit" value="Go" />
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
     </form>
-    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -55,19 +65,19 @@
 <span class="c1">#</span>
 <span class="c1"># License: GNU General Public License v3.0</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
-<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">deepcopy</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">tigramite.data_processing</span> <span class="kn">import</span> <span class="n">DataFrame</span>
-<span class="kn">from</span> <span class="nn">tigramite.pcmci</span> <span class="kn">import</span> <span class="n">PCMCI</span>
+<span class="kn">from</span> <span class="nn">tigramite.data_processing</span> <span class="k">import</span> <span class="n">DataFrame</span>
+<span class="kn">from</span> <span class="nn">tigramite.pcmci</span> <span class="k">import</span> <span class="n">PCMCI</span>
 
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">sklearn</span>
-    <span class="kn">import</span> <span class="nn">sklearn.linear_model</span>
-<span class="k">except</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Could not import sklearn...&quot;</span><span class="p">)</span>
+<span class="c1"># try:</span>
+<span class="kn">import</span> <span class="nn">sklearn</span>
+<span class="kn">import</span> <span class="nn">sklearn.linear_model</span>
+<span class="c1"># except:</span>
+<span class="c1">#     print(&quot;Could not import sklearn...&quot;)</span>
 
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">networkx</span>
@@ -103,7 +113,7 @@
 <span class="sd">        Level of verbosity.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">dataframe</span><span class="p">,</span>
                  <span class="n">model</span><span class="p">,</span>
                  <span class="n">data_transform</span><span class="o">=</span><span class="n">sklearn</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">StandardScaler</span><span class="p">(),</span>
@@ -124,6 +134,201 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">selected_variables</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fit_results</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="Models.get_general_fitted_model"><a class="viewcode-back" href="../../index.html#tigramite.models.Models.get_general_fitted_model">[docs]</a>    <span class="k">def</span> <span class="nf">get_general_fitted_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+                <span class="n">Y</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">conditions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">tau_max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;max_lag_or_tau_max&#39;</span><span class="p">,</span>
+                <span class="n">return_data</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fit time series model.</span>
+
+<span class="sd">        For each variable in selected_variables, the sklearn model is fitted</span>
+<span class="sd">        with :math:`y` given by the target variable, and :math:`X` given by its</span>
+<span class="sd">        parents. The fitted model class is returned for later use.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X, Y, Z : lists of tuples</span>
+<span class="sd">            List of variables for estimating model Y = f(X,Z)</span>
+<span class="sd">        tau_max : int, optional (default: None)</span>
+<span class="sd">            Maximum time lag. If None, the maximum lag in all_parents is used.</span>
+<span class="sd">        cut_off : {&#39;max_lag_or_tau_max&#39;, &#39;2xtau_max&#39;, &#39;max_lag&#39;}</span>
+<span class="sd">            How many samples to cutoff at the beginning. The default is</span>
+<span class="sd">            &#39;max_lag_or_tau_max&#39;, which uses the maximum of tau_max and the</span>
+<span class="sd">            conditions. This is useful to compare multiple models on the same</span>
+<span class="sd">            sample. Other options are &#39;2xtau_max&#39;, which guarantees that MCI</span>
+<span class="sd">            tests are all conducted on the same samples. Last, &#39;max_lag&#39; uses</span>
+<span class="sd">            as much samples as possible.</span>
+<span class="sd">        return_data : bool, optional (default: False)</span>
+<span class="sd">            Whether to save the data array.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        fit_results : dictionary of sklearn model objects for each variable</span>
+<span class="sd">            Returns the sklearn model after fitting. Also returns the data</span>
+<span class="sd">            transformation parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">conditions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">conditions</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Find the maximal conditions lag</span>
+        <span class="n">max_lag</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">Y</span><span class="p">:</span>
+            <span class="n">this_lag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">X</span> <span class="o">+</span> <span class="n">Z</span> <span class="o">+</span> <span class="n">conditions</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+            <span class="n">max_lag</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_lag</span><span class="p">,</span> <span class="n">this_lag</span><span class="p">)</span>
+        <span class="c1"># Set the default tau max and check if it shoudl be overwritten</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">=</span> <span class="n">max_lag</span>
+        <span class="k">if</span> <span class="n">tau_max</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">=</span> <span class="n">tau_max</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">&lt;</span> <span class="n">max_lag</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;tau_max = </span><span class="si">%d</span><span class="s2">, but must be at least &quot;</span>
+                                 <span class="s2">&quot; max_lag = </span><span class="si">%d</span><span class="s2">&quot;</span>
+                                 <span class="s2">&quot;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span><span class="p">,</span> <span class="n">max_lag</span><span class="p">))</span>
+        <span class="c1"># Initialize the fit results</span>
+        <span class="n">fit_results</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">Y</span><span class="p">:</span>
+            <span class="c1"># Construct array of shape (var, time) with first entry being</span>
+            <span class="c1"># a dummy, second is y followed by joint X and Z (ignore the notation in construct_array)</span>
+            <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">construct_array</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">+</span> <span class="n">Z</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="n">conditions</span><span class="p">,</span>
+                                               <span class="n">tau_max</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span><span class="p">,</span>
+                                               <span class="n">mask_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span><span class="p">,</span>
+                                               <span class="n">cut_off</span><span class="o">=</span><span class="n">cut_off</span><span class="p">,</span>
+                                               <span class="n">verbosity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
+
+
+            <span class="c1"># Transform the data if needed</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_transform</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_transform</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">array</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+            <span class="c1"># Fit the model </span>
+            <span class="c1"># Copy and fit the model</span>
+            <span class="n">a_model</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+
+            <span class="n">predictor_indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span><span class="o">==</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> \
+                                <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span><span class="o">==</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">:])</span> \
+                                <span class="o">+</span>  <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span><span class="o">==</span><span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">predictor_array</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">predictor_indices</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">target_array</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span><span class="o">==</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="p">:]</span>
+
+            <span class="n">a_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">predictor_array</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">target_array</span><span class="p">)</span>
+            <span class="c1"># Cache the results</span>
+            <span class="n">fit_results</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">fit_results</span><span class="p">[</span><span class="n">y</span><span class="p">][</span><span class="s1">&#39;model&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">a_model</span>
+            <span class="c1"># Cache the data transform</span>
+            <span class="n">fit_results</span><span class="p">[</span><span class="n">y</span><span class="p">][</span><span class="s1">&#39;data_transform&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_transform</span><span class="p">)</span>
+            <span class="c1"># Cache the data if needed</span>
+            <span class="k">if</span> <span class="n">return_data</span><span class="p">:</span>
+                <span class="n">fit_results</span><span class="p">[</span><span class="n">y</span><span class="p">][</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">array</span>
+
+        <span class="c1"># Cache and return the fit results</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_results</span> <span class="o">=</span> <span class="n">fit_results</span>
+        <span class="k">return</span> <span class="n">fit_results</span></div>
+
+<div class="viewcode-block" id="Models.get_general_prediction"><a class="viewcode-back" href="../../index.html#tigramite.models.Models.get_general_prediction">[docs]</a>    <span class="k">def</span> <span class="nf">get_general_prediction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                <span class="n">Y</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">intervention_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">conditions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">conditions_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">pred_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;max_lag_or_tau_max&#39;</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Predict effect of intervention with fitted model.</span>
+
+<span class="sd">        Uses the model.predict() function of the sklearn model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X, Y, Z : lists of tuples</span>
+<span class="sd">            List of variables for estimating model Y = f(X,Z)</span>
+<span class="sd">        intervention_data : data object, optional</span>
+<span class="sd">            New Tigramite dataframe object with optional new mask.</span>
+<span class="sd">        pred_params : dict, optional</span>
+<span class="sd">            Optional parameters passed on to sklearn prediction function.</span>
+<span class="sd">        cut_off : {&#39;2xtau_max&#39;, &#39;max_lag&#39;, &#39;max_lag_or_tau_max&#39;}</span>
+<span class="sd">            How many samples to cutoff at the beginning. The default is</span>
+<span class="sd">            &#39;2xtau_max&#39;, which guarantees that MCI tests are all conducted on</span>
+<span class="sd">            the same samples.  For modeling, &#39;max_lag_or_tau_max&#39; can be used,</span>
+<span class="sd">            which uses the maximum of tau_max and the conditions, which is</span>
+<span class="sd">            useful to compare multiple models on the same sample. Last,</span>
+<span class="sd">            &#39;max_lag&#39; uses as much samples as possible.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Results from prediction.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">conditions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">conditions</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># XZS = X + Z + conditions</span>
+
+        <span class="n">return_type</span> <span class="o">=</span> <span class="s1">&#39;list&#39;</span>
+
+        <span class="n">pred_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">Y</span><span class="p">:</span>
+            <span class="c1"># Print message</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">##</span><span class="se">\n</span><span class="s2">## Predicting target </span><span class="si">%s</span><span class="se">\n</span><span class="s2">##&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">pred_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">pred_params</span><span class="p">):</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">pred_params</span><span class="p">[</span><span class="n">key</span><span class="p">]))</span>
+            <span class="c1"># Default value for pred_params</span>
+            <span class="k">if</span> <span class="n">pred_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">pred_params</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="c1"># Check this is a valid target</span>
+            <span class="k">if</span> <span class="n">y</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_results</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;y = </span><span class="si">%s</span><span class="s2"> not yet fitted&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+            <span class="c1"># Construct the array form of the data</span>
+            <span class="c1"># Check if we&#39;ve passed a new dataframe object</span>
+            <span class="n">observation_array</span><span class="p">,</span> <span class="n">xyz</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">construct_array</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">+</span> <span class="n">Z</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="n">conditions</span><span class="p">,</span>
+                                               <span class="n">tau_max</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span><span class="p">,</span>
+                                               <span class="c1"># mask=self.test_mask,</span>
+                                               <span class="n">mask_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span><span class="p">,</span>
+                                               <span class="n">cut_off</span><span class="o">=</span><span class="n">cut_off</span><span class="p">,</span>
+                                               <span class="n">verbosity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
+
+            <span class="n">intervention_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">observation_array</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">intervention_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">tmp_array</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">intervention_data</span><span class="o">.</span><span class="n">construct_array</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">+</span> <span class="n">Z</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="n">conditions</span><span class="p">,</span>
+                                                         <span class="n">tau_max</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span><span class="p">,</span>
+                                                         <span class="n">mask_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span><span class="p">,</span>
+                                                         <span class="n">cut_off</span><span class="o">=</span><span class="n">cut_off</span><span class="p">,</span>
+                                                         <span class="n">verbosity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
+
+                <span class="c1"># Only replace X-variables in intervention_array (necessary if lags of</span>
+                <span class="c1"># X are in Z...)</span>
+                <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span><span class="o">==</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span>
+                    <span class="n">intervention_array</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp_array</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">conditions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">conditions_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">tmp_array</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">conditions_data</span><span class="o">.</span><span class="n">construct_array</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">+</span> <span class="n">Z</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="n">conditions</span><span class="p">,</span>
+                                                         <span class="n">tau_max</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span><span class="p">,</span>
+                                                         <span class="n">mask_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span><span class="p">,</span>
+                                                         <span class="n">cut_off</span><span class="o">=</span><span class="n">cut_off</span><span class="p">,</span>
+                                                         <span class="n">verbosity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
+
+                <span class="c1"># Only replace condition-variables in intervention_array </span>
+                <span class="c1"># (necessary if lags of X are in Z...)</span>
+                <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span><span class="o">==</span><span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span>
+                    <span class="n">intervention_array</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp_array</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+
+            <span class="c1"># Transform the data if needed</span>
+            <span class="n">a_transform</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_results</span><span class="p">[</span><span class="n">y</span><span class="p">][</span><span class="s1">&#39;data_transform&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">a_transform</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">intervention_array</span> <span class="o">=</span> <span class="n">a_transform</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">intervention_array</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+            <span class="c1"># Cache the test array</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">intervention_array</span> <span class="o">=</span> <span class="n">intervention_array</span>
+            <span class="c1"># Run the predictor, for Y only the Z-part is used, the first index is y</span>
+            <span class="n">predictor_indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span><span class="o">==</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> \
+                                <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span><span class="o">==</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">:])</span> \
+                                <span class="o">+</span>  <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span><span class="o">==</span><span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">predictor_array</span> <span class="o">=</span> <span class="n">intervention_array</span><span class="p">[</span><span class="n">predictor_indices</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">pred_dict</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_results</span><span class="p">[</span><span class="n">y</span><span class="p">][</span><span class="s1">&#39;model&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+                <span class="n">X</span><span class="o">=</span><span class="n">predictor_array</span><span class="p">,</span> <span class="o">**</span><span class="n">pred_params</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">pred_dict</span></div>
 
 <div class="viewcode-block" id="Models.get_fit"><a class="viewcode-back" href="../../index.html#tigramite.models.Models.get_fit">[docs]</a>    <span class="k">def</span> <span class="nf">get_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">all_parents</span><span class="p">,</span>
                 <span class="n">selected_variables</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -241,7 +446,7 @@
         <span class="k">return</span> <span class="n">coeffs</span></div>
 
 <div class="viewcode-block" id="Models.get_val_matrix"><a class="viewcode-back" href="../../index.html#tigramite.models.Models.get_val_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">get_val_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns the coefficient array for different lags.</span>
+        <span class="sd">&quot;&quot;&quot;Returns the coefficient array for different lags for linear model.</span>
 
 <span class="sd">        Requires fit_model() before. An entry val_matrix[i,j,tau] gives the</span>
 <span class="sd">        coefficient of the link from i to j at lag tau, including tau=0.</span>
@@ -341,7 +546,7 @@
 <span class="sd">        Level of verbosity.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">dataframe</span><span class="p">,</span>
                  <span class="n">model_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">data_transform</span><span class="o">=</span><span class="n">sklearn</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">StandardScaler</span><span class="p">(),</span>
@@ -990,7 +1195,7 @@
 <span class="sd">        Level of verbosity.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">dataframe</span><span class="p">,</span>
                  <span class="n">train_indices</span><span class="p">,</span>
                  <span class="n">test_indices</span><span class="p">,</span>
@@ -1308,8 +1513,8 @@
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2020, Jakob Runge.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
+        &#169; Copyright 2021, Jakob Runge.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
     </div>
   </body>
 </html>

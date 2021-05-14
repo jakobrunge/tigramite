@@ -341,9 +341,6 @@ class GPDC(CondIndTest):
     The null distribution of the distance correlation should be pre-computed.
     Otherwise it is computed during runtime.
 
-    The cython-code for distance correlation is Copyright (c) 2012, Florian
-    Finkernagel (https://gist.github.com/ffinkernagel/2960386).
-
     References
     ----------
     .. [2] Gabor J. Szekely, Maria L. Rizzo, and Nail K. Bakirov: Measuring and

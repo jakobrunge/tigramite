@@ -1,20 +1,30 @@
 
-<!DOCTYPE html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>tigramite.pcmci &#8212; Tigramite 4.2 documentation</title>
     <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '4.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script type="text/javascript" src="../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
-  </head><body>
+  </head>
+  <body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -31,13 +41,13 @@
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
 <div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
+  <h3>Quick search</h3>
     <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
-      <input type="submit" value="Go" />
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
     </form>
-    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -55,11 +65,11 @@
 <span class="c1">#</span>
 <span class="c1"># License: GNU General Public License v3.0</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">itertools</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
-<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">deepcopy</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">scipy.stats</span>
 
@@ -185,7 +195,7 @@
 <span class="sd">        Time series sample length.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">,</span>
                  <span class="n">cond_ind_test</span><span class="p">,</span>
                  <span class="n">selected_variables</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
@@ -240,7 +250,8 @@
             <span class="c1"># Set the default as all combinations of the selected variables</span>
             <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">_vars</span><span class="p">:</span>
                 <span class="n">_int_sel_links</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="p">[(</span><span class="n">var</span><span class="p">,</span> <span class="o">-</span><span class="n">lag</span><span class="p">)</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">_vars</span>
-                                     <span class="k">for</span> <span class="n">lag</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">tau_min</span><span class="p">,</span> <span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>
+                                     <span class="k">for</span> <span class="n">lag</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">tau_min</span><span class="p">,</span> <span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> 
+                                     <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">var</span> <span class="o">==</span> <span class="n">j</span> <span class="ow">and</span> <span class="n">lag</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">remove_contemp</span><span class="p">:</span>
                 <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">_int_sel_links</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
@@ -852,7 +863,7 @@
 <span class="sd">            p-value of a link across different conditions.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parents</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">20</span> <span class="ow">or</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;iterations&#39;</span><span class="p">):</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">    Variable </span><span class="si">%s</span><span class="s2"> has </span><span class="si">%d</span><span class="s2"> parent(s):&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">    Variable </span><span class="si">%s</span><span class="s2"> has </span><span class="si">%d</span><span class="s2"> link(s):&quot;</span> <span class="o">%</span> <span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="n">parents</span><span class="p">)))</span>
             <span class="k">if</span> <span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;iterations&#39;</span><span class="p">)</span>
                     <span class="ow">and</span> <span class="s1">&#39;optimal_pc_alpha&#39;</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iterations</span><span class="p">[</span><span class="n">j</span><span class="p">])):</span>
@@ -868,7 +879,7 @@
                         <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">pval_max</span><span class="p">[</span><span class="n">p</span><span class="p">],</span>
                         <span class="n">val_min</span><span class="p">[</span><span class="n">p</span><span class="p">]))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">    Variable </span><span class="si">%s</span><span class="s2"> has </span><span class="si">%d</span><span class="s2"> parent(s):&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">    Variable </span><span class="si">%s</span><span class="s2"> has </span><span class="si">%d</span><span class="s2"> link(s):&quot;</span> <span class="o">%</span> <span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="n">parents</span><span class="p">)))</span>
 
     <span class="k">def</span> <span class="nf">_print_parents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">all_parents</span><span class="p">,</span> <span class="n">val_min</span><span class="p">,</span> <span class="n">pval_max</span><span class="p">):</span>
@@ -1394,7 +1405,11 @@
 
 <div class="viewcode-block" id="PCMCI.get_corrected_pvalues"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.get_corrected_pvalues">[docs]</a>    <span class="k">def</span> <span class="nf">get_corrected_pvalues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_matrix</span><span class="p">,</span>
                               <span class="n">fdr_method</span><span class="o">=</span><span class="s1">&#39;fdr_bh&#39;</span><span class="p">,</span>
-                              <span class="n">exclude_contemporaneous</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                              <span class="n">exclude_contemporaneous</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                              <span class="n">tau_min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                              <span class="n">tau_max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                              <span class="n">selected_links</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                              <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns p-values corrected for multiple testing.</span>
 
 <span class="sd">        Currently implemented is Benjamini-Hochberg False Discovery Rate</span>
@@ -1405,6 +1420,15 @@
 <span class="sd">        ----------</span>
 <span class="sd">        p_matrix : array-like</span>
 <span class="sd">            Matrix of p-values. Must be of shape (N, N, tau_max + 1).</span>
+<span class="sd">        tau_min : int, default: 0</span>
+<span class="sd">            Minimum time lag. Only used as consistency check of selected_links. </span>
+<span class="sd">        tau_max : int, default: 1</span>
+<span class="sd">            Maximum time lag. Must be larger or equal to tau_min. Only used as </span>
+<span class="sd">            consistency check of selected_links. </span>
+<span class="sd">        selected_links : dict or None</span>
+<span class="sd">            Dictionary of form {0: [(3, -2), ...], 1:[], ...}</span>
+<span class="sd">            specifying whether only selected links should be tested. If None is</span>
+<span class="sd">            passed, all links are tested.</span>
 <span class="sd">        fdr_method : str, optional (default: &#39;fdr_bh&#39;)</span>
 <span class="sd">            Correction method, currently implemented is Benjamini-Hochberg</span>
 <span class="sd">            False Discovery Rate method.     </span>
@@ -1423,10 +1447,21 @@
             <span class="n">nobs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nobs</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">nobs</span><span class="p">)</span>
 
-        <span class="c1"># Get the shape paramters from the p_matrix</span>
+        <span class="c1"># Get the shape parameters from the p_matrix</span>
         <span class="n">_</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">tau_max_plusone</span> <span class="o">=</span> <span class="n">p_matrix</span><span class="o">.</span><span class="n">shape</span>
-        <span class="c1"># Create a mask for these values</span>
-        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">tau_max_plusone</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;bool&#39;</span><span class="p">)</span>
+        <span class="c1"># Check the limits on tau</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_tau_limits</span><span class="p">(</span><span class="n">tau_min</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">)</span>
+        <span class="c1"># Include only selected_links if given</span>
+        <span class="k">if</span> <span class="n">selected_links</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Create a mask for these values</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">tau_max_plusone</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;bool&#39;</span><span class="p">)</span>
+            <span class="n">_int_sel_links</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_sel_links</span><span class="p">(</span><span class="n">selected_links</span><span class="p">,</span> <span class="n">tau_min</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">node1</span><span class="p">,</span> <span class="n">links_</span> <span class="ow">in</span> <span class="n">_int_sel_links</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">node2</span><span class="p">,</span> <span class="n">lag</span> <span class="ow">in</span> <span class="n">links_</span><span class="p">:</span>
+                    <span class="n">mask</span><span class="p">[</span><span class="n">node2</span><span class="p">,</span> <span class="n">node1</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">lag</span><span class="p">)]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Create a mask for these values</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">tau_max_plusone</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;bool&#39;</span><span class="p">)</span>
         <span class="c1"># Ignore values from autocorrelation indices</span>
         <span class="n">mask</span><span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">),</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="c1"># Exclude all contemporaneous values if requested</span>
@@ -1846,7 +1881,9 @@
         <span class="c1"># Initialize and fill the q_matrix if there is a fdr_method</span>
         <span class="n">q_matrix</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">fdr_method</span> <span class="o">!=</span> <span class="s1">&#39;none&#39;</span><span class="p">:</span>
-            <span class="n">q_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_corrected_pvalues</span><span class="p">(</span><span class="n">p_matrix</span><span class="p">,</span>
+            <span class="n">q_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_corrected_pvalues</span><span class="p">(</span><span class="n">p_matrix</span><span class="o">=</span><span class="n">p_matrix</span><span class="p">,</span> <span class="n">tau_min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> 
+                                                  <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span> 
+                                                  <span class="n">selected_links</span><span class="o">=</span><span class="n">selected_links</span><span class="p">,</span>
                                                   <span class="n">fdr_method</span><span class="o">=</span><span class="n">fdr_method</span><span class="p">)</span>
         <span class="c1"># Store the parents in the pcmci member</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">all_parents</span> <span class="o">=</span> <span class="n">all_parents</span>
@@ -2189,6 +2226,10 @@
                 <span class="n">val_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">tau</span><span class="p">)]</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;val_matrix&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> 
                                                                    <span class="nb">abs</span><span class="p">(</span><span class="n">tau</span><span class="p">)]</span>
 
+        <span class="c1"># Update p_matrix and val_matrix for indices of symmetrical links</span>
+        <span class="n">p_matrix</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;p_matrix&#39;</span><span class="p">][:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">val_matrix</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;val_matrix&#39;</span><span class="p">][:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span>
+
         <span class="n">ambiguous</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;ambiguous_triples&#39;</span><span class="p">]</span>
 
         <span class="n">conf_matrix</span> <span class="o">=</span> <span class="kc">None</span>
@@ -2199,11 +2240,13 @@
         <span class="c1"># Initialize and fill the q_matrix if there is a fdr_method</span>
         <span class="n">q_matrix</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">fdr_method</span> <span class="o">!=</span> <span class="s1">&#39;none&#39;</span><span class="p">:</span>
-            <span class="n">q_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_corrected_pvalues</span><span class="p">(</span><span class="n">p_matrix</span><span class="p">,</span>
+            <span class="n">q_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_corrected_pvalues</span><span class="p">(</span><span class="n">p_matrix</span><span class="o">=</span><span class="n">p_matrix</span><span class="p">,</span> <span class="n">tau_min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> 
+                                                  <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span> 
+                                                  <span class="n">selected_links</span><span class="o">=</span><span class="n">selected_links</span><span class="p">,</span>
                                                   <span class="n">fdr_method</span><span class="o">=</span><span class="n">fdr_method</span><span class="p">,</span>
                                                   <span class="n">exclude_contemporaneous</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="c1"># Store the parents in the pcmci member</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">all_parents</span> <span class="o">=</span> <span class="n">lagged_parents</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">all_lagged_parents</span> <span class="o">=</span> <span class="n">lagged_parents</span>
 
         <span class="c1"># Cache the resulting values in the return dictionary</span>
         <span class="n">return_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;graph&#39;</span><span class="p">:</span> <span class="n">graph</span><span class="p">,</span>
@@ -2364,17 +2407,22 @@
             <span class="n">conflict_resolution</span><span class="o">=</span><span class="n">conflict_resolution</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="c1"># Symmetrize p_matrix using maximum p-value</span>
-        <span class="c1"># and also symmetrize val_matrix based on same order</span>
+        <span class="c1"># Symmetrize p_matrix and val_matrix</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
-                <span class="k">if</span> <span class="p">(</span><span class="n">skeleton_results</span><span class="p">[</span><span class="s1">&#39;p_matrix&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
-                        <span class="o">&gt;</span> <span class="n">skeleton_results</span><span class="p">[</span><span class="s1">&#39;p_matrix&#39;</span><span class="p">][</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
-                        <span class="ow">and</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">in</span> <span class="n">_int_sel_links</span><span class="p">[</span><span class="n">j</span><span class="p">]):</span>
-                    <span class="n">skeleton_results</span><span class="p">[</span><span class="s1">&#39;p_matrix&#39;</span><span class="p">][</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">skeleton_results</span><span class="p">[</span>
-                        <span class="s1">&#39;p_matrix&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
-                    <span class="n">skeleton_results</span><span class="p">[</span><span class="s1">&#39;val_matrix&#39;</span><span class="p">][</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> \
-                        <span class="n">skeleton_results</span><span class="p">[</span><span class="s1">&#39;val_matrix&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+                <span class="c1"># If both the links are present in selected_links, symmetrize using maximum p-value</span>
+                <span class="k">if</span> <span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">in</span> <span class="n">_int_sel_links</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="ow">and</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">in</span> <span class="n">_int_sel_links</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">skeleton_results</span><span class="p">[</span><span class="s1">&#39;p_matrix&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+                            <span class="o">&gt;=</span> <span class="n">skeleton_results</span><span class="p">[</span><span class="s1">&#39;p_matrix&#39;</span><span class="p">][</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]):</span>
+                        <span class="n">skeleton_results</span><span class="p">[</span><span class="s1">&#39;p_matrix&#39;</span><span class="p">][</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">skeleton_results</span><span class="p">[</span><span class="s1">&#39;p_matrix&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+                        <span class="n">skeleton_results</span><span class="p">[</span><span class="s1">&#39;val_matrix&#39;</span><span class="p">][</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">skeleton_results</span><span class="p">[</span><span class="s1">&#39;val_matrix&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+                <span class="c1"># If only one of the links is present in selected_links, symmetrize using the p-value of the link present</span>
+                <span class="k">elif</span> <span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">in</span> <span class="n">_int_sel_links</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="ow">and</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_int_sel_links</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+                    <span class="n">skeleton_results</span><span class="p">[</span><span class="s1">&#39;p_matrix&#39;</span><span class="p">][</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">skeleton_results</span><span class="p">[</span><span class="s1">&#39;p_matrix&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+                    <span class="n">skeleton_results</span><span class="p">[</span><span class="s1">&#39;val_matrix&#39;</span><span class="p">][</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">skeleton_results</span><span class="p">[</span><span class="s1">&#39;val_matrix&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Links not present in selected_links</span>
+                    <span class="k">pass</span>
 
         <span class="c1"># Convert numerical graph matrix to string</span>
         <span class="n">graph_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_to_string_graph</span><span class="p">(</span><span class="n">final_graph</span><span class="p">)</span>
@@ -3793,7 +3841,7 @@
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">tigramite.independence_tests</span> <span class="kn">import</span> <span class="n">ParCorr</span><span class="p">,</span> <span class="n">CMIknn</span>
+    <span class="kn">from</span> <span class="nn">tigramite.independence_tests</span> <span class="k">import</span> <span class="n">ParCorr</span><span class="p">,</span> <span class="n">CMIknn</span>
     <span class="kn">import</span> <span class="nn">tigramite.data_processing</span> <span class="k">as</span> <span class="nn">pp</span>
     <span class="kn">import</span> <span class="nn">tigramite.plotting</span> <span class="k">as</span> <span class="nn">tp</span>
 
@@ -3845,8 +3893,8 @@
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2020, Jakob Runge.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
+        &#169; Copyright 2021, Jakob Runge.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
     </div>
   </body>
 </html>
