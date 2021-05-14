@@ -45,13 +45,15 @@ def define_extension(extension_name, source_files=None):
         from Cython.Build import cythonize
         # Return the cythonized extension
         pyx_path = str((pathlib.Path(__file__).parent / extension_name.replace(".", "/")).with_suffix(".pyx"))
-        return cythonize([pyx_path])
+        return cythonize([pyx_path], language_level = "3")
     except ImportError:
         print(
             "Cython cannot be found. Skipping generation of C code from"
             + " cython and using pre-compiled C code instead"
         )
-        return [Extension(extension_name, source_files)]
+        return [Extension(extension_name, source_files, 
+                extra_compile_args=['-fopenmp'],
+                extra_link_args=['-fopenmp'],)]
 
 
 
@@ -64,13 +66,17 @@ INSTALL_REQUIRES = ["numpy", "scipy", "six"]
 EXTRAS_REQUIRE = {
     "all": [
         "scikit-learn>=0.21",  # Gaussian Process (GP) Regression
-        "matplotlib>=3.0",  # plotting
-        "networkx>=2.4",  # plotting
+        "matplotlib>=3.0",     # plotting
+        "networkx>=2.4",       # plotting
+        "torch>=1.7",          # GPDC torch version
+        "gpytorch>=1.4",       # GPDC torch version
+        "dcor>=0.5.3",         # GPDC
     ]
 }
 
 # Define the packages needed for testing
-TESTS_REQUIRE = ["nose", "pytest", "networkx>=2.4", "scikit-learn>=0.21"]
+TESTS_REQUIRE = ["nose", "pytest", "networkx>=2.4", "scikit-learn>=0.21", 
+                 "torch>=1.7", "gpytorch>=1.4", "dcor>=0.5.3"]
 EXTRAS_REQUIRE["test"] = TESTS_REQUIRE
 # Define the extras needed for development
 EXTRAS_REQUIRE["dev"] = EXTRAS_REQUIRE["all"] + TESTS_REQUIRE + ["cython"]
@@ -84,7 +90,7 @@ EXT_MODULES += define_extension("tigramite.tigramite_cython_code")
 # Run the setup
 setup(
     name="tigramite",
-    version="4.2.1.5",
+    version="4.2.2.0",
     packages=["tigramite", "tigramite.independence_tests"],
     license="GNU General Public License v3.0",
     description="Tigramite causal discovery for time series",
@@ -93,7 +99,7 @@ setup(
     url="https://github.com/jakobrunge/tigramite/",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    keywords="causality, time-series",
+    keywords="causal inference, causal discovery, prediction, time series",
     cmdclass=CMDCLASS,
     ext_modules=EXT_MODULES,
     install_requires=INSTALL_REQUIRES,

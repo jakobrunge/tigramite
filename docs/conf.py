@@ -25,8 +25,22 @@
 #
 import os
 import sys
+# import mock
+# from unittest import mock
+
+autodoc_mock_imports = ['numpy', 'scipy', 'matplotlib', 'sklearn', 
+'networkx', 'dcor', 'gpytorch', 'torch']
+
+
+# MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'sklearn', 'networkx', 'dcor']
+# for mod_name in MOCK_MODULES:
+#     sys.modules[mod_name] = mock.Mock()
+
 # sys.path.insert(0, os.path.abspath('.'))
-sys.path.insert(0, "/home/rung_ja/work/code/python_code/tigramite/tigramite_v4/tigramite/")
+# sys.path.insert(0, "/home/rung_ja/work/code/python_code/tigramite/tigramite_v4/tigramite/")
+sys.path.insert(0, os.path.abspath('../'))
+
+ 
 
 
 # -- General configuration ------------------------------------------------
@@ -75,7 +89,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Tigramite'
-copyright = u'2020, Jakob Runge'
+copyright = u'2021, Jakob Runge'
 author = u'Jakob Runge'
 
 # The version info for the project you're documenting, acts as replacement for

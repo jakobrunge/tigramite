@@ -4,27 +4,23 @@
 #
 # License: GNU General Public License v3.0
 
+
+
 from __future__ import print_function
 import numpy as np
+import gpytorch
+import torch
 import dcor
+import gc
 
 from .independence_tests_base import CondIndTest
+from .LBFGS import FullBatchLBFGS
 
-try:
-    from sklearn import gaussian_process
-except:
-    print("Could not import sklearn for Gaussian process tests")
-
-class GaussProcReg():
+class GaussProcRegTorch():
     r"""Gaussian processes abstract base class.
 
-    GP is estimated with scikit-learn and allows to flexibly specify kernels and
-    hyperparameters or let them be optimized automatically. The kernel specifies
-    the covariance function of the GP. Parameters can be passed on to
-    ``GaussianProcessRegressor`` using the gp_params dictionary. If None is
-    passed, the kernel '1.0 * RBF(1.0) + WhiteKernel()' is used with alpha=0 as
-    default. Note that the kernel's hyperparameters are optimized during
-    fitting.
+    GP is estimated with gpytorch. Note that the kernel's hyperparameters are
+    optimized during fitting.
 
     When the null distribution is not analytically available, but can be
     precomputed with the function generate_and_save_nulldists(...) which saves
@@ -41,25 +37,21 @@ class GaussProcReg():
         calculate the null distribution for.  This is used to grab the
         get_dependence_measure function.
 
-    gp_params : dictionary, optional (default: None)
-        Dictionary with parameters for ``GaussianProcessRegressor``.
-
     null_dist_filename : str, otional (default: None)
         Path to file containing null distribution.
 
     verbosity : int, optional (default: 0)
         Level of verbosity.
     """
+
     def __init__(self,
                  null_samples,
                  cond_ind_test,
-                 gp_params=None,
                  null_dist_filename=None,
                  verbosity=0):
         # Set the dependence measure function
         self.cond_ind_test = cond_ind_test
         # Set member variables
-        self.gp_params = gp_params
         self.verbosity = verbosity
         # Set the null distribution defaults
         self.null_samples = null_samples
@@ -68,7 +60,9 @@ class GaussProcReg():
         # Check if we are loading a null distrubtion from a cached file
         if self.null_dist_filename is not None:
             self.null_dists, self.null_samples = \
-                    self._load_nulldist(self.null_dist_filename)
+                self._load_nulldist(self.null_dist_filename)
+        # Size for batching
+        self.checkpoint_size = None
 
     def _load_nulldist(self, filename):
         r"""
@@ -123,12 +117,13 @@ class GaussProcReg():
                       "precompute null distribution and load *.npz file with "
                       "argument null_dist_filename")
 
-        xyz = np.array([0,1])
+        xyz = np.array([0, 1])
 
         null_dist = np.zeros(self.null_samples)
         for i in range(self.null_samples):
             array = self.cond_ind_test.random_state.random((2, df))
-            null_dist[i] = self.cond_ind_test.get_dependence_measure(array, xyz)
+            null_dist[i] = self.cond_ind_test.get_dependence_measure(
+                array, xyz)
 
         null_dist.sort()
         if add_to_null_dists:
@@ -158,17 +153,21 @@ class GaussProcReg():
         null_dists = np.zeros((len(sample_sizes), self.null_samples))
 
         for iT, T in enumerate(sample_sizes):
-            null_dists[iT] = self._generate_nulldist(T, add_to_null_dists=False)
+            null_dists[iT] = self._generate_nulldist(
+                T, add_to_null_dists=False)
             self.null_dists[T] = null_dists[iT]
 
         np.savez("%s" % null_dist_filename,
                  exact_dist=null_dists,
                  T=np.array(sample_sizes))
 
+
     def _get_single_residuals(self, array, target_var,
-                              return_means=False,
-                              standardize=True,
-                              return_likelihood=False):
+                                    return_means=False,
+                                    standardize=True,
+                                    return_likelihood=False,
+                                    training_iter=50,
+                                    lr=0.1):
         """Returns residuals of Gaussian process regression.
 
         Performs a GP regression of the variable indexed by target_var on the
@@ -191,7 +190,13 @@ class GaussProcReg():
             Whether to return the estimated regression line.
 
         return_likelihood : bool, optional (default: False)
-            Whether to return the log_marginal_likelihood of the fitted GP
+            Whether to return the log_marginal_likelihood of the fitted GP.
+
+        training_iter : int, optional (default: 50)
+            Number of training iterations.
+
+        lr : float, optional (default: 0.1)
+            Learning rate (default: 0.1).
 
         Returns
         -------
@@ -199,22 +204,21 @@ class GaussProcReg():
             The residual of the regression and optionally the estimated mean
             and/or the likelihood.
         """
-        dim, T = array.shape
 
-        if self.gp_params is None:
-            self.gp_params = {}
+        dim, T = array.shape
 
         if dim <= 2:
             if return_likelihood:
                 return array[target_var, :], -np.inf
             return array[target_var, :]
 
+        # Implement using PyTorch
         # Standardize
         if standardize:
             array -= array.mean(axis=1).reshape(dim, 1)
             array /= array.std(axis=1).reshape(dim, 1)
-            if np.isnan(array).sum() != 0:
-                raise ValueError("nans after standardizing, "
+            if np.isnan(array).any():
+                raise ValueError("Nans after standardizing, "
                                  "possibly constant array!")
 
         target_series = array[target_var, :]
@@ -222,44 +226,197 @@ class GaussProcReg():
         if np.ndim(z) == 1:
             z = z.reshape(-1, 1)
 
+        train_x = torch.tensor(z).float()
+        train_y = torch.tensor(target_series).float()
 
-        # Overwrite default kernel and alpha values
-        params = self.gp_params.copy()
-        if 'kernel' not in list(self.gp_params):
-            kernel = gaussian_process.kernels.RBF() +\
-             gaussian_process.kernels.WhiteKernel()
+        device_type = 'cuda' if torch.cuda.is_available() else 'cpu'
+        output_device = torch.device(device_type)
+        train_x, train_y = train_x.to(output_device), train_y.to(output_device)
+
+        if device_type == 'cuda':
+            # If GPU is available, use MultiGPU with Kernel Partitioning
+            n_devices = torch.cuda.device_count()
+            class mExactGPModel(gpytorch.models.ExactGP):
+                def __init__(self, train_x, train_y, likelihood, n_devices):
+                    super(mExactGPModel, self).__init__(train_x, train_y, likelihood)
+                    self.mean_module = gpytorch.means.ConstantMean()
+                    base_covar_module = gpytorch.kernels.ScaleKernel(gpytorch.kernels.RBFKernel())
+
+                    self.covar_module = gpytorch.kernels.MultiDeviceKernel(
+                        base_covar_module, device_ids=range(n_devices),
+                        output_device=output_device
+                    )
+
+                def forward(self, x):
+                    mean_x = self.mean_module(x)
+                    covar_x = self.covar_module(x)
+                    return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
+
+            def mtrain(train_x,
+                      train_y,
+                      n_devices,
+                      output_device,
+                      checkpoint_size,
+                      preconditioner_size,
+                      n_training_iter,
+                      ):
+                likelihood = gpytorch.likelihoods.GaussianLikelihood().to(output_device)
+                model = mExactGPModel(train_x, train_y, likelihood, n_devices).to(output_device)
+                model.train()
+                likelihood.train()
+
+                optimizer = FullBatchLBFGS(model.parameters(), lr=lr)
+                # "Loss" for GPs - the marginal log likelihood
+                mll = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model)
+
+                with gpytorch.beta_features.checkpoint_kernel(checkpoint_size), \
+                        gpytorch.settings.max_preconditioner_size(preconditioner_size):
+
+                    def closure():
+                        optimizer.zero_grad()
+                        output = model(train_x)
+                        loss = -mll(output, train_y)
+                        return loss
+
+                    loss = closure()
+                    loss.backward()
+
+                    for i in range(n_training_iter):
+                        options = {'closure': closure, 'current_loss': loss, 'max_ls': 10}
+                        loss, _, _, _, _, _, _, fail = optimizer.step(options)
+
+                        '''print('Iter %d/%d - Loss: %.3f   lengthscale: %.3f   noise: %.3f' % (
+                            i + 1, n_training_iter, loss.item(),
+                            model.covar_module.module.base_kernel.lengthscale.item(),
+                            model.likelihood.noise.item()
+                        ))'''
+
+                        if fail:
+                            # print('Convergence reached!')
+                            break
+
+                return model, likelihood, mll
+
+            def find_best_gpu_setting(train_x,
+                                      train_y,
+                                      n_devices,
+                                      output_device,
+                                      preconditioner_size
+                                      ):
+                N = train_x.size(0)
+
+                # Find the optimum partition/checkpoint size by decreasing in powers of 2
+                # Start with no partitioning (size = 0)
+                settings = [0] + [int(n) for n in np.ceil(N / 2 ** np.arange(1, np.floor(np.log2(N))))]
+
+                for checkpoint_size in settings:
+                    print('Number of devices: {} -- Kernel partition size: {}'.format(n_devices, checkpoint_size))
+                    try:
+                        # Try a full forward and backward pass with this setting to check memory usage
+                        _, _, _ = mtrain(train_x, train_y,
+                                     n_devices=n_devices, output_device=output_device,
+                                     checkpoint_size=checkpoint_size,
+                                     preconditioner_size=preconditioner_size, n_training_iter=1)
+
+                        # when successful, break out of for-loop and jump to finally block
+                        break
+                    except RuntimeError as e:
+                        pass
+                    except AttributeError as e:
+                        pass
+                    finally:
+                        # handle CUDA OOM error
+                        gc.collect()
+                        torch.cuda.empty_cache()
+                return checkpoint_size
+
+            # Set a large enough preconditioner size to reduce the number of CG iterations run
+            preconditioner_size = 100
+            if self.checkpoint_size is None:
+                self.checkpoint_size = find_best_gpu_setting(train_x, train_y,
+                                                        n_devices=n_devices,
+                                                        output_device=output_device,
+                                                        preconditioner_size=preconditioner_size)
+
+            model, likelihood, mll = mtrain(train_x, train_y,
+                                      n_devices=n_devices, output_device=output_device,
+                                      checkpoint_size=self.checkpoint_size,
+                                      preconditioner_size=100,
+                                      n_training_iter=training_iter)
+
+            # Get into evaluation (predictive posterior) mode
+            model.eval()
+            likelihood.eval()
+
+            # Make predictions by feeding model through likelihood
+            with torch.no_grad(), gpytorch.settings.fast_pred_var(), gpytorch.beta_features.checkpoint_kernel(1000):
+                mean = model(train_x).loc.detach()
+                loglik = mll(model(train_x), train_y)*T
+
+            resid = (train_y - mean).detach().cpu().numpy()
+            mean = mean.detach().cpu().numpy()
+
         else:
-            kernel = self.gp_params['kernel']
-            del params['kernel']
+            # If only CPU is available, we will use the simplest form of GP model, exact inference
+            class ExactGPModel(gpytorch.models.ExactGP):
+                def __init__(self, train_x, train_y, likelihood):
+                    super(ExactGPModel, self).__init__(
+                        train_x, train_y, likelihood)
+                    self.mean_module = gpytorch.means.ConstantMean()
 
-        if 'alpha' not in list(self.gp_params):
-            alpha = 0.
-        else:
-            alpha = self.gp_params['alpha']
-            del params['alpha']
+                    # We only use the RBF kernel here, the WhiteNoiseKernel is deprecated
+                    # and its featured integrated into the Likelihood-Module.
+                    self.covar_module = gpytorch.kernels.ScaleKernel(gpytorch.kernels.RBFKernel())
 
-        gp = gaussian_process.GaussianProcessRegressor(kernel=kernel,
-                                               alpha=alpha,
-                                               **params)
+                def forward(self, x):
+                    mean_x = self.mean_module(x)
+                    covar_x = self.covar_module(x)
+                    return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
 
-        gp.fit(z, target_series.reshape(-1, 1))
+            # initialize likelihood and model
+            likelihood = gpytorch.likelihoods.GaussianLikelihood()
+            model = ExactGPModel(train_x, train_y, likelihood)
 
-        if self.verbosity > 3:
-            print(kernel, alpha, gp.kernel_, gp.alpha)
+            # Find optimal model hyperparameters
+            model.train()
+            likelihood.train()
 
-        if return_likelihood:
-            likelihood = gp.log_marginal_likelihood()
+            # Use the adam optimizer
+            # Includes GaussianLikelihood parameters
+            optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
-        mean = gp.predict(z).squeeze()
+            # "Loss" for GPs - the marginal log likelihood
+            mll = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model)
 
-        resid = target_series - mean
+            for i in range(training_iter):
+                # Zero gradients from previous iteration
+                optimizer.zero_grad()
+                # Output from model
+                output = model(train_x)
+
+                # Calc loss and backprop gradients
+                loss = -mll(output, train_y)
+                loss.backward()
+                optimizer.step()
+
+            # Get into evaluation (predictive posterior) mode
+            model.eval()
+            likelihood.eval()
+
+            # Make predictions by feeding model through likelihood
+            with torch.no_grad(), gpytorch.settings.fast_pred_var():
+                mean = model(train_x).loc.detach()
+                loglik = mll(model(train_x), train_y) * T
+
+            resid = (train_y - mean).detach().numpy()
+            mean = mean.detach().numpy()
 
         if return_means and not return_likelihood:
-            return (resid, mean)
+            return resid, mean
         elif return_likelihood and not return_means:
-            return (resid, likelihood)
+            return resid, loglik
         elif return_means and return_likelihood:
-            return resid, mean, likelihood
+            return resid, mean, loglik
         return resid
 
     def _get_model_selection_criterion(self, j, parents, tau_max=0):
@@ -290,13 +447,13 @@ class GaussProcReg():
         X = [(j, 0)]   # dummy variable here
         Z = parents
         array, xyz = \
-                self.cond_ind_test.dataframe.construct_array(
-                    X=X, Y=Y, Z=Z,
-                    tau_max=tau_max,
-                    mask_type=self.cond_ind_test.mask_type,
-                    return_cleaned_xyz=False,
-                    do_checks=True,
-                    verbosity=self.verbosity)
+            self.cond_ind_test.dataframe.construct_array(
+                X=X, Y=Y, Z=Z,
+                tau_max=tau_max,
+                mask_type=self.cond_ind_test.mask_type,
+                return_cleaned_xyz=False,
+                do_checks=True,
+                verbosity=self.verbosity)
 
         dim, T = array.shape
 
@@ -307,14 +464,14 @@ class GaussProcReg():
         score = -logli
         return score
 
-class GPDC(CondIndTest):
+
+class GPDCtorch(CondIndTest):
     r"""GPDC conditional independence test based on Gaussian processes and
-        distance correlation.
+        distance correlation. Here with gpytorch implementation.
 
     GPDC is based on a Gaussian process (GP) regression and a distance
-    correlation test on the residuals [2]_. GP is estimated with scikit-learn
-    and allows to flexibly specify kernels and hyperparameters or let them be
-    optimized automatically. The distance correlation test is implemented with
+    correlation test on the residuals [2]_. GP is estimated with gpytorch.
+    The distance correlation test is implemented with
     cython. Here the null distribution is not analytically available, but can be
     precomputed with the function generate_and_save_nulldists(...) which saves a
     \*.npz file containing the null distribution for different sample sizes.
@@ -333,7 +490,7 @@ class GPDC(CondIndTest):
         \epsilon_{X,Y} &\sim \mathcal{N}(0, \sigma^2)
 
     using GP regression. Here :math:`\sigma^2` and the kernel bandwidth are
-    optimzed using ``sklearn``. Then the residuals  are transformed to uniform
+    optimzed using ``gpytorch``. Then the residuals  are transformed to uniform
     marginals yielding :math:`r_X,r_Y` and their dependency is tested with
 
     .. math::  \mathcal{R}\left(r_X, r_Y\right)
@@ -341,22 +498,13 @@ class GPDC(CondIndTest):
     The null distribution of the distance correlation should be pre-computed.
     Otherwise it is computed during runtime.
 
-    References
-    ----------
-    .. [2] Gabor J. Szekely, Maria L. Rizzo, and Nail K. Bakirov: Measuring and
-           testing dependence by correlation of distances,
-           https://arxiv.org/abs/0803.4101
-
     Parameters
     ----------
     null_dist_filename : str, otional (default: None)
         Path to file containing null distribution.
 
-    gp_params : dictionary, optional (default: None)
-        Dictionary with parameters for ``GaussianProcessRegressor``.
-
     **kwargs :
-        Arguments passed on to parent class GaussProcReg.
+        Arguments passed on to parent class GaussProcRegTorch.
 
     """
     @property
@@ -368,7 +516,6 @@ class GPDC(CondIndTest):
 
     def __init__(self,
                  null_dist_filename=None,
-                 gp_params=None,
                  **kwargs):
         self._measure = 'gp_dc'
         self.two_sided = False
@@ -376,17 +523,13 @@ class GPDC(CondIndTest):
         # Call the parent constructor
         CondIndTest.__init__(self, **kwargs)
         # Build the regressor
-        self.gauss_pr = GaussProcReg(self.sig_samples,
+        self.gauss_pr = GaussProcRegTorch(self.sig_samples,
                                      self,
-                                     gp_params=gp_params,
                                      null_dist_filename=null_dist_filename,
                                      verbosity=self.verbosity)
 
         if self.verbosity > 0:
             print("null_dist_filename = %s" % self.gauss_pr.null_dist_filename)
-            if self.gauss_pr.gp_params is not None:
-                for key in  list(self.gauss_pr.gp_params):
-                    print("%s = %s" % (key, self.gauss_pr.gp_params[key]))
             print("")
 
     def _load_nulldist(self, filename):
@@ -451,10 +594,13 @@ class GPDC(CondIndTest):
         self.gauss_pr._generate_and_save_nulldists(sample_sizes,
                                                    null_dist_filename)
 
+
     def _get_single_residuals(self, array, target_var,
-                              return_means=False,
-                              standardize=True,
-                              return_likelihood=False):
+                                    return_means=False,
+                                    standardize=True,
+                                    return_likelihood=False,
+                                    training_iter=50,
+                                    lr=0.1):
         """Returns residuals of Gaussian process regression.
 
         Performs a GP regression of the variable indexed by target_var on the
@@ -479,6 +625,12 @@ class GPDC(CondIndTest):
         return_likelihood : bool, optional (default: False)
             Whether to return the log_marginal_likelihood of the fitted GP
 
+        training_iter : int, optional (default: 50)
+            Number of training iterations.
+
+        lr : float, optional (default: 0.1)
+            Learning rate (default: 0.1).
+
         Returns
         -------
         resid [, mean, likelihood] : array-like
@@ -489,7 +641,9 @@ class GPDC(CondIndTest):
             array, target_var,
             return_means,
             standardize,
-            return_likelihood)
+            return_likelihood,
+            training_iter,
+            lr)
 
     def get_model_selection_criterion(self, j, parents, tau_max=0):
         """Returns log marginal likelihood for GP regression.
@@ -540,7 +694,6 @@ class GPDC(CondIndTest):
         y_vals = self._get_single_residuals(array, target_var=1)
         val = self._get_dcorr(np.array([x_vals, y_vals]))
         return val
-
 
     def _get_dcorr(self, array_resid):
         """Return distance correlation coefficient.
@@ -644,7 +797,7 @@ class GPDC(CondIndTest):
         else:
             # idx_near = (np.abs(self.sample_sizes - df)).argmin()
             if int(df) not in list(self.gauss_pr.null_dists):
-            # if np.abs(self.sample_sizes[idx_near] - df) / float(df) > 0.01:
+                # if np.abs(self.sample_sizes[idx_near] - df) / float(df) > 0.01:
                 if self.verbosity > 0:
                     print("Null distribution for GPDC not available "
                           "for deg. of freed. = %d." % df)

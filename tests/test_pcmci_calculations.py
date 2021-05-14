@@ -520,7 +520,7 @@ def a_run_pcmciplus(a_pcmciplus, a_pcmciplus_params):
      ) = a_pcmciplus_params
 
     if cond_ind_test_class == 'oracle_ci':
-        cond_ind_test = OracleCI(links_coeffs)
+        cond_ind_test = OracleCI(links=links_coeffs)
     elif cond_ind_test_class == 'par_corr':
         cond_ind_test = ParCorr()
 
@@ -633,7 +633,7 @@ def test_order_independence_pcmciplus(a_pcmciplus_order_independence,
      ) = a_pcmciplus_params_order_independence
 
     if cond_ind_test_class == 'oracle_ci':
-        cond_ind_test = OracleCI(links_coeffs)
+        cond_ind_test = OracleCI(links=links_coeffs)
     elif cond_ind_test_class == 'par_corr':
         cond_ind_test = ParCorr()
 

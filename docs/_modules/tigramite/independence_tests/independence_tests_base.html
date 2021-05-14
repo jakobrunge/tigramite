@@ -1,20 +1,30 @@
 
-<!DOCTYPE html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>tigramite.independence_tests.independence_tests_base &#8212; Tigramite 4.2 documentation</title>
     <link rel="stylesheet" href="../../../_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '4.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
-    <script type="text/javascript" src="../../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
-  </head><body>
+  </head>
+  <body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -31,13 +41,13 @@
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
 <div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
+  <h3>Quick search</h3>
     <form class="search" action="../../../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
-      <input type="submit" value="Go" />
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
     </form>
-    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -55,13 +65,13 @@
 <span class="c1">#</span>
 <span class="c1"># License: GNU General Public License v3.0</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">abc</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">six</span>
-<span class="kn">from</span> <span class="nn">hashlib</span> <span class="kn">import</span> <span class="n">sha1</span>
+<span class="kn">from</span> <span class="nn">hashlib</span> <span class="k">import</span> <span class="n">sha1</span>
 
 
 <div class="viewcode-block" id="CondIndTest"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.CondIndTest">[docs]</a><span class="nd">@six</span><span class="o">.</span><span class="n">add_metaclass</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABCMeta</span><span class="p">)</span>
@@ -74,6 +84,9 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
+<span class="sd">    seed : int, optional(default = 42)</span>
+<span class="sd">        Seed for RandomState (default_rng)</span>
+
 <span class="sd">    mask_type : str, optional (default = None)</span>
 <span class="sd">        Must be in {&#39;y&#39;,&#39;x&#39;,&#39;z&#39;,&#39;xy&#39;,&#39;xz&#39;,&#39;yz&#39;,&#39;xyz&#39;}</span>
 <span class="sd">        Masking mode: Indicators for which variables in the dependence measure</span>
@@ -133,7 +146,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
                  <span class="n">mask_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">significance</span><span class="o">=</span><span class="s1">&#39;analytic&#39;</span><span class="p">,</span>
                  <span class="n">fixed_thres</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
@@ -148,6 +162,7 @@
         <span class="c1"># Set the dataframe to None for now, will be reset during pcmci call</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="c1"># Set the options</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">significance</span> <span class="o">=</span> <span class="n">significance</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sig_samples</span> <span class="o">=</span> <span class="n">sig_samples</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sig_blocklength</span> <span class="o">=</span> <span class="n">sig_blocklength</span>
@@ -794,7 +809,7 @@
         <span class="n">bootdist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">conf_samples</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">smpl</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">conf_samples</span><span class="p">):</span>
             <span class="c1"># Get the starting indecies for the blocks</span>
-            <span class="n">blk_strt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">T</span> <span class="o">-</span> <span class="n">conf_blocklength</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_blks</span><span class="p">)</span>
+            <span class="n">blk_strt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">T</span> <span class="o">-</span> <span class="n">conf_blocklength</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_blks</span><span class="p">)</span>
             <span class="c1"># Get the empty array of block resampled values</span>
             <span class="n">array_bootstrap</span> <span class="o">=</span> \
                     <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim</span><span class="p">,</span> <span class="n">n_blks</span><span class="o">*</span><span class="n">conf_blocklength</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">array</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
@@ -873,7 +888,7 @@
 <span class="sd">            Optimal block length.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Inject a dependency on siganal, optimize</span>
-        <span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">signal</span><span class="p">,</span> <span class="n">optimize</span>
+        <span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">signal</span><span class="p">,</span> <span class="n">optimize</span>
         <span class="c1"># Get the shape of the array</span>
         <span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
         <span class="c1"># Initiailize the indices</span>
@@ -978,7 +993,7 @@
         <span class="n">null_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">sig_samples</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">sam</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">sig_samples</span><span class="p">):</span>
 
-            <span class="n">blk_starts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">block_starts</span><span class="p">)[:</span><span class="n">n_blks</span><span class="p">]</span>
+            <span class="n">blk_starts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">block_starts</span><span class="p">)[:</span><span class="n">n_blks</span><span class="p">]</span>
 
             <span class="n">x_shuffled</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim_x</span><span class="p">,</span> <span class="n">n_blks</span><span class="o">*</span><span class="n">sig_blocklength</span><span class="p">),</span>
                                   <span class="n">dtype</span><span class="o">=</span><span class="n">array</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
@@ -990,7 +1005,7 @@
 
             <span class="c1"># Insert tail randomly somewhere</span>
             <span class="k">if</span> <span class="n">tail</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">insert_tail_at</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">block_starts</span><span class="p">)</span>
+                <span class="n">insert_tail_at</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">block_starts</span><span class="p">)</span>
                 <span class="n">x_shuffled</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">x_shuffled</span><span class="p">,</span> <span class="n">insert_tail_at</span><span class="p">,</span>
                                        <span class="n">tail</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
@@ -1080,8 +1095,8 @@
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2020, Jakob Runge.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
+        &#169; Copyright 2021, Jakob Runge.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
     </div>
   </body>
 </html>

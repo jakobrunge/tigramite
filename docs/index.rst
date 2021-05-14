@@ -63,6 +63,7 @@ https://aip.scitation.org/doi/10.1063/1.5025050
    tigramite.independence_tests.CondIndTest
    tigramite.independence_tests.ParCorr
    tigramite.independence_tests.GPDC
+   tigramite.independence_tests.GPDCtorch
    tigramite.independence_tests.CMIknn
    tigramite.independence_tests.CMIsymb  
    tigramite.independence_tests.OracleCI
@@ -93,6 +94,9 @@ Test statistics:
    :members:
 
 .. autoclass:: tigramite.independence_tests.GPDC
+   :members:
+
+.. autoclass:: tigramite.independence_tests.GPDCtorch
    :members:
 
 .. autoclass:: tigramite.independence_tests.CMIknn

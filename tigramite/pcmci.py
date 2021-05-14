@@ -189,7 +189,8 @@ class PCMCI():
             # Set the default as all combinations of the selected variables
             for j in _vars:
                 _int_sel_links[j] = [(var, -lag) for var in _vars
-                                     for lag in range(tau_min, tau_max + 1)]
+                                     for lag in range(tau_min, tau_max + 1) 
+                                     if not (var == j and lag == 0)]
         else:
             if remove_contemp:
                 for j in _int_sel_links.keys():
@@ -801,7 +802,7 @@ class PCMCI():
             p-value of a link across different conditions.
         """
         if len(parents) < 20 or hasattr(self, 'iterations'):
-            print("\n    Variable %s has %d parent(s):" % (
+            print("\n    Variable %s has %d link(s):" % (
                 self.var_names[j], len(parents)))
             if (hasattr(self, 'iterations')
                     and 'optimal_pc_alpha' in list(self.iterations[j])):
@@ -817,7 +818,7 @@ class PCMCI():
                         self.var_names[p[0]], p[1], pval_max[p],
                         val_min[p]))
         else:
-            print("\n    Variable %s has %d parent(s):" % (
+            print("\n    Variable %s has %d link(s):" % (
                 self.var_names[j], len(parents)))
 
     def _print_parents(self, all_parents, val_min, pval_max):
@@ -1343,7 +1344,11 @@ class PCMCI():
 
     def get_corrected_pvalues(self, p_matrix,
                               fdr_method='fdr_bh',
-                              exclude_contemporaneous=True):
+                              exclude_contemporaneous=True,
+                              tau_min=0,
+                              tau_max=1,
+                              selected_links=None,
+                              ):
         """Returns p-values corrected for multiple testing.
 
         Currently implemented is Benjamini-Hochberg False Discovery Rate
@@ -1354,6 +1359,15 @@ class PCMCI():
         ----------
         p_matrix : array-like
             Matrix of p-values. Must be of shape (N, N, tau_max + 1).
+        tau_min : int, default: 0
+            Minimum time lag. Only used as consistency check of selected_links. 
+        tau_max : int, default: 1
+            Maximum time lag. Must be larger or equal to tau_min. Only used as 
+            consistency check of selected_links. 
+        selected_links : dict or None
+            Dictionary of form {0: [(3, -2), ...], 1:[], ...}
+            specifying whether only selected links should be tested. If None is
+            passed, all links are tested.
         fdr_method : str, optional (default: 'fdr_bh')
             Correction method, currently implemented is Benjamini-Hochberg
             False Discovery Rate method.     
@@ -1372,10 +1386,21 @@ class PCMCI():
             nobs = len(x)
             return np.arange(1, nobs + 1) / float(nobs)
 
-        # Get the shape paramters from the p_matrix
+        # Get the shape parameters from the p_matrix
         _, N, tau_max_plusone = p_matrix.shape
-        # Create a mask for these values
-        mask = np.ones((N, N, tau_max_plusone), dtype='bool')
+        # Check the limits on tau
+        self._check_tau_limits(tau_min, tau_max)
+        # Include only selected_links if given
+        if selected_links != None:
+            # Create a mask for these values
+            mask = np.zeros((N, N, tau_max_plusone), dtype='bool')
+            _int_sel_links = self._set_sel_links(selected_links, tau_min, tau_max)
+            for node1, links_ in _int_sel_links.items():
+                for node2, lag in links_:
+                    mask[node2, node1, abs(lag)] = True
+        else:
+            # Create a mask for these values
+            mask = np.ones((N, N, tau_max_plusone), dtype='bool')
         # Ignore values from autocorrelation indices
         mask[range(N), range(N), 0] = False
         # Exclude all contemporaneous values if requested
@@ -1795,7 +1820,9 @@ class PCMCI():
         # Initialize and fill the q_matrix if there is a fdr_method
         q_matrix = None
         if fdr_method != 'none':
-            q_matrix = self.get_corrected_pvalues(p_matrix,
+            q_matrix = self.get_corrected_pvalues(p_matrix=p_matrix, tau_min=tau_min, 
+                                                  tau_max=tau_max, 
+                                                  selected_links=selected_links,
                                                   fdr_method=fdr_method)
         # Store the parents in the pcmci member
         self.all_parents = all_parents
@@ -2138,6 +2165,10 @@ class PCMCI():
                 val_matrix[i, j, abs(tau)] = results['val_matrix'][i, j, 
                                                                    abs(tau)]
 
+        # Update p_matrix and val_matrix for indices of symmetrical links
+        p_matrix[:, :, 0] = results['p_matrix'][:, :, 0]
+        val_matrix[:, :, 0] = results['val_matrix'][:, :, 0]
+
         ambiguous = results['ambiguous_triples']
 
         conf_matrix = None
@@ -2148,11 +2179,13 @@ class PCMCI():
         # Initialize and fill the q_matrix if there is a fdr_method
         q_matrix = None
         if fdr_method != 'none':
-            q_matrix = self.get_corrected_pvalues(p_matrix,
+            q_matrix = self.get_corrected_pvalues(p_matrix=p_matrix, tau_min=tau_min, 
+                                                  tau_max=tau_max, 
+                                                  selected_links=selected_links,
                                                   fdr_method=fdr_method,
                                                   exclude_contemporaneous=False)
         # Store the parents in the pcmci member
-        self.all_parents = lagged_parents
+        self.all_lagged_parents = lagged_parents
 
         # Cache the resulting values in the return dictionary
         return_dict = {'graph': graph,
@@ -2313,17 +2346,22 @@ class PCMCI():
             conflict_resolution=conflict_resolution,
         )
 
-        # Symmetrize p_matrix using maximum p-value
-        # and also symmetrize val_matrix based on same order
+        # Symmetrize p_matrix and val_matrix
         for i in range(self.N):
             for j in range(self.N):
-                if (skeleton_results['p_matrix'][i, j, 0]
-                        >= skeleton_results['p_matrix'][j, i, 0]
-                        and (i, 0) in _int_sel_links[j]):
-                    skeleton_results['p_matrix'][j, i, 0] = skeleton_results[
-                        'p_matrix'][i, j, 0]
-                    skeleton_results['val_matrix'][j, i, 0] = \
-                        skeleton_results['val_matrix'][i, j, 0]
+                # If both the links are present in selected_links, symmetrize using maximum p-value
+                if ((i, 0) in _int_sel_links[j] and (j, 0) in _int_sel_links[i]):
+                    if (skeleton_results['p_matrix'][i, j, 0]
+                            >= skeleton_results['p_matrix'][j, i, 0]):
+                        skeleton_results['p_matrix'][j, i, 0] = skeleton_results['p_matrix'][i, j, 0]
+                        skeleton_results['val_matrix'][j, i, 0] = skeleton_results['val_matrix'][i, j, 0]
+                # If only one of the links is present in selected_links, symmetrize using the p-value of the link present
+                elif ((i, 0) in _int_sel_links[j] and (j, 0) not in _int_sel_links[i]):
+                    skeleton_results['p_matrix'][j, i, 0] = skeleton_results['p_matrix'][i, j, 0]
+                    skeleton_results['val_matrix'][j, i, 0] = skeleton_results['val_matrix'][i, j, 0]
+                else:
+                    # Links not present in selected_links
+                    pass
 
         # Convert numerical graph matrix to string
         graph_str = self.convert_to_string_graph(final_graph)

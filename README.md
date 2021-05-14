@@ -8,6 +8,25 @@ Version 4.2
 [Documentation](https://jakobrunge.github.io/tigramite/)
 
 
+## Overview
+
+Tigramite provides several causal discovery methods that can be used under different sets of assumptions. An application always consists of a method and a chosen conditional independence test, e.g. PCMCI together with ParCorr. The following two tables give an overview of the assumptions involved:
+
+| Method | Assumptions         | Output |
+|--------|---------------------------------------------------------------------------|----|
+|         |   (in addition to Causal Markov Condition and Faithfulness)   |    |
+| PCMCI  | Causal stationarity, no contemporaneous causal links, no hidden variables |  Directed lagged links, undirected contemporaneous links (for tau_min=0)  |
+| PCMCIplus | Causal stationarity, no hidden variables    | Directed lagged links, directed and undirected contemp. links (Time series CPDAG) |
+| LPCMCI | Causal stationarity    | Time series PAG |
+
+
+| Conditional independence test | Assumptions                                  |
+|--------|---------------------------------------------------------------------------|
+| ParCorr  | univariate, continuous, linear Gaussian dependencies |
+| GPDC / GPDCtorch | univariate, continuous, additive dependencies        |
+| CMIknn | multivariate, continuous, general dependencies           |
+| CMIsymb | univariate, discrete/categorical dependencies           |
+
 ## General Notes
 
 Tigramite is a causal time series analysis python package. It allows to
@@ -15,6 +34,7 @@ Tigramite is a causal time series analysis python package. It allows to
 
 - PCMCI: J. Runge, P. Nowack, M. Kretschmer, S. Flaxman, D. Sejdinovic, Detecting and quantifying causal associations in large nonlinear time series datasets. Sci. Adv. 5, eaau4996 (2019). https://advances.sciencemag.org/content/5/11/eaau4996
 - PCMCI+: J. Runge (2020): Discovering contemporaneous and lagged causal relations in autocorrelated nonlinear time series datasets. Proceedings of the 36th Conference on Uncertainty in Artificial Intelligence, UAI 2020,Toronto, Canada, 2019, AUAI Press, 2020. http://auai.org/uai2020/proceedings/579_main_paper.pdf
+- Gerhardus, A. & Runge, J. High-recall causal discovery for autocorrelated time series with latent confounders Advances in Neural Information Processing Systems, 2020, 33. https://proceedings.neurips.cc/paper/2020/hash/94e70705efae423efda1088614128d0b-Abstract.html
 - Generally: J. Runge (2018): Causal Network Reconstruction from Time Series: From Theoretical Assumptions to Practical Estimation. Chaos: An Interdisciplinary Journal of Nonlinear Science 28 (7): 075310. https://aip.scitation.org/doi/10.1063/1.5025050
 - Nature Communications Perspective paper: https://www.nature.com/articles/s41467-019-10105-3
 - Mediation class: J. Runge et al. (2015): Identifying causal gateways and mediators in complex spatio-temporal systems. Nature Communications, 6, 8502. http://doi.org/10.1038/ncomms9502
@@ -43,8 +63,10 @@ Tigramite is a causal time series analysis python package. It allows to
 - scikit-learn   (optional, necessary for GPDC test)
 - matplotlib (optional, only for plotting)
 - networkx (optional, only for plotting and mediation)
-- cython   (optional, necessary for CMIknn and GPDC tests)
-- mpi4py   (optional, necessary for using the parallelized implementation)
+- cython   (optional, necessary for CMIknn)
+- mpi4py   (optional, necessary for using the parallelized script)
+- dcor     (optional, necessary for GPDC)
+- gpytorch (optional, necessary for GPDCtorch implementation)
 
 
 ## Installation
@@ -57,7 +79,9 @@ To use just the ParCorr and CMIsymb independence tests, only numpy and scipy are
 
 - CMIknn: cython can optionally be used for compilation, otherwise the provided ``*.c'' file is used 
 
-- GPDC: also based on cython, and additionally, scikit-learn is required for Gaussian Process regression
+- GPDC: scikit-learn is required for Gaussian Process regression and dcor for distance correlation
+
+- GPDCtorch: gpytorch is required for Gaussian Process regression
 
 
 ## User Agreement

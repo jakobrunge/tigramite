@@ -251,7 +251,7 @@ class ParCorr(CondIndTest):
         return (conf_lower, conf_upper)
 
 
-    def get_model_selection_criterion(self, j, parents, tau_max=0):
+    def get_model_selection_criterion(self, j, parents, tau_max=0, corrected_aic=False):
         """Returns Akaike's Information criterion modulo constants.
 
         Fits a linear model of the parents to variable j and returns the
@@ -294,5 +294,8 @@ class ParCorr(CondIndTest):
         # Number of parameters
         p = dim - 1
         # Get AIC
-        score = T * np.log(rss) + 2. * p
+        if corrected_aic:
+            score = T * np.log(rss) + 2. * p + (2.*p**2 + 2.*p)/(T - p - 1)
+        else:
+            score = T * np.log(rss) + 2. * p
         return score
