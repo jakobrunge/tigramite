@@ -3134,38 +3134,6 @@ def plot_tsg(links, X, Y, Z=None, anc_x=None, anc_y=None, anc_xy=None):
         network_lower_bound=network_lower_bound,
         inner_edge_style=inner_edge_style,
     )
-    # _draw_network_with_curved_edges(
-    #     fig=fig,
-    #     ax=ax,
-    #     G=deepcopy(G),
-    #     pos=pos,
-    #     # dictionary of rings: {0:{'sizes':(N,)-array, 'color_array':(N,)-array
-    #     # or None, 'cmap':string,
-    #     node_rings=node_rings,
-    #     # 'vmin':float or None, 'vmax':float or None, 'label':string or None}}
-    #     node_labels=node_labels,
-    #     node_label_size=node_label_size,
-    #     node_alpha=alpha,
-    #     standard_size=node_size,
-    #     node_aspect=None,
-    #     standard_cmap="OrRd",
-    #     standard_color="lightgrey",
-    #     log_sizes=False,
-    #     cmap_links=cmap_edges,
-    #     links_vmin=vmin_edges,
-    #     links_vmax=vmax_edges,
-    #     links_ticks=edge_ticks,
-    #     arrowstyle="simple",
-    #     arrowhead_size=arrowhead_size,
-    #     curved_radius=curved_radius,
-    #     label_fontsize=label_fontsize,
-    #     label_fraction=0.5,
-    #     link_colorbar_label=link_colorbar_label,
-    #     inner_edge_curved=True,
-    #     network_lower_bound=network_lower_bound,
-    #     inner_edge_style=inner_edge_style,
-    #     show_colorbar=False,
-    # )
 
     for i in range(N):
         trans = transforms.blended_transform_factory(fig.transFigure, ax.transData)

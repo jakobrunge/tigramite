@@ -1,6 +1,30 @@
+"""
+MIT License
+
+Copyright (c) 2017 Jake Gardner
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
+
 import torch
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from functools import reduce
 from copy import deepcopy
 from torch.optim import Optimizer
@@ -140,12 +164,12 @@ def polyinterp(points, x_min_bound=None, x_max_bound=None, plot=False):
                         x_sol = np.real(crit_pt)
                         f_min = np.real(F_cp)
 
-            if plot:
-                plt.figure()
-                x = np.arange(x_min_bound, x_max_bound, (x_max_bound - x_min_bound) / 10000)
-                f = np.polyval(coeff, x)
-                plt.plot(x, f)
-                plt.plot(x_sol, f_min, "x")
+            # if plot:
+            #     plt.figure()
+            #     x = np.arange(x_min_bound, x_max_bound, (x_max_bound - x_min_bound) / 10000)
+            #     f = np.polyval(coeff, x)
+            #     plt.plot(x, f)
+            #     plt.plot(x_sol, f_min, "x")
 
     return x_sol
 

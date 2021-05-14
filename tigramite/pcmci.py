@@ -1360,9 +1360,10 @@ class PCMCI():
         p_matrix : array-like
             Matrix of p-values. Must be of shape (N, N, tau_max + 1).
         tau_min : int, default: 0
-            Minimum time lag to test. Note that zero-lags are undirected.
+            Minimum time lag. Only used as consistency check of selected_links. 
         tau_max : int, default: 1
-            Maximum time lag. Must be larger or equal to tau_min.
+            Maximum time lag. Must be larger or equal to tau_min. Only used as 
+            consistency check of selected_links. 
         selected_links : dict or None
             Dictionary of form {0: [(3, -2), ...], 1:[], ...}
             specifying whether only selected links should be tested. If None is
@@ -1385,7 +1386,7 @@ class PCMCI():
             nobs = len(x)
             return np.arange(1, nobs + 1) / float(nobs)
 
-        # Get the shape paramters from the p_matrix
+        # Get the shape parameters from the p_matrix
         _, N, tau_max_plusone = p_matrix.shape
         # Check the limits on tau
         self._check_tau_limits(tau_min, tau_max)
@@ -1819,7 +1820,9 @@ class PCMCI():
         # Initialize and fill the q_matrix if there is a fdr_method
         q_matrix = None
         if fdr_method != 'none':
-            q_matrix = self.get_corrected_pvalues(p_matrix, tau_min, tau_max,
+            q_matrix = self.get_corrected_pvalues(p_matrix=p_matrix, tau_min=tau_min, 
+                                                  tau_max=tau_max, 
+                                                  selected_links=selected_links,
                                                   fdr_method=fdr_method)
         # Store the parents in the pcmci member
         self.all_parents = all_parents
@@ -2176,11 +2179,13 @@ class PCMCI():
         # Initialize and fill the q_matrix if there is a fdr_method
         q_matrix = None
         if fdr_method != 'none':
-            q_matrix = self.get_corrected_pvalues(p_matrix, tau_min, tau_max,
+            q_matrix = self.get_corrected_pvalues(p_matrix=p_matrix, tau_min=tau_min, 
+                                                  tau_max=tau_max, 
+                                                  selected_links=selected_links,
                                                   fdr_method=fdr_method,
                                                   exclude_contemporaneous=False)
         # Store the parents in the pcmci member
-        self.all_parents = lagged_parents
+        self.all_lagged_parents = lagged_parents
 
         # Cache the resulting values in the return dictionary
         return_dict = {'graph': graph,
