@@ -7,7 +7,7 @@ Version 4.2
 
 [Documentation](https://jakobrunge.github.io/tigramite/)
 
-! [Take a survey to improve tigramite](https://forms.gle/bXdj5vWkSDB7yN9u7) !
+--> [Take a survey to improve tigramite](https://forms.gle/bXdj5vWkSDB7yN9u7) <--
 
 ## Overview
 
