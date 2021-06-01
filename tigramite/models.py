@@ -1364,8 +1364,14 @@ class Prediction(Models, PCMCI):
             # Check if we've passed a new dataframe object
             test_array = None
             if new_data is not None:
+                if new_data.mask is None:
+                    # if no mask is supplied, use the same mask as for the fitted array
+                    new_data_mask = self.test_mask
+                else:
+                    new_data_mask = new_data.mask
                 test_array, _ = new_data.construct_array(X, Y, Z,
                                                          tau_max=self.tau_max,
+                                                         mask=new_data_mask,
                                                          mask_type=self.mask_type,
                                                          cut_off=cut_off,
                                                          verbosity=self.verbosity)
@@ -1406,6 +1412,7 @@ class Prediction(Models, PCMCI):
 if __name__ == '__main__':
    
     import tigramite.data_processing as pp
+    from tigramite.independence_tests import ParCorr
 
     np.random.seed(6)
 
@@ -1418,12 +1425,12 @@ if __name__ == '__main__':
     data, nonstat = pp.structural_causal_process(links, T=10000)
     true_parents = pp._get_true_parent_neighbor_dict(links)
     dataframe = pp.DataFrame(data)
- 
-    med = Models(dataframe=dataframe, model=sklearn.linear_model.LinearRegression(), data_transform=None)
-    # Fit the model
-    med.get_fit(all_parents=true_parents, tau_max=3)
 
-    print(med.get_val_matrix())
+    # med = Models(dataframe=dataframe, model=sklearn.linear_model.LinearRegression(), data_transform=None)
+    # # Fit the model
+    # med.get_fit(all_parents=true_parents, tau_max=3)
+
+    # print(med.get_val_matrix())
 
     # for j, i, tau, coeff in pp._iter_coeffs(links):
     #     print(i, j, tau, coeff, med.get_coeff(i=i, tau=tau, j=j))
@@ -1431,3 +1438,16 @@ if __name__ == '__main__':
     # for causal_coeff in [med.get_ce(i=0, tau=-2, j=2),
     #                      med.get_mce(i=0, tau=-2, j=2, k=1)]:
     #     print(causal_coeff)
+
+
+    pred = Prediction(dataframe=dataframe,
+            cond_ind_test=ParCorr(),   #CMIknn ParCorr
+            prediction_model = sklearn.linear_model.LinearRegression(),
+    #         prediction_model = sklearn.gaussian_process.GaussianProcessRegressor(),
+            # prediction_model = sklearn.neighbors.KNeighborsRegressor(),
+        data_transform=sklearn.preprocessing.StandardScaler(),
+        # train_indices= range(int(0.8*T)),
+        # test_indices= range(int(0.8*T), T),
+        verbosity=1
+        )
+
