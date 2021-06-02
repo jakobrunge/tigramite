@@ -66,7 +66,7 @@ INSTALL_REQUIRES = ["numpy", "scipy", "six"]
 EXTRAS_REQUIRE = {
     "all": [
         "scikit-learn>=0.21",  # Gaussian Process (GP) Regression
-        "matplotlib>=3.0",     # plotting
+        "matplotlib>=3.4.0",     # plotting
         "networkx>=2.4",       # plotting
         "torch>=1.7",          # GPDC torch version
         "gpytorch>=1.4",       # GPDC torch version
