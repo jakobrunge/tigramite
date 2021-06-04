@@ -1354,7 +1354,7 @@ def _draw_network_with_curved_edges(
             cax_e = pyplot.axes(
                 [
                     0.55,
-                    ax.figbox.bounds[1] + 0.02,
+                    ax.get_subplotspec().get_position(ax.figure).bounds[1] + 0.02,
                     0.4,
                     0.025 + (len(all_links_edge_weights) == 0) * 0.035,
                 ],
@@ -1375,7 +1375,7 @@ def _draw_network_with_curved_edges(
             # except:
             #     print('no ticks given')
 
-            cb_e.outline.remove()
+            cb_e.outline.clear()
             cax_e.set_xlabel(
                 link_colorbar_label, labelpad=1, fontsize=label_fontsize, zorder=-10
             )
@@ -1442,13 +1442,13 @@ def _draw_network_with_curved_edges(
             if node_rings[ring]["colorbar"]:
                 # Create colorbars for nodes
                 # cax_n = pyplot.axes([.8 + ring*0.11,
-                # ax.figbox.bounds[1]+0.05, 0.025, 0.35], frameon=False) #
+                # ax.get_subplotspec().get_position(ax.figure).bounds[1]+0.05, 0.025, 0.35], frameon=False) #
                 # setup colorbar axes.
                 # setup colorbar axes.
                 cax_n = pyplot.axes(
                     [
                         0.05,
-                        ax.figbox.bounds[1] + 0.02 + ring * 0.11,
+                        ax.get_subplotspec().get_position(ax.figure).bounds[1] + 0.02 + ring * 0.11,
                         0.4,
                         0.025 + (len(node_rings) == 1) * 0.035,
                     ],
@@ -1466,7 +1466,7 @@ def _draw_network_with_curved_edges(
                 )
                 # except:
                 #     print ('no ticks given')
-                cb_n.outline.remove()
+                cb_n.outline.clear()
                 # cb_n.set_ticks()
                 cax_n.set_xlabel(
                     node_rings[ring]["label"], labelpad=1, fontsize=label_fontsize

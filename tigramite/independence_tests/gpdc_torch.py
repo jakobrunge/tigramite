@@ -4,17 +4,18 @@
 #
 # License: GNU General Public License v3.0
 
-
-
 from __future__ import print_function
+import warnings
 import numpy as np
-import gpytorch
-import torch
-import dcor
 import gc
-
 from .independence_tests_base import CondIndTest
-from .LBFGS import FullBatchLBFGS
+try:
+    import dcor
+    import torch
+    import gpytorch
+    from .LBFGS import FullBatchLBFGS
+except Exception as e:
+    warnings.warn(str(e))
 
 class GaussProcRegTorch():
     r"""Gaussian processes abstract base class.

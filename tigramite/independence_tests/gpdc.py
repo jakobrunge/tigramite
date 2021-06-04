@@ -6,14 +6,14 @@
 
 from __future__ import print_function
 import numpy as np
-import dcor
-
+import warnings
 from .independence_tests_base import CondIndTest
 
 try:
+    import dcor
     from sklearn import gaussian_process
-except:
-    print("Could not import sklearn for Gaussian process tests")
+except Exception as e:
+    warnings.warn(str(e))
 
 class GaussProcReg():
     r"""Gaussian processes abstract base class.

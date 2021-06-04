@@ -7,13 +7,12 @@
 from __future__ import print_function
 from scipy import special, stats, spatial
 import numpy as np
-
+import warnings
 from .independence_tests_base import CondIndTest
-
 try:
     from tigramite import tigramite_cython_code
-except:
-    print("Could not import packages for CMIknn and GPDC estimation")
+except Exception as e:
+    warnings.warn(str(e))
 
 
 class CMIknn(CondIndTest):
