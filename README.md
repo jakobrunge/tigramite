@@ -59,15 +59,15 @@ Tigramite is a causal time series analysis python package. It allows to
 
 ## Required python packages
 
-- numpy
-- scipy
-- scikit-learn   (optional, necessary for GPDC test)
-- matplotlib (optional, only for plotting)
-- networkx (optional, only for plotting and mediation)
-- cython   (optional, necessary for CMIknn)
-- mpi4py   (optional, necessary for using the parallelized script)
-- dcor     (optional, necessary for GPDC)
-- gpytorch (optional, necessary for GPDCtorch implementation)
+- numpy>=1.17.0
+- scipy>=1.3.0
+- scikit-learn>=0.21   (optional, necessary for GPDC test)
+- matplotlib>=3.4.0 (optional, only for plotting)
+- networkx>=2.4 (optional, only for plotting and mediation)
+- cython>=0.29.12   (optional, necessary for CMIknn)
+- mpi4py>=3.0.3   (optional, necessary for using the parallelized script)
+- dcor>=0.5.3     (optional, necessary for GPDC)
+- gpytorch>=1.4 (optional, necessary for GPDCtorch implementation)
 
 
 ## Installation
