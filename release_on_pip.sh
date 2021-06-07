@@ -15,7 +15,7 @@
 # cd v4210/
 
 # Make sure to be in a clean anaconda
-# conda create --name tigramite-release-4210 python=3.6
+# conda create --name tigramite-release-4210 python=3.7
 # conda activate tigramite-release-4210
 
 # Pull tigramite github
