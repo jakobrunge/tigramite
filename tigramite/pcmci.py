@@ -1504,7 +1504,7 @@ class PCMCI():
         link_dict : dict
             Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}
             containing estimated links.
-        link_dict : array, shape [N, N, tau_max+1]
+        link_matrix : array, shape [N, N, tau_max+1]
             Boolean array with True entries for significant links at alpha_level
         """
         # Initialize the return value
