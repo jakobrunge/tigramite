@@ -202,12 +202,13 @@ class PCMCI():
         _key_set = set(_int_sel_links.keys())
         valid_entries = _key_set == set(range(self.N))
 
-        valid_entries = valid_entries and \
-                        set(var for parents in _int_sel_links.values()
-                            for var, _ in parents).issubset(_vars)
-        valid_entries = valid_entries and \
-                        set(lag for parents in _int_sel_links.values()
-                            for _, lag in parents).issubset(_lags)
+        for link in _int_sel_links.values():
+            if isinstance(link, list) and len(link) == 0:
+                continue
+            for var, lag in link:
+                if var not in _vars or lag not in _lags:
+                    valid_entries = False
+
         if not valid_entries:
             raise ValueError("selected_links"
                              " must be dictionary with keys for all [0,...,N-1]"
@@ -3808,6 +3809,3 @@ if __name__ == '__main__':
     pcmci = PCMCI(dataframe=dataframe, cond_ind_test=cond_ind_test)
     results = pcmci.run_pcmciplus(tau_min=0, tau_max=2, pc_alpha=0.01)
     pcmci.print_results(results, alpha_level=0.01)
-
-
-
