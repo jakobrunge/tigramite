@@ -142,6 +142,11 @@ class PCMCI():
         self.dataframe = dataframe
         # Set the conditional independence test to be used
         self.cond_ind_test = cond_ind_test
+        if isinstance(self.cond_ind_test, type):
+            raise ValueError("PCMCI requires that the independence "
+                             "test is instantiated. "
+                             "Please run `cond_ind_test()` before passing "
+                             "the independence test."
         self.cond_ind_test.set_dataframe(self.dataframe)
         # Set the verbosity for debugging/logging messages
         self.verbosity = verbosity
