@@ -647,7 +647,11 @@ class LinearMediation(Models):
             excluded.
         """
 
-        all_psi_k = np.zeros((self.N, self.tau_max + 1, self.N, self.N))
+        try:
+            all_psi_k = np.zeros((self.N, self.tau_max + 1, self.N, self.N))
+        except np.core._exceptions._ArrayMemoryError:
+            all_psi_k = np.zeros((self.N, self.tau_max + 1, self.N, self.N), dtype="float16")
+            warnings.warn("Not enought memory. Reducing precision to float16."
 
         for k in range(self.N):
             all_psi_k[k] = self._get_psi_k(phi, k)
