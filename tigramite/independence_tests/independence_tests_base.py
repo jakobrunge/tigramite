@@ -27,11 +27,10 @@ class CondIndTest():
         Seed for RandomState (default_rng)
 
     mask_type : str, optional (default = None)
-        Must be in {'y','x','z','xy','xz','yz','xyz'}
+        Must be in {None, 'y','x','z','xy','xz','yz','xyz'}
         Masking mode: Indicators for which variables in the dependence measure
-        I(X; Y | Z) the samples should be masked. If None, 'y' is used, which
-        excludes all time slices containing masked samples in Y. Explained in
-        [1]_.
+        I(X; Y | Z) the samples should be masked. If None, the mask is not used. 
+        Explained in [1]_.
 
     significance : str, optional (default: 'analytic')
         Type of significance test to use. In this package 'analytic',
@@ -133,10 +132,9 @@ class CondIndTest():
         Parameters
         ----------
         mask_type : str
-            Must be in {'y','x','z','xy','xz','yz','xyz'}
-            Masking mode: Indicators for which variables in the dependence
-            measure I(X; Y | Z) the samples should be masked. If None, 'y' is
-            used, which excludes all time slices containing masked samples in Y.
+            Must be in {None, 'y','x','z','xy','xz','yz','xyz'}
+            Masking mode: Indicators for which variables in the dependence measure
+            I(X; Y | Z) the samples should be masked. If None, the mask is not used. 
             Explained in [1]_.
         """
         # Set the mask type
@@ -183,10 +181,9 @@ class CondIndTest():
     def _check_mask_type(self):
         """
         mask_type : str, optional (default = None)
-            Must be in {'y','x','z','xy','xz','yz','xyz'}
-            Masking mode: Indicators for which variables in the dependence
-            measure I(X; Y | Z) the samples should be masked. If None, 'y' is
-            used, which excludes all time slices containing masked samples in Y.
+            Must be in {None, 'y','x','z','xy','xz','yz','xyz'}
+            Masking mode: Indicators for which variables in the dependence measure
+            I(X; Y | Z) the samples should be masked. If None, the mask is not used. 
             Explained in [1]_.
         """
         if self.mask_type is not None:
@@ -953,8 +950,6 @@ class CondIndTest():
 
             null_dist[sam] = dependence_measure(array=array_shuffled,
                                                 xyz=xyz)
-
-        null_dist.sort()
 
         return null_dist
 

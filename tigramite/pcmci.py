@@ -155,7 +155,8 @@ class PCMCI():
                              "functions run_pcmci() etc.")
 
         # Store the shape of the data in the T and N variables
-        self.T, self.N = self.dataframe.values.shape
+        self.T = self.dataframe.T
+        self.N = self.dataframe.N
 
     def _set_sel_links(self, selected_links, tau_min, tau_max,
                        remove_contemp=False):

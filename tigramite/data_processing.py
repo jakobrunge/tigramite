@@ -11,6 +11,7 @@ import copy
 import numpy as np
 import scipy.sparse
 import scipy.sparse.linalg
+from numba import jit
 
 class DataFrame():
     """Data object containing time series array and optional mask.
@@ -68,6 +69,9 @@ class DataFrame():
         # if np.isnan(data).sum() != 0:
         #     raise ValueError("NaNs in the data")
         self._check_mask()
+
+        self.T = T
+        self.N = N
 
         # If PCMCI.run_bootstrap_of is called, then the
         # bootstrap random draw can be set here
@@ -131,10 +135,10 @@ class DataFrame():
             Optional mask array, must be of same shape as data.  If it is set,
             then it overrides the self.mask assigned to the dataframe. If it is
             None, then the self.mask is used, if it exists.
-        mask_type : {'y','x','z','xy','xz','yz','xyz'}
+        mask_type : {None, 'y','x','z','xy','xz','yz','xyz'}
             Masking mode: Indicators for which variables in the dependence
-            measure I(X; Y | Z) the samples should be masked. If None, 'y' is
-            used, which excludes all time slices containing masked samples in Y.
+            measure I(X; Y | Z) the samples should be masked. If None, the mask
+            is not used.
             Explained in [1]_.
         return_cleaned_xyz : bool, optional (default: False)
             Whether to return cleaned X,Y,Z, where possible duplicates are
@@ -323,8 +327,8 @@ class DataFrame():
             Supplement of [1]_.
         mask_type : {'y','x','z','xy','xz','yz','xyz'}
             Masking mode: Indicators for which variables in the dependence
-            measure I(X; Y | Z) the samples should be masked. If None, 'y' is
-            used, which excludes all time slices containing masked samples in Y.
+            measure I(X; Y | Z) the samples should be masked. If None, the mask
+            is not used.
             Explained in [1]_.
         """
         indt = " " * 12
@@ -332,7 +336,7 @@ class DataFrame():
               "\n" + indt + "X = %s" % str(X) +
               "\n" + indt + "Y = %s" % str(Y) +
               "\n" + indt + "Z = %s" % str(Z))
-        if self.mask is not None:
+        if self.mask is not None and mask_type is not None:
             print(indt+"with masked samples in %s removed" % mask_type)
         if self.missing_flag is not None:
             print(indt+"with missing values = %s removed" % self.missing_flag)
@@ -522,6 +526,38 @@ def time_bin_with_mask(data, time_bin_length, mask=None):
 
     return (bindata.squeeze(), T)
 
+@jit
+def _get_patterns(array, array_mask, patt, patt_mask, weights, dim, step, fac, N, T):
+    v = np.zeros(dim, dtype='float')
+
+    start = step * (dim - 1)
+    for n in range(0, N):
+        for t in range(start, T):
+            mask = 1
+            ave = 0.
+            for k in range(0, dim):
+                tau = k * step
+                v[k] = array[t - tau, n]
+                ave += v[k]
+                mask *= array_mask[t - tau, n]
+            ave /= dim
+            var = 0.
+            for k in range(0, dim):
+                var += (v[k] - ave) ** 2
+            var /= dim
+            weights[t - start, n] = var
+            if (v[0] < v[1]):
+                p = 1
+            else:
+                p = 0
+            for i in range(2, dim):
+                for j in range(0, i):
+                    if (v[j] < v[i]):
+                        p += fac[i]
+            patt[t - start, n] = p
+            patt_mask[t - start, n] = mask
+
+    return patt, patt_mask, weights
 
 def ordinal_patt_array(array, array_mask=None, dim=2, step=1,
                         weights=False, verbosity=0):
@@ -603,11 +639,7 @@ def ordinal_patt_array(array, array_mask=None, dim=2, step=1,
     # _get_patterns_cython assumes mask=0 to be a masked value
     array_mask = (array_mask == False).astype('int32')
 
-    (patt, patt_mask, weights_array) = \
-            tigramite_cython_code._get_patterns_cython(array, array_mask,
-                                                       patt, patt_mask,
-                                                       weights_array, dim,
-                                                       step, fac, N, T)
+    (patt, patt_mask, weights_array) = _get_patterns(array, array_mask, patt, patt_mask, weights_array, dim, step, fac, N, T)
 
     weights_array = np.asarray(weights_array)
     patt = np.asarray(patt)

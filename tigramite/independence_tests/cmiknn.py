@@ -5,14 +5,10 @@
 # License: GNU General Public License v3.0
 
 from __future__ import print_function
-from scipy import special, stats, spatial
+from scipy import special, spatial
 import numpy as np
-import warnings
 from .independence_tests_base import CondIndTest
-try:
-    from tigramite import tigramite_cython_code
-except Exception as e:
-    warnings.warn(str(e))
+from numba import jit
 
 
 class CMIknn(CondIndTest):
@@ -105,7 +101,7 @@ class CMIknn(CondIndTest):
                  shuffle_neighbors=5,
                  significance='shuffle_test',
                  transform='ranks',
-                 n_jobs=-1,
+                 workers=-1,
                  **kwargs):
         # Set the member variables
         self.knn = knn
@@ -115,7 +111,7 @@ class CMIknn(CondIndTest):
         self.two_sided = False
         self.residual_based = False
         self.recycle_residuals = False
-        self.n_jobs = n_jobs
+        self.workers = workers
         # Call the parent constructor
         CondIndTest.__init__(self, significance=significance, **kwargs)
         # Print some information about construction
@@ -126,6 +122,7 @@ class CMIknn(CondIndTest):
                 print("knn = %s" % self.knn)
             print("shuffle_neighbors = %d\n" % self.shuffle_neighbors)
 
+    @jit
     def _get_nearest_neighbors(self, array, xyz, knn):
         """Returns nearest neighbors according to Frenzel and Pompe (2007).
 
@@ -175,25 +172,36 @@ class CMIknn(CondIndTest):
         elif self.transform == 'ranks':
             array = array.argsort(axis=1).argsort(axis=1).astype('float')
 
+        array = array.T
+        tree_xyz = spatial.cKDTree(array)
+        epsarray = tree_xyz.query(array, k=[knn+1], p=np.inf,
+                                  eps=0., workers=self.workers)[0][:, 0].astype('float')
 
-        # Use cKDTree to get distances eps to the k-th nearest neighbors for
-        # every sample in joint space XYZ with maximum norm
-        tree_xyz = spatial.cKDTree(array.T)
-        epsarray = tree_xyz.query(array.T, k=knn+1, p=np.inf,
-                                  eps=0., n_jobs=self.n_jobs)[0][:, knn].astype('float')
+        # To search neighbors < eps
+        epsarray = np.multiply(epsarray, 0.99999)
 
-        # Prepare for fast cython access
-        dim_x = int(np.where(xyz == 0)[0][-1] + 1)
-        dim_y = int(np.where(xyz == 1)[0][-1] + 1 - dim_x)
+        # Subsample indices
+        x_indices = np.where(xyz == 0)[0]
+        y_indices = np.where(xyz == 1)[0]
+        z_indices = np.where(xyz == 2)[0]
 
-        k_xz, k_yz, k_z = \
-                tigramite_cython_code._get_neighbors_within_eps_cython(array,
-                                                                       T,
-                                                                       dim_x,
-                                                                       dim_y,
-                                                                       epsarray,
-                                                                       knn,
-                                                                       dim)
+        # Find nearest neighbors in subspaces
+        xz = array[:, np.concatenate((x_indices, z_indices))]
+        tree_xz = spatial.cKDTree(xz)
+        k_xz = tree_xz.query_ball_point(xz, r=epsarray, eps=0., p=np.inf, workers=self.workers, return_length=True)
+
+        yz = array[:, np.concatenate((y_indices, z_indices))]
+        tree_yz = spatial.cKDTree(yz)
+        k_yz = tree_yz.query_ball_point(yz, r=epsarray, eps=0., p=np.inf, workers=self.workers, return_length=True)
+
+        if len(z_indices) > 0:
+            z = array[:, z_indices]
+            tree_z = spatial.cKDTree(z)
+            k_z = tree_z.query_ball_point(z, r=epsarray, eps=0., p=np.inf, workers=self.workers, return_length=True)
+        else:
+            # Number of neighbors is T when z is empty.
+            k_z = np.full(T, T, dtype='float')
+
         return k_xz, k_yz, k_z
 
     def get_dependence_measure(self, array, xyz):
@@ -291,14 +299,13 @@ class CMIknn(CondIndTest):
                 # Generate random order in which to go through indices loop in
                 # next step
                 order = self.random_state.permutation(T).astype('int32')
-                # print(order[:5])
+
                 # Shuffle neighbor indices for each sample index
-                for i in range(T):
-                    self.random_state.shuffle(neighbors[i])
+                neighbors = self.random_state.permuted(neighbors, axis=1)
+
                 # Select a series of neighbor indices that contains as few as
                 # possible duplicates
-                restricted_permutation = \
-                    tigramite_cython_code._get_restricted_permutation_cython(
+                restricted_permutation = self.get_restricted_permutation(
                         T=T,
                         shuffle_neighbors=self.shuffle_neighbors,
                         neighbors=neighbors,
@@ -319,11 +326,11 @@ class CMIknn(CondIndTest):
                                            sig_blocklength=self.sig_blocklength,
                                            verbosity=self.verbosity)
 
-        # Sort
-        null_dist.sort()
         pval = (null_dist >= value).mean()
 
         if return_null_dist:
+            # Sort
+            null_dist.sort()
             return pval, null_dist
         return pval
 
@@ -393,8 +400,8 @@ class CMIknn(CondIndTest):
 
         x_array = np.fastCopyAndTranspose(array[x_indices, :])
         tree_xyz = spatial.cKDTree(x_array)
-        epsarray = tree_xyz.query(x_array, k=knn_here+1, p=np.inf,
-                                  eps=0., n_jobs=self.n_jobs)[0][:, knn_here].astype('float')
+        epsarray = tree_xyz.query(x_array, k=[knn_here+1], p=np.inf,
+                                  eps=0., workers=self.workers)[0][:, 0].astype('float')
 
         h_x = - special.digamma(knn_here) + special.digamma(T) + dim_x * np.log(2.*epsarray).mean()
 
@@ -409,3 +416,23 @@ class CMIknn(CondIndTest):
         h_x_y = h_x - i_xy
 
         return h_x_y
+
+
+    @jit
+    def get_restricted_permutation(self, T, shuffle_neighbors, neighbors, order):
+
+        restricted_permutation = np.zeros(T, dtype='int32')
+        used = np.array([], dtype='int32')
+
+        for sample_index in order:
+            m = 0
+            use = neighbors[sample_index, m]
+
+            while ((use in used) and (m < shuffle_neighbors - 1)):
+                m += 1
+                use = neighbors[sample_index, m]
+
+            restricted_permutation[sample_index] = use
+            used = np.append(used, use)
+
+        return restricted_permutation

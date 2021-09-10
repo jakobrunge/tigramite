@@ -43,11 +43,11 @@ class Models():
         Used to transform data prior to fitting. For example,
         sklearn.preprocessing.StandardScaler for simple standardization. The
         fitted parameters are stored.
-    mask_type : {'y','x','z','xy','xz','yz','xyz'}
-        Masking mode: Indicators for which variables in the dependence measure
-        I(X; Y | Z) the samples should be masked. If None, 'y' is used, which
-        excludes all time slices containing masked samples in Y. Explained in
-        [1]_.
+    mask_type : {None, 'y','x','z','xy','xz','yz','xyz'}
+        Masking mode: Indicators for which variables in the dependence
+        measure I(X; Y | Z) the samples should be masked. If None, the mask
+        is not used.
+        Explained in [1]_.
     verbosity : int, optional (default: 0)
         Level of verbosity.
     """
@@ -319,7 +319,7 @@ class Models():
             if all_parents[j]:
                 this_parent_lag = np.abs(np.array(all_parents[j])[:, 1]).max()
                 max_parents_lag = max(max_parents_lag, this_parent_lag)
-        # Set the default tau max and check if it shoudl be overwritten
+        # Set the default tau_max and check if it should be overwritten
         self.tau_max = max_parents_lag
         if tau_max is not None:
             self.tau_max = tau_max
@@ -476,11 +476,11 @@ class LinearMediation(Models):
         Used to transform data prior to fitting. For example,
         sklearn.preprocessing.StandardScaler for simple standardization. The
         fitted parameters are stored.
-    mask_type : {'y','x','z','xy','xz','yz','xyz'}
-        Masking mode: Indicators for which variables in the dependence measure
-        I(X; Y | Z) the samples should be masked. If None, 'y' is used, which
-        excludes all time slices containing masked samples in Y. Explained in
-        [1]_.
+    mask_type : {None, 'y','x','z','xy','xz','yz','xyz'}
+        Masking mode: Indicators for which variables in the dependence
+        measure I(X; Y | Z) the samples should be masked. If None, the mask
+        is not used.
+        Explained in [1]_.
     verbosity : int, optional (default: 0)
         Level of verbosity.
     """
@@ -528,7 +528,9 @@ class LinearMediation(Models):
                 var, lag = parent
                 if lag == 0:
                     raise ValueError("all_parents cannot contain "
-                                     "contemporaneous links. Remove these.")
+                                     "contemporaneous links for the LinearMediation"
+                                     " class. Use the optimal causal effects "
+                                     "class.")
 
         # Fit the model using the base class
         self.fit_results = self.get_fit(all_parents=all_parents,
