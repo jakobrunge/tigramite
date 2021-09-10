@@ -7,8 +7,6 @@ Version 4.3
 
 [Documentation](https://jakobrunge.github.io/tigramite/)
 
---> [Take a survey to improve tigramite](https://forms.gle/bXdj5vWkSDB7yN9u7) <--
-
 ## Overview
 
 Tigramite provides several causal discovery methods that can be used under different sets of assumptions. An application always consists of a method and a chosen conditional independence test, e.g. PCMCI together with ParCorr. The following two tables give an overview of the assumptions involved:
