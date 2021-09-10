@@ -8,49 +8,25 @@ TIGRAMITE
 
 `Github repo <https://github.com/jakobrunge/tigramite/>`_
 
-Tigramite is a causal time series analysis python package. It allows to
-efficiently reconstruct causal graphs from high-dimensional time series
-datasets and model the obtained causal dependencies for causal mediation and
-prediction analyses. Causal discovery is based on linear as well as
-non-parametric conditional independence tests applicable to discrete or
-continuously-valued time series. Also includes functions for high-quality
-plots of the results. Please cite the following papers depending on which
-method you use:
+Tigramite is a causal time series analysis python package. It allows to efficiently estimate causal graphs from high-dimensional time series datasets (causal discovery) and to use these graphs for robust forecasting and the estimation and prediction of direct, total, and mediated effects. Causal discovery is based on linear as well as non-parametric conditional independence tests applicable to discrete or continuously-valued time series. Also includes functions for high-quality plots of the results. Please cite the following papers depending on which method you use:
 
 
-0. J. Runge et al. (2019): Inferring causation from time series in Earth
-system sciences. Nature Communications, 10(1):2553.
-https://www.nature.com/articles/s41467-019-10105-3
+- PCMCI: J. Runge, P. Nowack, M. Kretschmer, S. Flaxman, D. Sejdinovic, Detecting and quantifying causal associations in large nonlinear time series datasets. Sci. Adv. 5, eaau4996 (2019). https://advances.sciencemag.org/content/5/11/eaau4996
 
-1. J. Runge, P. Nowack, M. Kretschmer, S. Flaxman, D. Sejdinovic (2019):
-Detecting and quantifying causal associations in large nonlinear time series
-datasets. Sci. Adv. 5, eaau4996.
-https://advances.sciencemag.org/content/5/11/eaau4996
+- PCMCI+: J. Runge (2020): Discovering contemporaneous and lagged causal relations in autocorrelated nonlinear time series datasets. Proceedings of the 36th Conference on Uncertainty in Artificial Intelligence, UAI 2020,Toronto, Canada, 2019, AUAI Press, 2020. http://auai.org/uai2020/proceedings/579_main_paper.pdf
 
-2. J. Runge (2020): 
-Discovering contemporaneous and lagged causal relations in autocorrelated 
-nonlinear time series datasets. Proceedings of the 36th Conference on 
-Uncertainty in Artificial Intelligence, UAI 2020,Toronto, Canada, 2019, 
-AUAI Press, 2020. 
-http://auai.org/uai2020/proceedings/579_main_paper.pdf
+- LPCMCI: Gerhardus, A. & Runge, J. High-recall causal discovery for autocorrelated time series with latent confounders Advances in Neural Information Processing Systems, 2020, 33. https://proceedings.neurips.cc/paper/2020/hash/94e70705efae423efda1088614128d0b-Abstract.html
 
-3. J. Runge et al. (2015): Identifying causal gateways and mediators in
-complex spatio-temporal systems. Nature Communications, 6, 8502.
-http://doi.org/10.1038/ncomms9502
+- Generally: J. Runge (2018): Causal Network Reconstruction from Time Series: From Theoretical Assumptions to Practical Estimation. Chaos: An Interdisciplinary Journal of Nonlinear Science 28 (7): 075310. https://aip.scitation.org/doi/10.1063/1.5025050
 
-4. J. Runge (2015): Quantifying information transfer and mediation along
-causal pathways in complex systems. Phys. Rev. E, 92(6), 62829.
-http://doi.org/10.1103/PhysRevE.92.062829
+- Nature Communications Perspective paper: https://www.nature.com/articles/s41467-019-10105-3
 
-5. J. Runge (2018): Conditional Independence Testing Based on a
-Nearest-Neighbor Estimator of Conditional Mutual Information. In Proceedings
-of the 21st International Conference on Artificial Intelligence and Statistics.
-http://proceedings.mlr.press/v84/runge18a.html
+- Mediation class: J. Runge et al. (2015): Identifying causal gateways and mediators in complex spatio-temporal systems. Nature Communications, 6, 8502. http://doi.org/10.1038/ncomms9502
 
-6. J. Runge (2018): Causal Network Reconstruction from Time Series: From
-Theoretical Assumptions to Practical Estimation. Chaos: An Interdisciplinary
-Journal of Nonlinear Science 28 (7): 075310.
-https://aip.scitation.org/doi/10.1063/1.5025050
+- Mediation class: J. Runge (2015): Quantifying information transfer and mediation along causal pathways in complex systems. Phys. Rev. E, 92(6), 62829. http://doi.org/10.1103/PhysRevE.92.062829
+
+- CMIknn: J. Runge (2018): Conditional Independence Testing Based on a Nearest-Neighbor Estimator of Conditional Mutual Information. In Proceedings of the 21st International Conference on Artificial Intelligence and Statistics. http://proceedings.mlr.press/v84/runge18a.html
+
 
 
 .. toctree::

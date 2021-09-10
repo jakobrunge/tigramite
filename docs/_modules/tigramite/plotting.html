@@ -5,13 +5,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>tigramite.plotting &#8212; Tigramite 4.2 documentation</title>
+    <title>tigramite.plotting &#8212; Tigramite 4.3 documentation</title>
     <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '4.2',
+        VERSION:     '4.3',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -34,7 +34,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 4.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 4.3 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
       </ul>
     </div>
@@ -1415,7 +1415,7 @@
             <span class="n">cax_e</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">axes</span><span class="p">(</span>
                 <span class="p">[</span>
                     <span class="mf">0.55</span><span class="p">,</span>
-                    <span class="n">ax</span><span class="o">.</span><span class="n">figbox</span><span class="o">.</span><span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.02</span><span class="p">,</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">get_subplotspec</span><span class="p">()</span><span class="o">.</span><span class="n">get_position</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">figure</span><span class="p">)</span><span class="o">.</span><span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.02</span><span class="p">,</span>
                     <span class="mf">0.4</span><span class="p">,</span>
                     <span class="mf">0.025</span> <span class="o">+</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">all_links_edge_weights</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.035</span><span class="p">,</span>
                 <span class="p">],</span>
@@ -1436,7 +1436,7 @@
             <span class="c1"># except:</span>
             <span class="c1">#     print(&#39;no ticks given&#39;)</span>
 
-            <span class="n">cb_e</span><span class="o">.</span><span class="n">outline</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+            <span class="n">cb_e</span><span class="o">.</span><span class="n">outline</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
             <span class="n">cax_e</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span>
                 <span class="n">link_colorbar_label</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=-</span><span class="mi">10</span>
             <span class="p">)</span>
@@ -1503,13 +1503,13 @@
             <span class="k">if</span> <span class="n">node_rings</span><span class="p">[</span><span class="n">ring</span><span class="p">][</span><span class="s2">&quot;colorbar&quot;</span><span class="p">]:</span>
                 <span class="c1"># Create colorbars for nodes</span>
                 <span class="c1"># cax_n = pyplot.axes([.8 + ring*0.11,</span>
-                <span class="c1"># ax.figbox.bounds[1]+0.05, 0.025, 0.35], frameon=False) #</span>
+                <span class="c1"># ax.get_subplotspec().get_position(ax.figure).bounds[1]+0.05, 0.025, 0.35], frameon=False) #</span>
                 <span class="c1"># setup colorbar axes.</span>
                 <span class="c1"># setup colorbar axes.</span>
                 <span class="n">cax_n</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">axes</span><span class="p">(</span>
                     <span class="p">[</span>
                         <span class="mf">0.05</span><span class="p">,</span>
-                        <span class="n">ax</span><span class="o">.</span><span class="n">figbox</span><span class="o">.</span><span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.02</span> <span class="o">+</span> <span class="n">ring</span> <span class="o">*</span> <span class="mf">0.11</span><span class="p">,</span>
+                        <span class="n">ax</span><span class="o">.</span><span class="n">get_subplotspec</span><span class="p">()</span><span class="o">.</span><span class="n">get_position</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">figure</span><span class="p">)</span><span class="o">.</span><span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.02</span> <span class="o">+</span> <span class="n">ring</span> <span class="o">*</span> <span class="mf">0.11</span><span class="p">,</span>
                         <span class="mf">0.4</span><span class="p">,</span>
                         <span class="mf">0.025</span> <span class="o">+</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">node_rings</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.035</span><span class="p">,</span>
                     <span class="p">],</span>
@@ -1527,7 +1527,7 @@
                 <span class="p">)</span>
                 <span class="c1"># except:</span>
                 <span class="c1">#     print (&#39;no ticks given&#39;)</span>
-                <span class="n">cb_n</span><span class="o">.</span><span class="n">outline</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+                <span class="n">cb_n</span><span class="o">.</span><span class="n">outline</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
                 <span class="c1"># cb_n.set_ticks()</span>
                 <span class="n">cax_n</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span>
                     <span class="n">node_rings</span><span class="p">[</span><span class="n">ring</span><span class="p">][</span><span class="s2">&quot;label&quot;</span><span class="p">],</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fontsize</span>
@@ -3274,7 +3274,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 4.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 4.3 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
       </ul>
     </div>

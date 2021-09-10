@@ -30,7 +30,7 @@ class CondIndTest():
         Must be in {None, 'y','x','z','xy','xz','yz','xyz'}
         Masking mode: Indicators for which variables in the dependence measure
         I(X; Y | Z) the samples should be masked. If None, the mask is not used. 
-        Explained in [1]_.
+        Explained in tutorial on masking and missing values.
 
     significance : str, optional (default: 'analytic')
         Type of significance test to use. In this package 'analytic',
@@ -135,7 +135,7 @@ class CondIndTest():
             Must be in {None, 'y','x','z','xy','xz','yz','xyz'}
             Masking mode: Indicators for which variables in the dependence measure
             I(X; Y | Z) the samples should be masked. If None, the mask is not used. 
-            Explained in [1]_.
+            Explained in tutorial on masking and missing values.
         """
         # Set the mask type
         self.mask_type = mask_type
@@ -184,7 +184,7 @@ class CondIndTest():
             Must be in {None, 'y','x','z','xy','xz','yz','xyz'}
             Masking mode: Indicators for which variables in the dependence measure
             I(X; Y | Z) the samples should be masked. If None, the mask is not used. 
-            Explained in [1]_.
+            Explained in tutorial on masking and missing values.
         """
         if self.mask_type is not None:
             mask_set = set(self.mask_type) - set(['x', 'y', 'z'])

@@ -138,8 +138,7 @@ class DataFrame():
         mask_type : {None, 'y','x','z','xy','xz','yz','xyz'}
             Masking mode: Indicators for which variables in the dependence
             measure I(X; Y | Z) the samples should be masked. If None, the mask
-            is not used.
-            Explained in [1]_.
+            is not used. Explained in tutorial on masking and missing values.
         return_cleaned_xyz : bool, optional (default: False)
             Whether to return cleaned X,Y,Z, where possible duplicates are
             removed.
@@ -328,8 +327,7 @@ class DataFrame():
         mask_type : {'y','x','z','xy','xz','yz','xyz'}
             Masking mode: Indicators for which variables in the dependence
             measure I(X; Y | Z) the samples should be masked. If None, the mask
-            is not used.
-            Explained in [1]_.
+            is not used. Explained in tutorial on masking and missing values.
         """
         indt = " " * 12
         print(indt + "Constructed array of shape %s from"%str(array.shape) +

@@ -5,13 +5,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>tigramite.data_processing &#8212; Tigramite 4.2 documentation</title>
+    <title>tigramite.data_processing &#8212; Tigramite 4.3 documentation</title>
     <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '4.2',
+        VERSION:     '4.3',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -34,7 +34,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 4.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 4.3 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
       </ul>
     </div>
@@ -72,6 +72,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">scipy.sparse</span>
 <span class="kn">import</span> <span class="nn">scipy.sparse.linalg</span>
+<span class="kn">from</span> <span class="nn">numba</span> <span class="k">import</span> <span class="n">jit</span>
 
 <div class="viewcode-block" id="DataFrame"><a class="viewcode-back" href="../../index.html#tigramite.data_processing.DataFrame">[docs]</a><span class="k">class</span> <span class="nc">DataFrame</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;Data object containing time series array and optional mask.</span>
@@ -129,6 +130,9 @@
         <span class="c1"># if np.isnan(data).sum() != 0:</span>
         <span class="c1">#     raise ValueError(&quot;NaNs in the data&quot;)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_mask</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="o">=</span> <span class="n">T</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="n">N</span>
 
         <span class="c1"># If PCMCI.run_bootstrap_of is called, then the</span>
         <span class="c1"># bootstrap random draw can be set here</span>
@@ -192,11 +196,10 @@
 <span class="sd">            Optional mask array, must be of same shape as data.  If it is set,</span>
 <span class="sd">            then it overrides the self.mask assigned to the dataframe. If it is</span>
 <span class="sd">            None, then the self.mask is used, if it exists.</span>
-<span class="sd">        mask_type : {&#39;y&#39;,&#39;x&#39;,&#39;z&#39;,&#39;xy&#39;,&#39;xz&#39;,&#39;yz&#39;,&#39;xyz&#39;}</span>
+<span class="sd">        mask_type : {None, &#39;y&#39;,&#39;x&#39;,&#39;z&#39;,&#39;xy&#39;,&#39;xz&#39;,&#39;yz&#39;,&#39;xyz&#39;}</span>
 <span class="sd">            Masking mode: Indicators for which variables in the dependence</span>
-<span class="sd">            measure I(X; Y | Z) the samples should be masked. If None, &#39;y&#39; is</span>
-<span class="sd">            used, which excludes all time slices containing masked samples in Y.</span>
-<span class="sd">            Explained in [1]_.</span>
+<span class="sd">            measure I(X; Y | Z) the samples should be masked. If None, the mask</span>
+<span class="sd">            is not used. Explained in tutorial on masking and missing values.</span>
 <span class="sd">        return_cleaned_xyz : bool, optional (default: False)</span>
 <span class="sd">            Whether to return cleaned X,Y,Z, where possible duplicates are</span>
 <span class="sd">            removed.</span>
@@ -384,16 +387,15 @@
 <span class="sd">            Supplement of [1]_.</span>
 <span class="sd">        mask_type : {&#39;y&#39;,&#39;x&#39;,&#39;z&#39;,&#39;xy&#39;,&#39;xz&#39;,&#39;yz&#39;,&#39;xyz&#39;}</span>
 <span class="sd">            Masking mode: Indicators for which variables in the dependence</span>
-<span class="sd">            measure I(X; Y | Z) the samples should be masked. If None, &#39;y&#39; is</span>
-<span class="sd">            used, which excludes all time slices containing masked samples in Y.</span>
-<span class="sd">            Explained in [1]_.</span>
+<span class="sd">            measure I(X; Y | Z) the samples should be masked. If None, the mask</span>
+<span class="sd">            is not used. Explained in tutorial on masking and missing values.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">indt</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="mi">12</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">indt</span> <span class="o">+</span> <span class="s2">&quot;Constructed array of shape </span><span class="si">%s</span><span class="s2"> from&quot;</span><span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span>
               <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">indt</span> <span class="o">+</span> <span class="s2">&quot;X = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="o">+</span>
               <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">indt</span> <span class="o">+</span> <span class="s2">&quot;Y = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span> <span class="o">+</span>
               <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">indt</span> <span class="o">+</span> <span class="s2">&quot;Z = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">Z</span><span class="p">))</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">mask_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">indt</span><span class="o">+</span><span class="s2">&quot;with masked samples in </span><span class="si">%s</span><span class="s2"> removed&quot;</span> <span class="o">%</span> <span class="n">mask_type</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">indt</span><span class="o">+</span><span class="s2">&quot;with missing values = </span><span class="si">%s</span><span class="s2"> removed&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span><span class="p">)</span></div></div>
@@ -583,6 +585,38 @@
 
     <span class="k">return</span> <span class="p">(</span><span class="n">bindata</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(),</span> <span class="n">T</span><span class="p">)</span></div>
 
+<span class="nd">@jit</span>
+<span class="k">def</span> <span class="nf">_get_patterns</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">array_mask</span><span class="p">,</span> <span class="n">patt</span><span class="p">,</span> <span class="n">patt_mask</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">fac</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+
+    <span class="n">start</span> <span class="o">=</span> <span class="n">step</span> <span class="o">*</span> <span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">ave</span> <span class="o">=</span> <span class="mf">0.</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+                <span class="n">tau</span> <span class="o">=</span> <span class="n">k</span> <span class="o">*</span> <span class="n">step</span>
+                <span class="n">v</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">t</span> <span class="o">-</span> <span class="n">tau</span><span class="p">,</span> <span class="n">n</span><span class="p">]</span>
+                <span class="n">ave</span> <span class="o">+=</span> <span class="n">v</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                <span class="n">mask</span> <span class="o">*=</span> <span class="n">array_mask</span><span class="p">[</span><span class="n">t</span> <span class="o">-</span> <span class="n">tau</span><span class="p">,</span> <span class="n">n</span><span class="p">]</span>
+            <span class="n">ave</span> <span class="o">/=</span> <span class="n">dim</span>
+            <span class="n">var</span> <span class="o">=</span> <span class="mf">0.</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+                <span class="n">var</span> <span class="o">+=</span> <span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">-</span> <span class="n">ave</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="n">var</span> <span class="o">/=</span> <span class="n">dim</span>
+            <span class="n">weights</span><span class="p">[</span><span class="n">t</span> <span class="o">-</span> <span class="n">start</span><span class="p">,</span> <span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">var</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+                        <span class="n">p</span> <span class="o">+=</span> <span class="n">fac</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">patt</span><span class="p">[</span><span class="n">t</span> <span class="o">-</span> <span class="n">start</span><span class="p">,</span> <span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">p</span>
+            <span class="n">patt_mask</span><span class="p">[</span><span class="n">t</span> <span class="o">-</span> <span class="n">start</span><span class="p">,</span> <span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">mask</span>
+
+    <span class="k">return</span> <span class="n">patt</span><span class="p">,</span> <span class="n">patt_mask</span><span class="p">,</span> <span class="n">weights</span>
 
 <div class="viewcode-block" id="ordinal_patt_array"><a class="viewcode-back" href="../../index.html#tigramite.data_processing.ordinal_patt_array">[docs]</a><span class="k">def</span> <span class="nf">ordinal_patt_array</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">array_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                         <span class="n">weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
@@ -664,11 +698,7 @@
     <span class="c1"># _get_patterns_cython assumes mask=0 to be a masked value</span>
     <span class="n">array_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">array_mask</span> <span class="o">==</span> <span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
 
-    <span class="p">(</span><span class="n">patt</span><span class="p">,</span> <span class="n">patt_mask</span><span class="p">,</span> <span class="n">weights_array</span><span class="p">)</span> <span class="o">=</span> \
-            <span class="n">tigramite_cython_code</span><span class="o">.</span><span class="n">_get_patterns_cython</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">array_mask</span><span class="p">,</span>
-                                                       <span class="n">patt</span><span class="p">,</span> <span class="n">patt_mask</span><span class="p">,</span>
-                                                       <span class="n">weights_array</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span>
-                                                       <span class="n">step</span><span class="p">,</span> <span class="n">fac</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span>
+    <span class="p">(</span><span class="n">patt</span><span class="p">,</span> <span class="n">patt_mask</span><span class="p">,</span> <span class="n">weights_array</span><span class="p">)</span> <span class="o">=</span> <span class="n">_get_patterns</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">array_mask</span><span class="p">,</span> <span class="n">patt</span><span class="p">,</span> <span class="n">patt_mask</span><span class="p">,</span> <span class="n">weights_array</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">fac</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span>
 
     <span class="n">weights_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">weights_array</span><span class="p">)</span>
     <span class="n">patt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">patt</span><span class="p">)</span>
@@ -1508,7 +1538,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 4.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 4.3 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
       </ul>
     </div>

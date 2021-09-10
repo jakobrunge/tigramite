@@ -46,8 +46,7 @@ class Models():
     mask_type : {None, 'y','x','z','xy','xz','yz','xyz'}
         Masking mode: Indicators for which variables in the dependence
         measure I(X; Y | Z) the samples should be masked. If None, the mask
-        is not used.
-        Explained in [1]_.
+        is not used. Explained in tutorial on masking and missing values.
     verbosity : int, optional (default: 0)
         Level of verbosity.
     """
@@ -479,8 +478,7 @@ class LinearMediation(Models):
     mask_type : {None, 'y','x','z','xy','xz','yz','xyz'}
         Masking mode: Indicators for which variables in the dependence
         measure I(X; Y | Z) the samples should be masked. If None, the mask
-        is not used.
-        Explained in [1]_.
+        is not used. Explained in tutorial on masking and missing values.
     verbosity : int, optional (default: 0)
         Level of verbosity.
     """

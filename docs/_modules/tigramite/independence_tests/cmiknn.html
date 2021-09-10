@@ -5,13 +5,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>tigramite.independence_tests.cmiknn &#8212; Tigramite 4.2 documentation</title>
+    <title>tigramite.independence_tests.cmiknn &#8212; Tigramite 4.3 documentation</title>
     <link rel="stylesheet" href="../../../_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '4.2',
+        VERSION:     '4.3',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -34,7 +34,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">Tigramite 4.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Tigramite 4.3 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
       </ul>
     </div>
@@ -66,15 +66,10 @@
 <span class="c1"># License: GNU General Public License v3.0</span>
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
-<span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">special</span><span class="p">,</span> <span class="n">stats</span><span class="p">,</span> <span class="n">spatial</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">special</span><span class="p">,</span> <span class="n">spatial</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-
 <span class="kn">from</span> <span class="nn">.independence_tests_base</span> <span class="k">import</span> <span class="n">CondIndTest</span>
-
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">tigramite</span> <span class="k">import</span> <span class="n">tigramite_cython_code</span>
-<span class="k">except</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Could not import packages for CMIknn and GPDC estimation&quot;</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">numba</span> <span class="k">import</span> <span class="n">jit</span>
 
 
 <div class="viewcode-block" id="CMIknn"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.CMIknn">[docs]</a><span class="k">class</span> <span class="nc">CMIknn</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
@@ -167,7 +162,7 @@
                  <span class="n">shuffle_neighbors</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
                  <span class="n">significance</span><span class="o">=</span><span class="s1">&#39;shuffle_test&#39;</span><span class="p">,</span>
                  <span class="n">transform</span><span class="o">=</span><span class="s1">&#39;ranks&#39;</span><span class="p">,</span>
-                 <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">workers</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
                  <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="c1"># Set the member variables</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">knn</span> <span class="o">=</span> <span class="n">knn</span>
@@ -177,7 +172,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">two_sided</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">residual_based</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">recycle_residuals</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span> <span class="o">=</span> <span class="n">n_jobs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">workers</span> <span class="o">=</span> <span class="n">workers</span>
         <span class="c1"># Call the parent constructor</span>
         <span class="n">CondIndTest</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">significance</span><span class="o">=</span><span class="n">significance</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="c1"># Print some information about construction</span>
@@ -188,6 +183,7 @@
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;knn = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">knn</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;shuffle_neighbors = </span><span class="si">%d</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">shuffle_neighbors</span><span class="p">)</span>
 
+    <span class="nd">@jit</span>
     <span class="k">def</span> <span class="nf">_get_nearest_neighbors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">knn</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns nearest neighbors according to Frenzel and Pompe (2007).</span>
 
@@ -237,25 +233,36 @@
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span> <span class="o">==</span> <span class="s1">&#39;ranks&#39;</span><span class="p">:</span>
             <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
 
+        <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">tree_xyz</span> <span class="o">=</span> <span class="n">spatial</span><span class="o">.</span><span class="n">cKDTree</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+        <span class="n">epsarray</span> <span class="o">=</span> <span class="n">tree_xyz</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="p">[</span><span class="n">knn</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="n">p</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
+                                  <span class="n">eps</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">workers</span><span class="p">)[</span><span class="mi">0</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
 
-        <span class="c1"># Use cKDTree to get distances eps to the k-th nearest neighbors for</span>
-        <span class="c1"># every sample in joint space XYZ with maximum norm</span>
-        <span class="n">tree_xyz</span> <span class="o">=</span> <span class="n">spatial</span><span class="o">.</span><span class="n">cKDTree</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
-        <span class="n">epsarray</span> <span class="o">=</span> <span class="n">tree_xyz</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">knn</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
-                                  <span class="n">eps</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span><span class="p">)[</span><span class="mi">0</span><span class="p">][:,</span> <span class="n">knn</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+        <span class="c1"># To search neighbors &lt; eps</span>
+        <span class="n">epsarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">epsarray</span><span class="p">,</span> <span class="mf">0.99999</span><span class="p">)</span>
 
-        <span class="c1"># Prepare for fast cython access</span>
-        <span class="n">dim_x</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="n">dim_y</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">dim_x</span><span class="p">)</span>
+        <span class="c1"># Subsample indices</span>
+        <span class="n">x_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">y_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">z_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
-        <span class="n">k_xz</span><span class="p">,</span> <span class="n">k_yz</span><span class="p">,</span> <span class="n">k_z</span> <span class="o">=</span> \
-                <span class="n">tigramite_cython_code</span><span class="o">.</span><span class="n">_get_neighbors_within_eps_cython</span><span class="p">(</span><span class="n">array</span><span class="p">,</span>
-                                                                       <span class="n">T</span><span class="p">,</span>
-                                                                       <span class="n">dim_x</span><span class="p">,</span>
-                                                                       <span class="n">dim_y</span><span class="p">,</span>
-                                                                       <span class="n">epsarray</span><span class="p">,</span>
-                                                                       <span class="n">knn</span><span class="p">,</span>
-                                                                       <span class="n">dim</span><span class="p">)</span>
+        <span class="c1"># Find nearest neighbors in subspaces</span>
+        <span class="n">xz</span> <span class="o">=</span> <span class="n">array</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">x_indices</span><span class="p">,</span> <span class="n">z_indices</span><span class="p">))]</span>
+        <span class="n">tree_xz</span> <span class="o">=</span> <span class="n">spatial</span><span class="o">.</span><span class="n">cKDTree</span><span class="p">(</span><span class="n">xz</span><span class="p">)</span>
+        <span class="n">k_xz</span> <span class="o">=</span> <span class="n">tree_xz</span><span class="o">.</span><span class="n">query_ball_point</span><span class="p">(</span><span class="n">xz</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">epsarray</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">workers</span><span class="p">,</span> <span class="n">return_length</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">yz</span> <span class="o">=</span> <span class="n">array</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">y_indices</span><span class="p">,</span> <span class="n">z_indices</span><span class="p">))]</span>
+        <span class="n">tree_yz</span> <span class="o">=</span> <span class="n">spatial</span><span class="o">.</span><span class="n">cKDTree</span><span class="p">(</span><span class="n">yz</span><span class="p">)</span>
+        <span class="n">k_yz</span> <span class="o">=</span> <span class="n">tree_yz</span><span class="o">.</span><span class="n">query_ball_point</span><span class="p">(</span><span class="n">yz</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">epsarray</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">workers</span><span class="p">,</span> <span class="n">return_length</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">z_indices</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">array</span><span class="p">[:,</span> <span class="n">z_indices</span><span class="p">]</span>
+            <span class="n">tree_z</span> <span class="o">=</span> <span class="n">spatial</span><span class="o">.</span><span class="n">cKDTree</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+            <span class="n">k_z</span> <span class="o">=</span> <span class="n">tree_z</span><span class="o">.</span><span class="n">query_ball_point</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">epsarray</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">workers</span><span class="p">,</span> <span class="n">return_length</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Number of neighbors is T when z is empty.</span>
+            <span class="n">k_z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="n">k_xz</span><span class="p">,</span> <span class="n">k_yz</span><span class="p">,</span> <span class="n">k_z</span>
 
 <div class="viewcode-block" id="CMIknn.get_dependence_measure"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.CMIknn.get_dependence_measure">[docs]</a>    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">):</span>
@@ -353,14 +360,13 @@
                 <span class="c1"># Generate random order in which to go through indices loop in</span>
                 <span class="c1"># next step</span>
                 <span class="n">order</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
-                <span class="c1"># print(order[:5])</span>
+
                 <span class="c1"># Shuffle neighbor indices for each sample index</span>
-                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">T</span><span class="p">):</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">neighbors</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="n">neighbors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="o">.</span><span class="n">permuted</span><span class="p">(</span><span class="n">neighbors</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
                 <span class="c1"># Select a series of neighbor indices that contains as few as</span>
                 <span class="c1"># possible duplicates</span>
-                <span class="n">restricted_permutation</span> <span class="o">=</span> \
-                    <span class="n">tigramite_cython_code</span><span class="o">.</span><span class="n">_get_restricted_permutation_cython</span><span class="p">(</span>
+                <span class="n">restricted_permutation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_restricted_permutation</span><span class="p">(</span>
                         <span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">,</span>
                         <span class="n">shuffle_neighbors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shuffle_neighbors</span><span class="p">,</span>
                         <span class="n">neighbors</span><span class="o">=</span><span class="n">neighbors</span><span class="p">,</span>
@@ -381,11 +387,11 @@
                                            <span class="n">sig_blocklength</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sig_blocklength</span><span class="p">,</span>
                                            <span class="n">verbosity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
 
-        <span class="c1"># Sort</span>
-        <span class="n">null_dist</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
         <span class="n">pval</span> <span class="o">=</span> <span class="p">(</span><span class="n">null_dist</span> <span class="o">&gt;=</span> <span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">return_null_dist</span><span class="p">:</span>
+            <span class="c1"># Sort</span>
+            <span class="n">null_dist</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
             <span class="k">return</span> <span class="n">pval</span><span class="p">,</span> <span class="n">null_dist</span>
         <span class="k">return</span> <span class="n">pval</span></div>
 
@@ -455,8 +461,8 @@
 
         <span class="n">x_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fastCopyAndTranspose</span><span class="p">(</span><span class="n">array</span><span class="p">[</span><span class="n">x_indices</span><span class="p">,</span> <span class="p">:])</span>
         <span class="n">tree_xyz</span> <span class="o">=</span> <span class="n">spatial</span><span class="o">.</span><span class="n">cKDTree</span><span class="p">(</span><span class="n">x_array</span><span class="p">)</span>
-        <span class="n">epsarray</span> <span class="o">=</span> <span class="n">tree_xyz</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">x_array</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">knn_here</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
-                                  <span class="n">eps</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span><span class="p">)[</span><span class="mi">0</span><span class="p">][:,</span> <span class="n">knn_here</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+        <span class="n">epsarray</span> <span class="o">=</span> <span class="n">tree_xyz</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">x_array</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="p">[</span><span class="n">knn_here</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="n">p</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
+                                  <span class="n">eps</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">workers</span><span class="p">)[</span><span class="mi">0</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
 
         <span class="n">h_x</span> <span class="o">=</span> <span class="o">-</span> <span class="n">special</span><span class="o">.</span><span class="n">digamma</span><span class="p">(</span><span class="n">knn_here</span><span class="p">)</span> <span class="o">+</span> <span class="n">special</span><span class="o">.</span><span class="n">digamma</span><span class="p">(</span><span class="n">T</span><span class="p">)</span> <span class="o">+</span> <span class="n">dim_x</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">2.</span><span class="o">*</span><span class="n">epsarray</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 
@@ -470,7 +476,27 @@
 
         <span class="n">h_x_y</span> <span class="o">=</span> <span class="n">h_x</span> <span class="o">-</span> <span class="n">i_xy</span>
 
-        <span class="k">return</span> <span class="n">h_x_y</span></div></div>
+        <span class="k">return</span> <span class="n">h_x_y</span></div>
+
+
+    <span class="nd">@jit</span>
+    <span class="k">def</span> <span class="nf">get_restricted_permutation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">shuffle_neighbors</span><span class="p">,</span> <span class="n">neighbors</span><span class="p">,</span> <span class="n">order</span><span class="p">):</span>
+
+        <span class="n">restricted_permutation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
+        <span class="n">used</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">sample_index</span> <span class="ow">in</span> <span class="n">order</span><span class="p">:</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">use</span> <span class="o">=</span> <span class="n">neighbors</span><span class="p">[</span><span class="n">sample_index</span><span class="p">,</span> <span class="n">m</span><span class="p">]</span>
+
+            <span class="k">while</span> <span class="p">((</span><span class="n">use</span> <span class="ow">in</span> <span class="n">used</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">m</span> <span class="o">&lt;</span> <span class="n">shuffle_neighbors</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)):</span>
+                <span class="n">m</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">use</span> <span class="o">=</span> <span class="n">neighbors</span><span class="p">[</span><span class="n">sample_index</span><span class="p">,</span> <span class="n">m</span><span class="p">]</span>
+
+            <span class="n">restricted_permutation</span><span class="p">[</span><span class="n">sample_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">use</span>
+            <span class="n">used</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">used</span><span class="p">,</span> <span class="n">use</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">restricted_permutation</span></div>
 </pre></div>
 
           </div>
@@ -487,7 +513,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">Tigramite 4.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Tigramite 4.3 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
       </ul>
     </div>

@@ -5,13 +5,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>tigramite.models &#8212; Tigramite 4.2 documentation</title>
+    <title>tigramite.models &#8212; Tigramite 4.3 documentation</title>
     <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '4.2',
+        VERSION:     '4.3',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -34,7 +34,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 4.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 4.3 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
       </ul>
     </div>
@@ -104,11 +104,10 @@
 <span class="sd">        Used to transform data prior to fitting. For example,</span>
 <span class="sd">        sklearn.preprocessing.StandardScaler for simple standardization. The</span>
 <span class="sd">        fitted parameters are stored.</span>
-<span class="sd">    mask_type : {&#39;y&#39;,&#39;x&#39;,&#39;z&#39;,&#39;xy&#39;,&#39;xz&#39;,&#39;yz&#39;,&#39;xyz&#39;}</span>
-<span class="sd">        Masking mode: Indicators for which variables in the dependence measure</span>
-<span class="sd">        I(X; Y | Z) the samples should be masked. If None, &#39;y&#39; is used, which</span>
-<span class="sd">        excludes all time slices containing masked samples in Y. Explained in</span>
-<span class="sd">        [1]_.</span>
+<span class="sd">    mask_type : {None, &#39;y&#39;,&#39;x&#39;,&#39;z&#39;,&#39;xy&#39;,&#39;xz&#39;,&#39;yz&#39;,&#39;xyz&#39;}</span>
+<span class="sd">        Masking mode: Indicators for which variables in the dependence</span>
+<span class="sd">        measure I(X; Y | Z) the samples should be masked. If None, the mask</span>
+<span class="sd">        is not used. Explained in tutorial on masking and missing values.</span>
 <span class="sd">    verbosity : int, optional (default: 0)</span>
 <span class="sd">        Level of verbosity.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -380,7 +379,7 @@
             <span class="k">if</span> <span class="n">all_parents</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
                 <span class="n">this_parent_lag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">all_parents</span><span class="p">[</span><span class="n">j</span><span class="p">])[:,</span> <span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
                 <span class="n">max_parents_lag</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_parents_lag</span><span class="p">,</span> <span class="n">this_parent_lag</span><span class="p">)</span>
-        <span class="c1"># Set the default tau max and check if it shoudl be overwritten</span>
+        <span class="c1"># Set the default tau_max and check if it should be overwritten</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">=</span> <span class="n">max_parents_lag</span>
         <span class="k">if</span> <span class="n">tau_max</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">=</span> <span class="n">tau_max</span>
@@ -537,11 +536,10 @@
 <span class="sd">        Used to transform data prior to fitting. For example,</span>
 <span class="sd">        sklearn.preprocessing.StandardScaler for simple standardization. The</span>
 <span class="sd">        fitted parameters are stored.</span>
-<span class="sd">    mask_type : {&#39;y&#39;,&#39;x&#39;,&#39;z&#39;,&#39;xy&#39;,&#39;xz&#39;,&#39;yz&#39;,&#39;xyz&#39;}</span>
-<span class="sd">        Masking mode: Indicators for which variables in the dependence measure</span>
-<span class="sd">        I(X; Y | Z) the samples should be masked. If None, &#39;y&#39; is used, which</span>
-<span class="sd">        excludes all time slices containing masked samples in Y. Explained in</span>
-<span class="sd">        [1]_.</span>
+<span class="sd">    mask_type : {None, &#39;y&#39;,&#39;x&#39;,&#39;z&#39;,&#39;xy&#39;,&#39;xz&#39;,&#39;yz&#39;,&#39;xyz&#39;}</span>
+<span class="sd">        Masking mode: Indicators for which variables in the dependence</span>
+<span class="sd">        measure I(X; Y | Z) the samples should be masked. If None, the mask</span>
+<span class="sd">        is not used. Explained in tutorial on masking and missing values.</span>
 <span class="sd">    verbosity : int, optional (default: 0)</span>
 <span class="sd">        Level of verbosity.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -589,7 +587,9 @@
                 <span class="n">var</span><span class="p">,</span> <span class="n">lag</span> <span class="o">=</span> <span class="n">parent</span>
                 <span class="k">if</span> <span class="n">lag</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;all_parents cannot contain &quot;</span>
-                                     <span class="s2">&quot;contemporaneous links. Remove these.&quot;</span><span class="p">)</span>
+                                     <span class="s2">&quot;contemporaneous links for the LinearMediation&quot;</span>
+                                     <span class="s2">&quot; class. Use the optimal causal effects &quot;</span>
+                                     <span class="s2">&quot;class.&quot;</span><span class="p">)</span>
 
         <span class="c1"># Fit the model using the base class</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fit_results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_fit</span><span class="p">(</span><span class="n">all_parents</span><span class="o">=</span><span class="n">all_parents</span><span class="p">,</span>
@@ -1425,8 +1425,14 @@
             <span class="c1"># Check if we&#39;ve passed a new dataframe object</span>
             <span class="n">test_array</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">if</span> <span class="n">new_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">new_data</span><span class="o">.</span><span class="n">mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="c1"># if no mask is supplied, use the same mask as for the fitted array</span>
+                    <span class="n">new_data_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_mask</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">new_data_mask</span> <span class="o">=</span> <span class="n">new_data</span><span class="o">.</span><span class="n">mask</span>
                 <span class="n">test_array</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">new_data</span><span class="o">.</span><span class="n">construct_array</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span>
                                                          <span class="n">tau_max</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span><span class="p">,</span>
+                                                         <span class="n">mask</span><span class="o">=</span><span class="n">new_data_mask</span><span class="p">,</span>
                                                          <span class="n">mask_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span><span class="p">,</span>
                                                          <span class="n">cut_off</span><span class="o">=</span><span class="n">cut_off</span><span class="p">,</span>
                                                          <span class="n">verbosity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
@@ -1467,6 +1473,7 @@
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
    
     <span class="kn">import</span> <span class="nn">tigramite.data_processing</span> <span class="k">as</span> <span class="nn">pp</span>
+    <span class="kn">from</span> <span class="nn">tigramite.independence_tests</span> <span class="k">import</span> <span class="n">ParCorr</span>
 
     <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
 
@@ -1479,12 +1486,12 @@
     <span class="n">data</span><span class="p">,</span> <span class="n">nonstat</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">structural_causal_process</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
     <span class="n">true_parents</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">_get_true_parent_neighbor_dict</span><span class="p">(</span><span class="n">links</span><span class="p">)</span>
     <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
- 
-    <span class="n">med</span> <span class="o">=</span> <span class="n">Models</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">sklearn</span><span class="o">.</span><span class="n">linear_model</span><span class="o">.</span><span class="n">LinearRegression</span><span class="p">(),</span> <span class="n">data_transform</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-    <span class="c1"># Fit the model</span>
-    <span class="n">med</span><span class="o">.</span><span class="n">get_fit</span><span class="p">(</span><span class="n">all_parents</span><span class="o">=</span><span class="n">true_parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="n">med</span><span class="o">.</span><span class="n">get_val_matrix</span><span class="p">())</span>
+    <span class="c1"># med = Models(dataframe=dataframe, model=sklearn.linear_model.LinearRegression(), data_transform=None)</span>
+    <span class="c1"># # Fit the model</span>
+    <span class="c1"># med.get_fit(all_parents=true_parents, tau_max=3)</span>
+
+    <span class="c1"># print(med.get_val_matrix())</span>
 
     <span class="c1"># for j, i, tau, coeff in pp._iter_coeffs(links):</span>
     <span class="c1">#     print(i, j, tau, coeff, med.get_coeff(i=i, tau=tau, j=j))</span>
@@ -1492,6 +1499,19 @@
     <span class="c1"># for causal_coeff in [med.get_ce(i=0, tau=-2, j=2),</span>
     <span class="c1">#                      med.get_mce(i=0, tau=-2, j=2, k=1)]:</span>
     <span class="c1">#     print(causal_coeff)</span>
+
+
+    <span class="n">pred</span> <span class="o">=</span> <span class="n">Prediction</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span>
+            <span class="n">cond_ind_test</span><span class="o">=</span><span class="n">ParCorr</span><span class="p">(),</span>   <span class="c1">#CMIknn ParCorr</span>
+            <span class="n">prediction_model</span> <span class="o">=</span> <span class="n">sklearn</span><span class="o">.</span><span class="n">linear_model</span><span class="o">.</span><span class="n">LinearRegression</span><span class="p">(),</span>
+    <span class="c1">#         prediction_model = sklearn.gaussian_process.GaussianProcessRegressor(),</span>
+            <span class="c1"># prediction_model = sklearn.neighbors.KNeighborsRegressor(),</span>
+        <span class="n">data_transform</span><span class="o">=</span><span class="n">sklearn</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">StandardScaler</span><span class="p">(),</span>
+        <span class="c1"># train_indices= range(int(0.8*T)),</span>
+        <span class="c1"># test_indices= range(int(0.8*T), T),</span>
+        <span class="n">verbosity</span><span class="o">=</span><span class="mi">1</span>
+        <span class="p">)</span>
+
 </pre></div>
 
           </div>
@@ -1508,7 +1528,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 4.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 4.3 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
       </ul>
     </div>
