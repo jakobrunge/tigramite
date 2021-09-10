@@ -2,7 +2,6 @@ language: python
 python:
   # We don't actually use the Travis Python since we are using Conda, but this
   # keeps it organized.
-  - "3.6"
   - "3.7"
 install:
   - sudo apt-get update
