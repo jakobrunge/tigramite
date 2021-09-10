@@ -35,7 +35,7 @@ Tigramite is a causal time series analysis python package. It allows to
 
 - PCMCI: J. Runge, P. Nowack, M. Kretschmer, S. Flaxman, D. Sejdinovic, Detecting and quantifying causal associations in large nonlinear time series datasets. Sci. Adv. 5, eaau4996 (2019). https://advances.sciencemag.org/content/5/11/eaau4996
 - PCMCI+: J. Runge (2020): Discovering contemporaneous and lagged causal relations in autocorrelated nonlinear time series datasets. Proceedings of the 36th Conference on Uncertainty in Artificial Intelligence, UAI 2020,Toronto, Canada, 2019, AUAI Press, 2020. http://auai.org/uai2020/proceedings/579_main_paper.pdf
-- Gerhardus, A. & Runge, J. High-recall causal discovery for autocorrelated time series with latent confounders Advances in Neural Information Processing Systems, 2020, 33. https://proceedings.neurips.cc/paper/2020/hash/94e70705efae423efda1088614128d0b-Abstract.html
+- LPCMCI: Gerhardus, A. & Runge, J. High-recall causal discovery for autocorrelated time series with latent confounders Advances in Neural Information Processing Systems, 2020, 33. https://proceedings.neurips.cc/paper/2020/hash/94e70705efae423efda1088614128d0b-Abstract.html
 - Generally: J. Runge (2018): Causal Network Reconstruction from Time Series: From Theoretical Assumptions to Practical Estimation. Chaos: An Interdisciplinary Journal of Nonlinear Science 28 (7): 075310. https://aip.scitation.org/doi/10.1063/1.5025050
 - Nature Communications Perspective paper: https://www.nature.com/articles/s41467-019-10105-3
 - Mediation class: J. Runge et al. (2015): Identifying causal gateways and mediators in complex spatio-temporal systems. Nature Communications, 6, 8502. http://doi.org/10.1038/ncomms9502
@@ -59,16 +59,7 @@ Tigramite is a causal time series analysis python package. It allows to
 
 ## Required python packages
 
-- numpy>=1.17.0
-- scipy>=1.3.0
-- scikit-learn>=0.21   (optional, necessary for GPDC test)
-- matplotlib>=3.4.0 (optional, only for plotting)
-- networkx>=2.4 (optional, only for plotting and mediation)
-- cython>=0.29.12   (optional, necessary for CMIknn)
-- mpi4py>=3.0.3   (optional, necessary for using the parallelized script)
-- dcor>=0.5.3     (optional, necessary for GPDC)
-- gpytorch>=1.4 (optional, necessary for GPDCtorch implementation)
-
+see environment_py3.yml and setup.py
 
 ## Installation
 
@@ -76,9 +67,7 @@ python setup.py install
 
 This will install tigramite in your path.
 
-To use just the ParCorr and CMIsymb independence tests, only numpy and scipy are required. For other independence tests more packages are required:
-
-- CMIknn: cython can optionally be used for compilation, otherwise the provided ``*.c'' file is used 
+To use just the ParCorr, CMIknn, and CMIsymb independence tests, only numpy/numba and scipy are required. For other independence tests more packages are required:
 
 - GPDC: scikit-learn is required for Gaussian Process regression and dcor for distance correlation
 
@@ -94,7 +83,7 @@ You commit to cite above papers in your reports or publications.
 
 ## License
 
-Copyright (C) 2014-2020 Jakob Runge
+Copyright (C) 2014-2022 Jakob Runge
 
 See license.txt for full text.
 
