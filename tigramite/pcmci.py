@@ -142,6 +142,10 @@ class PCMCI():
         self.dataframe = dataframe
         # Set the conditional independence test to be used
         self.cond_ind_test = cond_ind_test
+        if isinstance(self.cond_ind_test, type):
+            raise ValueError("PCMCI requires that cond_ind_test "
+                             "is instantiated, e.g. cond_ind_test =  "
+                             "ParCorr().")
         self.cond_ind_test.set_dataframe(self.dataframe)
         # Set the verbosity for debugging/logging messages
         self.verbosity = verbosity
@@ -203,12 +207,13 @@ class PCMCI():
         _key_set = set(_int_sel_links.keys())
         valid_entries = _key_set == set(range(self.N))
 
-        valid_entries = valid_entries and \
-                        set(var for parents in _int_sel_links.values()
-                            for var, _ in parents).issubset(_vars)
-        valid_entries = valid_entries and \
-                        set(lag for parents in _int_sel_links.values()
-                            for _, lag in parents).issubset(_lags)
+        for link in _int_sel_links.values():
+            if isinstance(link, list) and len(link) == 0:
+                continue
+            for var, lag in link:
+                if var not in _vars or lag not in _lags:
+                    valid_entries = False
+
         if not valid_entries:
             raise ValueError("selected_links"
                              " must be dictionary with keys for all [0,...,N-1]"
@@ -1463,7 +1468,7 @@ class PCMCI():
         link_dict : dict
             Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}
             containing estimated links.
-        link_dict : array, shape [N, N, tau_max+1]
+        link_matrix : array, shape [N, N, tau_max+1]
             Boolean array with True entries for significant links at alpha_level
         """
         warnings.warn("return_significant_parents is DEPRECATED: use "
@@ -1505,7 +1510,7 @@ class PCMCI():
         link_dict : dict
             Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}
             containing estimated links.
-        link_dict : array, shape [N, N, tau_max+1]
+        link_matrix : array, shape [N, N, tau_max+1]
             Boolean array with True entries for significant links at alpha_level
         """
         # Initialize the return value

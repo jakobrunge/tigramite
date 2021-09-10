@@ -55,16 +55,15 @@ def run_pc_stable_parallel(j):
     pcmci_of_j = PCMCI(
         dataframe=dataframe,
         cond_ind_test=cond_ind_test,
-        selected_variables=[j],
         verbosity=verbosity)
 
     # Run PC condition-selection algorithm. Also here further parameters can be
     # specified:
     parents_of_j = pcmci_of_j.run_pc_stable(
-                      selected_links=selected_links,
-                      tau_max=tau_max,
-                      pc_alpha=pc_alpha,
-            )
+        selected_links=selected_links[j],
+        tau_max=tau_max,
+        pc_alpha=pc_alpha,
+    )
 
     # We return also the PCMCI object because it may contain pre-computed 
     # results can be re-used in the MCI step (such as residuals or null
@@ -97,12 +96,12 @@ def run_mci_parallel(j, pcmci_of_j, all_parents):
         matrix[:,j,:].
     """
     results_in_j = pcmci_of_j.run_mci(
-                selected_links=selected_links,
-                tau_min=tau_min,
-                tau_max=tau_max,
-                parents=all_parents,
-                max_conds_px=max_conds_px,
-            )
+        selected_links=selected_links[j],
+        tau_min=tau_min,
+        tau_max=tau_max,
+        parents=all_parents,
+        max_conds_px=max_conds_px,
+    )
 
     return j, results_in_j
 
@@ -146,10 +145,12 @@ max_conds_dim = None
 max_conds_px = None
 
 # Selected links may be used to restricted estimation to given links.
-selected_links = None
+# Used to tell pcmci.run_pc_stable() and pcmci.run_mci() to only search for links into j variable.
+selected_links = {n: {m: [(i, -t) for i in range(N) for \
+                          t in range(tau_min, tau_max)] if m == n else [] for m in range(N)} for n in range(N)}
 
 # Alpha level for MCI tests (just used for printing since all p-values are 
-# stored anyway)
+# stored anyways)
 alpha_level = 0.05
 
 # Verbosity level. Note that slaves will ouput on top of each other.
@@ -216,8 +217,8 @@ if COMM.rank == 0:
         print("\n\n## Resulting condition sets:")
         for j in [var for var in all_parents.keys()]:
             pcmci_objects[j]._print_parents_single(j, all_parents[j],
-                                    pcmci_objects[j].val_min[j], 
-                                    pcmci_objects[j].p_max[j])
+                                                   pcmci_objects[j].val_min[j],
+                                                   None)
 
     if verbosity > -1:
         print("\n##\n## Running Parallelized Tigramite MCI algorithm\n##"
@@ -273,14 +274,13 @@ if COMM.rank == 0:
                             all_results[key] = numpy.ones(results_in_j[key].shape)
                         else:
                             all_results[key] = numpy.zeros(results_in_j[key].shape)
-                        all_results[key][:,j,:] =  results_in_j[key][:,j,:]
+                        all_results[key][:, j, :] = results_in_j[key][:, j, :]
                     else:
-                        all_results[key][:,j,:] =  results_in_j[key][:,j,:]
+                        all_results[key][:, j, :] = results_in_j[key][:, j, :]
 
-
-    p_matrix=all_results['p_matrix']
-    val_matrix=all_results['val_matrix']
-    conf_matrix=all_results['conf_matrix']
+    p_matrix = all_results['p_matrix']
+    val_matrix = all_results['val_matrix']
+    conf_matrix = all_results['conf_matrix']
 
     sig_links = (p_matrix <= alpha_level)
 
@@ -288,8 +288,8 @@ if COMM.rank == 0:
         print("\n## Significant links at alpha = %s:" % alpha_level)
         for j in selected_variables:
 
-            links = dict([((p[0], -p[1] ), numpy.abs(val_matrix[p[0], 
-                            j, abs(p[1])]))
+            links = dict([((p[0], -p[1]), numpy.abs(val_matrix[p[0],
+                                                               j, abs(p[1])]))
                           for p in zip(*numpy.where(sig_links[:, j, :]))])
 
             # Sort by value
@@ -302,7 +302,7 @@ if COMM.rank == 0:
                       "link(s):" % (var_names[j], n_links))
             for p in sorted_links:
                 string += ("\n        (%s %d): pval = %.5f" %
-                           (var_names[p[0]], p[1], 
+                           (var_names[p[0]], p[1],
                             p_matrix[p[0], j, abs(p[1])]))
 
                 string += " | val = %.3f" % (
@@ -310,16 +310,15 @@ if COMM.rank == 0:
 
                 if conf_matrix is not None:
                     string += " | conf = (%.3f, %.3f)" % (
-                        conf_matrix[p[0], j, abs(p[1])][0], 
+                        conf_matrix[p[0], j, abs(p[1])][0],
                         conf_matrix[p[0], j, abs(p[1])][1])
 
-            print (string)
-
+            print(string)
 
     if verbosity > -1:
         print("Pickling to ", file_name)
     file = open(file_name, 'wb')
-    pickle.dump(all_results, file, protocol=-1)        
+    pickle.dump(all_results, file, protocol=-1)
     file.close()
     # PCMCI._print_significant_links(
     #        p_matrix=all_results['p_matrix'],
