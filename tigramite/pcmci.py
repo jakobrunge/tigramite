@@ -85,6 +85,13 @@ class PCMCI():
     of data (continuous or discrete) and its assumed dependency types.
     These are available in ``tigramite.independence_tests``.
 
+    NOTE: MCI test statistic values define a particular measure of causal
+    strength depending on the test statistic used. For example, ParCorr()
+    results in normalized values between -1 and 1. However, if you are 
+    interested in quantifying causal effects, i.e., the effect of
+    hypothetical interventions, you may better look at the causal effect 
+    estimation functionality of Tigramite.
+
     References
     ----------
 
@@ -1693,6 +1700,13 @@ class PCMCI():
         here implemented as ``run_mci``. This step estimates the p-values and
         test statistic values for all links accounting for common drivers,
         indirect links, and autocorrelation.
+
+        NOTE: MCI test statistic values define a particular measure of causal
+        strength depending on the test statistic used. For example, ParCorr()
+        results in normalized values between -1 and 1. However, if you are 
+        interested in quantifying causal effects, i.e., the effect of
+        hypothetical interventions, you may better look at the causal effect 
+        estimation functionality of Tigramite.
 
         PCMCI can be flexibly combined with any kind of conditional
         independence test statistic adapted to the kind of data (continuous
