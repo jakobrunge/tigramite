@@ -48,8 +48,7 @@ class CMIknn(CondIndTest):
     that the estimated CMI values can be slightly negative while CMI is a non-
     negative quantity.
 
-    This method requires the scipy.spatial.cKDTree package and the tigramite
-    cython module.
+    This method requires the scipy.spatial.cKDTree package.
 
     References
     ----------
@@ -78,8 +77,8 @@ class CMIknn(CondIndTest):
         Whether to transform the array beforehand by standardizing
         or transforming to uniform marginals.
 
-    n_jobs : int (optional, default = -1)
-        Number of jobs to schedule for parallel processing. If -1 is given
+    workers : int (optional, default = -1)
+        Number of workers to use for parallel processing. If -1 is given
         all processors are used. Default: 1.
 
     significance : str, optional (default: 'shuffle_test')

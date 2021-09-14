@@ -109,8 +109,7 @@
 <span class="sd">    that the estimated CMI values can be slightly negative while CMI is a non-</span>
 <span class="sd">    negative quantity.</span>
 
-<span class="sd">    This method requires the scipy.spatial.cKDTree package and the tigramite</span>
-<span class="sd">    cython module.</span>
+<span class="sd">    This method requires the scipy.spatial.cKDTree package.</span>
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
@@ -139,8 +138,8 @@
 <span class="sd">        Whether to transform the array beforehand by standardizing</span>
 <span class="sd">        or transforming to uniform marginals.</span>
 
-<span class="sd">    n_jobs : int (optional, default = -1)</span>
-<span class="sd">        Number of jobs to schedule for parallel processing. If -1 is given</span>
+<span class="sd">    workers : int (optional, default = -1)</span>
+<span class="sd">        Number of workers to use for parallel processing. If -1 is given</span>
 <span class="sd">        all processors are used. Default: 1.</span>
 
 <span class="sd">    significance : str, optional (default: &#39;shuffle_test&#39;)</span>

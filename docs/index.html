@@ -176,6 +176,12 @@ conditional independence testing. PCMCI can be flexibly combined with
 any kind of conditional independence test statistic adapted to the kind
 of data (continuous or discrete) and its assumed dependency types.
 These are available in <code class="docutils literal"><span class="pre">tigramite.independence_tests</span></code>.</p>
+<p>NOTE: MCI test statistic values define a particular measure of causal
+strength depending on the test statistic used. For example, ParCorr()
+results in normalized values between -1 and 1. However, if you are
+interested in quantifying causal effects, i.e., the effect of
+hypothetical interventions, you may better look at the causal effect
+estimation functionality of Tigramite.</p>
 <p class="rubric">References</p>
 <table class="docutils footnote" frame="void" id="id3" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
@@ -420,7 +426,7 @@ zero. Note that the link_matrix always contains those.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
 <li><strong>link_dict</strong> (<em>dict</em>) – Dictionary of form {0:[(0, -1), (3, -2), …], 1:[], …}
 containing estimated links.</li>
-<li><strong>link_dict</strong> (<em>array, shape [N, N, tau_max+1]</em>) – Boolean array with True entries for significant links at alpha_level</li>
+<li><strong>link_matrix</strong> (<em>array, shape [N, N, tau_max+1]</em>) – Boolean array with True entries for significant links at alpha_level</li>
 </ul>
 </p>
 </td>
@@ -451,7 +457,7 @@ zero. Note that the link_matrix always contains those.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
 <li><strong>link_dict</strong> (<em>dict</em>) – Dictionary of form {0:[(0, -1), (3, -2), …], 1:[], …}
 containing estimated links.</li>
-<li><strong>link_dict</strong> (<em>array, shape [N, N, tau_max+1]</em>) – Boolean array with True entries for significant links at alpha_level</li>
+<li><strong>link_matrix</strong> (<em>array, shape [N, N, tau_max+1]</em>) – Boolean array with True entries for significant links at alpha_level</li>
 </ul>
 </p>
 </td>
@@ -730,6 +736,12 @@ X^j_t), \tilde{\mathcal{P}}(X^i_{t-\tau})"/></p>
 </div><p>here implemented as <code class="docutils literal"><span class="pre">run_mci</span></code>. This step estimates the p-values and
 test statistic values for all links accounting for common drivers,
 indirect links, and autocorrelation.</p>
+<p>NOTE: MCI test statistic values define a particular measure of causal
+strength depending on the test statistic used. For example, ParCorr()
+results in normalized values between -1 and 1. However, if you are
+interested in quantifying causal effects, i.e., the effect of
+hypothetical interventions, you may better look at the causal effect
+estimation functionality of Tigramite.</p>
 <p>PCMCI can be flexibly combined with any kind of conditional
 independence test statistic adapted to the kind of data (continuous
 or discrete) and its assumed dependency types. These are available in
@@ -1978,8 +1990,7 @@ underlying dependencies are more smoothed and CMI has a larger bias,
 but lower variance, which is more important for significance testing. Note
 that the estimated CMI values can be slightly negative while CMI is a non-
 negative quantity.</p>
-<p>This method requires the scipy.spatial.cKDTree package and the tigramite
-cython module.</p>
+<p>This method requires the scipy.spatial.cKDTree package.</p>
 <p class="rubric">References</p>
 <table class="docutils footnote" frame="void" id="id22" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
@@ -2006,7 +2017,7 @@ point.</li>
 <li><strong>transform</strong> (<em>{'ranks'</em><em>, </em><em>'standardize'</em><em>,  </em><em>'uniform'</em><em>, </em><em>False}</em><em>, </em><em>optional</em>) – (default: ‘ranks’)
 Whether to transform the array beforehand by standardizing
 or transforming to uniform marginals.</li>
-<li><strong>n_jobs</strong> (<em>int</em><em> (</em><em>optional</em><em>, </em><em>default = -1</em><em>)</em>) – Number of jobs to schedule for parallel processing. If -1 is given
+<li><strong>workers</strong> (<em>int</em><em> (</em><em>optional</em><em>, </em><em>default = -1</em><em>)</em>) – Number of workers to use for parallel processing. If -1 is given
 all processors are used. Default: 1.</li>
 <li><strong>significance</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'shuffle_test'</em><em>)</em>) – Type of significance test to use. For CMIknn only ‘fixed_thres’ and
 ‘shuffle_test’ are available.</li>

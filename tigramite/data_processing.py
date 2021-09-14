@@ -593,13 +593,6 @@ def ordinal_patt_array(array, array_mask=None, dim=2, step=1,
     """
     from scipy.misc import factorial
 
-    # Import cython code
-    try:
-        import tigramite.tigramite_cython_code as tigramite_cython_code
-    except ImportError:
-        raise ImportError("Could not import tigramite_cython_code, please"
-                          " compile cython code first as described in Readme.")
-
     array = array.astype('float64')
 
     if array_mask is not None:
@@ -634,7 +627,7 @@ def ordinal_patt_array(array, array_mask=None, dim=2, step=1,
     # larger than 10 are not supported
     fac = factorial(np.arange(10)).astype('int32')
 
-    # _get_patterns_cython assumes mask=0 to be a masked value
+    # _get_patterns assumes mask=0 to be a masked value
     array_mask = (array_mask == False).astype('int32')
 
     (patt, patt_mask, weights_array) = _get_patterns(array, array_mask, patt, patt_mask, weights_array, dim, step, fac, N, T)
@@ -645,9 +638,9 @@ def ordinal_patt_array(array, array_mask=None, dim=2, step=1,
     patt_mask = np.asarray(patt_mask) == False
 
     if weights:
-        return (patt, patt_mask, patt_time, weights_array)
+        return patt, patt_mask, patt_time, weights_array
     else:
-        return (patt, patt_mask, patt_time)
+        return patt, patt_mask, patt_time
 
 
 def quantile_bin_array(data, bins=6):
