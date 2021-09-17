@@ -1588,9 +1588,9 @@ def plot_graph(
 
     Parameters
     ----------
-    link_matrix : bool array-like, optional (default: None)
-        Matrix of significant links. Must be of same shape as val_matrix. Either
-        sig_thres or link_matrix has to be provided.
+    link_matrix : string or bool array-like, optional (default: None)
+        Either string matrix providing graph or bool array providing only adjacencies
+        Must be of same shape as val_matrix. 
     val_matrix : array_like
         Matrix of shape (N, N, tau_max+1) containing test statistic values.
     sig_thres : array-like, optional (default: None)
@@ -2036,9 +2036,9 @@ def plot_time_series_graph(
 
     Parameters
     ----------
-    link_matrix : bool array-like, optional (default: None)
-        Matrix of significant links. Must be of same shape as val_matrix. Either
-        sig_thres or link_matrix has to be provided.
+    link_matrix : string or bool array-like, optional (default: None)
+        Either string matrix providing graph or bool array providing only adjacencies
+        Must be of same shape as val_matrix. 
     val_matrix : array_like
         Matrix of shape (N, N, tau_max+1) containing test statistic values.
     sig_thres : array-like, optional (default: None)

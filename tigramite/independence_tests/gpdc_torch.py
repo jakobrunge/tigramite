@@ -472,8 +472,8 @@ class GPDCtorch(CondIndTest):
 
     GPDC is based on a Gaussian process (GP) regression and a distance
     correlation test on the residuals [2]_. GP is estimated with gpytorch.
-    The distance correlation test is implemented with
-    cython. Here the null distribution is not analytically available, but can be
+    The distance correlation test is implemented with the dcor package available
+    from pip. Here the null distribution is not analytically available, but can be
     precomputed with the function generate_and_save_nulldists(...) which saves a
     \*.npz file containing the null distribution for different sample sizes.
     This file can then be supplied as null_dist_filename.
