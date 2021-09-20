@@ -32,3 +32,5 @@ install:
 script: 
   # Run the tests
   - pytest -v
+success_after:
+  # 111
