@@ -1491,6 +1491,7 @@ class PCMCI():
     def return_significant_links(self,
                                  pq_matrix,
                                  val_matrix,
+                                 graph=None,
                                  alpha_level=0.05,
                                  include_lagzero_links=False):
         """Returns list of significant links as well as a boolean matrix.
@@ -1506,6 +1507,8 @@ class PCMCI():
         val_matrix : array-like
             Matrix of test statistic values. Must be of shape (N, N, tau_max +
             1).
+        graph : array of shape [N, N, tau_max+1]
+            Causal graph, see description above for interpretation.
         alpha_level : float, optional (default: 0.05)
             Significance level.
         include_lagzero_links : bool (default: False)
@@ -1537,8 +1540,12 @@ class PCMCI():
             # Sort by value
             link_dict[j] = sorted(links, key=links.get, reverse=True)
         # Return the significant parents
+        link_matrix = pq_matrix <= alpha_level
+        if graph is not None:
+            graph = graph[link_matrix]
         return {'link_dict': link_dict,
-                'link_matrix': pq_matrix <= alpha_level}
+                'link_matrix': link_matrix,
+                'graph' : graph}
 
     def print_significant_links(self,
                                 p_matrix,
