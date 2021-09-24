@@ -1,31 +1,41 @@
 import numpy as np
 from itertools import product, combinations
-import os
+from copy import deepcopy
 
 class LPCMCI():
     r"""
-    This class implements the LPCMCI algorithm for constraint-based causal discovery on stationary times series with latent confounders and without selection variables, which we introduce in the paper:
+    LPCMCI is an algorithm for causal discovery in large-scale times series that allows for latent confounders and learns lag-specific causal relationships.
 
-    Gerhardus, A. & Runge, J. High-recall causal discovery for autocorrelated time series with latent confounders Advances in Neural Information Processing Systems, 2020, 33. https://proceedings.neurips.cc/paper/2020/hash/94e70705efae423efda1088614128d0b-Abstract.html
+    The algorithm is introduced and explained in:
+    [1] Gerhardus, A. & Runge, J. High-recall causal discovery for autocorrelated time series with latent confounders Advances in Neural Information Processing Systems, 2020, 33. https://proceedings.neurips.cc/paper/2020/hash/94e70705efae423efda1088614128d0b-Abstract.html
 
-    NOTE: This method is still EXPERIMENTAL since the default settings for the hyperparameters of this method are still being fine-tuned. We actually invite feedback on which work best in applications and numerical experiments.
+    NOTE:
+    This method is still EXPERIMENTAL since the default settings of hyperparameters are still being fine-tuned. We actually invite feedback on which work best in applications and numerical experiments.
+
+    The main function, which applies the algorithm, is 'run_lpcmci_experimental'.
 
     Parameters passed to the constructor:
     - dataframe:
         Tigramite dataframe object that contains the the time series dataset \bold{X}
     - cond_ind_test:
         A conditional independence test object that specifies which conditional independence test CI is to be used
+    - verbosity:
+        Controls the verbose output self.run_lpcmci_experimental() and the function it calls.
 
-    Parameters passed to self.run_lpcmci():
-    Note: Some are temporary and might be removed in future versions
+    Parameters passed to self.run_lpcmci_experimental():
+    Note: The default values are still being tuned and some parameters might be removed in the future.
+    - selected_links: dict or None
+        Dictionary of the form {0: [(3, 0), (0, -1), ...], 1:[], ...} that specifys which links are potentially present. All other links are assumed to be absent. If None is passed Iall links are potentially present.
+    - tau_min:
+        The assumed minimum time lag, i.e., links with a lag smaller than tau_min are assumed to be absent.
     - tau_max:
-        The maximum considered time lag tau_max
+        The maximum considered time lag, i.e., the algorithm learns a DPAG on a time window [t-\taumax, t] with \tau_max + 1 time steps. It is *not* assumed that in the underlying time series DAG there are no links with a lag larger than \tau_max.
     - pc_alpha:
-        The significance level \alpha of conditional independence tests
+        The significance level of conditional independence tests
     - n_preliminary_iterations:
-        Determines the number of iterations in the preliminary phase of LPCMCI. In the paper this corresponds to the 'k' in LPCMCI(k)
+        Determines the number of iterations in the preliminary phase of LPCMCI, corresponding to the 'k' in LPCMCI(k) in [1].
     - max_cond_px:
-        Consider a pair of variables (X^i_{t-\tau}, X^j_t) with \tau > 0. In Algorithm S2 (here this is self._run_ancestral_removal_phase()), the algorithm does not test for conditional independence given subsets of apds_t(X^i_{t-\tau}, X^j_t, C(G)) of cardinality higher than max_cond_px. In Algorithm S3 (here this is self._run_non_ancestral_removal_phase()), the algorithm does not test for conditional independence given subsets of napds_t(X^i_{t-\tau}, X^j_t, C(G)) of cardinality higher than max_cond_px.
+        Consider a pair of variables (X^i_{t-\tau}, X^j_t) with \tau > 0. In Algorithm S2 in [1] (here this is self._run_ancestral_removal_phase()), the algorithm does not test for conditional independence given subsets of apds_t(X^i_{t-\tau}, X^j_t, C(G)) of cardinality higher than max_cond_px. In Algorithm S3 in [1] (here this is self._run_non_ancestral_removal_phase()), the algorithm does not test for conditional independence given subsets of napds_t(X^i_{t-\tau}, X^j_t, C(G)) of cardinality higher than max_cond_px.
     - max_p_global:
         Restricts all conditional independence tests to conditioning sets with cardinality smaller or equal to max_p_global
     - max_p_non_ancestral:
@@ -36,7 +46,7 @@ class LPCMCI():
         In Algorithm S3 (here this is self._run_non_ancestral_removal_phase()), the algorithm tests for conditional independence given subsets of the relevant napds_t sets. If for a given link the set napds_t(X^j_t, X^i_{t-\tau}, C(G)) has more than max_pds_set many elements (or, if the link is also tested in the opposite directed, if napds_t(X^i_{t-\tau}, X^j_t, C(G)) has more than max_pds_set elements), this link is not tested.
     - prelim_with_collider_rules:
         If True: As in pseudocode
-        If False: Line 22 of Algorithm S2 is replaced by line 18 of Algorithm S2 when Algorithm S2 is called from the preliminary phase (not in the last applicatin of Algorithm S2 directly before Algorithm S3 is applied)
+        If False: Line 22 of Algorithm S2 in [1] is replaced by line 18 of Algorithm S2 when Algorithm S2 is called from the preliminary phase (not in the last application of Algorithm S2 directly before Algorithm S3 is applied)
     - parents_of_lagged:
         If True: As in pseudocode
         If False: The default conditioning set is pa(X^j_t, C(G)) rather than pa({X^j_t, X^i_{t-\tau}, C(G)) for tau > 0
@@ -44,48 +54,51 @@ class LPCMCI():
         If True, stop after the preliminary phase. Can be used for detailed performance analysis
     - break_once_separated:
         If True: As in pseudocode
-        If False: The break commands are removed from Algorithms S2 and S3
+        If False: The break commands are removed from Algorithms S2 and S3 in in [1]
     - no_non_ancestral_phase:
         If True, do not execute Algorithm S3. Can be used for detailed performance analysis
     - use_a_pds_t_for_majority:
         If True: As in pseudocode
         If False: The search for separating sets instructed by the majority rule is made given subsets adj(X^j_t, C(G)) rather than subsets of apds_t(X^j_t, X^i_{t-\tau}, C(G))
     - orient_contemp:
-        If orient_contemp == 1: As in pseudocode of Algorithm S2
+        If orient_contemp == 1: As in pseudocode of Algorithm S2 in [1]
         If orient_contemp == 2: Also orient contemporaneous links in line 18 of Algorithm S2
         If orient_comtemp == 0: Also not orient contemporaneous links in line 22 of Algorithm S2
     - update_middle_marks:
-        If True: As in pseudoce of Algorithms S2 and S3
+        If True: As in pseudoce of Algorithms S2 and S3 in [1]
         If False: The MMR rule is not applied
     - prelim_rules:
-        If prelim_rules == 1: As in pseudocode of Algorithm S2
+        If prelim_rules == 1: As in pseudocode of Algorithm S2 in [1]
         If prelim_rules == 0: Exclude rules R9^prime and R10^\prime from line 18 in Algorithm S2
     - fix_all_edges_before_final_orientation:
         When one of max_p_global, max_p_non_ancestral, max_q_global or max_pds_set is not np.inf, the algorithm may terminate although not all middle marks are empty. All orientation rules are nevertheless sound, since the rules always check for the appropriate middle marks. If fix_all_edges_before_final_orientation is True, all middle marks are set to the empty middle mark by force, followed by another application of the rules.
     - auto_first:
-        If True: As in pseudcode of Algorithms S2 and S3
+        If True: As in pseudcode of Algorithms S2 and S3 in [1]
         If False: Autodependency links are not prioritized even before contemporaneous links
     - remember_only_parents:
         If True: As in pseudocode of Algorithm 1
         If False: If X^i_{t-\tau} has been marked as ancestor of X^j_t at any point of a preliminary iteration but the link between X^i_{t-\tau} and X^j_t was removed later, the link is nevertheless initialized with a tail at X^i_{t-\tau} in the re-initialization
     - no_apr:
-        If no_apr == 0: As in pseudcode of Algorithms S2 and S3
+        If no_apr == 0: As in pseudcode of Algorithms S2 and S3 in [1]
         If no_apr == 1: The APR is not applied by Algorithm S2, except in line 22 of its last call directly before the call of Algorithm S3
         If no_apr == 2: The APR is never applied
-    - verbosity:
-        Controls the verbose output self.run_lpcmci() and the function it calls.
 
-    Return value of self.run_lpcmci():
-        The estimated graph in form of a link matrix. This is a numpy array of shape (self.N, self.N, self.tau_max + 1), where the entry array[i, j, \tau] is a string that visualizes the estimated link from X^i_{i-\tau} to X^j_t. For example, if array[0, 2, 1] = 'o->', then the estimated graph contains the link X^i_{t-1} o-> X^j_t. This numpy array is also saved as instance attribute self.graph. Note that self.N is the number of observed time series and self.tau_max the maximal considered time lag.
+    Return value of self.run_lpcmci_experimental():
+        graph : array of shape (N, N, tau_max+1)
+            Resulting DPAG, representing the learned causal relationships.
+        val_matrix : array of shape (N, N, tau_max+1)
+            Estimated matrix of test statistic values regarding adjacencies.
+        p_matrix : array of shape [N, N, tau_max+1]
+            Estimated matrix of p-values regarding adjacencies.
 
     A note on middle marks:
-        For convenience (to have strings of the same lengths) we here internally denote the empty middle mark by '-'.  For post-processing purposes all middle marks are set to the empty middle mark (here '-') in line 224 (there can be non-empty middle marks only when one of max_p_global, max_p_non_ancestral, max_q_global or max_pds_set is not np.inf), but if verbosity >= 1 a graph with the middle marks will be printed out before.
+        For convenience (to have strings of the same lengths) we here internally denote the empty middle mark by '-'.  For post-processing purposes all middle marks are set to the empty middle mark (here '-').
     
     A note on wildcards:
         The middle mark wildcard \ast and the edge mark wildcard are here represented as *, the edge mark wildcard \star as +
     """
 
-    def __init__(self, dataframe, cond_ind_test):
+    def __init__(self, dataframe, cond_ind_test, verbosity = 0):
         """Class constructor. Store:
                 i)      data
                 ii)     conditional independence test object
@@ -101,8 +114,13 @@ class LPCMCI():
         # Store the shape of the data in the T and N variables
         self.T, self.N = self.dataframe.T, self.dataframe.N
 
+        # Save verbosity
+        self.verbosity = verbosity
 
-    def run_lpcmci(self, 
+
+    def run_lpcmci_experimental(self,
+                    selected_links = None,
+                    tau_min = 0,
                     tau_max = 1, 
                     pc_alpha = 0.05,
                     n_preliminary_iterations = 1,
@@ -123,14 +141,13 @@ class LPCMCI():
                     fix_all_edges_before_final_orientation = True,
                     auto_first = True,
                     remember_only_parents = True,
-                    no_apr = 0,
-                    verbosity = 0):
+                    no_apr = 0):
         """Run LPCMCI on the dataset and with the conditional independence test passed to the class constructor and with the options passed to this function."""
 
         #######################################################################################################################
         #######################################################################################################################
         # Step 0: Initializations
-        self._initialize(tau_max, pc_alpha, n_preliminary_iterations, max_cond_px, max_p_global, max_p_non_ancestral, max_q_global, max_pds_set, prelim_with_collider_rules, parents_of_lagged, prelim_only, break_once_separated, no_non_ancestral_phase, use_a_pds_t_for_majority, orient_contemp, update_middle_marks, prelim_rules, fix_all_edges_before_final_orientation, auto_first, remember_only_parents, no_apr, verbosity)
+        self._initialize(selected_links, tau_min, tau_max, pc_alpha, n_preliminary_iterations, max_cond_px, max_p_global, max_p_non_ancestral, max_q_global, max_pds_set, prelim_with_collider_rules, parents_of_lagged, prelim_only, break_once_separated, no_non_ancestral_phase, use_a_pds_t_for_majority, orient_contemp, update_middle_marks, prelim_rules, fix_all_edges_before_final_orientation, auto_first, remember_only_parents, no_apr)
 
         #######################################################################################################################
         #######################################################################################################################
@@ -234,20 +251,26 @@ class LPCMCI():
         # Post processing
         self._fix_all_edges()
         self.graph = self._dict2graph()
-        self.val_min_matrix = self._dict_to_matrix(self.val_min, self.tau_max, self.N, default = 0)
-        self.cardinality_matrix = self._dict_to_matrix(self.max_cardinality, self.tau_max, self.N, default = 0)
+        self.pval_max_matrix = self._dict_to_matrix(self.pval_max, self.tau_max, self.N, default = 0)
+        self.val_min_matrix = self._dict_to_matrix(self.pval_max_val, self.tau_max, self.N, default = 0)
+        self.cardinality_matrix = self._dict_to_matrix(self.pval_max_card, self.tau_max, self.N, default = 0)
 
-        # Return the estimated graph
-        return self.graph
+        # Build and return the return dictionariy
+        return_dict = {"graph": self.graph,
+                       "p_matrix": self.pval_max_matrix,
+                       "val_matrix": self.val_min_matrix}
+        return return_dict
 
 
-    def _initialize(self, tau_max, pc_alpha, n_preliminary_iterations, max_cond_px, max_p_global, max_p_non_ancestral, max_q_global, max_pds_set, prelim_with_collider_rules, parents_of_lagged, prelim_only, break_once_separated, no_non_ancestral_phase, use_a_pds_t_for_majority, orient_contemp, update_middle_marks, prelim_rules, fix_all_edges_before_final_orientation, auto_first, remember_only_parents, no_apr, verbosity):
+    def _initialize(self, selected_links, tau_min, tau_max, pc_alpha, n_preliminary_iterations, max_cond_px, max_p_global, max_p_non_ancestral, max_q_global, max_pds_set, prelim_with_collider_rules, parents_of_lagged, prelim_only, break_once_separated, no_non_ancestral_phase, use_a_pds_t_for_majority, orient_contemp, update_middle_marks, prelim_rules, fix_all_edges_before_final_orientation, auto_first, remember_only_parents, no_apr):
         """Function for
-            i)      saving the arguments passed to self.run_lpcmci() as instance attributes
+            i)      saving the arguments passed to self.run_lpcmci_experimental() as instance attributes
             ii)     initializing various memory variables for storing the current graph, sepsets etc.
             """
 
-        # Save the arguments passed to self.run_lpcmci()
+        # Save the arguments passed to self.run_lpcmci_experimental()
+        self.selected_links = selected_links
+        self.tau_min = tau_min
         self.tau_max = tau_max
         self.pc_alpha = pc_alpha
         self.n_preliminary_iterations = n_preliminary_iterations
@@ -269,7 +292,12 @@ class LPCMCI():
         self.auto_first = auto_first
         self.remember_only_parents = remember_only_parents
         self.no_apr = no_apr
-        self.verbosity = verbosity
+
+        # Check that validity of tau_min and tau_max
+        self._check_tau_min_tau_max()
+
+        # Check the validity of 'selected_links'
+        self._check_and_set_selected_links()
 
         # Rules to be executed at the end of a preliminary phase
         self._rules_prelim_final= [["APR"], ["ER-08"], ["ER-02"], ["ER-01"], ["ER-09"], ["ER-10"]]
@@ -286,6 +314,48 @@ class LPCMCI():
         # Return
         return True
 
+    def _check_tau_min_tau_max(self):
+        """Check whether the choice of tau_min and tau_max is valid."""
+
+        if not 0 <= self.tau_min <= self.tau_max:
+            raise ValueError("tau_min = {}, ".format(self.tau_min) + \
+                             "tau_max = {}, ".format(self.tau_max) + \
+                             "but 0 <= tau_min <= tau_max required.")
+
+    def _check_and_set_selected_links(self):
+        """If 'selected_links' is given check its validity, else set all links as selected."""
+
+        if self.selected_links is not None:
+
+            # Check validity of keys
+            if set(self.selected_links.keys()) == set(range(self.N)):
+
+                # Check validity of entries
+                var_allowed = set(range(self.N))
+                var_entries = set(var for parents in self.selected_links.values() for var, _ in parents)
+
+                lag_allowed = set (range(-self.tau_max, -self.tau_min + 1))
+                lag_entries = set(lag for parents in self.selected_links.values() for _, lag in parents)
+                
+                if var_entries.issubset(var_allowed) and lag_entries.issubset(lag_allowed):
+
+                    # Check symmetry of lag-zero links
+                    lag_zero = set((i, j) for j in range(self.N) for (i, lag) in self.selected_links[j] if lag == 0)
+
+                    check_symmetry = np.zeros((self.N, self.N))
+                    for (i, j) in lag_zero:
+                        check_symmetry[i, j] = 1
+
+                    if np.sum(np.transpose(check_symmetry) == check_symmetry) != self.N**2:
+                        raise ValueError("Invalid 'selected_links': Zero-lag links must be symmetric.")
+
+                else:
+                    raise ValueError("Invalid link in at least one entry of 'selected_links'. Must be of the form (i, lag_i), where i in {0, 1, ..., N-1} and lag_i in {-tau_max, ..., -tau_min}.")
+            else:
+                raise ValueError("'selected_links' must be dictionary whose keys are exactly 0, 1, ..., N-1, where N is the number of component time series.")
+
+        else:
+            self.selected_links = {j: [(i, -tau) for i in range(self.N) for tau in range(self.tau_min, self.tau_max + 1) if (tau > 0 or j != i)] for j in range(self.N)}
 
     def _initialize_run_memory(self):
         """Function for initializing various memory variables for storing the current graph, sepsets etc."""
@@ -312,23 +382,57 @@ class LPCMCI():
         self.def_non_ancs = {j: set() for j in range(self.N)}
         self.ambiguous_ancestorships = {j: set() for j in range(self.N)}
 
-        # Initialize nested dictionaries for saving the minimum test statistic among all conditional independence tests of a given pair of variables, the maximum p-values, as well as the maximal cardinality of the known separating sets.
+        # Initialize nested dictionaries for saving the maximal p-value among all conditional independence tests of a given pair of variables as well as the corresponding test statistic values and conditioning set cardinalities
         # Syntax: As for self.sepsets
-        self.val_min = {j: {(i, -tau): float("inf") for i in range(self.N) for tau in range(self.tau_max + 1) if (tau > 0 or i < j)} for j in range(self.N)}
         self.pval_max = {j: {(i, -tau): 0 for i in range(self.N) for tau in range(self.tau_max + 1) if (tau > 0 or i < j)} for j in range(self.N)}
-        self.max_cardinality = {j: {(i, -tau): 0 for i in range(self.N) for tau in range(self.tau_max + 1) if (tau > 0 or i < j)} for j in range(self.N)}                                        
-
+        self.pval_max_val = {j: {(i, -tau): np.inf for i in range(self.N) for tau in range(self.tau_max + 1) if (tau > 0 or i < j)} for j in range(self.N)}
+        self.pval_max_card = {j: {(i, -tau): -1 for i in range(self.N) for tau in range(self.tau_max + 1) if (tau > 0 or i < j)} for j in range(self.N)}                                        
         # Initialize a nested dictionary for caching na-pds-sets
-        # Syntax: As for self.sepsets
+        # Syntax: self._na_pds_t[(i, t_i)][(j, t_j)] stores na_pds_t((i, t_i), (j, t_j))
         self._na_pds_t = {(j, -tau_j): {} for j in range(self.N) for tau_j in range(self.tau_max + 1)}
 
         # Initialize a variable for remembering the maximal cardinality among all calculated na-pds-sets, as well as the maximial cardinality of any search set in the non-ancestral phase
         self.max_na_search_set_found = -1
         self.max_na_pds_set_found = -1
 
+        # Apply the restriction imposed by tau_min
+        self._apply_tau_min_restriction()
+
+        # Apply the restriction imposed by selected_links
+        self._apply_selected_links_restriction()
+
         # Return
         return True
 
+    def _apply_tau_min_restriction(self):
+        """Apply the restrictions imposed by a non-zero tau_min:
+        - Remove all links of lag smaller than tau_min from self.graph_dict
+        - Set the corresponding entries in self.pval_max, self.pval_max_val, and self.pval_max_card to None
+        """
+
+        for (i, j, tau) in product(range(self.N), range(self.N), range(0, self.tau_min)):
+            if tau > 0 or j != i:
+                self.graph_dict[j][(i, -tau)] = ""
+
+            if tau > 0 or i < j:
+                self.pval_max[j][(i, -tau)] = None
+                self.pval_max_val[j][(i, -tau)] = None
+                self.pval_max_card[j][(i, -tau)] = None
+
+    def _apply_selected_links_restriction(self):
+        """Apply the restrictions imposed by selected_links:
+        - Remove all links that have not been selected
+        - Set the corresponding entries in self.pval_max, self.pval_max_val, and self.pval_max_card to None 
+        """
+
+        for (i, j, tau) in product(range(self.N), range(self.N), range(self.tau_min, self.tau_max + 1)):
+            if (tau > 0 or j != i) and (i, -tau) not in self.selected_links[j]:
+                self.graph_dict[j][(i, -tau)] = ""
+
+            if (tau > 0 or i < j) and (i, -tau) not in self.selected_links[j]:
+                self.pval_max[j][(i, -tau)] = None
+                self.pval_max_val[j][(i, -tau)] = None
+                self.pval_max_card[j][(i, -tau)] = None
 
     def _run_ancestral_removal_phase(self, prelim = False):
         """Run an ancestral edge removal phase, this is Algorithm S2"""
@@ -342,7 +446,7 @@ class LPCMCI():
             ##########################################################################################################
             ### Run the next removal iteration #######################################################################
 
-            # Force-quit while leep when p_pc exceeds the limit put by self.max_p_global
+            # Force-quit while loop when p_pc exceeds the limit put by self.max_p_global
             if p_pc > self.max_p_global:
                 while_broken = True
                 break
@@ -356,9 +460,6 @@ class LPCMCI():
             # Variables to memorize the occurence and absence of certain events in the below edge removal phase
             has_converged = True
             any_removal = False
-
-            # Remember edges for which the separating set search is aborted due to max_q_global
-            self._cannot_mark = set()
 
             # Generate the prioritized link list
             if self.auto_first:
@@ -439,8 +540,7 @@ class LPCMCI():
                     if test_Y:
                         if len(S_search_YX) < p_pc:
                             # Note that X is smaller than Y. If S_search_YX exists and has fewer than p elements, X and Y are not d-separated by S \subset Par(Y). Therefore, the middle mark on the edge between X and Y can be updated with 'R'
-                            if (X, Y) not in self._cannot_mark:
-                                self._apply_middle_mark(X, Y, "R")
+                            self._apply_middle_mark(X, Y, "R")
                         else:
                             # Since S_search_YX exists and has hat least p_pc elements, the link between X and Y will be subjected to conditional independenc tests. Therefore, the algorithm has not converged yet.
                             has_converged = False
@@ -448,8 +548,7 @@ class LPCMCI():
                     if test_X:
                         if len(S_search_XY) < p_pc:
                             # Note that X is smaller than Y. If S_search_XY exists and has fewer than p elements, X and Y are not d-separated by S \subset Par(X). Therefore, the middle mark on the edge between X and Y can be updated with 'L'
-                            if (X, Y) not in self._cannot_mark:
-                                self._apply_middle_mark(X, Y, "L")
+                            self._apply_middle_mark(X, Y, "L")
                         else:
                             # Since S_search_YX exists and has hat least p_pc elements, the link between X and Y will be subjected to conditional independenc tests. Therefore, the algorithm has not converged yet.
                             has_converged = False
@@ -474,7 +573,6 @@ class LPCMCI():
 
                             q_count = q_count + 1
                             if q_count > self.max_q_global:
-                                self._cannot_mark.add((X, Y))
                                 break
 
                             # Build the full conditioning set
@@ -488,10 +586,8 @@ class LPCMCI():
                                 print("ANC(Y):    %s _|_ %s  |  S_def = %s, S_pc = %s: val = %.2f / pval = % .4f" %
                                     (X, Y, ' '.join([str(z) for z in S_default_YX]), ' '.join([str(z) for z in S_pc]), val, pval))
 
-                            # Accordingly update dictionaries that keep track of the test statistic, the corresponding p-value and the cardinality of conditioning sets
-                            self._update_val_min(X, Y, val)
-                            self._update_pval_max(X, Y, pval)
-                            self._update_cardinality(X, Y, len(Z))
+                            # Accordingly update dictionaries that keep track of the maximal p-value and the corresponding test statistic values and conditioning set cardinalities
+                            self._update_pval_val_card_dicts(X, Y, pval, val, len(Z))
 
                             # Check whether test result was significant
                             if pval > self.pc_alpha:
@@ -515,7 +611,6 @@ class LPCMCI():
 
                             q_count = q_count + 1
                             if q_count > self.max_q_global:
-                                self._cannot_mark.add((X, Y))
                                 break
 
                             # Build the full conditioning set
@@ -529,10 +624,8 @@ class LPCMCI():
                                 print("ANC(X):    %s _|_ %s  |  S_def = %s, S_pc = %s: val = %.2f / pval = % .4f" %
                                     (X, Y, ' '.join([str(z) for z in S_default_XY]), ' '.join([str(z) for z in S_pc]), val, pval))
 
-                            # Accordingly update dictionaries that keep track of the test statistic, the corresponding p-value and the cardinality of conditioning sets
-                            self._update_val_min(X, Y, val)
-                            self._update_pval_max(X, Y, pval)
-                            self._update_cardinality(X, Y, len(Z))
+                            # Accordingly update dictionaries that keep track of the maximal p-value and the corresponding test statistic values and conditioning set cardinalities
+                            self._update_pval_val_card_dicts(X, Y, pval, val, len(Z))
 
                             # Check whether test result was significant
                             if pval > self.pc_alpha:
@@ -613,8 +706,9 @@ class LPCMCI():
                 if len(link) > 0:
 
                     # Consistency check
-                    if not while_broken and (X, Y) not in self._cannot_mark:
+                    if not while_broken:
                         assert link[1] != "?"
+                        assert link[1] != "L"
                         assert link[1] != "R" or (lag_i < 0 and (self.max_cond_px > 0 or not self.update_middle_marks))
 
                     # Update all middle marks to '!'
@@ -663,7 +757,7 @@ class LPCMCI():
             ##########################################################################################################
             ### Run the next removal iteration #######################################################################
 
-            # Force-quit while leep when p_pc exceeds the limit put by self.max_p_global or self.max_p_non_ancestral
+            # Force-quit while loop when p_pc exceeds the limit put by self.max_p_global or self.max_p_non_ancestral
             if p_pc > self.max_p_global or p_pc > self.max_p_non_ancestral:
                 break
 
@@ -676,9 +770,6 @@ class LPCMCI():
             # Variables to memorize the occurence and absence of certain events in the below edge removal phase
             has_converged = True
             any_removal = False
-
-            # Remember edges for which the separating set search is aborted due to max_q_global
-            self._cannot_mark = set()
 
             # Generate the prioritized link list
             if self.auto_first:
@@ -756,7 +847,6 @@ class LPCMCI():
 
                     # If the search set exceeds the specified bounds, do not test this link
                     if len(S_search_YX) > self.max_pds_set or (test_X and len(S_search_XY) > self.max_pds_set):
-                        self._cannot_mark.add((X, Y))
                         continue
 
                     ######################################################################################################
@@ -765,49 +855,14 @@ class LPCMCI():
                     ### Middle mark updates ##############################################################################
 
                     # Note: Updating the middle marks here, within the for-loop, does not spoil order independence. In fact, this update does not influence the flow of the for-loop at all
-                    if link[1] == "!":
-
-                        if len(S_search_YX) < p_pc or (test_X and len(S_search_XY) < p_pc):
-                            # Mark the link from X to Y as converged, remember the fixation, then continue
-                            if (X, Y) not in self._cannot_mark:
-                                self._write_link(X, Y, link[0] + "-" + link[2], verbosity = self.verbosity)
-                            continue
-
-                        else:
-                            has_converged = False
-
-                    elif link[1] == "R":
-
-                        if len(S_search_YX) < p_pc:
-                            # Mark the link from X to Y as converged, remember the fixation, then continue
-                            if (X, Y) not in self._cannot_mark:
-                                self._write_link(X, Y, link[0] + "-" + link[2], verbosity = self.verbosity)
-                            continue
-
-                        elif (test_X and len(S_search_XY) >= p_pc):
-                            has_converged = False
-
-                    elif link[1] == "L":
-
-                        if test_X and len(S_seach_XY) < p_pc:
-                            # Mark the link from X to Y as converged, remember the fixation, then continue
-                            if (X, Y) not in self._cannot_mark:
-                                self._write_link(X, Y, link[0] + "-" + link[2], verbosity = self.verbosity)
-                            continue
-
-                        elif len(S_search_YX) >= p_pc:
-                            has_converged = False
+                    if len(S_search_YX) < p_pc or (test_X and len(S_search_XY) < p_pc):
+                        # Mark the link from X to Y as converged, remember the fixation, then continue
+                        self._write_link(X, Y, link[0] + "-" + link[2], verbosity = self.verbosity)
+                        continue
 
                     else:
+                        has_converged = False
 
-                        if len(S_search_YX) < p_pc and (not test_X or len(S_search_XY) < p_pc):
-                            # Mark the link from X to Y as converged, remember the fixation, then continue
-                            if (X, Y) not in self._cannot_mark:
-                                self._write_link(X, Y, link[0] + "-" + link[2], verbosity = self.verbosity)
-                            continue
-
-                        else:
-                            has_converged = False
 
                     ######################################################################################################
                     ### Tests for conditional independence ###############################################################
@@ -828,7 +883,6 @@ class LPCMCI():
 
                         q_count = q_count + 1
                         if q_count > self.max_q_global:
-                            self._cannot_mark.add((X, Y))
                             break
 
                         # Build the full conditioning set
@@ -842,10 +896,8 @@ class LPCMCI():
                             print("Non-ANC(Y):    %s _|_ %s  |  S_def = %s, S_pc = %s: val = %.2f / pval = % .4f" %
                                 (X, Y, ' '.join([str(z) for z in S_default_YX]), ' '.join([str(z) for z in S_pc]), val, pval))
 
-                        # Accordingly update dictionaries that keep track of the test statistic, the corresponding p-value and the cardinality of conditioning sets
-                        self._update_val_min(X, Y, val)
-                        self._update_pval_max(X, Y, pval)
-                        self._update_cardinality(X, Y, len(Z))
+                        # Accordingly update dictionaries that keep track of the maximal p-value and the corresponding test statistic values and conditioning set cardinalities
+                        self._update_pval_val_card_dicts(X, Y, pval, val, len(Z))
 
                         # Check whether test result was significant
                         if pval > self.pc_alpha:
@@ -873,7 +925,6 @@ class LPCMCI():
 
                             q_count = q_count + 1
                             if q_count > self.max_q_global:
-                                self._cannot_mark.add((X, Y))
                                 break
 
                             # Build the full conditioning set
@@ -887,10 +938,8 @@ class LPCMCI():
                                 print("Non-ANC(X):    %s _|_ %s  |  S_def = %s, S_pc = %s: val = %.2f / pval = % .4f" %
                                     (X, Y, ' '.join([str(z) for z in S_default_XY]), ' '.join([str(z) for z in S_pc]), val, pval))
 
-                            # Accordingly update dictionaries that keep track of the test statistic, the corresponding p-value and the cardinality of conditioning sets
-                            self._update_val_min(X, Y, val)
-                            self._update_pval_max(X, Y, pval)
-                            self._update_cardinality(X, Y, len(Z))
+                            # Accordingly update dictionaries that keep track of the maximal p-value and the corresponding test statistic values and conditioning set cardinalities
+                            self._update_pval_val_card_dicts(X, Y, pval, val, len(Z))
 
                             # Check whether test result was significant
                             if pval > self.pc_alpha:
@@ -1820,9 +1869,9 @@ class LPCMCI():
 
         else:
             if A[1] < B[1]:
-                return out.union({(var, lag + B[1]) for ((var, lag), link) in self.graph_dict[B[0]].items() if len(link) > 0 and link[0] == "-" and lag + B[1] >= -self.tau_max})
+                return {(var, lag + B[1]) for ((var, lag), link) in self.graph_dict[B[0]].items() if len(link) > 0 and link[0] == "-" and lag + B[1] >= -self.tau_max}
             else:
-                return out.union({(var, lag + A[1]) for ((var, lag), link) in self.graph_dict[A[0]].items() if len(link) > 0 and link[0] == "-" and lag + A[1] >= -self.tau_max})
+                return {(var, lag + A[1]) for ((var, lag), link) in self.graph_dict[A[0]].items() if len(link) > 0 and link[0] == "-" and lag + A[1] >= -self.tau_max}
 
 
     def _apply_middle_mark(self, X, Y, char):
@@ -1975,12 +2024,12 @@ class LPCMCI():
         """Remove all non-trivial orientations"""
 
         for j in range(self.N):
-                for (i, lag_i) in self.graph_dict[j].keys():
+            for (i, lag_i) in self.graph_dict[j].keys():
 
-                    link = self._get_link((i, lag_i), (j, 0))
-                    if len(link) > 0:
-                        new_link = link[0] + "-" + link[2]
-                        self.graph_dict[j][(i, lag_i)] = new_link
+                link = self._get_link((i, lag_i), (j, 0))
+                if len(link) > 0:
+                    new_link = link[0] + "-" + link[2]
+                    self.graph_dict[j][(i, lag_i)] = new_link
 
     ########################################################################################################################
     ########################################################################################################################
@@ -2413,10 +2462,8 @@ class LPCMCI():
                         print("ER00a(part1):    %s _|_ %s  |  Z_add = %s, Z = %s: val = %.2f / pval = % .4f" %
                             (X, Y, ' '.join([str(z) for z in Z_add2]), ' '.join([str(z) for z in Z_test]), val, pval))
 
-                    # Accordingly update dictionaries that keep track of the test statistic, the corresponding p-value and the cardinality of conditioning sets
-                    self._update_val_min(X, Y, val)
-                    self._update_pval_max(X, Y, pval)
-                    self._update_cardinality(X, Y, len(Z_test))
+                    # Accordingly update dictionaries that keep track of the maximal p-value and the corresponding test statistic values and conditioning set cardinalities
+                    self._update_pval_val_card_dicts(X, Y, pval, val, len(Z_test))
 
                     # Check whether test result was significant
                     if pval > self.pc_alpha:
@@ -2471,10 +2518,8 @@ class LPCMCI():
                         print("ER00a(part2):    %s _|_ %s  |  Z_add = %s, Z = %s: val = %.2f / pval = % .4f" %
                             (X, Y, ' '.join([str(z) for z in Z_add2]), ' '.join([str(z) for z in Z_test]), val, pval))
 
-                    # Accordingly update dictionaries that keep track of the test statistic, the corresponding p-value and the cardinality of conditioning sets
-                    self._update_val_min(X, Y, val)
-                    self._update_pval_max(X, Y, pval)
-                    self._update_cardinality(X, Y, len(Z_test))
+                    # Accordingly update dictionaries that keep track of the maximal p-value and the corresponding test statistic values and conditioning set cardinalities
+                    self._update_pval_val_card_dicts(X, Y, pval, val, len(Z_test))
 
                     # Check whether test result was significant
                     if pval > self.pc_alpha:
@@ -2580,10 +2625,8 @@ class LPCMCI():
                         print("ER00b:    %s _|_ %s  |  Z_add = %s, Z = %s: val = %.2f / pval = % .4f" %
                             (X, Y, ' '.join([str(z) for z in Z_add2]), ' '.join([str(z) for z in Z_test]), val, pval))
 
-                    # Accordingly update dictionaries that keep track of the test statistic, the corresponding p-value and the cardinality of conditioning sets
-                    self._update_val_min(X, Y, val)
-                    self._update_pval_max(X, Y, pval)
-                    self._update_cardinality(X, Y, len(Z_test))
+                    # Accordingly update dictionaries that keep track of the maximal p-value and the corresponding test statistic values and conditioning set cardinalities
+                    self._update_pval_val_card_dicts(X, Y, pval, val, len(Z_test))
 
                     # Check whether test result was significant
                     if pval > self.pc_alpha:
@@ -2733,33 +2776,19 @@ class LPCMCI():
         # Return the desired set
         return out
 
-
-    def _update_val_min(self, X, Y, val):
-        """Some conditional independence test for X and Y has given the test statistic value val. Update the val_min dictionary accordingly"""
-
-        if X[1] < 0 or X[0] < Y[0]:
-            self.val_min[Y[0]][X] = min(self.val_min[Y[0]][X], np.abs(val))
-        else:
-            self.val_min[X[0]][Y] = min(self.val_min[X[0]][Y], np.abs(val))
-
-
-    def _update_cardinality(self, X, Y, cardinality):
-        """Some conditional independence test for X and Y has given the p-value val. Update the pval_max dictionary accordingly"""
+    def _update_pval_val_card_dicts(self, X, Y, pval, val, card):
+        """If 'pval' is larger than the current maximal p-value across all previous independence tests for X and Y (stored in self.pval_max) then: Replace the current values stored in self.pval_max, self.pval_max_val, self.pval_max_card respectively by 'pval', 'val', and 'card'."""
 
         if X[1] < 0 or X[0] < Y[0]:
-            self.max_cardinality[Y[0]][X] = max(self.max_cardinality[Y[0]][X], cardinality)
+            if pval > self.pval_max[Y[0]][X]:
+                self.pval_max[Y[0]][X] = pval
+                self.pval_max_val[Y[0]][X] = val
+                self.pval_max_card[Y[0]][X] = card
         else:
-            self.max_cardinality[X[0]][Y] = max(self.max_cardinality[X[0]][Y], cardinality)
-
-
-    def _update_pval_max(self, X, Y, pval):
-        """Some conditional independence test for X and Y has given the p-value val. Update the pval_max dictionary accordingly"""
-
-        if X[1] < 0 or X[0] < Y[0]:
-            self.pval_max[Y[0]][X] = max(self.pval_max[Y[0]][X], pval)
-        else:
-            self.pval_max[X[0]][Y] = max(self.pval_max[X[0]][Y], pval)
-
+            if pval > self.pval_max[X[0]][Y]:
+                self.pval_max[X[0]][Y] = pval
+                self.pval_max_val[X[0]][Y] = val
+                self.pval_max_card[X[0]][Y] = card
 
     def _save_sepset(self, X, Y, Z):
         """Save Z as separating sets of X and Y. Y is assumed to be at lag 0"""
@@ -2775,7 +2804,6 @@ class LPCMCI():
             self.sepsets[j][X].add(Z)
         else:
             self.sepsets[i][Y].add(Z)
-
 
     def _reverse_link(self, link):
         """Reverse a given link, taking care to replace > with < and vice versa"""
@@ -3172,29 +3200,19 @@ class LPCMCI():
 
 
     def _sort_search_set(self, search_set, reference_node):
-        """Sort the nodes in search_set by their val_min value with respect to the reference_node. Nodes with higher values appear earlier""" 
+        """Sort the nodes in search_set by their values in self.pval_max_val with respect to the reference_node. Nodes with higher values appear earlier"""
 
-        sort_by = [self._get_val_min(reference_node, node) for node in search_set]
+        sort_by = [np.abs(self._get_pval_max_val(node, reference_node)) for node in search_set]
+
         return [x for _, x in sorted(zip(sort_by, search_set), reverse = True)]
 
-
-    def _get_val_min(self, X, Y):
-        """Some conditional independence test for X and Y has given the test statistic value val. Update the val_min dictionary accordingly"""
-
-        if X[1] < 0 or X[0] < Y[0]:
-            return self.val_min[Y[0]][X]
-        else:
-            return self.val_min[X[0]][Y]
-
-
-    def _get_pval_max(self, X, Y):
-        """Some conditional independence test for X and Y has given the p-value val. Update the pval_max dictionary accordingly"""
+    def _get_pval_max_val(self, X, Y):
+        """Return the test statistic value of that independence test for X and Y which, among all such tests, has the largest p-value."""
 
         if X[1] < 0 or X[0] < Y[0]:
-            return self.pval_max[Y[0]][X]
+            return self.pval_max_val[Y[0]][X]
         else:
-            return self.pval_max[X[0]][Y]
-       
+            return self.pval_max_val[X[0]][Y]    
 
     def _delete_sepsets(self, X, Y):
         """Delete all separating sets of X and Y. Y is assumed to be at lag 0"""
@@ -3210,7 +3228,6 @@ class LPCMCI():
             self.sepsets[j][X] = set()
         else:
             self.sepsets[i][Y] = set()
-
 
     def _dict_to_matrix(self, val_dict, tau_max, n_vars, default=1):
         """Convert a dictionary to matrix format"""
@@ -3258,13 +3275,10 @@ if __name__ == '__main__':
     dataframe = pp.DataFrame(data)
     cond_ind_test = ParCorr()
     pcmci = LPCMCI(dataframe=dataframe, cond_ind_test=cond_ind_test)
-    graph = pcmci.run_lpcmci(tau_max=2, pc_alpha=0.01)
+    results = pcmci.run_lpcmci_experimental(tau_max=2, pc_alpha=0.01)
 
     # For a proper causal interpretation of the graph see the paper!
-    print(graph)
-    tp.plot_graph(link_matrix=graph)
+    print(results['graph'])
+    tp.plot_graph(graph=results['graph'], val_matrix=results['val_matrix'])
     plt.show()
-
-
-
 

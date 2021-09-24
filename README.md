@@ -52,6 +52,7 @@ Tigramite is a causal time series analysis python package. It allows to efficien
 - p-value correction and confidence interval estimation
 - causal mediation class to analyze causal pathways
 - prediction class based on sklearn models including causal feature selection
+- GUI covering basic functionality
 
 
 ## Required python packages

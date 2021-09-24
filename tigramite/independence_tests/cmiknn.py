@@ -149,8 +149,10 @@ class CMIknn(CondIndTest):
             Nearest neighbors in subspaces.
         """
 
+        array = array.astype(np.float64)
+        xyz = xyz.astype(np.int32)
+
         dim, T = array.shape
-        array = array.astype('float')
 
         # Add noise to destroy ties...
         array += (1E-6 * array.std(axis=1).reshape(dim, 1)
@@ -158,7 +160,7 @@ class CMIknn(CondIndTest):
 
         if self.transform == 'standardize':
             # Standardize
-            array = array.astype('float')
+            array = array.astype(np.float64)
             array -= array.mean(axis=1).reshape(dim, 1)
             array /= array.std(axis=1).reshape(dim, 1)
             # FIXME: If the time series is constant, return nan rather than
@@ -169,12 +171,12 @@ class CMIknn(CondIndTest):
         elif self.transform == 'uniform':
             array = self._trafo2uniform(array)
         elif self.transform == 'ranks':
-            array = array.argsort(axis=1).argsort(axis=1).astype('float')
+            array = array.argsort(axis=1).argsort(axis=1).astype(np.float64)
 
         array = array.T
         tree_xyz = spatial.cKDTree(array)
         epsarray = tree_xyz.query(array, k=[knn+1], p=np.inf,
-                                  eps=0., workers=self.workers)[0][:, 0].astype('float')
+                                  eps=0., workers=self.workers)[0][:, 0].astype(np.float64)
 
         # To search neighbors < eps
         epsarray = np.multiply(epsarray, 0.99999)
@@ -199,7 +201,7 @@ class CMIknn(CondIndTest):
             k_z = tree_z.query_ball_point(z, r=epsarray, eps=0., p=np.inf, workers=self.workers, return_length=True)
         else:
             # Number of neighbors is T when z is empty.
-            k_z = np.full(T, T, dtype='float')
+            k_z = np.full(T, T, dtype=np.float64)
 
         return k_xz, k_yz, k_z
 
@@ -226,6 +228,7 @@ class CMIknn(CondIndTest):
             knn_here = max(1, int(self.knn*T))
         else:
             knn_here = max(1, int(self.knn))
+
 
         k_xz, k_yz, k_z = self._get_nearest_neighbors(array=array,
                                                       xyz=xyz,
@@ -290,17 +293,18 @@ class CMIknn(CondIndTest):
             neighbors = tree_xyz.query(z_array,
                                        k=self.shuffle_neighbors,
                                        p=np.inf,
-                                       eps=0.)[1].astype('int32')
+                                       eps=0.)[1].astype(np.int32)
 
             null_dist = np.zeros(self.sig_samples)
             for sam in range(self.sig_samples):
 
                 # Generate random order in which to go through indices loop in
                 # next step
-                order = self.random_state.permutation(T).astype('int32')
+                order = self.random_state.permutation(T).astype(np.int32)
 
                 # Shuffle neighbor indices for each sample index
-                neighbors = self.random_state.permuted(neighbors, axis=1)
+                for i in range(len(neighbors)):
+                    self.random_state.shuffle(neighbors[i])
 
                 # Select a series of neighbor indices that contains as few as
                 # possible duplicates
@@ -361,7 +365,7 @@ class CMIknn(CondIndTest):
             knn_here = max(1, int(self.knn))
 
 
-        array = array.astype('float')
+        array = array.astype(np.float64)
 
         # Add noise to destroy ties...
         array += (1E-6 * array.std(axis=1).reshape(dim, 1)
@@ -369,7 +373,7 @@ class CMIknn(CondIndTest):
 
         if self.transform == 'standardize':
             # Standardize
-            array = array.astype('float')
+            array = array.astype(np.float64)
             array -= array.mean(axis=1).reshape(dim, 1)
             array /= array.std(axis=1).reshape(dim, 1)
             # FIXME: If the time series is constant, return nan rather than
@@ -380,7 +384,7 @@ class CMIknn(CondIndTest):
         elif self.transform == 'uniform':
             array = self._trafo2uniform(array)
         elif self.transform == 'ranks':
-            array = array.argsort(axis=1).argsort(axis=1).astype('float')
+            array = array.argsort(axis=1).argsort(axis=1).astype(np.float64)
 
         # Compute conditional entropy as H(X|Y) = H(X) - I(X;Y)
 
@@ -400,7 +404,7 @@ class CMIknn(CondIndTest):
         x_array = np.fastCopyAndTranspose(array[x_indices, :])
         tree_xyz = spatial.cKDTree(x_array)
         epsarray = tree_xyz.query(x_array, k=[knn_here+1], p=np.inf,
-                                  eps=0., workers=self.workers)[0][:, 0].astype('float')
+                                  eps=0., workers=self.workers)[0][:, 0].astype(np.float64)
 
         h_x = - special.digamma(knn_here) + special.digamma(T) + dim_x * np.log(2.*epsarray).mean()
 
@@ -420,8 +424,8 @@ class CMIknn(CondIndTest):
     @jit
     def get_restricted_permutation(self, T, shuffle_neighbors, neighbors, order):
 
-        restricted_permutation = np.zeros(T, dtype='int32')
-        used = np.array([], dtype='int32')
+        restricted_permutation = np.zeros(T, dtype=np.int32)
+        used = np.array([], dtype=np.int32)
 
         for sample_index in order:
             m = 0

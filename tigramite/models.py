@@ -1364,11 +1364,11 @@ class Prediction(Models, PCMCI):
             # Check if we've passed a new dataframe object
             test_array = None
             if new_data is not None:
-                if new_data.mask is None:
-                    # if no mask is supplied, use the same mask as for the fitted array
-                    new_data_mask = self.test_mask
-                else:
-                    new_data_mask = new_data.mask
+                # if new_data.mask is None:
+                #     # if no mask is supplied, use the same mask as for the fitted array
+                #     new_data_mask = self.test_mask
+                # else:
+                new_data_mask = new_data.mask
                 test_array, _ = new_data.construct_array(X, Y, Z,
                                                          tau_max=self.tau_max,
                                                          mask=new_data_mask,

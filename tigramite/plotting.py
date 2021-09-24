@@ -1541,9 +1541,8 @@ def _draw_network_with_curved_edges(
 
 
 def plot_graph(
-    link_matrix=None,
+    graph=None,
     val_matrix=None,
-    sig_thres=None,
     var_names=None,
     fig_ax=None,
     figsize=None,
@@ -1574,28 +1573,26 @@ def plot_graph(
     network_lower_bound=0.2,
     show_colorbar=True,
     inner_edge_style="dashed",
+    link_matrix=None,
 ):
     """Creates a network plot.
-    This is still in beta. The network is defined either from True values in
-    link_matrix, or from thresholding the val_matrix with sig_thres.  Nodes
+    
+    This is still in beta. The network is defined from links in graph. Nodes
     denote variables, straight links contemporaneous dependencies and curved
     arrows lagged dependencies. The node color denotes the maximal absolute
     auto-dependency and the link color the value at the lag with maximal
     absolute cross-dependency. The link label lists the lags with significant
-    dependency in order of absolute magnitude. The network can also be plotted
-    over a map drawn before on the same axis. Then the node positions can be
-    supplied in appropriate axis coordinates via node_pos.
+    dependency in order of absolute magnitude. The network can also be
+    plotted over a map drawn before on the same axis. Then the node positions
+    can be supplied in appropriate axis coordinates via node_pos.
 
     Parameters
     ----------
-    link_matrix : string or bool array-like, optional (default: None)
+    graph : string or bool array-like, optional (default: None)
         Either string matrix providing graph or bool array providing only adjacencies
         Must be of same shape as val_matrix. 
     val_matrix : array_like
         Matrix of shape (N, N, tau_max+1) containing test statistic values.
-    sig_thres : array-like, optional (default: None)
-        Matrix of significance thresholds. Must be of same shape as  val_matrix.
-        Either sig_thres or link_matrix has to be provided.
     var_names : list, optional (default: None)
         List of variable names. If None, range(N) is used.
     fig_ax : tuple of figure and axis object, optional (default: None)
@@ -1659,28 +1656,32 @@ def plot_graph(
         Whether to show colorbars for links and nodes.
     """
 
+    if link_matrix is not None:
+        raise ValueError("link_matrix is deprecated and replaced by graph array"
+                         " which is now returned by all methods.")
+
     if fig_ax is None:
         fig = pyplot.figure(figsize=figsize)
         ax = fig.add_subplot(111, frame_on=False)
     else:
         fig, ax = fig_ax
 
-    (link_matrix, val_matrix, link_width, link_attribute) = _check_matrices(
-        link_matrix, val_matrix, link_width, link_attribute, sig_thres
+    (graph, val_matrix, link_width, link_attribute) = _check_matrices(
+        graph, val_matrix, link_width, link_attribute
     )
 
     N, N, dummy = val_matrix.shape
     tau_max = dummy - 1
 
-    if np.count_nonzero(link_matrix != "") == np.count_nonzero(
-        np.diagonal(link_matrix) != ""
+    if np.count_nonzero(graph != "") == np.count_nonzero(
+        np.diagonal(graph) != ""
     ):
         diagonal = True
     else:
         diagonal = False
 
-    if np.count_nonzero(link_matrix == "") == link_matrix.size or diagonal:
-        link_matrix[0, 1, 0] = "---"
+    if np.count_nonzero(graph == "") == graph.size or diagonal:
+        graph[0, 1, 0] = "---"
         no_links = True
     else:
         no_links = False
@@ -1694,7 +1695,7 @@ def plot_graph(
 
     # Only draw link in one direction among contemp
     # Remove lower triangle
-    link_matrix_upper = np.copy(link_matrix)
+    link_matrix_upper = np.copy(graph)
     link_matrix_upper[:, :, 0] = np.triu(link_matrix_upper[:, :, 0])
 
     # net = _get_absmax(link_matrix != "")
@@ -1912,45 +1913,33 @@ def _reverse_patt(patt):
     #     return '-->'
 
 
-def _check_matrices(link_matrix, val_matrix, link_width, link_attribute, sig_thres):
-    if link_matrix is None and (val_matrix is None or sig_thres is None):
-        raise ValueError(
-            "Need to specify either val_matrix together with sig_thres, or link_matrix"
-        )
+def _check_matrices(graph, val_matrix, link_width, link_attribute):
 
-    if link_matrix is not None:
-        pass
-    elif link_matrix is None and sig_thres is not None and val_matrix is not None:
-        link_matrix = np.abs(val_matrix) >= sig_thres
-    else:
-        raise ValueError(
-            "Need to specify either val_matrix together with sig_thres, or link_matrix"
-        )
 
-    if link_matrix.dtype != "<U3":
-        # Transform to new link_matrix data type U3
-        old_matrix = np.copy(link_matrix)
-        link_matrix = np.zeros(old_matrix.shape, dtype="<U3")
-        link_matrix[:] = ""
+    if graph.dtype != "<U3":
+        # Transform to new graph data type U3
+        old_matrix = np.copy(graph)
+        graph = np.zeros(old_matrix.shape, dtype="<U3")
+        graph[:] = ""
         for i, j, tau in zip(*np.where(old_matrix)):
             if tau == 0:
                 if old_matrix[j, i, 0] == 0:
-                    link_matrix[i, j, 0] = "-->"
-                    link_matrix[j, i, 0] = "<--"
+                    graph[i, j, 0] = "-->"
+                    graph[j, i, 0] = "<--"
                 else:
-                    link_matrix[i, j, 0] = "o-o"
-                    link_matrix[j, i, 0] = "o-o"
+                    graph[i, j, 0] = "o-o"
+                    graph[j, i, 0] = "o-o"
             else:
-                link_matrix[i, j, tau] = "-->"
+                graph[i, j, tau] = "-->"
     else:
-        # print(link_matrix[:,:,0])
-        # Assert that link_matrix has valid and consistent lag-zero entries
-        for i, j, tau in zip(*np.where(link_matrix)):
+        # print(graph[:,:,0])
+        # Assert that graph has valid and consistent lag-zero entries
+        for i, j, tau in zip(*np.where(graph)):
             if tau == 0:
-                if link_matrix[i, j, 0] != _reverse_patt(link_matrix[j, i, 0]):
+                if graph[i, j, 0] != _reverse_patt(graph[j, i, 0]):
                     raise ValueError(
-                        "link_matrix needs to have consistent lag-zero patterns (eg"
-                        " link_matrix[i,j,0]='-->' requires link_matrix[j,i,0]='<--')"
+                        "graph needs to have consistent lag-zero links (eg"
+                        " graph[i,j,0]='-->' requires graph[j,i,0]='<--')"
                     )
                 if (
                     val_matrix is not None
@@ -1970,7 +1959,7 @@ def _check_matrices(link_matrix, val_matrix, link_width, link_attribute, sig_thr
                         "link_attribute needs to be symmetric for lag-zero"
                     )
 
-            if link_matrix[i, j, tau] not in [
+            if graph[i, j, tau] not in [
                 "---",
                 "o--",
                 "--o",
@@ -1990,21 +1979,20 @@ def _check_matrices(link_matrix, val_matrix, link_width, link_attribute, sig_thr
                 "<-+",
                 "+->",
             ]:
-                raise ValueError("Invalid link_matrix entry.")
+                raise ValueError("Invalid graph entry.")
 
     if val_matrix is None:
-        val_matrix = (link_matrix != "").astype("int")
+        val_matrix = (graph != "").astype("int")
 
     if link_width is not None and not np.all(link_width >= 0.0):
         raise ValueError("link_width must be non-negative")
 
-    return link_matrix, val_matrix, link_width, link_attribute
+    return graph, val_matrix, link_width, link_attribute
 
 
 def plot_time_series_graph(
-    link_matrix=None,
+    graph=None,
     val_matrix=None,
-    sig_thres=None,
     var_names=None,
     fig_ax=None,
     figsize=None,
@@ -2029,6 +2017,7 @@ def plot_time_series_graph(
     label_space_top=0.0,
     network_lower_bound=0.2,
     inner_edge_style="dashed",
+    link_matrix=None,
 ):
     """Creates a time series graph.
     This is still in beta. The time series graph's links are colored by
@@ -2036,14 +2025,11 @@ def plot_time_series_graph(
 
     Parameters
     ----------
-    link_matrix : string or bool array-like, optional (default: None)
+    graph : string or bool array-like, optional (default: None)
         Either string matrix providing graph or bool array providing only adjacencies
         Must be of same shape as val_matrix. 
     val_matrix : array_like
         Matrix of shape (N, N, tau_max+1) containing test statistic values.
-    sig_thres : array-like, optional (default: None)
-        Matrix of significance thresholds. Must be of same shape as  val_matrix.
-        Either sig_thres or link_matrix has to be provided.
     var_names : list, optional (default: None)
         List of variable names. If None, range(N) is used.
     fig_ax : tuple of figure and axis object, optional (default: None)
@@ -2095,22 +2081,26 @@ def plot_time_series_graph(
         Style of inner_edge contemporaneous links.
     """
 
+    if link_matrix is not None:
+        raise ValueError("link_matrix is deprecated and replaced by graph array"
+                         " which is now returned by all methods.")
+        
     if fig_ax is None:
         fig = pyplot.figure(figsize=figsize)
         ax = fig.add_subplot(111, frame_on=False)
     else:
         fig, ax = fig_ax
 
-    (link_matrix, val_matrix, link_width, link_attribute) = _check_matrices(
-        link_matrix, val_matrix, link_width, link_attribute, sig_thres
+    (graph, val_matrix, link_width, link_attribute) = _check_matrices(
+        graph, val_matrix, link_width, link_attribute
     )
 
-    N, N, dummy = link_matrix.shape
+    N, N, dummy = graph.shape
     tau_max = dummy - 1
     max_lag = tau_max + 1
 
-    if np.count_nonzero(link_matrix == "") == link_matrix.size:
-        link_matrix[0, 1, 0] = "---"
+    if np.count_nonzero(graph == "") == graph.size:
+        graph[0, 1, 0] = "---"
         no_links = True
     else:
         no_links = False
@@ -2132,14 +2122,14 @@ def plot_time_series_graph(
     tsg = np.zeros((N * max_lag, N * max_lag))
     tsg_val = np.zeros((N * max_lag, N * max_lag))
     tsg_width = np.zeros((N * max_lag, N * max_lag))
-    tsg_style = np.zeros((N * max_lag, N * max_lag), dtype=link_matrix.dtype)
+    tsg_style = np.zeros((N * max_lag, N * max_lag), dtype=graph.dtype)
     if link_attribute is not None:
         tsg_attr = np.zeros((N * max_lag, N * max_lag), dtype=link_attribute.dtype)
 
     # Only draw link in one direction among contemp
     # Remove lower triangle
-    link_matrix_tsg = np.copy(link_matrix)
-    link_matrix_tsg[:, :, 0] = np.triu(link_matrix[:, :, 0])
+    link_matrix_tsg = np.copy(graph)
+    link_matrix_tsg[:, :, 0] = np.triu(graph[:, :, 0])
 
     for i, j, tau in np.column_stack(np.where(link_matrix_tsg)):
         for t in range(max_lag):
@@ -2152,7 +2142,7 @@ def plot_time_series_graph(
                     translate(i, t - tau), translate(j, t)
                 ] = 1.0  # val_matrix[i, j, tau]
                 tsg_val[translate(i, t - tau), translate(j, t)] = val_matrix[i, j, tau]
-                tsg_style[translate(i, t - tau), translate(j, t)] = link_matrix[
+                tsg_style[translate(i, t - tau), translate(j, t)] = graph[
                     i, j, tau
                 ]
                 if link_width is not None:
@@ -2748,7 +2738,7 @@ def plot_mediation_graph(
     # Define graph links by absolute maximum (positive or negative like for
     # partial correlation)
     # val_matrix[np.abs(val_matrix) < sig_thres] = 0.
-    link_matrix = val_matrix != 0.0
+    graph = val_matrix != 0.0
     net = _get_absmax(val_matrix)
     G = nx.DiGraph(net)
 
@@ -2775,7 +2765,7 @@ def plot_mediation_graph(
             #                       sig_thres[u, v][0]) or
             #                      (np.abs(val_matrix[v, u][0]) >=
             #                       sig_thres[v, u][0]))
-            dic["inner_edge"] = link_matrix[u, v, 0] or link_matrix[v, u, 0]
+            dic["inner_edge"] = graph[u, v, 0] or graph[v, u, 0]
             dic["inner_edge_alpha"] = alpha
             # value at argmax of average
             if np.abs(val_matrix[u, v][0] - val_matrix[v, u][0]) > 0.0001:
@@ -2802,7 +2792,7 @@ def plot_mediation_graph(
                 # True if ensemble mean at lags > 0 is nonzero
                 # dic['outer_edge'] = np.any(
                 #     np.abs(val_matrix[u, v][1:]) >= sig_thres[u, v][1:])
-                dic["outer_edge"] = np.any(link_matrix[u, v, 1:])
+                dic["outer_edge"] = np.any(graph[u, v, 1:])
             else:
                 dic["outer_edge"] = False
             dic["outer_edge_alpha"] = alpha
@@ -2822,7 +2812,7 @@ def plot_mediation_graph(
             # d['min_ensemble_frac'])
             if tau_max > 0:
                 lags = np.abs(val_matrix[u, v][1:]).argsort()[::-1] + 1
-                sig_lags = (np.where(link_matrix[u, v, 1:])[0] + 1).tolist()
+                sig_lags = (np.where(graph[u, v, 1:])[0] + 1).tolist()
             else:
                 lags, sig_lags = [], []
             if lag_array is not None:
@@ -3178,21 +3168,21 @@ if __name__ == "__main__":
     val_matrix = np.zeros((4, 4, 3))
 
     # Complete test case
-    link_matrix = np.zeros((3,3,2), dtype='<U3')
+    graph = np.zeros((3,3,2), dtype='<U3')
 
-    link_matrix[0, 1, 0] = "x->"
-    link_matrix[1, 0, 0] = "<-x"
+    graph[0, 1, 0] = "x->"
+    graph[1, 0, 0] = "<-x"
 
-    link_matrix[1, 2, 0] = "x->"
-    link_matrix[2, 1, 0] = "<-x"
+    graph[1, 2, 0] = "x->"
+    graph[2, 1, 0] = "<-x"
 
-    link_matrix[0, 2, 0] = "x->"
-    link_matrix[2, 0, 0] = "<-x"
-    nolinks = np.zeros(link_matrix.shape)
+    graph[0, 2, 0] = "x->"
+    graph[2, 0, 0] = "<-x"
+    nolinks = np.zeros(graph.shape)
     # nolinks[range(4), range(4), 1] = 1
 
-    # plot_time_series_graph(link_matrix=nolinks)
-    plot_graph(link_matrix=link_matrix, 
+    # plot_time_series_graph(graph=nolinks)
+    plot_graph(graph=graph, 
         save_name="/home/rung_ja/Downloads/tsg_test.pdf")
 
     # pyplot.show()

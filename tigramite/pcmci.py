@@ -1030,11 +1030,14 @@ class PCMCI():
                              parents=None,
                              max_conds_py=None,
                              max_conds_px=None,
-                             val_only=False):
+                             val_only=False,
+                             alpha_level=0.05,
+                             fdr_method='none'):
         """Base function for MCI method and variants.
 
-        Returns the matrices of test statistic values, p-values,
-        and (optionally) confidence intervals.
+        Returns the matrices of test statistic values, (optionally corrected) 
+        p-values, and (optionally) confidence intervals. Also (new in 4.3)
+        returns graph based on alpha_level (and optional FDR-correction).
 
         Parameters
         ----------
@@ -1058,13 +1061,22 @@ class PCMCI():
             number is unrestricted.
         val_only : bool, default: False
             Option to only compute dependencies and not p-values.
+        alpha_level : float, optional (default: 0.05)
+            Significance level at which the p_matrix is thresholded to 
+            get graph.
+        fdr_method : str, optional (default: 'fdr_bh')
+            Correction method, currently implemented is Benjamini-Hochberg
+            False Discovery Rate method. 
 
         Returns
         -------
+        graph : array of shape [N, N, tau_max+1]
+            Causal graph, see description above for interpretation.
         val_matrix : array of shape [N, N, tau_max+1]
             Estimated matrix of test statistic values.
         p_matrix : array of shape [N, N, tau_max+1]
-            Estimated matrix of p-values. Set to 1 if val_only=True.
+            Estimated matrix of p-values, optionally adjusted if fdr_method is
+            not 'none'.
         conf_matrix : array of shape [N, N, tau_max+1,2]
             Estimated matrix of confidence intervals of test statistic values.
             Only computed if set in cond_ind_test, where also the percentiles
@@ -1119,10 +1131,47 @@ class PCMCI():
             if self.cond_ind_test.confidence:
                 conf_matrix[i, j, abs(tau)] = conf
 
+        if val_only:
+            results = {'val_matrix':val_matrix,
+                       'conf_matrix':conf_matrix}
+            self.results = results
+            return results
+
+        # Correct the p_matrix if there is a fdr_method
+        if fdr_method != 'none':
+            p_matrix = self.get_corrected_pvalues(p_matrix=p_matrix, tau_min=tau_min, 
+                                                  tau_max=tau_max, 
+                                                  selected_links=_int_sel_links,
+                                                  fdr_method=fdr_method)
+
+        # Threshold p_matrix to get graph
+        final_graph = p_matrix <= alpha_level
+
+        # Convert to string graph representation
+        graph = self.convert_to_string_graph(final_graph)
+
+        # Symmetrize p_matrix and val_matrix
+        symmetrized_results = self.symmetrize_p_and_val_matrix(
+                            p_matrix=p_matrix, 
+                            val_matrix=val_matrix, 
+                            selected_links=_int_sel_links,
+                            conf_matrix=conf_matrix)
+
+        if self.verbosity > 0:
+            self.print_significant_links(
+                    graph = graph,
+                    p_matrix = symmetrized_results['p_matrix'], 
+                    val_matrix = symmetrized_results['val_matrix'],
+                    conf_matrix = symmetrized_results['conf_matrix'],
+                    alpha_level = alpha_level)
+
         # Return the values as a dictionary and store in class
-        results = {'val_matrix': val_matrix,
-                   'p_matrix': p_matrix,
-                   'conf_matrix': conf_matrix}
+        results = {
+            'graph': graph,
+            'p_matrix': symmetrized_results['p_matrix'],
+            'val_matrix': symmetrized_results['val_matrix'],
+            'conf_matrix': symmetrized_results['conf_matrix'],
+                   }
         self.results = results
         return results
 
@@ -1133,11 +1182,16 @@ class PCMCI():
                 parents=None,
                 max_conds_py=None,
                 max_conds_px=None,
-                val_only=False):
+                val_only=False,
+                alpha_level=0.05,
+                fdr_method='none'):
         """MCI conditional independence tests.
 
-        Implements the MCI test (Algorithm 2 in [1]_). Returns the matrices of
-        test statistic values,  p-values, and (optionally) confidence intervals.
+        Implements the MCI test (Algorithm 2 in [1]_). 
+
+        Returns the matrices of test statistic values, (optionally corrected) 
+        p-values, and (optionally) confidence intervals. Also (new in 4.3)
+        returns graph based on alpha_level (and optional FDR-correction).
 
         Parameters
         ----------
@@ -1161,13 +1215,22 @@ class PCMCI():
             number is unrestricted.
         val_only : bool, default: False
             Option to only compute dependencies and not p-values.
+        alpha_level : float, optional (default: 0.05)
+            Significance level at which the p_matrix is thresholded to 
+            get graph.
+        fdr_method : str, optional (default: 'fdr_bh')
+            Correction method, currently implemented is Benjamini-Hochberg
+            False Discovery Rate method. 
 
         Returns
         -------
+        graph : array of shape [N, N, tau_max+1]
+            Causal graph, see description above for interpretation.
         val_matrix : array of shape [N, N, tau_max+1]
             Estimated matrix of test statistic values.
         p_matrix : array of shape [N, N, tau_max+1]
-            Estimated matrix of p-values. Set to 1 if val_only=True.
+            Estimated matrix of p-values, optionally adjusted if fdr_method is
+            not 'none'.
         conf_matrix : array of shape [N, N, tau_max+1,2]
             Estimated matrix of confidence intervals of test statistic values.
             Only computed if set in cond_ind_test, where also the percentiles
@@ -1190,18 +1253,24 @@ class PCMCI():
             parents=parents,
             max_conds_py=max_conds_py,
             max_conds_px=max_conds_px,
-            val_only=val_only)
+            val_only=val_only,
+            alpha_level=alpha_level,
+            fdr_method=fdr_method)
 
     def get_lagged_dependencies(self,
                                 selected_links=None,
                                 tau_min=0,
                                 tau_max=1,
-                                val_only=False):
+                                val_only=False,
+                                alpha_level=0.05,
+                                fdr_method='none'):
         """Unconditional lagged independence tests.
 
         Implements the unconditional lagged independence test (see [ 1]_).
-        Returns the matrices of test statistic values,  p-values,
-        and confidence intervals.
+        
+        Returns the matrices of test statistic values, (optionally corrected) 
+        p-values, and (optionally) confidence intervals. Also (new in 4.3)
+        returns graph based on alpha_level (and optional FDR-correction).
 
         Parameters
         ----------
@@ -1215,13 +1284,22 @@ class PCMCI():
             Maximum time lag. Must be larger or equal to tau_min.
         val_only : bool, default: False
             Option to only compute dependencies and not p-values.
+        alpha_level : float, optional (default: 0.05)
+            Significance level at which the p_matrix is thresholded to 
+            get graph.
+        fdr_method : str, optional (default: 'fdr_bh')
+            Correction method, currently implemented is Benjamini-Hochberg
+            False Discovery Rate method. 
 
         Returns
         -------
+        graph : array of shape [N, N, tau_max+1]
+            Causal graph, see description above for interpretation.
         val_matrix : array of shape [N, N, tau_max+1]
             Estimated matrix of test statistic values.
         p_matrix : array of shape [N, N, tau_max+1]
-            Estimated matrix of p-values. Set to 1 if val_only=True.
+            Estimated matrix of p-values, optionally adjusted if fdr_method is
+            not 'none'.
         conf_matrix : array of shape [N, N, tau_max+1,2]
             Estimated matrix of confidence intervals of test statistic values.
             Only computed if set in cond_ind_test, where also the percentiles
@@ -1242,17 +1320,24 @@ class PCMCI():
             parents=None,
             max_conds_py=0,
             max_conds_px=0,
-            val_only=val_only)
+            val_only=val_only,
+            alpha_level=alpha_level,
+            fdr_method=fdr_method)
 
     def run_fullci(self,
                    selected_links=None,
                    tau_min=0,
                    tau_max=1,
-                   val_only=False):
+                   val_only=False,
+                   alpha_level=0.05,
+                   fdr_method='none'):
         """FullCI conditional independence tests.
 
-        Implements the FullCI test (see [1]_). Returns the matrices of
-        test statistic values,  p-values, and confidence intervals.
+        Implements the FullCI test (see [1]_). 
+
+        Returns the matrices of test statistic values, (optionally corrected) 
+        p-values, and (optionally) confidence intervals. Also (new in 4.3)
+        returns graph based on alpha_level (and optional FDR-correction).
 
         Parameters
         ----------
@@ -1266,13 +1351,22 @@ class PCMCI():
             Maximum time lag. Must be larger or equal to tau_min.
         val_only : bool, default: False
             Option to only compute dependencies and not p-values.
+        alpha_level : float, optional (default: 0.05)
+            Significance level at which the p_matrix is thresholded to 
+            get graph.
+        fdr_method : str, optional (default: 'fdr_bh')
+            Correction method, currently implemented is Benjamini-Hochberg
+            False Discovery Rate method. 
 
         Returns
         -------
+        graph : array of shape [N, N, tau_max+1]
+            Causal graph, see description above for interpretation.
         val_matrix : array of shape [N, N, tau_max+1]
             Estimated matrix of test statistic values.
         p_matrix : array of shape [N, N, tau_max+1]
-            Estimated matrix of p-values. Set to 1 if val_only=True.
+            Estimated matrix of p-values, optionally adjusted if fdr_method is
+            not 'none'.
         conf_matrix : array of shape [N, N, tau_max+1,2]
             Estimated matrix of confidence intervals of test statistic values.
             Only computed if set in cond_ind_test, where also the percentiles
@@ -1298,17 +1392,24 @@ class PCMCI():
             parents=full_past,
             max_conds_py=None,
             max_conds_px=0,
-            val_only=val_only)
+            val_only=val_only,
+            alpha_level=alpha_level,
+            fdr_method=fdr_method)
 
     def run_bivci(self,
                   selected_links=None,
                   tau_min=0,
                   tau_max=1,
-                  val_only=False):
+                  val_only=False,
+                  alpha_level=0.05,
+                  fdr_method='none'):
         """BivCI conditional independence tests.
 
-        Implements the BivCI test (see [1]_). Returns the matrices of
-        test statistic values,  p-values, and confidence intervals.
+        Implements the BivCI test (see [1]_). 
+
+        Returns the matrices of test statistic values, (optionally corrected) 
+        p-values, and (optionally) confidence intervals. Also (new in 4.3)
+        returns graph based on alpha_level (and optional FDR-correction).
 
         Parameters
         ----------
@@ -1322,13 +1423,22 @@ class PCMCI():
             Maximum time lag. Must be larger or equal to tau_min.
         val_only : bool, default: False
             Option to only compute dependencies and not p-values.
+        alpha_level : float, optional (default: 0.05)
+            Significance level at which the p_matrix is thresholded to 
+            get graph.
+        fdr_method : str, optional (default: 'fdr_bh')
+            Correction method, currently implemented is Benjamini-Hochberg
+            False Discovery Rate method. 
 
         Returns
         -------
+        graph : array of shape [N, N, tau_max+1]
+            Causal graph, see description above for interpretation.
         val_matrix : array of shape [N, N, tau_max+1]
             Estimated matrix of test statistic values.
         p_matrix : array of shape [N, N, tau_max+1]
-            Estimated matrix of p-values. Set to 1 if val_only=True.
+            Estimated matrix of p-values, optionally adjusted if fdr_method is
+            not 'none'.
         conf_matrix : array of shape [N, N, tau_max+1,2]
             Estimated matrix of confidence intervals of test statistic values.
             Only computed if set in cond_ind_test, where also the percentiles
@@ -1353,7 +1463,9 @@ class PCMCI():
             parents=auto_past,
             max_conds_py=None,
             max_conds_px=0,
-            val_only=val_only)
+            val_only=val_only,
+            alpha_level=alpha_level,
+            fdr_method=fdr_method)
 
     def get_corrected_pvalues(self, p_matrix,
                               fdr_method='fdr_bh',
@@ -1449,109 +1561,127 @@ class PCMCI():
         # Return the new matrix
         return q_matrix
 
-    def return_significant_parents(self,
-                                 pq_matrix,
-                                 val_matrix,
-                                 alpha_level=0.05,
-                                 include_lagzero_parents=False):
-        """DEPRECATED: use return_significant_links() instead.
+    def get_graph_from_pmatrix(self, p_matrix, alpha_level, 
+            tau_min, tau_max, selected_links=None):
+        """Construct graph from thresholding the p_matrix at an alpha-level.
+
+        Allows to take into account selected_links.
 
         Parameters
         ----------
-        pq_matrix : array-like
-            p-matrix, or q-value matrix with corrected p-values. Must be of
-            shape (N, N, tau_max + 1).
-        val_matrix : array-like
-            Matrix of test statistic values. Must be of shape (N, N, tau_max +
-            1).
+        p_matrix : array of shape [N, N, tau_max+1]
+            Estimated matrix of p-values, optionally adjusted if fdr_method is
+            not 'none'.
         alpha_level : float, optional (default: 0.05)
-            Significance level.
-        include_lagzero_parents : bool (default: False)
-            Whether the dictionary should also return parents at lag
-            zero. Note that the link_matrix always contains those.
+            Significance level at which the p_matrix is thresholded to 
+            get graph.
+        tau_mix : int
+            Minimum time delay to test.
+        tau_max : int
+            Maximum time delay to test.
+        selected_links : dict or None
+            Dictionary of form {0: [(3, -2), ...], 1:[], ...}
+            specifying whether only selected links should be tested. If None is
+            passed, all links are tested.
 
         Returns
         -------
-        link_dict : dict
-            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}
-            containing estimated links.
-        link_matrix : array, shape [N, N, tau_max+1]
-            Boolean array with True entries for significant links at alpha_level
-        """
-        warnings.warn("return_significant_parents is DEPRECATED: use "
-              "return_significant_links() instead and check updated key names.")
-
-        siglinks = self.return_significant_links(pq_matrix=pq_matrix,
-                                 val_matrix=val_matrix,
-                                 alpha_level=alpha_level,
-                                 include_lagzero_links=include_lagzero_parents)
-        siglinks['parents'] = siglinks.pop('link_dict')
-        return siglinks
-
-    def return_significant_links(self,
-                                 pq_matrix,
-                                 val_matrix,
-                                 graph=None,
-                                 alpha_level=0.05,
-                                 include_lagzero_links=False):
-        """Returns list of significant links as well as a boolean matrix.
-
-        Significance based on p-matrix, or q-value matrix with corrected
-        p-values.
-
-        Parameters
-        ----------
-        pq_matrix : array-like
-            p-matrix, or q-value matrix with corrected p-values. Must be of
-            shape (N, N, tau_max + 1).
-        val_matrix : array-like
-            Matrix of test statistic values. Must be of shape (N, N, tau_max +
-            1).
         graph : array of shape [N, N, tau_max+1]
             Causal graph, see description above for interpretation.
-        alpha_level : float, optional (default: 0.05)
-            Significance level.
-        include_lagzero_links : bool (default: False)
-            Whether the dictionary should also return links at lag
-            zero. Note that the link_matrix always contains those.
+        """  
+
+        _int_sel_links = self._set_sel_links(selected_links, tau_min, tau_max)
+
+        if selected_links != None:
+            # Create a mask for these values
+            mask = np.zeros((self.N, self.N, tau_max + 1), dtype='bool')
+            for node1, links_ in _int_sel_links.items():
+                for node2, lag in links_:
+                    mask[node2, node1, abs(lag)] = True
+        else:
+            # Create a mask for these values
+            mask = np.ones((self.N, self.N, tau_max + 1), dtype='bool')
+
+        # Set all p-values of absent links to 1.
+        p_matrix[mask==False] == 1.
+
+        # Threshold p_matrix to get graph
+        graph_bool = p_matrix <= alpha_level
+
+        # Convert to string graph representation
+        graph = self.convert_to_string_graph(graph_bool)
+
+        # Return the graph
+        return graph
+
+    def return_parents_dict(graph,
+                             val_matrix,
+                             include_lagzero_parents=False):
+        """Returns dictionary of parents sorted by val_matrix.
+
+        If parents are unclear (link with o or x), then no parent 
+        is returned. 
+
+        Parameters
+        ----------
+        graph : array of shape [N, N, tau_max+1]
+            Causal graph, see description above for interpretation.
+        val_matrix : array-like
+            Matrix of test statistic values. Must be of shape (N, N, tau_max +
+            1).
+        include_lagzero_parents : bool (default: False)
+            Whether the dictionary should also return parents at lag
+            zero. 
 
         Returns
         -------
-        link_dict : dict
+        parents_dict : dict
             Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}
-            containing estimated links.
-        link_matrix : array, shape [N, N, tau_max+1]
-            Boolean array with True entries for significant links at alpha_level
+            containing estimated parents.
         """
+
         # Initialize the return value
-        link_dict = dict()
+        parents_dict = dict()
         for j in range(self.N):
             # Get the good links
-            if include_lagzero_links:
-                good_links = np.argwhere(pq_matrix[:, j, :] <= alpha_level)
+            if include_lagzero_parents:
+                good_links = np.argwhere(graph[:, j, :] == "-->")
                 # Build a dictionary from these links to their values
                 links = {(i, -tau): np.abs(val_matrix[i, j, abs(tau)])
                          for i, tau in good_links}
             else:
-                good_links = np.argwhere(pq_matrix[:, j, 1:] <= alpha_level)
+                good_links = np.argwhere(pq_matrix[:, j, 1:] == "-->")
                 # Build a dictionary from these links to their values
                 links = {(i, -tau - 1): np.abs(val_matrix[i, j, abs(tau) + 1])
                          for i, tau in good_links}
             # Sort by value
-            link_dict[j] = sorted(links, key=links.get, reverse=True)
-        # Return the significant parents
-        link_matrix = pq_matrix <= alpha_level
-        if graph is not None:
-            graph = graph[link_matrix]
-        return {'link_dict': link_dict,
-                'link_matrix': link_matrix,
-                'graph' : graph}
+            parents_dict[j] = sorted(links, key=links.get, reverse=True)
+        
+        return parents_dict
+               
+
+    def return_significant_links(pq_matrix,
+                                 val_matrix,
+                                 alpha_level=0.05,
+                                 include_lagzero_links=False):
+        """Returns list of significant links as well as a boolean matrix.
+
+        DEPRECATED. Will be removed in future.
+        """
+        print("return_significant_links() is DEPRECATED: now run_pcmci(), "
+              " run_mci()"
+              " and all variants directly return the graph based on thresholding "
+              "the p_matrix at alpha_level. The graph can also be updated "
+              "based on a (potentially further adjusted) p_matrix using "
+              "get_graph_from_pmatrix(). "
+              "A dictionary of parents can be obtained "
+              "with return_parents_dict().")
+        return None
 
     def print_significant_links(self,
                                 p_matrix,
                                 val_matrix,
                                 conf_matrix=None,
-                                q_matrix=None,
                                 graph=None,
                                 ambiguous_triples=None,
                                 alpha_level=0.05):
@@ -1568,8 +1698,6 @@ class PCMCI():
             Must be of shape (N, N, tau_max + 1).
         val_matrix : array-like
             Must be of shape (N, N, tau_max + 1).
-        q_matrix : array-like, optional (default: None)
-            Adjusted p-values. Must be of shape (N, N, tau_max + 1).
         conf_matrix : array-like, optional (default: None)
             Matrix of confidence intervals of shape (N, N, tau_max+1, 2).
         graph : array-like
@@ -1579,8 +1707,6 @@ class PCMCI():
         """
         if graph is not None:
             sig_links = (graph != "")*(graph != "<--")
-        elif q_matrix is not None:
-            sig_links = (q_matrix <= alpha_level)
         else:
             sig_links = (p_matrix <= alpha_level)
 
@@ -1597,9 +1723,6 @@ class PCMCI():
                 string += ("\n        (%s % d): pval = %.5f" %
                            (self.var_names[p[0]], p[1],
                             p_matrix[p[0], j, abs(p[1])]))
-                if q_matrix is not None:
-                    string += " | qval = %.5f" % (
-                        q_matrix[p[0], j, abs(p[1])])
                 string += " | val = % .3f" % (
                     val_matrix[p[0], j, abs(p[1])])
                 if conf_matrix is not None:
@@ -1636,17 +1759,10 @@ class PCMCI():
                 * 'p_matrix'
                 * 'val_matrix'
                 * 'conf_matrix'
-                * 'q_matrix' can also be included in keys, but is not necessary.
 
         alpha_level : float, optional (default: 0.05)
             Significance level.
         """
-        # Check if q_matrix is defined.  It is returned for PCMCI but not for
-        # MCI
-        q_matrix = None
-        q_key = 'q_matrix'
-        if q_key in return_dict:
-            q_matrix = return_dict[q_key]
         # Check if conf_matrix is defined
         conf_matrix = None
         conf_key = 'conf_matrix'
@@ -1664,7 +1780,6 @@ class PCMCI():
         self.print_significant_links(return_dict['p_matrix'],
                                      return_dict['val_matrix'],
                                      conf_matrix=conf_matrix,
-                                     q_matrix=q_matrix,
                                      graph=graph,
                                      ambiguous_triples=ambiguous_triples,
                                      alpha_level=alpha_level)
@@ -1679,6 +1794,7 @@ class PCMCI():
                   max_combinations=1,
                   max_conds_py=None,
                   max_conds_px=None,
+                  alpha_level=0.05,
                   fdr_method='none'):
         """Runs PCMCI time-lagged causal discovery for time series.
 
@@ -1760,8 +1876,8 @@ class PCMCI():
         >>> pcmci = PCMCI(dataframe=dataframe, cond_ind_test=cond_ind_test)
         >>> results = pcmci.run_pcmci(tau_max=2, pc_alpha=None)
         >>> pcmci.print_significant_links(p_matrix=results['p_matrix'],
-                                             val_matrix=results['val_matrix'],
-                                             alpha_level=0.05)
+                                         val_matrix=results['val_matrix'],
+                                         alpha_level=0.05)
         ## Significant parents at alpha = 0.05:
 
             Variable 0 has 1 link(s):
@@ -1803,16 +1919,22 @@ class PCMCI():
         max_conds_px : int, optional (default: None)
             Maximum number of conditions of Z to use. If None is passed, this
             number is unrestricted.
-        fdr_method : str, optional (default: 'none')
-            Correction method, default is Benjamini-Hochberg False Discovery
-            Rate method.
+        alpha_level : float, optional (default: 0.05)
+            Significance level at which the p_matrix is thresholded to 
+            get graph.
+        fdr_method : str, optional (default: 'fdr_bh')
+            Correction method, currently implemented is Benjamini-Hochberg
+            False Discovery Rate method. 
 
         Returns
         -------
+        graph : array of shape [N, N, tau_max+1]
+            Causal graph, see description above for interpretation.
         val_matrix : array of shape [N, N, tau_max+1]
             Estimated matrix of test statistic values.
         p_matrix : array of shape [N, N, tau_max+1]
-            Estimated matrix of p-values. Set to 1 if val_only=True.
+            Estimated matrix of p-values, optionally adjusted if fdr_method is
+            not 'none'.
         conf_matrix : array of shape [N, N, tau_max+1,2]
             Estimated matrix of confidence intervals of test statistic values.
             Only computed if set in cond_ind_test, where also the percentiles
@@ -1834,36 +1956,19 @@ class PCMCI():
                                tau_max=tau_max,
                                parents=all_parents,
                                max_conds_py=max_conds_py,
-                               max_conds_px=max_conds_px)
-        # Get the values and p-values
-        val_matrix = results['val_matrix']
-        p_matrix = results['p_matrix']
-        # Initialize and fill the the confidance matrix if the confidance test
-        # says it should be returned
-
-        conf_matrix = None
-        if self.cond_ind_test.confidence is not None:
-            conf_matrix = results['conf_matrix']
-        # Initialize and fill the q_matrix if there is a fdr_method
-        q_matrix = None
-        if fdr_method != 'none':
-            q_matrix = self.get_corrected_pvalues(p_matrix=p_matrix, tau_min=tau_min, 
-                                                  tau_max=tau_max, 
-                                                  selected_links=selected_links,
-                                                  fdr_method=fdr_method)
+                               max_conds_px=max_conds_px,
+                               alpha_level=alpha_level,
+                               fdr_method=fdr_method)
+    
         # Store the parents in the pcmci member
         self.all_parents = all_parents
-        # Cache the resulting values in the return dictionary
-        return_dict = {'val_matrix': val_matrix,
-                       'p_matrix': p_matrix,
-                       'q_matrix': q_matrix,
-                       'conf_matrix': conf_matrix}
+
         # Print the information
-        if self.verbosity > 0:
-            self.print_results(return_dict)
+        # if self.verbosity > 0:
+        #     self.print_results(results)
         # Return the dictionary
-        self.results = return_dict
-        return return_dict
+        self.results = results
+        return results
 
     def run_pcmciplus(self,
                       selected_links=None,
@@ -2203,14 +2308,13 @@ class PCMCI():
         # if self.cond_ind_test.confidence is not False:
         #     conf_matrix = results['conf_matrix']
 
-        # Initialize and fill the q_matrix if there is a fdr_method
-        q_matrix = None
+        # Correct the p_matrix if there is a fdr_method
         if fdr_method != 'none':
-            q_matrix = self.get_corrected_pvalues(p_matrix=p_matrix, tau_min=tau_min, 
+            p_matrix = self.get_corrected_pvalues(p_matrix=p_matrix, tau_min=tau_min, 
                                                   tau_max=tau_max, 
-                                                  selected_links=selected_links,
-                                                  fdr_method=fdr_method,
-                                                  exclude_contemporaneous=False)
+                                                  selected_links=_int_sel_links,
+                                                  fdr_method=fdr_method)
+
         # Store the parents in the pcmci member
         self.all_lagged_parents = lagged_parents
 
@@ -2218,7 +2322,6 @@ class PCMCI():
         return_dict = {'graph': graph,
                        'val_matrix': val_matrix,
                        'p_matrix': p_matrix,
-                       'q_matrix': q_matrix,
                        'ambiguous_triples': ambiguous,
                        'conf_matrix': conf_matrix}
         # Print the results
@@ -2374,29 +2477,19 @@ class PCMCI():
         )
 
         # Symmetrize p_matrix and val_matrix
-        for i in range(self.N):
-            for j in range(self.N):
-                # If both the links are present in selected_links, symmetrize using maximum p-value
-                if ((i, 0) in _int_sel_links[j] and (j, 0) in _int_sel_links[i]):
-                    if (skeleton_results['p_matrix'][i, j, 0]
-                            >= skeleton_results['p_matrix'][j, i, 0]):
-                        skeleton_results['p_matrix'][j, i, 0] = skeleton_results['p_matrix'][i, j, 0]
-                        skeleton_results['val_matrix'][j, i, 0] = skeleton_results['val_matrix'][i, j, 0]
-                # If only one of the links is present in selected_links, symmetrize using the p-value of the link present
-                elif ((i, 0) in _int_sel_links[j] and (j, 0) not in _int_sel_links[i]):
-                    skeleton_results['p_matrix'][j, i, 0] = skeleton_results['p_matrix'][i, j, 0]
-                    skeleton_results['val_matrix'][j, i, 0] = skeleton_results['val_matrix'][i, j, 0]
-                else:
-                    # Links not present in selected_links
-                    pass
+        symmetrized_results = self.symmetrize_p_and_val_matrix(
+                            p_matrix=skeleton_results['p_matrix'], 
+                            val_matrix=skeleton_results['val_matrix'], 
+                            selected_links=_int_sel_links,
+                            conf_matrix=None)
 
         # Convert numerical graph matrix to string
         graph_str = self.convert_to_string_graph(final_graph)
 
         pc_results = {
             'graph': graph_str,
-            'p_matrix': skeleton_results['p_matrix'],
-            'val_matrix': skeleton_results['val_matrix'],
+            'p_matrix': symmetrized_results['p_matrix'],
+            'val_matrix': symmetrized_results['val_matrix'],
             'sepset': colliders_step_results['sepset'],
             'ambiguous_triples': colliders_step_results['ambiguous_triples'],
         }
@@ -2417,6 +2510,7 @@ class PCMCI():
         """Runs PC algorithm for non-time series data.
 
         Simply calls run_pcalg with tau_min = tau_max = 0.
+        Removes lags from ouput dictionaries.
 
         Parameters
         ----------
@@ -3739,11 +3833,6 @@ class PCMCI():
                             cpdag_graph=results[pc_alpha_here]['graph'],
                             variable_order=variable_order)
             
-            # = self.return_significant_links(
-            #         pq_matrix=results[pc_alpha_here]['p_matrix'],
-            #         val_matrix=results[pc_alpha_here]['val_matrix'], 
-            #         alpha_level=pc_alpha_here,
-            #         include_lagzero_links=True)['link_dict']
 
             # Compute the best average score when the model selection
             # is applied to all N variables
@@ -3805,6 +3894,64 @@ class PCMCI():
 
         return graph
 
+    def symmetrize_p_and_val_matrix(self, p_matrix, val_matrix, selected_links, conf_matrix=None):
+        """Symmetrizes the p_matrix, val_matrix, and conf_matrix based on selected_links
+           and the larger p-value.
+
+        Parameters
+        ----------
+        val_matrix : array of shape [N, N, tau_max+1]
+            Estimated matrix of test statistic values.
+        p_matrix : array of shape [N, N, tau_max+1]
+            Estimated matrix of p-values. Set to 1 if val_only=True.
+        conf_matrix : array of shape [N, N, tau_max+1,2]
+            Estimated matrix of confidence intervals of test statistic values.
+            Only computed if set in cond_ind_test, where also the percentiles
+            are set.
+        selected_links : dict or None
+            Dictionary of form {0: [(3, -2), ...], 1:[], ...}
+            specifying whether only selected links should be tested. If None is
+            passed, all links are tested.
+
+        Returns
+        -------
+        val_matrix : array of shape [N, N, tau_max+1]
+            Estimated matrix of test statistic values.
+        p_matrix : array of shape [N, N, tau_max+1]
+            Estimated matrix of p-values. Set to 1 if val_only=True.
+        conf_matrix : array of shape [N, N, tau_max+1,2]
+            Estimated matrix of confidence intervals of test statistic values.
+            Only computed if set in cond_ind_test, where also the percentiles
+            are set.
+        """
+
+        # Symmetrize p_matrix and val_matrix and conf_matrix
+        for i in range(self.N):
+            for j in range(self.N):
+                # If both the links are present in selected_links, symmetrize using maximum p-value
+                if ((i, 0) in selected_links[j] and (j, 0) in selected_links[i]):
+                    if (p_matrix[i, j, 0]
+                            >= p_matrix[j, i, 0]):
+                        p_matrix[j, i, 0] = p_matrix[i, j, 0]
+                        val_matrix[j, i, 0] = val_matrix[i, j, 0]
+                        if conf_matrix is not None:
+                            conf_matrix[j, i, 0] = conf_matrix[i, j, 0]
+
+                # If only one of the links is present in selected_links, symmetrize using the p-value of the link present
+                elif ((i, 0) in selected_links[j] and (j, 0) not in selected_links[i]):
+                    p_matrix[j, i, 0] = p_matrix[i, j, 0]
+                    val_matrix[j, i, 0] = val_matrix[i, j, 0]
+                    if conf_matrix is not None:
+                        conf_matrix[j, i, 0] = conf_matrix[i, j, 0]
+                else:
+                    # Links not present in selected_links
+                    pass
+
+        # Return the values as a dictionary and store in class
+        results = {'val_matrix': val_matrix,
+                   'p_matrix': p_matrix,
+                   'conf_matrix': conf_matrix}
+        return results
 
 if __name__ == '__main__':
     from tigramite.independence_tests import ParCorr, CMIknn
