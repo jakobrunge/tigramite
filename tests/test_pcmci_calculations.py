@@ -47,16 +47,15 @@ def _select_links(link_ids, true_parents):
     return {par : [true_parents[par][link]] for par in true_parents \
                                             for link in link_ids}
 
-def _get_parents_from_results(pcmci, results, alpha_level):
+def _get_parents_from_results(pcmci, results):
     """
     Select the significant parents from the MCI-like results at a given
     alpha_level
     """
     significant_parents = \
-        pcmci.return_significant_links(pq_matrix=results['p_matrix'],
-                                         val_matrix=results['val_matrix'],
-                                         alpha_level=alpha_level)
-    return significant_parents['link_dict']
+        pcmci.return_parents_dict(graph=results['graph'],
+                                         val_matrix=results['val_matrix'])
+    return significant_parents
 
 def gen_data_frame(links_coeffs, time, seed_val):
     # Set the random seed
@@ -211,9 +210,10 @@ def a_run_mci(a_pcmci, a_mci_params):
                             tau_max=tau_max,
                             parents=true_parents,
                             max_conds_py=max_conds_px,
-                            max_conds_px=max_conds_py)
+                            max_conds_px=max_conds_py,
+                            alpha_level=alpha_level)
     # Return the calculated and expected results
-    return _get_parents_from_results(pcmci, results, alpha_level), true_parents
+    return _get_parents_from_results(pcmci, results), true_parents
 
 def test_mci(a_run_mci):
     """
@@ -242,9 +242,10 @@ def a_run_pcmci(a_pcmci, a_pc_stable_params, a_mci_params):
                               max_conds_dim=max_conds_dim,
                               max_combinations=max_combinations,
                               max_conds_px=max_conds_px,
-                              max_conds_py=max_conds_py)
+                              max_conds_py=max_conds_py,
+                              alpha_level=alpha_level)
     # Return the results and the expected result
-    return _get_parents_from_results(pcmci, results, alpha_level), true_parents
+    return _get_parents_from_results(pcmci, results), true_parents
 
 def test_pcmci(a_run_pcmci):
     """

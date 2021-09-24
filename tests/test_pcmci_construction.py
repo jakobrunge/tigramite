@@ -365,11 +365,10 @@ def test_sig_parents(a_pcmci):
     # Define the alpha value
     alpha = dim*dim*dim/2
     # Get the significant parents
-    sig_parents = pcmci.return_significant_links(p_matrix,
-                                                   val_matrix,
+    graph = pcmci.get_graph_from_pmatrix(p_matrix=p_matrix, tau_min=0, tau_max=dim-1,
                                                    alpha_level=alpha)
     # Ensure the link matrix has the correct sum
-    link_matrix = sig_parents['link_matrix']
+    link_matrix = graph != ""
     num_links = np.count_nonzero(link_matrix)
     assert num_links == alpha,\
         "The correct number of significant parents are found in the returned"+\
@@ -381,7 +380,7 @@ def test_sig_parents(a_pcmci):
         " link matrix"
     # Ensure the correct number of links are returned in the dictionary of
     # parents
-    parents_dict = sig_parents['link_dict']
+    parents_dict = return_parents_dict(graph)
     all_links = [lnk for links in parents_dict.values() for lnk in links]
     assert len(all_links) == (dim*dim*(dim - 1))/2.,\
             "The correct number of links are returned in the dictionary of"+\

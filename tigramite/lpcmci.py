@@ -3258,7 +3258,7 @@ if __name__ == '__main__':
     def lin_f(x): return x
     def nonlin_f(x): return (x + 5. * x ** 2 * np.exp(-x ** 2 / 20.))
 
-    links = {0: [((0, -1), 0.9, lin_f), ((3, -1), 0.6, lin_f)],
+    links = {0: [((0, -1), 0.9, lin_f), ((3, -1), -0.6, lin_f)],
              1: [((1, -1), 0.9, lin_f), ((3, -1), 0.6, lin_f)],
              2: [((2, -1), 0.9, lin_f), ((1, -1), 0.6, lin_f)],
              3: [],
