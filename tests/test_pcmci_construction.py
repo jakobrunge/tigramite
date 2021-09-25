@@ -380,7 +380,7 @@ def test_sig_parents(a_pcmci):
     #     " link matrix"
     # Ensure the correct number of links are returned in the dictionary of
     # parents
-    parents_dict = return_parents_dict(graph)
+    parents_dict = pcmci.return_parents_dict(graph=graph, val_matrix=val_matrix)
     all_links = [lnk for links in parents_dict.values() for lnk in links]
     assert len(all_links) == (dim*dim*(dim - 1))/2.,\
             "The correct number of links are returned in the dictionary of"+\
