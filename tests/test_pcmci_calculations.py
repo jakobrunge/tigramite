@@ -54,7 +54,7 @@ def _get_parents_from_results(pcmci, results):
     """
     significant_parents = \
         pcmci.return_parents_dict(graph=results['graph'],
-                                         val_matrix=results['val_matrix'])
+                                val_matrix=results['val_matrix'])
     return significant_parents
 
 def gen_data_frame(links_coeffs, time, seed_val):

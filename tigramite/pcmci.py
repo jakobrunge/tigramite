@@ -1614,7 +1614,7 @@ class PCMCI():
         # Return the graph
         return graph
 
-    def return_parents_dict(graph,
+    def return_parents_dict(self, graph,
                              val_matrix,
                              include_lagzero_parents=False):
         """Returns dictionary of parents sorted by val_matrix.
@@ -1650,7 +1650,7 @@ class PCMCI():
                 links = {(i, -tau): np.abs(val_matrix[i, j, abs(tau)])
                          for i, tau in good_links}
             else:
-                good_links = np.argwhere(pq_matrix[:, j, 1:] == "-->")
+                good_links = np.argwhere(graph[:, j, 1:] == "-->")
                 # Build a dictionary from these links to their values
                 links = {(i, -tau - 1): np.abs(val_matrix[i, j, abs(tau) + 1])
                          for i, tau in good_links}
@@ -1660,7 +1660,7 @@ class PCMCI():
         return parents_dict
                
 
-    def return_significant_links(pq_matrix,
+    def return_significant_links(self, pq_matrix,
                                  val_matrix,
                                  alpha_level=0.05,
                                  include_lagzero_links=False):
