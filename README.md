@@ -1,4 +1,4 @@
-# TIGRAMITE – Causal discovery for time series datasets
+# Tigramite – Causal discovery for time series datasets
 Version 4.3
 
 (Python Package)
