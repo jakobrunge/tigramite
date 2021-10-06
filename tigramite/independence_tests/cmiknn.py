@@ -121,7 +121,7 @@ class CMIknn(CondIndTest):
                 print("knn = %s" % self.knn)
             print("shuffle_neighbors = %d\n" % self.shuffle_neighbors)
 
-    @jit
+    @jit(forceobj=True)
     def _get_nearest_neighbors(self, array, xyz, knn):
         """Returns nearest neighbors according to Frenzel and Pompe (2007).
 
@@ -421,7 +421,7 @@ class CMIknn(CondIndTest):
         return h_x_y
 
 
-    @jit
+    @jit(forceobj=True)
     def get_restricted_permutation(self, T, shuffle_neighbors, neighbors, order):
 
         restricted_permutation = np.zeros(T, dtype=np.int32)

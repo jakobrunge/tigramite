@@ -7,6 +7,8 @@ Version 4.3
 
 [Documentation](https://jakobrunge.github.io/tigramite/)
 
+[Simple GUI](https://github.com/stbachinger/TigramiteGui)
+
 ## Overview
 
 Tigramite provides several causal discovery methods that can be used under different sets of assumptions. An application always consists of a method and a chosen conditional independence test, e.g. PCMCI together with ParCorr. The following two tables give an overview of the assumptions involved:
@@ -28,7 +30,7 @@ Tigramite provides several causal discovery methods that can be used under diffe
 
 ## General Notes
 
-Tigramite is a causal time series analysis python package. It allows to efficiently estimate causal graphs from high-dimensional time series datasets (causal discovery) and to use these graphs for robust forecasting and the estimation and prediction of direct, total, and mediated effects. Causal discovery is based on linear as well as non-parametric conditional independence tests applicable to discrete or continuously-valued time series. Also includes functions for high-quality plots of the results. Please cite the following papers depending on which method you use:
+Tigramite is a causal time series analysis python package. It allows to efficiently estimate causal graphs from high-dimensional time series datasets (causal discovery) and to use these graphs for robust forecasting and the estimation and prediction of direct, total, and mediated effects. Causal discovery is based on linear as well as non-parametric conditional independence tests applicable to discrete or continuously-valued time series. Also includes functions for high-quality plots of the results. You can find a simple GUI version on https://github.com/stbachinger/TigramiteGui. Please cite the following papers depending on which method you use:
 
 - PCMCI: J. Runge, P. Nowack, M. Kretschmer, S. Flaxman, D. Sejdinovic, Detecting and quantifying causal associations in large nonlinear time series datasets. Sci. Adv. 5, eaau4996 (2019). https://advances.sciencemag.org/content/5/11/eaau4996
 - PCMCI+: J. Runge (2020): Discovering contemporaneous and lagged causal relations in autocorrelated nonlinear time series datasets. Proceedings of the 36th Conference on Uncertainty in Artificial Intelligence, UAI 2020,Toronto, Canada, 2019, AUAI Press, 2020. http://auai.org/uai2020/proceedings/579_main_paper.pdf
@@ -52,7 +54,7 @@ Tigramite is a causal time series analysis python package. It allows to efficien
 - p-value correction and confidence interval estimation
 - causal mediation class to analyze causal pathways
 - prediction class based on sklearn models including causal feature selection
-- GUI covering basic functionality
+- GUI covering basic functionality on https://github.com/stbachinger/TigramiteGui
 
 
 ## Required python packages
