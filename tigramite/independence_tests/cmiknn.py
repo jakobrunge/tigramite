@@ -303,9 +303,10 @@ class CMIknn(CondIndTest):
                 order = self.random_state.permutation(T).astype(np.int32)
 
                 # Shuffle neighbor indices for each sample index
-                for i in range(len(neighbors)):
-                    self.random_state.shuffle(neighbors[i])
-
+                # for i in range(len(neighbors)):
+                #     self.random_state.shuffle(neighbors[i])
+                neighbors = self.random_state.permuted(neighbors, axis=1)
+                
                 # Select a series of neighbor indices that contains as few as
                 # possible duplicates
                 restricted_permutation = self.get_restricted_permutation(

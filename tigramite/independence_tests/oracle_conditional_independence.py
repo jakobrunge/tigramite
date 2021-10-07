@@ -1404,6 +1404,15 @@ class OracleCI:
 
         return graph
 
+    def get_confidence(self, X, Y, Z=None, tau_max=0):
+        """For compatibility with PCMCI.
+
+        Returns
+        -------
+        None
+        """
+        return None
+
 if __name__ == '__main__':
 
     import tigramite.plotting as tp
