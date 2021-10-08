@@ -32,7 +32,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 # Define the minimal classes needed to install and run tigramite
-INSTALL_REQUIRES = ["numpy", "scipy", "six"]
+INSTALL_REQUIRES =  ["numpy>=1.21.2", "scipy>=1.7.1", "numba>=0.53.1", "six"]
 # Define all the possible extras needed
 EXTRAS_REQUIRE = {
     "all": [
