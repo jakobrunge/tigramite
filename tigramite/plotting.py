@@ -928,6 +928,7 @@ def _draw_network_with_curved_edges(
 
             if d.get("inner_edge_attribute", None) == "spurious":
                 facecolor = "grey"
+            # print(d.get("inner_edge_type"))
             if d.get("inner_edge_type") in ["<-o", "<--", "<-x", "<-+"]:
                 n1, n2 = n2, n1
 
@@ -1155,7 +1156,7 @@ def _draw_network_with_curved_edges(
                     zorder=1,
                 )
                 ax.add_collection(circle_marker_start)
-            elif d.get("outer_edge_type") == "<-o":
+            elif d.get("inner_edge_type") == "<-o":
                 circle_marker_end = ax.scatter(
                     *start,
                     marker="o",
@@ -1165,7 +1166,7 @@ def _draw_network_with_curved_edges(
                     zorder=1,
                 )
                 ax.add_collection(circle_marker_end)
-            elif d.get("outer_edge_type") == "--o":
+            elif d.get("inner_edge_type") == "--o":
                 circle_marker_end = ax.scatter(
                     *end,
                     marker="o",
@@ -1195,7 +1196,7 @@ def _draw_network_with_curved_edges(
                     zorder=1,
                 )
                 ax.add_collection(circle_marker_start)
-            elif d.get("outer_edge_type") == "<-x":
+            elif d.get("inner_edge_type") == "<-x":
                 circle_marker_end = ax.scatter(
                     *start,
                     marker="X",
@@ -1205,7 +1206,7 @@ def _draw_network_with_curved_edges(
                     zorder=1,
                 )
                 ax.add_collection(circle_marker_end)
-            elif d.get("outer_edge_type") == "<-+":
+            elif d.get("inner_edge_type") == "<-+":
                 circle_marker_end = ax.scatter(
                     *start,
                     marker="P",
@@ -1215,7 +1216,7 @@ def _draw_network_with_curved_edges(
                     zorder=1,
                 )
                 ax.add_collection(circle_marker_end)
-            elif d.get("outer_edge_type") == "--x":
+            elif d.get("inner_edge_type") == "--x":
                 circle_marker_end = ax.scatter(
                     *end,
                     marker="X",
@@ -3170,14 +3171,14 @@ if __name__ == "__main__":
     # Complete test case
     graph = np.zeros((3,3,2), dtype='<U3')
 
-    graph[0, 1, 0] = "x->"
-    graph[1, 0, 0] = "<-x"
+    graph[0, 1, 0] = "<-+"
+    graph[1, 0, 0] = "+->"
 
-    graph[1, 2, 0] = "x->"
-    graph[2, 1, 0] = "<-x"
+    # graph[1, 2, 0] = "x->"
+    # graph[2, 1, 0] = "<-x"
 
-    graph[0, 2, 0] = "x->"
-    graph[2, 0, 0] = "<-x"
+    # graph[0, 2, 0] = "x->"
+    # graph[2, 0, 0] = "<-x"
     nolinks = np.zeros(graph.shape)
     # nolinks[range(4), range(4), 1] = 1
 
