@@ -28,7 +28,7 @@ COMM = MPI.COMM_WORLD
 
 def split(container, count):
     """
-    Simple function splitting a the range of selected variables (or range(N)) 
+    Simple function splitting a range of selected variables (or range(N)) 
     into equal length chunks. Order is not preserved.
     """
     return [container[_i::count] for _i in range(count)]
@@ -128,7 +128,7 @@ dataframe = pp.DataFrame(data, var_names=var_names)
 # provided or pc_alpha=None, the optimal pc_alpha is automatically chosen via
 # model-selection.
 pc_alpha = 0.2  # [0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
-selected_variables = range(N)  #[2] # [2]  # [2]
+selected_variables = list(range(N))  #[2] # [2]  # [2]
 
 # Maximum time lag
 tau_max = 3
@@ -181,7 +181,7 @@ if COMM.rank == 0:
     # Split selected_variables into however many cores are available.
     splitted_jobs = split(selected_variables, COMM.size)
     if verbosity > -1:
-        print("Splitted selected_variables = "), splitted_jobs
+        print("Splitted selected_variables = ", splitted_jobs)
 else:
     splitted_jobs = None
 
@@ -273,14 +273,16 @@ if COMM.rank == 0:
                         if key == 'p_matrix':
                             all_results[key] = numpy.ones(results_in_j[key].shape)
                         else:
-                            all_results[key] = numpy.zeros(results_in_j[key].shape)
-                        all_results[key][:, j, :] = results_in_j[key][:, j, :]
-                    else:
-                        all_results[key][:, j, :] = results_in_j[key][:, j, :]
+                            all_results[key] = numpy.zeros(results_in_j[key].shape, dtype=results_in_j[key].dtype)
+                    all_results[key][:, j, :] = results_in_j[key][:, j, :]
 
     p_matrix = all_results['p_matrix']
     val_matrix = all_results['val_matrix']
     conf_matrix = all_results['conf_matrix']
+    # if 'graph' in all_results.keys():
+    #     graph = all_results['graph']
+    #     if verbosity > -1:
+    #         print(all_results['graph'])
 
     sig_links = (p_matrix <= alpha_level)
 
