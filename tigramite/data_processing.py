@@ -1242,7 +1242,7 @@ class Graph():
 
         return stack
 
-def structural_causal_process(links, T, noises=None, seed=None):
+def structural_causal_process(links, T, noises=None, intervention=None, seed=None):
     """Returns a structural causal process with contemporaneous and lagged
     dependencies.
 
@@ -1268,6 +1268,9 @@ def structural_causal_process(links, T, noises=None, seed=None):
         Sample size.
     noises : list of callables, optional (default: 'np.random.randn')
         Random distribution function that is called with noises[j](T).
+    intervention : dict
+        Dictionary of format: {1:np.array, ...} containing only keys of intervened
+        variables with the value being the array of length T with interventional values.
     seed : int, optional (default: None)
         Random seed.
 
@@ -1314,14 +1317,24 @@ def structural_causal_process(links, T, noises=None, seed=None):
 
     causal_order = contemp_dag.topologicalSort() 
 
+    if intervention is not None:
+        for j in intervention.keys():
+            if len(intervention[j]) != T:
+                raise ValueError("intervention array for j=%s must be of length T = %d" %(j, T))
+
     transient = int(.2*T)
 
     data = np.zeros((T+transient, N), dtype='float32')
     for j in range(N):
         data[:, j] = noises[j](T+transient)
 
+        if intervention is not None and j in intervention:
+            data[-T:, j] = intervention[j]
+
     for t in range(max_lag, T+transient):
         for j in causal_order:
+            if intervention is not None and j in intervention:
+                continue
             for link_props in links[j]:
                 var, lag = link_props[0]
                 coeff = link_props[1]

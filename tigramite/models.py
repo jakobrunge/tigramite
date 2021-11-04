@@ -111,6 +111,9 @@ class Models():
         if conditions is None:
             conditions = []
 
+        if Z is not None:
+            Z = [z for z in Z if z not in conditions]
+
         # Find the maximal conditions lag
         max_lag = 0
         for j in Y:
@@ -148,6 +151,7 @@ class Models():
                                 + list(np.where(xyz==1)[0][1:]) \
                                 +  list(np.where(xyz==2)[0])
             predictor_array = array[predictor_indices, :].T
+            # Target is only first entry of Y, ie [y]
             target_array = array[np.where(xyz==1)[0][0], :]
 
             a_model.fit(X=predictor_array, y=target_array)
@@ -198,6 +202,9 @@ class Models():
 
         if conditions is None:
             conditions = []
+
+        if Z is not None:
+            Z = [z for z in Z if z not in conditions]
 
         # XZS = X + Z + conditions
 

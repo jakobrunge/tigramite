@@ -2195,18 +2195,18 @@ class PCMCI():
         if pc_alpha is None or isinstance(pc_alpha, (list, tuple, np.ndarray)):
             # Call optimizer wrapper around run_pcmciplus()
             return self._optimize_pcmciplus_alpha(
-                                    selected_links=selected_links,
-                                    tau_min=tau_min,
-                                    tau_max=tau_max,
-                                    pc_alpha=pc_alpha,
-                                    contemp_collider_rule=contemp_collider_rule,
-                                    conflict_resolution=conflict_resolution,
-                                    reset_lagged_links=reset_lagged_links,
-                                    max_conds_dim=max_conds_dim,
-                                    max_conds_py=max_conds_py,
-                                    max_conds_px=max_conds_px,
-                                    max_conds_px_lagged=max_conds_px_lagged,
-                                    fdr_method=fdr_method)
+                        selected_links=selected_links,
+                        tau_min=tau_min,
+                        tau_max=tau_max,
+                        pc_alpha=pc_alpha,
+                        contemp_collider_rule=contemp_collider_rule,
+                        conflict_resolution=conflict_resolution,
+                        reset_lagged_links=reset_lagged_links,
+                        max_conds_dim=max_conds_dim,
+                        max_conds_py=max_conds_py,
+                        max_conds_px=max_conds_px,
+                        max_conds_px_lagged=max_conds_px_lagged,
+                        fdr_method=fdr_method)
 
         # else:
         #     raise ValueError("pc_alpha=None not supported in PCMCIplus, choose"

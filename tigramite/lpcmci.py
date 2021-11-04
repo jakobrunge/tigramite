@@ -423,9 +423,9 @@ class LPCMCI():
         # Initialize nested dictionaries for saving the maximal p-value among all conditional independence tests of a given
         # pair of variables as well as the corresponding test statistic values and conditioning set cardinalities
         # Syntax: As for self.sepsets
-        self.pval_max = {j: {(i, -tau): 0 for i in range(self.N) for tau in range(self.tau_max + 1) if (tau > 0 or i < j)} for j in range(self.N)}
-        self.pval_max_val = {j: {(i, -tau): np.inf for i in range(self.N) for tau in range(self.tau_max + 1) if (tau > 0 or i < j)} for j in range(self.N)}
-        self.pval_max_card = {j: {(i, -tau): -1 for i in range(self.N) for tau in range(self.tau_max + 1) if (tau > 0 or i < j)} for j in range(self.N)}                                        
+        self.pval_max = {j: {(i, -tau): np.inf for i in range(self.N) for tau in range(self.tau_max + 1) if (tau > 0 or i < j)} for j in range(self.N)}
+        self.pval_max_val = {j: {(i, -tau): -np.inf for i in range(self.N) for tau in range(self.tau_max + 1) if (tau > 0 or i < j)} for j in range(self.N)}
+        self.pval_max_card = {j: {(i, -tau): np.inf for i in range(self.N) for tau in range(self.tau_max + 1) if (tau > 0 or i < j)} for j in range(self.N)}                                        
         # Initialize a nested dictionary for caching na-pds-sets
         # Syntax: self._na_pds_t[(i, t_i)][(j, t_j)] stores na_pds_t((i, t_i), (j, t_j))
         self._na_pds_t = {(j, -tau_j): {} for j in range(self.N) for tau_j in range(self.tau_max + 1)}
@@ -455,9 +455,9 @@ class LPCMCI():
                 self.graph_dict[j][(i, -tau)] = ""
 
             if tau > 0 or i < j:
-                self.pval_max[j][(i, -tau)] = None
-                self.pval_max_val[j][(i, -tau)] = None
-                self.pval_max_card[j][(i, -tau)] = None
+                self.pval_max[j][(i, -tau)] = np.inf
+                self.pval_max_val[j][(i, -tau)] = -np.inf
+                self.pval_max_card[j][(i, -tau)] = np.inf
 
     def _apply_selected_links_restriction(self):
         """Apply the restrictions imposed by selected_links:
@@ -768,7 +768,9 @@ class LPCMCI():
                     if not while_broken:
                         assert link[1] != "?"
                         assert link[1] != "L"
-                        assert link[1] != "R" or (lag_i < 0 and (self.max_cond_px > 0 or not self.update_middle_marks))
+                        assert ((link[1] != "R") or (lag_i < 0 and (self.max_cond_px > 0 or not self.update_middle_marks))
+                            or (self.no_apr != 0))
+
 
                     # Update all middle marks to '!'
                     if link[1] not in ["-", "!"]:
@@ -1779,6 +1781,10 @@ class LPCMCI():
                     print("BnotinSepSetAC(A):    %s _|_ %s  |  Z_add = %s, Z = %s: val = %.2f / pval = % .4f" %
                         (X, Y, ' '.join([str(z) for z in Z_add]), ' '.join([str(z) for z in {node for node in Z_raw if node != X and node != Y}]), val, pval))
 
+                # Accordingly update dictionaries that keep track of the maximal p-value and the corresponding test statistic
+                # values and conditioning set cardinalities
+                self._update_pval_val_card_dicts(X, Y, pval, val, len(Z))
+
                 # Check whether test result was significant
                 if pval > self.pc_alpha:
                     all_sepsets.add(frozenset(Z))
@@ -1805,6 +1811,10 @@ class LPCMCI():
                     #     (X, Y, ' '.join([str(z) for z in list(Z)]), val, pval))
                     print("BnotinSepSetAC(C):    %s _|_ %s  |  Z_add = %s, Z = %s: val = %.2f / pval = % .4f" %
                         (X, Y, ' '.join([str(z) for z in Z_add]), ' '.join([str(z) for z in {node for node in Z_raw if node != X and node != Y}]), val, pval))
+
+                # Accordingly update dictionaries that keep track of the maximal p-value and the corresponding test statistic
+                # values and conditioning set cardinalities
+                self._update_pval_val_card_dicts(X, Y, pval, val, len(Z))
 
                 # Check whether test result was significant
                 if pval > self.pc_alpha:
@@ -1899,6 +1909,9 @@ class LPCMCI():
                         print("BinSepSetAC(A):    %s _|_ %s  |  Z_add = %s, Z = %s: val = %.2f / pval = % .4f" %
                             (X, Y, ' '.join([str(z) for z in Z_add]), ' '.join([str(z) for z in {node for node in Z_raw if node != X and node != Y}]), val, pval))
 
+                    # Accordingly update dictionaries that keep track of the maximal p-value and the corresponding test statistic
+                    # values and conditioning set cardinalities
+                    self._update_pval_val_card_dicts(X, Y, pval, val, len(Z))
 
                     # Check whether test result was significant
                     if pval > self.pc_alpha:
@@ -1926,6 +1939,10 @@ class LPCMCI():
                         #     (X, Y, ' '.join([str(z) for z in list(Z)]), val, pval))
                         print("BinSepSetAC(C):    %s _|_ %s  |  Z_add = %s, Z = %s: val = %.2f / pval = % .4f" %
                             (X, Y, ' '.join([str(z) for z in Z_add]), ' '.join([str(z) for z in {node for node in Z_raw if node != X and node != Y}]), val, pval))
+
+                    # Accordingly update dictionaries that keep track of the maximal p-value and the corresponding test statistic
+                    # values and conditioning set cardinalities
+                    self._update_pval_val_card_dicts(X, Y, pval, val, len(Z))
 
                     # Check whether test result was significant
                     if pval > self.pc_alpha:
@@ -3307,7 +3324,8 @@ class LPCMCI():
         """Sort the nodes in search_set by their values in self.pval_max_val with respect to the reference_node. Nodes with higher values
         appear earlier"""
 
-        sort_by = [np.abs(self._get_pval_max_val(node, reference_node)) for node in search_set]
+        sort_by_potential_Nones = [self._get_pval_max_val(node, reference_node) for node in search_set]
+        sort_by = [(np.abs(value) if value is not None else np.inf) for value in sort_by_potential_Nones]
 
         return [x for _, x in sorted(zip(sort_by, search_set), reverse = True)]
 

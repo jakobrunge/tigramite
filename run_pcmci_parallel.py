@@ -61,6 +61,7 @@ def run_pc_stable_parallel(j):
     # specified:
     parents_of_j = pcmci_of_j.run_pc_stable(
         selected_links=selected_links[j],
+        tau_min=tau_min,
         tau_max=tau_max,
         pc_alpha=pc_alpha,
     )
