@@ -1242,7 +1242,9 @@ class Graph():
 
         return stack
 
-def structural_causal_process(links, T, noises=None, intervention=None, seed=None):
+def structural_causal_process(links, T, noises=None, 
+                        intervention=None, intervention_type='hard',
+                        seed=None):
     """Returns a structural causal process with contemporaneous and lagged
     dependencies.
 
@@ -1271,6 +1273,10 @@ def structural_causal_process(links, T, noises=None, intervention=None, seed=Non
     intervention : dict
         Dictionary of format: {1:np.array, ...} containing only keys of intervened
         variables with the value being the array of length T with interventional values.
+        Set values to np.nan to leave specific values of a variable un-intervened.
+    intervention_type : dict
+        Dictionary of format: {1:'hard',  3:'soft', ...} to specify whether intervention is 
+        hard (set value) or soft (add value) for variable j.
     seed : int, optional (default: None)
         Random seed.
 
@@ -1318,9 +1324,13 @@ def structural_causal_process(links, T, noises=None, intervention=None, seed=Non
     causal_order = contemp_dag.topologicalSort() 
 
     if intervention is not None:
+        if intervention_type is None:
+            intervention_type = {j:'hard' for j in intervention}
         for j in intervention.keys():
             if len(intervention[j]) != T:
                 raise ValueError("intervention array for j=%s must be of length T = %d" %(j, T))
+            if j not in intervention_type.keys():        
+                raise ValueError("intervention_type dictionary must contain entry for %s" %(j))
 
     transient = int(.2*T)
 
@@ -1328,13 +1338,15 @@ def structural_causal_process(links, T, noises=None, intervention=None, seed=Non
     for j in range(N):
         data[:, j] = noises[j](T+transient)
 
-        if intervention is not None and j in intervention:
-            data[-T:, j] = intervention[j]
-
     for t in range(max_lag, T+transient):
         for j in causal_order:
-            if intervention is not None and j in intervention:
-                continue
+            if (intervention is not None and j in intervention and t > transient
+                and np.isnan(intervention[j][t - transient]) is False):
+                if intervention_type[j] == 'hard':
+                    data[t, j] = intervention[j][t - transient]
+                    continue
+                else:
+                    data[t, j] += intervention[j][t - transient]
             for link_props in links[j]:
                 var, lag = link_props[0]
                 coeff = link_props[1]

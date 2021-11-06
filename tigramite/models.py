@@ -147,9 +147,9 @@ class Models():
             # Copy and fit the model
             a_model = deepcopy(self.model)
 
-            predictor_indices = list(np.where(xyz==0)[0]) \
-                                + list(np.where(xyz==1)[0][1:]) \
-                                +  list(np.where(xyz==2)[0])
+            predictor_indices =  list(np.where(xyz==0)[0]) \
+                               + list(np.where(xyz==1)[0][1:]) \
+                               + list(np.where(xyz==2)[0])
             predictor_array = array[predictor_indices, :].T
             # Target is only first entry of Y, ie [y]
             target_array = array[np.where(xyz==1)[0][0], :]
@@ -266,9 +266,9 @@ class Models():
             # Cache the test array
             self.intervention_array = intervention_array
             # Run the predictor, for Y only the Z-part is used, the first index is y
-            predictor_indices = list(np.where(xyz==0)[0]) \
+            predictor_indices =   list(np.where(xyz==0)[0]) \
                                 + list(np.where(xyz==1)[0][1:]) \
-                                +  list(np.where(xyz==2)[0])
+                                + list(np.where(xyz==2)[0])
             predictor_array = intervention_array[predictor_indices, :].T
             pred_dict[y] = self.fit_results[y]['model'].predict(
                 X=predictor_array, **pred_params)

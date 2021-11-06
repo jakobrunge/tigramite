@@ -826,6 +826,7 @@ def _draw_network_with_curved_edges(
     inner_edge_style="solid",
     network_lower_bound=0.2,
     show_colorbar=True,
+    special_nodes=None,
 ):
     """Function to draw a network from networkx graph instance.
     Various attributes are used to specify the graph's properties.
@@ -1483,27 +1484,41 @@ def _draw_network_with_curved_edges(
             else:
                 alpha = 1.0
 
-            if colors is None:
-                c = Ellipse(
-                    pos[n],
-                    width=node_sizes[: ring + 1].sum(axis=0)[n] * node_aspect,
-                    height=node_sizes[: ring + 1].sum(axis=0)[n],
-                    clip_on=False,
-                    facecolor=standard_color,
-                    edgecolor=standard_color,
-                    zorder=-ring - 1,
-                )
-
+            if special_nodes is not None:
+                if n in special_nodes:
+                    color_here = special_nodes[n]
+                else:
+                    color_here = 'grey'
             else:
-                c = Ellipse(
-                    pos[n],
-                    width=node_sizes[: ring + 1].sum(axis=0)[n] * node_aspect,
-                    height=node_sizes[: ring + 1].sum(axis=0)[n],
-                    clip_on=False,
-                    facecolor=colors[n],
-                    edgecolor=colors[n],
-                    zorder=-ring - 1,
-                )
+                if colors is None:
+                    color_here = standard_color
+                else:
+                    color_here = colors[n]
+
+            c = Ellipse(
+                pos[n],
+                width=node_sizes[: ring + 1].sum(axis=0)[n] * node_aspect,
+                height=node_sizes[: ring + 1].sum(axis=0)[n],
+                clip_on=False,
+                facecolor=color_here,
+                edgecolor=color_here,
+                zorder=-ring - 1,
+            )
+
+            # else:
+            #     if special_nodes is not None and n in special_nodes:
+            #         color_here = special_nodes[n]
+            #     else:
+            #         color_here = colors[n]
+            #     c = Ellipse(
+            #         pos[n],
+            #         width=node_sizes[: ring + 1].sum(axis=0)[n] * node_aspect,
+            #         height=node_sizes[: ring + 1].sum(axis=0)[n],
+            #         clip_on=False,
+            #         facecolor=colors[n],
+            #         edgecolor=colors[n],
+            #         zorder=-ring - 1,
+            #     )
 
             ax.add_patch(c)
 
@@ -1575,6 +1590,7 @@ def plot_graph(
     show_colorbar=True,
     inner_edge_style="dashed",
     link_matrix=None,
+    special_nodes=None,
 ):
     """Creates a network plot.
     
@@ -1815,6 +1831,14 @@ def plot_graph(
         # dic['inner_edge_edge'] = False
         # dic['inner_edge_edgecolor'] = None
 
+    if special_nodes is not None:
+        special_nodes_draw = {}
+        for node in special_nodes:
+            i, tau = node
+            special_nodes_draw[i] = special_nodes[node]
+        special_nodes = special_nodes_draw
+    
+
     # If no links are present, set value to zero
     if len(all_strengths) == 0:
         all_strengths = [0.0]
@@ -1874,6 +1898,7 @@ def plot_graph(
         network_lower_bound=network_lower_bound,
         show_colorbar=show_colorbar,
         # label_fraction=label_fraction,
+        special_nodes=special_nodes,
     )
 
     if save_name is not None:
@@ -2019,6 +2044,7 @@ def plot_time_series_graph(
     network_lower_bound=0.2,
     inner_edge_style="dashed",
     link_matrix=None,
+    special_nodes=None,
 ):
     """Creates a time series graph.
     This is still in beta. The time series graph's links are colored by
@@ -2080,6 +2106,8 @@ def plot_time_series_graph(
         Fraction of vertical space below graph plot.
     inner_edge_style : string, optional (default: 'dashed')
         Style of inner_edge contemporaneous links.
+    special_nodes : dict
+        Dictionary of format {(i, -tau): 'blue', ...} to color special nodes.
     """
 
     if link_matrix is not None:
@@ -2156,6 +2184,14 @@ def plot_time_series_graph(
                     ]
 
     G = nx.DiGraph(tsg)
+
+    if special_nodes is not None:
+        special_nodes_tsg = {}
+        for node in special_nodes:
+            i, tau = node
+            special_nodes_tsg[translate(i, max_lag-1 + tau)] = special_nodes[node]
+
+    special_nodes = special_nodes_tsg
 
     # node_color = np.zeros(N)
     # list of all strengths for color map
@@ -2249,6 +2285,7 @@ def plot_time_series_graph(
         inner_edge_curved=True,
         network_lower_bound=network_lower_bound,
         inner_edge_style=inner_edge_style,
+        special_nodes=special_nodes,
     )
 
     for i in range(N):
