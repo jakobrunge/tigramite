@@ -4,58 +4,33 @@
 #
 # License: GNU General Public License v3.0
 
-from __future__ import print_function
-from copy import deepcopy
-
-import sys
-
 import numpy as np
 import itertools
-
+from copy import deepcopy
 from tigramite.models import Models
 
 class CausalEffects:
     r"""Causal effect analysis for time series models.
 
-    Handles the estimation of causal effects
-    given a causal graph.
-
-    # TODO: Perkovic2018: By Theorem 11, we recommend pre-processing the set X as follows: 
-    # remove all nodes X∈X that do not have a possibly directed path to Y which is proper 
-    # with respect to X
-    # IMPORTANT regarding amenability in MAGs...
+    Handles the estimation of causal effects given a causal graph.
 
     Parameters
     ----------
-    dataframe : data object
-        Tigramite dataframe object. It must have the attributes dataframe.values
-        yielding a numpy array of shape (observations T, variables N) and
-        optionally a mask of the same shape and a missing values flag.
     graph : array of shape [N, N, tau_max+1]
-        Causal graph with link types `-->` or `<--` (direct causal links),
-        `<->` (counfounding), or `---` (selection variable induced).
-    links : dict
-        Dictionary of form {0:[(0, -1), ...], 1:[...], ...}.
-        Alternatively can also digest {0: [((0, -1), coeff, f
-    observed_vars : None or list, optional (default: None)
-        Subset of keys in links definining which variables are 
-        observed. If None, then all variables are observed.
-    selection_vars : None or list, optional (default: None)
-        Subset of keys in links definining which variables are 
-        selected (= always conditioned on at every time lag).
-        If None, then no variables are selected.
-    estimator_model : sklearn model object
-        For example, sklearn.linear_model.LinearRegression() for a linear
-        regression model.
-    data_transform : sklearn preprocessing object, optional (default: None)
-        Used to transform data prior to fitting. For example,
-        sklearn.preprocessing.StandardScaler for simple standardization. The
-        fitted parameters are stored.
-    mask_type : {'y','x','z','xy','xz','yz','xyz'}
-        Masking mode: Indicators for which variables in the dependence measure
-        I(X; Y | Z) the samples should be masked. If None, 'y' is used, which
-        excludes all time slices containing masked samples in Y. Explained in
-        [1]_.
+        Causal graph with link types `-->` (direct causal links),
+        `<->` (counfounding), or `+->` (both, only for ADMGs).
+    X : list of tuples
+        List of tuples [(i, -tau), ...] containing cause variables.
+    Y : list of tuples
+        List of tuples [(j, 0), ...] containing effect variables.
+    S : list of tuples
+        List of tuples [(i, -tau), ...] containing conditioned variables.
+    tau_max : int, optional (default: None)
+        Maximum time lag. If None, graph.shape[2] - 1 is used.   
+    graph_type : str
+        Type of graph. Currently 'admg' and 'dag' are supported. 
+    prune_X : bool
+        Whether or not to remove nodes from X with no proper causal path to Y.
     verbosity : int, optional (default: 0)
         Level of verbosity.
     """
@@ -70,21 +45,15 @@ class CausalEffects:
                  prune_X=True,
                  verbosity=0):
         
-
-        # 'admg', 'dag', 'pag', 'mag', 'statmag', ....???
         self.graph_type = graph_type
-
         self.graph = graph
-
         self.N = graph.shape[0]
 
-        # TODO: handle tau_max ???       
         if tau_max is None:
             self.tau_max = graph.shape[2] - 1
         else:
             self.tau_max = tau_max
 
-        # TODO Hard Set HER
         self.ignore_time_bounds = False
 
         self.verbosity = verbosity
@@ -135,42 +104,32 @@ class CausalEffects:
                 print("Pruning X = %s to X=%s " %(oldX, self.X) +
                       "since only these have causal path to Y")
 
-
         if len(self.X.intersection(self.Y)) > 0:
             raise ValueError("Overlap between X and Y")
 
         if len(S.intersection(self.Y.union(self.X))) > 0:
             raise ValueError("Conditions S overlap with X or Y")
 
-        # if len(S.intersection(E)) > 0:
-        #     raise ValueError("Conditions S overlap with excluded nodes E")
-
         if len(self.S.intersection(self.M)) > 0:
             raise ValueError("Conditions S overlap with mediators M")
 
-        # if len(Y) > 1 or len(X) > 1:
-        #     raise ValueError("Currently only single effects and causes implemented")
-
-
-        # if len(Y) > 1 or len(X) > 1:
-        #     raise ValueError("Currently only single effects and causes implemented")
-
-
         descendants = self._get_descendants(self.Y.union(self.M))
+        
         # Remove X and descendants of YM
         self.forbidden_nodes = descendants.union(self.X)  #.union(S)
 
         self.vancs = self._get_ancestors(list(self.X.union(self.Y).union(self.S))) - self.forbidden_nodes
 
-
         if len(self.S.intersection(self._get_descendants(self.X))) > 0:
             if self.verbosity > 0:
                 print("Potentially outside assumptions: Conditions S overlap with des(X)")
 
-
         if len(self.S.intersection(descendants)) > 0:
             raise ValueError("Not identifiable: Conditions S overlap with des(YM)")
 
+        self.listX = list(self.X)
+        self.listY = list(self.Y)
+        self.listS = list(self.S)
 
     def get_mediators(self,):
         """for proper causal paths from X to Y"""
@@ -781,7 +740,7 @@ class CausalEffects:
         start_with_tail_or_head=False, 
         # possible=False
         ):
-        """Iterates over collider paths within O-set
+        """Iterates over collider paths within O-set via depth-first search
 
         """
 
@@ -963,12 +922,7 @@ class CausalEffects:
             # Next remove all nodes that have no unique path to Y given Oset_min
             # Z = Zprime2
             for node in minimize_nodes:
-                # path = self.oracle.check_shortest_path(X=[node], Y=Y, 
-                #     Z=list(vancs - set([node])) + list(X), 
-                #     max_lag=None, 
-                #     ends_with=None, #'arrowhead',
-                #     forbidden_nodes=None, #list(Zprime2 - set([node])), 
-                #     return_path=False)
+
                 path = self.check_path(start=[node], end=self.Y, 
                     conditions=list(vancs - set([node])) + list(self.X),
                     )
@@ -1057,10 +1011,6 @@ class CausalEffects:
 
         if yield_index is not None:
             return None
-        # sets_left = True
-        # while sets_left:
-        #     sets_left = list_sep(X, Y, I, R)
-        #     all_sets.append(sets_left)
 
         if check_one_set_exists:
             if len(all_sets) == 1:
@@ -1069,6 +1019,66 @@ class CausalEffects:
                 return False
 
         return all_sets
+
+
+    def get_causal_paths(self, source_nodes, target_nodes,
+        mediators=None,
+        mediated_through=None,
+        proper_paths=True,
+        ):
+        """Returns causal paths via depth-first search
+
+        """
+
+        source_nodes = set(source_nodes)
+        target_nodes = set(target_nodes)
+
+        if mediators is None:
+            mediators = set()
+        else:
+            mediators = set(mediators)
+
+        if mediated_through is not None:
+            mediated_through = set(mediated_through)
+
+        if proper_paths:
+             inside_set = mediators.union(target_nodes) - source_nodes
+        else:
+             inside_set = mediators.union(target_nodes).union(source_nodes)
+
+        all_causal_paths = {}         
+        for w in source_nodes:
+            all_causal_paths[w] = {}
+            for z in target_nodes:
+                all_causal_paths[w][z] = []
+
+        for w in source_nodes:
+            
+            causal_path = []
+            queue = [(w, causal_path)]
+
+            while queue:
+
+                varlag, causal_path = queue.pop()
+                causal_path = causal_path + [varlag]
+                suitable_nodes = set(self._get_children(varlag)
+                    ).intersection(inside_set)
+
+                for node in suitable_nodes:
+                    i, tau = node
+                    if ((-self.tau_max <= tau <= 0 or self.ignore_time_bounds)
+                        and node not in causal_path):
+
+                        queue.append((node, causal_path)) 
+ 
+                        if node in target_nodes:  
+
+                            if mediated_through is not None and len(set(causal_path).intersection(mediated_through)) == 0:
+                                continue
+                            else:
+                                all_causal_paths[w][node].append(causal_path + [node]) 
+
+        return all_causal_paths
 
 
     def fit_total_effect(self,
@@ -1109,8 +1119,8 @@ class CausalEffects:
                         verbosity=self.verbosity)
 
         self.model.get_general_fitted_model(
-                Y=list(self.Y), X=list(self.X), Z=list(self.adjustment_set),
-                conditions=list(self.S),
+                Y=self.listY, X=self.listX, Z=list(self.adjustment_set),
+                conditions=self.listS,
                 tau_max=self.tau_max,
                 cut_off='max_lag_or_tau_max',
                 return_data=False)
@@ -1136,13 +1146,148 @@ class CausalEffects:
                 raise ValueError("intervention_data must be of same shape as "
                                  "fitted model dataframe.")
 
-
-        # First set to x1
         effect = self.model.get_general_prediction(
-                Y=list(self.Y), X=list(self.X), Z=list(self.adjustment_set),
+                Y=self.listY, X=self.listX, Z=list(self.adjustment_set),
                 intervention_data=intervention_data,
-                conditions=list(self.S),
+                conditions=self.listS,
                 conditions_data=conditions_data,
+                pred_params=pred_params,
+                cut_off='max_lag_or_tau_max')
+
+        return effect
+
+    def fit_wrights_effect(self,
+        dataframe, 
+        mediated_through=None,
+        links_coeffs=None,  
+        data_transform=None,
+        mask_type=None,
+        ):
+        """Returns a fitted model for the total causal effect of X on Y 
+           conditional on S.
+        """
+        import sklearn.linear_model
+
+        self.dataframe = dataframe
+        estimator_model = sklearn.linear_model.LinearRegression()
+
+        # Fit model of Y on X and Z (and conditions)
+        # Build the model
+        self.model = Models(
+                        dataframe=dataframe,
+                        model=estimator_model,
+                        data_transform=data_transform,
+                        mask_type=mask_type,
+                        verbosity=self.verbosity)
+
+        if links_coeffs is not None:
+            coeffs = {}
+            max_lag = 0
+            for j in range(self.N):
+                coeffs[j] = {}
+                for ipar, par_coeff in enumerate(links_coeffs[j]):
+                    par, coeff, func = par_coeff
+                    max_lag = max(abs(par[1]), max_lag)
+                    coeffs[j][par] = coeff #self.fit_results[j][(j, 0)]['model'].coef_[ipar]
+
+            self.model.tau_max = max_lag
+
+        else:
+            fit_results = {}
+            all_parents = {}
+            for j in range(self.N):
+                all_parents[j] = self._get_all_parents([(j, 0)]) - set([(j, 0)])
+                # print(j, all_parents[j])
+                if len(all_parents[j]) > 0:
+                  fit_results[j] = self.model.get_general_fitted_model(
+                    Y=[(j, 0)], X=list(all_parents[j]), Z=[],
+                    conditions=None,
+                    tau_max=self.tau_max,
+                    cut_off='max_lag_or_tau_max',
+                    return_data=False)
+                else:
+                    fit_results[j] = None
+
+            # Cache the results in the member variables
+            self.fit_results = fit_results
+            self.all_parents = all_parents
+            
+            coeffs = self.get_path_coeffs()
+        
+        mediators = self.get_mediators()
+        causal_paths = self.get_causal_paths(source_nodes=self.X, 
+                target_nodes=self.Y, mediators=mediators, 
+                mediated_through=mediated_through, proper_paths=True)
+
+        # Effect is sum over products over all path coefficients
+        # from x in X to y in Y
+        effect = {}
+        for (x, y) in itertools.product(self.listX, self.listY):
+            effect[(x, y)] = 0.
+            for causal_path in causal_paths[x][y]:
+                effect_here = 1.
+                for index, node in enumerate(causal_path[:-1]):
+                    i, taui = node
+                    j, tauj = causal_path[index + 1]
+                    tau_ij = abs(tauj - taui)
+                    effect_here *= coeffs[j][(i, -tau_ij)]
+
+                effect[(x, y)] += effect_here
+                    
+        class dummy_fit_class():
+            def __init__(self, y_here, listX_here, effect_here):
+                dim = len(listX_here)
+                self.coeff_array = np.array([effect_here[(x, y_here)] for x in listX_here]).reshape(dim, 1)
+            def predict(self, X):
+                return np.dot(X, self.coeff_array).squeeze()
+
+        fit_results = {}
+        for y in self.listY:
+            fit_results[y] = {}
+            fit_results[y]['model'] = dummy_fit_class(y, self.listX, effect)
+            fit_results[y]['data_transform'] = deepcopy(data_transform)
+
+        # self.effect = effect
+        self.model.fit_results = fit_results
+        return self
+
+    def get_path_coeffs(self):
+        """Returns dictionary of coefficients for linear models.
+
+        Only for models from sklearn.linear_model
+
+        Returns
+        -------
+        coeffs : dictionary
+            Dictionary of dictionaries for each variable with keys given by the
+            parents and the regression coefficients as values.
+        """
+        coeffs = {}
+        for j in range(self.N):
+            coeffs[j] = {}
+            for ipar, par in enumerate(self.all_parents[j]):
+                coeffs[j][par] = self.fit_results[j][(j, 0)]['model'].coef_[ipar]
+        return coeffs
+    
+    def predict_wrights_effect(self, 
+        intervention_data=None, 
+        # conditions_data=None,
+        pred_params=None,
+        ):
+        """Returns a fitted model for the total causal effect of X on Y 
+           conditional on S.
+        """
+
+        if intervention_data is not None:
+            if intervention_data.values.shape != self.dataframe.values.shape:
+                raise ValueError("intervention_data must be of same shape as "
+                                 "fitted model dataframe.")
+
+        effect = self.model.get_general_prediction(
+                Y=self.listY, X=self.listX, Z=[],
+                intervention_data=intervention_data,
+                conditions=[],
+                conditions_data=None,
                 pred_params=pred_params,
                 cut_off='max_lag_or_tau_max')
 
@@ -1167,6 +1312,8 @@ if __name__ == '__main__':
     conf_coeff = 2.
     conf_coeff2 = 1.
     def lin_f(x): return x
+
+    # Non-time series example
     # links = {
     #         0: [((3, 0), conf_coeff, lin_f), ((6, 0), conf_coeff, lin_f)], 
     #         1: [((0, 0), coeff, lin_f), ((4, 0), conf_coeff, lin_f)], 
@@ -1176,31 +1323,60 @@ if __name__ == '__main__':
     #         5: [((4, 0), conf_coeff, lin_f), ((7, 0), conf_coeff, lin_f)],
     #         6: [],
     #         7: []}
-    auto_coeff = 0.3
+
+    # Same example with time-structure
+    # auto_coeff = 0.3
+    # links = {
+    #         0: [((0, -1), auto_coeff, lin_f), ((3, 0), conf_coeff, lin_f), ((6, 0), conf_coeff, lin_f)], 
+    #         1: [((1, -1), auto_coeff, lin_f), ((0, -1), coeff, lin_f), ((4, 0), conf_coeff, lin_f)], 
+    #         2: [((2, -1), auto_coeff, lin_f), ((0, -2), coeff, lin_f), ((1, -1), coeff, lin_f), ((4, -1), conf_coeff, lin_f), ((7, 0), conf_coeff, lin_f)], #, ((1, 0), coeff, lin_f)], 
+    #         3: [((3, -1), auto_coeff, lin_f), ((6, 0), conf_coeff, lin_f)],
+    #         4: [((4, -1), auto_coeff, lin_f), ((3, -1), conf_coeff2, lin_f)],
+    #         5: [((5, -1), auto_coeff, lin_f), ((4, -1), conf_coeff, lin_f), ((7, 0), conf_coeff, lin_f)], #, ((8, -1), conf_coeff, lin_f), ((8, 0), conf_coeff, lin_f)],
+    #         6: [],
+    #         7: [],
+    #         8: []}
+
+    # DAG version of Non-time series example
     links = {
-            0: [((0, -1), auto_coeff, lin_f), ((3, 0), conf_coeff, lin_f), ((6, 0), conf_coeff, lin_f)], 
-            1: [((1, -1), auto_coeff, lin_f), ((0, -1), coeff, lin_f), ((4, 0), conf_coeff, lin_f)], 
-            2: [((2, -1), auto_coeff, lin_f), ((0, -2), coeff, lin_f), ((1, -1), coeff, lin_f), ((4, -1), conf_coeff, lin_f), ((7, 0), conf_coeff, lin_f)], #, ((1, 0), coeff, lin_f)], 
-            3: [((3, -1), auto_coeff, lin_f), ((6, 0), conf_coeff, lin_f)],
-            4: [((4, -1), auto_coeff, lin_f), ((3, -1), conf_coeff2, lin_f)],
-            5: [((5, -1), auto_coeff, lin_f), ((4, -1), conf_coeff, lin_f), ((7, 0), conf_coeff, lin_f)], #, ((8, -1), conf_coeff, lin_f), ((8, 0), conf_coeff, lin_f)],
-            6: [],
-            7: [],
-            8: []}
+            0: [((3, 0), conf_coeff, lin_f)], 
+            1: [((0, 0), coeff, lin_f), ((4, 0), conf_coeff, lin_f)], 
+            2: [((0, 0), coeff, lin_f), ((1, 0), coeff, lin_f), ((4, 0), conf_coeff, lin_f)], #, ((1, 0), coeff, lin_f)], 
+            3: [],
+            4: [((3, 0), conf_coeff2, lin_f)],
+            5: [((4, 0), conf_coeff, lin_f)],}
+
     observed_vars = [0,   1,   2,   3,    4,    5]
     var_names =    ['X', 'M', 'Y', 'Z1', 'Z2', 'Z3']
-    X = [(0, -2)]
+    X = [(0, 0)] #, (0, -2)]
     Y = [(2, 0)]
     conditions = []   # called 'S' in paper
 
+    # DAG version of time series example
+    auto_coeff = 0.3 
+    links = {
+            0: [((0, -1), auto_coeff, lin_f),((3, 0), conf_coeff, lin_f)], 
+            1: [((1, -1), auto_coeff, lin_f),((0, -1), coeff, lin_f), ((4, 0), conf_coeff, lin_f)], 
+            2: [((2, -1), auto_coeff, lin_f),((0, -2), coeff, lin_f), ((1, -1), coeff, lin_f), ((4, -1), conf_coeff, lin_f), ((5, 0), coeff, lin_f)], 
+            3: [((3, -1), auto_coeff, lin_f),],
+            4: [((4, -1), auto_coeff, lin_f),((3, -1), conf_coeff2, lin_f)],
+            5: [((5, -1), auto_coeff, lin_f),((4, -1), conf_coeff, lin_f)],}
+
+    observed_vars = [0,   1,   2,   3,    4,    5]
+    var_names =    ['X', 'M', 'Y', 'Z1', 'Z2', 'Z3']
+    X = [(0, -1), (0, -2), (0, -3)]
+    Y = [(2, 0), (2, -1)]
+    conditions = []   # called 'S' in paper
+
+
     # if tau_max is None, graph.shape[2]-1 will be used
-    tau_max = 4
+    tau_max = 4  # 4 for time series version
 
     oracle = OracleCI(links=links, observed_vars=observed_vars)
     graph = oracle.graph
     # tau_max = graph.shape[2] - 1
 
-    T = 3000
+    T = 10000
     data, nonstat = pp.structural_causal_process(links, T=T, noises=None, seed=7)
     dataframe = pp.DataFrame(data)
 
@@ -1250,10 +1426,16 @@ if __name__ == '__main__':
             len(observed_vars), tau_max+1), dtype='<U3')
         graph_plot[:,:, :graph.shape[2]] = graph
         graph_plot[:,:, graph.shape[2]:] = ""
-        print(graph_plot.shape)
-        print(graph.shape)
+        # print(graph_plot.shape)
+        # print(graph.shape)
+    else:
+        graph_plot = graph
 
-    special_nodes = {X[0]:'red', Y[0]:'blue'}
+    special_nodes = {}
+    for node in X:
+        special_nodes[node] = 'red'
+    for node in Y:
+        special_nodes[node] = 'blue'
     for node in opt:
         special_nodes[node] = 'orange'
     for node in causal_effects.get_mediators():
@@ -1263,7 +1445,8 @@ if __name__ == '__main__':
             save_name='Example-Fig1A.pdf',
             figsize = (15, 15), node_size=0.2,
             special_nodes=special_nodes)
-    tp.plot_time_series_graph(graph = graph_plot, var_names=var_names, 
+    if tau_max is not None:
+        tp.plot_time_series_graph(graph = graph_plot, var_names=var_names, 
             save_name='Example-Fig1A-TSG.pdf',
             figsize = (15, 15),
             special_nodes=special_nodes)
@@ -1273,34 +1456,44 @@ if __name__ == '__main__':
     # estimator_model = KNeighborsRegressor(n_neighbors=3)
     # estimator_model = MLPRegressor(max_iter=200)
 
-    causal_effects.fit_total_effect(
-        dataframe=dataframe, 
-        estimator_model=estimator_model,
-        adjustment_set='optimal',  
-        data_transform=None,
-        mask_type=None,
-        )
+    # causal_effects.fit_total_effect(
+    #     dataframe=dataframe, 
+    #     estimator_model=estimator_model,
+    #     adjustment_set='optimal',  
+    #     data_transform=None,
+    #     mask_type=None,
+    #     )
 
-    # Causal effect in observational data
-    ce_obs = causal_effects.predict_total_effect( 
-        intervention_data=None, 
-        conditions_data=None,
-        )
+    # # Causal effect in observational data
+    # ce_obs = causal_effects.predict_total_effect( 
+    #     intervention_data=None, 
+    #     conditions_data=None,
+    #     )
 
-    # Causal effect for interventional data 
-    # with + 1 added
+    # # Causal effect for interventional data 
+    # # with + 1 added
     intervention_data = data.copy()
     intervention_data[:, X[0]] += 1.
     intervention_data = pp.DataFrame(intervention_data)
 
-    ce_int = causal_effects.predict_total_effect( 
-        intervention_data=intervention_data, 
-        conditions_data=None,
-        )
+    # ce_int = causal_effects.predict_total_effect( 
+    #     intervention_data=intervention_data, 
+    #     conditions_data=None,
+    #     )
 
-    # Expected change corresponds to linear regression coefficient
-    # for linear models
-    beta = (ce_int[Y[0]] - ce_obs[Y[0]]).mean()
+    causal_effects.fit_wrights_effect(dataframe=dataframe, 
+        links_coeffs=links, mediated_through=[(1, -2)])
+    ce_obs = causal_effects.predict_wrights_effect(intervention_data=None)
+    ce_int = causal_effects.predict_wrights_effect(intervention_data=intervention_data)
 
-    print("\nLinear causal effect with Oset = %.2f" %(beta))
+
+    ## Expected change corresponds to linear regression coefficient
+    ## for linear models
+    for y in Y:
+        beta = (ce_int[y] - ce_obs[y]).mean()
+        print("\nLinear causal effect on %s with Oset = %.2f" %(y, beta))
+
+
+
+
 

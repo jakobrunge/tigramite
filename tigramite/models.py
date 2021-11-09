@@ -116,17 +116,19 @@ class Models():
 
         # Find the maximal conditions lag
         max_lag = 0
-        for j in Y:
+        for y in Y:
             this_lag = np.abs(np.array(X + Z + conditions)[:, 1]).max()
             max_lag = max(max_lag, this_lag)
-        # Set the default tau max and check if it shoudl be overwritten
-        self.tau_max = max_lag
-        if tau_max is not None:
+        # Set the default tau max and check if it should be overwritten
+        if tau_max is None:
+            self.tau_max = max_lag
+        else:
             self.tau_max = tau_max
             if self.tau_max < max_lag:
                 raise ValueError("tau_max = %d, but must be at least "
                                  " max_lag = %d"
                                  "" % (self.tau_max, max_lag))
+
         # Initialize the fit results
         fit_results = {}
         for y in Y:
@@ -205,10 +207,6 @@ class Models():
 
         if Z is not None:
             Z = [z for z in Z if z not in conditions]
-
-        # XZS = X + Z + conditions
-
-        return_type = 'list'
 
         pred_dict = {}
         for y in Y:

@@ -302,9 +302,9 @@ class DataFrame():
                 or np.any(np.array(XYZ)[:, 0] < 0)):
             raise ValueError("var indices %s," % str(np.array(XYZ)[:, 0]) +
                              " but must be in [0, %d]" % (N - 1))
-        if np.all(np.array(Y)[:, 1] != 0):
-            raise ValueError("Y-nodes are %s, " % str(Y) +
-                             "but one of the Y-nodes must have zero lag")
+        # if np.all(np.array(Y)[:, 1] != 0):
+        #     raise ValueError("Y-nodes are %s, " % str(Y) +
+        #                      "but one of the Y-nodes must have zero lag")
 
     def print_array_info(self, array, X, Y, Z, missing_flag, mask_type):
         """
