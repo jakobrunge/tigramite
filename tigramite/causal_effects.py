@@ -110,8 +110,8 @@ class CausalEffects:
         if len(S.intersection(self.Y.union(self.X))) > 0:
             raise ValueError("Conditions S overlap with X or Y")
 
-        if len(self.S.intersection(self.M)) > 0:
-            raise ValueError("Conditions S overlap with mediators M")
+        # if len(self.S.intersection(self.M)) > 0:
+        #     raise ValueError("Conditions S overlap with mediators M")
 
         descendants = self._get_descendants(self.Y.union(self.M))
         
@@ -124,8 +124,8 @@ class CausalEffects:
             if self.verbosity > 0:
                 print("Potentially outside assumptions: Conditions S overlap with des(X)")
 
-        if len(self.S.intersection(descendants)) > 0:
-            raise ValueError("Not identifiable: Conditions S overlap with des(YM)")
+        if len(self.S.intersection(self._get_descendants(self.Y))) > 0:
+            raise ValueError("Not identifiable: Conditions S overlap with des(Y)")
 
         self.listX = list(self.X)
         self.listY = list(self.Y)
@@ -1159,6 +1159,7 @@ class CausalEffects:
     def fit_wrights_effect(self,
         dataframe, 
         mediated_through=None,
+        method=None,
         links_coeffs=None,  
         data_transform=None,
         mask_type=None,
@@ -1180,44 +1181,66 @@ class CausalEffects:
                         mask_type=mask_type,
                         verbosity=self.verbosity)
 
-        if links_coeffs is not None:
+        mediators = self.get_mediators()
+        causal_paths = self.get_causal_paths(source_nodes=self.X, 
+                target_nodes=self.Y, mediators=mediators, 
+                mediated_through=mediated_through, proper_paths=True)
+
+        if method == 'links_coeffs':
             coeffs = {}
             max_lag = 0
-            for j in range(self.N):
+            for j in [med[0] for med in mediators] + [y[0] for y in self.listY]:
                 coeffs[j] = {}
                 for ipar, par_coeff in enumerate(links_coeffs[j]):
-                    par, coeff, func = par_coeff
+                    par, coeff, _ = par_coeff
                     max_lag = max(abs(par[1]), max_lag)
                     coeffs[j][par] = coeff #self.fit_results[j][(j, 0)]['model'].coef_[ipar]
 
             self.model.tau_max = max_lag
 
-        else:
-            fit_results = {}
-            all_parents = {}
-            for j in range(self.N):
-                all_parents[j] = self._get_all_parents([(j, 0)]) - set([(j, 0)])
+        elif method == 'optimal':
+            # all_parents = {}
+            coeffs = {}
+            for j in [med[0] for med in mediators] + [y[0] for y in self.listY]:
+                coeffs[j] = {}
+                all_parents = self._get_all_parents([(j, 0)]) - set([(j, 0)])
+                for par in all_parents:
+                    Sprime = set(all_parents) - set([par])
+                    # print(j, par, Sprime)
+                    causal_effects = CausalEffects(graph=self.graph, X=[par], Y=[(j, 0)],
+                                        S=Sprime,
+                                        tau_max=self.tau_max, graph_type=self.graph_type,
+                                            prune_X=False)
+                    oset = causal_effects.get_optimal_set()
+                    # print(j, all_parents[j])
+                    if oset is False:
+                        raise ValueError("Not identifiable via Wright's method.")
+                    fit_res = self.model.get_general_fitted_model(
+                        Y=[(j, 0)], X=[par], Z=oset,
+                        tau_max=self.tau_max,
+                        cut_off='max_lag_or_tau_max',
+                        return_data=False)
+                    coeffs[j][par] = fit_res[(j, 0)]['model'].coef_[0]
+
+        elif method == 'parents':
+            if self.graph_type != 'dag':
+                raise ValueError("method == 'parents' only possible for DAGs")
+
+            coeffs = {}
+            for j in [med[0] for med in mediators] + [y[0] for y in self.listY]:
+                coeffs[j] = {}
+                all_parents = self._get_all_parents([(j, 0)]) - set([(j, 0)])
                 # print(j, all_parents[j])
-                if len(all_parents[j]) > 0:
-                  fit_results[j] = self.model.get_general_fitted_model(
-                    Y=[(j, 0)], X=list(all_parents[j]), Z=[],
+                # if len(all_parents[j]) > 0:
+                fit_res = self.model.get_general_fitted_model(
+                    Y=[(j, 0)], X=list(all_parents), Z=[],
                     conditions=None,
                     tau_max=self.tau_max,
                     cut_off='max_lag_or_tau_max',
                     return_data=False)
-                else:
-                    fit_results[j] = None
 
-            # Cache the results in the member variables
-            self.fit_results = fit_results
-            self.all_parents = all_parents
-            
-            coeffs = self.get_path_coeffs()
-        
-        mediators = self.get_mediators()
-        causal_paths = self.get_causal_paths(source_nodes=self.X, 
-                target_nodes=self.Y, mediators=mediators, 
-                mediated_through=mediated_through, proper_paths=True)
+                for ipar, par in enumerate(all_parents):
+                    coeffs[j][par] = fit_res[(j, 0)]['model'].coef_[ipar]
 
         # Effect is sum over products over all path coefficients
         # from x in X to y in Y
@@ -1251,23 +1274,6 @@ class CausalEffects:
         self.model.fit_results = fit_results
         return self
 
-    def get_path_coeffs(self):
-        """Returns dictionary of coefficients for linear models.
-
-        Only for models from sklearn.linear_model
-
-        Returns
-        -------
-        coeffs : dictionary
-            Dictionary of dictionaries for each variable with keys given by the
-            parents and the regression coefficients as values.
-        """
-        coeffs = {}
-        for j in range(self.N):
-            coeffs[j] = {}
-            for ipar, par in enumerate(self.all_parents[j]):
-                coeffs[j][par] = self.fit_results[j][(j, 0)]['model'].coef_[ipar]
-        return coeffs
     
     def predict_wrights_effect(self, 
         intervention_data=None, 
@@ -1301,6 +1307,7 @@ if __name__ == '__main__':
     from tigramite.independence_tests import OracleCI
     from tigramite.data_processing import DataFrame
 
+    import sklearn
     from sklearn.linear_model import LinearRegression
     from sklearn.neighbors import KNeighborsRegressor
     from sklearn.neural_network import MLPRegressor
@@ -1325,42 +1332,42 @@ if __name__ == '__main__':
     #         7: []}
 
     # Same example with time-structure
-    # auto_coeff = 0.3
-    # links = {
-    #         0: [((0, -1), auto_coeff, lin_f), ((3, 0), conf_coeff, lin_f), ((6, 0), conf_coeff, lin_f)], 
-    #         1: [((1, -1), auto_coeff, lin_f), ((0, -1), coeff, lin_f), ((4, 0), conf_coeff, lin_f)], 
-    #         2: [((2, -1), auto_coeff, lin_f), ((0, -2), coeff, lin_f), ((1, -1), coeff, lin_f), ((4, -1), conf_coeff, lin_f), ((7, 0), conf_coeff, lin_f)], #, ((1, 0), coeff, lin_f)], 
-    #         3: [((3, -1), auto_coeff, lin_f), ((6, 0), conf_coeff, lin_f)],
-    #         4: [((4, -1), auto_coeff, lin_f), ((3, -1), conf_coeff2, lin_f)],
-    #         5: [((5, -1), auto_coeff, lin_f), ((4, -1), conf_coeff, lin_f), ((7, 0), conf_coeff, lin_f)], #, ((8, -1), conf_coeff, lin_f), ((8, 0), conf_coeff, lin_f)],
-    #         6: [],
-    #         7: [],
-    #         8: []}
+    auto_coeff = 0.3
+    links = {
+            0: [((0, -1), auto_coeff, lin_f), ((3, 0), conf_coeff, lin_f), ((6, 0), conf_coeff, lin_f)], 
+            1: [((1, -1), auto_coeff, lin_f), ((0, -1), coeff, lin_f), ((4, 0), conf_coeff, lin_f)], 
+            2: [((2, -1), auto_coeff, lin_f), ((0, -2), coeff, lin_f), ((1, -1), coeff, lin_f), ((4, -1), conf_coeff, lin_f), ((7, 0), conf_coeff, lin_f)], #, ((1, 0), coeff, lin_f)], 
+            3: [((3, -1), auto_coeff, lin_f), ((6, 0), conf_coeff, lin_f)],
+            4: [((4, -1), auto_coeff, lin_f), ((3, -1), conf_coeff2, lin_f)],
+            5: [((5, -1), auto_coeff, lin_f), ((4, -1), conf_coeff, lin_f), ((7, 0), conf_coeff, lin_f)], #, ((8, -1), conf_coeff, lin_f), ((8, 0), conf_coeff, lin_f)],
+            6: [],
+            7: [],
+            8: []}
 
     # DAG version of Non-time series example
-    links = {
-            0: [((3, 0), conf_coeff, lin_f)], 
-            1: [((0, 0), coeff, lin_f), ((4, 0), conf_coeff, lin_f)], 
-            2: [((0, 0), coeff, lin_f), ((1, 0), coeff, lin_f), ((4, 0), conf_coeff, lin_f)], #, ((1, 0), coeff, lin_f)], 
-            3: [],
-            4: [((3, 0), conf_coeff2, lin_f)],
-            5: [((4, 0), conf_coeff, lin_f)],}
+    # links = {
+    #         0: [((3, 0), conf_coeff, lin_f)], 
+    #         1: [((0, 0), coeff, lin_f), ((4, 0), conf_coeff, lin_f)], 
+    #         2: [((0, 0), coeff, lin_f), ((1, 0), coeff, lin_f), ((4, 0), conf_coeff, lin_f)], #, ((1, 0), coeff, lin_f)], 
+    #         3: [],
+    #         4: [((3, 0), conf_coeff2, lin_f)],
+    #         5: [((4, 0), conf_coeff, lin_f)],}
 
-    observed_vars = [0,   1,   2,   3,    4,    5]
-    var_names =    ['X', 'M', 'Y', 'Z1', 'Z2', 'Z3']
-    X = [(0, 0)] #, (0, -2)]
-    Y = [(2, 0)]
-    conditions = []   # called 'S' in paper
+    # observed_vars = [0,   1,   2,   3,    4,    5]
+    # var_names =    ['X', 'M', 'Y', 'Z1', 'Z2', 'Z3']
+    # X = [(0, 0)] #, (0, -2)]
+    # Y = [(2, 0)]
+    # conditions = []   # called 'S' in paper
 
     # DAG version of time series example
-    auto_coeff = 0.3 
-    links = {
-            0: [((0, -1), auto_coeff, lin_f),((3, 0), conf_coeff, lin_f)], 
-            1: [((1, -1), auto_coeff, lin_f),((0, -1), coeff, lin_f), ((4, 0), conf_coeff, lin_f)], 
-            2: [((2, -1), auto_coeff, lin_f),((0, -2), coeff, lin_f), ((1, -1), coeff, lin_f), ((4, -1), conf_coeff, lin_f), ((5, 0), coeff, lin_f)], 
-            3: [((3, -1), auto_coeff, lin_f),],
-            4: [((4, -1), auto_coeff, lin_f),((3, -1), conf_coeff2, lin_f)],
-            5: [((5, -1), auto_coeff, lin_f),((4, -1), conf_coeff, lin_f)],}
+    # auto_coeff = 0.3 
+    # links = {
+    #         0: [((0, -1), auto_coeff, lin_f),((3, 0), conf_coeff, lin_f)], 
+    #         1: [((1, -1), auto_coeff, lin_f),((0, -1), coeff, lin_f), ((4, 0), conf_coeff, lin_f)], 
+    #         2: [((2, -1), auto_coeff, lin_f),((0, -2), coeff, lin_f), ((1, -1), coeff, lin_f), ((4, -1), conf_coeff, lin_f), ((5, 0), coeff, lin_f)], 
+    #         3: [((3, -1), auto_coeff, lin_f),],
+    #         4: [((4, -1), auto_coeff, lin_f),((3, -1), conf_coeff2, lin_f)],
+    #         5: [((5, -1), auto_coeff, lin_f),((4, -1), conf_coeff, lin_f)],}
 
     observed_vars = [0,   1,   2,   3,    4,    5]
     var_names =    ['X', 'M', 'Y', 'Z1', 'Z2', 'Z3']
@@ -1482,7 +1489,11 @@ if __name__ == '__main__':
     #     )
 
     causal_effects.fit_wrights_effect(dataframe=dataframe, 
-        links_coeffs=links, mediated_through=[(1, -2)])
+        links_coeffs=links,
+        method = 'links_coeffs',
+         mediated_through=None, #[(1, -2)],
+         # data_transform=sklearn.preprocessing.StandardScaler()
+         )
     ce_obs = causal_effects.predict_wrights_effect(intervention_data=None)
     ce_int = causal_effects.predict_wrights_effect(intervention_data=intervention_data)
 
@@ -1491,7 +1502,7 @@ if __name__ == '__main__':
     ## for linear models
     for y in Y:
         beta = (ce_int[y] - ce_obs[y]).mean()
-        print("\nLinear causal effect on %s with Oset = %.2f" %(y, beta))
+        print("\nLinear causal effect on %s = %.2f" %(y, beta))
 
 
 
