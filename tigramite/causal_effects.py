@@ -1490,8 +1490,8 @@ if __name__ == '__main__':
 
     causal_effects.fit_wrights_effect(dataframe=dataframe, 
         links_coeffs=links,
-        method = 'links_coeffs',
-         mediated_through=None, #[(1, -2)],
+        method = 'optimal',
+         mediated_through=[(1, -2)],
          # data_transform=sklearn.preprocessing.StandardScaler()
          )
     ce_obs = causal_effects.predict_wrights_effect(intervention_data=None)
