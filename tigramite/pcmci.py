@@ -3004,7 +3004,7 @@ class PCMCI():
         return sepset
 
     def _find_unshielded_triples(self, graph):
-        """Find unshielded triples i_tau --(>) k_t -- j_t with i_tau -/- j_t.
+        """Find unshielded triples i_tau o-(>) k_t o-o j_t with i_tau -/- j_t.
 
         Excludes conflicting links.
 
@@ -3023,7 +3023,7 @@ class PCMCI():
         adjt = self._get_adj_time_series(graph, include_conflicts=False)
 
         # Find unshielded triples
-        # Find triples i_tau --(>) k_t -- j_t with i_tau -/- j_t
+        # Find triples i_tau o-(>) k_t o-o j_t with i_tau -/- j_t
         triples = []
         for j in range(N):
             for (k, tauk) in adjt[j]:
@@ -3032,9 +3032,9 @@ class PCMCI():
                         if not (k == j or (
                                 taui == 0 and (i == k or i == j))):
                             if ((taui == 0 and graph[i, j, 0] == 0 and
-                                 graph[j, i, 0] == 0)
-                                    or taui < 0 and graph[
-                                        i, j, abs(taui)] == 0):
+                                 graph[j, i, 0] == 0 and graph[j, k, 0] == 1)
+                                    or (taui < 0 and graph[j, k, 0] == 1
+                                        and graph[i, j, abs(taui)] == 0)):
                                 triples.append(((i, taui), k, j))
 
         return triples
