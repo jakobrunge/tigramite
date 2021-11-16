@@ -1957,6 +1957,8 @@ def _check_matrices(graph, val_matrix, link_width, link_attribute):
                     graph[j, i, 0] = "o-o"
             else:
                 graph[i, j, tau] = "-->"
+    elif graph.ndim == 4:
+        pass
     else:
         # print(graph[:,:,0])
         # Assert that graph has valid and consistent lag-zero entries
@@ -2008,7 +2010,10 @@ def _check_matrices(graph, val_matrix, link_width, link_attribute):
                 raise ValueError("Invalid graph entry.")
 
     if val_matrix is None:
-        val_matrix = (graph != "").astype("int")
+        # if graph.ndim == 4:
+        #     val_matrix = (graph != "").astype("int")
+        # else:
+            val_matrix = (graph != "").astype("int")
 
     if link_width is not None and not np.all(link_width >= 0.0):
         raise ValueError("link_width must be non-negative")
@@ -2045,6 +2050,7 @@ def plot_time_series_graph(
     inner_edge_style="dashed",
     link_matrix=None,
     special_nodes=None,
+    # aux_graph=None,
 ):
     """Creates a time series graph.
     This is still in beta. The time series graph's links are colored by
@@ -2054,7 +2060,8 @@ def plot_time_series_graph(
     ----------
     graph : string or bool array-like, optional (default: None)
         Either string matrix providing graph or bool array providing only adjacencies
-        Must be of same shape as val_matrix. 
+        Either of shape (N, N, tau_max + 1) or as auxiliary graph of dims 
+        (N, N, tau_max+1, tau_max+1) describing auxADMG. 
     val_matrix : array_like
         Matrix of shape (N, N, tau_max+1) containing test statistic values.
     var_names : list, optional (default: None)
@@ -2124,12 +2131,20 @@ def plot_time_series_graph(
         graph, val_matrix, link_width, link_attribute
     )
 
-    N, N, dummy = graph.shape
-    tau_max = dummy - 1
-    max_lag = tau_max + 1
+    if graph.ndim == 4:
+        N, N, dummy, _ = graph.shape
+        tau_max = dummy - 1
+        max_lag = tau_max + 1
+    else:
+        N, N, dummy = graph.shape
+        tau_max = dummy - 1
+        max_lag = tau_max + 1
 
     if np.count_nonzero(graph == "") == graph.size:
-        graph[0, 1, 0] = "---"
+        if graph.ndim == 4:
+            graph[0, 1, 0, 0] = "---"
+        else:
+            graph[0, 1, 0] = "---"
         no_links = True
     else:
         no_links = False
@@ -2157,10 +2172,29 @@ def plot_time_series_graph(
 
     # Only draw link in one direction among contemp
     # Remove lower triangle
-    link_matrix_tsg = np.copy(graph)
-    link_matrix_tsg[:, :, 0] = np.triu(graph[:, :, 0])
 
-    for i, j, tau in np.column_stack(np.where(link_matrix_tsg)):
+    if graph.ndim == 4:
+        for i, j, taui, tauj in np.column_stack(np.where(graph)):
+            tau = abs(taui - tauj)
+            if tau == 0 and j <= i:
+                continue
+            # print(max_lag, (i, -taui), (j, -tauj), aux_graph[i, j, taui, tauj])
+            # print(translate(i, max_lag - 1 - taui), translate(j, max_lag-1-tauj))
+            tsg[translate(i,   max_lag - 1 - taui), translate(j, max_lag-1-tauj)] = 1.0
+            tsg_val[translate(i,   max_lag - 1 - taui), translate(j, max_lag-1-tauj)] = 1. #val_matrix[i, j, tau]
+            tsg_style[translate(i,   max_lag - 1 - taui), translate(j, max_lag-1-tauj)] = graph[i, j, taui, tauj]
+            if link_width is not None:
+                tsg_width[translate(i,   max_lag - 1 - taui), translate(j, max_lag-1-tauj)] = arrow_linewidth
+            if link_attribute is not None:
+                tsg_attr[translate(i,   max_lag - 1 - taui), translate(j, max_lag-1-tauj)] = 'spurious'
+        # print(tsg_style)   
+        # print(tsg)     
+
+    else:
+      link_matrix_tsg = np.copy(graph)
+      link_matrix_tsg[:, :, 0] = np.triu(graph[:, :, 0])
+
+      for i, j, tau in np.column_stack(np.where(link_matrix_tsg)):
         for t in range(max_lag):
             if (
                 0 <= translate(i, t - tau)
@@ -2182,6 +2216,7 @@ def plot_time_series_graph(
                     tsg_attr[translate(i, t - tau), translate(j, t)] = link_attribute[
                         i, j, tau
                     ]
+       
 
     G = nx.DiGraph(tsg)
 
@@ -2191,7 +2226,7 @@ def plot_time_series_graph(
             i, tau = node
             special_nodes_tsg[translate(i, max_lag-1 + tau)] = special_nodes[node]
 
-    special_nodes = special_nodes_tsg
+        special_nodes = special_nodes_tsg
 
     # node_color = np.zeros(N)
     # list of all strengths for color map
@@ -2223,6 +2258,7 @@ def plot_time_series_graph(
 
             all_strengths.append(dic["outer_edge_color"])
             dic["label"] = None
+        # print(u, v, dic)
 
     # If no links are present, set value to zero
     if len(all_strengths) == 0:
@@ -2258,6 +2294,11 @@ def plot_time_series_graph(
 
     node_labels = ["" for i in range(N * max_lag)]
 
+    if graph.ndim == 4:
+        show_colorbar = False
+    else:
+        show_colorbar = True
+
     _draw_network_with_curved_edges(
         fig=fig,
         ax=ax,
@@ -2286,6 +2327,7 @@ def plot_time_series_graph(
         network_lower_bound=network_lower_bound,
         inner_edge_style=inner_edge_style,
         special_nodes=special_nodes,
+        show_colorbar=show_colorbar,
     )
 
     for i in range(N):

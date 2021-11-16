@@ -3849,13 +3849,14 @@ class PCMCI():
         optimal_alpha = pc_alpha_list[score.argmin()]
 
         if self.verbosity > 0:
-            print("\n##\n## Returning results for optimal " +
-                  "pc_alpha = %s" % optimal_alpha + 
-                  "\n##"+
+            print("\n##"+
                   "\n\n## Scores for individual pc_alpha values:\n")
             for iscore, pc_alpha in enumerate(pc_alpha_list):
                 print("   pc_alpha = %7s yields score = %.5f" % (pc_alpha, 
                                                                 score[iscore]))
+            print("\n##\n## Results for optimal " +
+                  "pc_alpha = %s\n##" % optimal_alpha)
+            self.print_results(results[optimal_alpha], alpha_level=optimal_alpha)
 
         optimal_results = results[optimal_alpha]
         optimal_results['optimal_alpha'] = optimal_alpha
@@ -3967,21 +3968,21 @@ if __name__ == '__main__':
     def nonlin_f(x): return (x + 5. * x ** 2 * np.exp(-x ** 2 / 20.))
 
     links = {0: [((0, -1), 0.9, lin_f)],
-             1: [((1, -1), 0.8, lin_f), ((0, -1), 0.8, lin_f)],
-             2: [((2, -1), 0.7, lin_f), ((1, 0), 0.6, lin_f)],
-             3: [((3, -1), 0.7, lin_f), ((2, 0), -0.5, lin_f)],
+             1: [((1, -1), 0.8, lin_f), ((0, -1), 0.1, lin_f)],
+             2: [((2, -1), 0.7, lin_f), ((1, 0), 0.1, lin_f)],
+             3: [((3, -1), 0.7, lin_f), ((2, 0), -0.1, lin_f)],
              }
 
     data, nonstat = pp.structural_causal_process(links,
-                        T=1000, seed=7)
+                        T=10000, seed=7)
 
     # Data must be array of shape (time, variables)
     print(data.shape)
     dataframe = pp.DataFrame(data)
     cond_ind_test = ParCorr()
-    pcmci = PCMCI(dataframe=dataframe, cond_ind_test=cond_ind_test)
-    results = pcmci.run_pcmciplus(tau_min=0, tau_max=2, pc_alpha=0.01)
-    pcmci.print_results(results, alpha_level=0.01)
+    pcmci = PCMCI(dataframe=dataframe, cond_ind_test=cond_ind_test, verbosity=1)
+    results = pcmci.run_pcmciplus(tau_min=0, tau_max=2, pc_alpha=[0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9])
+    # pcmci.print_results(results, alpha_level=0.01)
 
 
 
