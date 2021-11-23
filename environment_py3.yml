@@ -1,6 +1,6 @@
 name: tigramite4_conda
 dependencies:
     - python=3.7
-    - numpy>=1.21.2
-    - scipy>=1.7.1
-    - numba>=0.53.1
+    - numpy=1.21.4
+    - scipy=1.7.2
+    - numba=0.53.1

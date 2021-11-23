@@ -8,6 +8,7 @@ from collections import defaultdict, OrderedDict
 import sys
 import warnings
 import copy
+import math
 import numpy as np
 import scipy.sparse
 import scipy.sparse.linalg
@@ -1274,9 +1275,10 @@ def structural_causal_process(links, T, noises=None,
         Dictionary of format: {1:np.array, ...} containing only keys of intervened
         variables with the value being the array of length T with interventional values.
         Set values to np.nan to leave specific values of a variable un-intervened.
-    intervention_type : dict
+    intervention_type : str or dict
         Dictionary of format: {1:'hard',  3:'soft', ...} to specify whether intervention is 
-        hard (set value) or soft (add value) for variable j.
+        hard (set value) or soft (add value) for variable j. If str, all interventions have 
+        the same type.
     seed : int, optional (default: None)
         Random seed.
 
@@ -1326,13 +1328,15 @@ def structural_causal_process(links, T, noises=None,
     if intervention is not None:
         if intervention_type is None:
             intervention_type = {j:'hard' for j in intervention}
+        elif isinstance(intervention_type, str):
+            intervention_type = {j:intervention_type for j in intervention}
         for j in intervention.keys():
             if len(intervention[j]) != T:
                 raise ValueError("intervention array for j=%s must be of length T = %d" %(j, T))
             if j not in intervention_type.keys():        
                 raise ValueError("intervention_type dictionary must contain entry for %s" %(j))
 
-    transient = int(.2*T)
+    transient = int(math.floor(.2*T))
 
     data = np.zeros((T+transient, N), dtype='float32')
     for j in range(N):
@@ -1340,8 +1344,8 @@ def structural_causal_process(links, T, noises=None,
 
     for t in range(max_lag, T+transient):
         for j in causal_order:
-            if (intervention is not None and j in intervention and t > transient
-                and np.isnan(intervention[j][t - transient]) is False):
+            if (intervention is not None and j in intervention and t >= transient
+                and np.isnan(intervention[j][t - transient]) == False):
                 if intervention_type[j] == 'hard':
                     data[t, j] = intervention[j][t - transient]
                     continue

@@ -1687,8 +1687,13 @@ def plot_graph(
         graph, val_matrix, link_width, link_attribute
     )
 
-    N, N, dummy = val_matrix.shape
+    if graph.ndim == 4:
+        raise ValueError("auxiliary graph cannot be represented by plot_graph,"
+                         " use plot_time_series_graph instead.")
+
+    N, N, dummy = graph.shape
     tau_max = dummy - 1
+    max_lag = tau_max + 1
 
     if np.count_nonzero(graph != "") == np.count_nonzero(
         np.diagonal(graph) != ""
@@ -1835,7 +1840,8 @@ def plot_graph(
         special_nodes_draw = {}
         for node in special_nodes:
             i, tau = node
-            special_nodes_draw[i] = special_nodes[node]
+            if tau >= -tau_max:
+                special_nodes_draw[i] = special_nodes[node]
         special_nodes = special_nodes_draw
     
 
@@ -2224,7 +2230,8 @@ def plot_time_series_graph(
         special_nodes_tsg = {}
         for node in special_nodes:
             i, tau = node
-            special_nodes_tsg[translate(i, max_lag-1 + tau)] = special_nodes[node]
+            if tau >= -tau_max:
+                special_nodes_tsg[translate(i, max_lag-1 + tau)] = special_nodes[node]
 
         special_nodes = special_nodes_tsg
 

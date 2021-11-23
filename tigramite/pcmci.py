@@ -1736,14 +1736,14 @@ class PCMCI():
                         string += " | unclear orientation due to conflict"
             print(string)
 
-        link_marker = {True:"o-o", False:"-->"}
+        # link_marker = {True:"o-o", False:"-->"}
 
         if ambiguous_triples is not None and len(ambiguous_triples) > 0:
-            print("\n## Ambiguous triples:\n")
+            print("\n## Ambiguous triples (not used for orientation):\n")
             for triple in ambiguous_triples:
                 (i, tau), k, j = triple
-                print("    (%s % d) %s %s o-o %s" % (
-                    self.var_names[i], tau, link_marker[tau==0],
+                print("    [(%s % d), %s, %s]" % (
+                    self.var_names[i], tau, 
                     self.var_names[k],
                     self.var_names[j]))
 
@@ -3981,7 +3981,7 @@ if __name__ == '__main__':
     dataframe = pp.DataFrame(data)
     cond_ind_test = ParCorr()
     pcmci = PCMCI(dataframe=dataframe, cond_ind_test=cond_ind_test, verbosity=1)
-    results = pcmci.run_pcmciplus(tau_min=0, tau_max=2, pc_alpha=[0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9])
+    results = pcmci.run_pcmciplus(tau_min=0, tau_max=2, pc_alpha=0.01)
     # pcmci.print_results(results, alpha_level=0.01)
 
 

@@ -52,10 +52,10 @@ class OracleCI:
                  selection_vars=None,
                  graph=None,
                  graph_is_mag=False,
-                 # tau_max=None,
+                 tau_max=None,
                  verbosity=0):
 
-        # self.tau_max = tau_max
+        self.tau_max = tau_max
         self.graph_is_mag = graph_is_mag
 
         if links is None:
@@ -106,7 +106,7 @@ class OracleCI:
             self.selection_vars = []
 
         # ToDO: maybe allow to use user-tau_max, otherwise deduced from links
-        self.graph = self.get_graph_from_links(tau_max=None)
+        self.graph = self.get_graph_from_links(tau_max=tau_max)
 
     def set_dataframe(self, dataframe):
         """Dummy function."""
@@ -1257,7 +1257,7 @@ class OracleCI:
         # TODO: use MAG from DAG construction procedure (lecture notes)
         # issues with tau_max?
         if self.graph_is_mag is False and len(self.selection_vars) > 0:
-            raise ValueError("ADMG do not support selection_vars.")
+            raise ValueError("ADMGs do not support selection_vars.")
 
         N_all = len(self.links)
 
@@ -1268,6 +1268,8 @@ class OracleCI:
         else:
             if max_lag_links > tau_max:
                 raise ValueError("tau_max must be >= maximum lag in links_coeffs; choose tau_max=None")
+
+        # print("max_lag_links ", max_lag_links)
 
         N = len(self.observed_vars)
 
@@ -1401,6 +1403,7 @@ class OracleCI:
                         graph[i, j, tau] = "<-+"
                         if tau == 0:
                             graph[j, i, 0] = "+->"
+                    # print((i, -tau), j, cond_one_xy, cond_one_yx, cond_two)
 
         return graph
 
