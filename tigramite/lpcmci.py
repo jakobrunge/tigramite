@@ -423,9 +423,9 @@ class LPCMCI():
         # Initialize nested dictionaries for saving the maximal p-value among all conditional independence tests of a given
         # pair of variables as well as the corresponding test statistic values and conditioning set cardinalities
         # Syntax: As for self.sepsets
-        self.pval_max = {j: {(i, -tau): np.inf for i in range(self.N) for tau in range(self.tau_max + 1) if (tau > 0 or i < j)} for j in range(self.N)}
-        self.pval_max_val = {j: {(i, -tau): -np.inf for i in range(self.N) for tau in range(self.tau_max + 1) if (tau > 0 or i < j)} for j in range(self.N)}
-        self.pval_max_card = {j: {(i, -tau): np.inf for i in range(self.N) for tau in range(self.tau_max + 1) if (tau > 0 or i < j)} for j in range(self.N)}                                        
+        self.pval_max = {j: {(i, -tau): -np.inf for i in range(self.N) for tau in range(self.tau_max + 1) if (tau > 0 or i < j)} for j in range(self.N)}
+        self.pval_max_val = {j: {(i, -tau): np.inf for i in range(self.N) for tau in range(self.tau_max + 1) if (tau > 0 or i < j)} for j in range(self.N)}
+        self.pval_max_card = {j: {(i, -tau): -np.inf for i in range(self.N) for tau in range(self.tau_max + 1) if (tau > 0 or i < j)} for j in range(self.N)}                                        
         # Initialize a nested dictionary for caching na-pds-sets
         # Syntax: self._na_pds_t[(i, t_i)][(j, t_j)] stores na_pds_t((i, t_i), (j, t_j))
         self._na_pds_t = {(j, -tau_j): {} for j in range(self.N) for tau_j in range(self.tau_max + 1)}
@@ -470,9 +470,9 @@ class LPCMCI():
                 self.graph_dict[j][(i, -tau)] = ""
 
             if (tau > 0 or i < j) and (i, -tau) not in self.selected_links[j]:
-                self.pval_max[j][(i, -tau)] = None
-                self.pval_max_val[j][(i, -tau)] = None
-                self.pval_max_card[j][(i, -tau)] = None
+                self.pval_max[j][(i, -tau)] = np.inf
+                self.pval_max_val[j][(i, -tau)] = -np.inf
+                self.pval_max_card[j][(i, -tau)] = np.inf
 
     def _run_ancestral_removal_phase(self, prelim = False):
         """Run an ancestral edge removal phase, this is Algorithm S2"""
@@ -1688,6 +1688,10 @@ class LPCMCI():
                 if self.verbosity >= 2:
                     print("MakeMin:    %s _|_ %s  |  Z_A = %s: val = %.2f / pval = % .4f" %
                         (X, Y, ' '.join([str(z) for z in list(Z_A)]), val, pval))
+
+                # Accordingly update dictionaries that keep track of the maximal p-value and the corresponding test statistic
+                # values and conditioning set cardinalities
+                self._update_pval_val_card_dicts(X, Y, pval, val, len(Z_A))
 
                 # Check whether the test result was significant
                 if pval > self.pc_alpha:

@@ -748,6 +748,7 @@ class CausalEffects:
                                                hidden_variables=hidden_variables_here,
                                                stationary_graph=True,
                                                ))
+
                     cond_ii = ((tau <= graph_taumax and (graph[i, j, tau] == '<->' 
                                 or graph[i, j, tau] == '+->' or graph[i, j, tau] == '<-+')) 
                                             or self.check_path(graph=graph,
@@ -837,6 +838,7 @@ class CausalEffects:
             hidden_variables = hidden_variables.union([(k, -tauk) for k in range(self.N) 
                                             for tauk in range(self.tau_max+1, max_lag + 1)])
 
+        # print("hidden_variables ", hidden_variables)
         if starts_with is None:
             starts_with = '***'
 
@@ -846,6 +848,8 @@ class CausalEffects:
         #
         # Breadth-first search to find connection
         #
+        # print("\nstart, starts_with, ends_with, end ", start, starts_with, ends_with, end)
+        # print("hidden_variables ", hidden_variables)
         start_from = set()
         for x in start:
             if stationary_graph:
@@ -859,6 +863,7 @@ class CausalEffects:
 
                 # if before_taumax and neighbor[1] >= -self.tau_max:
                 #     continue
+
 
                 if (hidden_variables is not None and neighbor not in end
                                     and neighbor not in hidden_variables):
@@ -875,6 +880,8 @@ class CausalEffects:
                 # start_from.add((link, neighbor))
                 start_from.add((x, link, neighbor))
 
+        # print("start, end, start_from ", start, end, start_from)
+
         visited = set()
         for (varlag_i, link_ik, varlag_k) in start_from:
             visited.add((link_ik, varlag_k))
@@ -882,13 +889,23 @@ class CausalEffects:
         # Traversing through motifs i *-* k *-* j
         while start_from:
 
+            # print("Continue ", start_from)
             # for (link_ik, varlag_k) in start_from:
+            removables = []
             for (varlag_i, link_ik, varlag_k) in start_from:
 
                 # print("varlag_k in end ", varlag_k in end, link_ik)
-                if varlag_k in end and self._match_link(ends_with, link_ik):
-                    # print("Connected ", varlag_i, link_ik, varlag_k)
-                    return True
+                if varlag_k in end:
+                    if self._match_link(ends_with, link_ik):
+                        # print("Connected ", varlag_i, link_ik, varlag_k)
+                        return True
+                    else:
+                        removables.append((varlag_i, link_ik, varlag_k))
+
+            for removable in removables:
+                start_from.remove(removable)
+            if len(start_from)==0:
+                return False
 
             # Get any neighbor from starting nodes
             # link_ik, varlag_k = start_from.pop()
@@ -904,6 +921,7 @@ class CausalEffects:
             else:
                 link_neighbors = self._find_adj(node=varlag_k, patterns='***', exclude=list(start), return_link=True)
             
+            # print("link_neighbors ", link_neighbors)
             for link_neighbor in link_neighbors:
                 link_kj, varlag_j = link_neighbor
                 # print("Walk ", link_ik, varlag_k, link_kj, varlag_j)
@@ -1750,17 +1768,17 @@ if __name__ == '__main__':
     ### TESTING
     auto_coeff = 0.8
     links = {
-            0: [((2, 0), 1., lin_f)], #((0, -1), auto_coeff, lin_f)], 
-            1: [((0, 0), 2., nonlin_f), ((2, 0), 1., lin_f)], 
-            2: [],
-            3: [],}
+            0: [], #((0, -1), auto_coeff, lin_f)], 
+            1: [((0, 0), 2., lin_f)], 
+            2: [((1, 0), 2., lin_f)],
+            }
     
-    # observed_vars = [0, 1, 2 , 3]
+    # observed_vars = [1, 2]
     var_names =    ['X', 'Y', 'Z', 'W']
-    X = [(0, 0)] #, (0, -2), (0, -3)]
-    Y = [(1, 0)] #, (1, -1)]
+    X = [(1, 0)] #, (0, -2), (0, -3)]
+    Y = [(2, 0)] #, (1, -1)]
     conditions = []   # called 'S' in paper
-    hidden_variables = None 
+    hidden_variables = [(0,0)]
                          # [
                         # (0, 0), (0, -1),
                         # (1, -3),
@@ -1827,11 +1845,12 @@ if __name__ == '__main__':
     # if tau_max is None, graph.shape[2]-1 will be used
     # tau_max = 2  # 4 for time series version
 
-    oracle = OracleCI(links=links, observed_vars=list(range(len(links))), 
+    oracle = OracleCI(links=links, 
+        observed_vars=list(range(len(links))), 
         tau_max=tau_max_dag)
     graph = oracle.graph
     # tau_max = graph.shape[2] - 1
-    # print(graph)
+    print(graph)
 
     T = 10000
     data, nonstat = pp.structural_causal_process(links, T=T, noises=None, seed=7)
@@ -1845,6 +1864,7 @@ if __name__ == '__main__':
                                     hidden_variables=hidden_variables,
                                     verbosity=0)
 
+
     # graph_plot = np.zeros((graph.shape[0], graph.shape[1], 5), dtype='<U3') 
     # graph_plot[:,:,:tau_max+1] = graph[:,:,:]
 
@@ -1854,12 +1874,13 @@ if __name__ == '__main__':
     # aux[2, 3, 0, 0] = '<->'
     # aux[3, 2, 0, 0] = '<->'
     # causal_effects.graph = aux
+    print(causal_effects.graph.squeeze())
     tp.plot_time_series_graph(graph = causal_effects.graph, var_names=var_names, 
-        save_name='Example-Fig1A-TSG.pdf',
+        save_name='Example-new.pdf',
         figsize = (12, 8),
         )
 
-    # sys.exit(0)
+    sys.exit(0)
     # causal_effects.check_path(graph=causal_effects.graph, 
     #                     start=X, end=Y, 
     #         conditions=[(0, -2), (2, -1), (1, -2), (1, -3), ])
