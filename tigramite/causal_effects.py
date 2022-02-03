@@ -10,15 +10,20 @@ from copy import deepcopy
 from tigramite.models import Models
 
 class CausalEffects:
-    r"""Causal effect analysis for time series models.
+    r"""General linear/nonparametric (conditional) causal effect analysis.
 
-    Handles the estimation of causal effects given a causal graph.
+    Handles the estimation of causal effects given a causal graph. Various
+    graph types are supported.
+
+    STILL IN DEVELOPMENT: Currently only supports non-time series graphs!
+
+    See the corresponding tigramite tutorial for an in-depth introduction. 
 
     Parameters
     ----------
-    graph : array of shape [N, N, tau_max+1]
-        Causal graph with link types `-->` (direct causal links),
-        `<->` (counfounding), or `+->` (both, only for ADMGs).
+    graph : array of either shape [N, N], [N, N, tau_max+1],
+        or [N, N, tau_max+1, tau_max+1]
+        Different graph types are supported, see tutorial.
     X : list of tuples
         List of tuples [(i, -tau), ...] containing cause variables.
     Y : list of tuples
@@ -26,14 +31,13 @@ class CausalEffects:
     S : list of tuples
         List of tuples [(i, -tau), ...] containing conditioned variables.
     tau_max : int, optional (default: None)
-        Maximum time lag. If None, graph.shape[2] - 1 is used. 
-        If the graph is an auxiliary graph, tau_max is ignored.  
+        Maximum time lag. Relevant only for specific graph types.   
     graph_type : str
-        Type of graph. Currently 'admg' and 'dag' are supported. 
+        Type of graph.
     hidden_variables : list
-        Hidden variables if graph_type 
-    prune_X : bool
-        Whether or not to remove nodes from X with no proper causal path to Y.
+        Hidden variables if graph_type is of DAG-type.
+    prune_XY : bool
+        Whether or not to remove nodes from X and Y with no proper causal paths.
     verbosity : int, optional (default: 0)
         Level of verbosity.
     """
@@ -46,15 +50,18 @@ class CausalEffects:
                  tau_max=None,
                  graph_type='stationary_dag',
                  hidden_variables=None,
-                 prune_X=True,
+                 prune_XY=True,
                  verbosity=0):
         
         # TODO: add graph ckecks
         self.verbosity = verbosity
 
-        if graph_type not in ['stationary_dag', 'stationary_admg']:
-            raise ValueError("Graph type %s not supported!" %graph_type)
-        
+        supported_graphs = ['dag', 'admg'] #'stationary_dag', 'stationary_admg']
+
+        if graph_type not in supported_graphs:
+            raise ValueError("Only graph types %s supported!" %supported_graphs)
+
+
         self.graph_type = graph_type
 
         if self.graph_type == 'pag':
@@ -64,6 +71,7 @@ class CausalEffects:
             self.possible = False
             self.definite_status = False
 
+        # Maybe not needed...
         self.ignore_time_bounds = False
 
         self.N = graph.shape[0]
@@ -87,7 +95,15 @@ class CausalEffects:
 
         # Construct auxiliary time series graph
         # print(graph.shape)
-
+        if graph.ndim != 2:
+            raise ValueError("Currently only non-time series graphs of "
+                             "shape (N, N) supported!")
+        else:
+            # Convert to shape [N, N, tau_max+1] with dummy dimension
+            # to process as stationary graph with potential hidden variables
+            graph = np.expand_dims(graph, axis=2)
+            tau_max = 0
+                
         if hidden_variables is None:
             hidden_variables = []
         self.hidden_variables = set(hidden_variables)
@@ -147,11 +163,18 @@ class CausalEffects:
         M = set(mediators)
         self.M = M
 
-        if prune_X:
+        if prune_XY:
             oldX = X.copy()
+            oldY = Y.copy()
 
             # Remove from X those nodes with no causal path to Y
             X = set([x for x in self.X if x in anc_Y])
+            
+            # Remove from Y those nodes with no causal path from X
+            des_X = self._get_descendants(X)
+
+            Y = set([y for y in self.Y if y in des_X])
+            self.Y = Y
 
             # Also require that all x in X have proper path,
             # that is, the first link goes out of x 
@@ -160,8 +183,12 @@ class CausalEffects:
             self.X = X.intersection(self._get_all_parents(causal_children))
 
             if set(oldX) != set(self.X) and verbosity > 0:
-                print("Pruning X = %s to X=%s " %(oldX, self.X) +
+                print("Pruning X = %s to X = %s " %(oldX, self.X) +
                       "since only these have causal path to Y")
+
+            if set(oldY) != set(self.Y) and verbosity > 0:
+                print("Pruning Y = %s to Y = %s " %(oldY, self.Y) +
+                      "since only these have causal path from X")
 
         if len(self.X.intersection(self.Y)) > 0:
             raise ValueError("Overlap between X and Y")
@@ -169,7 +196,7 @@ class CausalEffects:
         if len(S.intersection(self.Y.union(self.X))) > 0:
             raise ValueError("Conditions S overlap with X or Y")
 
-        # TODO: still prove that!
+        # TODO: need to prove that this is sufficient for non-identifiability!
         if len(self.X.intersection(self._get_descendants(self.M))) > 0:
             raise ValueError("Not identifiable: Overlap between X and des(M)")
 
@@ -198,8 +225,7 @@ class CausalEffects:
             print("Mediators = ", mediators)
 
     def get_mediators(self, start, end):
-        """for proper causal paths from X to Y"""
-        # if conditions is None: conditions = []
+        """Returns mediator variables on proper causal paths from X to Y"""
 
         des_X = self._get_descendants(start)
 
@@ -228,9 +254,9 @@ class CausalEffects:
 
         return mediators
 
-    def get_mediators_stationary_graph(self, start, end, max_lag):
-        """for proper causal paths from X to Y"""
-        # if conditions is None: conditions = []
+    def _get_mediators_stationary_graph(self, start, end, max_lag):
+        """Returns mediator variables on proper causal paths
+           from X to Y in a stationary graph."""
 
         des_X = self._get_descendants_stationary_graph(start, max_lag)
 
@@ -569,7 +595,7 @@ class CausalEffects:
         adj = list(set(adj))
         return adj
 
-    def get_canonical_dag_from_graph(self, graph):
+    def _get_canonical_dag_from_graph(self, graph):
         """
         Constructs links_coeffs dictionary, observed_vars, 
         and selection_vars from graph array (MAG or DAG).
@@ -652,7 +678,7 @@ class CausalEffects:
         # else:
         #     patterns=['<*-'] 
 
-        canonical_dag_links = self.get_canonical_dag_from_graph(graph)
+        canonical_dag_links = self._get_canonical_dag_from_graph(graph)
 
         max_lag = 0
         for node in XYZ:
@@ -693,11 +719,11 @@ class CausalEffects:
            (i)  auxADMG contains (i, -taui) --> (j, -tauj) iff there is a directed path 
                 (i, -taui) --> ... --> (j, -tauj) on which
                 every non-endpoint vertex is in hidden variables (= not in observed_vars)
-                --> ... iff (i, -|taui-tauj|) --> j in graph
+                here iff (i, -|taui-tauj|) --> j in graph
            (ii) auxADMG contains (i, -taui) <-> (j, -tauj) iff there exists a path of the 
                 form (i, -taui) <-- ... --> (j, -tauj) on
                 which every non-endpoint vertex is non-collider AND in L (=not in observed_vars)
-                --> ... (i, -|taui-tauj|) <-> j OR there is path 
+                here iff (i, -|taui-tauj|) <-> j OR there is path 
                 (i, -taui) <-- nodes before t-tau_max --> (j, -tauj)
         """
         
@@ -723,7 +749,7 @@ class CausalEffects:
                     cond_i_xy = (tau <= graph_taumax 
                         # and (graph[i, j, tau] == '-->' or graph[i, j, tau] == '+->') 
                         #     )
-                          and self.check_path(graph=graph,
+                          and self._check_path(graph=graph,
                                                 start=[(i, -taui)],
                                                  end=[(j, -tauj)],
                                                  conditions=None,
@@ -737,7 +763,7 @@ class CausalEffects:
                     cond_i_yx = (tau <= graph_taumax 
                         # and (graph[i, j, tau] == '<--' or graph[i, j, tau] == '<-+') 
                         #     )
-                        and self.check_path(graph=graph,
+                        and self._check_path(graph=graph,
                                               start=[(j, -tauj)],
                                                end=[(i, -taui)],
                                                conditions=None,
@@ -751,7 +777,7 @@ class CausalEffects:
 
                     cond_ii = ((tau <= graph_taumax and (graph[i, j, tau] == '<->' 
                                 or graph[i, j, tau] == '+->' or graph[i, j, tau] == '<-+')) 
-                                            or self.check_path(graph=graph,
+                                            or self._check_path(graph=graph,
                                                                 start=[(i, -taui)],
                                                                  end=[(j, -tauj)],
                                                                  conditions=None,
@@ -791,7 +817,7 @@ class CausalEffects:
 
         return aux_graph
 
-    def check_path(self, graph, start, end,
+    def _check_path(self, graph, start, end,
         conditions=None, 
         starts_with=None,
         ends_with=None,
@@ -824,7 +850,7 @@ class CausalEffects:
         XYZ = start.union(end).union(conditions)
         if stationary_graph:
             max_lag = self._get_maximum_possible_lag(XYZ, graph)
-            causal_children = list(self.get_mediators_stationary_graph(start, end, max_lag).union(end))
+            causal_children = list(self._get_mediators_stationary_graph(start, end, max_lag).union(end))
         else:
             max_lag = None
             causal_children = list(self.get_mediators(start, end).union(end))
@@ -1000,14 +1026,25 @@ class CausalEffects:
         minimize=False,
         return_separate_sets=False,
         ):
-        """Constructs optimal adjustment set
+        """Returns optimal adjustment set.
         
         See Runge NeurIPS 2021.
 
-        minimize=False: full O-set
-        minimize=True: full minimized O-set
-        minimize='by_score': remove based on ci_test-model selection, but only up to minimal set
-
+        Parameters
+        ----------
+        alternative_conditions : set of tuples
+            Used only internally in optimality theorem. If None, self.S is used.
+        minimize : {False, True, 'colliders_only'} 
+            Minimize optimal set. If True, minimize such that no subset 
+            can be removed without making it invalid. If 'colliders_only',
+            only colliders are minimized.
+        return_separate_sets : bool
+            Whether to return tuple of parents, colliders, collider_parents, and S.
+        
+        Returns
+        -------
+        Oset_S : False or list or tuple of lists
+            Returns optimal adjustment set if a valid set exists, otherwise False.
         """
 
 
@@ -1044,8 +1081,6 @@ class CausalEffects:
                     for spouse in suitable_spouses:
                         i, tau = spouse
                         if spouse in self.X:
-                            # if self.verbosity > 0:
-                            #     print ("Causal effect not identifiable (valid collider node in X)")
                             return False
 
                         if (# Node not already in set
@@ -1055,7 +1090,7 @@ class CausalEffects:
                             # in time bounds
                             and (-self.tau_max <= tau <= 0 or self.ignore_time_bounds)
                             and (spouse in vancs
-                                or not self.check_path(graph=self.graph, start=self.X, end=[spouse], 
+                                or not self._check_path(graph=self.graph, start=self.X, end=[spouse], 
                                                     conditions=list(parents.union(vancs)) + list(S),
                                                     ))
                                 ):
@@ -1071,8 +1106,6 @@ class CausalEffects:
         # Add parents and raise Error if not identifiable
         collider_parents = self._get_all_parents(colliders)
         if len(self.X.intersection(collider_parents)) > 0:
-            # if self.verbosity > 0:
-            #     print ("Causal effect not identifiable (parent of valid collider node in X)")
             return False
 
         colliders_and_their_parents = colliders.union(collider_parents)
@@ -1089,7 +1122,7 @@ class CausalEffects:
                 sorted_Oset = [node for node in sorted_Oset if node not in parents]
 
             for node in sorted_Oset:
-                if (not self.check_path(graph=self.graph, start=X, end=[node], 
+                if (not self._check_path(graph=self.graph, start=X, end=[node], 
                                 conditions=list(Oset - set([node])) + list(S))):
                     removable.append(node) 
 
@@ -1100,7 +1133,7 @@ class CausalEffects:
             removable = []
             # Next remove all those with no direct connection to Y
             for node in sorted_Oset:
-                if (not self.check_path(graph=self.graph, start=[node], end=self.Y, 
+                if (not self._check_path(graph=self.graph, start=[node], end=self.Y, 
                             conditions=list(Oset - set([node])) + list(S) + list(self.X),
                             ends_with='**>')): 
                     removable.append(node) 
@@ -1118,7 +1151,7 @@ class CausalEffects:
             return list(Oset_S)
 
 
-    def get_collider_paths_optimality(self, source_nodes, target_nodes,
+    def _get_collider_paths_optimality(self, source_nodes, target_nodes,
         condition, 
         inside_set=None, 
         start_with_tail_or_head=False, 
@@ -1197,10 +1230,18 @@ class CausalEffects:
 
 
     def check_optimality(self):
-        """TODO"""
+        """Check whether optimal adjustment set exists.
+
+        See Theorem 3 in paper.
+
+        Returns
+        -------
+        optimality : bool
+            Returns True if optimal adjustment set exists, otherwise False.
+        """
 
         # Cond. 0: Exactly one valid adjustment set exists
-        cond_0 = (self.get_all_valid_adjustment_sets(check_one_set_exists=True))
+        cond_0 = (self._get_all_valid_adjustment_sets(check_one_set_exists=True))
 
         #
         # Cond. I
@@ -1217,7 +1258,7 @@ class CausalEffects:
             # (2) For all N ∈ N and all its collider paths i it holds that 
             # OπiN does not block all non-causal paths from X to Y
             # cond_I = True
-            cond_I = self.get_collider_paths_optimality(
+            cond_I = self._get_collider_paths_optimality(
                 source_nodes=list(n_nodes), target_nodes=list(self.Y.union(self.M)),
                 condition='I', 
                 inside_set=Oset.union(self.S), start_with_tail_or_head=False,
@@ -1230,10 +1271,10 @@ class CausalEffects:
         cond_II = True
         for E in e_nodes:
             Oset_minusE = Oset.difference(set([E]))
-            if self.check_path(graph=self.graph, start=list(self.X), end=[E], 
+            if self._check_path(graph=self.graph, start=list(self.X), end=[E], 
                                 conditions=list(self.S) + list(Oset_minusE)):
                    
-                cond_II = self.get_collider_paths_optimality(
+                cond_II = self._get_collider_paths_optimality(
                     target_nodes=self.Y.union(self.M), 
                     source_nodes=list(set([E])),
                     condition='II', 
@@ -1250,10 +1291,10 @@ class CausalEffects:
         return optimality
 
     def _check_validity(self, Z):
-        """"""
+        """Checks whether Z is a valid adjustment set."""
 
         # causal_children = list(self.M.union(self.Y))
-        backdoor_path = self.check_path(graph=self.graph, start=list(self.X), end=list(self.Y), 
+        backdoor_path = self._check_path(graph=self.graph, start=list(self.X), end=list(self.Y), 
                             conditions=list(Z), 
                             # causal_children=causal_children,
                             path_type = 'non_causal')
@@ -1263,15 +1304,17 @@ class CausalEffects:
         else:
             return True
     
-    def get_adjust_set(self, 
+    def _get_adjust_set(self, 
         minimize=False,
         ):
-        """Checks whether any valid adjustment set exist
+        """Returns Adjust-set.
         
-        based on van der Zander, Textor...
+        See van der Zander, B.; Liśkiewicz, M. & Textor, J.
+        Separators and adjustment sets in causal graphs: Complete 
+        criteria and an algorithmic framework 
+        Artificial Intelligence, Elsevier, 2019, 270, 1-40
 
         """
-        #             for tau in range(0, self.tau_max + 1)]
 
         vancs = self.vancs.copy()
 
@@ -1292,7 +1335,7 @@ class CausalEffects:
                 #     starts_with=None, #'arrowhead', 
                 #     forbidden_nodes=None, #list(Zprime - set([node])), 
                 #     return_path=False)
-                path = self.check_path(graph=self.graph, start=self.X, end=[node], 
+                path = self._check_path(graph=self.graph, start=self.X, end=[node], 
                     conditions=list(vancs - set([node])), 
                      )
   
@@ -1309,7 +1352,7 @@ class CausalEffects:
             # Z = Zprime2
             for node in minimize_nodes:
 
-                path = self.check_path(graph=self.graph, start=[node], end=self.Y, 
+                path = self._check_path(graph=self.graph, start=[node], end=self.Y, 
                     conditions=list(vancs - set([node])) + list(self.X),
                     )
 
@@ -1322,25 +1365,14 @@ class CausalEffects:
             return list(vancs)
 
 
-    def check_backdoor_identifiability(self):
-        """Checks whether any valid adjustment set exist
-        
-        based on van der Zander, Textor...
-
-        """
-        Z = self.get_adjust_set()
-        if Z is False:
-            return False
-        else:
-            return True
-
-    def get_all_valid_adjustment_sets(self, 
+    def _get_all_valid_adjustment_sets(self, 
         check_one_set_exists=False, yield_index=None):
-        """Constructs all valid adjustment sets
+        """Constructs all valid adjustment sets or just checks whether one exists.
         
-        See Runge UAI 2021.
-
-        based on van der Laan, Textor...
+        See van der Zander, B.; Liśkiewicz, M. & Textor, J.
+        Separators and adjustment sets in causal graphs: Complete 
+        criteria and an algorithmic framework 
+        Artificial Intelligence, Elsevier, 2019, 270, 1-40
 
         """
 
@@ -1407,12 +1439,12 @@ class CausalEffects:
         return all_sets
 
 
-    def get_causal_paths(self, source_nodes, target_nodes,
+    def _get_causal_paths(self, source_nodes, target_nodes,
         mediators=None,
         mediated_through=None,
         proper_paths=True,
         ):
-        """Returns causal paths via depth-first search
+        """Returns causal paths via depth-first search.
 
         """
 
@@ -1476,6 +1508,31 @@ class CausalEffects:
         ):
         """Returns a fitted model for the total causal effect of X on Y 
            conditional on S.
+
+        Parameters
+        ----------
+        dataframe : data object
+            Tigramite dataframe object. It must have the attributes dataframe.values
+            yielding a numpy array of shape (observations T, variables N) and
+            optionally a mask of the same shape and a missing values flag.
+        estimator : sklearn model object
+            For example, sklearn.linear_model.LinearRegression() for a linear
+            regression model.
+        adjustment_set : str or list of tuples
+            If 'optimal' the Oset is used, if 'minimized_optimal' the minimized Oset,
+            and if 'colliders_minimized_optimal', the colliders-minimized Oset.
+            If a list of tuples is passed, this set is used.
+        conditional_estimator : sklearn model object, optional (default: None)
+            Used to fit conditional causal effects in nested regression. 
+            If None, the same model as for estimator is used.
+        data_transform : sklearn preprocessing object, optional (default: None)
+            Used to transform data prior to fitting. For example,
+            sklearn.preprocessing.StandardScaler for simple standardization. The
+            fitted parameters are stored.
+        mask_type : {None, 'y','x','z','xy','xz','yz','xyz'}
+            Masking mode: Indicators for which variables in the dependence
+            measure I(X; Y | Z) the samples should be masked. If None, the mask
+            is not used. Explained in tutorial on masking and missing values.
         """
 
         self.dataframe = dataframe
@@ -1489,7 +1546,6 @@ class CausalEffects:
         elif adjustment_set == 'minimized_optimal':
             adjustment_set = self.get_optimal_set(minimize=True)
         else:
-            # TODO: Check validity
             if self._check_validity(adjustment_set) is False:
                 raise ValueError("Chosen adjustment_set is not valid.")
 
@@ -1519,8 +1575,24 @@ class CausalEffects:
         conditions_data=None,
         pred_params=None,
         ):
-        """Returns a fitted model for the total causal effect of X on Y 
-           conditional on S.
+        """Predict effect of intervention with fitted model.
+
+        Uses the model.predict() function of the sklearn model.
+
+        Parameters
+        ----------
+        intervention_data : data object, optional
+            Tigramite dataframe object with optional new mask. Only the 
+            values for X will be extracted.
+        conditions_data : data object, optional
+            Tigramite dataframe object with optional new mask. Only the
+            values for conditions will be extracted.
+        pred_params : dict, optional
+            Optional parameters passed on to sklearn prediction function.
+
+        Returns
+        -------
+        Results from prediction.
         """
 
         if intervention_data is not None:
@@ -1545,14 +1617,42 @@ class CausalEffects:
     def fit_wrights_effect(self,
         dataframe, 
         mediated_through=None,
-        method=None,
+        method='optimal',
         links_coeffs=None,  
         data_transform=None,
         mask_type=None,
         ):
-        """Returns a fitted model for the total causal effect of X on Y 
-           conditional on S.
+        """Returns a fitted model for the total or mediated causal effect of X on Y 
+           through mediator variables.
+
+        Parameters
+        ----------
+        dataframe : data object
+            Tigramite dataframe object. It must have the attributes dataframe.values
+            yielding a numpy array of shape (observations T, variables N) and
+            optionally a mask of the same shape and a missing values flag.
+        mediated_through : list of tuples
+            If None, total effect is estimated, else only those causal paths are considerd
+            that pass at least through one of these mediator nodes.
+        method : {'optimal', 'links_coeffs', 'parents'}
+            Method to use for estimating Wright's path coefficients. If 'optimal', 
+            the Oset is used, if 'links_coeffs', the coefficients in links_coeffs are used,
+            if 'parents', the parents are used (only valid for DAGs).
+        links_coeffs : dict
+            Only used if method = 'links_coeffs'.
+            Dictionary of format: {0:[((i, -tau), coeff),...], 1:[...],
+            ...} for all variables where i must be in [0..N-1] and tau >= 0 with
+            number of variables N. coeff must be a float.
+        data_transform : sklearn preprocessing object, optional (default: None)
+            Used to transform data prior to fitting. For example,
+            sklearn.preprocessing.StandardScaler for simple standardization. The
+            fitted parameters are stored.
+        mask_type : {None, 'y','x','z','xy','xz','yz','xyz'}
+            Masking mode: Indicators for which variables in the dependence
+            measure I(X; Y | Z) the samples should be masked. If None, the mask
+            is not used. Explained in tutorial on masking and missing values.
         """
+
         import sklearn.linear_model
 
         self.dataframe = dataframe
@@ -1568,7 +1668,7 @@ class CausalEffects:
                         verbosity=self.verbosity)
 
         mediators = self.get_mediators(start=self.X, end=self.Y)
-        causal_paths = self.get_causal_paths(source_nodes=self.X, 
+        causal_paths = self._get_causal_paths(source_nodes=self.X, 
                 target_nodes=self.Y, mediators=mediators, 
                 mediated_through=mediated_through, proper_paths=True)
 
@@ -1595,7 +1695,7 @@ class CausalEffects:
                     causal_effects = CausalEffects(graph=self.graph, X=[par], Y=[medy],
                                         S=Sprime,
                                         tau_max=self.tau_max, graph_type=self.graph_type,
-                                        prune_X=False)
+                                        prune_XY=False)
                     oset = causal_effects.get_optimal_set()
                     # print(j, all_parents[j])
                     if oset is False:
@@ -1627,6 +1727,9 @@ class CausalEffects:
                 for ipar, par in enumerate(all_parents):
                     coeffs[medy][par] = fit_res[medy]['model'].coef_[ipar]
 
+        else:
+            raise ValueError("method must be 'optimal', 'links_coeffs', or 'parents'.")
+        
         # Effect is sum over products over all path coefficients
         # from x in X to y in Y
         effect = {}
@@ -1670,8 +1773,19 @@ class CausalEffects:
         intervention_data=None, 
         pred_params=None,
         ):
-        """Returns a fitted model for the total causal effect of X on Y 
-           conditional on S.
+        """Predict linear effect of intervention with fitted Wright-model.
+
+        Parameters
+        ----------
+        intervention_data : data object, optional
+            Tigramite dataframe object with optional new mask. Only the 
+            values for X will be extracted.
+        pred_params : dict, optional
+            Optional parameters passed on to sklearn prediction function.
+
+        Returns
+        -------
+        Results from prediction.
         """
 
         if intervention_data is not None:
@@ -1771,12 +1885,13 @@ if __name__ == '__main__':
             0: [], #((0, -1), auto_coeff, lin_f)], 
             1: [((0, 0), 2., lin_f)], 
             2: [((1, 0), 2., lin_f)],
+            3: [((2, 0), 2., lin_f)],
             }
     
     # observed_vars = [1, 2]
     var_names =    ['X', 'Y', 'Z', 'W']
     X = [(1, 0)] #, (0, -2), (0, -3)]
-    Y = [(2, 0)] #, (1, -1)]
+    Y = [(3, 0)] #, (1, -1)]
     conditions = []   # called 'S' in paper
     hidden_variables = [(0,0)]
                          # [
@@ -1787,6 +1902,7 @@ if __name__ == '__main__':
                         # ]
     tau_max_dag = 0
     tau_max_admg = 0
+    graph_type = 'dag'
 
     int_value1 = 0.
     int_value2 = 2.
@@ -1849,17 +1965,21 @@ if __name__ == '__main__':
         observed_vars=list(range(len(links))), 
         tau_max=tau_max_dag)
     graph = oracle.graph
+
+    # CHANGE: assume non-timeseries graph
+    graph = graph.squeeze()
+    assert graph.ndim == 2
     # tau_max = graph.shape[2] - 1
     print(graph)
 
-    T = 10000
-    data, nonstat = pp.structural_causal_process(links, T=T, noises=None, seed=7)
-    dataframe = pp.DataFrame(data)
+    # T = 10000
+    # data, nonstat = pp.structural_causal_process(links, T=T, noises=None, seed=7)
+    # dataframe = pp.DataFrame(data)
 
     # Initialize class
     causal_effects = CausalEffects(graph=graph, X=X, Y=Y, 
                                     S=conditions,
-                                    graph_type='stationary_dag',
+                                    graph_type=graph_type,
                                     tau_max = tau_max_admg,
                                     hidden_variables=hidden_variables,
                                     verbosity=0)
@@ -1875,13 +1995,20 @@ if __name__ == '__main__':
     # aux[3, 2, 0, 0] = '<->'
     # causal_effects.graph = aux
     print(causal_effects.graph.squeeze())
-    tp.plot_time_series_graph(graph = causal_effects.graph, var_names=var_names, 
+    # tp.plot_time_series_graph(graph = causal_effects.graph, var_names=var_names, 
+    #     save_name='Example-new.pdf',
+    #     figsize = (12, 8),
+    #     )
+
+    plot_graph = np.expand_dims(causal_effects.graph.squeeze(), axis = 2)
+    tp.plot_graph(graph = plot_graph,
+        var_names=var_names, 
         save_name='Example-new.pdf',
         figsize = (12, 8),
         )
 
     sys.exit(0)
-    # causal_effects.check_path(graph=causal_effects.graph, 
+    # causal_effects._check_path(graph=causal_effects.graph, 
     #                     start=X, end=Y, 
     #         conditions=[(0, -2), (2, -1), (1, -2), (1, -3), ])
     # tp.plot_time_series_graph(graph = graph, var_names=var_names, 
@@ -1899,24 +2026,24 @@ if __name__ == '__main__':
     #     figsize = (8, 8),
     #     aux_graph=aux_graph)
 
-    if causal_effects.get_adjust_set() is False:
+    if causal_effects._get_adjust_set() is False:
         print("Not identifiable!")
 
     optimality = causal_effects.check_optimality()
     print("(Graph, X, Y, S) fulfills optimality: ", optimality)
 
     # Adjust-set
-    adjust = causal_effects.get_adjust_set()
+    adjust = causal_effects._get_adjust_set()
     print("\nAdjust / Ancs set")
     print([(var_names[v[0]], v[1]) for v in adjust])
 
     # # Minimized Adjust-set
-    # adjust_min = causal_effects.get_adjust_set(minimize=True)
+    # adjust_min = causal_effects._get_adjust_set(minimize=True)
     # print("\nMin Ancs set")
     # print([(var_names[v[0]], v[1]) for v in adjust_min])
 
     # # ParX-minimized Ancs-set
-    # adjust_pxmin = causal_effects.get_adjust_set(minimize='keep_parentsYM')
+    # adjust_pxmin = causal_effects._get_adjust_set(minimize='keep_parentsYM')
     # print("\nMinParX Ancs set")
     # print([(var_names[v[0]], v[1]) for v in adjust_pxmin])
 
