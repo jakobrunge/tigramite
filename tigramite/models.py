@@ -216,8 +216,8 @@ class Models():
         pred_dict = {}
         for y in self.Y:
             # Print message
-            if self.verbosity > 0:
-                print("\n##\n## Predicting target %s\n##" % str(y))
+            if self.verbosity > 1:
+                print("\n## Predicting target %s" % str(y))
                 if pred_params is not None:
                     for key in list(pred_params):
                         print("%s = %s" % (key, pred_params[key]))
@@ -252,7 +252,8 @@ class Models():
                     intervention_array[index] = tmp_array[index]
 
             if self.conditions is not None and conditions_data is not None:
-                tmp_array, _ = conditions_data.construct_array(X=self.X, Y=[y] + self.Z, Z=self.conditions,
+                tmp_array, _ = conditions_data.construct_array(X=self.X, Y=[y] + self.Z, 
+                                                         Z=self.conditions,
                                                          tau_max=self.tau_max,
                                                          mask_type=self.mask_type,
                                                          cut_off=self.cut_off,
@@ -295,7 +296,8 @@ class Models():
                 self.fit_results[y]['conditional_model'] = a_conditional_model
 
                 # Now predict conditional causal effect for new conditions
-                tmp_array, _ = conditions_data.construct_array(X=self.X, Y=[y] + self.Z, Z=self.conditions,
+                tmp_array, _ = conditions_data.construct_array(X=self.X, Y=[y] + self.Z, 
+                                                         Z=self.conditions,
                                                          tau_max=self.tau_max,
                                                          mask_type=self.mask_type,
                                                          cut_off=self.cut_off,

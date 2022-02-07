@@ -804,10 +804,11 @@ def _draw_network_with_curved_edges(
     standard_size=100,
     node_aspect=None,
     standard_cmap="OrRd",
-    standard_color="lightgrey",
+    standard_color_links='black',
+    standard_color_nodes='lightgrey',
     log_sizes=False,
     cmap_links="YlOrRd",
-    cmap_links_edges="YlOrRd",
+    # cmap_links_edges="YlOrRd",
     links_vmin=0.0,
     links_vmax=1.0,
     links_edges_vmin=0.0,
@@ -868,6 +869,7 @@ def _draw_network_with_curved_edges(
             n1 = G.nodes[u]["patch"]
             n2 = G.nodes[v]["patch"]
 
+        # print("+++++++++++++++++++++++==cmap_links ", cmap_links)
         if outer_edge:
             rad = -1.0 * curved_radius
             if cmap_links is not None:
@@ -876,7 +878,7 @@ def _draw_network_with_curved_edges(
                 if d["outer_edge_color"] is not None:
                     facecolor = d["outer_edge_color"]
                 else:
-                    facecolor = standard_color
+                    facecolor = standard_color_links
 
             width = d["outer_edge_width"]
             alpha = d["outer_edge_alpha"]
@@ -922,7 +924,8 @@ def _draw_network_with_curved_edges(
                 if d["inner_edge_color"] is not None:
                     facecolor = d["inner_edge_color"]
                 else:
-                    facecolor = standard_color
+                    # print("HERE")
+                    facecolor = standard_color_links
 
             width = d["inner_edge_width"]
             alpha = d["inner_edge_alpha"]
@@ -958,6 +961,7 @@ def _draw_network_with_curved_edges(
         marker_size = width ** 2
         figuresize = fig.get_size_inches()
 
+        # print("COLOR ", facecolor)
         e_p = FancyArrowPatch(
             coor1,
             coor2,
@@ -1491,7 +1495,7 @@ def _draw_network_with_curved_edges(
                     color_here = 'grey'
             else:
                 if colors is None:
-                    color_here = standard_color
+                    color_here = standard_color_nodes
                 else:
                     color_here = colors[n]
 
@@ -1683,13 +1687,26 @@ def plot_graph(
     else:
         fig, ax = fig_ax
 
-    (graph, val_matrix, link_width, link_attribute) = _check_matrices(
-        graph, val_matrix, link_width, link_attribute
-    )
+    graph = graph.squeeze()
 
     if graph.ndim == 4:
-        raise ValueError("auxiliary graph cannot be represented by plot_graph,"
+        raise ValueError("Time series graph of shape (N,N,tau_max+1,tau_max+1) cannot be represented by plot_graph,"
                          " use plot_time_series_graph instead.")
+
+    if graph.ndim == 2:
+        # If a non-time series (N,N)-graph is given, insert a dummy dimension
+        graph = np.expand_dims(graph, axis = 2)
+
+    if val_matrix is None:
+        no_coloring = True
+        cmap_edges = None
+        cmap_nodes = None
+    else:
+        no_coloring = False
+
+    (graph, val_matrix, link_width, link_attribute) = _check_matrices(
+        graph, val_matrix, link_width, link_attribute)
+    
 
     N, N, dummy = graph.shape
     tau_max = dummy - 1
@@ -1727,7 +1744,7 @@ def plot_graph(
     # This handels Graphs with no links.
     # nx.draw(G, alpha=0, zorder=-10)
 
-    node_color = np.zeros(N)
+    node_color = list(np.zeros(N))
     # list of all strengths for color map
     all_strengths = []
     # Add attributes, contemporaneous and lagged links are handled separately
@@ -1753,7 +1770,10 @@ def plot_graph(
             dic["inner_edge"] = link_matrix_upper[u, v, 0]
             dic["inner_edge_type"] = link_matrix_upper[u, v, 0]
             dic["inner_edge_alpha"] = alpha
-            dic["inner_edge_color"] = val_matrix[u, v, 0]
+            if no_coloring:
+                dic["inner_edge_color"] = None
+            else:
+                dic["inner_edge_color"] = val_matrix[u, v, 0]
             # # value at argmax of average
             # if np.abs(val_matrix[u, v][0] - val_matrix[v, u][0]) > .0001:
             #     print("Contemporaneous I(%d; %d)=%.3f != I(%d; %d)=%.3f" % (
@@ -1811,7 +1831,10 @@ def plot_graph(
                 dic["outer_edge_attribute"] = link_attribute[u, v, argmax]
 
             # value at argmax of average
-            dic["outer_edge_color"] = val_matrix[u, v][argmax]
+            if no_coloring:
+                dic["outer_edge_color"] = None
+            else:
+                dic["outer_edge_color"] = val_matrix[u, v][argmax]
             all_strengths.append(dic["outer_edge_color"])
 
             # Sorted list of significant lags (only if robust wrt
@@ -1827,7 +1850,10 @@ def plot_graph(
                 dic["label"] = str([l for l in lags if l in sig_lags])[1:-1]
         else:
             # Node color is max of average autodependency
-            node_color[u] = val_matrix[u, v][argmax]
+            if no_coloring:
+                node_color[u] = None
+            else:
+                node_color[u] = val_matrix[u, v][argmax]
             dic["inner_edge_attribute"] = None
             dic["outer_edge_attribute"] = None
 
@@ -1887,7 +1913,8 @@ def plot_graph(
         standard_size=node_size,
         node_aspect=node_aspect,
         standard_cmap="OrRd",
-        standard_color="orange",
+        standard_color_nodes="lightgrey",
+        standard_color_links="black",
         log_sizes=False,
         cmap_links=cmap_edges,
         links_vmin=vmin_edges,
@@ -2057,6 +2084,8 @@ def plot_time_series_graph(
     link_matrix=None,
     special_nodes=None,
     # aux_graph=None,
+    standard_color_links='black',
+    standard_color_nodes='lightgrey',
 ):
     """Creates a time series graph.
     This is still in beta. The time series graph's links are colored by
@@ -2133,6 +2162,12 @@ def plot_time_series_graph(
     else:
         fig, ax = fig_ax
 
+    if val_matrix is None:
+        no_coloring = True
+        cmap_edges = None
+    else:
+        no_coloring = False
+
     (graph, val_matrix, link_width, link_attribute) = _check_matrices(
         graph, val_matrix, link_width, link_attribute
     )
@@ -2176,13 +2211,12 @@ def plot_time_series_graph(
     if link_attribute is not None:
         tsg_attr = np.zeros((N * max_lag, N * max_lag), dtype=link_attribute.dtype)
 
-    # Only draw link in one direction among contemp
+    # Only draw link in one direction
     # Remove lower triangle
-
     if graph.ndim == 4:
         for i, j, taui, tauj in np.column_stack(np.where(graph)):
-            tau = abs(taui - tauj)
-            if tau == 0 and j <= i:
+            tau = taui - tauj
+            if tau <= 0 and j <= i:
                 continue
             # print(max_lag, (i, -taui), (j, -tauj), aux_graph[i, j, taui, tauj])
             # print(translate(i, max_lag - 1 - taui), translate(j, max_lag-1-tauj))
@@ -2261,7 +2295,10 @@ def plot_time_series_graph(
                 dic["outer_edge_attribute"] = tsg_attr[u, v]
 
             # value at argmax of average
-            dic["outer_edge_color"] = tsg_val[u, v]
+            if no_coloring:
+                dic["outer_edge_color"] = None
+            else:
+                dic["outer_edge_color"] = tsg_val[u, v]
 
             all_strengths.append(dic["outer_edge_color"])
             dic["label"] = None
@@ -2318,7 +2355,8 @@ def plot_time_series_graph(
         standard_size=node_size,
         node_aspect=node_aspect,
         standard_cmap="OrRd",
-        standard_color="lightgrey",
+        standard_color_nodes=standard_color_nodes,
+        standard_color_links=standard_color_links,
         log_sizes=False,
         cmap_links=cmap_edges,
         links_vmin=vmin_edges,
@@ -2408,6 +2446,8 @@ def plot_mediation_time_series_graph(
     label_space_left=0.1,
     label_space_top=0.0,
     network_lower_bound=0.2,
+    standard_color_links='black',
+    standard_color_nodes='lightgrey',
 ):
     """Creates a mediation time series graph plot.
     This is still in beta. The time series graph's links are colored by
@@ -2628,7 +2668,8 @@ def plot_mediation_time_series_graph(
         standard_size=node_size,
         node_aspect=node_aspect,
         standard_cmap="OrRd",
-        standard_color="grey",
+        standard_color_nodes=standard_color_nodes,
+        standard_color_links=standard_color_links,
         log_sizes=False,
         cmap_links=cmap_edges,
         links_vmin=vmin_edges,
@@ -2719,6 +2760,8 @@ def plot_mediation_graph(
     node_label_size=10,
     link_label_fontsize=10,
     network_lower_bound=0.2,
+    standard_color_links='black',
+    standard_color_nodes='lightgrey',
 ):
     """Creates a network plot visualizing the pathways of a mediation analysis.
     This is still in beta. The network is defined from non-zero entries in
@@ -2957,7 +3000,8 @@ def plot_mediation_graph(
         standard_size=node_size,
         node_aspect=node_aspect,
         standard_cmap="OrRd",
-        standard_color="orange",
+        standard_color_nodes=standard_color_nodes,
+        standard_color_links=standard_color_links,
         log_sizes=False,
         cmap_links=cmap_edges,
         links_vmin=vmin_edges,
@@ -3195,7 +3239,8 @@ def plot_tsg(links, X, Y, Z=None, anc_x=None, anc_y=None, anc_xy=None):
         standard_size=node_size,
         node_aspect=None,
         standard_cmap="OrRd",
-        standard_color="lightgrey",
+        standard_color_links='black',
+        standard_color_nodes='lightgrey',
         log_sizes=False,
         cmap_links=cmap_edges,
         links_vmin=vmin_edges,
