@@ -3376,6 +3376,7 @@ if __name__ == '__main__':
 
     from tigramite.independence_tests import ParCorr
     import tigramite.data_processing as pp
+    from tigramite.toymodels import structural_causal_processes as toys
     import tigramite.plotting as tp
     from matplotlib import pyplot as plt
 
@@ -3391,7 +3392,7 @@ if __name__ == '__main__':
              3: [],
              }
 
-    full_data, nonstat = pp.structural_causal_process(links,
+    full_data, nonstat = toys.structural_causal_process(links,
                         T=1000, seed=7)
     
     # We now remove variable 3 which plays the role of a hidden confounder

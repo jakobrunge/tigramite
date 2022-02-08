@@ -11,6 +11,7 @@ from scipy.special import comb
 from tigramite.pcmci import PCMCI
 from tigramite.independence_tests import ParCorr
 import tigramite.data_processing as pp
+from tigramite.toymodels import structural_causal_processes as toys
 
 from test_pcmci_calculations import a_chain
 
@@ -27,7 +28,7 @@ def _get_parent_graph(parents_neighbors_coeffs, exclude=None):
     return only parent relations (i.e. where tau != 0)
     """
     graph = defaultdict(list)
-    for j, i, tau, _ in pp._iter_coeffs(parents_neighbors_coeffs):
+    for j, i, tau, _ in toys._iter_coeffs(parents_neighbors_coeffs):
         if tau != 0 and (i, tau) != exclude:
             graph[j].append((i, tau))
     return dict(graph)
@@ -55,7 +56,7 @@ def a_sample(request):
     # Set the random seed
     np.random.seed(seed_val)
     # Generate the data
-    data, _ = pp.var_process(links_coeffs, T=time)
+    data, _ = toys.var_process(links_coeffs, T=time)
     # Get the true parents
     true_parents = _get_parent_graph(links_coeffs)
     return pp.DataFrame(data), true_parents

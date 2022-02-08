@@ -1957,6 +1957,7 @@ if __name__ == '__main__':
    
     import sys
     import tigramite.data_processing as pp
+    import tigramite.toymodels.structural_causal_processes as toys
     import tigramite.plotting as tp
     from tigramite.independence_tests import OracleCI
     from tigramite.data_processing import DataFrame
@@ -2285,7 +2286,7 @@ if __name__ == '__main__':
     print(repr(graph))
 
     # T = 10000
-    # data, nonstat = pp.structural_causal_process(links, T=T, noises=None, seed=7)
+    # data, nonstat = toys.structural_causal_process(links, T=T, noises=None, seed=7)
     # dataframe = pp.DataFrame(data)
 
     # Initialize class
@@ -2497,13 +2498,13 @@ if __name__ == '__main__':
         )
 
     # Ground truth:
-    data, nonstat = pp.structural_causal_process(links=links, T=T, noises=None, 
+    data, nonstat = toys.structural_causal_process(links=links, T=T, noises=None, 
                         intervention={X[0][0]: intervention_data1.values[:, X[0][0]]}, 
                         intervention_type='hard',
                         seed=7)
     true_ce_int1 = data[:,Y[0][0]].mean()
     # print(data[:,X[0][0]])
-    data, nonstat = pp.structural_causal_process(links=links, T=T, noises=None, 
+    data, nonstat = toys.structural_causal_process(links=links, T=T, noises=None, 
                         intervention={X[0][0]: intervention_data2.values[:, X[0][0]]}, 
                         intervention_type='hard',
                         seed=7)

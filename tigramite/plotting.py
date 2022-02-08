@@ -3051,6 +3051,25 @@ def plot_tsg(links, X, Y, Z=None, anc_x=None, anc_y=None, anc_xy=None):
         tau = node % (max_lag) - (max_lag - 1)
         return var, tau
 
+    def _get_minmax_lag(links):
+        """Helper function to retrieve tau_min and tau_max from links
+        """
+
+        N = len(links)
+
+        # Get maximum time lag
+        min_lag = np.inf
+        max_lag = 0
+        for j in range(N):
+            for link_props in links[j]:
+                var, lag = link_props[0]
+                coeff = link_props[1]
+                # func = link_props[2]
+                if coeff != 0.:
+                    min_lag = min(min_lag, abs(lag))
+                    max_lag = max(max_lag, abs(lag))
+        return min_lag, max_lag
+
     def _links_to_tsg(link_coeffs, max_lag=None):
         """Transform link_coeffs to time series graph.
         TSG is of shape (N*max_lag, N*max_lag).
@@ -3058,7 +3077,7 @@ def plot_tsg(links, X, Y, Z=None, anc_x=None, anc_y=None, anc_xy=None):
         N = len(link_coeffs)
 
         # Get maximum lag
-        min_lag_links, max_lag_links = pp._get_minmax_lag(link_coeffs)
+        min_lag_links, max_lag_links = _get_minmax_lag(link_coeffs)
 
         # max_lag of TSG is max lag in links + 1 for the zero lag.
         if max_lag is None:
@@ -3088,7 +3107,7 @@ def plot_tsg(links, X, Y, Z=None, anc_x=None, anc_y=None, anc_xy=None):
 
     N = len(links)
 
-    min_lag_links, max_lag_links = pp._get_minmax_lag(links)
+    min_lag_links, max_lag_links = _get_minmax_lag(links)
     max_lag = max_lag_links
 
     for anc in X + Y:

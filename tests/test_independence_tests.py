@@ -7,6 +7,7 @@ import pytest
 
 from tigramite.independence_tests import ParCorr, GPDC, GPDCtorch, CMIsymb, CMIknn
 import tigramite.data_processing as pp
+from tigramite.toymodels import structural_causal_processes as toys
 
 from test_pcmci_calculations import a_chain, gen_data_frame
 

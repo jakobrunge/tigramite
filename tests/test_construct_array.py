@@ -8,6 +8,7 @@ import pytest
 import sys
 
 import tigramite.data_processing as pp
+from tigramite.toymodels import structural_causal_processes as toys
 
 # Pylint settings
 # pylint: disable=redefined-outer-name

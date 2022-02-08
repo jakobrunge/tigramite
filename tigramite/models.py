@@ -485,7 +485,7 @@ class LinearMediation(Models):
     --------
     >>> numpy.random.seed(42)
     >>> links_coeffs = {0: [], 1: [((0, -1), 0.5)], 2: [((1, -1), 0.5)]}
-    >>> data, true_parents = pp.var_process(links_coeffs, T=1000)
+    >>> data, true_parents = toys.var_process(links_coeffs, T=1000)
     >>> dataframe = pp.DataFrame(data)
     >>> med = LinearMediation(dataframe=dataframe)
     >>> med.fit_model(all_parents=true_parents, tau_max=3)
@@ -1458,7 +1458,9 @@ class Prediction(Models, PCMCI):
 
 if __name__ == '__main__':
    
+    import tigramite
     import tigramite.data_processing as pp
+    from tigramite.toymodels import structural_causal_processes as toys
     from tigramite.independence_tests import ParCorr
 
     np.random.seed(6)
@@ -1470,8 +1472,8 @@ if __name__ == '__main__':
              1: [((1, -1), 0.8, lin_f), ((0, -1), 0.5, lin_f)],
              2: [((2, -1), 0.8, lin_f), ((1, 0), -0.6, lin_f)]}
     # noises = [np.random.randn for j in links.keys()]
-    data, nonstat = pp.structural_causal_process(links, T=T)
-    true_parents = pp._get_true_parent_neighbor_dict(links)
+    data, nonstat = toys.structural_causal_process(links, T=T)
+    true_parents = toys._get_true_parent_neighbor_dict(links)
     dataframe = pp.DataFrame(data)
 
     # med = Models(dataframe=dataframe, model=sklearn.linear_model.LinearRegression(), data_transform=None)
@@ -1480,7 +1482,7 @@ if __name__ == '__main__':
 
     # print(med.get_val_matrix())
 
-    # for j, i, tau, coeff in pp._iter_coeffs(links):
+    # for j, i, tau, coeff in toys._iter_coeffs(links):
     #     print(i, j, tau, coeff, med.get_coeff(i=i, tau=tau, j=j))
 
     # for causal_coeff in [med.get_ce(i=0, tau=-2, j=2),

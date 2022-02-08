@@ -18,6 +18,7 @@ import numpy
 import os, sys, pickle
 
 from tigramite import data_processing as pp
+from tigramite.toymodels import structural_causal_processes as toys
 from tigramite.pcmci import PCMCI
 from tigramite.independence_tests import ParCorr, GPDC, CMIknn, CMIsymb
 
@@ -116,7 +117,7 @@ links_coeffs = {0: [((0, -1), 0.7)],
                 }
 
 T = 500     # time series length
-data, true_parents_neighbors = pp.var_process(links_coeffs, T=T)
+data, true_parents_neighbors = toys.var_process(links_coeffs, T=T)
 T, N = data.shape
 
 # Optionally specify variable names

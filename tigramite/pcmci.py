@@ -1860,6 +1860,7 @@ class PCMCI():
         >>> from tigramite.pcmci import PCMCI
         >>> from tigramite.independence_tests import ParCorr
         >>> import tigramite.data_processing as pp
+        >>> from tigramite.toymodels import structural_causal_processes as toys
         >>> numpy.random.seed(7)
         >>> # Example process to play around with
         >>> # Each key refers to a variable and the incoming links are supplied
@@ -1867,7 +1868,7 @@ class PCMCI():
         >>> links_coeffs = {0: [((0, -1), 0.8)],
                             1: [((1, -1), 0.8), ((0, -1), 0.5)],
                             2: [((2, -1), 0.8), ((1, -2), -0.6)]}
-        >>> data, _ = pp.var_process(links_coeffs, T=1000)
+        >>> data, _ = toys.var_process(links_coeffs, T=1000)
         >>> # Data must be array of shape (time, variables)
         >>> print (data.shape)
         (1000, 3)
@@ -2096,6 +2097,7 @@ class PCMCI():
         >>> from tigramite.pcmci import PCMCI
         >>> from tigramite.independence_tests import ParCorr
         >>> import tigramite.data_processing as pp
+        >>> from tigramite.toymodels import structural_causal_processes as toys
         >>> # Example process to play around with
         >>> # Each key refers to a variable and the incoming links are supplied
         >>> # as a list of format [((var, -lag), coeff, function), ...]
@@ -2105,7 +2107,7 @@ class PCMCI():
                      2: [((2, -1), 0.7, lin_f), ((1, 0), 0.6, lin_f)],
                      3: [((3, -1), 0.7, lin_f), ((2, 0), -0.5, lin_f)],
                      }
-        >>> data, nonstat = pp.structural_causal_process(links,
+        >>> data, nonstat = toys.structural_causal_process(links,
                             T=1000, seed=7)
         >>> # Data must be array of shape (time, variables)
         >>> print (data.shape)
@@ -3957,6 +3959,7 @@ class PCMCI():
 if __name__ == '__main__':
     from tigramite.independence_tests import ParCorr, CMIknn
     import tigramite.data_processing as pp
+    from tigramite.toymodels import structural_causal_processes as toys
     import tigramite.plotting as tp
 
     np.random.seed(43)
@@ -3973,7 +3976,7 @@ if __name__ == '__main__':
              3: [((3, -1), 0.7, lin_f), ((2, 0), -0.1, lin_f)],
              }
 
-    data, nonstat = pp.structural_causal_process(links,
+    data, nonstat = toys.structural_causal_process(links,
                         T=10000, seed=7)
 
     # Data must be array of shape (time, variables)

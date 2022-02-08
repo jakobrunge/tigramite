@@ -19,6 +19,7 @@ import os, sys, pickle
 from copy import deepcopy
 
 from tigramite import data_processing as pp
+from tigramite.toymodels import structural_causal_processes as toys
 from tigramite.pcmci import PCMCI
 from tigramite.independence_tests import ParCorr, GPDC, CMIknn, CMIsymb
 
@@ -84,7 +85,7 @@ links_coeffs = {0: [((0, -1), 0.7, lin_f)],
                 }
 
 T = 1000     # time series length
-data, true_parents_neighbors = pp.structural_causal_process(links_coeffs, T=T, seed=7)
+data, true_parents_neighbors = toys.structural_causal_process(links_coeffs, T=T, seed=7)
 T, N = data.shape
 
 # Optionally specify variable names
