@@ -11,7 +11,9 @@ Version 4.3
 
 ## Overview
 
-Tigramite provides several causal discovery methods that can be used under different sets of assumptions. An application always consists of a method and a chosen conditional independence test, e.g. PCMCI together with ParCorr. The following two tables give an overview of the assumptions involved:
+__Update:__ Tigramite now has a new CausalEffects class that allows to estimate (conditional) causal effects and mediation based on a causal graph. Have a look at the tutorial.
+
+Further, Tigramite provides several causal discovery methods that can be used under different sets of assumptions. An application always consists of a method and a chosen conditional independence test, e.g. PCMCI together with ParCorr. The following two tables give an overview of the assumptions involved:
 
 | Method | Assumptions         | Output |
 |--------|---------------------------------------------------------------------------|----|
@@ -40,7 +42,7 @@ Tigramite is a causal time series analysis python package. It allows to efficien
 - Mediation class: J. Runge et al. (2015): Identifying causal gateways and mediators in complex spatio-temporal systems. Nature Communications, 6, 8502. http://doi.org/10.1038/ncomms9502
 - Mediation class: J. Runge (2015): Quantifying information transfer and mediation along causal pathways in complex systems. Phys. Rev. E, 92(6), 62829. http://doi.org/10.1103/PhysRevE.92.062829
 - CMIknn: J. Runge (2018): Conditional Independence Testing Based on a Nearest-Neighbor Estimator of Conditional Mutual Information. In Proceedings of the 21st International Conference on Artificial Intelligence and Statistics. http://proceedings.mlr.press/v84/runge18a.html
-
+- J. Runge, Necessary and sufficient graphical conditions for optimal adjustment sets in causal graphical models with hidden variables, Advances in Neural Information Processing Systems, 2021, 34
 
 ## Features
 
@@ -52,7 +54,7 @@ Tigramite is a causal time series analysis python package. It allows to efficien
 - parallel computing script based on mpi4py
 - handling of missing values and masks
 - p-value correction and confidence interval estimation
-- causal mediation class to analyze causal pathways
+- causal effect class to  non-parametrically estimate (conditional) causal effects and also mediated causal effects
 - prediction class based on sklearn models including causal feature selection
 - GUI covering basic functionality on https://github.com/stbachinger/TigramiteGui
 
