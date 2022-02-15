@@ -3957,18 +3957,14 @@ class PCMCI():
         return results
 
     def run_sliding_window_of(self, method, method_args, 
-                        window_step=10,
-                        window_length=200,
+                        window_step,
+                        window_length,
+                        conf_lev = 0.95,
                         ):
         """Runs chosen method on sliding windows taken from DataFrame.
-        
-        Bootstraps for tau=0 are drawn from [2xtau_max, ..., T] and all lagged
-        variables constructed in DataFrame.construct_array are consistently
-        shifted with respect to this bootsrap sample to ensure that lagged
-        relations in the bootstrap sample are preserved.
 
         The function returns summary_results and all_results (containing the
-        individual bootstrap results). summary_results contains  val_matrix_mean
+        individual window results). summary_results contains val_matrix_mean
         and val_matrix_interval, the latter containing the confidence bounds for
         conf_lev. If the method also returns a graph, then 'most_frequent_links'
         containing the most frequent link outcome (either 0 or 1 or a specific
@@ -3976,27 +3972,22 @@ class PCMCI():
         containing the occurence frequency of the most frequent link outcome,
         are returned. 
 
-        Assumes that method uses cond_ind_test.run_test() function with cut_off
-        = '2xtau_max'.
-
         Parameters
         ----------
         method : str
             Chosen method among valid functions in PCMCI.
         method_args : dict
             Arguments passed to method.
-        boot_samples : int
-            Number of bootstrap samples to draw.
-        boot_blocklength : int, optional (default: 1)
-            Block length for block-bootstrap.
+        window_step : int
+            Time step of windows.
+        window_length : int
+            Length of sliding window.
         conf_lev : float, optional (default: 0.9)
             Two-sided confidence interval for summary results.
-        seed : int, optional(default = None)
-            Seed for RandomState (default_rng)
 
         Returns
         -------
-        Dictionary of results for every bootstrap sample.
+        Dictionary of results for every sliding window.
         """
 
         valid_methods = ['run_pc_stable',
@@ -4014,22 +4005,9 @@ class PCMCI():
 
         T = self.T
 
-        # # Extract tau_max to construct bootstrap draws
-        # if 'tau_max' not in method_args:
-        #     raise ValueError("tau_max must be explicitely set in method_args.")
-        # tau_max = method_args['tau_max']
-
-        # if self.cond_ind_test.recycle_residuals:
-        #     # recycle_residuals clashes with bootstrap draws...
-        #     raise ValueError("cond_ind_test.recycle_residuals must be False.")
-
-        # Determine the number of blocks total, rounding up for non-integer
-        # amounts
-        n_blks = int(math.ceil(float(T) / window_length))
-
-        if n_blks < 10:
-            raise ValueError("Only %d block(s) for block-sampling,"  %n_blks +
-                             "choose smaller boot_blocklength!")
+        if self.cond_ind_test.recycle_residuals:
+            # recycle_residuals clashes with sliding windows...
+            raise ValueError("cond_ind_test.recycle_residuals must be False.")
 
         if self.verbosity > 0:
             print("\n##\n## Running sliding window analysis of %s " % method +
@@ -4041,66 +4019,58 @@ class PCMCI():
         if self.dataframe.missing_flag is None:
             self.dataframe.missing_flag = True
 
-        original_data = self.dataframe.values.copy()
+        original_data = deepcopy(self.dataframe.values)
 
-        # TODO!!!
-        
+        window_start_points = np.arange(0, T - window_length, window_step)
+        n_windows = len(window_start_points)
+
         window_results = {}
-        for w in np.arange(0, T - window_length, window_step):
-            # Set values to np.nan that do NOT belong to this window
-            data_here = None
+        for iw, w in enumerate(window_start_points):
+            # Set values before and after window to np.nan
+            data_window = deepcopy(original_data)
+            data_window[0:w] = np.nan
+            data_window[w + window_length:] = np.nan
 
-            blk_strt = random_state.integers(2*tau_max, T - boot_blocklength + 1, n_blks)
-            # Get the empty array of block resampled values
-            boot_draw = np.zeros(n_blks*boot_blocklength, dtype='int')
-            # Fill the array of block resamples
-            for i in range(boot_blocklength):
-                boot_draw[i::boot_blT = ocklength] = np.arange(0, T, dtype='int')[blk_strt + i]
-            # Cut to proper length
-            boot_draw = boot_draw[:T-2*tau_max]
-
-            # boot_draw = random_state.integers(2*tau_max, T, size=T-2*tau_max)
-            self.dataframe.bootstrap = boot_draw
-            # print(self.dataframe.bootstrap)
-            boot_res = getattr(self, method)(**method_args)
+            self.dataframe.values = data_window
+            window_res = getattr(self, method)(**method_args)
 
             # Aggregate val_matrix and other arrays to new arrays with
-            # boot_samples as first dimension. Lists and other objects
+            # windows as first dimension. Lists and other objects
             # are stored in dictionary
-            for key in boot_res:
-                res_item = boot_res[key]
-                if w == 0:
+            for key in window_res:
+                res_item = window_res[key]
+                if iw == 0:
                     if type(res_item) is np.ndarray:
-                        boot_results[key] = np.empty((boot_samples,) 
+                        window_results[key] = np.empty((n_windows,) 
                                                      + res_item.shape,
                                                      dtype=res_item.dtype) 
                     else:
-                        boot_results[key] = {}
+                        window_results[key] = {}
                 
-                window_results[key][w] = res_item
+                window_results[key][iw] = res_item
 
         # Generate summary results
         summary_results = {}
 
-        if 'graph' in boot_results:
+        if 'graph' in window_results:
             most_frequent_links, counts = scipy.stats.mode(
-                        boot_results['graph'], axis=0)
+                        window_results['graph'], axis=0)
             summary_results['most_frequent_links'] =\
                     most_frequent_links[0]  #.squeeze()
             summary_results['link_frequency'] =\
-                    counts[0]/float(boot_samples)   
+                    counts[0]/float(n_windows)   
 
         # Confidence intervals for val_matrix; interval is two-sided
         c_int = (1. - (1. - conf_lev)/2.)
         summary_results['val_matrix_mean'] = np.mean(
-                                    boot_results['val_matrix'], axis=0)
+                                    window_results['val_matrix'], axis=0)
 
         summary_results['val_matrix_interval'] = np.stack(np.percentile(
-                                    boot_results['val_matrix'], axis=0,
+                                    window_results['val_matrix'], axis=0,
                                     q = [100*(1. - c_int), 100*c_int]), axis=3)
 
         return {'summary_results': summary_results, 
-                'boot_results': boot_results}
+                'window_results': window_results}
 
 
 if __name__ == '__main__':
@@ -4118,13 +4088,13 @@ if __name__ == '__main__':
     def nonlin_f(x): return (x + 5. * x ** 2 * np.exp(-x ** 2 / 20.))
 
     links = {0: [((0, -1), 0.9, lin_f)],
-             1: [((1, -1), 0.8, lin_f), ((0, -1), 0.1, lin_f)],
-             2: [((2, -1), 0.7, lin_f), ((1, 0), 0.1, lin_f)],
-             3: [((3, -1), 0.7, lin_f), ((2, 0), -0.1, lin_f)],
+             1: [((1, -1), 0.8, lin_f), ((0, -1), 0.5, lin_f)],
+             # 2: [((2, -1), 0.7, lin_f), ((1, 0), 0.1, lin_f)],
+             # 3: [((3, -1), 0.7, lin_f), ((2, 0), -0.1, lin_f)],
              }
 
     data, nonstat = toys.structural_causal_process(links,
-                        T=10000, seed=7)
+                        T=1000, seed=7)
 
     # Data must be array of shape (time, variables)
     print(data.shape)
@@ -4135,4 +4105,8 @@ if __name__ == '__main__':
     # pcmci.print_results(results, alpha_level=0.01)
 
 
+    print(pcmci.run_sliding_window_of(method='run_pcmciplus', method_args={}, 
+                        window_step=55,
+                        window_length=200,
+                        conf_lev = 0.95)['summary_results'])
 

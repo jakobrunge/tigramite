@@ -273,6 +273,7 @@ class DataFrame():
         # Return the array and xyz and optionally (X, Y, Z)
         if return_cleaned_xyz:
             return array, xyz, (X, Y, Z)
+
         return array, xyz
 
     def _check_nodes(self, Y, XYZ, N, dim):
