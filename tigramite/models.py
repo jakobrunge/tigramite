@@ -251,18 +251,18 @@ class Models():
                 for index in np.where(xyz==0)[0]:
                     intervention_array[index] = tmp_array[index]
 
-            if self.conditions is not None and conditions_data is not None:
-                tmp_array, _ = conditions_data.construct_array(X=self.X, Y=[y] + self.Z, 
-                                                         Z=self.conditions,
-                                                         tau_max=self.tau_max,
-                                                         mask_type=self.mask_type,
-                                                         cut_off=self.cut_off,
-                                                         verbosity=self.verbosity)
+            # if self.conditions is not None and conditions_data is not None:
+            #     tmp_array, _ = conditions_data.construct_array(X=self.X, Y=[y] + self.Z, 
+            #                                              Z=self.conditions,
+            #                                              tau_max=self.tau_max,
+            #                                              mask_type=self.mask_type,
+            #                                              cut_off=self.cut_off,
+            #                                              verbosity=self.verbosity)
 
-                # Only replace condition-variables in intervention_array 
-                # (necessary if lags of X are in Z...)
-                for index in np.where(xyz==2)[0]:
-                    intervention_array[index] = tmp_array[index]
+            #     # Only replace condition-variables in intervention_array 
+            #     # (necessary if lags of X are in Z...)
+            #     for index in np.where(xyz==2)[0]:
+            #         intervention_array[index] = tmp_array[index]
 
             # Transform the data if needed
             a_transform = self.fit_results[y]['data_transform']

@@ -49,6 +49,8 @@ class DataFrame():
         self.values = data
         self.mask = mask
         self.missing_flag = missing_flag
+        if self.missing_flag is not None:
+            self.values[self.values == self.missing_flag] = np.nan
         T, N = data.shape
         # Set the variable names
         self.var_names = var_names
@@ -219,7 +221,7 @@ class DataFrame():
         # Remove all values that have missing value flag, as well as the time
         # slices that occur up to max_lag after
         if self.missing_flag is not None:
-            missing_anywhere = np.any(self.values == self.missing_flag, axis=1)
+            missing_anywhere = np.any(np.isnan(self.values), axis=1)
             for tau in range(max_lag+1):
                 if self.bootstrap is None:
                     use_indices[missing_anywhere[tau:T-max_lag+tau]] = 0

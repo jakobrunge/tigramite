@@ -3956,6 +3956,153 @@ class PCMCI():
                    'conf_matrix': conf_matrix}
         return results
 
+    def run_sliding_window_of(self, method, method_args, 
+                        window_step=10,
+                        window_length=200,
+                        ):
+        """Runs chosen method on sliding windows taken from DataFrame.
+        
+        Bootstraps for tau=0 are drawn from [2xtau_max, ..., T] and all lagged
+        variables constructed in DataFrame.construct_array are consistently
+        shifted with respect to this bootsrap sample to ensure that lagged
+        relations in the bootstrap sample are preserved.
+
+        The function returns summary_results and all_results (containing the
+        individual bootstrap results). summary_results contains  val_matrix_mean
+        and val_matrix_interval, the latter containing the confidence bounds for
+        conf_lev. If the method also returns a graph, then 'most_frequent_links'
+        containing the most frequent link outcome (either 0 or 1 or a specific
+        link type) in each entry of graph, as well as 'link_frequency',
+        containing the occurence frequency of the most frequent link outcome,
+        are returned. 
+
+        Assumes that method uses cond_ind_test.run_test() function with cut_off
+        = '2xtau_max'.
+
+        Parameters
+        ----------
+        method : str
+            Chosen method among valid functions in PCMCI.
+        method_args : dict
+            Arguments passed to method.
+        boot_samples : int
+            Number of bootstrap samples to draw.
+        boot_blocklength : int, optional (default: 1)
+            Block length for block-bootstrap.
+        conf_lev : float, optional (default: 0.9)
+            Two-sided confidence interval for summary results.
+        seed : int, optional(default = None)
+            Seed for RandomState (default_rng)
+
+        Returns
+        -------
+        Dictionary of results for every bootstrap sample.
+        """
+
+        valid_methods = ['run_pc_stable',
+                          'run_mci',
+                          'get_lagged_dependencies',
+                          'run_fullci',
+                          'run_bivci',
+                          'run_pcmci',
+                          'run_pcalg',
+                          # 'run_pcalg_non_timeseries_data',
+                          'run_pcmciplus',]
+
+        if method not in valid_methods:
+            raise ValueError("method must be one of %s" % str(valid_methods))
+
+        T = self.T
+
+        # # Extract tau_max to construct bootstrap draws
+        # if 'tau_max' not in method_args:
+        #     raise ValueError("tau_max must be explicitely set in method_args.")
+        # tau_max = method_args['tau_max']
+
+        # if self.cond_ind_test.recycle_residuals:
+        #     # recycle_residuals clashes with bootstrap draws...
+        #     raise ValueError("cond_ind_test.recycle_residuals must be False.")
+
+        # Determine the number of blocks total, rounding up for non-integer
+        # amounts
+        n_blks = int(math.ceil(float(T) / window_length))
+
+        if n_blks < 10:
+            raise ValueError("Only %d block(s) for block-sampling,"  %n_blks +
+                             "choose smaller boot_blocklength!")
+
+        if self.verbosity > 0:
+            print("\n##\n## Running sliding window analysis of %s " % method +
+                  "\n##\n" +
+                  "\nwindow_step = %s \n" % window_step +
+                  "\nwindow_length = %s \n" % window_length
+                  )
+
+        if self.dataframe.missing_flag is None:
+            self.dataframe.missing_flag = True
+
+        original_data = self.dataframe.values.copy()
+
+        # TODO!!!
+        
+        window_results = {}
+        for w in np.arange(0, T - window_length, window_step):
+            # Set values to np.nan that do NOT belong to this window
+            data_here = None
+
+            blk_strt = random_state.integers(2*tau_max, T - boot_blocklength + 1, n_blks)
+            # Get the empty array of block resampled values
+            boot_draw = np.zeros(n_blks*boot_blocklength, dtype='int')
+            # Fill the array of block resamples
+            for i in range(boot_blocklength):
+                boot_draw[i::boot_blT = ocklength] = np.arange(0, T, dtype='int')[blk_strt + i]
+            # Cut to proper length
+            boot_draw = boot_draw[:T-2*tau_max]
+
+            # boot_draw = random_state.integers(2*tau_max, T, size=T-2*tau_max)
+            self.dataframe.bootstrap = boot_draw
+            # print(self.dataframe.bootstrap)
+            boot_res = getattr(self, method)(**method_args)
+
+            # Aggregate val_matrix and other arrays to new arrays with
+            # boot_samples as first dimension. Lists and other objects
+            # are stored in dictionary
+            for key in boot_res:
+                res_item = boot_res[key]
+                if w == 0:
+                    if type(res_item) is np.ndarray:
+                        boot_results[key] = np.empty((boot_samples,) 
+                                                     + res_item.shape,
+                                                     dtype=res_item.dtype) 
+                    else:
+                        boot_results[key] = {}
+                
+                window_results[key][w] = res_item
+
+        # Generate summary results
+        summary_results = {}
+
+        if 'graph' in boot_results:
+            most_frequent_links, counts = scipy.stats.mode(
+                        boot_results['graph'], axis=0)
+            summary_results['most_frequent_links'] =\
+                    most_frequent_links[0]  #.squeeze()
+            summary_results['link_frequency'] =\
+                    counts[0]/float(boot_samples)   
+
+        # Confidence intervals for val_matrix; interval is two-sided
+        c_int = (1. - (1. - conf_lev)/2.)
+        summary_results['val_matrix_mean'] = np.mean(
+                                    boot_results['val_matrix'], axis=0)
+
+        summary_results['val_matrix_interval'] = np.stack(np.percentile(
+                                    boot_results['val_matrix'], axis=0,
+                                    q = [100*(1. - c_int), 100*c_int]), axis=3)
+
+        return {'summary_results': summary_results, 
+                'boot_results': boot_results}
+
+
 if __name__ == '__main__':
     from tigramite.independence_tests import ParCorr, CMIknn
     import tigramite.data_processing as pp

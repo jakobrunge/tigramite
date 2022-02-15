@@ -355,6 +355,93 @@ class OracleCI:
 
         return ancestors, max_lag
 
+    def _get_maximum_possible_lag(self, XYZ):
+        """Helper function to return the maximum time lag of any confounding path.
+
+        This is still based on a conjecture!
+
+        The conjecture states that if and only if X and Y are d-connected given Z
+        in a stationary DAG, then there exists a confounding path with a maximal
+        time lag (i.e., the node on that path with maximal lag) given as follows:
+        For any node in XYZ consider all non-repeating causal paths from the past
+        to that node, where non-repeating means that a link X^i_{t-\tau_i}
+        --> X^j_{ t-\tau_j} is only traversed if X^i_{t'-\tau_i} --> X^j_{
+        t'-\tau_j} is not already part of that path. The most lagged
+        ancestor for every variable node in XYZ defines the maximum ancestral time
+        lag, which is returned.
+
+        Parameters
+        ----------
+        XYZ : list of tuples
+            Of the form [(var, -tau)], where var specifies the variable
+            index and tau the time lag.
+
+        Returns
+        -------
+        max_lag : int
+            Maximum time lag of non-repeating causal path ancestors.
+        """
+
+        def _repeating(link, seen_path):
+            """Returns True if a link or its time-shifted version is already
+            included in seen_links."""
+            i, taui = link[0]
+            j, tauj = link[1]
+
+            for index, seen_link in enumerate(seen_path[:-1]):
+                seen_i, seen_taui = seen_link
+                seen_j, seen_tauj = seen_path[index + 1]
+
+                if (i == seen_i and j == seen_j
+                    and abs(tauj-taui) == abs(seen_tauj-seen_taui)):
+                    return True
+
+            return False
+
+        N = len(self.links)
+
+        # Initialize max. ancestral time lag for every N
+        max_lag = 0
+    
+        # Not sure whether this is relevant!
+        # if self.selection_vars is not None:
+        #     for selection_var in self.selection_vars:
+        #         # print (selection_var, conds)
+        #         # print([(selection_var, -tau_sel) for tau_sel in range(0, max_lag + 1)])
+        #         conds += [(selection_var, -tau_sel) for tau_sel in range(0, max_lag + 1)]
+
+        # ancestors = dict([(y, []) for y in Y])
+
+        for y in XYZ:
+            j, tau = y   # tau <= 0
+            max_lag = max(max_lag, abs(tau))
+                
+            causal_path = []
+            queue = [(y, causal_path)]
+
+            while queue:
+                varlag, causal_path = queue.pop()
+                causal_path = [varlag] + causal_path
+
+                for node in self._get_lagged_parents(varlag):
+                    i, tau = node
+
+                    if (node not in causal_path):
+                    
+                        if len(causal_path) == 1:
+                            queue.append((node, causal_path))
+                            continue
+
+                        if (len(causal_path) > 1) and not _repeating((node, varlag), causal_path):
+                            
+                                max_lag = max(max_lag, abs(tau))
+                                queue.append((node, causal_path))
+
+        if self.verbosity > 0:
+            print("Max. non-repeated ancestral time lag: ", max_lag)
+
+        return max_lag
+
     def _get_descendants(self, W, children, max_lag, ignore_time_bounds=False):
         """Get descendants of nodes in W up to time t.
         
@@ -416,7 +503,9 @@ class OracleCI:
             Whether to only consider paths ending with particular mark at Y.
         """
         if max_lag is None:
-            max_lag = self._get_max_lag_from_XYZ(X, Y, conds)
+            if conds is None:
+                conds = []
+            max_lag = self._get_maximum_possible_lag(X+Y+conds)
 
         def _walk_to_parents(v, fringe, this_path, other_path):
             """Helper function to update paths when walking to parents."""
@@ -778,38 +867,14 @@ class OracleCI:
 
         return False
 
-    def _get_max_lag_from_XYZ(self, X, Y, Z):
-        """Get maximum non-repeated ancestral time lag.
-        """
-
-        # Get maximum non-repeated ancestral time lag
-        _, max_lag_X = self._get_non_blocked_ancestors(X, conds=Z, 
-                                                       mode='non_repeating')
-        _, max_lag_Y = self._get_non_blocked_ancestors(Y, conds=Z, 
-                                                       mode='non_repeating')
-        _, max_lag_Z = self._get_non_blocked_ancestors(Z, conds=Z, 
-                                                       mode='non_repeating')
-
-        # Get max time lag among the ancestors
-        max_lag = max(max_lag_X, max_lag_Y, max_lag_Z)
-
-        if self.verbosity > 0:
-            print("Max. non-repeated ancestral time lag: ", max_lag)
-
-        return max_lag
-
     def _is_dsep(self, X, Y, Z, max_lag=None):
         """Returns whether X and Y are d-separated given Z in the graph.
 
         X, Y, Z are of the form (var, lag) for lag <= 0. D-separation is
         based on:
 
-        1. Assessing maximum time lag max_lag of last ancestor of any X, Y, Z
-        with non-blocked (by Z), non-repeating directed path towards X, Y, Z
-        in the graph. 'non_repeating' means that an ancestor X^i_{ t-\tau_i}
-        with link X^i_{t-\tau_i} --> X^j_{ t-\tau_j} is only included if
-        X^i_{t'-\tau_i} --> X^j_{ t'-\tau_j} for t'!=t is not already part of
-        the ancestors.
+        1. Assessing the maximum time lag max_lag possible for any confounding
+        path (see _get_maximum_possible_lag(...)).
 
         2. Using the time series graph truncated at max_lag we then test
         d-separation between X and Y conditional on Z using breadth-first
@@ -835,12 +900,15 @@ class OracleCI:
         if self.verbosity > 0:
             print("Testing X=%s d-sep Y=%s given Z=%s in TSG" %(X, Y, Z))
 
+        if Z is None:
+            Z = []
+
         if max_lag is not None:
             # max_lags = dict([(j, max_lag) for j in range(N)])
             if self.verbosity > 0:
                 print("Set max. time lag to: ", max_lag)
         else:
-            max_lag = self._get_max_lag_from_XYZ(X, Y, Z)
+            max_lag = self._get_maximum_possible_lag(X+Y+Z)
 
         # Store overall max. lag
         self.max_lag = max_lag
@@ -936,7 +1004,7 @@ class OracleCI:
             if self.verbosity > 0:
                 print("Set max. time lag to: ", max_lag)
         else:
-            max_lag = self._get_max_lag_from_XYZ(X, Y, Z)
+            max_lag = self._get_maximum_possible_lag(X+Y+Z)
 
         # Store overall max. lag
         self.max_lag = max_lag
@@ -1422,243 +1490,9 @@ if __name__ == '__main__':
     from matplotlib import pyplot as plt
     def lin_f(x): return x
 
-    # N = 20
-    # links = tests.a_random_process(
-    #  N=N, L=2*N, coupling_coeffs=[0.7, -0.7],
-    #  coupling_funcs=[lin_f, lin_f], auto_coeffs=[0., 0.5],
-    #  tau_max=5, contemp_fraction=0.3, num_trials=1,
-    #  model_seed=3)
-
-    # N = 50
-    # links = {0: [((0, -1), 0.5)]}
-    # for j in range(1, N):
-    #     links[j] = [((j, -1), 0.6), ((j-1, -1), 0.5)]
-
-    # links = {0: [((0, -1), 0.5)],
-    #          1: [((0, -1), 0.5), ((2, -1), 0.5)],
-    #          2: [((2, -1), 0.)],
-    #          3: [((3, -1), 0.), ((2, -1), 0.5), ((4, -1), 0.5)],
-    #          4: [((4, -1), 0.5),],
-    #          }
-
-    # links = {0: [((0, -1), 0.)],
-    #          1: [((1, -1), 0.)],
-    #          2: [((2, -1), 0.), ((1, 0), 0.6), ((0, 0), 0.6)],
-    #          3: [((3, -1), 0.), ((2, 0), -0.5)],
-    #          }
-
-    # links = {0: [((0, -1), 0.9)],
-    #          1: [((1, -1), 0.8, lin_f), ((0, -1), 0.8, lin_f)],
-    #          2: [((2, -1), 0.7, lin_f), ((1, 0), 0.6, lin_f)],
-    #          3: [((3, -1), 0.7, lin_f), ((2, 0), -0.5, lin_f)],
-    #          }
-
-    # links = {0: [((0, -1), 0.5)],
-    #          1: [((0, -1), 0.5), ((2, -1), 0.5)],
-    #          2: [],
-    #          3: [((2, -1), 0.4), ((4, -1), -0.5)],
-    #          4: [((4, -1), 0.4)],
-    #          }
-
-    # def setup_nodes(auto_coeff, N):
-    #     links = {}
-    #     for j in range(N):
-    #        links[j] = [((j, -1), auto_coeff, lin_f)]
-    #     return links
-    # coeff = 0.5
-
-    # links = setup_nodes(0.7, N=3)
-    # for i in [0, 2]:
-    #     links[1].append(((i, 0), coeff, lin_f))
-
-
-    # links = setup_nodes(0., N=3)
-    # links[1].append(((1, -1), coeff, lin_f))
-    # links[1].append(((0, 0), coeff, lin_f))
-    # links[2].append(((1, 0), coeff, lin_f))
-    # links[2].append(((0, 0), coeff, lin_f))
-
-    coeff = 0.5
-    links ={
-            0: [((4, 0), coeff, lin_f), ((2, 0), coeff, lin_f)],
-            1: [((4, 0), coeff, lin_f)],
-            2: [],
-            3: [], 
-            4: [],
-            5: [((2, 0), coeff, lin_f), ((3, 0), coeff, lin_f)]                               
-            }
-    observed_vars = [0, 1, 2, 3]
-    selection_vars = [5]
-
-    # graph = np.zeros((8, 8, 4), dtype='<U3')
-    # # EXample C from paper plus M
-    # # X = 0, M = 1, Y = 2, Z1 = 3, etc
-    # var_names = ['X-0', 'M-1', 'Y-2', 'Z1-3', 'Z2-4', 'Z3-5', 'Z4-6', 'Z5-7']
-    # # Causal paths
-    # graph[0, 1, 0] = '-->'
-    # graph[1, 0, 0] = '<--'
-    # graph[1, 2, 0] = '-->'
-    # graph[2, 1, 0] = '<--'
-    # graph[0, 2, 0] = '-->'
-    # graph[2, 0, 0] = '<--'
-
-
-    # # Others
-    # # Z1 = 3
-    # graph[0, 3, 0] = '<->'
-    # graph[3, 0, 0] = '<->'
-    # graph[3, 2, 0] = '-->'
-    # graph[2, 3, 0] = '<--'
-    # graph[3, 4, 0] = '<->'    
-    # graph[4, 3, 0] = '<->'    
-
-    # # Z2 = 4
-    # graph[2, 4, 0] = '<->'
-    # graph[4, 2, 0] = '<->'    
-    # graph[4, 3, 0] = '<->'    
-    # graph[4, 5, 0] = '<->'    
-
-    # # Z3 = 5
-    # graph[5, 4, 0] = '<->'    
-
-    # # Z4 = 6
-    # graph[6, 5, 0] = '-->'
-    # graph[5, 6, 0] = '<--'
-    # graph[6, 0, 0] = '-->'
-    # graph[0, 6, 0] = '<--'
-
-    # # Z5 = 7
-    # graph[7, 2, 0] = '<->'  
-    # graph[2, 7, 0] = '<->'    
-    # graph[7, 0, 0] = '-->'    
-    # graph[0, 7, 0] = '<--'  
-
-    graph = np.zeros((16, 16, 1), dtype='<U3')
-    # EXample B from paper
-    # X = 0, M = 1, Y = 2, Z1 = 3, etc (S is last)
-    var_names = ['X-0', 'M-1', 'Y-2', 'Z1-3', 'Z2-4', 
-    'Z3-5', 'Z4-6', 'Z5-7', 'Z6-8', 'Z7-9', 'Z8-10', 
-    'Z9-11', 'Z10-12', 'Z11-13', 'Z12-14', 'S-15']
-    # Causal paths
-    graph[0, 1, 0] = '-->'
-    graph[1, 0, 0] = '<--'
-    graph[1, 2, 0] = '-->'
-    graph[2, 1, 0] = '<--'
-    graph[0, 2, 0] = '-->'
-    graph[2, 0, 0] = '<--'
-
-    # Others
-    # Z1 = 3
-    graph[0, 3, 0] = '<->'
-    graph[3, 0, 0] = '<->'
-    graph[3, 2, 0] = '-->'
-    graph[2, 3, 0] = '<--'
-    graph[3, 1, 0] = '-->'    
-    graph[1, 3, 0] = '<--'    
-    graph[3, 7, 0] = '-->'    
-    graph[7, 3, 0] = '<--'  
-    graph[3, 8, 0] = '-->'    
-    graph[8, 3, 0] = '<--'  
-
-    # Z2 = 4
-    graph[4, 2, 0] = '-->'
-    graph[2, 4, 0] = '<--'    
-
-    # Z3 = 5
-    graph[5, 1, 0] = '-->'    
-    graph[1, 5, 0] = '<--'    
-
-    # Z4 = 6
-    graph[6, 2, 0] = '-->'
-    graph[2, 6, 0] = '<--'
-
-    # Z5 = 7
-    graph[7, 2, 0] = '<->'  
-    graph[2, 7, 0] = '<->'    
-    graph[7, 8, 0] = '<->'    
-    graph[8, 7, 0] = '<->' 
-    graph[7, 10, 0] = '<->'    
-    graph[10, 7, 0] = '<->' 
-
-    # Z6 = 8
-    graph[8, 12, 0] = '-->'
-    graph[12, 8, 0] = '<--'
-
-    # Z7 = 9
-    graph[9, 8, 0] = '-->'
-    graph[8, 9, 0] = '<--'
-
-    # Z8 = 10
-    graph[10, 11, 0] = '<->'  
-    graph[11, 10, 0] = '<->'  
-
-    # Z9 = 11
-    graph[2, 11, 0] = '-->'  
-    graph[11, 2, 0] = '<--'  
-
-    # Z10 = 12
-    graph[1, 12, 0] = '-->'  
-    graph[12, 1, 0] = '<--'  
-
-    # Z11 = 13
-    graph[13, 0, 0] = '-->'  
-    graph[0, 13, 0] = '<--'  
-    graph[13, 4, 0] = '-->'  
-    graph[4, 13, 0] = '<--'  
-
-    # Z12 = 14
-    # No links 
-
-    # S = 15
-    graph[15, 0, 0] = '-->'  
-    graph[0, 15, 0] = '<--'  
-    graph[15, 13, 0] = '-->'  
-    graph[13, 15, 0] = '<--'  
-
-
-    # tp.plot_time_series_graph(link_matrix=graph, save_name="/home/rung_ja/Downloads/tsg.pdf")
-
-    # links = {0: [((0, -1), 0.8, lin_f)],
-    #          1: [((1, -1), 0.8, lin_f), ((0, -1), 0.5, lin_f)],
-    #          2: [((2, -1), 0.8, lin_f), ((1, 0), -0.6, lin_f)]}
-    
-    # oracle = OracleCI(links=links, observed_vars=observed_vars, 
-    #         selection_vars=selection_vars,
-    #     verbosity=2)
-
-    # print(cond_ind_test.get_graph_from_links()[:,:,0])
-
-    # Example C
-    links ={
-        0: [((8, 0), coeff, lin_f), ((6, 0), coeff, lin_f), ((7, 0), coeff, lin_f)], 
-        1: [((0, 0), coeff, lin_f)], 
-        2: [((0, 0), coeff, lin_f), ((1, 0), coeff, lin_f), ((3, 0), coeff, lin_f), ((9, 0), coeff, lin_f), ((12, 0), coeff, lin_f)], 
-        3: [((8, 0), coeff, lin_f), ((10, 0), coeff, lin_f)], 
-        4: [((9, 0), coeff, lin_f), ((10, 0), coeff, lin_f), ((11, 0), coeff, lin_f)], 
-        5: [((11, 0), coeff, lin_f), ((6, 0), coeff, lin_f)], 
-        6: [], 
-        7: [((12, 0), coeff, lin_f)], 
-        8: [], 
-        9: [], 
-        10: [], 
-        11: [], 
-        12: []}
-    observed_vars = [0, 1, 2, 3, 4, 5, 6, 7]
-
-    # links ={
-    # 0: [((2, 0), coeff, lin_f)], 
-    # 1: [((0, 0), coeff, lin_f), ((3, 0), coeff, lin_f)], 
-    # 2: [], 
-    # 3: [((2, 0), coeff, lin_f)], }
-    # observed_vars = [0, 1, 2, 3]
-
-    # links ={
-    # 0: [((3, 0), coeff, lin_f)], 
-    # 1: [((2, 0), coeff, lin_f), ((4, 0), coeff, lin_f)], 
-    # 2: [((3, 0), coeff, lin_f), ((4, 0), coeff, lin_f)], 
-    # 3: [],
-    # 4: []}
-    # observed_vars = [0, 1, 2]
+    # Define the stationary DAG
+    links = {0 : [(0, -3), (1, 0)], 1: [(2, -2)], 2: [(1, -2)]}
+    observed_vars = [0, 1, 2]
 
     oracle = OracleCI(links=links, 
         observed_vars=observed_vars, 
@@ -1669,23 +1503,27 @@ if __name__ == '__main__':
     graph = oracle.graph
     print(graph[:,:,0])
 
-    tp.plot_graph(link_matrix=graph, var_names=var_names, figsize=(5, 5),
+    tp.plot_time_series_graph(graph=graph, var_names=None, figsize=(5, 5),
                 save_name="/home/rung_ja/Downloads/tsg.pdf")
 
-    # X = [(0, 0)]
-    # Y = [(2, 0)]
+    X = [(0, 0)]
+    Y = [(2, 0)]
+    Z = []
     # node = (3, 0)
     # prelim_Oset = set([(3, 0)])
     # S = set([])
     # collider_path_nodes = set([])
-    # path = oracle._has_any_path(X=X, Y=Y, 
-    #                         conds=list(prelim_Oset), 
-    #                         max_lag=None, 
-    #                         starts_with='arrowhead',
-    #                         ends_with='arrowhead',  
-    #                         forbidden_nodes=None, 
-    #                         return_path=True)
-    # print(path)
+    path = oracle._has_any_path(X=X, Y=Y, 
+                            conds=Z, 
+                            max_lag=8, 
+                            starts_with='arrowhead',
+                            ends_with='arrowhead',  
+                            forbidden_nodes=None, 
+                            return_path=True)
+    print(path)
+
+    print("-------------------------------")
+    print(oracle._get_maximum_possible_lag(X+Z)) #(X = X, Y = Y, Z = Z))
 
     # cond_ind_test = OracleCI(graph=graph)
     # links, observed_vars, selection_vars = cond_ind_test.get_links_from_graph(graph)

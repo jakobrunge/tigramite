@@ -796,7 +796,7 @@ class CausalEffects:
 
 
     def _get_maximum_possible_lag(self, XYZ, graph):
-        """Expexts graph to be stationary type. See Thm. XXXX"""
+        """Expects graph to be stationary type. See Thm. XXXX"""
 
         def _repeating(link, seen_links):
             """Returns True if a link or its time-shifted version is already
@@ -826,27 +826,31 @@ class CausalEffects:
         for node in XYZ:
             j, tau = node   # tau <= 0
             max_lag = max(max_lag, abs(tau))
-            
-            seen_ancs = []
-            seen_links = []
-            this_level = [node]
-            while len(this_level) > 0:
-                next_level = []
-                for varlag in this_level:
-                    var, lag = varlag
-                    for partmp in canonical_dag_links[var]:
-                        i, tautmp = partmp
-                        # Get shifted lag since canonical_dag_links is at t=0
-                        tau = tautmp + lag
-                        par = (i, tau)
-                        if par not in seen_ancs:
-                            if not _repeating((par, varlag), seen_links):
-                                max_lag = max(max_lag, abs(tau))
-                                seen_ancs.append(par)
-                                next_level.append(par)
-                                seen_links.append((par, varlag))
 
-                this_level = next_level
+            causal_path = []
+            queue = [(node, causal_path)]
+
+            while queue:
+                varlag, causal_path = queue.pop()
+                causal_path = [varlag] + causal_path
+
+                var, lag = varlag
+                for partmp in canonical_dag_links[var]:
+                    i, tautmp = partmp
+                    # Get shifted lag since canonical_dag_links is at t=0
+                    tau = tautmp + lag
+                    par = (i, tau)
+
+                    if (par not in causal_path):
+                    
+                        if len(causal_path) == 1:
+                            queue.append((par, causal_path))
+                            continue
+
+                        if (len(causal_path) > 1) and not _repeating((par, varlag), causal_path):
+                            
+                                max_lag = max(max_lag, abs(tau))
+                                queue.append((par, causal_path))
 
         return max_lag
 
@@ -1828,7 +1832,7 @@ class CausalEffects:
             max_lag = 0
             for medy in [med for med in mediators] + [y for y in self.listY]:
                 coeffs[medy] = {}
-                for ipar, par_coeff in enumerate(links_coeffs[j]):
+                for ipar, par_coeff in enumerate(links_coeffs[medy[0]]):
                     par, coeff, _ = par_coeff
                     max_lag = max(abs(par[1]), max_lag)
                     coeffs[medy][par] = coeff #self.fit_results[j][(j, 0)]['model'].coef_[ipar]
@@ -1902,6 +1906,8 @@ class CausalEffects:
         self.model.X = self.listX  
         self.model.Z = []
         self.model.conditions = [] 
+        self.model.cut_off = 'max_lag_or_tau_max'
+
         class dummy_fit_class():
             def __init__(self, y_here, listX_here, effect_here):
                 dim = len(listX_here)
@@ -1968,6 +1974,51 @@ if __name__ == '__main__':
     from sklearn.neural_network import MLPRegressor
     from sklearn.ensemble import RandomForestRegressor
         
+
+
+
+    import pandas as pd
+    from sklearn.linear_model import LinearRegression
+    from sklearn.compose import ColumnTransformer
+    from sklearn.preprocessing import OneHotEncoder, StandardScaler
+
+
+    df = pd.DataFrame({'par1':[1,3,5,7,9, 11,13],
+                       'par2':[0.2, 0.4, 0.5, 0.7, 1, 1.2, 1.45],
+                       'par3':['yes', 'no', 'no', 'yes', 'no', 'yes', 'no'],
+                       'par4':['blue', 'red', 'red', 'blue', 'green', 'green', 'blue'],
+                       'output':[103, 310, 522, 711, 921, 1241, 1451]})
+
+    t = ColumnTransformer(transformers=[
+        ('onehot', OneHotEncoder(), ['par3', 'par4']),
+        # ('scale', StandardScaler(), ['par1', 'par2'])
+    ], remainder='passthrough')
+
+    # Transform the features
+    features = t.fit_transform(df.iloc[:,:-1])
+    result = df.iloc[:,-1]
+
+    print(features.shape)
+    print(features[:,1])
+    print(features[:,2])
+    print(features[:,3])
+    print(features[:,4])
+    print(features[:,5])
+
+    # Train the linear regression model
+    reg = LinearRegression()
+    model = reg.fit(features, result)
+
+    # Generate a prediction
+    example = t.transform(pd.DataFrame([{
+        'par1': 2, 'par2': 0.33, 'par3': 'no', 'par4': 'red'
+    }]))
+    prediction = model.predict(example)
+    reg_score = reg.score(features, result)
+    print(prediction, reg_score)
+
+    sys.exit(0)
+
     graph =  np.array([['', '-->', '', '', '', '', ''],
                        ['<--', '', '-->', '-->', '', '<--', ''],
                        ['', '<--', '', '-->', '', '<--', ''],

@@ -682,13 +682,17 @@ def structural_causal_process(links, T, noises=None,
 
     for t in range(max_lag, T+transient):
         for j in causal_order:
+
             if (intervention is not None and j in intervention and t >= transient
                 and np.isnan(intervention[j][t - transient]) == False):
                 if intervention_type[j] == 'hard':
                     data[t, j] = intervention[j][t - transient]
+                    # Move to next j and skip link_props-loop from parents below 
                     continue
                 else:
                     data[t, j] += intervention[j][t - transient]
+
+            # This loop is only entered if intervention_type != 'hard'
             for link_props in links[j]:
                 var, lag = link_props[0]
                 coeff = link_props[1]
