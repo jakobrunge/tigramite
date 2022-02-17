@@ -163,6 +163,10 @@ class Models():
             # Transform the data if needed
             if self.data_transform is not None:
                 array = self.data_transform.fit_transform(X=array.T).T
+
+            # Cache array for use in prediction
+            self.observation_array = array
+            self.xyz = xyz
             # Fit the model 
             # Copy and fit the model
             a_model = deepcopy(self.model)
@@ -189,7 +193,7 @@ class Models():
         return fit_results
 
     def get_general_prediction(self,
-                intervention_data=None,
+                intervention_data,
                 conditions_data=None,
                 pred_params=None,
                 ):
@@ -199,12 +203,10 @@ class Models():
 
         Parameters
         ----------
-        intervention_data : data object, optional
-            Tigramite dataframe object with optional new mask. Only the 
-            values for X will be extracted.
+        intervention_data : numpy array
+            Numpy array of shape (time, len(X)) that contains the do(X) values.
         conditions_data : data object, optional
-            Tigramite dataframe object with optional new mask. Only the
-            values for conditions will be extracted.
+            Numpy array of shape (time, len(S)) that contains the S=s values.
         pred_params : dict, optional
             Optional parameters passed on to sklearn prediction function.
 
@@ -213,8 +215,24 @@ class Models():
         Results from prediction.
         """
 
+        intervention_T, lenX = intervention_data.shape
+
+        if intervention_data.shape[1] != len(self.X):
+            raise ValueError("intervention_data.shape[1] must be len(X).")
+
+        if conditions_data is not None:
+            if conditions_data.shape[1] != len(self.conditions):
+                raise ValueError("conditions_data.shape[1] must be len(S).")
+            if conditions_data.shape[0] != intervention_data.shape[0]:
+                raise ValueError("conditions_data.shape[0] must match intervention_data.shape[0].")
+
+        lenS = len(self.conditions)
+
+        lenY = len(self.Y)
+
+        predicted_array = np.zeros((intervention_T, lenY))
         pred_dict = {}
-        for y in self.Y:
+        for iy, y in enumerate(self.Y):
             # Print message
             if self.verbosity > 1:
                 print("\n## Predicting target %s" % str(y))
@@ -227,92 +245,179 @@ class Models():
             # Check this is a valid target
             if y not in self.fit_results:
                 raise ValueError("y = %s not yet fitted" % str(y))
-            # Construct the array form of the data
-            # Check if we've passed a new dataframe object
-            observation_array, xyz = \
-                self.dataframe.construct_array(X=self.X, Y=[y] + self.Z, Z=self.conditions,
-                                               tau_max=self.tau_max,
-                                               # mask=self.test_mask,
-                                               mask_type=self.mask_type,
-                                               cut_off=self.cut_off,
-                                               verbosity=self.verbosity)
-
-            intervention_array = np.copy(observation_array)
-            if intervention_data is not None:
-                tmp_array, _ = intervention_data.construct_array(X=self.X, Y=[y] + self.Z, 
-                                                         Z=self.conditions,
-                                                         tau_max=self.tau_max,
-                                                         mask_type=self.mask_type,
-                                                         cut_off=self.cut_off,
-                                                         verbosity=self.verbosity)
-
-                # Only replace X-variables in intervention_array (necessary if lags of
-                # X are in Z...)
-                for index in np.where(xyz==0)[0]:
-                    intervention_array[index] = tmp_array[index]
-
-            # if self.conditions is not None and conditions_data is not None:
-            #     tmp_array, _ = conditions_data.construct_array(X=self.X, Y=[y] + self.Z, 
-            #                                              Z=self.conditions,
-            #                                              tau_max=self.tau_max,
-            #                                              mask_type=self.mask_type,
-            #                                              cut_off=self.cut_off,
-            #                                              verbosity=self.verbosity)
-
-            #     # Only replace condition-variables in intervention_array 
-            #     # (necessary if lags of X are in Z...)
-            #     for index in np.where(xyz==2)[0]:
-            #         intervention_array[index] = tmp_array[index]
 
             # Transform the data if needed
             a_transform = self.fit_results[y]['data_transform']
             if a_transform is not None:
-                intervention_array = a_transform.transform(X=intervention_array.T).T
-            # Cache the test array
-            self.intervention_array = intervention_array
-            # Run the predictor, for Y only the Z-part is used, the first index is y
-            predictor_indices =   list(np.where(xyz==0)[0]) \
-                                + list(np.where(xyz==1)[0][1:]) \
-                                + list(np.where(xyz==2)[0])
-            predictor_array = intervention_array[predictor_indices, :].T
+                intervention_data = a_transform.transform(X=intervention_data)
+                if self.conditions is not None and conditions_data is not None:
+                    conditions_data = a_transform.transform(X=conditions_data)
 
-            pred_dict[y] = self.fit_results[y]['model'].predict(
+            # Extract observational Z from stored array
+            z_indices = list(np.where(self.xyz==1)[0][1:])
+            z_array = self.observation_array[z_indices, :].T  
+            Tobs = len(z_array)              
+
+            if self.conditions is not None and conditions_data is not None:
+                s_indices = list(np.where(self.xyz==2)[0])
+                s_array = self.observation_array[s_indices, :].T  
+
+            # Now iterate through interventions (and potentially S)
+            for index, dox_vals in enumerate(intervention_data):
+                # Construct XZS-array
+                intervention_array = dox_vals.reshape(1, lenX) * np.ones((Tobs, lenX))
+                if self.conditions is not None and conditions_data is not None:
+                    conditions_array = conditions_data[index].reshape(1, lenS) * np.ones((Tobs, lenS))  
+                    predictor_array = np.hstack((intervention_array, z_array, conditions_array))
+                else:
+                    predictor_array = np.hstack((intervention_array, z_array))
+
+                predicted_vals = self.fit_results[y]['model'].predict(
                 X=predictor_array, **pred_params)
 
-            # print(pred_dict[y])
-            if self.conditions is not None and conditions_data is not None:
+                if self.conditions is not None and conditions_data is not None:
+ 
+                    # if a_transform is not None:
+                    #     predicted_vals = a_transform.transform(X=target_array.T).T
+                    a_conditional_model = deepcopy(self.conditional_model)
+                    
+                    a_conditional_model.fit(X=s_array, y=predicted_vals)
+                    self.fit_results[y]['conditional_model'] = a_conditional_model
 
-                a_conditional_model = deepcopy(self.conditional_model)
+                    predicted_array[index, iy] = a_conditional_model.predict(
+                        X=conditions_array, **pred_params).mean()
 
-                # Fit Y|do(X) on S
-                conditions_array = observation_array[list(np.where(xyz==2)[0])]
-                target_array = pred_dict[y]  # array[np.where(xyz==1)[0][0], :]
+                else:
+                    predicted_array[index, iy] = predicted_vals.mean()
 
-                if a_transform is not None:
-                    conditions_array = a_transform.transform(X=conditions_array.T).T
-                    target_array = a_transform.transform(X=target_array.T).T
+        return predicted_array
 
-                a_conditional_model.fit(X=conditions_array.T, y=target_array)
-                self.fit_results[y]['conditional_model'] = a_conditional_model
 
-                # Now predict conditional causal effect for new conditions
-                tmp_array, _ = conditions_data.construct_array(X=self.X, Y=[y] + self.Z, 
-                                                         Z=self.conditions,
-                                                         tau_max=self.tau_max,
-                                                         mask_type=self.mask_type,
-                                                         cut_off=self.cut_off,
-                                                         verbosity=self.verbosity)
+    # def get_general_prediction(self,
+    #             intervention_data=None,
+    #             conditions_data=None,
+    #             pred_params=None,
+    #             ):
+    #     r"""Predict effect of intervention with fitted model.
 
-                # Construct conditions array
-                new_conditions_array = tmp_array[list(np.where(xyz==2)[0])]
+    #     Uses the model.predict() function of the sklearn model.
 
-                if a_transform is not None:
-                    new_conditions_array = a_transform.transform(X=new_conditions_array.T).T
+    #     Parameters
+    #     ----------
+    #     intervention_data : data object, optional
+    #         Tigramite dataframe object with optional new mask. Only the 
+    #         values for X will be extracted.
+    #     conditions_data : data object, optional
+    #         Tigramite dataframe object with optional new mask. Only the
+    #         values for conditions will be extracted.
+    #     pred_params : dict, optional
+    #         Optional parameters passed on to sklearn prediction function.
+
+    #     Returns
+    #     -------
+    #     Results from prediction.
+    #     """
+
+    #     pred_dict = {}
+    #     for y in self.Y:
+    #         # Print message
+    #         if self.verbosity > 1:
+    #             print("\n## Predicting target %s" % str(y))
+    #             if pred_params is not None:
+    #                 for key in list(pred_params):
+    #                     print("%s = %s" % (key, pred_params[key]))
+    #         # Default value for pred_params
+    #         if pred_params is None:
+    #             pred_params = {}
+    #         # Check this is a valid target
+    #         if y not in self.fit_results:
+    #             raise ValueError("y = %s not yet fitted" % str(y))
+    #         # Construct the array form of the data
+    #         # Check if we've passed a new dataframe object
+    #         observation_array, xyz = \
+    #             self.dataframe.construct_array(X=self.X, Y=[y] + self.Z, Z=self.conditions,
+    #                                            tau_max=self.tau_max,
+    #                                            # mask=self.test_mask,
+    #                                            mask_type=self.mask_type,
+    #                                            cut_off=self.cut_off,
+    #                                            verbosity=self.verbosity)
+
+    #         intervention_array = np.copy(observation_array)
+    #         if intervention_data is not None:
+    #             tmp_array, _ = intervention_data.construct_array(X=self.X, Y=[y] + self.Z, 
+    #                                                      Z=self.conditions,
+    #                                                      tau_max=self.tau_max,
+    #                                                      mask_type=self.mask_type,
+    #                                                      cut_off=self.cut_off,
+    #                                                      verbosity=self.verbosity)
+
+    #             # Only replace X-variables in intervention_array (necessary if lags of
+    #             # X are in Z...)
+    #             for index in np.where(xyz==0)[0]:
+    #                 intervention_array[index] = tmp_array[index]
+
+    #         if self.conditions is not None and conditions_data is not None:
+    #             tmp_array, _ = conditions_data.construct_array(X=self.X, Y=[y] + self.Z, 
+    #                                                      Z=self.conditions,
+    #                                                      tau_max=self.tau_max,
+    #                                                      mask_type=self.mask_type,
+    #                                                      cut_off=self.cut_off,
+    #                                                      verbosity=self.verbosity)
+
+    #             # Only replace condition-variables in intervention_array 
+    #             # (necessary if lags of X are in Z...)
+    #             for index in np.where(xyz==2)[0]:
+    #                 intervention_array[index] = tmp_array[index]
+
+    #         # Transform the data if needed
+    #         a_transform = self.fit_results[y]['data_transform']
+    #         if a_transform is not None:
+    #             intervention_array = a_transform.transform(X=intervention_array.T).T
+    #         # Cache the test array
+    #         self.intervention_array = intervention_array
+    #         # Run the predictor, for Y only the Z-part is used, the first index is y
+    #         predictor_indices =   list(np.where(xyz==0)[0]) \
+    #                             + list(np.where(xyz==1)[0][1:]) \
+    #                             + list(np.where(xyz==2)[0])
+    #         predictor_array = intervention_array[predictor_indices, :].T
+
+    #         pred_dict[y] = self.fit_results[y]['model'].predict(
+    #             X=predictor_array, **pred_params)
+
+    #         # print(pred_dict[y])
+    #         if self.conditions is not None and conditions_data is not None:
+
+    #             a_conditional_model = deepcopy(self.conditional_model)
+
+    #             # Fit Y|do(X) on S
+    #             conditions_array = observation_array[list(np.where(xyz==2)[0])]
+    #             target_array = pred_dict[y]  # array[np.where(xyz==1)[0][0], :]
+
+    #             if a_transform is not None:
+    #                 conditions_array = a_transform.transform(X=conditions_array.T).T
+    #                 target_array = a_transform.transform(X=target_array.T).T
+
+    #             a_conditional_model.fit(X=conditions_array.T, y=target_array)
+    #             self.fit_results[y]['conditional_model'] = a_conditional_model
+
+    #             # Now predict conditional causal effect for new conditions
+    #             tmp_array, _ = conditions_data.construct_array(X=self.X, Y=[y] + self.Z, 
+    #                                                      Z=self.conditions,
+    #                                                      tau_max=self.tau_max,
+    #                                                      mask_type=self.mask_type,
+    #                                                      cut_off=self.cut_off,
+    #                                                      verbosity=self.verbosity)
+
+    #             # Construct conditions array
+    #             new_conditions_array = tmp_array[list(np.where(xyz==2)[0])]
+
+    #             if a_transform is not None:
+    #                 new_conditions_array = a_transform.transform(X=new_conditions_array.T).T
                 
-                pred_dict[y] = a_conditional_model.predict(
-                    X=new_conditions_array.T, **pred_params)
+    #             pred_dict[y] = a_conditional_model.predict(
+    #                 X=new_conditions_array.T, **pred_params)
 
-        return pred_dict
+    #     return pred_dict
 
 
     def get_fit(self, all_parents,

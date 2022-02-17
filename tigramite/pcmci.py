@@ -4094,19 +4094,20 @@ if __name__ == '__main__':
              }
 
     data, nonstat = toys.structural_causal_process(links,
-                        T=1000, seed=7)
+                        T=10000, seed=7)
 
     # Data must be array of shape (time, variables)
     print(data.shape)
     dataframe = pp.DataFrame(data)
     cond_ind_test = ParCorr()
     pcmci = PCMCI(dataframe=dataframe, cond_ind_test=cond_ind_test, verbosity=1)
-    results = pcmci.run_pcmciplus(tau_min=0, tau_max=2, pc_alpha=0.01)
+    # results = pcmci.run_pcmciplus(tau_min=0, tau_max=2, pc_alpha=0.01)
     # pcmci.print_results(results, alpha_level=0.01)
 
 
-    print(pcmci.run_sliding_window_of(method='run_pcmciplus', method_args={}, 
-                        window_step=55,
-                        window_length=200,
+    print(pcmci.run_sliding_window_of(method='run_pcmciplus', 
+                    method_args={'tau_min':0, 'tau_max':3, 'pc_alpha':0.01}, 
+                        window_step=500,
+                        window_length=1000,
                         conf_lev = 0.95)['summary_results'])
 

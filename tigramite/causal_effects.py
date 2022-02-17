@@ -34,7 +34,9 @@ class CausalEffects:
     graph_type : str
         Type of graph.
     hidden_variables : list
-        Hidden variables if graph_type is of DAG-type.
+        Hidden variables. The internal graph is constructed by marginalization.
+    check_SM_overlap : bool
+        Whether to check whether S overlaps with M.
     verbosity : int, optional (default: 0)
         Level of verbosity.
     """
@@ -45,12 +47,11 @@ class CausalEffects:
                  X,
                  Y,
                  S=None,
-                 # tau_max=None,
                  hidden_variables=None,
+                 check_SM_overlap=True,
                  verbosity=0):
         
         self.verbosity = verbosity
-
 
         supported_graphs = ['dag', 
                             'admg',
@@ -68,7 +69,7 @@ class CausalEffects:
                             ]
 
         # Maybe not needed...
-        self.ignore_time_bounds = False
+        # self.ignore_time_bounds = False
 
         self.N = graph.shape[0]
 
@@ -89,14 +90,15 @@ class CausalEffects:
         if hidden_variables is None:
             hidden_variables = []
         
-        # TODO: remove if theory clear
-        if graph_type == 'stationary_dag' and len(hidden_variables) > 0:
-            raise ValueError("Hidden variables currently not supported for stationary_dag with tau_max>0")
 
         self.hidden_variables = set(hidden_variables)
         if len(self.hidden_variables.intersection(X.union(Y).union(S))) > 0:
             raise ValueError("XYS overlaps with hidden_variables!")
 
+
+        self.X = X
+        self.Y = Y
+        self.S = S
 
         if 'pag' in graph_type:
             self.possible = True 
@@ -105,83 +107,12 @@ class CausalEffects:
             self.possible = False
             self.definite_status = False
 
-        if graph_type in ['dag', 'admg']: 
-            if graph.ndim != 2:
-                raise ValueError("graph_type in ['dag', 'admg'] assumes graph.shape=(N, N).")
-            # Convert to shape [N, N, 1, 1] with dummy dimension
-            # to process as tsg_admg with potential hidden variables
-            graph = np.expand_dims(graph, axis=(2, 3))
-            # self.tau_max = 0
-            # graph_type = 'stationary_dag'
-              
-        # self.graph = graph
-        original_graph = deepcopy(graph)
-        graph_taumax = graph.shape[2] - 1
-        # self.tau_max = graph_taumax
+        (self.graph, self.graph_type, 
+         self.tau_max, self.hidden_variables) = self._construct_graph(
+                            graph=graph, graph_type=graph_type,
+                            hidden_variables=hidden_variables)
 
-        self.graph = graph
-
-        if 'stationary' in graph_type:
-            # If a stationary graph is provided
-            # then construct tsg_admg which marginalizes over variables
-            # earlier than tau_max and hidden_variables
-            if self.graph.ndim != 3:
-                raise ValueError("stationary graph_type assumes graph.shape=(N, N, tau_max+1).")
-
-            max_lag = self._get_maximum_possible_lag(XYZ=list(X.union(Y).union(S)), graph=graph)
-
-            stat_mediators = self._get_mediators_stationary_graph(start=X, end=Y, max_lag=max_lag)
-            self.tau_max = self._get_maximum_possible_lag(XYZ=list(X.union(Y).union(S).union(stat_mediators)), graph=graph)
-            # self.tau_max = graph_taumax
-            # for varlag in X.union(Y).union(S):
-            #     self.tau_max = max(self.tau_max, abs(varlag[1]))
-
-            if verbosity > 0:
-                print("Setting tau_max = ", self.tau_max)
-
-            # if tau_max is None:
-            #     self.tau_max = graph_taumax
-            #     for varlag in X.union(Y).union(S):
-            #         self.tau_max = max(self.tau_max, abs(varlag[1]))
-
-            #     if verbosity > 0:
-            #         print("Setting tau_max = ", self.tau_max)
-            # else:
-                # self.tau_max = graph_taumax
-                # # Repeat hidden variable pattern 
-                # # if larger tau_max is given
-                # if self.tau_max > graph_taumax:
-                #     for lag in range(graph_taumax + 1, self.tau_max + 1):
-                #         for j in range(self.N):
-                #             if (j, -(lag % (graph_taumax+1))) in self.hidden_variables:
-                #                 self.hidden_variables.add((j, -lag))
-            # print(self.hidden_variables)
-
-            self.graph = self._get_latent_projection_graph(self.graph, stationary=True)
-            self.graph_type = "tsg_admg"
-        else:
-            if self.graph.ndim != 4:
-                raise ValueError("tsg-graph_type assumes graph.shape=(N, N, tau_max+1, tau_max+1).")
-
-            # Then tau_max is ignored and implicitely derived from
-            # the dimensions 
-            self.tau_max = self.graph.shape[2] - 1
-            # if verbosity > 0:
-            #     print("Implicit auxADMG tau_max = ", self.tau_max)              
-
-            # self.tau_max = graph_taumax
-            for varlag in X.union(Y).union(S):
-                if abs(varlag[1]) > self.tau_max:
-                    raise ValueError("X, Y, S must have time lags inside graph.")
-
-            if len(self.hidden_variables) > 0:
-                # print(self.graph.shape, self.tau_max)
-                self.graph = self._get_latent_projection_graph(self.graph, stationary=False)
-                self.graph_type = "tsg_admg"
-            else:
-                self.graph_type = graph_type
-
-        # print(self.graph)
+        # print(self.graph.shape)
         self._check_graph(self.graph)
 
         anc_Y = self._get_ancestors(Y)
@@ -190,15 +121,17 @@ class CausalEffects:
         if anc_Y.intersection(set(X)) == set():
             raise ValueError("No causal path from X to Y exists.")
 
-        self.X = X
-        self.Y = Y
-        self.S = S
+
 
         # Get mediators
         mediators = self.get_mediators(start=self.X, end=self.Y) 
 
         M = set(mediators)
         self.M = M
+
+        for varlag in X.union(Y).union(S):
+            if abs(varlag[1]) > self.tau_max:
+                raise ValueError("X, Y, S must have time lags inside graph.")
 
         if len(self.X.intersection(self.Y)) > 0:
             raise ValueError("Overlap between X and Y")
@@ -210,8 +143,8 @@ class CausalEffects:
         # if len(self.X.intersection(self._get_descendants(self.M))) > 0:
         #     raise ValueError("Not identifiable: Overlap between X and des(M)")
 
-        if len(self.S.intersection(self.M)) > 0:
-            raise ValueError("Conditions S overlap with mediators M")
+        if check_SM_overlap and len(self.S.intersection(self.M)) > 0:
+            raise ValueError("Conditions S overlap with mediators M!")
 
         descendants = self._get_descendants(self.Y.union(self.M))
         
@@ -243,6 +176,131 @@ class CausalEffects:
             if len(self.hidden_variables) > 0:
                 print("\nhidden_variables = %s" % self.hidden_variables
                       ) 
+            print("\n\n")
+
+
+    def _construct_graph(self, graph, graph_type, hidden_variables):
+        """Construct internal graph object based on input graph and hidden variables."""
+
+
+        if graph_type in ['dag', 'admg']: 
+            tau_max = 0
+            if graph.ndim != 2:
+                raise ValueError("graph_type in ['dag', 'admg'] assumes graph.shape=(N, N).")
+            # Convert to shape [N, N, 1, 1] with dummy dimension
+            # to process as tsg_dag or tsg_admg with potential hidden variables
+            self.graph = np.expand_dims(graph, axis=(2, 3))
+            self.tau_max = 0
+
+            if len(hidden_variables) > 0:
+                graph = self._get_latent_projection_graph() # stationary=False)
+                graph_type = "tsg_admg"
+            else:
+                graph = self.graph
+                graph_type = 'tsg_' + graph_type
+
+        elif graph_type in ['tsg_dag', 'tsg_admg']:
+            if graph.ndim != 4:
+                raise ValueError("tsg-graph_type assumes graph.shape=(N, N, tau_max+1, tau_max+1).")
+
+            # Then tau_max is ignored and implicitely derived from
+            # the dimensions 
+            self.graph = graph
+            self.tau_max = graph.shape[2] - 1
+
+            if len(hidden_variables) > 0:
+                graph = self._get_latent_projection_graph() #, stationary=False)
+                graph_type = "tsg_admg"
+            else:
+                graph_type = graph_type   
+
+        elif graph_type in ['stationary_dag']:
+            # Currently on stationary_dag without hidden variables is supported
+            if graph.ndim != 3:
+                raise ValueError("stationary graph_type assumes graph.shape=(N, N, tau_max+1).")
+            # TODO: remove if theory for stationary ADMGs is clear
+            if graph_type == 'stationary_dag' and len(hidden_variables) > 0:
+                raise ValueError("Hidden variables currently not supported for "
+                                 "stationary_dag.")
+
+            # For a stationary DAG without hidden variables it's sufficient to consider
+            # a tau_max that includes the parents of X, Y, M, and S. A conservative
+            # estimate thereof is simply the lag-dimension of the stationary DAG plus
+            # the maximum lag of X,S.
+            statgraph_tau_max = graph.shape[2] - 1
+            maxlag_XS = 0
+            for varlag in self.X.union(self.S):
+                maxlag_XS = max(maxlag_XS, abs(varlag[1]))
+
+            tau_max = maxlag_XS + statgraph_tau_max
+
+            stat_graph = deepcopy(graph)
+
+            # Construct tsg_graph
+            graph = np.zeros((self.N, self.N, tau_max + 1, tau_max + 1), dtype='<U3')
+            graph[:] = ""
+            for (i, j) in itertools.product(range(self.N), range(self.N)):
+                for jt, tauj in enumerate(range(0, tau_max + 1)):
+                    for it, taui in enumerate(range(tauj, tau_max + 1)):
+                        tau = abs(taui - tauj)
+                        if tau == 0 and j == i:
+                            continue
+                        if tau > statgraph_tau_max:
+                            continue                        
+
+                        # if tau == 0:
+                        #     if stat_graph[i, j, tau] == '-->':
+                        #         graph[i, j, taui, tauj] = "-->" 
+                        #         graph[j, i, tauj, taui] = "<--" 
+
+                        #     # elif stat_graph[i, j, tau] == '<--':
+                        #     #     graph[i, j, taui, tauj] = "<--"
+                        #     #     graph[j, i, tauj, taui] = "-->" 
+                        # else:
+                        if stat_graph[i, j, tau] == '-->':
+                            graph[i, j, taui, tauj] = "-->" 
+                            graph[j, i, tauj, taui] = "<--" 
+
+                        # elif stat_graph[i, j, tau] == '<--':
+                        #     graph[i, j, taui, tauj] = "<--"
+                        #     graph[j, i, tauj, taui] = "-->" 
+
+            graph_type = 'tsg_dag'
+
+        return (graph, graph_type, tau_max, hidden_variables)
+
+            # max_lag = self._get_maximum_possible_lag(XYZ=list(X.union(Y).union(S)), graph=graph)
+
+            # stat_mediators = self._get_mediators_stationary_graph(start=X, end=Y, max_lag=max_lag)
+            # self.tau_max = self._get_maximum_possible_lag(XYZ=list(X.union(Y).union(S).union(stat_mediators)), graph=graph)
+            # self.tau_max = graph_taumax
+            # for varlag in X.union(Y).union(S):
+            #     self.tau_max = max(self.tau_max, abs(varlag[1]))
+
+            # if verbosity > 0:
+            #     print("Setting tau_max = ", self.tau_max)
+
+            # if tau_max is None:
+            #     self.tau_max = graph_taumax
+            #     for varlag in X.union(Y).union(S):
+            #         self.tau_max = max(self.tau_max, abs(varlag[1]))
+
+            #     if verbosity > 0:
+            #         print("Setting tau_max = ", self.tau_max)
+            # else:
+                # self.tau_max = graph_taumax
+                # # Repeat hidden variable pattern 
+                # # if larger tau_max is given
+                # if self.tau_max > graph_taumax:
+                #     for lag in range(graph_taumax + 1, self.tau_max + 1):
+                #         for j in range(self.N):
+                #             if (j, -(lag % (graph_taumax+1))) in self.hidden_variables:
+                #                 self.hidden_variables.add((j, -lag))
+            # print(self.hidden_variables)
+
+        #     self.graph = self._get_latent_projection_graph(self.graph, stationary=True)
+        #     self.graph_type = "tsg_admg"
+        # else:
 
 
     def check_XYS_paths(self):
@@ -385,7 +443,7 @@ class CausalEffects:
                             # and parent not in potential_mediators
                             and parent not in start
                             and parent not in end
-                            and (-self.tau_max <= tau <= 0 or self.ignore_time_bounds)):
+                            and (-self.tau_max <= tau <= 0)): # or self.ignore_time_bounds)):
                             mediators = mediators.union(set([parent]))
                             next_level.append(parent)
                             
@@ -659,7 +717,7 @@ class CausalEffects:
                     for child in self._get_children(varlag):
                         i, tau = child
                         if (child not in descendants 
-                            and (-self.tau_max <= tau <= 0 or self.ignore_time_bounds)):
+                            and (-self.tau_max <= tau <= 0)): # or self.ignore_time_bounds)):
                             descendants = descendants.union(set([child]))
                             next_level.append(child)
 
@@ -687,7 +745,7 @@ class CausalEffects:
                         i, tau = spouse
                         if (spouse not in collider_path_nodes
                             and spouse not in descendants 
-                            and (-self.tau_max <= tau <= 0 or self.ignore_time_bounds)):
+                            and (-self.tau_max <= tau <= 0)): # or self.ignore_time_bounds)):
                             collider_path_nodes = collider_path_nodes.union(set([spouse]))
                             next_level.append(spouse)
 
@@ -698,7 +756,7 @@ class CausalEffects:
             for par in self._get_parents(w):
                 if (par not in collider_path_nodes
                     and par not in descendants
-                    and (-self.tau_max <= tau <= 0 or self.ignore_time_bounds)):
+                    and (-self.tau_max <= tau <= 0)): # or self.ignore_time_bounds)):
                     collider_path_nodes = collider_path_nodes.union(set([par]))
 
         return collider_path_nodes
@@ -798,18 +856,18 @@ class CausalEffects:
     def _get_maximum_possible_lag(self, XYZ, graph):
         """Expects graph to be stationary type. See Thm. XXXX"""
 
-        def _repeating(link, seen_links):
+        def _repeating(link, seen_path):
             """Returns True if a link or its time-shifted version is already
             included in seen_links."""
             i, taui = link[0]
             j, tauj = link[1]
 
-            for seen_link in seen_links:
-                seen_i, seen_taui = seen_link[0]
-                seen_j, seen_tauj = seen_link[1]
+            for index, seen_link in enumerate(seen_path[:-1]):
+                seen_i, seen_taui = seen_link
+                seen_j, seen_tauj = seen_path[index + 1]
 
                 if (i == seen_i and j == seen_j
-                    and abs(tauj - taui) == abs(seen_tauj - seen_taui)):
+                    and abs(tauj-taui) == abs(seen_tauj-seen_taui)):
                     return True
 
             return False
@@ -854,10 +912,10 @@ class CausalEffects:
 
         return max_lag
 
-    def _get_latent_projection_graph(self, graph, stationary=False):
-        """For ADMGs uses the Latent projection operation (Pearl 2009).
+    def _get_latent_projection_graph(self, stationary=False):
+        """For DAGs/ADMGs uses the Latent projection operation (Pearl 2009).
 
-           Assumes a stationary graph with potentially unobserved nodes.
+           Assumes a normal or stationary graph with potentially unobserved nodes.
            Also allows particular time steps to be unobserved. By stationarity
            that pattern ob unobserved nodes is repeated into -infinity.
 
@@ -874,7 +932,6 @@ class CausalEffects:
         """
         
         # graph = self.graph
-        graph_taumax = graph.shape[2] - 1
 
         # if self.hidden_variables is None:
         #     hidden_variables_here = []
@@ -894,10 +951,12 @@ class CausalEffects:
                     # print("\n")
                     # print((i, -taui), (j, -tauj))
 
-                    cond_i_xy = (tau <= graph_taumax 
+                    cond_i_xy = (
+                            # tau <= graph_taumax 
                         # and (graph[i, j, tau] == '-->' or graph[i, j, tau] == '+->') 
                         #     )
-                          and self._check_path(graph=graph,
+                          # and 
+                          self._check_path( #graph=graph,
                                                 start=[(i, -taui)],
                                                  end=[(j, -tauj)],
                                                  conditions=None,
@@ -908,10 +967,12 @@ class CausalEffects:
                                                  hidden_variables=hidden_variables_here,
                                                  stationary_graph=stationary,
                                                  ))
-                    cond_i_yx = (tau <= graph_taumax 
+                    cond_i_yx = (
+                        # tau <= graph_taumax 
                         # and (graph[i, j, tau] == '<--' or graph[i, j, tau] == '<-+') 
                         #     )
-                        and self._check_path(graph=graph,
+                        # and 
+                        self._check_path( #graph=graph,
                                               start=[(j, -tauj)],
                                                end=[(i, -taui)],
                                                conditions=None,
@@ -926,19 +987,23 @@ class CausalEffects:
                         hidden_by_taumax_here = True
                     else:
                         hidden_by_taumax_here = False
-                    cond_ii = ((tau <= graph_taumax and (graph[i, j, tau] == '<->' 
-                                or graph[i, j, tau] == '+->' or graph[i, j, tau] == '<-+')) 
-                                            or self._check_path(graph=graph,
-                                                                start=[(i, -taui)],
-                                                                 end=[(j, -tauj)],
-                                                                 conditions=None,
-                                                                 starts_with='<**',
-                                                                 ends_with='**>',
-                                                                 path_type='any',
-                                                                 hidden_by_taumax=hidden_by_taumax_here,
-                                                                 hidden_variables=hidden_variables_here,
-                                                                 stationary_graph=stationary,
-                                                                 ))
+                    cond_ii = (
+                        # tau <= graph_taumax 
+                                # and 
+                                (
+                                #     graph[i, j, tau] == '<->' 
+                                # or graph[i, j, tau] == '+->' or graph[i, j, tau] == '<-+')) 
+                                    self._check_path( #graph=graph,
+                                                start=[(i, -taui)],
+                                                 end=[(j, -tauj)],
+                                                 conditions=None,
+                                                 starts_with='<**',
+                                                 ends_with='**>',
+                                                 path_type='any',
+                                                 hidden_by_taumax=hidden_by_taumax_here,
+                                                 hidden_variables=hidden_variables_here,
+                                                 stationary_graph=stationary,
+                                                 )))
 
                     # print((i, -taui), (j, -tauj), cond_i_xy, cond_i_yx, cond_ii)
 
@@ -968,7 +1033,9 @@ class CausalEffects:
 
         return aux_graph
 
-    def _check_path(self, graph, start, end,
+    def _check_path(self, 
+        # graph, 
+        start, end,
         conditions=None, 
         starts_with=None,
         ends_with=None,
@@ -1000,7 +1067,7 @@ class CausalEffects:
         # See Thm. XXXX
         XYZ = start.union(end).union(conditions)
         if stationary_graph:
-            max_lag = self._get_maximum_possible_lag(XYZ, graph)
+            max_lag = self._get_maximum_possible_lag(XYZ, self.graph)
             causal_children = list(self._get_mediators_stationary_graph(start, end, max_lag).union(end))
         else:
             max_lag = None
@@ -1030,7 +1097,7 @@ class CausalEffects:
         start_from = set()
         for x in start:
             if stationary_graph:
-                link_neighbors = self._get_adjacents_stationary_graph(graph=graph, node=x, patterns=starts_with, 
+                link_neighbors = self._get_adjacents_stationary_graph(graph=self.graph, node=x, patterns=starts_with, 
                                         max_lag=max_lag, exclude=list(start))
             else:
                 link_neighbors = self._find_adj(node=x, patterns=starts_with, exclude=list(start), return_link=True)
@@ -1093,7 +1160,7 @@ class CausalEffects:
             # print("visited    ", visited)
 
             if stationary_graph:
-                link_neighbors = self._get_adjacents_stationary_graph(graph=graph, node=varlag_k, patterns='***', 
+                link_neighbors = self._get_adjacents_stationary_graph(graph=self.graph, node=varlag_k, patterns='***', 
                                         max_lag=max_lag, exclude=list(start))
             else:
                 link_neighbors = self._find_adj(node=varlag_k, patterns='***', exclude=list(start), return_link=True)
@@ -1239,9 +1306,10 @@ class CausalEffects:
                             # not forbidden
                             and spouse not in self.forbidden_nodes 
                             # in time bounds
-                            and (-self.tau_max <= tau <= 0 or self.ignore_time_bounds)
+                            and (-self.tau_max <= tau <= 0) # or self.ignore_time_bounds)
                             and (spouse in vancs
-                                or not self._check_path(graph=self.graph, start=self.X, end=[spouse], 
+                                or not self._check_path(#graph=self.graph, 
+                                    start=self.X, end=[spouse], 
                                                     conditions=list(parents.union(vancs)) + list(S),
                                                     ))
                                 ):
@@ -1273,7 +1341,8 @@ class CausalEffects:
                 sorted_Oset = [node for node in sorted_Oset if node not in parents]
 
             for node in sorted_Oset:
-                if (not self._check_path(graph=self.graph, start=self.X, end=[node], 
+                if (not self._check_path(#graph=self.graph, 
+                    start=self.X, end=[node], 
                                 conditions=list(Oset - set([node])) + list(S))):
                     removable.append(node) 
 
@@ -1284,7 +1353,8 @@ class CausalEffects:
             removable = []
             # Next remove all those with no direct connection to Y
             for node in sorted_Oset:
-                if (not self._check_path(graph=self.graph, start=[node], end=self.Y, 
+                if (not self._check_path(#graph=self.graph, 
+                    start=[node], end=self.Y, 
                             conditions=list(Oset - set([node])) + list(S) + list(self.X),
                             ends_with='**>')): 
                     removable.append(node) 
@@ -1340,7 +1410,7 @@ class CausalEffects:
  
                 for node in suitable_nodes:
                     i, tau = node
-                    if ((-self.tau_max <= tau <= 0 or self.ignore_time_bounds)
+                    if ((-self.tau_max <= tau <= 0) # or self.ignore_time_bounds)
                         and node not in coll_path):
 
                         if condition == 'II' and node not in target_nodes and node not in self.vancs:
@@ -1426,7 +1496,8 @@ class CausalEffects:
         cond_II = True
         for E in e_nodes:
             Oset_minusE = Oset.difference(set([E]))
-            if self._check_path(graph=self.graph, start=list(self.X), end=[E], 
+            if self._check_path(#graph=self.graph, 
+                start=list(self.X), end=[E], 
                                 conditions=list(self.S) + list(Oset_minusE)):
                    
                 cond_II = self._get_collider_paths_optimality(
@@ -1449,7 +1520,8 @@ class CausalEffects:
         """Checks whether Z is a valid adjustment set."""
 
         # causal_children = list(self.M.union(self.Y))
-        backdoor_path = self._check_path(graph=self.graph, start=list(self.X), end=list(self.Y), 
+        backdoor_path = self._check_path(#graph=self.graph, 
+            start=list(self.X), end=list(self.Y), 
                             conditions=list(Z), 
                             # causal_children=causal_children,
                             path_type = 'non_causal')
@@ -1490,7 +1562,8 @@ class CausalEffects:
                 #     starts_with=None, #'arrowhead', 
                 #     forbidden_nodes=None, #list(Zprime - set([node])), 
                 #     return_path=False)
-                path = self._check_path(graph=self.graph, start=self.X, end=[node], 
+                path = self._check_path(#graph=self.graph, 
+                    start=self.X, end=[node], 
                     conditions=list(vancs - set([node])), 
                      )
   
@@ -1507,7 +1580,8 @@ class CausalEffects:
             # Z = Zprime2
             for node in minimize_nodes:
 
-                path = self._check_path(graph=self.graph, start=[node], end=self.Y, 
+                path = self._check_path(#graph=self.graph, 
+                    start=[node], end=self.Y, 
                     conditions=list(vancs - set([node])) + list(self.X),
                     )
 
@@ -1639,7 +1713,7 @@ class CausalEffects:
                     ).intersection(inside_set)
                 for node in suitable_nodes:
                     i, tau = node
-                    if ((-self.tau_max <= tau <= 0 or self.ignore_time_bounds)
+                    if ((-self.tau_max <= tau <= 0) # or self.ignore_time_bounds)
                         and node not in causal_path):
 
                         queue.append((node, causal_path)) 
@@ -1726,7 +1800,7 @@ class CausalEffects:
         return self
 
     def predict_total_effect(self, 
-        intervention_data=None, 
+        intervention_data, 
         conditions_data=None,
         pred_params=None,
         ):
@@ -1736,31 +1810,25 @@ class CausalEffects:
 
         Parameters
         ----------
-        intervention_data : data object, optional
-            Tigramite dataframe object with optional new mask. Only the 
-            values for X will be extracted.
+        intervention_data : numpy array
+            Numpy array of shape (time, len(X)) that contains the do(X) values.
         conditions_data : data object, optional
-            Tigramite dataframe object with optional new mask. Only the
-            values for conditions will be extracted.
+            Numpy array of shape (time, len(S)) that contains the S=s values.
         pred_params : dict, optional
             Optional parameters passed on to sklearn prediction function.
 
         Returns
         -------
-        Results from prediction.
+        Results from prediction: an array of shape  (time, len(Y)).
         """
-
-        if intervention_data is not None:
-            if intervention_data.values.shape != self.dataframe.values.shape:
-                raise ValueError("intervention_data must be of same shape as "
-                                 "fitted model dataframe.")
+        if intervention_data.shape[1] != len(self.X):
+            raise ValueError("intervention_data.shape[1] must be len(X).")
 
         if conditions_data is not None:
-            if len(self.listS) == 0:
-                raise ValueError("Conditions S are empty!")
-            if conditions_data.values.shape != self.dataframe.values.shape:
-                raise ValueError("intervention_data must be of same shape as "
-                                 "fitted model dataframe.")
+            if conditions_data.shape[1] != len(self.S):
+                raise ValueError("conditions_data.shape[1] must be len(S).")
+            if conditions_data.shape[0] != intervention_data.shape[0]:
+                raise ValueError("conditions_data.shape[0] must match intervention_data.shape[0].")
 
         effect = self.model.get_general_prediction(
             intervention_data=intervention_data,
@@ -1769,9 +1837,9 @@ class CausalEffects:
 
         return effect
 
-    def fit_wrights_effect(self,
+    def fit_wright_effect(self,
         dataframe, 
-        mediated_through=None,
+        mediation=None,
         method='parents',
         links_coeffs=None,  
         data_transform=None,
@@ -1786,9 +1854,9 @@ class CausalEffects:
             Tigramite dataframe object. It must have the attributes dataframe.values
             yielding a numpy array of shape (observations T, variables N) and
             optionally a mask of the same shape and a missing values flag.
-        mediated_through : list of tuples
-            If None, total effect is estimated, else only those causal paths are considerd
-            that pass at least through one of these mediator nodes.
+        mediation : None, 'direct', or list of tuples
+            If None, total effect is estimated, if 'direct' then only the direct effect is estimated,
+            else only those causal paths are considerd that pass at least through one of these mediator nodes.
         method : {'parents', 'links_coeffs', 'optimal'}
             Method to use for estimating Wright's path coefficients. If 'optimal', 
             the Oset is used, if 'links_coeffs', the coefficients in links_coeffs are used,
@@ -1823,9 +1891,20 @@ class CausalEffects:
                         verbosity=self.verbosity)
 
         mediators = self.get_mediators(start=self.X, end=self.Y)
-        causal_paths = self._get_causal_paths(source_nodes=self.X, 
+
+        if mediation == 'direct':
+            causal_paths = {}         
+            for w in self.X:
+                causal_paths[w] = {}
+                for z in self.Y:
+                    if w in self._get_parents(z):
+                        causal_paths[w][z] = [[w, z]]
+                    else:
+                        causal_paths[w][z] = []
+        else:
+            causal_paths = self._get_causal_paths(source_nodes=self.X, 
                 target_nodes=self.Y, mediators=mediators, 
-                mediated_through=mediated_through, proper_paths=True)
+                mediated_through=mediation, proper_paths=True)
 
         if method == 'links_coeffs':
             coeffs = {}
@@ -1844,15 +1923,16 @@ class CausalEffects:
             coeffs = {}
             for medy in [med for med in mediators] + [y for y in self.listY]:
                 coeffs[medy] = {}
+                mediator_parents = self._get_all_parents([medy]).intersection(mediators.union(self.X)) - set([medy])
                 all_parents = self._get_all_parents([medy]) - set([medy])
-                for par in all_parents:
+                for par in mediator_parents:
                     Sprime = set(all_parents) - set([par, medy])
-                    causal_effects = CausalEffects(graph=self.graph, X=[par], Y=[medy],
-                                        S=Sprime,
+                    causal_effects = CausalEffects(graph=self.graph, 
+                                        X=[par], Y=[medy], S=Sprime,
                                         graph_type=self.graph_type,
+                                        check_SM_overlap=False,
                                         )
                     oset = causal_effects.get_optimal_set()
-                    # print(j, all_parents[j])
                     if oset is False:
                         raise ValueError("Not identifiable via Wright's method.")
                     fit_res = self.model.get_general_fitted_model(
@@ -1869,6 +1949,7 @@ class CausalEffects:
             coeffs = {}
             for medy in [med for med in mediators] + [y for y in self.listY]:
                 coeffs[medy] = {}
+                # mediator_parents = self._get_all_parents([medy]).intersection(mediators.union(self.X)) - set([medy])
                 all_parents = self._get_all_parents([medy]) - set([medy])
                 # print(j, all_parents[j])
                 # if len(all_parents[j]) > 0:
@@ -1926,7 +2007,7 @@ class CausalEffects:
         return self
 
     
-    def predict_wrights_effect(self, 
+    def predict_wright_effect(self, 
         intervention_data=None, 
         pred_params=None,
         ):
@@ -1934,27 +2015,22 @@ class CausalEffects:
 
         Parameters
         ----------
-        intervention_data : data object, optional
-            Tigramite dataframe object with optional new mask. Only the 
-            values for X will be extracted.
+        intervention_data : numpy array
+            Numpy array of shape (time, len(X)) that contains the do(X) values.
         pred_params : dict, optional
             Optional parameters passed on to sklearn prediction function.
 
         Returns
         -------
-        Results from prediction.
+        Results from prediction: an array of shape  (time, len(Y)).
         """
+        if intervention_data.shape[1] != len(self.X):
+            raise ValueError("intervention_data.shape[1] must be len(X).")
 
-        if intervention_data is not None:
-            if intervention_data.values.shape != self.dataframe.values.shape:
-                raise ValueError("intervention_data must be of same shape as "
-                                 "fitted model dataframe.")
-
-        # print(intervention_data.values.shape)
         effect = self.model.get_general_prediction(
-                intervention_data=intervention_data,
-                conditions_data=None,
-                pred_params=pred_params)
+            intervention_data=intervention_data,
+            conditions_data=None,
+            pred_params=pred_params) 
 
         return effect
 
@@ -1973,51 +2049,105 @@ if __name__ == '__main__':
     from sklearn.neighbors import KNeighborsRegressor
     from sklearn.neural_network import MLPRegressor
     from sklearn.ensemble import RandomForestRegressor
-        
+     
+    graph =  np.array([[['', '-->', ''],
+                        ['', '', ''],
+                        ['', '', '']],
+                       [['', '-->', ''],
+                        ['', '-->', ''],
+                        ['-->', '', '-->']],
+                       [['', '', ''],
+                        ['<--', '', ''],
+                        ['', '-->', '']]], dtype='<U3')
 
-
-
-    import pandas as pd
-    from sklearn.linear_model import LinearRegression
-    from sklearn.compose import ColumnTransformer
-    from sklearn.preprocessing import OneHotEncoder, StandardScaler
-
-
-    df = pd.DataFrame({'par1':[1,3,5,7,9, 11,13],
-                       'par2':[0.2, 0.4, 0.5, 0.7, 1, 1.2, 1.45],
-                       'par3':['yes', 'no', 'no', 'yes', 'no', 'yes', 'no'],
-                       'par4':['blue', 'red', 'red', 'blue', 'green', 'green', 'blue'],
-                       'output':[103, 310, 522, 711, 921, 1241, 1451]})
-
-    t = ColumnTransformer(transformers=[
-        ('onehot', OneHotEncoder(), ['par3', 'par4']),
-        # ('scale', StandardScaler(), ['par1', 'par2'])
-    ], remainder='passthrough')
-
-    # Transform the features
-    features = t.fit_transform(df.iloc[:,:-1])
-    result = df.iloc[:,-1]
-
-    print(features.shape)
-    print(features[:,1])
-    print(features[:,2])
-    print(features[:,3])
-    print(features[:,4])
-    print(features[:,5])
-
-    # Train the linear regression model
-    reg = LinearRegression()
-    model = reg.fit(features, result)
-
-    # Generate a prediction
-    example = t.transform(pd.DataFrame([{
-        'par1': 2, 'par2': 0.33, 'par3': 'no', 'par4': 'red'
-    }]))
-    prediction = model.predict(example)
-    reg_score = reg.score(features, result)
-    print(prediction, reg_score)
-
+    X = [(1,-2)]
+    Y = [(2,0)]
+    causal_effects = CausalEffects(graph, graph_type='stationary_dag', X=X, Y=Y, S=None, 
+                                   hidden_variables=None, 
+                                verbosity=1)
+    var_names = ['$X^0$', '$X^1$', '$X^2$']
+    tp.plot_time_series_graph(graph = causal_effects.graph,
+            var_names=var_names, 
+            save_name='Example.pdf',
+            figsize = (8, 4),
+            );
     sys.exit(0)
+
+    T = 10000
+    np.random.seed(5)
+    Zdata = np.random.randn(T)
+    Sdata =  Zdata + np.random.randn(T)  #np.random.choice(a=[-1., 1.], size=T)
+    Xdata = np.random.randn(T) + Sdata*Zdata
+    Ydata = 0.7*Sdata*Xdata + Zdata + np.random.randn(T)
+    data = np.vstack((Xdata, Ydata, Sdata, Zdata)).T
+    dataframe = pp.DataFrame(data)
+
+    graph =  np.array([['', '-->', '<--', '<--'],
+                       ['<--', '', '<--', '<--'],
+                       ['-->', '-->', '', '<--'],
+                       ['-->', '-->', '-->', '']], dtype='<U3')
+
+    X = [(0,0)]
+    Y = [(1,0)]
+    S = [(2,0)]
+    causal_effects = CausalEffects(graph, graph_type='admg', 
+                                X=X, Y=Y, S=S, hidden_variables=None, 
+                                verbosity=0)
+    print(causal_effects.get_optimal_set())
+    # Fit causal effect model from observational data
+    causal_effects.fit_total_effect(
+        dataframe=dataframe, 
+        estimator=MLPRegressor(max_iter=200), #MLPRegressor(max_iter=200),
+        adjustment_set='optimal',
+        conditional_estimator=LinearRegression(),  
+        data_transform=None,
+        mask_type=None,
+        )
+
+    # Copy original observational data
+    # intervention_data = np.ones((1, 1))
+    # conditions_data = np.ones((1, 1))
+
+    # Set X to intervened values given S=-1, 1
+    # S=-1
+    conditions_data = np.linspace(-1, 1, 10).reshape(10, 1)
+
+    intervention_data = 1.*np.ones((10, 1))
+    y1 = causal_effects.predict_total_effect( 
+            intervention_data=intervention_data,
+            conditions_data=conditions_data,
+            )
+
+    intervention_data = 0.*np.ones((10, 1))
+    y2 = causal_effects.predict_total_effect( 
+            intervention_data=intervention_data,
+            conditions_data=conditions_data,
+            )
+    # for y in Y:
+    beta = (y1 - y2)
+    print(beta)
+    # print("Causal effect for S = % .2f is %.2f" %(cond_value,))
+
+    sys.exit()
+
+
+    def lin_f(x): return x
+    conf_coeff = 0.
+    coeff = .5
+    links = {
+            0: [], #((0, -1), auto_coeff, lin_f)], 
+            1: [((0, 0), coeff, lin_f), ((5, 0), conf_coeff, lin_f)], 
+            2: [((1, 0), coeff, lin_f), ((5, 0), conf_coeff, lin_f)],
+            3: [((1, 0), coeff, lin_f), ((2, 0), coeff, lin_f), ((6, 0), conf_coeff, lin_f), ((8, 0), conf_coeff, lin_f)],
+            4: [((5, 0), conf_coeff, lin_f), ((8, 0), conf_coeff, lin_f)], #, ((7, 0), coeff, lin_f),],
+            5: [],
+            6: [],
+            7: [], #((0, 0), coeff, lin_f)],
+            8: [],
+            }
+    T = 10000
+    data, nonstat = toys.structural_causal_process(links, T=T, noises=None, seed=7)
+    dataframe = pp.DataFrame(data) 
 
     graph =  np.array([['', '-->', '', '', '', '', ''],
                        ['<--', '', '-->', '-->', '', '<--', ''],
@@ -2054,18 +2184,21 @@ if __name__ == '__main__':
             special_nodes=special_nodes
             )
 
-    causal_effects.fit_wrights_effect(dataframe=dataframe, 
-                                      method='parents'
+    causal_effects.fit_wright_effect(dataframe=dataframe, 
+                                    mediation = 'direct', #[(2, 0)],
+                                    method='parents'
             )
+
+    intervention_data = data.copy()
 
     # Set X to intervened values
     intervention_data[:,[x[0] for x in X]] = 1.
-    y1 = causal_effects.predict_wrights_effect( 
+    y1 = causal_effects.predict_wright_effect( 
             intervention_data=pp.DataFrame(intervention_data), 
             )
 
     intervention_data[:,[x[0] for x in X]] = 0.
-    y2 = causal_effects.predict_wrights_effect( 
+    y2 = causal_effects.predict_wright_effect( 
             intervention_data=pp.DataFrame(intervention_data), 
             )
 
@@ -2073,6 +2206,8 @@ if __name__ == '__main__':
         beta = (y1[y] - y2[y]).mean()
         print("Causal effect = %.2f" %(beta))
     sys.exit(0)
+
+
 
     graph =  np.array([[['', '-->', ''],
                         ['', '', ''],
@@ -2110,64 +2245,6 @@ if __name__ == '__main__':
             )
     sys.exit(0)
 
-
-    T = 20000
-    np.random.seed(5)
-    Sdata = np.random.choice([-1., 1.], size=T)
-    Zdata = Sdata*np.random.randn(T)
-    Xdata = np.random.randn(T) + Zdata
-    Ydata = 0.7*Sdata*Xdata + Zdata + np.random.randn(T)
-    data = np.vstack((Xdata, Ydata, Sdata, Zdata)).T
-    dataframe = pp.DataFrame(data)
-
-    graph =  np.array([['', '-->', '', '<--'],
-                       ['<--', '', '<--', '<--'],
-                       ['', '-->', '', '-->'],
-                       ['-->', '-->', '<--', '']], dtype='<U3')
-
-    X = [(0,0)]
-    Y = [(1,0)]
-    S = [(2,0)]
-    causal_effects = CausalEffects(graph, graph_type='admg', X=X, Y=Y, S=S, hidden_variables=None, 
-                                verbosity=0)
-    print(causal_effects.get_optimal_set())
-    # Fit causal effect model from observational data
-    causal_effects.fit_total_effect(
-        dataframe=dataframe, 
-        estimator=MLPRegressor(max_iter=200),
-        adjustment_set='optimal',
-        conditional_estimator=LinearRegression(),  
-        data_transform=None,
-        mask_type=None,
-        )
-
-    # Copy original observational data
-    intervention_data = data.copy()
-    conditions_data = data.copy()
-
-    # Set X to intervened values given S=-1, 1
-    # S=-1
-    for cond_value in [-1, 1]:
-        conditions_data[:,[s[0] for s in S]] = cond_value
-
-        intervention_data[:,[x[0] for x in X]] = 1.
-        y1 = causal_effects.predict_total_effect( 
-                intervention_data=pp.DataFrame(intervention_data),
-                conditions_data=pp.DataFrame(conditions_data),
-                )
-        intervention_data[:,[x[0] for x in X]] = 0.
-        y2 = causal_effects.predict_total_effect( 
-                intervention_data=pp.DataFrame(intervention_data),
-                conditions_data=pp.DataFrame(conditions_data),
-                )
-        for y in Y:
-            beta = (y1[y] - y2[y]).mean()
-            print("Causal effect for S = % .2f is %.2f" %(cond_value, beta))
-
-
-
-
-    sys.exit()
 
     # Example from NeurIPS 2021 paper Fig. 1A
     coeff = .5
@@ -2418,7 +2495,7 @@ if __name__ == '__main__':
     #     save_name='Example-Fig1A-TSG.pdf',
     #     figsize = (8, 8))
 
-    # aux_graph = causal_effects._get_latent_projection_graph(graph)
+    # aux_graph = causal_effects._get_latent_projection_graph()
     # # print(aux_graph)
 
     # graph_plot = np.zeros((graph.shape[0], graph.shape[1], tau_max+1), dtype='<U3') 
@@ -2562,14 +2639,14 @@ if __name__ == '__main__':
     true_ce_int2 = data[:,Y[0][0]].mean()
     # print(data[:,X[0][0]])
 
-    # causal_effects.fit_wrights_effect(dataframe=dataframe, 
+    # causal_effects.fit_wright_effect(dataframe=dataframe, 
     #     links_coeffs=links,
     #     method = 'optimal',
-    #      mediated_through=[],
+    #      mediation=[],
     #      # data_transform=sklearn.preprocessing.StandardScaler()
     #      )
-    # ce_obs = causal_effects.predict_wrights_effect(intervention_data=None)
-    # ce_int = causal_effects.predict_wrights_effect(intervention_data=intervention_data)
+    # ce_obs = causal_effects.predict_wright_effect(intervention_data=None)
+    # ce_int = causal_effects.predict_wright_effect(intervention_data=intervention_data)
 
 
     ## Expected change corresponds to linear regression coefficient
