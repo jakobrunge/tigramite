@@ -10,7 +10,7 @@ from copy import deepcopy
 from collections import defaultdict
 from tigramite.models import Models
 
-class CausalEffects:
+class CausalEffects():
     r"""General linear/nonparametric (conditional) causal effect analysis.
 
     Handles the estimation of causal effects given a causal graph. Various

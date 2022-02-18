@@ -1,5 +1,5 @@
 # Tigramite – Causal discovery for time series datasets
-Version 4.3
+Version 5.0
 
 (Python Package)
 
