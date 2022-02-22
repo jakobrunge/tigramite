@@ -2728,10 +2728,11 @@ variable index in the observed_vars and tau the time lag.</li>
 <dl class="class">
 <dt id="tigramite.causal_effects.CausalEffects">
 <em class="property">class </em><code class="descclassname">tigramite.causal_effects.</code><code class="descname">CausalEffects</code><span class="sig-paren">(</span><em>graph</em>, <em>graph_type</em>, <em>X</em>, <em>Y</em>, <em>S=None</em>, <em>hidden_variables=None</em>, <em>check_SM_overlap=True</em>, <em>verbosity=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/causal_effects.html#CausalEffects"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.causal_effects.CausalEffects" title="Permalink to this definition">¶</a></dt>
-<dd><p>General linear/nonparametric (conditional) causal effect analysis.</p>
-<p>Handles the estimation of causal effects given a causal graph. Various
-graph types are supported.</p>
-<p>STILL IN DEVELOPMENT!</p>
+<dd><p>Provides functions for causal effect analysis.</p>
+<dl class="docutils">
+<dt>Handles the estimation of non-parametric linear or non-parametric causal</dt>
+<dd>effects given a causal graph. Various graph types are supported.</dd>
+</dl>
 <p>See the corresponding tigramite tutorial for an in-depth introduction.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -2744,7 +2745,8 @@ Different graph types are supported, see tutorial.</li>
 <li><strong>Y</strong> (<em>list of tuples</em>) – List of tuples [(j, 0), …] containing effect variables.</li>
 <li><strong>S</strong> (<em>list of tuples</em>) – List of tuples [(i, -tau), …] containing conditioned variables.</li>
 <li><strong>graph_type</strong> (<em>str</em>) – Type of graph.</li>
-<li><strong>hidden_variables</strong> (<em>list</em>) – Hidden variables. The internal graph is constructed by marginalization.</li>
+<li><strong>hidden_variables</strong> (<em>list of tuples</em>) – Hidden variables in format [(i, -tau), …]. The internal graph is
+constructed by a latent projection.</li>
 <li><strong>check_SM_overlap</strong> (<em>bool</em>) – Whether to check whether S overlaps with M.</li>
 <li><strong>verbosity</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) – Level of verbosity.</li>
 </ul>
@@ -2771,13 +2773,12 @@ Different graph types are supported, see tutorial.</li>
 <dl class="method">
 <dt id="tigramite.causal_effects.CausalEffects.check_optimality">
 <code class="descname">check_optimality</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/causal_effects.html#CausalEffects.check_optimality"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.causal_effects.CausalEffects.check_optimality" title="Permalink to this definition">¶</a></dt>
-<dd><p>Check whether optimal adjustment set exists.</p>
-<p>See Theorem 3 in paper.</p>
+<dd><p>Check whether optimal adjustment set exists according to Thm. 3 in Runge NeurIPS 2021.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>optimality</strong> – Returns True if optimal adjustment set exists, otherwise False.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>optimality</strong> – Returns True if an optimal adjustment set exists, otherwise False.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
 </tr>
@@ -2825,7 +2826,7 @@ is not used. Explained in tutorial on masking and missing values.</li>
 <code class="descname">fit_wright_effect</code><span class="sig-paren">(</span><em>dataframe</em>, <em>mediation=None</em>, <em>method='parents'</em>, <em>links_coeffs=None</em>, <em>data_transform=None</em>, <em>mask_type=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/causal_effects.html#CausalEffects.fit_wright_effect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.causal_effects.CausalEffects.fit_wright_effect" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
 <dt>Returns a fitted model for the total or mediated causal effect of X on Y</dt>
-<dd>through mediator variables.</dd>
+<dd>potentially through mediator variables.</dd>
 </dl>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -2860,7 +2861,25 @@ is not used. Explained in tutorial on masking and missing values.</li>
 <dl class="method">
 <dt id="tigramite.causal_effects.CausalEffects.get_mediators">
 <code class="descname">get_mediators</code><span class="sig-paren">(</span><em>start</em>, <em>end</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/causal_effects.html#CausalEffects.get_mediators"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.causal_effects.CausalEffects.get_mediators" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns mediator variables on proper causal paths from X to Y</p>
+<dd><p>Returns mediator variables on proper causal paths.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>start</strong> (<em>set</em>) – Set of start nodes.</li>
+<li><strong>end</strong> (<em>set</em>) – Set of end nodes.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>mediators</strong> – Mediators on causal paths from start to end.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">set</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">

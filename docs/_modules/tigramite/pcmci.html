@@ -4093,7 +4093,7 @@
             <span class="n">data_window</span><span class="p">[</span><span class="n">w</span> <span class="o">+</span> <span class="n">window_length</span><span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">values</span> <span class="o">=</span> <span class="n">data_window</span>
-            <span class="n">window_res</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">)(</span><span class="o">**</span><span class="n">method_args</span><span class="p">)</span>
+            <span class="n">window_res</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">)(</span><span class="o">**</span><span class="n">method_args</span><span class="p">))</span>
 
             <span class="c1"># Aggregate val_matrix and other arrays to new arrays with</span>
             <span class="c1"># windows as first dimension. Lists and other objects</span>
@@ -4109,6 +4109,9 @@
                         <span class="n">window_results</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
                 
                 <span class="n">window_results</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">iw</span><span class="p">]</span> <span class="o">=</span> <span class="n">res_item</span>
+
+        <span class="c1"># Reset to original data for further analyses</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">values</span> <span class="o">=</span> <span class="n">original_data</span>
 
         <span class="c1"># Generate summary results</span>
         <span class="n">summary_results</span> <span class="o">=</span> <span class="p">{}</span>
