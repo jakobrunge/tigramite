@@ -3,6 +3,7 @@ python:
   # We don't actually use the Travis Python since we are using Conda, but this
   # keeps it organized.
   - "3.7"
+  - "3.9"
 install:
   - sudo apt-get update
   # We do this conditionally because it saves us some downloading if the
