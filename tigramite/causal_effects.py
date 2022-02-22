@@ -228,11 +228,11 @@ class CausalEffects():
             # estimate thereof is simply the lag-dimension of the stationary DAG plus
             # the maximum lag of X,S.
             statgraph_tau_max = graph.shape[2] - 1
-            maxlag_XS = 0
-            for varlag in self.X.union(self.S):
-                maxlag_XS = max(maxlag_XS, abs(varlag[1]))
+            maxlag_XYS = 0
+            for varlag in self.X.union(self.Y).union(self.S):
+                maxlag_XYS = max(maxlag_XYS, abs(varlag[1]))
 
-            tau_max = maxlag_XS + statgraph_tau_max
+            tau_max = maxlag_XYS + statgraph_tau_max
 
             stat_graph = deepcopy(graph)
 
