@@ -4032,7 +4032,7 @@ class PCMCI():
             data_window[w + window_length:] = np.nan
 
             self.dataframe.values = data_window
-            window_res = getattr(self, method)(**method_args)
+            window_res = deepcopy(getattr(self, method)(**method_args))
 
             # Aggregate val_matrix and other arrays to new arrays with
             # windows as first dimension. Lists and other objects
@@ -4048,6 +4048,9 @@ class PCMCI():
                         window_results[key] = {}
                 
                 window_results[key][iw] = res_item
+
+        # Reset to original data for further analyses
+        self.dataframe.values = original_data
 
         # Generate summary results
         summary_results = {}
