@@ -467,8 +467,7 @@ class GaussProcRegTorch():
 
 
 class GPDCtorch(CondIndTest):
-    r"""GPDC conditional independence test based on Gaussian processes and
-        distance correlation. Here with gpytorch implementation.
+    r"""GPDC conditional independence test based on Gaussian processes and distance correlation. Here with gpytorch implementation.
 
     GPDC is based on a Gaussian process (GP) regression and a distance
     correlation test on the residuals [2]_. GP is estimated with gpytorch.

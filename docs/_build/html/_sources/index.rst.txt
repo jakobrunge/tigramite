@@ -132,7 +132,7 @@ Derived classes:
 :mod:`tigramite.toymodels`: Toy model generators
 ===========================================================
 
-.. automodule:: tigramite.toymodels
+.. automodule:: tigramite.toymodels.structural_causal_processes
    :members:
 
 

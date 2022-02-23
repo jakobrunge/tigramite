@@ -1,4 +1,4 @@
-"""Tigramite data processing functions."""
+"""Tigramite toymodels."""
 
 # Author: Jakob Runge <jakob@jakob-runge.com>
 #
@@ -506,7 +506,7 @@ def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
     # Return the data
     return data, true_parents_neighbors
 
-class Graph():
+class _Graph():
     r"""Helper class to handle graph properties.
 
     Parameters
@@ -584,10 +584,15 @@ class Graph():
 def structural_causal_process(links, T, noises=None, 
                         intervention=None, intervention_type='hard',
                         seed=None):
-    """Returns a structural causal process with contemporaneous and lagged
-    dependencies.
+    """Returns a time series generated from a structural causal process.
 
-    Generates generalized additive noise model process of the form
+    Allows lagged and contemporaneous dependencies and includes the option
+    to have intervened variables or particular samples.
+
+    The interventional data is in particular useful for generating ground
+    truth for the CausalEffects class.
+
+    In more detail, the method implements a generalized additive noise model process of the form
 
     .. math:: X^j_t = \\eta^j_t + \\sum_{X^i_{t-\\tau}\\in \\mathcal{P}(X^j_t)}
               c^i_{\\tau} f^i_{\\tau}(X^i_{t-\\tau})
@@ -597,6 +602,9 @@ def structural_causal_process(links, T, noises=None,
     as a python callable with one argument and coeff is the multiplication
     factor. The noise distributions of :math:`\\eta^j` can be specified in
     ``noises``.
+
+    Through the parameters ``intervention`` and ``intervention_type`` the model
+    can also be generated with intervened variables.
 
     Parameters
     ----------
@@ -612,7 +620,7 @@ def structural_causal_process(links, T, noises=None,
     intervention : dict
         Dictionary of format: {1:np.array, ...} containing only keys of intervened
         variables with the value being the array of length T with interventional values.
-        Set values to np.nan to leave specific values of a variable un-intervened.
+        Set values to np.nan to leave specific time points of a variable un-intervened.
     intervention_type : str or dict
         Dictionary of format: {1:'hard',  3:'soft', ...} to specify whether intervention is 
         hard (set value) or soft (add value) for variable j. If str, all interventions have 
@@ -639,7 +647,7 @@ def structural_causal_process(links, T, noises=None,
 
     # Check parameters
     max_lag = 0
-    contemp_dag = Graph(N)
+    contemp_dag = _Graph(N)
     for j in range(N):
         for link_props in links[j]:
             var, lag = link_props[0]
@@ -758,47 +766,6 @@ def _get_children(parents):
 
     return children
 
-def links_to_graph(links, tau_max=None):
-    """Helper function to convert dictionary of links to graph array format.
-
-    Parameters
-    ---------
-    links : dict
-        Dictionary of form {0:[((0, -1), coeff, func), ...], 1:[...], ...}.
-    tau_max : int or None
-        Maximum lag. If None, the maximum lag in links is used.
-
-    Returns
-    -------
-    graph : array of shape (N, N, tau_max+1)
-        Matrix format of graph with 1 for true links and 0 else.
-    """
-    N = len(links)
-
-    # Get maximum time lag
-    min_lag, max_lag = _get_minmax_lag(links)
-
-    # Set maximum lag
-    if tau_max is None:
-        tau_max = max_lag
-    else:
-        if max_lag > tau_max:
-            raise ValueError("tau_max is smaller than maximum lag = %d "
-                             "found in links, use tau_max=None or larger "
-                             "value" % max_lag)
-
-    graph = np.zeros((N, N, tau_max + 1), dtype='<U3')
-    for j in links.keys():
-        for link_props in links[j]:
-            var, lag = link_props[0]
-            coeff = link_props[1]
-            if coeff != 0.:
-                graph[var, j, abs(lag)] = "-->"
-                if lag == 0:
-                    graph[j, var, 0] = "<--"
-
-
-    return graph
 
 class _Logger(object):
     """Class to append print output to a string which can be saved"""

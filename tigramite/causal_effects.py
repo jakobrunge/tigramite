@@ -11,17 +11,34 @@ from collections import defaultdict
 from tigramite.models import Models
 
 class CausalEffects():
-    r"""Provides functions for causal effect analysis.
+    r"""Causal effect estimation.
 
-    Handles the estimation of non-parametric linear or non-parametric causal
-     effects given a causal graph. Various graph types are supported.
+    Methods for the estimation of linear or non-parametric causal effects 
+    between (potentially multivariate) X and Y (potentially conditional 
+    on S) by (generalized) backdoor adjustment. Various graph types are 
+    supported, also including hidden variables.
+    
+    Linear and non-parametric estimators are based on sklearn. For the 
+    linear case without hidden variables also an efficient estimation 
+    based on Wright's path coefficients is available. This estimator 
+    also allows to estimate mediation effects.
 
-    See the corresponding tigramite tutorial for an in-depth introduction. 
+    See the corresponding paper [6]_ and tigramite tutorial for an 
+    in-depth introduction. 
+
+    References
+    ----------
+
+    .. [6] J. Runge, Necessary and sufficient graphical conditions for
+           optimal adjustment sets in causal graphical models with 
+           hidden variables, Advances in Neural Information Processing
+           Systems, 2021, 34 
+           https://proceedings.neurips.cc/paper/2021/hash/8485ae387a981d783f8764e508151cd9-Abstract.html
+
 
     Parameters
     ----------
-    graph : array of either shape [N, N], [N, N, tau_max+1],
-        or [N, N, tau_max+1, tau_max+1]
+    graph : array of either shape [N, N], [N, N, tau_max+1], or [N, N, tau_max+1, tau_max+1]
         Different graph types are supported, see tutorial.
     X : list of tuples
         List of tuples [(i, -tau), ...] containing cause variables.
@@ -51,7 +68,18 @@ class CausalEffects():
                  verbosity=0):
         
         self.verbosity = verbosity
+        self.N = graph.shape[0]
 
+        if S is None:
+            S = []
+
+        X = set(X)
+        Y = set(Y)
+        S = set(S)    
+
+        # 
+        # Checks regarding graph type
+        #
         supported_graphs = ['dag', 
                             'admg',
                             'tsg_dag',
@@ -66,26 +94,10 @@ class CausalEffects():
                             # 'tsg_pag',
                             # 'stationary_pag',
                             ]
-
-        # Not needed for now...
-        # self.ignore_time_bounds = False
-
-        self.N = graph.shape[0]
-
-        if S is None:
-            S = []
-
-        X = set(X)
-        Y = set(Y)
-        S = set(S)    
-
-        # 
-        # Checks regarding graph type
-        #
         if graph_type not in supported_graphs:
             raise ValueError("Only graph types %s supported!" %supported_graphs)
 
-        # TODO: check that masking aligns with hidden samples in variables
+        # TODO?: check that masking aligns with hidden samples in variables
         if hidden_variables is None:
             hidden_variables = []
         
@@ -97,12 +109,16 @@ class CausalEffects():
         self.Y = Y
         self.S = S
 
+        # Only needed for later extension to MAG/PAGs
         if 'pag' in graph_type:
             self.possible = True 
             self.definite_status = True
         else:
             self.possible = False
             self.definite_status = False
+
+        # Not needed for now...
+        # self.ignore_time_bounds = False
 
         # Construct internal graph from input graph depending on graph type
         # and hidden variables
@@ -118,7 +134,13 @@ class CausalEffects():
 
         # If X is not in anc(Y), then no causal link exists
         if anc_Y.intersection(set(X)) == set():
-            raise ValueError("No causal path from X to Y exists.")
+            self.no_causal_path = True
+            if self.verbosity > 0:
+                print("No causal path from X to Y exists.")
+
+            # raise ValueError("No causal path from X to Y exists.")
+        else:
+            self.no_causal_path = False
 
         # Get mediators
         mediators = self.get_mediators(start=self.X, end=self.Y) 
@@ -178,6 +200,8 @@ class CausalEffects():
                 print("\nhidden_variables = %s" % self.hidden_variables
                       ) 
             print("\n\n")
+            if self.no_causal_path:
+                print("No causal path from X to Y exists!")
 
 
     def _construct_graph(self, graph, graph_type, hidden_variables):
@@ -382,7 +406,8 @@ class CausalEffects():
                 )
 
             if edge not in allowed_edges:
-                raise ValueError("Invalid graph edge %s." %(edge))
+                raise ValueError("Invalid graph edge %s. " %(edge) +
+                                 "For graph_type = %s only %s are allowed." %(self.graph_type, str(allowed_edges)))
 
             if edge == "-->" or edge == "+->":
                 # Map to (i,-taui, j, tauj) graph
@@ -1780,6 +1805,11 @@ class CausalEffects():
             is not used. Explained in tutorial on masking and missing values.
         """
 
+        if self.no_causal_path:
+            if self.verbosity > 0:
+                print("No causal path from X to Y exists.")
+            return self
+
         self.dataframe = dataframe
         self.conditional_estimator = conditional_estimator
 
@@ -1847,6 +1877,11 @@ class CausalEffects():
             if conditions_data.shape[0] != intervention_data.shape[0]:
                 raise ValueError("conditions_data.shape[0] must match intervention_data.shape[0].")
 
+        if self.no_causal_path:
+            if self.verbosity > 0:
+                print("No causal path from X to Y exists.")
+            return np.zeros((len(intervention_data), len(self.Y)))
+
         effect = self.model.get_general_prediction(
             intervention_data=intervention_data,
             conditions_data=conditions_data,
@@ -1892,6 +1927,11 @@ class CausalEffects():
             measure I(X; Y | Z) the samples should be masked. If None, the mask
             is not used. Explained in tutorial on masking and missing values.
         """
+
+        if self.no_causal_path:
+            if self.verbosity > 0:
+                print("No causal path from X to Y exists.")
+            return self
 
         import sklearn.linear_model
 
@@ -2025,7 +2065,7 @@ class CausalEffects():
 
     
     def predict_wright_effect(self, 
-        intervention_data=None, 
+        intervention_data, 
         pred_params=None,
         ):
         """Predict linear effect of intervention with fitted Wright-model.
@@ -2043,6 +2083,11 @@ class CausalEffects():
         """
         if intervention_data.shape[1] != len(self.X):
             raise ValueError("intervention_data.shape[1] must be len(X).")
+
+        if self.no_causal_path:
+            if self.verbosity > 0:
+                print("No causal path from X to Y exists.")
+            return np.zeros((len(intervention_data), len(self.Y)))
 
         effect = self.model.get_general_prediction(
             intervention_data=intervention_data,

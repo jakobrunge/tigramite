@@ -1740,7 +1740,7 @@ def plot_graph(
     # net = _get_absmax(link_matrix != "")
     net = np.any(link_matrix_upper != "", axis=2)
     G = nx.DiGraph(net)
-
+    
     # This handels Graphs with no links.
     # nx.draw(G, alpha=0, zorder=-10)
 

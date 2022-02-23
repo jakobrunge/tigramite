@@ -564,6 +564,9 @@ class LinearMediation(Models):
     as causal effect, mediated causal effect, average causal effect, etc. as
     described in [4]_.
 
+    For general nonlinear, lagged and contemporaneous causal effect analysis, 
+    use the CausalEffects class.
+
     Notes
     -----
     This class implements the following causal mediation measures introduced in

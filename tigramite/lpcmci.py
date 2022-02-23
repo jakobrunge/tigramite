@@ -15,7 +15,7 @@ class LPCMCI():
     This method is still EXPERIMENTAL since the default settings of hyperparameters are still being fine-tuned. We actually invite
     feedback on which work best in applications and numerical experiments.
 
-    The main function, which applies the algorithm, is 'run_lpcmci_experimental'.
+    The main function, which applies the algorithm, is 'run_lpcmci'.
 
     Parameters passed to the constructor:
     - dataframe:
@@ -23,9 +23,9 @@ class LPCMCI():
     - cond_ind_test:
         A conditional independence test object that specifies which conditional independence test CI is to be used
     - verbosity:
-        Controls the verbose output self.run_lpcmci_experimental() and the function it calls.
+        Controls the verbose output self.run_lpcmci() and the function it calls.
 
-    Parameters passed to self.run_lpcmci_experimental():
+    Parameters passed to self.run_lpcmci():
     Note: The default values are still being tuned and some parameters might be removed in the future.
     - selected_links: dict or None
         Dictionary of the form {0: [(3, 0), (0, -1), ...], 1:[], ...} that specifys which links are potentially present. All other links
@@ -103,7 +103,7 @@ class LPCMCI():
         If no_apr == 1: The APR is not applied by Algorithm S2, except in line 22 of its last call directly before the call of Algorithm S3
         If no_apr == 2: The APR is never applied
 
-    Return value of self.run_lpcmci_experimental():
+    Return value of self.run_lpcmci():
         graph : array of shape (N, N, tau_max+1)
             Resulting DPAG, representing the learned causal relationships.
         val_matrix : array of shape (N, N, tau_max+1)
@@ -139,7 +139,7 @@ class LPCMCI():
         self.verbosity = verbosity
 
 
-    def run_lpcmci_experimental(self,
+    def run_lpcmci(self,
                     selected_links = None,
                     tau_min = 0,
                     tau_max = 1, 
@@ -302,11 +302,11 @@ class LPCMCI():
         break_once_separated, no_non_ancestral_phase, use_a_pds_t_for_majority, orient_contemp, update_middle_marks, prelim_rules,
         fix_all_edges_before_final_orientation, auto_first, remember_only_parents, no_apr):
         """Function for
-            i)      saving the arguments passed to self.run_lpcmci_experimental() as instance attributes
+            i)      saving the arguments passed to self.run_lpcmci() as instance attributes
             ii)     initializing various memory variables for storing the current graph, sepsets etc.
             """
 
-        # Save the arguments passed to self.run_lpcmci_experimental()
+        # Save the arguments passed to self.run_lpcmci()
         self.selected_links = selected_links
         self.tau_min = tau_min
         self.tau_max = tau_max
@@ -3403,7 +3403,7 @@ if __name__ == '__main__':
     dataframe = pp.DataFrame(data)
     cond_ind_test = ParCorr()
     pcmci = LPCMCI(dataframe=dataframe, cond_ind_test=cond_ind_test)
-    results = pcmci.run_lpcmci_experimental(tau_max=2, pc_alpha=0.01)
+    results = pcmci.run_lpcmci(tau_max=2, pc_alpha=0.01)
 
     # For a proper causal interpretation of the graph see the paper!
     print(results['graph'])

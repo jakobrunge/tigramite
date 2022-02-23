@@ -1,30 +1,21 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>tigramite.causal_effects &#8212; Tigramite 5.0 documentation</title>
     <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../../',
-        VERSION:     '5.0',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
-    <script type="text/javascript" src="../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
-  </head>
-  <body>
+  </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -35,23 +26,10 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 5.0 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">tigramite.causal_effects</a></li> 
       </ul>
-    </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="../../search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
+    </div>  
 
     <div class="document">
       <div class="documentwrapper">
@@ -67,22 +45,39 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">itertools</span>
-<span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">deepcopy</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
-<span class="kn">from</span> <span class="nn">tigramite.models</span> <span class="k">import</span> <span class="n">Models</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">tigramite.models</span> <span class="kn">import</span> <span class="n">Models</span>
 
 <div class="viewcode-block" id="CausalEffects"><a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects">[docs]</a><span class="k">class</span> <span class="nc">CausalEffects</span><span class="p">():</span>
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Provides functions for causal effect analysis.</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Causal effect estimation.</span>
 
-<span class="sd">    Handles the estimation of non-parametric linear or non-parametric causal</span>
-<span class="sd">     effects given a causal graph. Various graph types are supported.</span>
+<span class="sd">    Methods for the estimation of linear or non-parametric causal effects </span>
+<span class="sd">    between (potentially multivariate) X and Y (potentially conditional </span>
+<span class="sd">    on S) by (generalized) backdoor adjustment. Various graph types are </span>
+<span class="sd">    supported, also including hidden variables.</span>
+<span class="sd">    </span>
+<span class="sd">    Linear and non-parametric estimators are based on sklearn. For the </span>
+<span class="sd">    linear case without hidden variables also an efficient estimation </span>
+<span class="sd">    based on Wright&#39;s path coefficients is available. This estimator </span>
+<span class="sd">    also allows to estimate mediation effects.</span>
 
-<span class="sd">    See the corresponding tigramite tutorial for an in-depth introduction. </span>
+<span class="sd">    See the corresponding paper [6]_ and tigramite tutorial for an </span>
+<span class="sd">    in-depth introduction. </span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    .. [6] J. Runge, Necessary and sufficient graphical conditions for</span>
+<span class="sd">           optimal adjustment sets in causal graphical models with </span>
+<span class="sd">           hidden variables, Advances in Neural Information Processing</span>
+<span class="sd">           Systems, 2021, 34 </span>
+<span class="sd">           https://proceedings.neurips.cc/paper/2021/hash/8485ae387a981d783f8764e508151cd9-Abstract.html</span>
+
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    graph : array of either shape [N, N], [N, N, tau_max+1],</span>
-<span class="sd">        or [N, N, tau_max+1, tau_max+1]</span>
+<span class="sd">    graph : array of either shape [N, N], [N, N, tau_max+1], or [N, N, tau_max+1, tau_max+1]</span>
 <span class="sd">        Different graph types are supported, see tutorial.</span>
 <span class="sd">    X : list of tuples</span>
 <span class="sd">        List of tuples [(i, -tau), ...] containing cause variables.</span>
@@ -101,7 +96,7 @@
 <span class="sd">        Level of verbosity.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">graph</span><span class="p">,</span>
                  <span class="n">graph_type</span><span class="p">,</span>
                  <span class="n">X</span><span class="p">,</span>
@@ -112,7 +107,18 @@
                  <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">=</span> <span class="n">verbosity</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
+        <span class="k">if</span> <span class="n">S</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">S</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">X</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
+        <span class="n">S</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>    
+
+        <span class="c1"># </span>
+        <span class="c1"># Checks regarding graph type</span>
+        <span class="c1">#</span>
         <span class="n">supported_graphs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;dag&#39;</span><span class="p">,</span> 
                             <span class="s1">&#39;admg&#39;</span><span class="p">,</span>
                             <span class="s1">&#39;tsg_dag&#39;</span><span class="p">,</span>
@@ -127,26 +133,10 @@
                             <span class="c1"># &#39;tsg_pag&#39;,</span>
                             <span class="c1"># &#39;stationary_pag&#39;,</span>
                             <span class="p">]</span>
-
-        <span class="c1"># Not needed for now...</span>
-        <span class="c1"># self.ignore_time_bounds = False</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-
-        <span class="k">if</span> <span class="n">S</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">S</span> <span class="o">=</span> <span class="p">[]</span>
-
-        <span class="n">X</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="n">Y</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
-        <span class="n">S</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>    
-
-        <span class="c1"># </span>
-        <span class="c1"># Checks regarding graph type</span>
-        <span class="c1">#</span>
         <span class="k">if</span> <span class="n">graph_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">supported_graphs</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only graph types </span><span class="si">%s</span><span class="s2"> supported!&quot;</span> <span class="o">%</span><span class="n">supported_graphs</span><span class="p">)</span>
 
-        <span class="c1"># TODO: check that masking aligns with hidden samples in variables</span>
+        <span class="c1"># TODO?: check that masking aligns with hidden samples in variables</span>
         <span class="k">if</span> <span class="n">hidden_variables</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">hidden_variables</span> <span class="o">=</span> <span class="p">[]</span>
         
@@ -158,12 +148,16 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">S</span> <span class="o">=</span> <span class="n">S</span>
 
+        <span class="c1"># Only needed for later extension to MAG/PAGs</span>
         <span class="k">if</span> <span class="s1">&#39;pag&#39;</span> <span class="ow">in</span> <span class="n">graph_type</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">possible</span> <span class="o">=</span> <span class="kc">True</span> 
             <span class="bp">self</span><span class="o">.</span><span class="n">definite_status</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">possible</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">definite_status</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># Not needed for now...</span>
+        <span class="c1"># self.ignore_time_bounds = False</span>
 
         <span class="c1"># Construct internal graph from input graph depending on graph type</span>
         <span class="c1"># and hidden variables</span>
@@ -179,7 +173,13 @@
 
         <span class="c1"># If X is not in anc(Y), then no causal link exists</span>
         <span class="k">if</span> <span class="n">anc_Y</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">X</span><span class="p">))</span> <span class="o">==</span> <span class="nb">set</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No causal path from X to Y exists.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">no_causal_path</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No causal path from X to Y exists.&quot;</span><span class="p">)</span>
+
+            <span class="c1"># raise ValueError(&quot;No causal path from X to Y exists.&quot;)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">no_causal_path</span> <span class="o">=</span> <span class="kc">False</span>
 
         <span class="c1"># Get mediators</span>
         <span class="n">mediators</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_mediators</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">)</span> 
@@ -239,6 +239,8 @@
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">hidden_variables = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">hidden_variables</span>
                       <span class="p">)</span> 
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">no_causal_path</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No causal path from X to Y exists!&quot;</span><span class="p">)</span>
 
 
     <span class="k">def</span> <span class="nf">_construct_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">graph_type</span><span class="p">,</span> <span class="n">hidden_variables</span><span class="p">):</span>
@@ -443,7 +445,8 @@
                 <span class="p">)</span>
 
             <span class="k">if</span> <span class="n">edge</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allowed_edges</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid graph edge </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span><span class="p">(</span><span class="n">edge</span><span class="p">))</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid graph edge </span><span class="si">%s</span><span class="s2">. &quot;</span> <span class="o">%</span><span class="p">(</span><span class="n">edge</span><span class="p">)</span> <span class="o">+</span>
+                                 <span class="s2">&quot;For graph_type = </span><span class="si">%s</span><span class="s2"> only </span><span class="si">%s</span><span class="s2"> are allowed.&quot;</span> <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph_type</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">allowed_edges</span><span class="p">)))</span>
 
             <span class="k">if</span> <span class="n">edge</span> <span class="o">==</span> <span class="s2">&quot;--&gt;&quot;</span> <span class="ow">or</span> <span class="n">edge</span> <span class="o">==</span> <span class="s2">&quot;+-&gt;&quot;</span><span class="p">:</span>
                 <span class="c1"># Map to (i,-taui, j, tauj) graph</span>
@@ -1841,6 +1844,11 @@
 <span class="sd">            is not used. Explained in tutorial on masking and missing values.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">no_causal_path</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No causal path from X to Y exists.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span> <span class="o">=</span> <span class="n">dataframe</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">conditional_estimator</span> <span class="o">=</span> <span class="n">conditional_estimator</span>
 
@@ -1908,6 +1916,11 @@
             <span class="k">if</span> <span class="n">conditions_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">intervention_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;conditions_data.shape[0] must match intervention_data.shape[0].&quot;</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">no_causal_path</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No causal path from X to Y exists.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">intervention_data</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">)))</span>
+
         <span class="n">effect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">get_general_prediction</span><span class="p">(</span>
             <span class="n">intervention_data</span><span class="o">=</span><span class="n">intervention_data</span><span class="p">,</span>
             <span class="n">conditions_data</span><span class="o">=</span><span class="n">conditions_data</span><span class="p">,</span>
@@ -1953,6 +1966,11 @@
 <span class="sd">            measure I(X; Y | Z) the samples should be masked. If None, the mask</span>
 <span class="sd">            is not used. Explained in tutorial on masking and missing values.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">no_causal_path</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No causal path from X to Y exists.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span>
 
         <span class="kn">import</span> <span class="nn">sklearn.linear_model</span>
 
@@ -2068,7 +2086,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">cut_off</span> <span class="o">=</span> <span class="s1">&#39;max_lag_or_tau_max&#39;</span>
 
         <span class="k">class</span> <span class="nc">dummy_fit_class</span><span class="p">():</span>
-            <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_here</span><span class="p">,</span> <span class="n">listX_here</span><span class="p">,</span> <span class="n">effect_here</span><span class="p">):</span>
+            <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_here</span><span class="p">,</span> <span class="n">listX_here</span><span class="p">,</span> <span class="n">effect_here</span><span class="p">):</span>
                 <span class="n">dim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">listX_here</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">coeff_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">effect_here</span><span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">y_here</span><span class="p">)]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">listX_here</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
             <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
@@ -2086,7 +2104,7 @@
 
     
 <div class="viewcode-block" id="CausalEffects.predict_wright_effect"><a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.predict_wright_effect">[docs]</a>    <span class="k">def</span> <span class="nf">predict_wright_effect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
-        <span class="n">intervention_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+        <span class="n">intervention_data</span><span class="p">,</span> 
         <span class="n">pred_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Predict linear effect of intervention with fitted Wright-model.</span>
@@ -2105,6 +2123,11 @@
         <span class="k">if</span> <span class="n">intervention_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;intervention_data.shape[1] must be len(X).&quot;</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">no_causal_path</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No causal path from X to Y exists.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">intervention_data</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">)))</span>
+
         <span class="n">effect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">get_general_prediction</span><span class="p">(</span>
             <span class="n">intervention_data</span><span class="o">=</span><span class="n">intervention_data</span><span class="p">,</span>
             <span class="n">conditions_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -2113,7 +2136,22 @@
         <span class="k">return</span> <span class="n">effect</span></div></div>
 </pre></div>
 
+            <div class="clearer"></div>
           </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -2128,12 +2166,13 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 5.0 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">tigramite.causal_effects</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2021, Jakob Runge.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
     </div>
   </body>
 </html>

@@ -42,7 +42,7 @@ Tigramite is a causal time series analysis python package. It allows to efficien
 - Mediation class: J. Runge et al. (2015): Identifying causal gateways and mediators in complex spatio-temporal systems. Nature Communications, 6, 8502. http://doi.org/10.1038/ncomms9502
 - Mediation class: J. Runge (2015): Quantifying information transfer and mediation along causal pathways in complex systems. Phys. Rev. E, 92(6), 62829. http://doi.org/10.1103/PhysRevE.92.062829
 - CMIknn: J. Runge (2018): Conditional Independence Testing Based on a Nearest-Neighbor Estimator of Conditional Mutual Information. In Proceedings of the 21st International Conference on Artificial Intelligence and Statistics. http://proceedings.mlr.press/v84/runge18a.html
-- J. Runge, Necessary and sufficient graphical conditions for optimal adjustment sets in causal graphical models with hidden variables, Advances in Neural Information Processing Systems, 2021, 34
+- J. Runge, Necessary and sufficient graphical conditions for optimal adjustment sets in causal graphical models with hidden variables, Advances in Neural Information Processing Systems, 2021, 34. https://proceedings.neurips.cc/paper/2021/hash/8485ae387a981d783f8764e508151cd9-Abstract.html
 
 ## Features
 
@@ -54,7 +54,7 @@ Tigramite is a causal time series analysis python package. It allows to efficien
 - parallel computing script based on mpi4py
 - handling of missing values and masks
 - p-value correction and confidence interval estimation
-- causal effect class to  non-parametrically estimate (conditional) causal effects and also mediated causal effects
+- causal effect class to  non-parametrically estimate (conditional) causal effects and also linear mediated causal effects
 - prediction class based on sklearn models including causal feature selection
 - GUI covering basic functionality on https://github.com/stbachinger/TigramiteGui
 
@@ -66,12 +66,12 @@ Tigramite is a causal time series analysis python package. It allows to efficien
 - scipy
 - numba
 
-## Optional packages depending on the test
+## Optional packages depending on used functions
 - scikit-learn>=0.21  # Gaussian Process (GP) Regression
 - matplotlib>=3.4.0   # Plotting
 - networkx>=2.4       # Plotting
 - torch>=1.7          # GPDC torch version
-- gpytorch>=1.4       # GPDC gpytorch version
+- gpytorch>=1.4       # GPDC torch version
 - dcor>=0.5.3         # GPDC distance correlation version
 
 ## Installation

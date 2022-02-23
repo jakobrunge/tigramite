@@ -308,8 +308,7 @@ class GaussProcReg():
         return score
 
 class GPDC(CondIndTest):
-    r"""GPDC conditional independence test based on Gaussian processes and
-        distance correlation.
+    r"""GPDC conditional independence test based on Gaussian processes and distance correlation.
 
     GPDC is based on a Gaussian process (GP) regression and a distance
     correlation test on the residuals [2]_. GP is estimated with scikit-learn
