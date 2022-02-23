@@ -8,6 +8,7 @@ import pytest
 import sys
 
 import tigramite.data_processing as pp
+from tigramite.toymodels import structural_causal_processes as toys
 
 # Pylint settings
 # pylint: disable=redefined-outer-name
@@ -61,7 +62,7 @@ def test_construct_array(cstrct_array_params):
     (x_nds, y_nds, z_nds), tau_max, missing_vals, mask_type =\
         cstrct_array_params
     # Make some fake data
-    data = np.arange(1000).reshape(10, 100).T
+    data = np.arange(1000).reshape(10, 100).T.astype('float')
     # Get the needed parameters from the data
     T, N = data.shape
     max_lag = 2*tau_max
@@ -111,9 +112,9 @@ def test_construct_array(cstrct_array_params):
              if (node not in x_nds) and (node not in y_nds)]
 
     # Get the expected results
-    expect_array = np.array([list(range(data[time-n_times, node],
+    expect_array = np.array([list(np.arange(data[time-n_times, node],
                                         data[time-n_times, node]+n_times))
-                             for node, time in x_nds + y_nds + z_nds])
+                             for node, time in x_nds + y_nds + z_nds]).astype('float')
     expect_xyz = np.array([0 for _ in x_nds] +\
                           [1 for _ in y_nds] +\
                           [2 for _ in z_nds])

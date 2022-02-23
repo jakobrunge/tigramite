@@ -6,6 +6,7 @@ import copy
 import pytest
 import numpy as np
 import tigramite.data_processing as pp
+from tigramite.toymodels import structural_causal_processes as toys
 
 # Pylint settings
 # pylint: disable=redefined-outer-name
@@ -86,7 +87,7 @@ def gen_process(a_process):
     # Deducte the max time from the expected answer shape
     max_time = expect.shape[0]
     # Generate the data
-    data, true_parents_neighbors = pp.var_process(coefs,
+    data, true_parents_neighbors = toys.var_process(coefs,
                                                   T=max_time,
                                                   initial_values=init_vals,
                                                   use="no_noise")
@@ -185,17 +186,17 @@ def test_bad_parameters(bad_parameter_sets):
                               "parent-neighbour dictionary"
     # Test the good parameter set
     try:
-        pp._check_parent_neighbor(good_params)
-        covar = pp._get_covariance_matrix(good_params)
-        pp._check_symmetric_relations(covar)
+        toys._check_parent_neighbor(good_params)
+        covar = toys._get_covariance_matrix(good_params)
+        toys._check_symmetric_relations(covar)
     # Ensure no exception is raised
     except:
         pytest.fail("Good parameter set triggers exception incorrectly!")
     # Ensure an exception is raised for a bad parameter set
     with pytest.raises(ValueError):
-        pp._check_parent_neighbor(bad_params)
-        covar = pp._get_covariance_matrix(bad_params)
-        pp._check_symmetric_relations(covar)
+        toys._check_parent_neighbor(bad_params)
+        covar = toys._get_covariance_matrix(bad_params)
+        toys._check_symmetric_relations(covar)
         pytest.fail(error_message)
 
 # TEST STABILITY CHECKING ######################################################
@@ -225,8 +226,8 @@ def unstable_parameter_sets(request):
             # Autocorrelate each node N with delay N and the given coefficient
             a_params[node_id] = [((node_id, -delay), a_coef)]
     # Return the stable and unstable coefficients
-    return pp._get_lag_connect_matrix(stab_params),\
-           pp._get_lag_connect_matrix(unst_params),\
+    return toys._get_lag_connect_matrix(stab_params),\
+           toys._get_lag_connect_matrix(unst_params),\
            message
 
 def test_stability_parameters(unstable_parameter_sets):
@@ -240,13 +241,13 @@ def test_stability_parameters(unstable_parameter_sets):
                               "_var_network graph."
     # Test the good parameter set
     try:
-        pp._check_stability(stab_matrix)
+        toys._check_stability(stab_matrix)
     # Ensure no exception is raised
     except:
         pytest.fail("Stable matrix set triggers exception incorrectly!")
     # Ensure an exception is raised for a bad parameter set
     with pytest.raises(AssertionError):
-        pp._check_stability(unst_matrix)
+        toys._check_stability(unst_matrix)
         pytest.fail(error_message)
 
 # TEST NOISE GENERATION ########################################################
@@ -266,7 +267,7 @@ def covariance_parameters(request):
                       ((1, 0), default_coef * 2.)]
     good_params[3] = [((3, 0), default_coef * 4.)]
     # Get the innovation matrix
-    covar_matrix = pp._get_covariance_matrix(good_params)
+    covar_matrix = toys._get_covariance_matrix(good_params)
     return good_params, covar_matrix
 
 def test_symmetric_covariance(covariance_parameters):
@@ -291,7 +292,7 @@ def test_covariance_construction(covariance_parameters):
     # Unpack the covariance matrix and parameters
     good_params, covar_matrix = covariance_parameters
     # Check the values are passed correctly
-    for j, i, _, coeff in pp._iter_coeffs(good_params):
+    for j, i, _, coeff in toys._iter_coeffs(good_params):
         covar_coeff = covar_matrix[j, i]
         err_message = "Node {} and parent node {} have".format(j, i)+\
                         " coefficient {} for tau == 0,\nbut the".format(coeff)+\
@@ -306,7 +307,7 @@ def test_noise_generation(covariance_parameters):
     # Unpack the parameters and covariance matrix
     good_params, covar_matrix = covariance_parameters
     # Generate noise-only from this parameter set
-    data, _ = pp.var_process(good_params, T=10000, use='inno_cov',
+    data, _ = toys.var_process(good_params, T=10000, use='inno_cov',
                              verbosity=0, initial_values=None)
     # Get the covariance of the data set
     covar_result = np.cov(data.T)

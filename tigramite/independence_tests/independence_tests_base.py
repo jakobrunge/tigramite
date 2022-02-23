@@ -27,11 +27,10 @@ class CondIndTest():
         Seed for RandomState (default_rng)
 
     mask_type : str, optional (default = None)
-        Must be in {'y','x','z','xy','xz','yz','xyz'}
+        Must be in {None, 'y','x','z','xy','xz','yz','xyz'}
         Masking mode: Indicators for which variables in the dependence measure
-        I(X; Y | Z) the samples should be masked. If None, 'y' is used, which
-        excludes all time slices containing masked samples in Y. Explained in
-        [1]_.
+        I(X; Y | Z) the samples should be masked. If None, the mask is not used. 
+        Explained in tutorial on masking and missing values.
 
     significance : str, optional (default: 'analytic')
         Type of significance test to use. In this package 'analytic',
@@ -133,11 +132,10 @@ class CondIndTest():
         Parameters
         ----------
         mask_type : str
-            Must be in {'y','x','z','xy','xz','yz','xyz'}
-            Masking mode: Indicators for which variables in the dependence
-            measure I(X; Y | Z) the samples should be masked. If None, 'y' is
-            used, which excludes all time slices containing masked samples in Y.
-            Explained in [1]_.
+            Must be in {None, 'y','x','z','xy','xz','yz','xyz'}
+            Masking mode: Indicators for which variables in the dependence measure
+            I(X; Y | Z) the samples should be masked. If None, the mask is not used. 
+            Explained in tutorial on masking and missing values.
         """
         # Set the mask type
         self.mask_type = mask_type
@@ -183,11 +181,10 @@ class CondIndTest():
     def _check_mask_type(self):
         """
         mask_type : str, optional (default = None)
-            Must be in {'y','x','z','xy','xz','yz','xyz'}
-            Masking mode: Indicators for which variables in the dependence
-            measure I(X; Y | Z) the samples should be masked. If None, 'y' is
-            used, which excludes all time slices containing masked samples in Y.
-            Explained in [1]_.
+            Must be in {None, 'y','x','z','xy','xz','yz','xyz'}
+            Masking mode: Indicators for which variables in the dependence measure
+            I(X; Y | Z) the samples should be masked. If None, the mask is not used. 
+            Explained in tutorial on masking and missing values.
         """
         if self.mask_type is not None:
             mask_set = set(self.mask_type) - set(['x', 'y', 'z'])
@@ -628,32 +625,35 @@ class CondIndTest():
             if self.confidence == 'bootstrap' and  half_conf < 1.:
                 raise ValueError("conf_samples*(1.-conf_lev)/2 is %.2f"
                                  % half_conf + ", must be >> 1")
-        # Make and check the array
-        array, xyz, _ = self._get_array(X, Y, Z, tau_max, verbosity=0)
-        dim, T = array.shape
-        if np.isnan(array).sum() != 0:
-            raise ValueError("nans in the array!")
 
-        # Check if we are using analytic confidence or bootstrapping it
-        if self.confidence == 'analytic':
-            val = self.get_dependence_measure(array, xyz)
-            (conf_lower, conf_upper) = \
-                    self.get_analytic_confidence(df=T-dim,
-                                                 value=val,
-                                                 conf_lev=self.conf_lev)
-        elif self.confidence == 'bootstrap':
-            # Overwrite analytic values
-            (conf_lower, conf_upper) = \
-                    self.get_bootstrap_confidence(
-                        array, xyz,
-                        conf_samples=self.conf_samples,
-                        conf_blocklength=self.conf_blocklength,
-                        conf_lev=self.conf_lev, verbosity=self.verbosity)
-        elif not self.confidence:
-            return None
+        if self.confidence:
+            # Make and check the array
+            array, xyz, _ = self._get_array(X, Y, Z, tau_max, verbosity=0)
+            dim, T = array.shape
+            if np.isnan(array).sum() != 0:
+                raise ValueError("nans in the array!")
+
+            # Check if we are using analytic confidence or bootstrapping it
+            if self.confidence == 'analytic':
+                val = self.get_dependence_measure(array, xyz)
+                (conf_lower, conf_upper) = \
+                        self.get_analytic_confidence(df=T-dim,
+                                                     value=val,
+                                                     conf_lev=self.conf_lev)
+            elif self.confidence == 'bootstrap':
+                # Overwrite analytic values
+                (conf_lower, conf_upper) = \
+                        self.get_bootstrap_confidence(
+                            array, xyz,
+                            conf_samples=self.conf_samples,
+                            conf_blocklength=self.conf_blocklength,
+                            conf_lev=self.conf_lev, verbosity=self.verbosity)
+            else:
+                raise ValueError("%s confidence estimation not implemented"
+                                 % self.confidence)
         else:
-            raise ValueError("%s confidence estimation not implemented"
-                             % self.confidence)
+            return None
+
         # Cache the confidence interval
         self.conf = (conf_lower, conf_upper)
         # Return the confidence interval
@@ -747,7 +747,7 @@ class CondIndTest():
         # Generate the block bootstrapped distribution
         bootdist = np.zeros(conf_samples)
         for smpl in range(conf_samples):
-            # Get the starting indecies for the blocks
+            # Get the starting indices for the blocks
             blk_strt = self.random_state.integers(0, T - conf_blocklength + 1, n_blks)
             # Get the empty array of block resampled values
             array_bootstrap = \
@@ -953,8 +953,6 @@ class CondIndTest():
 
             null_dist[sam] = dependence_measure(array=array_shuffled,
                                                 xyz=xyz)
-
-        null_dist.sort()
 
         return null_dist
 

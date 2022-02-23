@@ -8,6 +8,7 @@ import sklearn.linear_model
 
 from tigramite.models import LinearMediation
 import tigramite.data_processing as pp
+from tigramite.toymodels import structural_causal_processes as toys
 from tigramite.models import Prediction
 from tigramite.independence_tests import ParCorr
 
@@ -38,7 +39,7 @@ def test_linear_mediation_coeffs(data_frame_a):
     # Fit the model
     med.fit_model(all_parents=true_parents, tau_max=3)
     # Ensure the results make sense
-    for j, i, tau, coeff in pp._iter_coeffs(links_coeffs):
+    for j, i, tau, coeff in toys._iter_coeffs(links_coeffs):
         np.testing.assert_allclose(med.get_coeff(i=i, tau=tau, j=j),
                                    coeff, rtol=1e-1)
 

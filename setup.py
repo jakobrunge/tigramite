@@ -28,45 +28,17 @@ class UseNumpyHeadersBuildExt(build_ext):
         # Call original build_ext command
         build_ext.run(self)
 
-
-# Handle cythonizing code only in development mode
-def define_extension(extension_name, source_files=None):
-    """
-    Will define an extension from the *.c files unless in "setup.py develop"
-    is called.  If this is in develop mode, then it tries to import cython
-    and regenerate the *.c files from the *.pyx files
-    :return: single-element list of needed extension
-    """
-    # Default source file
-    if source_files is None:
-        source_files = [str((pathlib.Path(__file__).parent / extension_name.replace(".", "/")).with_suffix(".c"))]
-    # If we are, try to import and use cythonize
-    try:
-        from Cython.Build import cythonize
-        # Return the cythonized extension
-        pyx_path = str((pathlib.Path(__file__).parent / extension_name.replace(".", "/")).with_suffix(".pyx"))
-        return cythonize([pyx_path], language_level = "3")
-    except ImportError:
-        print(
-            "Cython cannot be found. Skipping generation of C code from"
-            + " cython and using pre-compiled C code instead"
-        )
-        return [Extension(extension_name, source_files, 
-                extra_compile_args=['-fopenmp'],
-                extra_link_args=['-fopenmp'],)]
-
-
-
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 # Define the minimal classes needed to install and run tigramite
-INSTALL_REQUIRES = ["numpy", "scipy", "six"]
+# INSTALL_REQUIRES =  ["numpy==1.21.4", "scipy==1.7.2", "numba==0.53.1", "six"]
+INSTALL_REQUIRES =  ["numpy", "scipy", "numba", "six"]
 # Define all the possible extras needed
 EXTRAS_REQUIRE = {
     "all": [
         "scikit-learn>=0.21",  # Gaussian Process (GP) Regression
-        "matplotlib>=3.4.0",     # plotting
+        "matplotlib>=3.4.0",   # plotting
         "networkx>=2.4",       # plotting
         "torch>=1.7",          # GPDC torch version
         "gpytorch>=1.4",       # GPDC gpytorch version
@@ -79,19 +51,16 @@ TESTS_REQUIRE = ["nose", "pytest", "networkx>=2.4", "scikit-learn>=0.21",
                  "torch>=1.7", "gpytorch>=1.4", "dcor>=0.5.3"]
 EXTRAS_REQUIRE["test"] = TESTS_REQUIRE
 # Define the extras needed for development
-EXTRAS_REQUIRE["dev"] = EXTRAS_REQUIRE["all"] + TESTS_REQUIRE + ["cython"]
+EXTRAS_REQUIRE["dev"] = EXTRAS_REQUIRE["all"]
 
 # Use a custom build to handle numpy.include_dirs() when building
 CMDCLASS = {"build_ext": UseNumpyHeadersBuildExt}
-# Define the external modules to build
-EXT_MODULES = []
-EXT_MODULES += define_extension("tigramite.tigramite_cython_code")
 
 # Run the setup
 setup(
     name="tigramite",
-    version="4.2.2.1",
-    packages=["tigramite", "tigramite.independence_tests"],
+    version="5.0.0.0",
+    packages=["tigramite", "tigramite.independence_tests", "tigramite.toymodels"],
     license="GNU General Public License v3.0",
     description="Tigramite causal discovery for time series",
     author="Jakob Runge",
@@ -101,7 +70,6 @@ setup(
     long_description_content_type="text/markdown",
     keywords="causal inference, causal discovery, prediction, time series",
     cmdclass=CMDCLASS,
-    ext_modules=EXT_MODULES,
     install_requires=INSTALL_REQUIRES,
     extras_require=EXTRAS_REQUIRE,
     test_suite="tests",

@@ -11,6 +11,7 @@ import pytest
 from tigramite.pcmci import PCMCI
 from tigramite.independence_tests import ParCorr, OracleCI
 import tigramite.data_processing as pp
+from tigramite.toymodels import structural_causal_processes as toys
 
 # Pylint settings
 # pylint: disable=redefined-outer-name
@@ -33,7 +34,7 @@ def _get_parent_graph(parents_neighbors_coeffs, exclude=None):
     return only parent relations (i.e. where tau != 0)
     """
     graph = defaultdict(list)
-    for j, i, tau, _ in pp._iter_coeffs(parents_neighbors_coeffs):
+    for j, i, tau, _ in toys._iter_coeffs(parents_neighbors_coeffs):
         if tau != 0 and (i, tau) != exclude:
             graph[j].append((i, tau))
     return dict(graph)
@@ -47,22 +48,21 @@ def _select_links(link_ids, true_parents):
     return {par : [true_parents[par][link]] for par in true_parents \
                                             for link in link_ids}
 
-def _get_parents_from_results(pcmci, results, alpha_level):
+def _get_parents_from_results(pcmci, results):
     """
     Select the significant parents from the MCI-like results at a given
     alpha_level
     """
     significant_parents = \
-        pcmci.return_significant_links(pq_matrix=results['p_matrix'],
-                                         val_matrix=results['val_matrix'],
-                                         alpha_level=alpha_level)
-    return significant_parents['link_dict']
+        pcmci.return_parents_dict(graph=results['graph'],
+                                val_matrix=results['val_matrix'])
+    return significant_parents
 
 def gen_data_frame(links_coeffs, time, seed_val):
     # Set the random seed
     np.random.seed(seed_val)
     # Generate the data
-    data, _ = pp.var_process(links_coeffs, T=time)
+    data, _ = toys.var_process(links_coeffs, T=time)
     # Get the true parents
     true_parents = _get_parent_graph(links_coeffs)
     return pp.DataFrame(data), true_parents
@@ -211,9 +211,10 @@ def a_run_mci(a_pcmci, a_mci_params):
                             tau_max=tau_max,
                             parents=true_parents,
                             max_conds_py=max_conds_px,
-                            max_conds_px=max_conds_py)
+                            max_conds_px=max_conds_py,
+                            alpha_level=alpha_level)
     # Return the calculated and expected results
-    return _get_parents_from_results(pcmci, results, alpha_level), true_parents
+    return _get_parents_from_results(pcmci, results), true_parents
 
 def test_mci(a_run_mci):
     """
@@ -242,9 +243,10 @@ def a_run_pcmci(a_pcmci, a_pc_stable_params, a_mci_params):
                               max_conds_dim=max_conds_dim,
                               max_combinations=max_combinations,
                               max_conds_px=max_conds_px,
-                              max_conds_py=max_conds_py)
+                              max_conds_py=max_conds_py,
+                              alpha_level=alpha_level)
     # Return the results and the expected result
-    return _get_parents_from_results(pcmci, results, alpha_level), true_parents
+    return _get_parents_from_results(pcmci, results), true_parents
 
 def test_pcmci(a_run_pcmci):
     """
@@ -401,7 +403,7 @@ def a_random_process(
     # # Stationarity check assuming model with linear dependencies at least for large x
     # # if check_stationarity(links)[0]:
     #     # return links
-    # X, nonstat = pp.structural_causal_process(links, 
+    # X, nonstat = toys.structural_causal_process(links, 
     #     T=100000, noises=None)
     # if nonstat == False:
     #     return links
@@ -463,13 +465,13 @@ def a_pcmciplus(request):
     links_coeffs, time, seed_val = request.param
 
     # Retrieve lags
-    tau_min, tau_max = pp._get_minmax_lag(links_coeffs)
+    tau_min, tau_max = toys._get_minmax_lag(links_coeffs)
     # Generate the data
-    data, _ = pp.structural_causal_process(links=links_coeffs, T=time,
+    data, _ = toys.structural_causal_process(links=links_coeffs, T=time,
                                            noises=None, seed=seed_val)
     # Get the true parents
-    # true_parents = pp._get_parents(links_coeffs, exclude_contemp=False)
-    true_graph = pp.links_to_graph(links_coeffs, tau_max=tau_max)
+    # true_parents = toys._get_parents(links_coeffs, exclude_contemp=False)
+    true_graph = toys.links_to_graph(links_coeffs, tau_max=tau_max)
     return pp.DataFrame(data), true_graph, links_coeffs, tau_min, tau_max
 
 @pytest.fixture(params=[
@@ -588,13 +590,13 @@ def a_pcmciplus_order_independence(request):
     links_coeffs, time, seed_val = request.param
 
     # Retrieve lags
-    tau_min, tau_max = pp._get_minmax_lag(links_coeffs)
+    tau_min, tau_max = toys._get_minmax_lag(links_coeffs)
     # Generate the data
-    data, _ = pp.structural_causal_process(links=links_coeffs, T=time,
+    data, _ = toys.structural_causal_process(links=links_coeffs, T=time,
                                            noises=None, seed=seed_val)
     # Get the true parents
-    # true_parents = pp._get_parents(links_coeffs, exclude_contemp=False)
-    true_graph = pp.links_to_graph(links_coeffs, tau_max=tau_max)
+    # true_parents = toys._get_parents(links_coeffs, exclude_contemp=False)
+    true_graph = toys.links_to_graph(links_coeffs, tau_max=tau_max)
     return pp.DataFrame(data), true_graph, links_coeffs, tau_min, tau_max
 
 @pytest.fixture(params=[
