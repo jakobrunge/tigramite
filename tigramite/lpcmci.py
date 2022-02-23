@@ -447,7 +447,7 @@ class LPCMCI():
     def _apply_tau_min_restriction(self):
         """Apply the restrictions imposed by a non-zero tau_min:
         - Remove all links of lag smaller than tau_min from self.graph_dict
-        - Set the corresponding entries in self.pval_max, self.pval_max_val, and self.pval_max_card to None
+        - Set the corresponding entries in self.pval_max, self.pval_max_val, and self.pval_max_card to np.inf, -np.inf, np.inf
         """
 
         for (i, j, tau) in product(range(self.N), range(self.N), range(0, self.tau_min)):
@@ -462,7 +462,7 @@ class LPCMCI():
     def _apply_selected_links_restriction(self):
         """Apply the restrictions imposed by selected_links:
         - Remove all links that have not been selected
-        - Set the corresponding entries in self.pval_max, self.pval_max_val, and self.pval_max_card to None 
+        - Set the corresponding entries in self.pval_max, self.pval_max_val, and self.pval_max_card to to np.inf, -np.inf, np.inf 
         """
 
         for (i, j, tau) in product(range(self.N), range(self.N), range(self.tau_min, self.tau_max + 1)):
@@ -3325,11 +3325,11 @@ class LPCMCI():
 
 
     def _sort_search_set(self, search_set, reference_node):
-        """Sort the nodes in search_set by their values in self.pval_max_val with respect to the reference_node. Nodes with higher values
-        appear earlier"""
+        """Sort the nodes in search_set by their values in self.pval_max_val with respect to the reference_node. Nodes with higher absolute
+        values appear earlier"""
 
-        sort_by_potential_Nones = [self._get_pval_max_val(node, reference_node) for node in search_set]
-        sort_by = [(np.abs(value) if value is not None else np.inf) for value in sort_by_potential_Nones]
+        sort_by_potential_minus_infs = [self._get_pval_max_val(node, reference_node) for node in search_set]
+        sort_by = [(np.abs(value) if value != -np.inf else 0) for value in sort_by_potential_minus_infs]
 
         return [x for _, x in sorted(zip(sort_by, search_set), reverse = True)]
 

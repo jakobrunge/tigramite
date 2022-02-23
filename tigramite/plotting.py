@@ -1561,7 +1561,7 @@ def _draw_network_with_curved_edges(
 
 
 def plot_graph(
-    graph=None,
+    graph,
     val_matrix=None,
     var_names=None,
     fig_ax=None,
@@ -1974,7 +1974,6 @@ def _reverse_patt(patt):
 
 def _check_matrices(graph, val_matrix, link_width, link_attribute):
 
-
     if graph.dtype != "<U3":
         # Transform to new graph data type U3
         old_matrix = np.copy(graph)
@@ -2055,7 +2054,7 @@ def _check_matrices(graph, val_matrix, link_width, link_attribute):
 
 
 def plot_time_series_graph(
-    graph=None,
+    graph,
     val_matrix=None,
     var_names=None,
     fig_ax=None,
