@@ -122,10 +122,10 @@ class CausalEffects():
 
         # Construct internal graph from input graph depending on graph type
         # and hidden variables
-        (self.graph, self.graph_type, 
-         self.tau_max, self.hidden_variables) = self._construct_graph(
-                            graph=graph, graph_type=graph_type,
-                            hidden_variables=hidden_variables)
+        # (self.graph, self.graph_type, 
+        #  self.tau_max, self.hidden_variables) = 
+        self._construct_graph(graph=graph, graph_type=graph_type,
+                              hidden_variables=hidden_variables)
 
         # print(self.graph.shape)
         self._check_graph(self.graph)
@@ -212,20 +212,21 @@ class CausalEffects():
 
 
         if graph_type in ['dag', 'admg']: 
-            tau_max = 0
             if graph.ndim != 2:
                 raise ValueError("graph_type in ['dag', 'admg'] assumes graph.shape=(N, N).")
             # Convert to shape [N, N, 1, 1] with dummy dimension
             # to process as tsg_dag or tsg_admg with potential hidden variables
             self.graph = np.expand_dims(graph, axis=(2, 3))
+            
+            # tau_max needed in _get_latent_projection_graph
             self.tau_max = 0
 
             if len(hidden_variables) > 0:
-                graph = self._get_latent_projection_graph() # stationary=False)
-                graph_type = "tsg_admg"
+                self.graph = self._get_latent_projection_graph() # stationary=False)
+                self.graph_type = "tsg_admg"
             else:
-                graph = self.graph
-                graph_type = 'tsg_' + graph_type
+                # graph = self.graph
+                self.graph_type = 'tsg_' + graph_type
 
         elif graph_type in ['tsg_dag', 'tsg_admg']:
             if graph.ndim != 4:
@@ -237,10 +238,10 @@ class CausalEffects():
             self.tau_max = graph.shape[2] - 1
 
             if len(hidden_variables) > 0:
-                graph = self._get_latent_projection_graph() #, stationary=False)
-                graph_type = "tsg_admg"
+                self.graph = self._get_latent_projection_graph() #, stationary=False)
+                self.graph_type = "tsg_admg"
             else:
-                graph_type = graph_type   
+                self.graph_type = graph_type   
 
         elif graph_type in ['stationary_dag']:
             # Currently only stationary_dag without hidden variables is supported
@@ -260,16 +261,16 @@ class CausalEffects():
             for varlag in self.X.union(self.Y).union(self.S):
                 maxlag_XYS = max(maxlag_XYS, abs(varlag[1]))
 
-            tau_max = maxlag_XYS + statgraph_tau_max
+            self.tau_max = maxlag_XYS + statgraph_tau_max
 
             stat_graph = deepcopy(graph)
 
             # Construct tsg_graph
-            graph = np.zeros((self.N, self.N, tau_max + 1, tau_max + 1), dtype='<U3')
+            graph = np.zeros((self.N, self.N, self.tau_max + 1, self.tau_max + 1), dtype='<U3')
             graph[:] = ""
             for (i, j) in itertools.product(range(self.N), range(self.N)):
-                for jt, tauj in enumerate(range(0, tau_max + 1)):
-                    for it, taui in enumerate(range(tauj, tau_max + 1)):
+                for jt, tauj in enumerate(range(0, self.tau_max + 1)):
+                    for it, taui in enumerate(range(tauj, self.tau_max + 1)):
                         tau = abs(taui - tauj)
                         if tau == 0 and j == i:
                             continue
@@ -293,9 +294,11 @@ class CausalEffects():
                         #     graph[i, j, taui, tauj] = "<--"
                         #     graph[j, i, tauj, taui] = "-->" 
 
-            graph_type = 'tsg_dag'
+            self.graph_type = 'tsg_dag'
+            self.graph = graph
 
-        return (graph, graph_type, tau_max, hidden_variables)
+
+        # return (graph, graph_type, self.tau_max, hidden_variables)
 
             # max_lag = self._get_maximum_possible_lag(XYZ=list(X.union(Y).union(S)), graph=graph)
 
@@ -1980,7 +1983,7 @@ class CausalEffects():
             coeffs = {}
             for medy in [med for med in mediators] + [y for y in self.listY]:
                 coeffs[medy] = {}
-                mediator_parents = self._get_all_parents([medy]).intersection(mediators.union(self.X)) - set([medy])
+                mediator_parents = self._get_all_parents([medy]).intersection(mediators.union(self.X).union(self.Y)) - set([medy])
                 all_parents = self._get_all_parents([medy]) - set([medy])
                 for par in mediator_parents:
                     Sprime = set(all_parents) - set([par, medy])
@@ -1998,6 +2001,7 @@ class CausalEffects():
                         cut_off='max_lag_or_tau_max',
                         return_data=False)
                     coeffs[medy][par] = fit_res[medy]['model'].coef_[0]
+                    # print(mediators, par, medy, coeffs[medy][par])
 
         elif method == 'parents':
             if 'dag' not in self.graph_type:
@@ -2030,6 +2034,7 @@ class CausalEffects():
             effect[(x, y)] = 0.
             for causal_path in causal_paths[x][y]:
                 effect_here = 1.
+                # print(x, y, causal_path)
                 for index, node in enumerate(causal_path[:-1]):
                     i, taui = node
                     j, tauj = causal_path[index + 1]
@@ -2089,9 +2094,40 @@ class CausalEffects():
                 print("No causal path from X to Y exists.")
             return np.zeros((len(intervention_data), len(self.Y)))
 
-        effect = self.model.get_general_prediction(
-            intervention_data=intervention_data,
-            conditions_data=None,
-            pred_params=pred_params) 
+        intervention_T, lenX = intervention_data.shape
 
-        return effect
+        lenY = len(self.Y)
+
+        predicted_array = np.zeros((intervention_T, lenY))
+        pred_dict = {}
+        for iy, y in enumerate(self.Y):
+            # Print message
+            if self.verbosity > 1:
+                print("\n## Predicting target %s" % str(y))
+                if pred_params is not None:
+                    for key in list(pred_params):
+                        print("%s = %s" % (key, pred_params[key]))
+            # Default value for pred_params
+            if pred_params is None:
+                pred_params = {}
+            # Check this is a valid target
+            if y not in self.model.fit_results:
+                raise ValueError("y = %s not yet fitted" % str(y))
+
+            # Transform the data if needed
+            a_transform = self.model.fit_results[y]['data_transform']
+            if a_transform is not None:
+                intervention_data = a_transform.transform(X=intervention_data)
+        
+
+            # Now iterate through interventions (and potentially S)
+            for index, dox_vals in enumerate(intervention_data):
+                # Construct XZS-array
+                intervention_array = dox_vals.reshape(1, lenX) 
+                predictor_array = intervention_array
+
+                predicted_vals = self.model.fit_results[y]['model'].predict(
+                X=predictor_array, **pred_params)
+                predicted_array[index, iy] = predicted_vals.mean()
+
+        return predicted_array
