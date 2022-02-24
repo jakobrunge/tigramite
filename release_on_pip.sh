@@ -33,16 +33,21 @@ pip install --use-feature=2020-resolver --upgrade setuptools wheel twine auditwh
 pip install -e .['dev']
 
 # Rebuild the .c files from the .pyc files
-python setup.py develop
+# python setup.py develop
 
 # Build the distribution
 python setup.py sdist bdist_wheel
 
 
 # Linux:
-auditwheel repair --plat manylinux2014_x86_64 ./dist/*linux_x86_64.whl -w ./dist/
+# auditwheel repair --plat manylinux2014_x86_64 ./dist/*linux_x86_64.whl -w ./dist/
+# auditwheel repair --plat manylinux2014_x86_64 ./dist/*.whl -w ./dist/
+
+
 # Upload the distro
-twine upload dist/*manylinux*.whl dist/*tar.gz
+# twine upload dist/*manylinux*.whl dist/*tar.gz
+twine upload dist/*.whl dist/*tar.gz
+
 
 # Windows (EDIT names to upload all things .whl and tat.gz in dist/ !!!):
 # twine upload dist/*manylinux*.whl dist/*tar.gz
