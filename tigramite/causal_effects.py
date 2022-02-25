@@ -73,9 +73,13 @@ class CausalEffects():
         if S is None:
             S = []
 
-        X = set(X)
-        Y = set(Y)
-        S = set(S)    
+        self.listX = list(X)
+        self.listY = list(Y)
+        self.listS = list(S)
+
+        self.X = set(X)
+        self.Y = set(Y)
+        self.S = set(S)    
 
         # 
         # Checks regarding graph type
@@ -102,12 +106,10 @@ class CausalEffects():
             hidden_variables = []
         
         self.hidden_variables = set(hidden_variables)
-        if len(self.hidden_variables.intersection(X.union(Y).union(S))) > 0:
+        if len(self.hidden_variables.intersection(self.X.union(self.Y).union(self.S))) > 0:
             raise ValueError("XYS overlaps with hidden_variables!")
 
-        self.X = X
-        self.Y = Y
-        self.S = S
+
 
         # Only needed for later extension to MAG/PAGs
         if 'pag' in graph_type:
@@ -148,14 +150,16 @@ class CausalEffects():
         M = set(mediators)
         self.M = M
 
-        for varlag in X.union(Y).union(S):
+        self.listM = list(self.M)
+
+        for varlag in self.X.union(self.Y).union(self.S):
             if abs(varlag[1]) > self.tau_max:
                 raise ValueError("X, Y, S must have time lags inside graph.")
 
         if len(self.X.intersection(self.Y)) > 0:
             raise ValueError("Overlap between X and Y")
 
-        if len(S.intersection(self.Y.union(self.X))) > 0:
+        if len(self.S.intersection(self.Y.union(self.X))) > 0:
             raise ValueError("Conditions S overlap with X or Y")
 
         # # TODO: need to prove that this is sufficient for non-identifiability!
@@ -181,11 +185,6 @@ class CausalEffects():
         # contains variables in des(M) to the user
         if len(self.S.intersection(self._get_descendants(self.Y))) > 0:
             raise ValueError("Not identifiable: Conditions S overlap with des(Y)")
-
-        self.listX = list(self.X)
-        self.listY = list(self.Y)
-        self.listS = list(self.S)
-        self.listM = list(self.M)
 
         if self.verbosity > 0:
             print("\n##\n## Initializing CausalEffects class\n##"
