@@ -15,14 +15,15 @@
 # cd v4210/
 
 # Make sure to be in a clean anaconda
-# conda create --name tigramite-release-4210 python=3.7
-# conda activate tigramite-release-4210
+conda create --name tigramite-release-5001 python=3.9
+conda activate tigramite-release-5001
 
 # Pull tigramite github
-# git clone https://github.com/jakobrunge/tigramite.git
+git clone https://github.com/jakobrunge/tigramite.git
+cd tigramite
 
 # Checkout master
-# git checkout master
+git checkout master
 
 # Run all those in Linux or Windows
 
