@@ -2208,8 +2208,57 @@ class CausalEffects():
 
 if __name__ == '__main__':
     
-    links = {0: [((0, 0), 0.9, None)],
-             1: [((1, 0), 0.8, None), ((0, 0), 0.3, None)],
-             2: [((2, 0), 0.7, None), ((1, 0), -0.2, None)],
+    # Consider some toy data
+    import tigramite
+    import tigramite.toymodels.structural_causal_processes as toys
+    import tigramite.data_processing as pp
+
+    import sklearn
+    from sklearn.linear_model import LinearRegression
+
+    T = 1000
+    def lin_f(x): return x
+    auto_coeff = 0.3
+    coeff = 2.
+    links = {
+            0: [((0, -1), auto_coeff, lin_f)], 
+            1: [((1, -1), auto_coeff, lin_f), ((0, -1), coeff, lin_f)], 
+            2: [((2, -1), auto_coeff, lin_f), ((1, 0), coeff, lin_f)],
+            }
+    data, nonstat = toys.structural_causal_process(links, T=T, 
+                                noises=None, seed=None)
+    dataframe = pp.DataFrame(data) 
+
+    # Construct expert knowledge graph from links here 
+    links = {0: [(0, -1)],
+             1: [(1, -1), (0, -1)],
+             2: [(2, -1), (1, 0),],
              }
-    print(CausalEffects.get_graph_from_dict(links, tau_max=None))
+    # Use staticmethod to get graph
+    graph = CausalEffects.get_graph_from_dict(links, tau_max=None)
+    
+    # We are interested in lagged total effect of X on Y
+    X = [(0, -1)]
+    Y = [(2, 0)]
+
+    # Initialize class as `stationary_dag`
+    causal_effects = CausalEffects(graph, graph_type='stationary_dag', 
+                                X=X, Y=Y, S=None, 
+                                hidden_variables=None, 
+                                verbosity=0)
+
+    # Optimal adjustment set (is used by default)
+    print(causal_effects.get_optimal_set())
+
+    # Fit causal effect model from observational data
+    causal_effects.fit_total_effect(
+        dataframe=dataframe, 
+        estimator=LinearRegression(),
+        )
+
+    # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go
+    dox_vals = np.linspace(0., 1., 5)
+    intervention_data = dox_vals.reshape(len(dox_vals), len(X))
+    pred_Y = causal_effects.predict_total_effect( 
+            intervention_data=intervention_data)
+    print(pred_Y)
