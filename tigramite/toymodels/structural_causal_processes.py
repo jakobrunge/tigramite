@@ -714,7 +714,7 @@ def structural_causal_process(links, T, noises=None,
     return data, nonstationary
 
 def _get_minmax_lag(links):
-    """Helper function to retrieve tau_min and tau_max from links
+    """Helper function to retrieve tau_min and tau_max from links.
     """
 
     N = len(links)
@@ -724,12 +724,18 @@ def _get_minmax_lag(links):
     max_lag = 0
     for j in range(N):
         for link_props in links[j]:
-            var, lag = link_props[0]
-            coeff = link_props[1]
-            # func = link_props[2]
-            if coeff != 0.:
+            if len(link_props) > 2:
+                var, lag = link_props[0]
+                coeff = link_props[1]
+                # func = link_props[2]
+                if coeff != 0.:
+                    min_lag = min(min_lag, abs(lag))
+                    max_lag = max(max_lag, abs(lag))
+            else:
+                var, lag = link_props
                 min_lag = min(min_lag, abs(lag))
-                max_lag = max(max_lag, abs(lag))
+                max_lag = max(max_lag, abs(lag))   
+
     return min_lag, max_lag
 
 def _get_parents(links, exclude_contemp=False):
@@ -767,6 +773,54 @@ def _get_children(parents):
     return children
 
 
+def links_to_graph(links, tau_max=None):
+    """Helper function to convert dictionary of links to graph array format.
+
+    Parameters
+    ---------
+    links : dict
+        Dictionary of form {0:[((0, -1), coeff, func), ...], 1:[...], ...}.
+        Also format {0:[(0, -1), ...], 1:[...], ...} is allowed.
+    tau_max : int or None
+        Maximum lag. If None, the maximum lag in links is used.
+
+    Returns
+    -------
+    graph : array of shape (N, N, tau_max+1)
+        Matrix format of graph with 1 for true links and 0 else.
+    """
+    N = len(links)
+
+    # Get maximum time lag
+    min_lag, max_lag = _get_minmax_lag(links)
+
+    # Set maximum lag
+    if tau_max is None:
+        tau_max = max_lag
+    else:
+        if max_lag > tau_max:
+            raise ValueError("tau_max is smaller than maximum lag = %d "
+                             "found in links, use tau_max=None or larger "
+                             "value" % max_lag)
+
+    graph = np.zeros((N, N, tau_max + 1), dtype='<U3')
+    for j in links.keys():
+        for link_props in links[j]:
+            if len(link_props) > 2:
+                var, lag = link_props[0]
+                coeff = link_props[1]
+                if coeff != 0.:
+                    graph[var, j, abs(lag)] = "-->"
+                    if lag == 0:
+                        graph[j, var, 0] = "<--"
+            else:
+                var, lag = link_props
+                graph[var, j, abs(lag)] = "-->"
+                if lag == 0:
+                    graph[j, var, 0] = "<--"
+
+    return graph
+
 class _Logger(object):
     """Class to append print output to a string which can be saved"""
     def __init__(self):
@@ -792,3 +846,6 @@ if __name__ == '__main__':
     data, nonstat = structural_causal_process(links,
      T=100, noises=noises)
     print(data.shape)
+
+    # Construct graph
+    print(links_to_graph(links))

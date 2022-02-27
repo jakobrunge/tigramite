@@ -2130,3 +2130,86 @@ class CausalEffects():
                 predicted_array[index, iy] = predicted_vals.mean()
 
         return predicted_array
+
+    @staticmethod
+    def get_graph_from_dict(links, tau_max=None):
+        """Helper function to convert dictionary of links to graph array format.
+
+        Parameters
+        ---------
+        links : dict
+            Dictionary of form {0:[((0, -1), coeff, func), ...], 1:[...], ...}.
+            Also format {0:[(0, -1), ...], 1:[...], ...} is allowed.
+        tau_max : int or None
+            Maximum lag. If None, the maximum lag in links is used.
+
+        Returns
+        -------
+        graph : array of shape (N, N, tau_max+1)
+            Matrix format of graph with 1 for true links and 0 else.
+        """
+
+        def _get_minmax_lag(links):
+            """Helper function to retrieve tau_min and tau_max from links.
+            """
+
+            N = len(links)
+
+            # Get maximum time lag
+            min_lag = np.inf
+            max_lag = 0
+            for j in range(N):
+                for link_props in links[j]:
+                    if len(link_props) > 2:
+                        var, lag = link_props[0]
+                        coeff = link_props[1]
+                        # func = link_props[2]
+                        if coeff != 0.:
+                            min_lag = min(min_lag, abs(lag))
+                            max_lag = max(max_lag, abs(lag))
+                    else:
+                        var, lag = link_props
+                        min_lag = min(min_lag, abs(lag))
+                        max_lag = max(max_lag, abs(lag))   
+
+            return min_lag, max_lag
+
+        N = len(links)
+
+        # Get maximum time lag
+        min_lag, max_lag = _get_minmax_lag(links)
+
+        # Set maximum lag
+        if tau_max is None:
+            tau_max = max_lag
+        else:
+            if max_lag > tau_max:
+                raise ValueError("tau_max is smaller than maximum lag = %d "
+                                 "found in links, use tau_max=None or larger "
+                                 "value" % max_lag)
+
+        graph = np.zeros((N, N, tau_max + 1), dtype='<U3')
+        for j in links.keys():
+            for link_props in links[j]:
+                if len(link_props) > 2:
+                    var, lag = link_props[0]
+                    coeff = link_props[1]
+                    if coeff != 0.:
+                        graph[var, j, abs(lag)] = "-->"
+                        if lag == 0:
+                            graph[j, var, 0] = "<--"
+                else:
+                    var, lag = link_props
+                    graph[var, j, abs(lag)] = "-->"
+                    if lag == 0:
+                        graph[j, var, 0] = "<--"
+
+        return graph
+
+if __name__ == '__main__':
+    
+    links = {0: [((0, 0), 0.9, None)],
+             1: [((1, 0), 0.8, None), ((0, 0), 0.3, None)],
+             2: [((2, 0), 0.7, None), ((1, 0), -0.2, None)],
+             }
+    print(CausalEffects.get_graph_from_dict(links, tau_max=None))
