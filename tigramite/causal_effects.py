@@ -2099,7 +2099,7 @@ class CausalEffects():
 
         predicted_array = np.zeros((intervention_T, lenY))
         pred_dict = {}
-        for iy, y in enumerate(self.Y):
+        for iy, y in enumerate(self.listY):
             # Print message
             if self.verbosity > 1:
                 print("\n## Predicting target %s" % str(y))
