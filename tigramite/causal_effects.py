@@ -1870,11 +1870,11 @@ class CausalEffects():
         Results from prediction: an array of shape  (time, len(Y)).
         """
 
-        if intervention_data.shape[1] != len(self.X):
+        if intervention_data.shape[1] != len(self.listX):
             raise ValueError("intervention_data.shape[1] must be len(X).")
 
         if conditions_data is not None:
-            if conditions_data.shape[1] != len(self.S):
+            if conditions_data.shape[1] != len(self.listS):
                 raise ValueError("conditions_data.shape[1] must be len(S).")
             if conditions_data.shape[0] != intervention_data.shape[0]:
                 raise ValueError("conditions_data.shape[0] must match intervention_data.shape[0].")
@@ -1882,7 +1882,7 @@ class CausalEffects():
         if self.no_causal_path:
             if self.verbosity > 0:
                 print("No causal path from X to Y exists.")
-            return np.zeros((len(intervention_data), len(self.Y)))
+            return np.zeros((len(intervention_data), len(self.listY)))
 
         effect = self.model.get_general_prediction(
             intervention_data=intervention_data,
@@ -2095,7 +2095,7 @@ class CausalEffects():
 
         intervention_T, lenX = intervention_data.shape
 
-        lenY = len(self.Y)
+        lenY = len(self.listY)
 
         predicted_array = np.zeros((intervention_T, lenY))
         pred_dict = {}
