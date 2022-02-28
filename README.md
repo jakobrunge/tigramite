@@ -1,4 +1,4 @@
-# Tigramite – Causal discovery for time series datasets
+# Tigramite – Causal inference and causal discovery for time series datasets
 Version 5.0
 
 (Python Package)
@@ -32,7 +32,7 @@ Further, Tigramite provides several causal discovery methods that can be used un
 
 ## General Notes
 
-Tigramite is a causal time series analysis python package. It allows to efficiently estimate causal graphs from high-dimensional time series datasets (causal discovery) and to use these graphs for robust forecasting and the estimation and prediction of direct, total, and mediated effects. Causal discovery is based on linear as well as non-parametric conditional independence tests applicable to discrete or continuously-valued time series. Also includes functions for high-quality plots of the results. You can find a simple GUI version on https://github.com/stbachinger/TigramiteGui. Please cite the following papers depending on which method you use:
+Tigramite is a causal time series analysis python package. It allows to efficiently estimate causal graphs from high-dimensional time series datasets (causal discovery) and to use graphs for robust forecasting and the estimation and prediction of direct, total, and mediated effects. Causal discovery is based on linear as well as non-parametric conditional independence tests applicable to discrete or continuously-valued time series. Also includes functions for high-quality plots of the results. You can find a simple GUI version on https://github.com/stbachinger/TigramiteGui. Please cite the following papers depending on which method you use:
 
 - PCMCI: J. Runge, P. Nowack, M. Kretschmer, S. Flaxman, D. Sejdinovic, Detecting and quantifying causal associations in large nonlinear time series datasets. Sci. Adv. 5, eaau4996 (2019). https://advances.sciencemag.org/content/5/11/eaau4996
 - PCMCI+: J. Runge (2020): Discovering contemporaneous and lagged causal relations in autocorrelated nonlinear time series datasets. Proceedings of the 36th Conference on Uncertainty in Artificial Intelligence, UAI 2020,Toronto, Canada, 2019, AUAI Press, 2020. http://auai.org/uai2020/proceedings/579_main_paper.pdf
