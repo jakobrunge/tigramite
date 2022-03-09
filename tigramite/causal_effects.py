@@ -1870,11 +1870,11 @@ class CausalEffects():
         Results from prediction: an array of shape  (time, len(Y)).
         """
 
-        if intervention_data.shape[1] != len(self.X):
+        if intervention_data.shape[1] != len(self.listX):
             raise ValueError("intervention_data.shape[1] must be len(X).")
 
         if conditions_data is not None:
-            if conditions_data.shape[1] != len(self.S):
+            if conditions_data.shape[1] != len(self.listS):
                 raise ValueError("conditions_data.shape[1] must be len(S).")
             if conditions_data.shape[0] != intervention_data.shape[0]:
                 raise ValueError("conditions_data.shape[0] must match intervention_data.shape[0].")
@@ -1882,7 +1882,7 @@ class CausalEffects():
         if self.no_causal_path:
             if self.verbosity > 0:
                 print("No causal path from X to Y exists.")
-            return np.zeros((len(intervention_data), len(self.Y)))
+            return np.zeros((len(intervention_data), len(self.listY)))
 
         effect = self.model.get_general_prediction(
             intervention_data=intervention_data,
@@ -2095,11 +2095,11 @@ class CausalEffects():
 
         intervention_T, lenX = intervention_data.shape
 
-        lenY = len(self.Y)
+        lenY = len(self.listY)
 
         predicted_array = np.zeros((intervention_T, lenY))
         pred_dict = {}
-        for iy, y in enumerate(self.Y):
+        for iy, y in enumerate(self.listY):
             # Print message
             if self.verbosity > 1:
                 print("\n## Predicting target %s" % str(y))
@@ -2130,3 +2130,136 @@ class CausalEffects():
                 predicted_array[index, iy] = predicted_vals.mean()
 
         return predicted_array
+
+    @staticmethod
+    def get_graph_from_dict(links, tau_max=None):
+        """Helper function to convert dictionary of links to graph array format.
+
+        Parameters
+        ---------
+        links : dict
+            Dictionary of form {0:[((0, -1), coeff, func), ...], 1:[...], ...}.
+            Also format {0:[(0, -1), ...], 1:[...], ...} is allowed.
+        tau_max : int or None
+            Maximum lag. If None, the maximum lag in links is used.
+
+        Returns
+        -------
+        graph : array of shape (N, N, tau_max+1)
+            Matrix format of graph with 1 for true links and 0 else.
+        """
+
+        def _get_minmax_lag(links):
+            """Helper function to retrieve tau_min and tau_max from links.
+            """
+
+            N = len(links)
+
+            # Get maximum time lag
+            min_lag = np.inf
+            max_lag = 0
+            for j in range(N):
+                for link_props in links[j]:
+                    if len(link_props) > 2:
+                        var, lag = link_props[0]
+                        coeff = link_props[1]
+                        # func = link_props[2]
+                        if coeff != 0.:
+                            min_lag = min(min_lag, abs(lag))
+                            max_lag = max(max_lag, abs(lag))
+                    else:
+                        var, lag = link_props
+                        min_lag = min(min_lag, abs(lag))
+                        max_lag = max(max_lag, abs(lag))   
+
+            return min_lag, max_lag
+
+        N = len(links)
+
+        # Get maximum time lag
+        min_lag, max_lag = _get_minmax_lag(links)
+
+        # Set maximum lag
+        if tau_max is None:
+            tau_max = max_lag
+        else:
+            if max_lag > tau_max:
+                raise ValueError("tau_max is smaller than maximum lag = %d "
+                                 "found in links, use tau_max=None or larger "
+                                 "value" % max_lag)
+
+        graph = np.zeros((N, N, tau_max + 1), dtype='<U3')
+        for j in links.keys():
+            for link_props in links[j]:
+                if len(link_props) > 2:
+                    var, lag = link_props[0]
+                    coeff = link_props[1]
+                    if coeff != 0.:
+                        graph[var, j, abs(lag)] = "-->"
+                        if lag == 0:
+                            graph[j, var, 0] = "<--"
+                else:
+                    var, lag = link_props
+                    graph[var, j, abs(lag)] = "-->"
+                    if lag == 0:
+                        graph[j, var, 0] = "<--"
+
+        return graph
+
+if __name__ == '__main__':
+    
+    # Consider some toy data
+    import tigramite
+    import tigramite.toymodels.structural_causal_processes as toys
+    import tigramite.data_processing as pp
+
+    import sklearn
+    from sklearn.linear_model import LinearRegression
+
+    T = 10000
+    def lin_f(x): return x
+    auto_coeff = 0.3
+    coeff = 2.
+    links = {
+            0: [((0, -1), auto_coeff, lin_f)], 
+            1: [((1, -1), auto_coeff, lin_f), ((0, -1), coeff, lin_f)], 
+            2: [((2, -1), auto_coeff, lin_f), ((1, 0), coeff, lin_f)],
+            }
+    data, nonstat = toys.structural_causal_process(links, T=T, 
+                                noises=None, seed=7)
+    dataframe = pp.DataFrame(data) 
+
+    # Construct expert knowledge graph from links here 
+    links = {0: [(0, -1)],
+             1: [(1, -1), (0, -1)],
+             2: [(2, -1), (1, 0),],
+             }
+    # Use staticmethod to get graph
+    graph = CausalEffects.get_graph_from_dict(links, tau_max=None)
+    
+    # We are interested in lagged total effect of X on Y
+    X = [(0, -1)]
+    Y = [(2, 0)]
+
+    # Initialize class as `stationary_dag`
+    causal_effects = CausalEffects(graph, graph_type='stationary_dag', 
+                                X=X, Y=Y, S=None, 
+                                hidden_variables=None, 
+                                verbosity=1)
+
+    # Optimal adjustment set (is used by default)
+    print(causal_effects.get_optimal_set())
+
+    # Fit causal effect model from observational data
+    causal_effects.fit_total_effect(
+        dataframe=dataframe, 
+        # mask_type='y',
+        estimator=LinearRegression(),
+        )
+
+    # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go
+    dox_vals = np.linspace(0., 1., 5)
+    intervention_data = dox_vals.reshape(len(dox_vals), len(X))
+    pred_Y = causal_effects.predict_total_effect( 
+            intervention_data=intervention_data)
+    print(pred_Y)

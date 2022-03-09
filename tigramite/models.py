@@ -154,7 +154,9 @@ class Models():
             # Construct array of shape (var, time) with first entry being
             # a dummy, second is y followed by joint X and Z (ignore the notation in construct_array)
             array, xyz = \
-                self.dataframe.construct_array(X=self.X, Y=[y] + self.Z, Z=self.conditions,
+                self.dataframe.construct_array(X=self.X, Y=[y], # + self.Z, 
+                                               Z=self.conditions,
+                                               extraZ=self.Z,
                                                tau_max=self.tau_max,
                                                mask_type=self.mask_type,
                                                cut_off=self.cut_off,
@@ -170,8 +172,8 @@ class Models():
             a_model = deepcopy(self.model)
 
             predictor_indices =  list(np.where(xyz==0)[0]) \
-                               + list(np.where(xyz==1)[0][1:]) \
-                               + list(np.where(xyz==2)[0])
+                               + list(np.where(xyz==2)[0]) \
+                               + list(np.where(xyz==3)[0])
             predictor_array = array[predictor_indices, :].T
             # Target is only first entry of Y, ie [y]
             target_array = array[np.where(xyz==1)[0][0], :]
@@ -255,7 +257,7 @@ class Models():
                     conditions_data = a_transform.transform(X=conditions_data)
 
             # Extract observational Z from stored array
-            z_indices = list(np.where(self.fit_results[y]['xyz']==1)[0][1:])
+            z_indices = list(np.where(self.fit_results[y]['xyz']==3)[0])
             z_array = self.fit_results[y]['observation_array'][z_indices, :].T  
             Tobs = len(z_array)              
 
