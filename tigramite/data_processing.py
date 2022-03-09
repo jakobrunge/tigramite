@@ -114,6 +114,7 @@ class DataFrame():
                                  % str(_use_mask.shape))
 
     def construct_array(self, X, Y, Z, tau_max,
+                        extraZ=None,
                         mask=None,
                         mask_type=None,
                         return_cleaned_xyz=False,
@@ -127,10 +128,10 @@ class DataFrame():
 
         Parameters
         ----------
-        X, Y, Z : list of tuples
+        X, Y, Z, extraZ : list of tuples
             For a dependence measure I(X;Y|Z), X, Y, Z can be multivariate of
             the form [(var1, -lag), (var2, -lag), ...]. At least one varlag in Y 
-            has to be at lag zero.
+            has to be at lag zero. extraZ is only used in CausalEffects class.
         tau_max : int
             Maximum time lag. This may be used to make sure that estimates for
             different lags in X and Z all have the same sample size.
@@ -171,16 +172,20 @@ class DataFrame():
         # Get the length in time and the number of nodes
         T, N = self.values.shape
 
-        # Remove duplicates in X, Y, Z
+        if extraZ is None:
+            extraZ = []
+        # Remove duplicates in X, Y, Z, extraZ
         X = list(OrderedDict.fromkeys(X))
         Y = list(OrderedDict.fromkeys(Y))
         Z = list(OrderedDict.fromkeys(Z))
+        extraZ = list(OrderedDict.fromkeys(extraZ))
 
         # If a node in Z occurs already in X or Y, remove it from Z
         Z = [node for node in Z if (node not in X) and (node not in Y)]
+        extraZ = [node for node in extraZ if (node not in X) and (node not in Y) and (node not in Z)]
 
         # Check that all lags are non-positive and indices are in [0,N-1]
-        XYZ = X + Y + Z
+        XYZ = X + Y + Z + extraZ
         dim = len(XYZ)
 
         # Ensure that XYZ makes sense
@@ -200,9 +205,10 @@ class DataFrame():
         # Setup XYZ identifier
         index_code = {'x' : 0,
                       'y' : 1,
-                      'z' : 2}
+                      'z' : 2,
+                      'e' : 3}
         xyz = np.array([index_code[name]
-                        for var, name in zip([X, Y, Z], ['x', 'y', 'z'])
+                        for var, name in zip([X, Y, Z, extraZ], ['x', 'y', 'z', 'e'])
                         for _ in var])
 
         # Setup and fill array with lagged time series
@@ -250,7 +256,7 @@ class DataFrame():
                     array_mask[i, :] = (_use_mask[self.bootstrap + lag, var] == False)
 
             # Iterate over defined mapping from letter index to number index,
-            # i.e. 'x' -> 0, 'y' -> 1, 'z'-> 2
+            # i.e. 'x' -> 0, 'y' -> 1, 'z'-> 2, 'e'-> 3
             for idx, cde in index_code.items():
                 # Check if the letter index is in the mask type
                 if (mask_type is not None) and (idx in mask_type):
@@ -268,7 +274,7 @@ class DataFrame():
 
         # Print information about the constructed array
         if verbosity > 2:
-            self.print_array_info(array, X, Y, Z, self.missing_flag, mask_type)
+            self.print_array_info(array, X, Y, Z, self.missing_flag, mask_type, extraZ)
 
         # Return the array and xyz and optionally (X, Y, Z)
         if return_cleaned_xyz:
@@ -310,7 +316,7 @@ class DataFrame():
         #     raise ValueError("Y-nodes are %s, " % str(Y) +
         #                      "but one of the Y-nodes must have zero lag")
 
-    def print_array_info(self, array, X, Y, Z, missing_flag, mask_type):
+    def print_array_info(self, array, X, Y, Z, missing_flag, mask_type, extraZ=None):
         """
         Print info about the constructed array
 
@@ -318,7 +324,7 @@ class DataFrame():
         ----------
         array : Data array of shape (dim, T)
             Data array.
-        X, Y, Z : list of tuples
+        X, Y, Z, extraZ : list of tuples
             For a dependence measure I(X;Y|Z), Y is of the form [(varY, 0)],
             where var specifies the variable index. X typically is of the form
             [(varX, -tau)] with tau denoting the time lag and Z can be
@@ -333,11 +339,15 @@ class DataFrame():
             measure I(X; Y | Z) the samples should be masked. If None, the mask
             is not used. Explained in tutorial on masking and missing values.
         """
+        if extraZ is None:
+            extraZ = []
         indt = " " * 12
         print(indt + "Constructed array of shape %s from"%str(array.shape) +
               "\n" + indt + "X = %s" % str(X) +
               "\n" + indt + "Y = %s" % str(Y) +
               "\n" + indt + "Z = %s" % str(Z))
+        if extraZ is not None:  
+            print(indt + "extraZ = %s" % str(extraZ))
         if self.mask is not None and mask_type is not None:
             print(indt+"with masked samples in %s removed" % mask_type)
         if self.missing_flag is not None:

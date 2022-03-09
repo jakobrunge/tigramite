@@ -2216,7 +2216,7 @@ if __name__ == '__main__':
     import sklearn
     from sklearn.linear_model import LinearRegression
 
-    T = 1000
+    T = 10000
     def lin_f(x): return x
     auto_coeff = 0.3
     coeff = 2.
@@ -2226,7 +2226,7 @@ if __name__ == '__main__':
             2: [((2, -1), auto_coeff, lin_f), ((1, 0), coeff, lin_f)],
             }
     data, nonstat = toys.structural_causal_process(links, T=T, 
-                                noises=None, seed=None)
+                                noises=None, seed=7)
     dataframe = pp.DataFrame(data) 
 
     # Construct expert knowledge graph from links here 
@@ -2245,7 +2245,7 @@ if __name__ == '__main__':
     causal_effects = CausalEffects(graph, graph_type='stationary_dag', 
                                 X=X, Y=Y, S=None, 
                                 hidden_variables=None, 
-                                verbosity=0)
+                                verbosity=1)
 
     # Optimal adjustment set (is used by default)
     print(causal_effects.get_optimal_set())
@@ -2253,6 +2253,7 @@ if __name__ == '__main__':
     # Fit causal effect model from observational data
     causal_effects.fit_total_effect(
         dataframe=dataframe, 
+        # mask_type='y',
         estimator=LinearRegression(),
         )
 
