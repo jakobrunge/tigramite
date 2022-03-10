@@ -28,7 +28,7 @@ Further, Tigramite provides several causal discovery methods that can be used un
 | ParCorr  | univariate variables with continuous, linear Gaussian dependencies |
 | GPDC / GPDCtorch | univariate variables with continuous, additive dependencies        |
 | CMIknn | multivariate variables with continuous, general dependencies           |
-| CMIsymb | univariables with discrete/categorical dependencies           |
+| CMIsymb | univariate with discrete/categorical dependencies           |
 
 ## General Notes
 
