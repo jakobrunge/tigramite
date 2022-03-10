@@ -1843,6 +1843,7 @@ class CausalEffects():
                 conditions=self.listS,
                 tau_max=self.tau_max,
                 cut_off='max_lag_or_tau_max',
+                remove_missing_upto_maxlag=False,
                 return_data=False)
 
         return self
@@ -1998,6 +1999,7 @@ class CausalEffects():
                         Y=[medy], X=[par], Z=oset,
                         tau_max=self.tau_max,
                         cut_off='max_lag_or_tau_max',
+                        remove_missing_upto_maxlag=False,
                         return_data=False)
                     coeffs[medy][par] = fit_res[medy]['model'].coef_[0]
                     # print(mediators, par, medy, coeffs[medy][par])
@@ -2018,6 +2020,7 @@ class CausalEffects():
                     conditions=None,
                     tau_max=self.tau_max,
                     cut_off='max_lag_or_tau_max',
+                    remove_missing_upto_maxlag=False,
                     return_data=False)
 
                 for ipar, par in enumerate(all_parents):

@@ -120,6 +120,7 @@ class DataFrame():
                         return_cleaned_xyz=False,
                         do_checks=True,
                         cut_off='2xtau_max',
+                        remove_missing_upto_maxlag=True,
                         verbosity=0):
         """Constructs array from variables X, Y, Z from data.
 
@@ -155,6 +156,9 @@ class DataFrame():
             which uses the maximum of tau_max and the conditions, which is
             useful to compare multiple models on the same sample.  Last,
             'max_lag' uses as much samples as possible.
+        remove_missing_upto_maxlag : bool, optional (default: True)
+            Whether to remove not only missing samples, but also all neighboring
+            samples up to max_lag (as given by cut_off).
         verbosity : int, optional (default: 0)
             Level of verbosity.
 
@@ -228,11 +232,17 @@ class DataFrame():
         # slices that occur up to max_lag after
         if self.missing_flag is not None:
             missing_anywhere = np.any(np.isnan(self.values), axis=1)
-            for tau in range(max_lag+1):
+            if remove_missing_upto_maxlag:
+                for tau in range(max_lag+1):
+                    if self.bootstrap is None:
+                        use_indices[missing_anywhere[tau:T-max_lag+tau]] = 0
+                    else:
+                        use_indices[missing_anywhere[self.bootstrap - max_lag + tau]] = 0
+            else:
                 if self.bootstrap is None:
-                    use_indices[missing_anywhere[tau:T-max_lag+tau]] = 0
+                    use_indices[missing_anywhere] = 0
                 else:
-                    use_indices[missing_anywhere[self.bootstrap - max_lag + tau]] = 0
+                    use_indices[missing_anywhere[self.bootstrap]] = 0
 
         # Use the mask override if needed
         _use_mask = mask
