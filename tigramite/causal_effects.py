@@ -1826,6 +1826,9 @@ class CausalEffects():
             if self._check_validity(adjustment_set) is False:
                 raise ValueError("Chosen adjustment_set is not valid.")
 
+        if adjustment_set is False:
+            raise ValueError("Causal effect not identifiable via adjustment.")
+
         self.adjustment_set = adjustment_set
 
         # Fit model of Y on X and Z (and conditions)
