@@ -9,7 +9,7 @@ from scipy import special, spatial
 import numpy as np
 from .independence_tests_base import CondIndTest
 from numba import jit
-
+import warnings
 
 class CMIknn(CondIndTest):
     r"""Conditional mutual information test based on nearest-neighbor estimator.
@@ -169,9 +169,10 @@ class CMIknn(CondIndTest):
             # array /= array.std(axis=1).reshape(dim, 1)
             # FIXME: If the time series is constant, return nan rather than
             # raising Exception
-            # if np.isnan(array).sum() != 0:
-            #     raise ValueError("nans after standardizing, "
-            #                      "possibly constant array!")
+            if np.any(std == 0.):
+                warnings.warn("Possibly constant array!")
+                # raise ValueError("nans after standardizing, "
+                #                  "possibly constant array!")
         elif self.transform == 'uniform':
             array = self._trafo2uniform(array)
         elif self.transform == 'ranks':
@@ -387,6 +388,8 @@ class CMIknn(CondIndTest):
             # array /= array.std(axis=1).reshape(dim, 1)
             # FIXME: If the time series is constant, return nan rather than
             # raising Exception
+            if np.any(std == 0.):
+                warnings.warn("Possibly constant array!")
             # if np.isnan(array).sum() != 0:
             #     raise ValueError("nans after standardizing, "
             #                      "possibly constant array!")
