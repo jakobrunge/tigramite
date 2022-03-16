@@ -8,6 +8,7 @@ from __future__ import print_function
 from scipy import stats
 import numpy as np
 import sys
+import warnings
 
 from .independence_tests_base import CondIndTest
 
@@ -95,6 +96,8 @@ class ParCorr(CondIndTest):
             for i in range(dim):
                 if std[i] != 0.:
                     array[i] /= std[i]
+            if np.any(std == 0.):
+                warnings.warn("Possibly constant array!")
             # array /= array.std(axis=1).reshape(dim, 1)
             # if np.isnan(array).sum() != 0:
             #     raise ValueError("nans after standardizing, "

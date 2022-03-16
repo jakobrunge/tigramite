@@ -221,6 +221,8 @@ class GaussProcRegTorch():
             for i in range(dim):
                 if std[i] != 0.:
                     array[i] /= std[i]
+            if np.any(std == 0.):
+                warnings.warn("Possibly constant array!")
             # array /= array.std(axis=1).reshape(dim, 1)
             # if np.isnan(array).any():
             #     raise ValueError("Nans after standardizing, "
