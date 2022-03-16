@@ -217,10 +217,14 @@ class GaussProcRegTorch():
         # Standardize
         if standardize:
             array -= array.mean(axis=1).reshape(dim, 1)
-            array /= array.std(axis=1).reshape(dim, 1)
-            if np.isnan(array).any():
-                raise ValueError("Nans after standardizing, "
-                                 "possibly constant array!")
+            std = array.std(axis=1)
+            for i in range(dim):
+                if std[i] != 0.:
+                    array[i] /= std[i]
+            # array /= array.std(axis=1).reshape(dim, 1)
+            # if np.isnan(array).any():
+            #     raise ValueError("Nans after standardizing, "
+            #                      "possibly constant array!")
 
         target_series = array[target_var, :]
         z = np.fastCopyAndTranspose(array[2:])

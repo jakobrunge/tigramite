@@ -162,12 +162,16 @@ class CMIknn(CondIndTest):
             # Standardize
             array = array.astype(np.float64)
             array -= array.mean(axis=1).reshape(dim, 1)
-            array /= array.std(axis=1).reshape(dim, 1)
+            std = array.std(axis=1)
+            for i in range(dim):
+                if std[i] != 0.:
+                    array[i] /= std[i]
+            # array /= array.std(axis=1).reshape(dim, 1)
             # FIXME: If the time series is constant, return nan rather than
             # raising Exception
-            if np.isnan(array).sum() != 0:
-                raise ValueError("nans after standardizing, "
-                                 "possibly constant array!")
+            # if np.isnan(array).sum() != 0:
+            #     raise ValueError("nans after standardizing, "
+            #                      "possibly constant array!")
         elif self.transform == 'uniform':
             array = self._trafo2uniform(array)
         elif self.transform == 'ranks':
@@ -376,12 +380,16 @@ class CMIknn(CondIndTest):
             # Standardize
             array = array.astype(np.float64)
             array -= array.mean(axis=1).reshape(dim, 1)
-            array /= array.std(axis=1).reshape(dim, 1)
+            std = array.std(axis=1)
+            for i in range(dim):
+                if std[i] != 0.:
+                    array[i] /= std[i]
+            # array /= array.std(axis=1).reshape(dim, 1)
             # FIXME: If the time series is constant, return nan rather than
             # raising Exception
-            if np.isnan(array).sum() != 0:
-                raise ValueError("nans after standardizing, "
-                                 "possibly constant array!")
+            # if np.isnan(array).sum() != 0:
+            #     raise ValueError("nans after standardizing, "
+            #                      "possibly constant array!")
         elif self.transform == 'uniform':
             array = self._trafo2uniform(array)
         elif self.transform == 'ranks':

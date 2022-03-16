@@ -91,10 +91,14 @@ class ParCorr(CondIndTest):
         # Standardize
         if standardize:
             array -= array.mean(axis=1).reshape(dim, 1)
-            array /= array.std(axis=1).reshape(dim, 1)
-            if np.isnan(array).sum() != 0:
-                raise ValueError("nans after standardizing, "
-                                 "possibly constant array!")
+            std = array.std(axis=1)
+            for i in range(dim):
+                if std[i] != 0.:
+                    array[i] /= std[i]
+            # array /= array.std(axis=1).reshape(dim, 1)
+            # if np.isnan(array).sum() != 0:
+            #     raise ValueError("nans after standardizing, "
+            #                      "possibly constant array!")
 
         y = array[target_var, :]
 
