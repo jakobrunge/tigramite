@@ -81,6 +81,7 @@ class Models():
         self.tau_max = None
         self.fit_results = None
 
+    # @profile    
     def get_general_fitted_model(self, 
                 Y, X, Z=None,
                 conditions=None,
@@ -200,6 +201,7 @@ class Models():
         self.fit_results = fit_results
         return fit_results
 
+    # @profile
     def get_general_prediction(self,
                 intervention_data,
                 conditions_data=None,
