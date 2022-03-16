@@ -9,6 +9,7 @@ import itertools
 from copy import deepcopy
 from collections import defaultdict
 from tigramite.models import Models
+import struct
 
 class CausalEffects():
     r"""Causal effect estimation.
@@ -132,10 +133,12 @@ class CausalEffects():
         # print(self.graph.shape)
         self._check_graph(self.graph)
 
-        anc_Y = self._get_ancestors(Y)
+        self.ancX = self._get_ancestors(X)
+        self.ancY = self._get_ancestors(Y)
+        self.ancS = self._get_ancestors(S)
 
         # If X is not in anc(Y), then no causal link exists
-        if anc_Y.intersection(set(X)) == set():
+        if self.ancY.intersection(set(X)) == set():
             self.no_causal_path = True
             if self.verbosity > 0:
                 print("No causal path from X to Y exists.")
@@ -169,21 +172,24 @@ class CausalEffects():
         if check_SM_overlap and len(self.S.intersection(self.M)) > 0:
             raise ValueError("Conditions S overlap with mediators M!")
 
-        descendants = self._get_descendants(self.Y.union(self.M))
-        
+        self.desX = self._get_descendants(self.X)
+        self.desY = self._get_descendants(self.Y)
+        self.desM = self._get_descendants(self.M)
+        self.descendants = self.desY.union(self.desM)
+
         # Define forb as X and descendants of YM
-        self.forbidden_nodes = descendants.union(self.X)  #.union(S)
+        self.forbidden_nodes = self.descendants.union(self.X)  #.union(S)
 
         # Define valid ancestors
-        self.vancs = self._get_ancestors(list(self.X.union(self.Y).union(self.S))) - self.forbidden_nodes
+        self.vancs = self.ancX.union(self.ancY).union(self.ancS) - self.forbidden_nodes
 
-        if len(self.S.intersection(self._get_descendants(self.X))) > 0:
-            if self.verbosity > 0:
+        if self.verbosity > 0:
+            if len(self.S.intersection(self.desX)) > 0:
                 print("Warning: Potentially outside assumptions: Conditions S overlap with des(X)")
 
         # Here only check if S overlaps with des(Y), leave the option that S
         # contains variables in des(M) to the user
-        if len(self.S.intersection(self._get_descendants(self.Y))) > 0:
+        if len(self.S.intersection(self.desY)) > 0:
             raise ValueError("Not identifiable: Conditions S overlap with des(Y)")
 
         if self.verbosity > 0:
@@ -345,16 +351,16 @@ class CausalEffects():
         oldX = self.X.copy()
         oldY = self.Y.copy()
 
-        anc_Y = self._get_ancestors(self.Y)
-        anc_S = self._get_ancestors(self.S)
+        # anc_Y = self._get_ancestors(self.Y)
+        # anc_S = self._get_ancestors(self.S)
 
         # Remove first from X those nodes with no causal path to Y or S
-        X = set([x for x in self.X if x in anc_Y.union(anc_S)])
+        X = set([x for x in self.X if x in self.ancY.union(self.ancS)])
         
         # Remove from Y those nodes with no causal path from X
-        des_X = self._get_descendants(X)
+        # des_X = self._get_descendants(X)
 
-        Y = set([y for y in self.Y if y in des_X])
+        Y = set([y for y in self.Y if y in self.desX])
 
         # Also require that all x in X have proper path to Y or S,
         # that is, the first link goes out of x 
@@ -596,27 +602,33 @@ class CausalEffects():
         # Find adjacencies going forward/contemp
         for k, lag_ik in zip(*np.where(graph[i,:,lag_i,:])):
             # print((k, lag_ik), graph[i,k,lag_i,lag_ik]) 
-            matches = [self._match_link(patt, graph[i,k,lag_i,lag_ik]) for patt in patterns]
-            if np.any(matches):
-                match = (k, -lag_ik)
-                if match not in exclude:
-                    if return_link:
-                        adj.append((graph[i,k,lag_i,lag_ik], match))
-                    else:
-                        adj.append(match)
+            # matches = [self._match_link(patt, graph[i,k,lag_i,lag_ik]) for patt in patterns]
+            # if np.any(matches):
+            for patt in patterns:
+                if self._match_link(patt, graph[i,k,lag_i,lag_ik]):
+                    match = (k, -lag_ik)
+                    if match not in exclude:
+                        if return_link:
+                            adj.append((graph[i,k,lag_i,lag_ik], match))
+                        else:
+                            adj.append(match)
+                    break
 
         
         # Find adjacencies going backward/contemp
         for k, lag_ki in zip(*np.where(graph[:,i,:,lag_i])):  
             # print((k, lag_ki), graph[k,i,lag_ki,lag_i]) 
-            matches = [self._match_link(self._reverse_link(patt), graph[k,i,lag_ki,lag_i]) for patt in patterns]
-            if np.any(matches):
-                match = (k, -lag_ki)
-                if match not in exclude:
-                    if return_link:
-                        adj.append((self._reverse_link(graph[k,i,lag_ki,lag_i]), match))
-                    else:
-                        adj.append(match)
+            # matches = [self._match_link(self._reverse_link(patt), graph[k,i,lag_ki,lag_i]) for patt in patterns]
+            # if np.any(matches):
+            for patt in patterns:
+                if self._match_link(self._reverse_link(patt), graph[k,i,lag_ki,lag_i]):
+                    match = (k, -lag_ki)
+                    if match not in exclude:
+                        if return_link:
+                            adj.append((self._reverse_link(graph[k,i,lag_ki,lag_i]), match))
+                        else:
+                            adj.append(match)
+                    break
      
         adj = list(set(adj))
         return adj
@@ -634,7 +646,7 @@ class CausalEffects():
         return ((tauij >= 0 and self._match_link(pattern_ij, graph[i, j, tauij])) or
                (tauij < 0 and self._match_link(self._reverse_link(pattern_ij), graph[j, i, abs(tauij)])))
 
-
+    # @profile
     def _get_children(self, varlag):
         """Returns set of children (varlag --> ...) for (lagged) varlag."""
         if self.possible:
@@ -745,6 +757,7 @@ class CausalEffects():
 
         return descendants
 
+    # @profile
     def _get_descendants(self, W):
         """Get descendants of nodes in W up to time t.
         
@@ -1079,6 +1092,7 @@ class CausalEffects():
 
         return aux_graph
 
+    # @profile
     def _check_path(self, 
         # graph, 
         start, end,
@@ -1280,7 +1294,7 @@ class CausalEffects():
         # print("Separated")
         return False
 
-
+    # @profile
     def get_optimal_set(self, 
         alternative_conditions=None,
         minimize=False,
@@ -1314,9 +1328,17 @@ class CausalEffects():
             vancs = self.vancs.copy()
         else:
             S = alternative_conditions
-            vancs = self._get_ancestors(list(self.X.union(self.Y).union(S))) - self.forbidden_nodes
+            newancS = self._get_ancestors(S)
+            self.vancs = self.ancX.union(self.ancY).union(newancS) - self.forbidden_nodes
 
-        descendants = self._get_descendants(self.Y.union(self.M))
+            # vancs = self._get_ancestors(list(self.X.union(self.Y).union(S))) - self.forbidden_nodes
+
+        # descendants = self._get_descendants(self.Y.union(self.M))
+
+        # Sufficient condition for non-identifiability
+        if len(self.X.intersection(self.descendants)) > 0:
+            return False  # raise ValueError("Not identifiable: Overlap between X and des(M)")
+
 
         ##
         ## Construct O-set
@@ -1409,8 +1431,9 @@ class CausalEffects():
         # if-statements of the construction algorithm, but for 
         # multivariate X there might be further cases... Hence,
         # we here explicitely check validity
-        if self._check_validity(list(Oset_S)) is False:
-            return False
+        # if len(self.X) > 1:
+        #     if self._check_validity(list(Oset_S)) is False:
+        #         return False
 
         if return_separate_sets:
             return parents, colliders, collider_parents, S
@@ -1769,7 +1792,7 @@ class CausalEffects():
 
         return all_causal_paths
 
-
+    # @profile
     def fit_total_effect(self,
         dataframe, 
         estimator,
@@ -1851,6 +1874,7 @@ class CausalEffects():
 
         return self
 
+    # @profile
     def predict_total_effect(self, 
         intervention_data, 
         conditions_data=None,
@@ -1895,6 +1919,7 @@ class CausalEffects():
 
         return effect
 
+    # @profile
     def fit_wright_effect(self,
         dataframe, 
         mediation=None,
@@ -1953,7 +1978,7 @@ class CausalEffects():
                         mask_type=mask_type,
                         verbosity=self.verbosity)
 
-        mediators = self.get_mediators(start=self.X, end=self.Y)
+        mediators = self.M  # self.get_mediators(start=self.X, end=self.Y)
 
         if mediation == 'direct':
             causal_paths = {}         
@@ -2073,7 +2098,7 @@ class CausalEffects():
         self.model.fit_results = fit_results
         return self
 
-    
+    # @profile 
     def predict_wright_effect(self, 
         intervention_data, 
         pred_params=None,
@@ -2222,7 +2247,7 @@ if __name__ == '__main__':
     import sklearn
     from sklearn.linear_model import LinearRegression
 
-    T = 10000
+    T = 1000
     def lin_f(x): return x
     auto_coeff = 0.3
     coeff = 2.
@@ -2254,18 +2279,32 @@ if __name__ == '__main__':
                                 verbosity=1)
 
     # Optimal adjustment set (is used by default)
-    print(causal_effects.get_optimal_set())
+    # print(causal_effects.get_optimal_set())
+
+    # # Fit causal effect model from observational data
+    # causal_effects.fit_total_effect(
+    #     dataframe=dataframe, 
+    #     # mask_type='y',
+    #     estimator=LinearRegression(),
+    #     )
+
+    # # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go
+    # dox_vals = np.linspace(0., 1., 5)
+    # intervention_data = dox_vals.reshape(len(dox_vals), len(X))
+    # pred_Y = causal_effects.predict_total_effect( 
+    #         intervention_data=intervention_data)
+    # print(pred_Y)
 
     # Fit causal effect model from observational data
-    causal_effects.fit_total_effect(
+    causal_effects.fit_wright_effect(
         dataframe=dataframe, 
         # mask_type='y',
-        estimator=LinearRegression(),
+        # estimator=LinearRegression(),
         )
 
     # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go
     dox_vals = np.linspace(0., 1., 5)
     intervention_data = dox_vals.reshape(len(dox_vals), len(X))
-    pred_Y = causal_effects.predict_total_effect( 
+    pred_Y = causal_effects.predict_wright_effect( 
             intervention_data=intervention_data)
     print(pred_Y)
