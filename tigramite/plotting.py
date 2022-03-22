@@ -5,7 +5,26 @@
 # License: GNU General Public License v3.0
 
 import numpy as np
-import matplotlib
+import json, warnings
+try:
+    from importlib import metadata
+except ImportError:
+    import importlib_metadata as metadata  # python<=3.7
+try:
+    import matplotlib
+    import networkx as nx
+    with open('../versions.py', 'r') as vfile:
+        packages = json.loads(vfile.read())['all']
+        packages = dict(map(lambda s: s.split('>='), packages))
+        if metadata.version('matplotlib') < packages['matplotlib']:
+            raise Exception('Version mismatch. Installed version of matplotlib', metadata.version('matplotlib'),
+                          'Please install matplotlib>=', packages['matplotlib'])
+        if metadata.version('networkx') < packages['networkx']:
+            raise Exception('Version mismatch. Installed version of networkx', metadata.version('networkx'),
+                          'Please install networkx>=', packages['networkx'])
+except Exception as e:
+    warnings.warn(str(e))
+
 from matplotlib.colors import ListedColormap
 import matplotlib.transforms as transforms
 from matplotlib import pyplot, ticker
@@ -15,7 +34,6 @@ from matplotlib.collections import PatchCollection
 
 import sys
 from operator import sub
-import networkx as nx
 import tigramite.data_processing as pp
 from copy import deepcopy
 import matplotlib.path as mpath

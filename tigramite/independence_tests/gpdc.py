@@ -5,15 +5,27 @@
 # License: GNU General Public License v3.0
 
 from __future__ import print_function
+import json, warnings
 import numpy as np
-import warnings
-from .independence_tests_base import CondIndTest
-
+try:
+    from importlib import metadata
+except ImportError:
+    import importlib_metadata as metadata  # python<=3.7
 try:
     import dcor
     from sklearn import gaussian_process
+    with open('../versions.py', 'r') as vfile:
+        packages = json.loads(vfile.read())['all']
+        packages = dict(map(lambda s: s.split('>='), packages))
+        if metadata.version('dcor') < packages['dcor']:
+            raise Exception('Version mismatch. Installed version of dcor', metadata.version('dcor'),
+                            'Please install dcor>=', packages['dcor'])
+        if metadata.version('scikit-learn') < packages['scikit-learn']:
+            raise Exception('Version mismatch. Installed version of scikit-learn', metadata.version('scikit-learn'),
+                          'Please install scikit-learn>=', packages['scikit-learn'])
 except Exception as e:
     warnings.warn(str(e))
+from .independence_tests_base import CondIndTest
 
 class GaussProcReg():
     r"""Gaussian processes abstract base class.
