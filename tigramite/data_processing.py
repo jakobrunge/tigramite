@@ -42,15 +42,19 @@ class DataFrame():
         passed, variables are enumerated as [0, 1, ...]
     datatime : array-like, optional (default: None)
         Timelabel array. If None, range(T) is used.
+    remove_missing_upto_maxlag : bool, optional (default: False)
+        Whether to remove not only missing samples, but also all neighboring
+        samples up to max_lag (as given by cut_off in construct_array).
     """
     def __init__(self, data, mask=None, missing_flag=None, var_names=None,
-        datatime=None):
+        datatime=None, remove_missing_upto_maxlag=False):
 
         self.values = data.copy()
         self.mask = mask
         self.missing_flag = missing_flag
         if self.missing_flag is not None:
             self.values[self.values == self.missing_flag] = np.nan
+        self.remove_missing_upto_maxlag = remove_missing_upto_maxlag
         T, N = data.shape
         # Set the variable names
         self.var_names = var_names
@@ -120,7 +124,6 @@ class DataFrame():
                         return_cleaned_xyz=False,
                         do_checks=True,
                         cut_off='2xtau_max',
-                        remove_missing_upto_maxlag=True,
                         verbosity=0):
         """Constructs array from variables X, Y, Z from data.
 
@@ -156,9 +159,6 @@ class DataFrame():
             which uses the maximum of tau_max and the conditions, which is
             useful to compare multiple models on the same sample.  Last,
             'max_lag' uses as much samples as possible.
-        remove_missing_upto_maxlag : bool, optional (default: True)
-            Whether to remove not only missing samples, but also all neighboring
-            samples up to max_lag (as given by cut_off).
         verbosity : int, optional (default: 0)
             Level of verbosity.
 
@@ -232,10 +232,12 @@ class DataFrame():
         # slices that occur up to max_lag after
         if self.missing_flag is not None:
             missing_anywhere = np.array(np.where(np.any(np.isnan(array), axis=0))[0])
-            if remove_missing_upto_maxlag:
+            if self.remove_missing_upto_maxlag:
                 for tau in range(max_lag+1):
                     if self.bootstrap is None:
-                        use_indices[missing_anywhere + tau] = 0
+                        delete = missing_anywhere + tau 
+                        delete = delete[delete < time_length]
+                        use_indices[delete] = 0
                     else:
                         use_indices[missing_anywhere[self.bootstrap] + tau] = 0
             else:

@@ -93,7 +93,6 @@ class Models():
                 conditions=None,
                 tau_max=None,
                 cut_off='max_lag_or_tau_max',
-                remove_missing_upto_maxlag=True,
                 return_data=False):
         """Fit time series model.
 
@@ -116,9 +115,6 @@ class Models():
             sample. Other options are '2xtau_max', which guarantees that MCI
             tests are all conducted on the same samples. Last, 'max_lag' uses
             as much samples as possible.
-        remove_missing_upto_maxlag : bool, optional (default: True)
-            Whether to remove not only missing samples, but also all neighboring
-            samples up to max_lag (as given by cut_off).
         return_data : bool, optional (default: False)
             Whether to save the data array.
 
@@ -171,7 +167,6 @@ class Models():
                                                tau_max=self.tau_max,
                                                mask_type=self.mask_type,
                                                cut_off=self.cut_off,
-                                               remove_missing_upto_maxlag=remove_missing_upto_maxlag,
                                                verbosity=self.verbosity)
 
 
