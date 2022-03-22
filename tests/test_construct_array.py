@@ -96,7 +96,7 @@ def test_construct_array(cstrct_array_params):
         missing_flag = data[earliest_time, a_nd]
         # Record that the row with this value and all rows up to max_lag after
         # this value have been cut off as well
-        n_rows_masked += max_lag + 1
+        # n_rows_masked += 1
 
     # Construct the array
     data_f = pp.DataFrame(data, data_mask, missing_flag)
@@ -122,6 +122,15 @@ def test_construct_array(cstrct_array_params):
     # masked variable, which removes the first n time slices in the returned
     # array
     expect_array = expect_array[:, n_rows_masked:]
+    if missing_vals:
+        missing_anywhere_base = np.array(np.where(np.any(expect_array==missing_flag, axis=0))[0])
+        missing_anywhere = list(missing_anywhere_base)
+        for tau in range(1, max_lag+1):
+            missing_anywhere += list(np.array(missing_anywhere_base) + tau)
+        expect_array = np.delete(expect_array, missing_anywhere, axis=1)
+
     # Test the results
+    # print(array)
+    # print(expect_array)
     np.testing.assert_almost_equal(array, expect_array)
     np.testing.assert_almost_equal(xyz, expect_xyz)

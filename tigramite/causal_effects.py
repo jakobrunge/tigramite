@@ -1339,7 +1339,6 @@ class CausalEffects():
         if len(self.X.intersection(self.descendants)) > 0:
             return False  # raise ValueError("Not identifiable: Overlap between X and des(M)")
 
-
         ##
         ## Construct O-set
         ##
@@ -1426,14 +1425,6 @@ class CausalEffects():
             Oset = Oset - set(removable)
 
         Oset_S = Oset.union(S)
-
-        # For singleton X the validity is already checked in the
-        # if-statements of the construction algorithm, but for 
-        # multivariate X there might be further cases... Hence,
-        # we here explicitely check validity
-        # if len(self.X) > 1:
-        #     if self._check_validity(list(Oset_S)) is False:
-        #         return False
 
         if return_separate_sets:
             return parents, colliders, collider_parents, S
@@ -2258,7 +2249,11 @@ if __name__ == '__main__':
             }
     data, nonstat = toys.structural_causal_process(links, T=T, 
                                 noises=None, seed=7)
-    dataframe = pp.DataFrame(data) 
+
+    # Create some missing values
+    data[:10,:] = 999.
+    dataframe = pp.DataFrame(data, missing_flag=999.) 
+
 
     # Construct expert knowledge graph from links here 
     links = {0: [(0, -1)],
@@ -2276,8 +2271,9 @@ if __name__ == '__main__':
     causal_effects = CausalEffects(graph, graph_type='stationary_dag', 
                                 X=X, Y=Y, S=None, 
                                 hidden_variables=None, 
-                                verbosity=1)
+                                verbosity=5)
 
+    print(data)
     # Optimal adjustment set (is used by default)
     # print(causal_effects.get_optimal_set())
 

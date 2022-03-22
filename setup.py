@@ -6,6 +6,7 @@ import pathlib
 import os
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
+import json
 
 # Handle building against numpy headers before installing numpy
 
@@ -33,22 +34,25 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 # Define the minimal classes needed to install and run tigramite
 # INSTALL_REQUIRES =  ["numpy==1.21.4", "scipy==1.7.2", "numba==0.53.1", "six"]
-INSTALL_REQUIRES =  ["numpy", "scipy", "numba", "six"]
+INSTALL_REQUIRES = ["numpy", "scipy", "numba", "six"]
 # Define all the possible extras needed
 EXTRAS_REQUIRE = {
     "all": [
         "scikit-learn>=0.21",  # Gaussian Process (GP) Regression
         "matplotlib>=3.4.0",   # plotting
         "networkx>=2.4",       # plotting
-        "torch>=1.7",          # GPDC torch version
+        "pytorch>=1.11.0",     # GPDC pytorch version
         "gpytorch>=1.4",       # GPDC gpytorch version
         "dcor>=0.5.3",         # GPDC distance correlation version
     ]
 }
 
+with open('versions.py', 'w') as vfile:
+    vfile.write(json.dumps(EXTRAS_REQUIRE))
+
 # Define the packages needed for testing
 TESTS_REQUIRE = ["nose", "pytest", "networkx>=2.4", "scikit-learn>=0.21", 
-                 "torch>=1.7", "gpytorch>=1.4", "dcor>=0.5.3"]
+                 "pytorch>=1.11.0", "gpytorch>=1.4", "dcor>=0.5.3"]
 EXTRAS_REQUIRE["test"] = TESTS_REQUIRE
 # Define the extras needed for development
 EXTRAS_REQUIRE["dev"] = EXTRAS_REQUIRE["all"]
@@ -59,7 +63,7 @@ CMDCLASS = {"build_ext": UseNumpyHeadersBuildExt}
 # Run the setup
 setup(
     name="tigramite",
-    version="5.0.0.8",
+    version="5.0.1.0",
     packages=["tigramite", "tigramite.independence_tests", "tigramite.toymodels"],
     license="GNU General Public License v3.0",
     description="Tigramite causal discovery for time series",
