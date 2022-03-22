@@ -125,12 +125,10 @@ def test_construct_array(cstrct_array_params):
     if missing_vals:
         missing_anywhere_base = np.array(np.where(np.any(expect_array==missing_flag, axis=0))[0])
         missing_anywhere = list(missing_anywhere_base)
-        for tau in range(1, max_lag+1):
-            missing_anywhere += list(np.array(missing_anywhere_base) + tau)
+        # for tau in range(1, max_lag+1):
+        #     missing_anywhere += list(np.array(missing_anywhere_base) + tau)
         expect_array = np.delete(expect_array, missing_anywhere, axis=1)
 
     # Test the results
-    # print(array)
-    # print(expect_array)
     np.testing.assert_almost_equal(array, expect_array)
     np.testing.assert_almost_equal(xyz, expect_xyz)

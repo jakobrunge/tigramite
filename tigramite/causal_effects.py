@@ -2251,7 +2251,7 @@ if __name__ == '__main__':
                                 noises=None, seed=7)
 
     # Create some missing values
-    data[:10,:] = 999.
+    data[-10:,:] = 999.
     dataframe = pp.DataFrame(data, missing_flag=999.) 
 
 
