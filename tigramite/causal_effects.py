@@ -2262,7 +2262,9 @@ if __name__ == '__main__':
 
     # Create some missing values
     data[-10:,:] = 999.
-    dataframe = pp.DataFrame(data, missing_flag=999.) 
+    var_names = range(5)
+    dataframe = pp.DataFrame(data, var_names=var_names,
+     missing_flag=999.) 
 
 
     # Construct expert knowledge graph from links here 

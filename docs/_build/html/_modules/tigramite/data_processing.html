@@ -1,10 +1,9 @@
 
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>tigramite.data_processing &#8212; Tigramite 5.0 documentation</title>
     <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -26,10 +25,23 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 5.0 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">tigramite.data_processing</a></li> 
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
       </ul>
-    </div>  
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
 
     <div class="document">
       <div class="documentwrapper">
@@ -56,8 +68,6 @@
 <div class="viewcode-block" id="DataFrame"><a class="viewcode-back" href="../../index.html#tigramite.data_processing.DataFrame">[docs]</a><span class="k">class</span> <span class="nc">DataFrame</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;Data object containing time series array and optional mask.</span>
 
-<span class="sd">    Alternatively, a panda dataframe can be used.</span>
-
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    data : array-like</span>
@@ -81,22 +91,28 @@
 <span class="sd">        passed, variables are enumerated as [0, 1, ...]</span>
 <span class="sd">    datatime : array-like, optional (default: None)</span>
 <span class="sd">        Timelabel array. If None, range(T) is used.</span>
+<span class="sd">    remove_missing_upto_maxlag : bool, optional (default: False)</span>
+<span class="sd">        Whether to remove not only missing samples, but also all neighboring</span>
+<span class="sd">        samples up to max_lag (as given by cut_off in construct_array).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">missing_flag</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">var_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">datatime</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">datatime</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">remove_missing_upto_maxlag</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">values</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">values</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span> <span class="o">=</span> <span class="n">missing_flag</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remove_missing_upto_maxlag</span> <span class="o">=</span> <span class="n">remove_missing_upto_maxlag</span>
         <span class="n">T</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
         <span class="c1"># Set the variable names</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span> <span class="o">=</span> <span class="n">var_names</span>
         <span class="c1"># Set the default variable names if none are set</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)}</span>
-
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">)</span> <span class="o">!=</span> <span class="n">N</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;len(var_names) != data.shape[1].&quot;</span><span class="p">)</span>
         <span class="c1"># Set datatime</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">datatime</span> <span class="o">=</span> <span class="n">datatime</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">datatime</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -153,6 +169,7 @@
                                  <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">_use_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
 
 <div class="viewcode-block" id="DataFrame.construct_array"><a class="viewcode-back" href="../../index.html#tigramite.data_processing.DataFrame.construct_array">[docs]</a>    <span class="k">def</span> <span class="nf">construct_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span>
+                        <span class="n">extraZ</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                         <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                         <span class="n">mask_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                         <span class="n">return_cleaned_xyz</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -166,10 +183,10 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        X, Y, Z : list of tuples</span>
+<span class="sd">        X, Y, Z, extraZ : list of tuples</span>
 <span class="sd">            For a dependence measure I(X;Y|Z), X, Y, Z can be multivariate of</span>
 <span class="sd">            the form [(var1, -lag), (var2, -lag), ...]. At least one varlag in Y </span>
-<span class="sd">            has to be at lag zero.</span>
+<span class="sd">            has to be at lag zero. extraZ is only used in CausalEffects class.</span>
 <span class="sd">        tau_max : int</span>
 <span class="sd">            Maximum time lag. This may be used to make sure that estimates for</span>
 <span class="sd">            different lags in X and Z all have the same sample size.</span>
@@ -210,16 +227,20 @@
         <span class="c1"># Get the length in time and the number of nodes</span>
         <span class="n">T</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">shape</span>
 
-        <span class="c1"># Remove duplicates in X, Y, Z</span>
+        <span class="k">if</span> <span class="n">extraZ</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">extraZ</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Remove duplicates in X, Y, Z, extraZ</span>
         <span class="n">X</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">OrderedDict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
         <span class="n">Y</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">OrderedDict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">Y</span><span class="p">))</span>
         <span class="n">Z</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">OrderedDict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">Z</span><span class="p">))</span>
+        <span class="n">extraZ</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">OrderedDict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">extraZ</span><span class="p">))</span>
 
         <span class="c1"># If a node in Z occurs already in X or Y, remove it from Z</span>
         <span class="n">Z</span> <span class="o">=</span> <span class="p">[</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">Z</span> <span class="k">if</span> <span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">X</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">Y</span><span class="p">)]</span>
+        <span class="n">extraZ</span> <span class="o">=</span> <span class="p">[</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">extraZ</span> <span class="k">if</span> <span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">X</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">Y</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">Z</span><span class="p">)]</span>
 
         <span class="c1"># Check that all lags are non-positive and indices are in [0,N-1]</span>
-        <span class="n">XYZ</span> <span class="o">=</span> <span class="n">X</span> <span class="o">+</span> <span class="n">Y</span> <span class="o">+</span> <span class="n">Z</span>
+        <span class="n">XYZ</span> <span class="o">=</span> <span class="n">X</span> <span class="o">+</span> <span class="n">Y</span> <span class="o">+</span> <span class="n">Z</span> <span class="o">+</span> <span class="n">extraZ</span>
         <span class="n">dim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">XYZ</span><span class="p">)</span>
 
         <span class="c1"># Ensure that XYZ makes sense</span>
@@ -239,9 +260,10 @@
         <span class="c1"># Setup XYZ identifier</span>
         <span class="n">index_code</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;x&#39;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
                       <span class="s1">&#39;y&#39;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-                      <span class="s1">&#39;z&#39;</span> <span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+                      <span class="s1">&#39;z&#39;</span> <span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                      <span class="s1">&#39;e&#39;</span> <span class="p">:</span> <span class="mi">3</span><span class="p">}</span>
         <span class="n">xyz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">index_code</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
-                        <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">])</span>
+                        <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">extraZ</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="s1">&#39;e&#39;</span><span class="p">])</span>
                         <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">var</span><span class="p">])</span>
 
         <span class="c1"># Setup and fill array with lagged time series</span>
@@ -257,15 +279,23 @@
         <span class="c1"># Choose which indices to use</span>
         <span class="n">use_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">time_length</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
 
-        <span class="c1"># Remove all values that have missing value flag, as well as the time</span>
+        <span class="c1"># Remove all values that have missing value flag, and optionally as well the time</span>
         <span class="c1"># slices that occur up to max_lag after</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">missing_anywhere</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">tau</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_lag</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">missing_anywhere</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">array</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">remove_missing_upto_maxlag</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">tau</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_lag</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bootstrap</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">delete</span> <span class="o">=</span> <span class="n">missing_anywhere</span> <span class="o">+</span> <span class="n">tau</span> 
+                        <span class="n">delete</span> <span class="o">=</span> <span class="n">delete</span><span class="p">[</span><span class="n">delete</span> <span class="o">&lt;</span> <span class="n">time_length</span><span class="p">]</span>
+                        <span class="n">use_indices</span><span class="p">[</span><span class="n">delete</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">use_indices</span><span class="p">[</span><span class="n">missing_anywhere</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">bootstrap</span><span class="p">]</span> <span class="o">+</span> <span class="n">tau</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bootstrap</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">use_indices</span><span class="p">[</span><span class="n">missing_anywhere</span><span class="p">[</span><span class="n">tau</span><span class="p">:</span><span class="n">T</span><span class="o">-</span><span class="n">max_lag</span><span class="o">+</span><span class="n">tau</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="n">use_indices</span><span class="p">[</span><span class="n">missing_anywhere</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">use_indices</span><span class="p">[</span><span class="n">missing_anywhere</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">bootstrap</span> <span class="o">-</span> <span class="n">max_lag</span> <span class="o">+</span> <span class="n">tau</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="n">use_indices</span><span class="p">[</span><span class="n">missing_anywhere</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">bootstrap</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">0</span>
 
         <span class="c1"># Use the mask override if needed</span>
         <span class="n">_use_mask</span> <span class="o">=</span> <span class="n">mask</span>
@@ -289,7 +319,7 @@
                     <span class="n">array_mask</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">(</span><span class="n">_use_mask</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">bootstrap</span> <span class="o">+</span> <span class="n">lag</span><span class="p">,</span> <span class="n">var</span><span class="p">]</span> <span class="o">==</span> <span class="kc">False</span><span class="p">)</span>
 
             <span class="c1"># Iterate over defined mapping from letter index to number index,</span>
-            <span class="c1"># i.e. &#39;x&#39; -&gt; 0, &#39;y&#39; -&gt; 1, &#39;z&#39;-&gt; 2</span>
+            <span class="c1"># i.e. &#39;x&#39; -&gt; 0, &#39;y&#39; -&gt; 1, &#39;z&#39;-&gt; 2, &#39;e&#39;-&gt; 3</span>
             <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">cde</span> <span class="ow">in</span> <span class="n">index_code</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="c1"># Check if the letter index is in the mask type</span>
                 <span class="k">if</span> <span class="p">(</span><span class="n">mask_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">idx</span> <span class="ow">in</span> <span class="n">mask_type</span><span class="p">):</span>
@@ -307,7 +337,7 @@
 
         <span class="c1"># Print information about the constructed array</span>
         <span class="k">if</span> <span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">print_array_info</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span><span class="p">,</span> <span class="n">mask_type</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">print_array_info</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span><span class="p">,</span> <span class="n">mask_type</span><span class="p">,</span> <span class="n">extraZ</span><span class="p">)</span>
 
         <span class="c1"># Return the array and xyz and optionally (X, Y, Z)</span>
         <span class="k">if</span> <span class="n">return_cleaned_xyz</span><span class="p">:</span>
@@ -349,7 +379,7 @@
         <span class="c1">#     raise ValueError(&quot;Y-nodes are %s, &quot; % str(Y) +</span>
         <span class="c1">#                      &quot;but one of the Y-nodes must have zero lag&quot;)</span>
 
-<div class="viewcode-block" id="DataFrame.print_array_info"><a class="viewcode-back" href="../../index.html#tigramite.data_processing.DataFrame.print_array_info">[docs]</a>    <span class="k">def</span> <span class="nf">print_array_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">missing_flag</span><span class="p">,</span> <span class="n">mask_type</span><span class="p">):</span>
+<div class="viewcode-block" id="DataFrame.print_array_info"><a class="viewcode-back" href="../../index.html#tigramite.data_processing.DataFrame.print_array_info">[docs]</a>    <span class="k">def</span> <span class="nf">print_array_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">missing_flag</span><span class="p">,</span> <span class="n">mask_type</span><span class="p">,</span> <span class="n">extraZ</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Print info about the constructed array</span>
 
@@ -357,7 +387,7 @@
 <span class="sd">        ----------</span>
 <span class="sd">        array : Data array of shape (dim, T)</span>
 <span class="sd">            Data array.</span>
-<span class="sd">        X, Y, Z : list of tuples</span>
+<span class="sd">        X, Y, Z, extraZ : list of tuples</span>
 <span class="sd">            For a dependence measure I(X;Y|Z), Y is of the form [(varY, 0)],</span>
 <span class="sd">            where var specifies the variable index. X typically is of the form</span>
 <span class="sd">            [(varX, -tau)] with tau denoting the time lag and Z can be</span>
@@ -372,11 +402,15 @@
 <span class="sd">            measure I(X; Y | Z) the samples should be masked. If None, the mask</span>
 <span class="sd">            is not used. Explained in tutorial on masking and missing values.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">extraZ</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">extraZ</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">indt</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="mi">12</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">indt</span> <span class="o">+</span> <span class="s2">&quot;Constructed array of shape </span><span class="si">%s</span><span class="s2"> from&quot;</span><span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span>
               <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">indt</span> <span class="o">+</span> <span class="s2">&quot;X = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="o">+</span>
               <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">indt</span> <span class="o">+</span> <span class="s2">&quot;Y = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span> <span class="o">+</span>
               <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">indt</span> <span class="o">+</span> <span class="s2">&quot;Z = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">Z</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">extraZ</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  
+            <span class="nb">print</span><span class="p">(</span><span class="n">indt</span> <span class="o">+</span> <span class="s2">&quot;extraZ = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">extraZ</span><span class="p">))</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">mask_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">indt</span><span class="o">+</span><span class="s2">&quot;with masked samples in </span><span class="si">%s</span><span class="s2"> removed&quot;</span> <span class="o">%</span> <span class="n">mask_type</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -745,6 +779,7 @@
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
     
+    <span class="kn">from</span> <span class="nn">tigramite.toymodels.structural_causal_processes</span> <span class="kn">import</span> <span class="n">structural_causal_process</span>
     <span class="c1">## Generate some time series from a structural causal process</span>
     <span class="k">def</span> <span class="nf">lin_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span>
     <span class="k">def</span> <span class="nf">nonlin_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mf">5.</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="mf">20.</span><span class="p">))</span>
@@ -757,24 +792,11 @@
     <span class="n">data</span><span class="p">,</span> <span class="n">nonstat</span> <span class="o">=</span> <span class="n">structural_causal_process</span><span class="p">(</span><span class="n">links</span><span class="p">,</span>
      <span class="n">T</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">noises</span><span class="o">=</span><span class="n">noises</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="n">frame</span> <span class="o">=</span> <span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 </pre></div>
 
-            <div class="clearer"></div>
           </div>
-        </div>
-      </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -789,13 +811,12 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 5.0 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">tigramite.data_processing</a></li> 
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2021, Jakob Runge.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
     </div>
   </body>
 </html>
