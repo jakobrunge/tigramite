@@ -62,9 +62,9 @@ Tigramite is a causal time series analysis python package. It allows to efficien
 ## Required python packages
 
 - python=3.7/3.8/3.9
-- numpy
-- scipy
-- numba
+- numpy==1.21.5
+- scipy==1.8.0
+- numba==0.55.1
 
 ## Optional packages depending on used functions
 - scikit-learn>=0.21  # Gaussian Process (GP) Regression
@@ -86,6 +86,7 @@ To use just the ParCorr, CMIknn, and CMIsymb independence tests, only numpy/numb
 
 - GPDCtorch: gpytorch is required for Gaussian Process regression
 
+Note: Due to incompatibility issues between numba and numpy/scipy, we currently freeze their versions.
 
 ## User Agreement
 
