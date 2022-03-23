@@ -1,10 +1,9 @@
 
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>tigramite.causal_effects &#8212; Tigramite 5.0 documentation</title>
     <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -26,10 +25,23 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 5.0 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">tigramite.causal_effects</a></li> 
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
       </ul>
-    </div>  
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
 
     <div class="document">
       <div class="documentwrapper">
@@ -48,6 +60,7 @@
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span> <span class="nn">tigramite.models</span> <span class="kn">import</span> <span class="n">Models</span>
+<span class="kn">import</span> <span class="nn">struct</span>
 
 <div class="viewcode-block" id="CausalEffects"><a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects">[docs]</a><span class="k">class</span> <span class="nc">CausalEffects</span><span class="p">():</span>
     <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Causal effect estimation.</span>
@@ -112,9 +125,13 @@
         <span class="k">if</span> <span class="n">S</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">S</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="n">X</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="n">Y</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
-        <span class="n">S</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>    
+        <span class="bp">self</span><span class="o">.</span><span class="n">listX</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">listY</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">listS</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Y</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">S</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>    
 
         <span class="c1"># </span>
         <span class="c1"># Checks regarding graph type</span>
@@ -141,12 +158,10 @@
             <span class="n">hidden_variables</span> <span class="o">=</span> <span class="p">[]</span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">hidden_variables</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">hidden_variables</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hidden_variables</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">S</span><span class="p">)))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hidden_variables</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">)</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="p">)))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;XYS overlaps with hidden_variables!&quot;</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">X</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">S</span> <span class="o">=</span> <span class="n">S</span>
+
 
         <span class="c1"># Only needed for later extension to MAG/PAGs</span>
         <span class="k">if</span> <span class="s1">&#39;pag&#39;</span> <span class="ow">in</span> <span class="n">graph_type</span><span class="p">:</span>
@@ -161,18 +176,21 @@
 
         <span class="c1"># Construct internal graph from input graph depending on graph type</span>
         <span class="c1"># and hidden variables</span>
-        <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_type</span><span class="p">,</span> 
-         <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hidden_variables</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_construct_graph</span><span class="p">(</span>
-                            <span class="n">graph</span><span class="o">=</span><span class="n">graph</span><span class="p">,</span> <span class="n">graph_type</span><span class="o">=</span><span class="n">graph_type</span><span class="p">,</span>
-                            <span class="n">hidden_variables</span><span class="o">=</span><span class="n">hidden_variables</span><span class="p">)</span>
+        <span class="c1"># (self.graph, self.graph_type, </span>
+        <span class="c1">#  self.tau_max, self.hidden_variables) = </span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_construct_graph</span><span class="p">(</span><span class="n">graph</span><span class="o">=</span><span class="n">graph</span><span class="p">,</span> <span class="n">graph_type</span><span class="o">=</span><span class="n">graph_type</span><span class="p">,</span>
+                              <span class="n">hidden_variables</span><span class="o">=</span><span class="n">hidden_variables</span><span class="p">)</span>
 
         <span class="c1"># print(self.graph.shape)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_graph</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
 
-        <span class="n">anc_Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_ancestors</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ancX</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_ancestors</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ancY</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_ancestors</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ancS</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_ancestors</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
 
         <span class="c1"># If X is not in anc(Y), then no causal link exists</span>
-        <span class="k">if</span> <span class="n">anc_Y</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">X</span><span class="p">))</span> <span class="o">==</span> <span class="nb">set</span><span class="p">():</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ancY</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">X</span><span class="p">))</span> <span class="o">==</span> <span class="nb">set</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">no_causal_path</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No causal path from X to Y exists.&quot;</span><span class="p">)</span>
@@ -187,14 +205,16 @@
         <span class="n">M</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">mediators</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">M</span> <span class="o">=</span> <span class="n">M</span>
 
-        <span class="k">for</span> <span class="n">varlag</span> <span class="ow">in</span> <span class="n">X</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">S</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">listM</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">varlag</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">)</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="p">):</span>
             <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">varlag</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;X, Y, S must have time lags inside graph.&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Overlap between X and Y&quot;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">)))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">)))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Conditions S overlap with X or Y&quot;</span><span class="p">)</span>
 
         <span class="c1"># # TODO: need to prove that this is sufficient for non-identifiability!</span>
@@ -204,27 +224,25 @@
         <span class="k">if</span> <span class="n">check_SM_overlap</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Conditions S overlap with mediators M!&quot;</span><span class="p">)</span>
 
-        <span class="n">descendants</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_descendants</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">))</span>
-        
+        <span class="bp">self</span><span class="o">.</span><span class="n">desX</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_descendants</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">desY</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_descendants</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">desM</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_descendants</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">descendants</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">desY</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">desM</span><span class="p">)</span>
+
         <span class="c1"># Define forb as X and descendants of YM</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">forbidden_nodes</span> <span class="o">=</span> <span class="n">descendants</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">)</span>  <span class="c1">#.union(S)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forbidden_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">descendants</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">)</span>  <span class="c1">#.union(S)</span>
 
         <span class="c1"># Define valid ancestors</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">vancs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_ancestors</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">)</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="p">)))</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">forbidden_nodes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vancs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ancX</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ancY</span><span class="p">)</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ancS</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">forbidden_nodes</span>
 
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_descendants</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">)))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">desX</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: Potentially outside assumptions: Conditions S overlap with des(X)&quot;</span><span class="p">)</span>
 
         <span class="c1"># Here only check if S overlaps with des(Y), leave the option that S</span>
         <span class="c1"># contains variables in des(M) to the user</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_descendants</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">)))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">desY</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Not identifiable: Conditions S overlap with des(Y)&quot;</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">listX</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">listY</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">listS</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">listM</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">##</span><span class="se">\n</span><span class="s2">## Initializing CausalEffects class</span><span class="se">\n</span><span class="s2">##&quot;</span>
@@ -251,20 +269,21 @@
 
 
         <span class="k">if</span> <span class="n">graph_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;dag&#39;</span><span class="p">,</span> <span class="s1">&#39;admg&#39;</span><span class="p">]:</span> 
-            <span class="n">tau_max</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="k">if</span> <span class="n">graph</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;graph_type in [&#39;dag&#39;, &#39;admg&#39;] assumes graph.shape=(N, N).&quot;</span><span class="p">)</span>
             <span class="c1"># Convert to shape [N, N, 1, 1] with dummy dimension</span>
             <span class="c1"># to process as tsg_dag or tsg_admg with potential hidden variables</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+            
+            <span class="c1"># tau_max needed in _get_latent_projection_graph</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">=</span> <span class="mi">0</span>
 
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">hidden_variables</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_latent_projection_graph</span><span class="p">()</span> <span class="c1"># stationary=False)</span>
-                <span class="n">graph_type</span> <span class="o">=</span> <span class="s2">&quot;tsg_admg&quot;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_latent_projection_graph</span><span class="p">()</span> <span class="c1"># stationary=False)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">=</span> <span class="s2">&quot;tsg_admg&quot;</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span>
-                <span class="n">graph_type</span> <span class="o">=</span> <span class="s1">&#39;tsg_&#39;</span> <span class="o">+</span> <span class="n">graph_type</span>
+                <span class="c1"># graph = self.graph</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">=</span> <span class="s1">&#39;tsg_&#39;</span> <span class="o">+</span> <span class="n">graph_type</span>
 
         <span class="k">elif</span> <span class="n">graph_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;tsg_dag&#39;</span><span class="p">,</span> <span class="s1">&#39;tsg_admg&#39;</span><span class="p">]:</span>
             <span class="k">if</span> <span class="n">graph</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
@@ -276,10 +295,10 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
 
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">hidden_variables</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_latent_projection_graph</span><span class="p">()</span> <span class="c1">#, stationary=False)</span>
-                <span class="n">graph_type</span> <span class="o">=</span> <span class="s2">&quot;tsg_admg&quot;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_latent_projection_graph</span><span class="p">()</span> <span class="c1">#, stationary=False)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">=</span> <span class="s2">&quot;tsg_admg&quot;</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">graph_type</span> <span class="o">=</span> <span class="n">graph_type</span>   
+                <span class="bp">self</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">=</span> <span class="n">graph_type</span>   
 
         <span class="k">elif</span> <span class="n">graph_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;stationary_dag&#39;</span><span class="p">]:</span>
             <span class="c1"># Currently only stationary_dag without hidden variables is supported</span>
@@ -299,16 +318,18 @@
             <span class="k">for</span> <span class="n">varlag</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">)</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="p">):</span>
                 <span class="n">maxlag_XYS</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">maxlag_XYS</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">varlag</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
 
-            <span class="n">tau_max</span> <span class="o">=</span> <span class="n">maxlag_XYS</span> <span class="o">+</span> <span class="n">statgraph_tau_max</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">=</span> <span class="n">maxlag_XYS</span> <span class="o">+</span> <span class="n">statgraph_tau_max</span>
 
             <span class="n">stat_graph</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
 
+            <span class="n">allowed_edges</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;--&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;--&quot;</span><span class="p">]</span>
+
             <span class="c1"># Construct tsg_graph</span>
-            <span class="n">graph</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;&lt;U3&#39;</span><span class="p">)</span>
+            <span class="n">graph</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;&lt;U3&#39;</span><span class="p">)</span>
             <span class="n">graph</span><span class="p">[:]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
             <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)):</span>
-                <span class="k">for</span> <span class="n">jt</span><span class="p">,</span> <span class="n">tauj</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)):</span>
-                    <span class="k">for</span> <span class="n">it</span><span class="p">,</span> <span class="n">taui</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">tauj</span><span class="p">,</span> <span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)):</span>
+                <span class="k">for</span> <span class="n">jt</span><span class="p">,</span> <span class="n">tauj</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)):</span>
+                    <span class="k">for</span> <span class="n">it</span><span class="p">,</span> <span class="n">taui</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">tauj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)):</span>
                         <span class="n">tau</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">taui</span> <span class="o">-</span> <span class="n">tauj</span><span class="p">)</span>
                         <span class="k">if</span> <span class="n">tau</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">j</span> <span class="o">==</span> <span class="n">i</span><span class="p">:</span>
                             <span class="k">continue</span>
@@ -327,14 +348,26 @@
                         <span class="k">if</span> <span class="n">stat_graph</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">tau</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;--&gt;&#39;</span><span class="p">:</span>
                             <span class="n">graph</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">taui</span><span class="p">,</span> <span class="n">tauj</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;--&gt;&quot;</span> 
                             <span class="n">graph</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">tauj</span><span class="p">,</span> <span class="n">taui</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&lt;--&quot;</span> 
+                        <span class="k">elif</span> <span class="n">stat_graph</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">tau</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;&lt;--&#39;</span><span class="p">:</span>
+                            <span class="k">pass</span>
+                        <span class="k">elif</span> <span class="n">stat_graph</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">tau</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+                            <span class="k">pass</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">edge</span> <span class="o">=</span> <span class="n">stat_graph</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">tau</span><span class="p">]</span>
+                            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid graph edge </span><span class="si">%s</span><span class="s2">. &quot;</span> <span class="o">%</span><span class="p">(</span><span class="n">edge</span><span class="p">)</span> <span class="o">+</span>
+                                 <span class="s2">&quot;For graph_type = </span><span class="si">%s</span><span class="s2"> only </span><span class="si">%s</span><span class="s2"> are allowed.&quot;</span> <span class="o">%</span><span class="p">(</span><span class="n">graph_type</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">allowed_edges</span><span class="p">)))</span>
+      
+
 
                         <span class="c1"># elif stat_graph[i, j, tau] == &#39;&lt;--&#39;:</span>
                         <span class="c1">#     graph[i, j, taui, tauj] = &quot;&lt;--&quot;</span>
                         <span class="c1">#     graph[j, i, tauj, taui] = &quot;--&gt;&quot; </span>
 
-            <span class="n">graph_type</span> <span class="o">=</span> <span class="s1">&#39;tsg_dag&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">=</span> <span class="s1">&#39;tsg_dag&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span>
 
-        <span class="k">return</span> <span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">graph_type</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span> <span class="n">hidden_variables</span><span class="p">)</span>
+
+        <span class="c1"># return (graph, graph_type, self.tau_max, hidden_variables)</span>
 
             <span class="c1"># max_lag = self._get_maximum_possible_lag(XYZ=list(X.union(Y).union(S)), graph=graph)</span>
 
@@ -382,16 +415,16 @@
         <span class="n">oldX</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">oldY</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
-        <span class="n">anc_Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_ancestors</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">)</span>
-        <span class="n">anc_S</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_ancestors</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="p">)</span>
+        <span class="c1"># anc_Y = self._get_ancestors(self.Y)</span>
+        <span class="c1"># anc_S = self._get_ancestors(self.S)</span>
 
         <span class="c1"># Remove first from X those nodes with no causal path to Y or S</span>
-        <span class="n">X</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">anc_Y</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">anc_S</span><span class="p">)])</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ancY</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ancS</span><span class="p">)])</span>
         
         <span class="c1"># Remove from Y those nodes with no causal path from X</span>
-        <span class="n">des_X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_descendants</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="c1"># des_X = self._get_descendants(X)</span>
 
-        <span class="n">Y</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">y</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Y</span> <span class="k">if</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">des_X</span><span class="p">])</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">y</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Y</span> <span class="k">if</span> <span class="n">y</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">desX</span><span class="p">])</span>
 
         <span class="c1"># Also require that all x in X have proper path to Y or S,</span>
         <span class="c1"># that is, the first link goes out of x </span>
@@ -633,27 +666,33 @@
         <span class="c1"># Find adjacencies going forward/contemp</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">lag_ik</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">graph</span><span class="p">[</span><span class="n">i</span><span class="p">,:,</span><span class="n">lag_i</span><span class="p">,:])):</span>
             <span class="c1"># print((k, lag_ik), graph[i,k,lag_i,lag_ik]) </span>
-            <span class="n">matches</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_match_link</span><span class="p">(</span><span class="n">patt</span><span class="p">,</span> <span class="n">graph</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">lag_i</span><span class="p">,</span><span class="n">lag_ik</span><span class="p">])</span> <span class="k">for</span> <span class="n">patt</span> <span class="ow">in</span> <span class="n">patterns</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">matches</span><span class="p">):</span>
-                <span class="n">match</span> <span class="o">=</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="o">-</span><span class="n">lag_ik</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">match</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">exclude</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">return_link</span><span class="p">:</span>
-                        <span class="n">adj</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">graph</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">lag_i</span><span class="p">,</span><span class="n">lag_ik</span><span class="p">],</span> <span class="n">match</span><span class="p">))</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">adj</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">match</span><span class="p">)</span>
+            <span class="c1"># matches = [self._match_link(patt, graph[i,k,lag_i,lag_ik]) for patt in patterns]</span>
+            <span class="c1"># if np.any(matches):</span>
+            <span class="k">for</span> <span class="n">patt</span> <span class="ow">in</span> <span class="n">patterns</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_match_link</span><span class="p">(</span><span class="n">patt</span><span class="p">,</span> <span class="n">graph</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">lag_i</span><span class="p">,</span><span class="n">lag_ik</span><span class="p">]):</span>
+                    <span class="n">match</span> <span class="o">=</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="o">-</span><span class="n">lag_ik</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">match</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">exclude</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">return_link</span><span class="p">:</span>
+                            <span class="n">adj</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">graph</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">lag_i</span><span class="p">,</span><span class="n">lag_ik</span><span class="p">],</span> <span class="n">match</span><span class="p">))</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">adj</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">match</span><span class="p">)</span>
+                    <span class="k">break</span>
 
         
         <span class="c1"># Find adjacencies going backward/contemp</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">lag_ki</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">graph</span><span class="p">[:,</span><span class="n">i</span><span class="p">,:,</span><span class="n">lag_i</span><span class="p">])):</span>  
             <span class="c1"># print((k, lag_ki), graph[k,i,lag_ki,lag_i]) </span>
-            <span class="n">matches</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_match_link</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_reverse_link</span><span class="p">(</span><span class="n">patt</span><span class="p">),</span> <span class="n">graph</span><span class="p">[</span><span class="n">k</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">lag_ki</span><span class="p">,</span><span class="n">lag_i</span><span class="p">])</span> <span class="k">for</span> <span class="n">patt</span> <span class="ow">in</span> <span class="n">patterns</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">matches</span><span class="p">):</span>
-                <span class="n">match</span> <span class="o">=</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="o">-</span><span class="n">lag_ki</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">match</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">exclude</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">return_link</span><span class="p">:</span>
-                        <span class="n">adj</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_reverse_link</span><span class="p">(</span><span class="n">graph</span><span class="p">[</span><span class="n">k</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">lag_ki</span><span class="p">,</span><span class="n">lag_i</span><span class="p">]),</span> <span class="n">match</span><span class="p">))</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">adj</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">match</span><span class="p">)</span>
+            <span class="c1"># matches = [self._match_link(self._reverse_link(patt), graph[k,i,lag_ki,lag_i]) for patt in patterns]</span>
+            <span class="c1"># if np.any(matches):</span>
+            <span class="k">for</span> <span class="n">patt</span> <span class="ow">in</span> <span class="n">patterns</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_match_link</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_reverse_link</span><span class="p">(</span><span class="n">patt</span><span class="p">),</span> <span class="n">graph</span><span class="p">[</span><span class="n">k</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">lag_ki</span><span class="p">,</span><span class="n">lag_i</span><span class="p">]):</span>
+                    <span class="n">match</span> <span class="o">=</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="o">-</span><span class="n">lag_ki</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">match</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">exclude</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">return_link</span><span class="p">:</span>
+                            <span class="n">adj</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_reverse_link</span><span class="p">(</span><span class="n">graph</span><span class="p">[</span><span class="n">k</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">lag_ki</span><span class="p">,</span><span class="n">lag_i</span><span class="p">]),</span> <span class="n">match</span><span class="p">))</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">adj</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">match</span><span class="p">)</span>
+                    <span class="k">break</span>
      
         <span class="n">adj</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">adj</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">adj</span>
@@ -671,7 +710,7 @@
         <span class="k">return</span> <span class="p">((</span><span class="n">tauij</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_match_link</span><span class="p">(</span><span class="n">pattern_ij</span><span class="p">,</span> <span class="n">graph</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">tauij</span><span class="p">]))</span> <span class="ow">or</span>
                <span class="p">(</span><span class="n">tauij</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_match_link</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_reverse_link</span><span class="p">(</span><span class="n">pattern_ij</span><span class="p">),</span> <span class="n">graph</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">tauij</span><span class="p">)])))</span>
 
-
+    <span class="c1"># @profile</span>
     <span class="k">def</span> <span class="nf">_get_children</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">varlag</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns set of children (varlag --&gt; ...) for (lagged) varlag.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">possible</span><span class="p">:</span>
@@ -782,6 +821,7 @@
 
         <span class="k">return</span> <span class="n">descendants</span>
 
+    <span class="c1"># @profile</span>
     <span class="k">def</span> <span class="nf">_get_descendants</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get descendants of nodes in W up to time t.</span>
 <span class="sd">        </span>
@@ -1116,6 +1156,7 @@
 
         <span class="k">return</span> <span class="n">aux_graph</span>
 
+    <span class="c1"># @profile</span>
     <span class="k">def</span> <span class="nf">_check_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
         <span class="c1"># graph, </span>
         <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span>
@@ -1317,7 +1358,7 @@
         <span class="c1"># print(&quot;Separated&quot;)</span>
         <span class="k">return</span> <span class="kc">False</span>
 
-
+    <span class="c1"># @profile</span>
 <div class="viewcode-block" id="CausalEffects.get_optimal_set"><a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.get_optimal_set">[docs]</a>    <span class="k">def</span> <span class="nf">get_optimal_set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
         <span class="n">alternative_conditions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">minimize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -1351,9 +1392,16 @@
             <span class="n">vancs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vancs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">S</span> <span class="o">=</span> <span class="n">alternative_conditions</span>
-            <span class="n">vancs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_ancestors</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">)</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">S</span><span class="p">)))</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">forbidden_nodes</span>
+            <span class="n">newancS</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_ancestors</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vancs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ancX</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ancY</span><span class="p">)</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">newancS</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">forbidden_nodes</span>
 
-        <span class="n">descendants</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_descendants</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">))</span>
+            <span class="c1"># vancs = self._get_ancestors(list(self.X.union(self.Y).union(S))) - self.forbidden_nodes</span>
+
+        <span class="c1"># descendants = self._get_descendants(self.Y.union(self.M))</span>
+
+        <span class="c1"># Sufficient condition for non-identifiability</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">descendants</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>  <span class="c1"># raise ValueError(&quot;Not identifiable: Overlap between X and des(M)&quot;)</span>
 
         <span class="c1">##</span>
         <span class="c1">## Construct O-set</span>
@@ -1441,13 +1489,6 @@
             <span class="n">Oset</span> <span class="o">=</span> <span class="n">Oset</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">removable</span><span class="p">)</span>
 
         <span class="n">Oset_S</span> <span class="o">=</span> <span class="n">Oset</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
-
-        <span class="c1"># For singleton X the validity is already checked in the</span>
-        <span class="c1"># if-statements of the construction algorithm, but for </span>
-        <span class="c1"># multivariate X there might be further cases... Hence,</span>
-        <span class="c1"># we here explicitely check validity</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_validity</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">Oset_S</span><span class="p">))</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">False</span>
 
         <span class="k">if</span> <span class="n">return_separate_sets</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">parents</span><span class="p">,</span> <span class="n">colliders</span><span class="p">,</span> <span class="n">collider_parents</span><span class="p">,</span> <span class="n">S</span>
@@ -1806,7 +1847,7 @@
 
         <span class="k">return</span> <span class="n">all_causal_paths</span>
 
-
+    <span class="c1"># @profile</span>
 <div class="viewcode-block" id="CausalEffects.fit_total_effect"><a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.fit_total_effect">[docs]</a>    <span class="k">def</span> <span class="nf">fit_total_effect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
         <span class="n">dataframe</span><span class="p">,</span> 
         <span class="n">estimator</span><span class="p">,</span>
@@ -1863,6 +1904,9 @@
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_validity</span><span class="p">(</span><span class="n">adjustment_set</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Chosen adjustment_set is not valid.&quot;</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="n">adjustment_set</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Causal effect not identifiable via adjustment.&quot;</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">adjustment_set</span> <span class="o">=</span> <span class="n">adjustment_set</span>
 
         <span class="c1"># Fit model of Y on X and Z (and conditions)</span>
@@ -1884,6 +1928,7 @@
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
+    <span class="c1"># @profile</span>
 <div class="viewcode-block" id="CausalEffects.predict_total_effect"><a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.predict_total_effect">[docs]</a>    <span class="k">def</span> <span class="nf">predict_total_effect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
         <span class="n">intervention_data</span><span class="p">,</span> 
         <span class="n">conditions_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1907,11 +1952,11 @@
 <span class="sd">        Results from prediction: an array of shape  (time, len(Y)).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">if</span> <span class="n">intervention_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">intervention_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">listX</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;intervention_data.shape[1] must be len(X).&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">conditions_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">conditions_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">conditions_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">listS</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;conditions_data.shape[1] must be len(S).&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">conditions_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">intervention_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;conditions_data.shape[0] must match intervention_data.shape[0].&quot;</span><span class="p">)</span>
@@ -1919,7 +1964,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">no_causal_path</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No causal path from X to Y exists.&quot;</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">intervention_data</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">)))</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">intervention_data</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">listY</span><span class="p">)))</span>
 
         <span class="n">effect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">get_general_prediction</span><span class="p">(</span>
             <span class="n">intervention_data</span><span class="o">=</span><span class="n">intervention_data</span><span class="p">,</span>
@@ -1928,6 +1973,7 @@
 
         <span class="k">return</span> <span class="n">effect</span></div>
 
+    <span class="c1"># @profile</span>
 <div class="viewcode-block" id="CausalEffects.fit_wright_effect"><a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.fit_wright_effect">[docs]</a>    <span class="k">def</span> <span class="nf">fit_wright_effect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
         <span class="n">dataframe</span><span class="p">,</span> 
         <span class="n">mediation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1986,7 +2032,7 @@
                         <span class="n">mask_type</span><span class="o">=</span><span class="n">mask_type</span><span class="p">,</span>
                         <span class="n">verbosity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
 
-        <span class="n">mediators</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_mediators</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">)</span>
+        <span class="n">mediators</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">M</span>  <span class="c1"># self.get_mediators(start=self.X, end=self.Y)</span>
 
         <span class="k">if</span> <span class="n">mediation</span> <span class="o">==</span> <span class="s1">&#39;direct&#39;</span><span class="p">:</span>
             <span class="n">causal_paths</span> <span class="o">=</span> <span class="p">{}</span>         
@@ -2019,7 +2065,7 @@
             <span class="n">coeffs</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="k">for</span> <span class="n">medy</span> <span class="ow">in</span> <span class="p">[</span><span class="n">med</span> <span class="k">for</span> <span class="n">med</span> <span class="ow">in</span> <span class="n">mediators</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">y</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">listY</span><span class="p">]:</span>
                 <span class="n">coeffs</span><span class="p">[</span><span class="n">medy</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-                <span class="n">mediator_parents</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_all_parents</span><span class="p">([</span><span class="n">medy</span><span class="p">])</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">mediators</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">))</span> <span class="o">-</span> <span class="nb">set</span><span class="p">([</span><span class="n">medy</span><span class="p">])</span>
+                <span class="n">mediator_parents</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_all_parents</span><span class="p">([</span><span class="n">medy</span><span class="p">])</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">mediators</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">)</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">))</span> <span class="o">-</span> <span class="nb">set</span><span class="p">([</span><span class="n">medy</span><span class="p">])</span>
                 <span class="n">all_parents</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_all_parents</span><span class="p">([</span><span class="n">medy</span><span class="p">])</span> <span class="o">-</span> <span class="nb">set</span><span class="p">([</span><span class="n">medy</span><span class="p">])</span>
                 <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="n">mediator_parents</span><span class="p">:</span>
                     <span class="n">Sprime</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">all_parents</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">([</span><span class="n">par</span><span class="p">,</span> <span class="n">medy</span><span class="p">])</span>
@@ -2037,6 +2083,7 @@
                         <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;max_lag_or_tau_max&#39;</span><span class="p">,</span>
                         <span class="n">return_data</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
                     <span class="n">coeffs</span><span class="p">[</span><span class="n">medy</span><span class="p">][</span><span class="n">par</span><span class="p">]</span> <span class="o">=</span> <span class="n">fit_res</span><span class="p">[</span><span class="n">medy</span><span class="p">][</span><span class="s1">&#39;model&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">coef_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="c1"># print(mediators, par, medy, coeffs[medy][par])</span>
 
         <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;parents&#39;</span><span class="p">:</span>
             <span class="k">if</span> <span class="s1">&#39;dag&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_type</span><span class="p">:</span>
@@ -2069,6 +2116,7 @@
             <span class="n">effect</span><span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">0.</span>
             <span class="k">for</span> <span class="n">causal_path</span> <span class="ow">in</span> <span class="n">causal_paths</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="n">y</span><span class="p">]:</span>
                 <span class="n">effect_here</span> <span class="o">=</span> <span class="mf">1.</span>
+                <span class="c1"># print(x, y, causal_path)</span>
                 <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">causal_path</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
                     <span class="n">i</span><span class="p">,</span> <span class="n">taui</span> <span class="o">=</span> <span class="n">node</span>
                     <span class="n">j</span><span class="p">,</span> <span class="n">tauj</span> <span class="o">=</span> <span class="n">causal_path</span><span class="p">[</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
@@ -2102,7 +2150,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fit_results</span> <span class="o">=</span> <span class="n">fit_results</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
-    
+    <span class="c1"># @profile </span>
 <div class="viewcode-block" id="CausalEffects.predict_wright_effect"><a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.predict_wright_effect">[docs]</a>    <span class="k">def</span> <span class="nf">predict_wright_effect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
         <span class="n">intervention_data</span><span class="p">,</span> 
         <span class="n">pred_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -2128,30 +2176,198 @@
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No causal path from X to Y exists.&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">intervention_data</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">)))</span>
 
-        <span class="n">effect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">get_general_prediction</span><span class="p">(</span>
-            <span class="n">intervention_data</span><span class="o">=</span><span class="n">intervention_data</span><span class="p">,</span>
-            <span class="n">conditions_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-            <span class="n">pred_params</span><span class="o">=</span><span class="n">pred_params</span><span class="p">)</span> 
+        <span class="n">intervention_T</span><span class="p">,</span> <span class="n">lenX</span> <span class="o">=</span> <span class="n">intervention_data</span><span class="o">.</span><span class="n">shape</span>
 
-        <span class="k">return</span> <span class="n">effect</span></div></div>
+        <span class="n">lenY</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">listY</span><span class="p">)</span>
+
+        <span class="n">predicted_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">intervention_T</span><span class="p">,</span> <span class="n">lenY</span><span class="p">))</span>
+        <span class="n">pred_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">iy</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">listY</span><span class="p">):</span>
+            <span class="c1"># Print message</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">## Predicting target </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">pred_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">pred_params</span><span class="p">):</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">pred_params</span><span class="p">[</span><span class="n">key</span><span class="p">]))</span>
+            <span class="c1"># Default value for pred_params</span>
+            <span class="k">if</span> <span class="n">pred_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">pred_params</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="c1"># Check this is a valid target</span>
+            <span class="k">if</span> <span class="n">y</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fit_results</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;y = </span><span class="si">%s</span><span class="s2"> not yet fitted&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+
+            <span class="c1"># Transform the data if needed</span>
+            <span class="n">a_transform</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fit_results</span><span class="p">[</span><span class="n">y</span><span class="p">][</span><span class="s1">&#39;data_transform&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">a_transform</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">intervention_data</span> <span class="o">=</span> <span class="n">a_transform</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">intervention_data</span><span class="p">)</span>
+        
+
+            <span class="c1"># Now iterate through interventions (and potentially S)</span>
+            <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">dox_vals</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">intervention_data</span><span class="p">):</span>
+                <span class="c1"># Construct XZS-array</span>
+                <span class="n">intervention_array</span> <span class="o">=</span> <span class="n">dox_vals</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">lenX</span><span class="p">)</span> 
+                <span class="n">predictor_array</span> <span class="o">=</span> <span class="n">intervention_array</span>
+
+                <span class="n">predicted_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fit_results</span><span class="p">[</span><span class="n">y</span><span class="p">][</span><span class="s1">&#39;model&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+                <span class="n">X</span><span class="o">=</span><span class="n">predictor_array</span><span class="p">,</span> <span class="o">**</span><span class="n">pred_params</span><span class="p">)</span>
+                <span class="n">predicted_array</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="n">iy</span><span class="p">]</span> <span class="o">=</span> <span class="n">predicted_vals</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">predicted_array</span></div>
+
+<div class="viewcode-block" id="CausalEffects.get_graph_from_dict"><a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.get_graph_from_dict">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_graph_from_dict</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Helper function to convert dictionary of links to graph array format.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ---------</span>
+<span class="sd">        links : dict</span>
+<span class="sd">            Dictionary of form {0:[((0, -1), coeff, func), ...], 1:[...], ...}.</span>
+<span class="sd">            Also format {0:[(0, -1), ...], 1:[...], ...} is allowed.</span>
+<span class="sd">        tau_max : int or None</span>
+<span class="sd">            Maximum lag. If None, the maximum lag in links is used.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        graph : array of shape (N, N, tau_max+1)</span>
+<span class="sd">            Matrix format of graph with 1 for true links and 0 else.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">_get_minmax_lag</span><span class="p">(</span><span class="n">links</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Helper function to retrieve tau_min and tau_max from links.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+
+            <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">links</span><span class="p">)</span>
+
+            <span class="c1"># Get maximum time lag</span>
+            <span class="n">min_lag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+            <span class="n">max_lag</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">link_props</span> <span class="ow">in</span> <span class="n">links</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">link_props</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                        <span class="n">var</span><span class="p">,</span> <span class="n">lag</span> <span class="o">=</span> <span class="n">link_props</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="n">coeff</span> <span class="o">=</span> <span class="n">link_props</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                        <span class="c1"># func = link_props[2]</span>
+                        <span class="k">if</span> <span class="n">coeff</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">:</span>
+                            <span class="n">min_lag</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">min_lag</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">lag</span><span class="p">))</span>
+                            <span class="n">max_lag</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_lag</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">lag</span><span class="p">))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">var</span><span class="p">,</span> <span class="n">lag</span> <span class="o">=</span> <span class="n">link_props</span>
+                        <span class="n">min_lag</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">min_lag</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">lag</span><span class="p">))</span>
+                        <span class="n">max_lag</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_lag</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">lag</span><span class="p">))</span>   
+
+            <span class="k">return</span> <span class="n">min_lag</span><span class="p">,</span> <span class="n">max_lag</span>
+
+        <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">links</span><span class="p">)</span>
+
+        <span class="c1"># Get maximum time lag</span>
+        <span class="n">min_lag</span><span class="p">,</span> <span class="n">max_lag</span> <span class="o">=</span> <span class="n">_get_minmax_lag</span><span class="p">(</span><span class="n">links</span><span class="p">)</span>
+
+        <span class="c1"># Set maximum lag</span>
+        <span class="k">if</span> <span class="n">tau_max</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">tau_max</span> <span class="o">=</span> <span class="n">max_lag</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">max_lag</span> <span class="o">&gt;</span> <span class="n">tau_max</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;tau_max is smaller than maximum lag = </span><span class="si">%d</span><span class="s2"> &quot;</span>
+                                 <span class="s2">&quot;found in links, use tau_max=None or larger &quot;</span>
+                                 <span class="s2">&quot;value&quot;</span> <span class="o">%</span> <span class="n">max_lag</span><span class="p">)</span>
+
+        <span class="n">graph</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;&lt;U3&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">links</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">link_props</span> <span class="ow">in</span> <span class="n">links</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">link_props</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="n">var</span><span class="p">,</span> <span class="n">lag</span> <span class="o">=</span> <span class="n">link_props</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">coeff</span> <span class="o">=</span> <span class="n">link_props</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">coeff</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">:</span>
+                        <span class="n">graph</span><span class="p">[</span><span class="n">var</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">lag</span><span class="p">)]</span> <span class="o">=</span> <span class="s2">&quot;--&gt;&quot;</span>
+                        <span class="k">if</span> <span class="n">lag</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="n">graph</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&lt;--&quot;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">var</span><span class="p">,</span> <span class="n">lag</span> <span class="o">=</span> <span class="n">link_props</span>
+                    <span class="n">graph</span><span class="p">[</span><span class="n">var</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">lag</span><span class="p">)]</span> <span class="o">=</span> <span class="s2">&quot;--&gt;&quot;</span>
+                    <span class="k">if</span> <span class="n">lag</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">graph</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&lt;--&quot;</span>
+
+        <span class="k">return</span> <span class="n">graph</span></div></div>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    
+    <span class="c1"># Consider some toy data</span>
+    <span class="kn">import</span> <span class="nn">tigramite</span>
+    <span class="kn">import</span> <span class="nn">tigramite.toymodels.structural_causal_processes</span> <span class="k">as</span> <span class="nn">toys</span>
+    <span class="kn">import</span> <span class="nn">tigramite.data_processing</span> <span class="k">as</span> <span class="nn">pp</span>
+
+    <span class="kn">import</span> <span class="nn">sklearn</span>
+    <span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LinearRegression</span>
+
+    <span class="n">T</span> <span class="o">=</span> <span class="mi">1000</span>
+    <span class="k">def</span> <span class="nf">lin_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span>
+    <span class="n">auto_coeff</span> <span class="o">=</span> <span class="mf">0.3</span>
+    <span class="n">coeff</span> <span class="o">=</span> <span class="mf">2.</span>
+    <span class="n">links</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="mi">0</span><span class="p">:</span> <span class="p">[((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">auto_coeff</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span> 
+            <span class="mi">1</span><span class="p">:</span> <span class="p">[((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">auto_coeff</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">coeff</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span> 
+            <span class="mi">2</span><span class="p">:</span> <span class="p">[((</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">auto_coeff</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">coeff</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
+            <span class="p">}</span>
+    <span class="n">data</span><span class="p">,</span> <span class="n">nonstat</span> <span class="o">=</span> <span class="n">toys</span><span class="o">.</span><span class="n">structural_causal_process</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">,</span> 
+                                <span class="n">noises</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+
+    <span class="c1"># Create some missing values</span>
+    <span class="n">data</span><span class="p">[</span><span class="o">-</span><span class="mi">10</span><span class="p">:,:]</span> <span class="o">=</span> <span class="mf">999.</span>
+    <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">missing_flag</span><span class="o">=</span><span class="mf">999.</span><span class="p">)</span> 
+
+
+    <span class="c1"># Construct expert knowledge graph from links here </span>
+    <span class="n">links</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)],</span>
+             <span class="mi">1</span><span class="p">:</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)],</span>
+             <span class="mi">2</span><span class="p">:</span> <span class="p">[(</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),],</span>
+             <span class="p">}</span>
+    <span class="c1"># Use staticmethod to get graph</span>
+    <span class="n">graph</span> <span class="o">=</span> <span class="n">CausalEffects</span><span class="o">.</span><span class="n">get_graph_from_dict</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    
+    <span class="c1"># We are interested in lagged total effect of X on Y</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)]</span>
+    <span class="n">Y</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
+
+    <span class="c1"># Initialize class as `stationary_dag`</span>
+    <span class="n">causal_effects</span> <span class="o">=</span> <span class="n">CausalEffects</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">graph_type</span><span class="o">=</span><span class="s1">&#39;stationary_dag&#39;</span><span class="p">,</span> 
+                                <span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="n">Y</span><span class="p">,</span> <span class="n">S</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                                <span class="n">hidden_variables</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                                <span class="n">verbosity</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="c1"># Optimal adjustment set (is used by default)</span>
+    <span class="c1"># print(causal_effects.get_optimal_set())</span>
+
+    <span class="c1"># # Fit causal effect model from observational data</span>
+    <span class="c1"># causal_effects.fit_total_effect(</span>
+    <span class="c1">#     dataframe=dataframe, </span>
+    <span class="c1">#     # mask_type=&#39;y&#39;,</span>
+    <span class="c1">#     estimator=LinearRegression(),</span>
+    <span class="c1">#     )</span>
+
+    <span class="c1"># # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go</span>
+    <span class="c1"># dox_vals = np.linspace(0., 1., 5)</span>
+    <span class="c1"># intervention_data = dox_vals.reshape(len(dox_vals), len(X))</span>
+    <span class="c1"># pred_Y = causal_effects.predict_total_effect( </span>
+    <span class="c1">#         intervention_data=intervention_data)</span>
+    <span class="c1"># print(pred_Y)</span>
+
+    <span class="c1"># Fit causal effect model from observational data</span>
+    <span class="n">causal_effects</span><span class="o">.</span><span class="n">fit_wright_effect</span><span class="p">(</span>
+        <span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span> 
+        <span class="c1"># mask_type=&#39;y&#39;,</span>
+        <span class="c1"># estimator=LinearRegression(),</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Predict effect of interventions do(X=0.), ..., do(X=1.) in one go</span>
+    <span class="n">dox_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+    <span class="n">intervention_data</span> <span class="o">=</span> <span class="n">dox_vals</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dox_vals</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
+    <span class="n">pred_Y</span> <span class="o">=</span> <span class="n">causal_effects</span><span class="o">.</span><span class="n">predict_wright_effect</span><span class="p">(</span> 
+            <span class="n">intervention_data</span><span class="o">=</span><span class="n">intervention_data</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">pred_Y</span><span class="p">)</span>
 </pre></div>
 
-            <div class="clearer"></div>
           </div>
-        </div>
-      </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -2166,13 +2382,12 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 5.0 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">tigramite.causal_effects</a></li> 
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2021, Jakob Runge.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
     </div>
   </body>
 </html>
