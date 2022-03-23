@@ -59,7 +59,9 @@ class DataFrame():
         # Set the default variable names if none are set
         if self.var_names is None:
             self.var_names = {i: i for i in range(N)}
-
+        else:
+            if len(self.var_names) != N:
+                raise ValueError("len(var_names) != data.shape[1].")
         # Set datatime
         self.datatime = datatime
         if self.datatime is None:
