@@ -17,8 +17,6 @@ from numba import jit
 class DataFrame():
     """Data object containing time series array and optional mask.
 
-    Alternatively, a panda dataframe can be used.
-
     Parameters
     ----------
     data : array-like
@@ -728,6 +726,7 @@ def structural_causal_process(links, T, noises=None,
 
 if __name__ == '__main__':
     
+    from tigramite.toymodels.structural_causal_processes import structural_causal_process
     ## Generate some time series from a structural causal process
     def lin_f(x): return x
     def nonlin_f(x): return (x + 5. * x**2 * np.exp(-x**2 / 20.))
@@ -740,3 +739,5 @@ if __name__ == '__main__':
     data, nonstat = structural_causal_process(links,
      T=100, noises=noises)
     print(data.shape)
+
+    frame = DataFrame(data)

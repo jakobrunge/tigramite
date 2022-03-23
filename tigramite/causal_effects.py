@@ -127,6 +127,7 @@ class CausalEffects():
         # and hidden variables
         # (self.graph, self.graph_type, 
         #  self.tau_max, self.hidden_variables) = 
+
         self._construct_graph(graph=graph, graph_type=graph_type,
                               hidden_variables=hidden_variables)
 
@@ -270,6 +271,8 @@ class CausalEffects():
 
             stat_graph = deepcopy(graph)
 
+            allowed_edges = ["-->", "<--"]
+
             # Construct tsg_graph
             graph = np.zeros((self.N, self.N, self.tau_max + 1, self.tau_max + 1), dtype='<U3')
             graph[:] = ""
@@ -294,6 +297,16 @@ class CausalEffects():
                         if stat_graph[i, j, tau] == '-->':
                             graph[i, j, taui, tauj] = "-->" 
                             graph[j, i, tauj, taui] = "<--" 
+                        elif stat_graph[i, j, tau] == '<--':
+                            pass
+                        elif stat_graph[i, j, tau] == '':
+                            pass
+                        else:
+                            edge = stat_graph[i, j, tau]
+                            raise ValueError("Invalid graph edge %s. " %(edge) +
+                                 "For graph_type = %s only %s are allowed." %(graph_type, str(allowed_edges)))
+      
+
 
                         # elif stat_graph[i, j, tau] == '<--':
                         #     graph[i, j, taui, tauj] = "<--"
@@ -1860,7 +1873,6 @@ class CausalEffects():
                 conditions=self.listS,
                 tau_max=self.tau_max,
                 cut_off='max_lag_or_tau_max',
-                remove_missing_upto_maxlag=False,
                 return_data=False)
 
         return self
@@ -2018,7 +2030,6 @@ class CausalEffects():
                         Y=[medy], X=[par], Z=oset,
                         tau_max=self.tau_max,
                         cut_off='max_lag_or_tau_max',
-                        remove_missing_upto_maxlag=False,
                         return_data=False)
                     coeffs[medy][par] = fit_res[medy]['model'].coef_[0]
                     # print(mediators, par, medy, coeffs[medy][par])
@@ -2039,7 +2050,6 @@ class CausalEffects():
                     conditions=None,
                     tau_max=self.tau_max,
                     cut_off='max_lag_or_tau_max',
-                    remove_missing_upto_maxlag=False,
                     return_data=False)
 
                 for ipar, par in enumerate(all_parents):
