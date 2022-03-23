@@ -41,7 +41,7 @@ EXTRAS_REQUIRE = {
         "scikit-learn>=0.21",  # Gaussian Process (GP) Regression
         "matplotlib>=3.4.0",   # plotting
         "networkx>=2.4",       # plotting
-        "pytorch>=1.11.0",     # GPDC pytorch version
+        "torch>=1.11.0",       # GPDC torch version
         "gpytorch>=1.4",       # GPDC gpytorch version
         "dcor>=0.5.3",         # GPDC distance correlation version
     ]
@@ -52,7 +52,7 @@ with open('versions.py', 'w') as vfile:
 
 # Define the packages needed for testing
 TESTS_REQUIRE = ["nose", "pytest", "networkx>=2.4", "scikit-learn>=0.21", 
-                 "pytorch>=1.11.0", "gpytorch>=1.4", "dcor>=0.5.3"]
+                 "torch>=1.11.0", "gpytorch>=1.4", "dcor>=0.5.3"]
 EXTRAS_REQUIRE["test"] = TESTS_REQUIRE
 # Define the extras needed for development
 EXTRAS_REQUIRE["dev"] = EXTRAS_REQUIRE["all"]
@@ -63,7 +63,7 @@ CMDCLASS = {"build_ext": UseNumpyHeadersBuildExt}
 # Run the setup
 setup(
     name="tigramite",
-    version="5.0.1.2",
+    version="5.0.1.3",
     packages=["tigramite", "tigramite.independence_tests", "tigramite.toymodels"],
     license="GNU General Public License v3.0",
     description="Tigramite causal discovery for time series",
