@@ -70,7 +70,7 @@ Tigramite is a causal time series analysis python package. It allows to efficien
 - scikit-learn>=0.21  # Gaussian Process (GP) Regression
 - matplotlib>=3.4.0   # Plotting
 - networkx>=2.4       # Plotting
-- pytorch>=1.11.0     # GPDC pytorch version
+- torch>=1.11.0       # GPDC pytorch version (in conda install pytorch)
 - gpytorch>=1.4       # GPDC gpytorch version
 - dcor>=0.5.3         # GPDC distance correlation version
 

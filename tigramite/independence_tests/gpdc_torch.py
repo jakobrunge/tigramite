@@ -23,9 +23,9 @@ try:
         if metadata.version('dcor') < packages['dcor']:
             raise Exception('Version mismatch. Installed version of dcor', metadata.version('dcor'),
                             'Please install dcor>=', packages['dcor'])
-        if metadata.version('torch') < packages['pytorch']:
-            raise Exception('Version mismatch. Installed version of pytorch', metadata.version('torch'),
-                            'Please install pytorch>=', packages['pytorch'])
+        if metadata.version('torch') < packages['torch']:
+            raise Exception('Version mismatch. Installed version of torch', metadata.version('torch'),
+                            'Please install torch>=', packages['torch'])
         if metadata.version('gpytorch') < packages['gpytorch']:
             raise Exception('Version mismatch. Installed version of gpytorch', metadata.version('gpytorch'),
                           'Please install gpytorch>=', packages['gpytorch'])
