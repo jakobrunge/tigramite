@@ -5,7 +5,7 @@
 # License: GNU General Public License v3.0
 
 import numpy as np
-import json, warnings
+import json, warnings, os, pathlib
 try:
     from importlib import metadata
 except ImportError:
@@ -13,7 +13,7 @@ except ImportError:
 try:
     import matplotlib
     import networkx as nx
-    with open('../versions.py', 'r') as vfile:
+    with open(pathlib.Path(os.path.dirname(__file__)) / '../versions.py', 'r') as vfile:
         packages = json.loads(vfile.read())['all']
         packages = dict(map(lambda s: s.split('>='), packages))
         if metadata.version('matplotlib') < packages['matplotlib']:

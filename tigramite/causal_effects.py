@@ -1882,6 +1882,7 @@ class CausalEffects():
         intervention_data, 
         conditions_data=None,
         pred_params=None,
+        return_further_pred_results=False,
         ):
         """Predict effect of intervention with fitted model.
 
@@ -1895,6 +1896,9 @@ class CausalEffects():
             Numpy array of shape (time, len(S)) that contains the S=s values.
         pred_params : dict, optional
             Optional parameters passed on to sklearn prediction function.
+        return_further_pred_results : bool, optional (default: False)
+            In case the predictor class returns more than just the expected value,
+            the entire results can be returned.
 
         Returns
         -------
@@ -1918,7 +1922,8 @@ class CausalEffects():
         effect = self.model.get_general_prediction(
             intervention_data=intervention_data,
             conditions_data=conditions_data,
-            pred_params=pred_params) 
+            pred_params=pred_params,
+            return_further_pred_results=return_further_pred_results) 
 
         return effect
 
@@ -2074,6 +2079,8 @@ class CausalEffects():
 
                 effect[(x, y)] += effect_here
                
+        # Make fitted coefficients available as attribute
+        self.coeffs = coeffs
 
         # Modify and overwrite variables in self.model
         self.model.Y = self.listY
