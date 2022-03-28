@@ -5,7 +5,7 @@
 # License: GNU General Public License v3.0
 
 from __future__ import print_function
-import json, warnings
+import json, warnings, os, pathlib
 import numpy as np
 try:
     from importlib import metadata
@@ -14,7 +14,7 @@ except ImportError:
 try:
     import dcor
     from sklearn import gaussian_process
-    with open('../versions.py', 'r') as vfile:
+    with open(pathlib.Path(os.path.dirname(__file__)) / '../../versions.py', 'r') as vfile:
         packages = json.loads(vfile.read())['all']
         packages = dict(map(lambda s: s.split('>='), packages))
         if metadata.version('dcor') < packages['dcor']:

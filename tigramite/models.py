@@ -6,7 +6,7 @@
 
 from __future__ import print_function
 from copy import deepcopy
-import json, warnings
+import json, warnings, os, pathlib
 import numpy as np
 try:
     from importlib import metadata
@@ -16,7 +16,7 @@ try:
     import sklearn
     import sklearn.linear_model
     import networkx
-    with open('../versions.py', 'r') as vfile:
+    with open(pathlib.Path(os.path.dirname(__file__)) / '../versions.py', 'r') as vfile:
         packages = json.loads(vfile.read())['all']
         packages = dict(map(lambda s: s.split('>='), packages))
         if metadata.version('scikit-learn') < packages['scikit-learn']:
@@ -207,6 +207,7 @@ class Models():
                 intervention_data,
                 conditions_data=None,
                 pred_params=None,
+                return_further_pred_results=False,
                 ):
         r"""Predict effect of intervention with fitted model.
 
@@ -220,7 +221,9 @@ class Models():
             Numpy array of shape (time, len(S)) that contains the S=s values.
         pred_params : dict, optional
             Optional parameters passed on to sklearn prediction function.
-
+        return_further_pred_results : bool, optional (default: False)
+            In case the predictor class returns more than just the expected value,
+            the entire results can be returned.
         Returns
         -------
         Results from prediction.
@@ -244,6 +247,7 @@ class Models():
         predicted_array = np.zeros((intervention_T, lenY))
         pred_dict = {}
         for iy, y in enumerate(self.Y):
+            pred_dict[iy] = {}
             # Print message
             if self.verbosity > 1:
                 print("\n## Predicting target %s" % str(y))
@@ -292,16 +296,28 @@ class Models():
                     #     predicted_vals = a_transform.transform(X=target_array.T).T
                     a_conditional_model = deepcopy(self.conditional_model)
                     
-                    a_conditional_model.fit(X=s_array, y=predicted_vals)
+                    if type(predicted_vals) is tuple:
+                        predicted_vals_here = predicted_vals[0]
+                    else:
+                        predicted_vals_here = predicted_vals
+
+                    a_conditional_model.fit(X=s_array, y=predicted_vals_here)
                     self.fit_results[y]['conditional_model'] = a_conditional_model
 
-                    predicted_array[index, iy] = a_conditional_model.predict(
-                        X=conditions_array, **pred_params).mean()
+                    predicted_vals = a_conditional_model.predict(
+                        X=conditions_array, **pred_params)
 
+                # print(predicted_vals)
+                if type(predicted_vals) is tuple:
+                    predicted_array[index, iy] = predicted_vals[0].mean()
+                    pred_dict[iy][index] = predicted_vals
                 else:
                     predicted_array[index, iy] = predicted_vals.mean()
 
-        return predicted_array
+        if return_further_pred_results:
+            return predicted_array, pred_dict
+        else:
+            return predicted_array
 
 
     def get_fit(self, all_parents,
