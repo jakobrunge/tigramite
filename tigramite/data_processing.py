@@ -201,6 +201,8 @@ class DataFrame():
             max_lag = 2*tau_max
         elif cut_off == 'max_lag':
             max_lag = abs(np.array(XYZ)[:, 1].min())
+        elif cut_off == 'tau_max':
+            max_lag = tau_max
         elif cut_off == 'max_lag_or_tau_max':
             max_lag = max(abs(np.array(XYZ)[:, 1].min()), tau_max)
         else:
@@ -218,7 +220,7 @@ class DataFrame():
         # Setup and fill array with lagged time series
         time_length = T - max_lag
         array = np.zeros((dim, time_length), dtype=self.values.dtype)
-        # Note, lags are negative here
+        # Note, lags are negative or zero here
         for i, (var, lag) in enumerate(XYZ):
             if self.bootstrap is None:
                 array[i, :] = self.values[max_lag + lag:T + lag, var]
@@ -234,17 +236,11 @@ class DataFrame():
             missing_anywhere = np.array(np.where(np.any(np.isnan(array), axis=0))[0])
             if self.remove_missing_upto_maxlag:
                 for tau in range(max_lag+1):
-                    if self.bootstrap is None:
-                        delete = missing_anywhere + tau 
-                        delete = delete[delete < time_length]
-                        use_indices[delete] = 0
-                    else:
-                        use_indices[missing_anywhere[self.bootstrap] + tau] = 0
+                    delete = missing_anywhere + tau 
+                    delete = delete[delete < time_length]
+                    use_indices[delete] = 0
             else:
-                if self.bootstrap is None:
-                    use_indices[missing_anywhere] = 0
-                else:
-                    use_indices[missing_anywhere[self.bootstrap]] = 0
+                use_indices[missing_anywhere] = 0
 
         # Use the mask override if needed
         _use_mask = mask
@@ -281,7 +277,7 @@ class DataFrame():
 
         if (self.missing_flag is not None) or (_use_mask is not None):
             if use_indices.sum() == 0:
-                raise ValueError("No unmasked samples")
+                raise ValueError("No unmasked samples!")
             array = array[:, use_indices == 1]
 
         # Print information about the constructed array

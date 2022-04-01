@@ -5,6 +5,7 @@
 # License: GNU General Public License v3.0
 
 import numpy as np
+import math
 import itertools
 from copy import deepcopy
 from collections import defaultdict
@@ -133,6 +134,8 @@ class CausalEffects():
 
         # print(self.graph.shape)
         self._check_graph(self.graph)
+
+        self._check_XYS()
 
         self.ancX = self._get_ancestors(X)
         self.ancY = self._get_ancestors(Y)
@@ -350,6 +353,18 @@ class CausalEffects():
         #     self.graph = self._get_latent_projection_graph(self.graph, stationary=True)
         #     self.graph_type = "tsg_admg"
         # else:
+
+    def _check_XYS(self):
+        """Check whether XYS are sober.
+        """
+
+        XYS = self.X.union(self.Y).union(self.S)
+        for xys in XYS:
+            var, lag = xys 
+            if var < 0 or var >= self.N:
+                raise ValueError("XYS vars must be in [0...N]")
+            if lag < -self.tau_max or lag > 0:
+                raise ValueError("XYS lags must be in [-taumax...0]")
 
 
     def check_XYS_paths(self):
@@ -1804,6 +1819,10 @@ class CausalEffects():
         conditional_estimator=None,  
         data_transform=None,
         mask_type=None,
+        # estimate_confidence=False,
+        # boot_samples=100,
+        # boot_blocklength=1,
+        # conf_lev=0.95, seed=None
         ):
         """Returns a fitted model for the total causal effect of X on Y 
            conditional on S.
@@ -1872,8 +1891,69 @@ class CausalEffects():
                 Y=self.listY, X=self.listX, Z=list(self.adjustment_set),
                 conditions=self.listS,
                 tau_max=self.tau_max,
-                cut_off='max_lag_or_tau_max',
+                cut_off='tau_max',
                 return_data=False)
+
+        # # Optionally estimate confidence bounds via bootstrap
+        # self.estimate_confidence = estimate_confidence
+        # self.conf_lev = conf_lev
+        # if self.estimate_confidence:
+        #     self.bootstrap_results = {}
+        #     random_state = np.random.default_rng(seed)
+
+        #     # Extract max_lag to construct bootstrap draws
+        #     XYZ = self.listY + \
+        #           self.listX + \
+        #           list(self.adjustment_set) + \
+        #           self.listS
+        #     max_lag = max(abs(np.array(XYZ)[:, 1].min()), self.tau_max)
+
+        #     # Determine the number of blocks total, rounding up for non-integer
+        #     # amounts
+        #     n_blks = int(math.ceil(float(T-max_lag)/boot_blocklength))
+
+        #     if n_blks < 10:
+        #         raise ValueError("Only %d block(s) for block-sampling,"  %n_blks +
+        #                          "choose smaller boot_blocklength!")
+
+
+        #     if self.verbosity > 0:
+        #         print("\n##\n## Running bootstrap confidence estimate"  +
+        #               "\n##\n" +
+        #               "\nboot_samples = %s \n" % boot_samples +
+        #               "\nboot_blocklength = %s \n" % boot_blocklength
+        #               )
+        #     boot_dataframe = deepcopy(dataframe)
+        #     for b in range(boot_samples):
+        #         # Get the starting indices for the blocks
+        #         blk_strt = random_state.integers(max_lag, T - boot_blocklength + 1, n_blks)
+        #         # Get the empty array of block resampled values
+        #         boot_draw = np.zeros(n_blks*boot_blocklength, dtype='int')
+        #         # Fill the array of block resamples
+        #         for i in range(boot_blocklength):
+        #             boot_draw[i::boot_blocklength] = np.arange(0, T, dtype='int')[blk_strt + i]
+        #         # Cut to proper length
+        #         boot_draw = boot_draw[:T-max_lag]
+
+        #         # boot_draw = random_state.integers(2*tau_max, T, size=T-2*tau_max)
+        #         boot_dataframe.bootstrap = boot_draw
+                
+        #         # Fit model of Y on X and Z (and conditions)
+        #         # Build the model
+        #         self.bootstrap_results[b] = Models(
+        #                         dataframe=boot_dataframe,
+        #                         model=estimator,
+        #                         conditional_model=conditional_estimator,
+        #                         data_transform=data_transform,
+        #                         mask_type=mask_type,
+        #                         verbosity=self.verbosity)      
+
+        #         self.bootstrap_results[b].get_general_fitted_model(
+        #                 Y=self.listY, X=self.listX, Z=list(self.adjustment_set),
+        #                 conditions=self.listS,
+        #                 tau_max=self.tau_max,
+        #                 cut_off='max_lag_or_tau_max',
+        #                 return_data=False)
 
         return self
 
@@ -1903,6 +1983,7 @@ class CausalEffects():
         Returns
         -------
         Results from prediction: an array of shape  (time, len(Y)).
+        If estimate_confidence = True, then a tuple is returned.
         """
 
         if intervention_data.shape[1] != len(self.listX):
@@ -1926,6 +2007,32 @@ class CausalEffects():
             return_further_pred_results=return_further_pred_results) 
 
         return effect
+
+        # # Optionally get confidence bounds
+        # if self.estimate_confidence:
+        #     lenY = len(self.listY)
+        #     intervention_T, lenX = intervention_data.shape
+        #     boot_samples = len(self.bootstrap_results)
+        #     bootstrap_predicted_array = np.zeros((boot_samples, intervention_T, lenY))
+        #     for b in self.bootstrap_results.keys():
+        #         boot_effect = self.bootstrap_results[b].get_general_prediction(
+        #             intervention_data=intervention_data,
+        #             conditions_data=conditions_data,
+        #             pred_params=pred_params,
+        #             return_further_pred_results=return_further_pred_results) 
+        #         if return_further_pred_results:
+        #             bootstrap_predicted_array[b] = boot_effect[0]
+        #         else:
+        #             bootstrap_predicted_array[b] = boot_effect
+
+        #     # Confidence intervals for val_matrix; interval is two-sided
+        #     c_int = (1. - (1. - self.conf_lev)/2.)
+        #     confidence_interval = np.percentile(
+        #                             bootstrap_predicted_array, axis=0,
+        #                             q = [100*(1. - c_int), 100*c_int])
+        #     return effect, confidence_interval
+        # else:
+        #     return effect
 
     # @profile
     def fit_wright_effect(self,
@@ -2034,7 +2141,7 @@ class CausalEffects():
                     fit_res = self.model.get_general_fitted_model(
                         Y=[medy], X=[par], Z=oset,
                         tau_max=self.tau_max,
-                        cut_off='max_lag_or_tau_max',
+                        cut_off='tau_max',
                         return_data=False)
                     coeffs[medy][par] = fit_res[medy]['model'].coef_[0]
                     # print(mediators, par, medy, coeffs[medy][par])
@@ -2054,7 +2161,7 @@ class CausalEffects():
                     Y=[medy], X=list(all_parents), Z=[],
                     conditions=None,
                     tau_max=self.tau_max,
-                    cut_off='max_lag_or_tau_max',
+                    cut_off='tau_max',
                     return_data=False)
 
                 for ipar, par in enumerate(all_parents):
@@ -2087,7 +2194,7 @@ class CausalEffects():
         self.model.X = self.listX  
         self.model.Z = []
         self.model.conditions = [] 
-        self.model.cut_off = 'max_lag_or_tau_max'
+        self.model.cut_off = 'tau_max' # 'max_lag_or_tau_max'
 
         class dummy_fit_class():
             def __init__(self, y_here, listX_here, effect_here):
@@ -2169,6 +2276,154 @@ class CausalEffects():
                 predicted_array[index, iy] = predicted_vals.mean()
 
         return predicted_array
+
+
+    def fit_bootstrap_of(self, method, method_args, 
+                        boot_samples=1000,
+                        boot_blocklength=1,
+                        seed=None):
+        """Runs chosen method on bootstrap samples drawn from DataFrame.
+        
+        Bootstraps for tau=0 are drawn from [max_lag, ..., T] and all lagged
+        variables constructed in DataFrame.construct_array are consistently
+        shifted with respect to this bootsrap sample to ensure that lagged
+        relations in the bootstrap sample are preserved.
+
+        This function fits the models, predict_bootstrap_of can then be used
+        to get confidence intervals for the effect of interventions.
+
+        Parameters
+        ----------
+        method : str
+            Chosen method among valid functions in this class.
+        method_args : dict
+            Arguments passed to method.
+        boot_samples : int
+            Number of bootstrap samples to draw.
+        boot_blocklength : int, optional (default: 1)
+            Block length for block-bootstrap.
+        seed : int, optional(default = None)
+            Seed for RandomState (default_rng)
+        """
+
+        valid_methods = ['fit_total_effect',
+                         'fit_wright_effect',
+                          ]
+
+        if method not in valid_methods:
+            raise ValueError("method must be one of %s" % str(valid_methods))
+
+        # First call the method on the original dataframe 
+        # to make available adjustment set etc
+        getattr(self, method)(**method_args)
+
+        self.original_model = deepcopy(self.model)
+
+        T = self.model.T
+
+        # # Extract max_lag to construct bootstrap draws
+        # XYZ = self.listY + \
+        #       self.listX + \
+        #       list(self.adjustment_set) + \
+        #       self.listS
+        max_lag = self.tau_max #max(abs(np.array(XYZ)[:, 1].min()), self.tau_max)
+
+        # Init seed
+        random_state = np.random.default_rng(seed)
+
+        # Determine the number of blocks total, rounding up for non-integer
+        # amounts
+        n_blks = int(math.ceil(float(T-max_lag)/boot_blocklength))
+
+        if n_blks < 10:
+            raise ValueError("Only %d block(s) for block-sampling,"  %n_blks +
+                             "choose smaller boot_blocklength!")
+
+        if self.verbosity > 0:
+            print("\n##\n## Running Bootstrap of %s " % method +
+                  "\n##\n" +
+                  "\nboot_samples = %s \n" % boot_samples +
+                  "\nboot_blocklength = %s \n" % boot_blocklength
+                  )
+
+        method_args_bootstrap = deepcopy(method_args)
+        self.bootstrap_results = {}
+
+        for b in range(boot_samples):
+            # Get the starting indices for the blocks
+            blk_strt = random_state.integers(max_lag, T - boot_blocklength + 1, n_blks)
+            # Get the empty array of block resampled values
+            boot_draw = np.zeros(n_blks*boot_blocklength, dtype='int')
+            # Fill the array of block resamples
+            for i in range(boot_blocklength):
+                boot_draw[i::boot_blocklength] = np.arange(0, T, dtype='int')[blk_strt + i]
+            # Cut to proper length
+            boot_draw = boot_draw[:T-max_lag]
+
+            # Replace dataframe in method args by bootstrapped dataframe
+            method_args_bootstrap['dataframe'].bootstrap = boot_draw
+
+            # Call method and save fitted model
+            getattr(self, method)(**method_args_bootstrap)
+            self.bootstrap_results[b] = deepcopy(self.model)
+
+        return self
+
+
+    def predict_bootstrap_of(self, method, method_args, 
+                        conf_lev=0.9):
+        """Predicts with fitted bootstraps.
+
+        To be used after fitting with fit_bootstrap_of. Only uses the 
+        expected values of the predict function, not potential other output.
+
+        Parameters
+        ----------
+        method : str
+            Chosen method among valid functions in this class.
+        method_args : dict
+            Arguments passed to method.
+        conf_lev : float, optional (default: 0.9)
+            Two-sided confidence interval.
+
+        Returns
+        -------
+        confidence_intervals : numpy array of 
+        """
+
+        valid_methods = ['predict_total_effect',
+                         'predict_wright_effect',
+                          ]
+
+        if method not in valid_methods:
+            raise ValueError("method must be one of %s" % str(valid_methods))
+
+        
+        lenY = len(self.listY)
+        intervention_T, lenX = method_args['intervention_data'].shape
+        boot_samples = len(self.bootstrap_results)
+        bootstrap_predicted_array = np.zeros((boot_samples, intervention_T, lenY))
+        
+        for b in self.bootstrap_results.keys():
+            self.model = self.bootstrap_results[b]
+            boot_effect = getattr(self, method)(**method_args)
+
+            if isinstance(boot_effect, tuple):
+                bootstrap_predicted_array[b] = boot_effect[0]
+            else:
+                bootstrap_predicted_array[b] = boot_effect
+
+        # Reset model
+        self.model = self.original_model
+
+        # Confidence intervals for val_matrix; interval is two-sided
+        c_int = (1. - (1. - conf_lev)/2.)
+        confidence_interval = np.percentile(
+                bootstrap_predicted_array, axis=0,
+                q = [100*(1. - c_int), 100*c_int])[:,:,0]
+
+        return confidence_interval
+
 
     @staticmethod
     def get_graph_from_dict(links, tau_max=None):
@@ -2255,62 +2510,48 @@ if __name__ == '__main__':
     import sklearn
     from sklearn.linear_model import LinearRegression
 
-    T = 1000
+    T = 100
     def lin_f(x): return x
     auto_coeff = 0.3
     coeff = 2.
     links = {
             0: [((0, -1), auto_coeff, lin_f)], 
             1: [((1, -1), auto_coeff, lin_f), ((0, -1), coeff, lin_f)], 
-            2: [((2, -1), auto_coeff, lin_f), ((1, 0), coeff, lin_f)],
+            # 2: [((2, -1), auto_coeff, lin_f), ((1, 0), coeff, lin_f)],
             }
     data, nonstat = toys.structural_causal_process(links, T=T, 
                                 noises=None, seed=7)
 
     # Create some missing values
     data[-10:,:] = 999.
-    var_names = range(5)
+    var_names = range(2)
     dataframe = pp.DataFrame(data, var_names=var_names,
      missing_flag=999.) 
 
 
     # Construct expert knowledge graph from links here 
-    links = {0: [(0, -1)],
-             1: [(1, -1), (0, -1)],
-             2: [(2, -1), (1, 0),],
-             }
+    # links = {0: [(0, -1)],
+    #          1: [(1, -1), (0, -1)],
+    #          2: [(2, -1), (1, 0),],
+    #          }
     # Use staticmethod to get graph
     graph = CausalEffects.get_graph_from_dict(links, tau_max=None)
     
     # We are interested in lagged total effect of X on Y
     X = [(0, -1)]
-    Y = [(2, 0)]
+    Y = [(1, 0)]
 
     # Initialize class as `stationary_dag`
     causal_effects = CausalEffects(graph, graph_type='stationary_dag', 
                                 X=X, Y=Y, S=None, 
                                 hidden_variables=None, 
-                                verbosity=5)
+                                verbosity=0)
 
-    print(data)
+    # print(data)
     # Optimal adjustment set (is used by default)
     # print(causal_effects.get_optimal_set())
 
     # # Fit causal effect model from observational data
-    # causal_effects.fit_total_effect(
-    #     dataframe=dataframe, 
-    #     # mask_type='y',
-    #     estimator=LinearRegression(),
-    #     )
-
-    # # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go
-    # dox_vals = np.linspace(0., 1., 5)
-    # intervention_data = dox_vals.reshape(len(dox_vals), len(X))
-    # pred_Y = causal_effects.predict_total_effect( 
-    #         intervention_data=intervention_data)
-    # print(pred_Y)
-
-    # Fit causal effect model from observational data
     causal_effects.fit_wright_effect(
         dataframe=dataframe, 
         # mask_type='y',
@@ -2318,8 +2559,58 @@ if __name__ == '__main__':
         )
 
     # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go
-    dox_vals = np.linspace(0., 1., 5)
+    dox_vals = np.array([1.]) #np.linspace(0., 1., 1)
     intervention_data = dox_vals.reshape(len(dox_vals), len(X))
     pred_Y = causal_effects.predict_wright_effect( 
             intervention_data=intervention_data)
     print(pred_Y)
+
+
+    # # Fit causal effect model from observational data
+    causal_effects.fit_bootstrap_of(
+        method='fit_wright_effect',
+        method_args={'dataframe':dataframe,  
+        # mask_type='y',
+        # 'estimator':LinearRegression()
+        }
+        )
+
+
+    # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go
+    dox_vals = np.array([1.]) #np.linspace(0., 1., 1)
+    intervention_data = dox_vals.reshape(len(dox_vals), len(X))
+    conf = causal_effects.predict_bootstrap_of(
+        method='predict_wright_effect',
+        method_args={'intervention_data':intervention_data})
+    print(conf)
+
+    # # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go
+    dox_vals = np.array([1.]) #np.linspace(0., 1., 1)
+    intervention_data = dox_vals.reshape(len(dox_vals), len(X))
+    pred_Y = causal_effects.predict_wright_effect( 
+            intervention_data=intervention_data)
+    print(pred_Y)
+
+
+    # # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go
+    # dox_vals = np.array([1.]) #np.linspace(0., 1., 1)
+    # intervention_data = dox_vals.reshape(len(dox_vals), len(X))
+    # pred_Y = causal_effects.predict_total_effect( 
+    #         intervention_data=intervention_data)
+    # print(pred_Y)
+
+
+
+    # # Fit causal effect model from observational data
+    # causal_effects.fit_wright_effect(
+    #     dataframe=dataframe, 
+    #     # mask_type='y',
+    #     # estimator=LinearRegression(),
+    #     )
+
+    # # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go
+    # dox_vals = np.linspace(0., 1., 5)
+    # intervention_data = dox_vals.reshape(len(dox_vals), len(X))
+    # pred_Y = causal_effects.predict_wright_effect( 
+    #         intervention_data=intervention_data)
+    # print(pred_Y)

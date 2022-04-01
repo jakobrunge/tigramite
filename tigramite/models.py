@@ -70,8 +70,9 @@ class Models():
         # Set the mask type and dataframe object
         self.mask_type = mask_type
         self.dataframe = dataframe
-        # Get the number of nodes for this dataset
-        self.N = self.dataframe.values.shape[1]
+        # Get the number of nodes and length for this dataset
+        self.N = self.dataframe.N
+        self.T = self.dataframe.T
         # Set the model to be used
         self.model = model
         if conditional_model is None:
