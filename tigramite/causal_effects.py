@@ -2367,6 +2367,9 @@ class CausalEffects():
             getattr(self, method)(**method_args_bootstrap)
             self.bootstrap_results[b] = deepcopy(self.model)
 
+        # Reset model
+        self.model = self.original_model
+
         return self
 
 
@@ -2552,44 +2555,42 @@ if __name__ == '__main__':
     # print(causal_effects.get_optimal_set())
 
     # # Fit causal effect model from observational data
-    causal_effects.fit_wright_effect(
+    causal_effects.fit_total_effect(
         dataframe=dataframe, 
         # mask_type='y',
-        # estimator=LinearRegression(),
+        estimator=LinearRegression(),
         )
-
-    # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go
-    dox_vals = np.array([1.]) #np.linspace(0., 1., 1)
-    intervention_data = dox_vals.reshape(len(dox_vals), len(X))
-    pred_Y = causal_effects.predict_wright_effect( 
-            intervention_data=intervention_data)
-    print(pred_Y)
 
 
     # # Fit causal effect model from observational data
     causal_effects.fit_bootstrap_of(
-        method='fit_wright_effect',
+        method='fit_total_effect',
         method_args={'dataframe':dataframe,  
         # mask_type='y',
-        # 'estimator':LinearRegression()
-        }
+        'estimator':LinearRegression()
+        },
+        seed=4
         )
+
+
+    # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go
+    dox_vals = np.array([1.]) #np.linspace(0., 1., 1)
+    intervention_data = dox_vals.reshape(len(dox_vals), len(X))
+    pred_Y = causal_effects.predict_total_effect( 
+            intervention_data=intervention_data)
+    print(pred_Y)
+
+
 
 
     # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go
     dox_vals = np.array([1.]) #np.linspace(0., 1., 1)
     intervention_data = dox_vals.reshape(len(dox_vals), len(X))
     conf = causal_effects.predict_bootstrap_of(
-        method='predict_wright_effect',
+        method='predict_total_effect',
         method_args={'intervention_data':intervention_data})
     print(conf)
 
-    # # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go
-    dox_vals = np.array([1.]) #np.linspace(0., 1., 1)
-    intervention_data = dox_vals.reshape(len(dox_vals), len(X))
-    pred_Y = causal_effects.predict_wright_effect( 
-            intervention_data=intervention_data)
-    print(pred_Y)
 
 
     # # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go
