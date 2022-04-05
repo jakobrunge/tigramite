@@ -841,9 +841,8 @@ def plot_scatterplots(dataframe, name=None, setup_args={}, add_scatterplot_args=
 
     matrix = setup_scatter_matrix(N=N, var_names=dataframe.var_names, **setup_args)
     matrix.add_scatterplot(dataframe=dataframe, **add_scatterplot_args)
-
-    if name is not None:
-        matrix.savefig(name=name)
+    matrix.adjustfig(name=name)
+   
 
     return matrix
 
@@ -942,7 +941,7 @@ class setup_scatter_matrix:
 
                 if j != 0:
                     self.axes_dict[(i, j)].get_yaxis().set_ticklabels([])
-                if i != dataframe.N - 1:
+                if i != N - 1:
                     self.axes_dict[(i, j)].get_xaxis().set_ticklabels([])
 
                 if plot_gridlines:
@@ -1031,8 +1030,8 @@ class setup_scatter_matrix:
             #     transform=self.axes_dict[(i, j)].transAxes)
 
 
-    def savefig(self, name=None):
-        """Save matrix figure.
+    def adjustfig(self, name=None):
+        """Adjust matrix figure.
 
         Parameters
         ----------
@@ -1111,12 +1110,10 @@ class setup_scatter_matrix:
                 wspace=0.35,
             )
        
-
         if name is not None:
             self.fig.savefig(name)
         else:
             pyplot.show()
-
 
 def _draw_network_with_curved_edges(
     fig,
@@ -3663,7 +3660,7 @@ if __name__ == "__main__":
                                 noises=None, seed=7)
 
     dataframe = pp.DataFrame(data, var_names=range(len(links)))
-    plot_scatterplots(dataframe, name='scattertest.pdf')
+    plot_scatterplots(dataframe) #, name='scattertest.pdf')
     
     # matrix = setup_scatter_matrix(N=dataframe.N, 
     #     var_names=dataframe.var_names)
