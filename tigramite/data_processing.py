@@ -268,6 +268,7 @@ class DataFrame():
             for idx, cde in index_code.items():
                 # Check if the letter index is in the mask type
                 if (mask_type is not None) and (idx in mask_type):
+                    print(idx, cde, xyz,  xyz == cde)
                     # If so, check if any of the data that correspond to the
                     # letter index is masked by taking the product along the
                     # node-data to return a time slice selection, where 0 means

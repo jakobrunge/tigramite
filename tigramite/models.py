@@ -30,6 +30,10 @@ except Exception as e:
 from tigramite.data_processing import DataFrame
 from tigramite.pcmci import PCMCI
 
+### remove!!!
+from matplotlib import pyplot as plt
+from scipy.stats import kde
+
 class Models():
     """Base class for time series models.
 
@@ -51,7 +55,8 @@ class Models():
     data_transform : sklearn preprocessing object, optional (default: None)
         Used to transform data prior to fitting. For example,
         sklearn.preprocessing.StandardScaler for simple standardization. The
-        fitted parameters are stored.
+        fitted parameters are stored. Note that the inverse_transform is then
+        applied to the predicted data.
     mask_type : {None, 'y','x','z','xy','xz','yz','xyz'}
         Masking mode: Indicators for which variables in the dependence
         measure I(X; Y | Z) the samples should be masked. If None, the mask
@@ -159,8 +164,7 @@ class Models():
         fit_results = {}
         for y in self.Y:
 
-            # Construct array of shape (var, time) with first entry being
-            # a dummy, second is y followed by joint X and Z (ignore the notation in construct_array)
+            # Construct array of shape (var, time)
             array, xyz = \
                 self.dataframe.construct_array(X=self.X, Y=[y], # + self.Z, 
                                                Z=self.conditions,
@@ -170,18 +174,35 @@ class Models():
                                                cut_off=self.cut_off,
                                                verbosity=self.verbosity)
 
-
             # Transform the data if needed
+            self.fitted_data_transform = None
             if self.data_transform is not None:
-                array = self.data_transform.fit_transform(X=array.T).T
+                # Fit only X, Y, and S for later use in transforming input
+                X_transform = deepcopy(self.data_transform)
+                x_indices = list(np.where(xyz==0)[0])
+                X_transform.fit(array[x_indices, :].T)
+                self.fitted_data_transform = {'X': X_transform}
+                Y_transform = deepcopy(self.data_transform)
+                y_indices = list(np.where(xyz==1)[0])
+                Y_transform.fit(array[y_indices, :].T)
+                self.fitted_data_transform['Y'] = Y_transform
+                if len(self.conditions) > 0:
+                    S_transform = deepcopy(self.data_transform)
+                    s_indices = list(np.where(xyz==2)[0])
+                    S_transform.fit(array[s_indices, :].T) 
+                    self.fitted_data_transform['S'] = S_transform
+
+                # Now transform whole array
+                all_transform = deepcopy(self.data_transform)
+                array = all_transform.fit_transform(X=array.T).T
 
             # Fit the model 
             # Copy and fit the model
             a_model = deepcopy(self.model)
 
             predictor_indices =  list(np.where(xyz==0)[0]) \
-                               + list(np.where(xyz==2)[0]) \
-                               + list(np.where(xyz==3)[0])
+                               + list(np.where(xyz==3)[0]) \
+                               + list(np.where(xyz==2)[0])
             predictor_array = array[predictor_indices, :].T
             # Target is only first entry of Y, ie [y]
             target_array = array[np.where(xyz==1)[0][0], :]
@@ -194,10 +215,10 @@ class Models():
             fit_results[y]['xyz'] = xyz
             fit_results[y]['model'] = a_model
             # Cache the data transform
-            fit_results[y]['data_transform'] = deepcopy(self.data_transform)
-            # Cache the data if needed
-            if return_data:
-                fit_results[y]['data'] = array
+            fit_results[y]['fitted_data_transform'] = self.fitted_data_transform
+            # # Cache the data if needed
+            # if return_data:
+            #     fit_results[y]['data'] = array
 
         # Cache and return the fit results
         self.fit_results = fit_results
@@ -242,7 +263,6 @@ class Models():
                 raise ValueError("conditions_data.shape[0] must match intervention_data.shape[0].")
 
         lenS = len(self.conditions)
-
         lenY = len(self.Y)
 
         predicted_array = np.zeros((intervention_T, lenY))
@@ -263,16 +283,16 @@ class Models():
                 raise ValueError("y = %s not yet fitted" % str(y))
 
             # Transform the data if needed
-            a_transform = self.fit_results[y]['data_transform']
-            if a_transform is not None:
-                intervention_data = a_transform.transform(X=intervention_data)
+            fitted_data_transform = self.fit_results[y]['fitted_data_transform']
+            if fitted_data_transform is not None:
+                intervention_data = fitted_data_transform['X'].transform(X=intervention_data)
                 if self.conditions is not None and conditions_data is not None:
-                    conditions_data = a_transform.transform(X=conditions_data)
+                    conditions_data = fitted_data_transform['S'].transform(X=conditions_data)
 
             # Extract observational Z from stored array
             z_indices = list(np.where(self.fit_results[y]['xyz']==3)[0])
             z_array = self.fit_results[y]['observation_array'][z_indices, :].T  
-            Tobs = len(z_array)              
+            Tobs = len(self.fit_results[y]['observation_array'].T) 
 
             if self.conditions is not None and conditions_data is not None:
                 s_indices = list(np.where(self.fit_results[y]['xyz']==2)[0])
@@ -293,27 +313,28 @@ class Models():
 
                 if self.conditions is not None and conditions_data is not None:
  
-                    # if a_transform is not None:
-                    #     predicted_vals = a_transform.transform(X=target_array.T).T
                     a_conditional_model = deepcopy(self.conditional_model)
                     
                     if type(predicted_vals) is tuple:
                         predicted_vals_here = predicted_vals[0]
                     else:
                         predicted_vals_here = predicted_vals
-
+                    
                     a_conditional_model.fit(X=s_array, y=predicted_vals_here)
                     self.fit_results[y]['conditional_model'] = a_conditional_model
 
                     predicted_vals = a_conditional_model.predict(
                         X=conditions_array, **pred_params)
 
-                # print(predicted_vals)
                 if type(predicted_vals) is tuple:
                     predicted_array[index, iy] = predicted_vals[0].mean()
                     pred_dict[iy][index] = predicted_vals
                 else:
                     predicted_array[index, iy] = predicted_vals.mean()
+
+                if fitted_data_transform is not None:
+                     rescaled = fitted_data_transform['Y'].inverse_transform(X=predicted_array[index, iy].reshape(-1, 1))
+                     predicted_array[index, iy] = rescaled.squeeze()
 
         if return_further_pred_results:
             return predicted_array, pred_dict

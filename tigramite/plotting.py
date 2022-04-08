@@ -1694,13 +1694,12 @@ def _draw_network_with_curved_edges(
                 data_to_rgb_links, cax=cax_e, orientation="horizontal"
             )
             # try:
-            cb_e.set_ticks(
-                np.arange(
+            ticks_here = np.arange(
                     _myround(links_vmin, links_ticks, "down"),
                     _myround(links_vmax, links_ticks, "up") + links_ticks,
                     links_ticks,
                 )
-            )
+            cb_e.set_ticks(ticks_here[(links_vmin <= ticks_here) & (ticks_here <= links_vmax)])
             # except:
             #     print('no ticks given')
 
@@ -1785,14 +1784,13 @@ def _draw_network_with_curved_edges(
                 )
                 cb_n = pyplot.colorbar(data_to_rgb, cax=cax_n, orientation="horizontal")
                 # try:
-                cb_n.set_ticks(
-                    np.arange(
-                        _myround(vmin, node_rings[ring]["ticks"], "down"),
-                        _myround(vmax, node_rings[ring]["ticks"], "up")
-                        + node_rings[ring]["ticks"],
-                        node_rings[ring]["ticks"],
-                    )
+                ticks_here = np.arange(
+                    _myround(vmin, node_rings[ring]["ticks"], "down"),
+                    _myround(vmax, node_rings[ring]["ticks"], "up")
+                    + node_rings[ring]["ticks"],
+                    node_rings[ring]["ticks"],
                 )
+                cb_n.set_ticks(ticks_here[(vmin <= ticks_here) & (ticks_here <= vmax)])
                 # except:
                 #     print ('no ticks given')
                 cb_n.outline.clear()
