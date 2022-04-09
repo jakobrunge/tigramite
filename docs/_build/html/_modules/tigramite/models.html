@@ -57,7 +57,7 @@
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
-<span class="kn">import</span> <span class="nn">json</span><span class="o">,</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">json</span><span class="o">,</span> <span class="nn">warnings</span><span class="o">,</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">pathlib</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">importlib</span> <span class="kn">import</span> <span class="n">metadata</span>
@@ -67,7 +67,7 @@
     <span class="kn">import</span> <span class="nn">sklearn</span>
     <span class="kn">import</span> <span class="nn">sklearn.linear_model</span>
     <span class="kn">import</span> <span class="nn">networkx</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;../versions.py&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">vfile</span><span class="p">:</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span> <span class="o">/</span> <span class="s1">&#39;../versions.py&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">vfile</span><span class="p">:</span>
         <span class="n">packages</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">vfile</span><span class="o">.</span><span class="n">read</span><span class="p">())[</span><span class="s1">&#39;all&#39;</span><span class="p">]</span>
         <span class="n">packages</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;&gt;=&#39;</span><span class="p">),</span> <span class="n">packages</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">metadata</span><span class="o">.</span><span class="n">version</span><span class="p">(</span><span class="s1">&#39;scikit-learn&#39;</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">packages</span><span class="p">[</span><span class="s1">&#39;scikit-learn&#39;</span><span class="p">]:</span>
@@ -80,6 +80,10 @@
     <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
 <span class="kn">from</span> <span class="nn">tigramite.data_processing</span> <span class="kn">import</span> <span class="n">DataFrame</span>
 <span class="kn">from</span> <span class="nn">tigramite.pcmci</span> <span class="kn">import</span> <span class="n">PCMCI</span>
+
+<span class="c1">### remove!!!</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">kde</span>
 
 <div class="viewcode-block" id="Models"><a class="viewcode-back" href="../../index.html#tigramite.models.Models">[docs]</a><span class="k">class</span> <span class="nc">Models</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;Base class for time series models.</span>
@@ -102,7 +106,8 @@
 <span class="sd">    data_transform : sklearn preprocessing object, optional (default: None)</span>
 <span class="sd">        Used to transform data prior to fitting. For example,</span>
 <span class="sd">        sklearn.preprocessing.StandardScaler for simple standardization. The</span>
-<span class="sd">        fitted parameters are stored.</span>
+<span class="sd">        fitted parameters are stored. Note that the inverse_transform is then</span>
+<span class="sd">        applied to the predicted data.</span>
 <span class="sd">    mask_type : {None, &#39;y&#39;,&#39;x&#39;,&#39;z&#39;,&#39;xy&#39;,&#39;xz&#39;,&#39;yz&#39;,&#39;xyz&#39;}</span>
 <span class="sd">        Masking mode: Indicators for which variables in the dependence</span>
 <span class="sd">        measure I(X; Y | Z) the samples should be masked. If None, the mask</span>
@@ -121,8 +126,9 @@
         <span class="c1"># Set the mask type and dataframe object</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span> <span class="o">=</span> <span class="n">mask_type</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span> <span class="o">=</span> <span class="n">dataframe</span>
-        <span class="c1"># Get the number of nodes for this dataset</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c1"># Get the number of nodes and length for this dataset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">N</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">T</span>
         <span class="c1"># Set the model to be used</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
         <span class="k">if</span> <span class="n">conditional_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -209,8 +215,7 @@
         <span class="n">fit_results</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">:</span>
 
-            <span class="c1"># Construct array of shape (var, time) with first entry being</span>
-            <span class="c1"># a dummy, second is y followed by joint X and Z (ignore the notation in construct_array)</span>
+            <span class="c1"># Construct array of shape (var, time)</span>
             <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span> <span class="o">=</span> \
                 <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">construct_array</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="p">[</span><span class="n">y</span><span class="p">],</span> <span class="c1"># + self.Z, </span>
                                                <span class="n">Z</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">conditions</span><span class="p">,</span>
@@ -220,18 +225,35 @@
                                                <span class="n">cut_off</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cut_off</span><span class="p">,</span>
                                                <span class="n">verbosity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
 
-
             <span class="c1"># Transform the data if needed</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fitted_data_transform</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_transform</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_transform</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">array</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+                <span class="c1"># Fit only X, Y, and S for later use in transforming input</span>
+                <span class="n">X_transform</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_transform</span><span class="p">)</span>
+                <span class="n">x_indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span><span class="o">==</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">X_transform</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">array</span><span class="p">[</span><span class="n">x_indices</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fitted_data_transform</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;X&#39;</span><span class="p">:</span> <span class="n">X_transform</span><span class="p">}</span>
+                <span class="n">Y_transform</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_transform</span><span class="p">)</span>
+                <span class="n">y_indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span><span class="o">==</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">Y_transform</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">array</span><span class="p">[</span><span class="n">y_indices</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fitted_data_transform</span><span class="p">[</span><span class="s1">&#39;Y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Y_transform</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conditions</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">S_transform</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_transform</span><span class="p">)</span>
+                    <span class="n">s_indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span><span class="o">==</span><span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="n">S_transform</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">array</span><span class="p">[</span><span class="n">s_indices</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> 
+                    <span class="bp">self</span><span class="o">.</span><span class="n">fitted_data_transform</span><span class="p">[</span><span class="s1">&#39;S&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S_transform</span>
+
+                <span class="c1"># Now transform whole array</span>
+                <span class="n">all_transform</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_transform</span><span class="p">)</span>
+                <span class="n">array</span> <span class="o">=</span> <span class="n">all_transform</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">array</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
 
             <span class="c1"># Fit the model </span>
             <span class="c1"># Copy and fit the model</span>
             <span class="n">a_model</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
 
             <span class="n">predictor_indices</span> <span class="o">=</span>  <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span><span class="o">==</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> \
-                               <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span><span class="o">==</span><span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> \
-                               <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span><span class="o">==</span><span class="mi">3</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+                               <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span><span class="o">==</span><span class="mi">3</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> \
+                               <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span><span class="o">==</span><span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
             <span class="n">predictor_array</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">predictor_indices</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">T</span>
             <span class="c1"># Target is only first entry of Y, ie [y]</span>
             <span class="n">target_array</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span><span class="o">==</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="p">:]</span>
@@ -244,10 +266,10 @@
             <span class="n">fit_results</span><span class="p">[</span><span class="n">y</span><span class="p">][</span><span class="s1">&#39;xyz&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">xyz</span>
             <span class="n">fit_results</span><span class="p">[</span><span class="n">y</span><span class="p">][</span><span class="s1">&#39;model&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">a_model</span>
             <span class="c1"># Cache the data transform</span>
-            <span class="n">fit_results</span><span class="p">[</span><span class="n">y</span><span class="p">][</span><span class="s1">&#39;data_transform&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_transform</span><span class="p">)</span>
-            <span class="c1"># Cache the data if needed</span>
-            <span class="k">if</span> <span class="n">return_data</span><span class="p">:</span>
-                <span class="n">fit_results</span><span class="p">[</span><span class="n">y</span><span class="p">][</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">array</span>
+            <span class="n">fit_results</span><span class="p">[</span><span class="n">y</span><span class="p">][</span><span class="s1">&#39;fitted_data_transform&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitted_data_transform</span>
+            <span class="c1"># # Cache the data if needed</span>
+            <span class="c1"># if return_data:</span>
+            <span class="c1">#     fit_results[y][&#39;data&#39;] = array</span>
 
         <span class="c1"># Cache and return the fit results</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fit_results</span> <span class="o">=</span> <span class="n">fit_results</span>
@@ -258,6 +280,7 @@
                 <span class="n">intervention_data</span><span class="p">,</span>
                 <span class="n">conditions_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">pred_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">return_further_pred_results</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                 <span class="p">):</span>
         <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Predict effect of intervention with fitted model.</span>
 
@@ -271,7 +294,9 @@
 <span class="sd">            Numpy array of shape (time, len(S)) that contains the S=s values.</span>
 <span class="sd">        pred_params : dict, optional</span>
 <span class="sd">            Optional parameters passed on to sklearn prediction function.</span>
-
+<span class="sd">        return_further_pred_results : bool, optional (default: False)</span>
+<span class="sd">            In case the predictor class returns more than just the expected value,</span>
+<span class="sd">            the entire results can be returned.</span>
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        Results from prediction.</span>
@@ -289,12 +314,12 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;conditions_data.shape[0] must match intervention_data.shape[0].&quot;</span><span class="p">)</span>
 
         <span class="n">lenS</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conditions</span><span class="p">)</span>
-
         <span class="n">lenY</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">)</span>
 
         <span class="n">predicted_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">intervention_T</span><span class="p">,</span> <span class="n">lenY</span><span class="p">))</span>
         <span class="n">pred_dict</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">iy</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">):</span>
+            <span class="n">pred_dict</span><span class="p">[</span><span class="n">iy</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="c1"># Print message</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">## Predicting target </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
@@ -309,16 +334,16 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;y = </span><span class="si">%s</span><span class="s2"> not yet fitted&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
 
             <span class="c1"># Transform the data if needed</span>
-            <span class="n">a_transform</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_results</span><span class="p">[</span><span class="n">y</span><span class="p">][</span><span class="s1">&#39;data_transform&#39;</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">a_transform</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">intervention_data</span> <span class="o">=</span> <span class="n">a_transform</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">intervention_data</span><span class="p">)</span>
+            <span class="n">fitted_data_transform</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_results</span><span class="p">[</span><span class="n">y</span><span class="p">][</span><span class="s1">&#39;fitted_data_transform&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">fitted_data_transform</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">intervention_data</span> <span class="o">=</span> <span class="n">fitted_data_transform</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">intervention_data</span><span class="p">)</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">conditions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">conditions_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">conditions_data</span> <span class="o">=</span> <span class="n">a_transform</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">conditions_data</span><span class="p">)</span>
+                    <span class="n">conditions_data</span> <span class="o">=</span> <span class="n">fitted_data_transform</span><span class="p">[</span><span class="s1">&#39;S&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">conditions_data</span><span class="p">)</span>
 
             <span class="c1"># Extract observational Z from stored array</span>
             <span class="n">z_indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_results</span><span class="p">[</span><span class="n">y</span><span class="p">][</span><span class="s1">&#39;xyz&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">3</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
             <span class="n">z_array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_results</span><span class="p">[</span><span class="n">y</span><span class="p">][</span><span class="s1">&#39;observation_array&#39;</span><span class="p">][</span><span class="n">z_indices</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">T</span>  
-            <span class="n">Tobs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">z_array</span><span class="p">)</span>              
+            <span class="n">Tobs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_results</span><span class="p">[</span><span class="n">y</span><span class="p">][</span><span class="s1">&#39;observation_array&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> 
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">conditions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">conditions_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">s_indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_results</span><span class="p">[</span><span class="n">y</span><span class="p">][</span><span class="s1">&#39;xyz&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
@@ -339,20 +364,33 @@
 
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">conditions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">conditions_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
  
-                    <span class="c1"># if a_transform is not None:</span>
-                    <span class="c1">#     predicted_vals = a_transform.transform(X=target_array.T).T</span>
                     <span class="n">a_conditional_model</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conditional_model</span><span class="p">)</span>
                     
-                    <span class="n">a_conditional_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">s_array</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">predicted_vals</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">predicted_vals</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">tuple</span><span class="p">:</span>
+                        <span class="n">predicted_vals_here</span> <span class="o">=</span> <span class="n">predicted_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">predicted_vals_here</span> <span class="o">=</span> <span class="n">predicted_vals</span>
+                    
+                    <span class="n">a_conditional_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">s_array</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">predicted_vals_here</span><span class="p">)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">fit_results</span><span class="p">[</span><span class="n">y</span><span class="p">][</span><span class="s1">&#39;conditional_model&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">a_conditional_model</span>
 
-                    <span class="n">predicted_array</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="n">iy</span><span class="p">]</span> <span class="o">=</span> <span class="n">a_conditional_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
-                        <span class="n">X</span><span class="o">=</span><span class="n">conditions_array</span><span class="p">,</span> <span class="o">**</span><span class="n">pred_params</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+                    <span class="n">predicted_vals</span> <span class="o">=</span> <span class="n">a_conditional_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+                        <span class="n">X</span><span class="o">=</span><span class="n">conditions_array</span><span class="p">,</span> <span class="o">**</span><span class="n">pred_params</span><span class="p">)</span>
 
+                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">predicted_vals</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">tuple</span><span class="p">:</span>
+                    <span class="n">predicted_array</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="n">iy</span><span class="p">]</span> <span class="o">=</span> <span class="n">predicted_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+                    <span class="n">pred_dict</span><span class="p">[</span><span class="n">iy</span><span class="p">][</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">predicted_vals</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">predicted_array</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="n">iy</span><span class="p">]</span> <span class="o">=</span> <span class="n">predicted_vals</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 
-        <span class="k">return</span> <span class="n">predicted_array</span></div>
+                <span class="k">if</span> <span class="n">fitted_data_transform</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                     <span class="n">rescaled</span> <span class="o">=</span> <span class="n">fitted_data_transform</span><span class="p">[</span><span class="s1">&#39;Y&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">inverse_transform</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">predicted_array</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="n">iy</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+                     <span class="n">predicted_array</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="n">iy</span><span class="p">]</span> <span class="o">=</span> <span class="n">rescaled</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">return_further_pred_results</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">predicted_array</span><span class="p">,</span> <span class="n">pred_dict</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">predicted_array</span></div>
 
 
 <div class="viewcode-block" id="Models.get_fit"><a class="viewcode-back" href="../../index.html#tigramite.models.Models.get_fit">[docs]</a>    <span class="k">def</span> <span class="nf">get_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">all_parents</span><span class="p">,</span>

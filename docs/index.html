@@ -2572,6 +2572,29 @@ constructed by a latent projection.</p></li>
 </dd></dl>
 
 <dl class="method">
+<dt id="tigramite.causal_effects.CausalEffects.fit_bootstrap_of">
+<code class="sig-name descname">fit_bootstrap_of</code><span class="sig-paren">(</span><em class="sig-param">method</em>, <em class="sig-param">method_args</em>, <em class="sig-param">boot_samples=1000</em>, <em class="sig-param">boot_blocklength=1</em>, <em class="sig-param">seed=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/causal_effects.html#CausalEffects.fit_bootstrap_of"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.causal_effects.CausalEffects.fit_bootstrap_of" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs chosen method on bootstrap samples drawn from DataFrame.</p>
+<p>Bootstraps for tau=0 are drawn from [max_lag, …, T] and all lagged
+variables constructed in DataFrame.construct_array are consistently
+shifted with respect to this bootsrap sample to ensure that lagged
+relations in the bootstrap sample are preserved.</p>
+<p>This function fits the models, predict_bootstrap_of can then be used
+to get confidence intervals for the effect of interventions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>method</strong> (<em>str</em>) – Chosen method among valid functions in this class.</p></li>
+<li><p><strong>method_args</strong> (<em>dict</em>) – Arguments passed to method.</p></li>
+<li><p><strong>boot_samples</strong> (<em>int</em>) – Number of bootstrap samples to draw.</p></li>
+<li><p><strong>boot_blocklength</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) – Block length for block-bootstrap.</p></li>
+<li><p><strong>seed</strong> (<em>int</em><em>, </em><em>optional</em><em>(</em><em>default = None</em><em>)</em>) – Seed for RandomState (default_rng)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="tigramite.causal_effects.CausalEffects.fit_total_effect">
 <code class="sig-name descname">fit_total_effect</code><span class="sig-paren">(</span><em class="sig-param">dataframe</em>, <em class="sig-param">estimator</em>, <em class="sig-param">adjustment_set='optimal'</em>, <em class="sig-param">conditional_estimator=None</em>, <em class="sig-param">data_transform=None</em>, <em class="sig-param">mask_type=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/causal_effects.html#CausalEffects.fit_total_effect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.causal_effects.CausalEffects.fit_total_effect" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
@@ -2701,8 +2724,31 @@ only colliders are minimized.</p></li>
 </dd></dl>
 
 <dl class="method">
+<dt id="tigramite.causal_effects.CausalEffects.predict_bootstrap_of">
+<code class="sig-name descname">predict_bootstrap_of</code><span class="sig-paren">(</span><em class="sig-param">method</em>, <em class="sig-param">method_args</em>, <em class="sig-param">conf_lev=0.9</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/causal_effects.html#CausalEffects.predict_bootstrap_of"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.causal_effects.CausalEffects.predict_bootstrap_of" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predicts with fitted bootstraps.</p>
+<p>To be used after fitting with fit_bootstrap_of. Only uses the
+expected values of the predict function, not potential other output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>method</strong> (<em>str</em>) – Chosen method among valid functions in this class.</p></li>
+<li><p><strong>method_args</strong> (<em>dict</em>) – Arguments passed to method.</p></li>
+<li><p><strong>conf_lev</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.9</em><em>)</em>) – Two-sided confidence interval.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>confidence_intervals</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy array of</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="tigramite.causal_effects.CausalEffects.predict_total_effect">
-<code class="sig-name descname">predict_total_effect</code><span class="sig-paren">(</span><em class="sig-param">intervention_data</em>, <em class="sig-param">conditions_data=None</em>, <em class="sig-param">pred_params=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/causal_effects.html#CausalEffects.predict_total_effect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.causal_effects.CausalEffects.predict_total_effect" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">predict_total_effect</code><span class="sig-paren">(</span><em class="sig-param">intervention_data</em>, <em class="sig-param">conditions_data=None</em>, <em class="sig-param">pred_params=None</em>, <em class="sig-param">return_further_pred_results=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/causal_effects.html#CausalEffects.predict_total_effect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.causal_effects.CausalEffects.predict_total_effect" title="Permalink to this definition">¶</a></dt>
 <dd><p>Predict effect of intervention with fitted model.</p>
 <p>Uses the model.predict() function of the sklearn model.</p>
 <dl class="field-list simple">
@@ -2711,13 +2757,16 @@ only colliders are minimized.</p></li>
 <li><p><strong>intervention_data</strong> (<em>numpy array</em>) – Numpy array of shape (time, len(X)) that contains the do(X) values.</p></li>
 <li><p><strong>conditions_data</strong> (<em>data object</em><em>, </em><em>optional</em>) – Numpy array of shape (time, len(S)) that contains the S=s values.</p></li>
 <li><p><strong>pred_params</strong> (<em>dict</em><em>, </em><em>optional</em>) – Optional parameters passed on to sklearn prediction function.</p></li>
+<li><p><strong>return_further_pred_results</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – In case the predictor class returns more than just the expected value,
+the entire results can be returned.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>Results from prediction</strong></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>an array of shape  (time, len(Y))</p>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>Results from prediction</strong> (<em>an array of shape  (time, len(Y)).</em>)</p></li>
+<li><p><em>If estimate_confidence = True, then a tuple is returned.</em></p></li>
+</ul>
+</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2766,7 +2815,8 @@ regression model.</p></li>
 If None, model is used.</p></li>
 <li><p><strong>data_transform</strong> (<em>sklearn preprocessing object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Used to transform data prior to fitting. For example,
 sklearn.preprocessing.StandardScaler for simple standardization. The
-fitted parameters are stored.</p></li>
+fitted parameters are stored. Note that the inverse_transform is then
+applied to the predicted data.</p></li>
 <li><p><strong>mask_type</strong> (<em>{None</em><em>, </em><em>'y'</em><em>,</em><em>'x'</em><em>,</em><em>'z'</em><em>,</em><em>'xy'</em><em>,</em><em>'xz'</em><em>,</em><em>'yz'</em><em>,</em><em>'xyz'}</em>) – Masking mode: Indicators for which variables in the dependence
 measure I(X; Y | Z) the samples should be masked. If None, the mask
 is not used. Explained in tutorial on masking and missing values.</p></li>
@@ -2858,7 +2908,7 @@ transformation parameters.</p>
 
 <dl class="method">
 <dt id="tigramite.models.Models.get_general_prediction">
-<code class="sig-name descname">get_general_prediction</code><span class="sig-paren">(</span><em class="sig-param">intervention_data</em>, <em class="sig-param">conditions_data=None</em>, <em class="sig-param">pred_params=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#Models.get_general_prediction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.Models.get_general_prediction" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_general_prediction</code><span class="sig-paren">(</span><em class="sig-param">intervention_data</em>, <em class="sig-param">conditions_data=None</em>, <em class="sig-param">pred_params=None</em>, <em class="sig-param">return_further_pred_results=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#Models.get_general_prediction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.models.Models.get_general_prediction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Predict effect of intervention with fitted model.</p>
 <p>Uses the model.predict() function of the sklearn model.</p>
 <dl class="field-list simple">
@@ -2867,6 +2917,8 @@ transformation parameters.</p>
 <li><p><strong>intervention_data</strong> (<em>numpy array</em>) – Numpy array of shape (time, len(X)) that contains the do(X) values.</p></li>
 <li><p><strong>conditions_data</strong> (<em>data object</em><em>, </em><em>optional</em>) – Numpy array of shape (time, len(S)) that contains the S=s values.</p></li>
 <li><p><strong>pred_params</strong> (<em>dict</em><em>, </em><em>optional</em>) – Optional parameters passed on to sklearn prediction function.</p></li>
+<li><p><strong>return_further_pred_results</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – In case the predictor class returns more than just the expected value,
+the entire results can be returned.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -4067,6 +4119,34 @@ given by arrow_linewidth. If None, all links have same width.</p></li>
 </dd></dl>
 
 <dl class="function">
+<dt id="tigramite.plotting.plot_scatterplots">
+<code class="sig-prename descclassname">tigramite.plotting.</code><code class="sig-name descname">plot_scatterplots</code><span class="sig-paren">(</span><em class="sig-param">dataframe</em>, <em class="sig-param">name=None</em>, <em class="sig-param">setup_args={}</em>, <em class="sig-param">add_scatterplot_args={}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_scatterplots"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.plot_scatterplots" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper helper function to plot scatter plots.
+Sets up the matrix object and plots the scatter plots, see parameters in
+setup_scatter_matrix and add_scatterplot.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataframe</strong> (<em>data object</em>) – Tigramite dataframe object. It must have the attributes dataframe.values
+yielding a numpy array of shape (observations T, variables N) and
+optionally a mask of the same shape and a missing values flag.</p></li>
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – File name. If None, figure is shown in window.</p></li>
+<li><p><strong>setup_args</strong> (<em>dict</em>) – Arguments for setting up the scatter plot matrix, see doc of
+setup_scatter_matrix.</p></li>
+<li><p><strong>add_scatterplot_args</strong> (<em>dict</em>) – Arguments for adding a scatter plot matrix.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>matrix</strong> – Further scatter plot can be overlaid using the
+matrix.add_scatterplot function.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
 <dt id="tigramite.plotting.plot_time_series_graph">
 <code class="sig-prename descclassname">tigramite.plotting.</code><code class="sig-name descname">plot_time_series_graph</code><span class="sig-paren">(</span><em class="sig-param">graph</em>, <em class="sig-param">val_matrix=None</em>, <em class="sig-param">var_names=None</em>, <em class="sig-param">fig_ax=None</em>, <em class="sig-param">figsize=None</em>, <em class="sig-param">link_colorbar_label='MCI'</em>, <em class="sig-param">save_name=None</em>, <em class="sig-param">link_width=None</em>, <em class="sig-param">link_attribute=None</em>, <em class="sig-param">arrow_linewidth=8</em>, <em class="sig-param">vmin_edges=-1</em>, <em class="sig-param">vmax_edges=1.0</em>, <em class="sig-param">edge_ticks=0.4</em>, <em class="sig-param">cmap_edges='RdBu_r'</em>, <em class="sig-param">order=None</em>, <em class="sig-param">node_size=0.1</em>, <em class="sig-param">node_aspect=None</em>, <em class="sig-param">arrowhead_size=20</em>, <em class="sig-param">curved_radius=0.2</em>, <em class="sig-param">label_fontsize=12</em>, <em class="sig-param">alpha=1.0</em>, <em class="sig-param">node_label_size=12</em>, <em class="sig-param">label_space_left=0.1</em>, <em class="sig-param">label_space_top=0.0</em>, <em class="sig-param">network_lower_bound=0.2</em>, <em class="sig-param">inner_edge_style='dashed'</em>, <em class="sig-param">link_matrix=None</em>, <em class="sig-param">special_nodes=None</em>, <em class="sig-param">standard_color_links='black'</em>, <em class="sig-param">standard_color_nodes='lightgrey'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_time_series_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.plot_time_series_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a time series graph.
@@ -4204,6 +4284,66 @@ val_matrix.</p></li>
 <dt id="tigramite.plotting.setup_matrix.savefig">
 <code class="sig-name descname">savefig</code><span class="sig-paren">(</span><em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#setup_matrix.savefig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.setup_matrix.savefig" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save matrix figure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – File name. If None, figure is shown in window.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tigramite.plotting.setup_scatter_matrix">
+<em class="property">class </em><code class="sig-prename descclassname">tigramite.plotting.</code><code class="sig-name descname">setup_scatter_matrix</code><span class="sig-paren">(</span><em class="sig-param">N</em>, <em class="sig-param">var_names=None</em>, <em class="sig-param">figsize=None</em>, <em class="sig-param">label_space_left=0.1</em>, <em class="sig-param">label_space_top=0.05</em>, <em class="sig-param">legend_width=0.15</em>, <em class="sig-param">legend_fontsize=10</em>, <em class="sig-param">plot_gridlines=False</em>, <em class="sig-param">label_fontsize=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#setup_scatter_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.setup_scatter_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create matrix of scatter plot panels.
+Class to setup figure object. The function add_scatterplot allows to plot
+scatterplots of variables in the dataframe. Multiple scatter plots can be
+overlaid for comparison.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>N</strong> (<em>int</em>) – Number of variables</p></li>
+<li><p><strong>var_names</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – List of variable names. If None, range(N) is used.</p></li>
+<li><p><strong>figsize</strong> (<em>tuple of floats</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Figure size if new figure is created. If None, default pyplot figsize
+is used.</p></li>
+<li><p><strong>label_space_left</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.1</em><em>)</em>) – Fraction of horizontal figure space to allocate left of plot for labels.</p></li>
+<li><p><strong>label_space_top</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.05</em><em>)</em>) – Fraction of vertical figure space to allocate top of plot for labels.</p></li>
+<li><p><strong>legend_width</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.15</em><em>)</em>) – Fraction of horizontal figure space to allocate right of plot for
+legend.</p></li>
+<li><p><strong>plot_gridlines</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – Whether to show a grid.</p></li>
+<li><p><strong>label_fontsize</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 10</em><em>)</em>) – Fontsize of variable labels.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="tigramite.plotting.setup_scatter_matrix.add_scatterplot">
+<code class="sig-name descname">add_scatterplot</code><span class="sig-paren">(</span><em class="sig-param">dataframe</em>, <em class="sig-param">scatter_lags=None</em>, <em class="sig-param">color='black'</em>, <em class="sig-param">label=None</em>, <em class="sig-param">marker='.'</em>, <em class="sig-param">markersize=5</em>, <em class="sig-param">alpha=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#setup_scatter_matrix.add_scatterplot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.setup_scatter_matrix.add_scatterplot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add lag function plot from val_matrix array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataframe</strong> (<em>data object</em>) – Tigramite dataframe object. It must have the attributes dataframe.values
+yielding a numpy array of shape (observations T, variables N) and
+optionally a mask of the same shape and a missing values flag.</p></li>
+<li><p><strong>scatter_lags</strong> (<em>array</em>) – Lags to use in scatter plots. Either None or of shape (N, N). Then the
+entry scatter_lags[i, j] = tau will depict the scatter plot of
+time series (i, -tau) vs (j, 0). If None, tau = 0 for i != j and for i = j
+tau = 1.</p></li>
+<li><p><strong>color</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'black'</em><em>)</em>) – Line color.</p></li>
+<li><p><strong>label</strong> (<em>str</em>) – Test statistic label.</p></li>
+<li><p><strong>marker</strong> (<em>matplotlib marker symbol</em><em>, </em><em>optional</em><em> (</em><em>default: '.'</em><em>)</em>) – Marker.</p></li>
+<li><p><strong>markersize</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 5</em><em>)</em>) – Marker size.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1.</em><em>)</em>) – Opacity.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tigramite.plotting.setup_scatter_matrix.adjustfig">
+<code class="sig-name descname">adjustfig</code><span class="sig-paren">(</span><em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#setup_scatter_matrix.adjustfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tigramite.plotting.setup_scatter_matrix.adjustfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adjust matrix figure.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – File name. If None, figure is shown in window.</p>
