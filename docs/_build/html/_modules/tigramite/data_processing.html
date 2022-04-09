@@ -252,6 +252,8 @@
             <span class="n">max_lag</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">tau_max</span>
         <span class="k">elif</span> <span class="n">cut_off</span> <span class="o">==</span> <span class="s1">&#39;max_lag&#39;</span><span class="p">:</span>
             <span class="n">max_lag</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">XYZ</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
+        <span class="k">elif</span> <span class="n">cut_off</span> <span class="o">==</span> <span class="s1">&#39;tau_max&#39;</span><span class="p">:</span>
+            <span class="n">max_lag</span> <span class="o">=</span> <span class="n">tau_max</span>
         <span class="k">elif</span> <span class="n">cut_off</span> <span class="o">==</span> <span class="s1">&#39;max_lag_or_tau_max&#39;</span><span class="p">:</span>
             <span class="n">max_lag</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">XYZ</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()),</span> <span class="n">tau_max</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -269,7 +271,7 @@
         <span class="c1"># Setup and fill array with lagged time series</span>
         <span class="n">time_length</span> <span class="o">=</span> <span class="n">T</span> <span class="o">-</span> <span class="n">max_lag</span>
         <span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim</span><span class="p">,</span> <span class="n">time_length</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-        <span class="c1"># Note, lags are negative here</span>
+        <span class="c1"># Note, lags are negative or zero here</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">lag</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">XYZ</span><span class="p">):</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bootstrap</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">array</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">max_lag</span> <span class="o">+</span> <span class="n">lag</span><span class="p">:</span><span class="n">T</span> <span class="o">+</span> <span class="n">lag</span><span class="p">,</span> <span class="n">var</span><span class="p">]</span>
@@ -285,17 +287,11 @@
             <span class="n">missing_anywhere</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">array</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))[</span><span class="mi">0</span><span class="p">])</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">remove_missing_upto_maxlag</span><span class="p">:</span>
                 <span class="k">for</span> <span class="n">tau</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_lag</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
-                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bootstrap</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                        <span class="n">delete</span> <span class="o">=</span> <span class="n">missing_anywhere</span> <span class="o">+</span> <span class="n">tau</span> 
-                        <span class="n">delete</span> <span class="o">=</span> <span class="n">delete</span><span class="p">[</span><span class="n">delete</span> <span class="o">&lt;</span> <span class="n">time_length</span><span class="p">]</span>
-                        <span class="n">use_indices</span><span class="p">[</span><span class="n">delete</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">use_indices</span><span class="p">[</span><span class="n">missing_anywhere</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">bootstrap</span><span class="p">]</span> <span class="o">+</span> <span class="n">tau</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="n">delete</span> <span class="o">=</span> <span class="n">missing_anywhere</span> <span class="o">+</span> <span class="n">tau</span> 
+                    <span class="n">delete</span> <span class="o">=</span> <span class="n">delete</span><span class="p">[</span><span class="n">delete</span> <span class="o">&lt;</span> <span class="n">time_length</span><span class="p">]</span>
+                    <span class="n">use_indices</span><span class="p">[</span><span class="n">delete</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bootstrap</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">use_indices</span><span class="p">[</span><span class="n">missing_anywhere</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">use_indices</span><span class="p">[</span><span class="n">missing_anywhere</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">bootstrap</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">use_indices</span><span class="p">[</span><span class="n">missing_anywhere</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
 
         <span class="c1"># Use the mask override if needed</span>
         <span class="n">_use_mask</span> <span class="o">=</span> <span class="n">mask</span>
@@ -323,6 +319,7 @@
             <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">cde</span> <span class="ow">in</span> <span class="n">index_code</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="c1"># Check if the letter index is in the mask type</span>
                 <span class="k">if</span> <span class="p">(</span><span class="n">mask_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">idx</span> <span class="ow">in</span> <span class="n">mask_type</span><span class="p">):</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">cde</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span>  <span class="n">xyz</span> <span class="o">==</span> <span class="n">cde</span><span class="p">)</span>
                     <span class="c1"># If so, check if any of the data that correspond to the</span>
                     <span class="c1"># letter index is masked by taking the product along the</span>
                     <span class="c1"># node-data to return a time slice selection, where 0 means</span>
@@ -332,7 +329,7 @@
 
         <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">_use_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">use_indices</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No unmasked samples&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No unmasked samples!&quot;</span><span class="p">)</span>
             <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="p">[:,</span> <span class="n">use_indices</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
 
         <span class="c1"># Print information about the constructed array</span>

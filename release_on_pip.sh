@@ -1,5 +1,7 @@
 #!/bin/bash
 
+version="50114"
+
 # Steps to move from github to pip
 # (Make sure pypi token exists)
 
@@ -11,12 +13,13 @@
 # tigramite$ git add docs/*
 
 # Create folder for next version (e.g., version 4.2.1.0 as edited in setup.py)
-# mkdir v4210
-# cd v4210/
+mkdir /home/rung_ja/work/code/python_code/tigramite/tigramite_v4/tigramitepipdistribute/tigramitepypi/v$version
+cd /home/rung_ja/work/code/python_code/tigramite/tigramite_v4/tigramitepipdistribute/tigramitepypi/v$version
 
 # Make sure to be in a clean anaconda
-conda create --name tigramite-release-5001 python=3.9
-conda activate tigramite-release-5001
+conda create --name tigramite-release-$version python=3.9 anaconda -y
+source ~/anaconda3/etc/profile.d/conda.sh
+conda activate tigramite-release-$version
 
 # Pull tigramite github
 git clone https://github.com/jakobrunge/tigramite.git

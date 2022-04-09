@@ -56,6 +56,7 @@
 <span class="c1"># License: GNU General Public License v3.0</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">itertools</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
@@ -184,6 +185,8 @@
 
         <span class="c1"># print(self.graph.shape)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_graph</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_XYS</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">ancX</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_ancestors</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ancY</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_ancestors</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
@@ -401,6 +404,18 @@
         <span class="c1">#     self.graph = self._get_latent_projection_graph(self.graph, stationary=True)</span>
         <span class="c1">#     self.graph_type = &quot;tsg_admg&quot;</span>
         <span class="c1"># else:</span>
+
+    <span class="k">def</span> <span class="nf">_check_XYS</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check whether XYS are sober.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">XYS</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">)</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">xys</span> <span class="ow">in</span> <span class="n">XYS</span><span class="p">:</span>
+            <span class="n">var</span><span class="p">,</span> <span class="n">lag</span> <span class="o">=</span> <span class="n">xys</span> 
+            <span class="k">if</span> <span class="n">var</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">var</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;XYS vars must be in [0...N]&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">lag</span> <span class="o">&lt;</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="ow">or</span> <span class="n">lag</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;XYS lags must be in [-taumax...0]&quot;</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="CausalEffects.check_XYS_paths"><a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.check_XYS_paths">[docs]</a>    <span class="k">def</span> <span class="nf">check_XYS_paths</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1855,6 +1870,10 @@
         <span class="n">conditional_estimator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  
         <span class="n">data_transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">mask_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="c1"># estimate_confidence=False,</span>
+        <span class="c1"># boot_samples=100,</span>
+        <span class="c1"># boot_blocklength=1,</span>
+        <span class="c1"># conf_lev=0.95, seed=None</span>
         <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns a fitted model for the total causal effect of X on Y </span>
 <span class="sd">           conditional on S.</span>
@@ -1923,8 +1942,69 @@
                 <span class="n">Y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">listY</span><span class="p">,</span> <span class="n">X</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">listX</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adjustment_set</span><span class="p">),</span>
                 <span class="n">conditions</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">listS</span><span class="p">,</span>
                 <span class="n">tau_max</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span><span class="p">,</span>
-                <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;max_lag_or_tau_max&#39;</span><span class="p">,</span>
+                <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;tau_max&#39;</span><span class="p">,</span>
                 <span class="n">return_data</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># # Optionally estimate confidence bounds via bootstrap</span>
+        <span class="c1"># self.estimate_confidence = estimate_confidence</span>
+        <span class="c1"># self.conf_lev = conf_lev</span>
+        <span class="c1"># if self.estimate_confidence:</span>
+        <span class="c1">#     self.bootstrap_results = {}</span>
+        <span class="c1">#     random_state = np.random.default_rng(seed)</span>
+
+        <span class="c1">#     # Extract max_lag to construct bootstrap draws</span>
+        <span class="c1">#     XYZ = self.listY + \</span>
+        <span class="c1">#           self.listX + \</span>
+        <span class="c1">#           list(self.adjustment_set) + \</span>
+        <span class="c1">#           self.listS</span>
+        <span class="c1">#     max_lag = max(abs(np.array(XYZ)[:, 1].min()), self.tau_max)</span>
+
+        <span class="c1">#     # Determine the number of blocks total, rounding up for non-integer</span>
+        <span class="c1">#     # amounts</span>
+        <span class="c1">#     n_blks = int(math.ceil(float(T-max_lag)/boot_blocklength))</span>
+
+        <span class="c1">#     if n_blks &lt; 10:</span>
+        <span class="c1">#         raise ValueError(&quot;Only %d block(s) for block-sampling,&quot;  %n_blks +</span>
+        <span class="c1">#                          &quot;choose smaller boot_blocklength!&quot;)</span>
+
+
+        <span class="c1">#     if self.verbosity &gt; 0:</span>
+        <span class="c1">#         print(&quot;\n##\n## Running bootstrap confidence estimate&quot;  +</span>
+        <span class="c1">#               &quot;\n##\n&quot; +</span>
+        <span class="c1">#               &quot;\nboot_samples = %s \n&quot; % boot_samples +</span>
+        <span class="c1">#               &quot;\nboot_blocklength = %s \n&quot; % boot_blocklength</span>
+        <span class="c1">#               )</span>
+        <span class="c1">#     boot_dataframe = deepcopy(dataframe)</span>
+        <span class="c1">#     for b in range(boot_samples):</span>
+        <span class="c1">#         # Get the starting indices for the blocks</span>
+        <span class="c1">#         blk_strt = random_state.integers(max_lag, T - boot_blocklength + 1, n_blks)</span>
+        <span class="c1">#         # Get the empty array of block resampled values</span>
+        <span class="c1">#         boot_draw = np.zeros(n_blks*boot_blocklength, dtype=&#39;int&#39;)</span>
+        <span class="c1">#         # Fill the array of block resamples</span>
+        <span class="c1">#         for i in range(boot_blocklength):</span>
+        <span class="c1">#             boot_draw[i::boot_blocklength] = np.arange(0, T, dtype=&#39;int&#39;)[blk_strt + i]</span>
+        <span class="c1">#         # Cut to proper length</span>
+        <span class="c1">#         boot_draw = boot_draw[:T-max_lag]</span>
+
+        <span class="c1">#         # boot_draw = random_state.integers(2*tau_max, T, size=T-2*tau_max)</span>
+        <span class="c1">#         boot_dataframe.bootstrap = boot_draw</span>
+                
+        <span class="c1">#         # Fit model of Y on X and Z (and conditions)</span>
+        <span class="c1">#         # Build the model</span>
+        <span class="c1">#         self.bootstrap_results[b] = Models(</span>
+        <span class="c1">#                         dataframe=boot_dataframe,</span>
+        <span class="c1">#                         model=estimator,</span>
+        <span class="c1">#                         conditional_model=conditional_estimator,</span>
+        <span class="c1">#                         data_transform=data_transform,</span>
+        <span class="c1">#                         mask_type=mask_type,</span>
+        <span class="c1">#                         verbosity=self.verbosity)      </span>
+
+        <span class="c1">#         self.bootstrap_results[b].get_general_fitted_model(</span>
+        <span class="c1">#                 Y=self.listY, X=self.listX, Z=list(self.adjustment_set),</span>
+        <span class="c1">#                 conditions=self.listS,</span>
+        <span class="c1">#                 tau_max=self.tau_max,</span>
+        <span class="c1">#                 cut_off=&#39;max_lag_or_tau_max&#39;,</span>
+        <span class="c1">#                 return_data=False)</span>
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
@@ -1933,6 +2013,7 @@
         <span class="n">intervention_data</span><span class="p">,</span> 
         <span class="n">conditions_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">pred_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">return_further_pred_results</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Predict effect of intervention with fitted model.</span>
 
@@ -1946,10 +2027,14 @@
 <span class="sd">            Numpy array of shape (time, len(S)) that contains the S=s values.</span>
 <span class="sd">        pred_params : dict, optional</span>
 <span class="sd">            Optional parameters passed on to sklearn prediction function.</span>
+<span class="sd">        return_further_pred_results : bool, optional (default: False)</span>
+<span class="sd">            In case the predictor class returns more than just the expected value,</span>
+<span class="sd">            the entire results can be returned.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        Results from prediction: an array of shape  (time, len(Y)).</span>
+<span class="sd">        If estimate_confidence = True, then a tuple is returned.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">intervention_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">listX</span><span class="p">):</span>
@@ -1969,9 +2054,36 @@
         <span class="n">effect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">get_general_prediction</span><span class="p">(</span>
             <span class="n">intervention_data</span><span class="o">=</span><span class="n">intervention_data</span><span class="p">,</span>
             <span class="n">conditions_data</span><span class="o">=</span><span class="n">conditions_data</span><span class="p">,</span>
-            <span class="n">pred_params</span><span class="o">=</span><span class="n">pred_params</span><span class="p">)</span> 
+            <span class="n">pred_params</span><span class="o">=</span><span class="n">pred_params</span><span class="p">,</span>
+            <span class="n">return_further_pred_results</span><span class="o">=</span><span class="n">return_further_pred_results</span><span class="p">)</span> 
 
         <span class="k">return</span> <span class="n">effect</span></div>
+
+        <span class="c1"># # Optionally get confidence bounds</span>
+        <span class="c1"># if self.estimate_confidence:</span>
+        <span class="c1">#     lenY = len(self.listY)</span>
+        <span class="c1">#     intervention_T, lenX = intervention_data.shape</span>
+        <span class="c1">#     boot_samples = len(self.bootstrap_results)</span>
+        <span class="c1">#     bootstrap_predicted_array = np.zeros((boot_samples, intervention_T, lenY))</span>
+        <span class="c1">#     for b in self.bootstrap_results.keys():</span>
+        <span class="c1">#         boot_effect = self.bootstrap_results[b].get_general_prediction(</span>
+        <span class="c1">#             intervention_data=intervention_data,</span>
+        <span class="c1">#             conditions_data=conditions_data,</span>
+        <span class="c1">#             pred_params=pred_params,</span>
+        <span class="c1">#             return_further_pred_results=return_further_pred_results) </span>
+        <span class="c1">#         if return_further_pred_results:</span>
+        <span class="c1">#             bootstrap_predicted_array[b] = boot_effect[0]</span>
+        <span class="c1">#         else:</span>
+        <span class="c1">#             bootstrap_predicted_array[b] = boot_effect</span>
+
+        <span class="c1">#     # Confidence intervals for val_matrix; interval is two-sided</span>
+        <span class="c1">#     c_int = (1. - (1. - self.conf_lev)/2.)</span>
+        <span class="c1">#     confidence_interval = np.percentile(</span>
+        <span class="c1">#                             bootstrap_predicted_array, axis=0,</span>
+        <span class="c1">#                             q = [100*(1. - c_int), 100*c_int])</span>
+        <span class="c1">#     return effect, confidence_interval</span>
+        <span class="c1"># else:</span>
+        <span class="c1">#     return effect</span>
 
     <span class="c1"># @profile</span>
 <div class="viewcode-block" id="CausalEffects.fit_wright_effect"><a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.fit_wright_effect">[docs]</a>    <span class="k">def</span> <span class="nf">fit_wright_effect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
@@ -2080,7 +2192,7 @@
                     <span class="n">fit_res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">get_general_fitted_model</span><span class="p">(</span>
                         <span class="n">Y</span><span class="o">=</span><span class="p">[</span><span class="n">medy</span><span class="p">],</span> <span class="n">X</span><span class="o">=</span><span class="p">[</span><span class="n">par</span><span class="p">],</span> <span class="n">Z</span><span class="o">=</span><span class="n">oset</span><span class="p">,</span>
                         <span class="n">tau_max</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span><span class="p">,</span>
-                        <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;max_lag_or_tau_max&#39;</span><span class="p">,</span>
+                        <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;tau_max&#39;</span><span class="p">,</span>
                         <span class="n">return_data</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
                     <span class="n">coeffs</span><span class="p">[</span><span class="n">medy</span><span class="p">][</span><span class="n">par</span><span class="p">]</span> <span class="o">=</span> <span class="n">fit_res</span><span class="p">[</span><span class="n">medy</span><span class="p">][</span><span class="s1">&#39;model&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">coef_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
                     <span class="c1"># print(mediators, par, medy, coeffs[medy][par])</span>
@@ -2100,7 +2212,7 @@
                     <span class="n">Y</span><span class="o">=</span><span class="p">[</span><span class="n">medy</span><span class="p">],</span> <span class="n">X</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">all_parents</span><span class="p">),</span> <span class="n">Z</span><span class="o">=</span><span class="p">[],</span>
                     <span class="n">conditions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">tau_max</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span><span class="p">,</span>
-                    <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;max_lag_or_tau_max&#39;</span><span class="p">,</span>
+                    <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;tau_max&#39;</span><span class="p">,</span>
                     <span class="n">return_data</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
                 <span class="k">for</span> <span class="n">ipar</span><span class="p">,</span> <span class="n">par</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">all_parents</span><span class="p">):</span>
@@ -2125,13 +2237,15 @@
 
                 <span class="n">effect</span><span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)]</span> <span class="o">+=</span> <span class="n">effect_here</span>
                
+        <span class="c1"># Make fitted coefficients available as attribute</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span> <span class="o">=</span> <span class="n">coeffs</span>
 
         <span class="c1"># Modify and overwrite variables in self.model</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">listY</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">listX</span>  
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">Z</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">conditions</span> <span class="o">=</span> <span class="p">[]</span> 
-        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">cut_off</span> <span class="o">=</span> <span class="s1">&#39;max_lag_or_tau_max&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">cut_off</span> <span class="o">=</span> <span class="s1">&#39;tau_max&#39;</span> <span class="c1"># &#39;max_lag_or_tau_max&#39;</span>
 
         <span class="k">class</span> <span class="nc">dummy_fit_class</span><span class="p">():</span>
             <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_here</span><span class="p">,</span> <span class="n">listX_here</span><span class="p">,</span> <span class="n">effect_here</span><span class="p">):</span>
@@ -2213,6 +2327,157 @@
                 <span class="n">predicted_array</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="n">iy</span><span class="p">]</span> <span class="o">=</span> <span class="n">predicted_vals</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="n">predicted_array</span></div>
+
+
+<div class="viewcode-block" id="CausalEffects.fit_bootstrap_of"><a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.fit_bootstrap_of">[docs]</a>    <span class="k">def</span> <span class="nf">fit_bootstrap_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">method_args</span><span class="p">,</span> 
+                        <span class="n">boot_samples</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+                        <span class="n">boot_blocklength</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                        <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Runs chosen method on bootstrap samples drawn from DataFrame.</span>
+<span class="sd">        </span>
+<span class="sd">        Bootstraps for tau=0 are drawn from [max_lag, ..., T] and all lagged</span>
+<span class="sd">        variables constructed in DataFrame.construct_array are consistently</span>
+<span class="sd">        shifted with respect to this bootsrap sample to ensure that lagged</span>
+<span class="sd">        relations in the bootstrap sample are preserved.</span>
+
+<span class="sd">        This function fits the models, predict_bootstrap_of can then be used</span>
+<span class="sd">        to get confidence intervals for the effect of interventions.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        method : str</span>
+<span class="sd">            Chosen method among valid functions in this class.</span>
+<span class="sd">        method_args : dict</span>
+<span class="sd">            Arguments passed to method.</span>
+<span class="sd">        boot_samples : int</span>
+<span class="sd">            Number of bootstrap samples to draw.</span>
+<span class="sd">        boot_blocklength : int, optional (default: 1)</span>
+<span class="sd">            Block length for block-bootstrap.</span>
+<span class="sd">        seed : int, optional(default = None)</span>
+<span class="sd">            Seed for RandomState (default_rng)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">valid_methods</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;fit_total_effect&#39;</span><span class="p">,</span>
+                         <span class="s1">&#39;fit_wright_effect&#39;</span><span class="p">,</span>
+                          <span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_methods</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;method must be one of </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">valid_methods</span><span class="p">))</span>
+
+        <span class="c1"># First call the method on the original dataframe </span>
+        <span class="c1"># to make available adjustment set etc</span>
+        <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">)(</span><span class="o">**</span><span class="n">method_args</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">original_model</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+
+        <span class="n">T</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="c1"># # Extract max_lag to construct bootstrap draws</span>
+        <span class="c1"># XYZ = self.listY + \</span>
+        <span class="c1">#       self.listX + \</span>
+        <span class="c1">#       list(self.adjustment_set) + \</span>
+        <span class="c1">#       self.listS</span>
+        <span class="n">max_lag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="c1">#max(abs(np.array(XYZ)[:, 1].min()), self.tau_max)</span>
+
+        <span class="c1"># Init seed</span>
+        <span class="n">random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+
+        <span class="c1"># Determine the number of blocks total, rounding up for non-integer</span>
+        <span class="c1"># amounts</span>
+        <span class="n">n_blks</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">T</span><span class="o">-</span><span class="n">max_lag</span><span class="p">)</span><span class="o">/</span><span class="n">boot_blocklength</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">n_blks</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only </span><span class="si">%d</span><span class="s2"> block(s) for block-sampling,&quot;</span>  <span class="o">%</span><span class="n">n_blks</span> <span class="o">+</span>
+                             <span class="s2">&quot;choose smaller boot_blocklength!&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">##</span><span class="se">\n</span><span class="s2">## Running Bootstrap of </span><span class="si">%s</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="n">method</span> <span class="o">+</span>
+                  <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">##</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span>
+                  <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">boot_samples = </span><span class="si">%s</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">boot_samples</span> <span class="o">+</span>
+                  <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">boot_blocklength = </span><span class="si">%s</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">boot_blocklength</span>
+                  <span class="p">)</span>
+
+        <span class="n">method_args_bootstrap</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">method_args</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bootstrap_results</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">boot_samples</span><span class="p">):</span>
+            <span class="c1"># Get the starting indices for the blocks</span>
+            <span class="n">blk_strt</span> <span class="o">=</span> <span class="n">random_state</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="n">max_lag</span><span class="p">,</span> <span class="n">T</span> <span class="o">-</span> <span class="n">boot_blocklength</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_blks</span><span class="p">)</span>
+            <span class="c1"># Get the empty array of block resampled values</span>
+            <span class="n">boot_draw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_blks</span><span class="o">*</span><span class="n">boot_blocklength</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+            <span class="c1"># Fill the array of block resamples</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">boot_blocklength</span><span class="p">):</span>
+                <span class="n">boot_draw</span><span class="p">[</span><span class="n">i</span><span class="p">::</span><span class="n">boot_blocklength</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int&#39;</span><span class="p">)[</span><span class="n">blk_strt</span> <span class="o">+</span> <span class="n">i</span><span class="p">]</span>
+            <span class="c1"># Cut to proper length</span>
+            <span class="n">boot_draw</span> <span class="o">=</span> <span class="n">boot_draw</span><span class="p">[:</span><span class="n">T</span><span class="o">-</span><span class="n">max_lag</span><span class="p">]</span>
+
+            <span class="c1"># Replace dataframe in method args by bootstrapped dataframe</span>
+            <span class="n">method_args_bootstrap</span><span class="p">[</span><span class="s1">&#39;dataframe&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">bootstrap</span> <span class="o">=</span> <span class="n">boot_draw</span>
+
+            <span class="c1"># Call method and save fitted model</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">)(</span><span class="o">**</span><span class="n">method_args_bootstrap</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bootstrap_results</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+
+        <span class="c1"># Reset model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_model</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="CausalEffects.predict_bootstrap_of"><a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.predict_bootstrap_of">[docs]</a>    <span class="k">def</span> <span class="nf">predict_bootstrap_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">method_args</span><span class="p">,</span> 
+                        <span class="n">conf_lev</span><span class="o">=</span><span class="mf">0.9</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Predicts with fitted bootstraps.</span>
+
+<span class="sd">        To be used after fitting with fit_bootstrap_of. Only uses the </span>
+<span class="sd">        expected values of the predict function, not potential other output.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        method : str</span>
+<span class="sd">            Chosen method among valid functions in this class.</span>
+<span class="sd">        method_args : dict</span>
+<span class="sd">            Arguments passed to method.</span>
+<span class="sd">        conf_lev : float, optional (default: 0.9)</span>
+<span class="sd">            Two-sided confidence interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        confidence_intervals : numpy array of </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">valid_methods</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;predict_total_effect&#39;</span><span class="p">,</span>
+                         <span class="s1">&#39;predict_wright_effect&#39;</span><span class="p">,</span>
+                          <span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_methods</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;method must be one of </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">valid_methods</span><span class="p">))</span>
+
+        
+        <span class="n">lenY</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">listY</span><span class="p">)</span>
+        <span class="n">intervention_T</span><span class="p">,</span> <span class="n">lenX</span> <span class="o">=</span> <span class="n">method_args</span><span class="p">[</span><span class="s1">&#39;intervention_data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">boot_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bootstrap_results</span><span class="p">)</span>
+        <span class="n">bootstrap_predicted_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">boot_samples</span><span class="p">,</span> <span class="n">intervention_T</span><span class="p">,</span> <span class="n">lenY</span><span class="p">))</span>
+        
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bootstrap_results</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bootstrap_results</span><span class="p">[</span><span class="n">b</span><span class="p">]</span>
+            <span class="n">boot_effect</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">)(</span><span class="o">**</span><span class="n">method_args</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">boot_effect</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                <span class="n">bootstrap_predicted_array</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="o">=</span> <span class="n">boot_effect</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">bootstrap_predicted_array</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="o">=</span> <span class="n">boot_effect</span>
+
+        <span class="c1"># Reset model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_model</span>
+
+        <span class="c1"># Confidence intervals for val_matrix; interval is two-sided</span>
+        <span class="n">c_int</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">conf_lev</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span><span class="p">)</span>
+        <span class="n">confidence_interval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span>
+                <span class="n">bootstrap_predicted_array</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">q</span> <span class="o">=</span> <span class="p">[</span><span class="mi">100</span><span class="o">*</span><span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">c_int</span><span class="p">),</span> <span class="mi">100</span><span class="o">*</span><span class="n">c_int</span><span class="p">])[:,:,</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">confidence_interval</span></div>
+
 
 <div class="viewcode-block" id="CausalEffects.get_graph_from_dict"><a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.get_graph_from_dict">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">get_graph_from_dict</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -2299,72 +2564,108 @@
     <span class="kn">import</span> <span class="nn">sklearn</span>
     <span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LinearRegression</span>
 
-    <span class="n">T</span> <span class="o">=</span> <span class="mi">1000</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="mi">100</span>
     <span class="k">def</span> <span class="nf">lin_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span>
     <span class="n">auto_coeff</span> <span class="o">=</span> <span class="mf">0.3</span>
     <span class="n">coeff</span> <span class="o">=</span> <span class="mf">2.</span>
     <span class="n">links</span> <span class="o">=</span> <span class="p">{</span>
             <span class="mi">0</span><span class="p">:</span> <span class="p">[((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">auto_coeff</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span> 
             <span class="mi">1</span><span class="p">:</span> <span class="p">[((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">auto_coeff</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">coeff</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span> 
-            <span class="mi">2</span><span class="p">:</span> <span class="p">[((</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">auto_coeff</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">coeff</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
+            <span class="c1"># 2: [((2, -1), auto_coeff, lin_f), ((1, 0), coeff, lin_f)],</span>
             <span class="p">}</span>
     <span class="n">data</span><span class="p">,</span> <span class="n">nonstat</span> <span class="o">=</span> <span class="n">toys</span><span class="o">.</span><span class="n">structural_causal_process</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">,</span> 
                                 <span class="n">noises</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
 
     <span class="c1"># Create some missing values</span>
     <span class="n">data</span><span class="p">[</span><span class="o">-</span><span class="mi">10</span><span class="p">:,:]</span> <span class="o">=</span> <span class="mf">999.</span>
-    <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">missing_flag</span><span class="o">=</span><span class="mf">999.</span><span class="p">)</span> 
+    <span class="n">var_names</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">var_names</span><span class="o">=</span><span class="n">var_names</span><span class="p">,</span>
+     <span class="n">missing_flag</span><span class="o">=</span><span class="mf">999.</span><span class="p">)</span> 
 
 
     <span class="c1"># Construct expert knowledge graph from links here </span>
-    <span class="n">links</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)],</span>
-             <span class="mi">1</span><span class="p">:</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)],</span>
-             <span class="mi">2</span><span class="p">:</span> <span class="p">[(</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),],</span>
-             <span class="p">}</span>
+    <span class="c1"># links = {0: [(0, -1)],</span>
+    <span class="c1">#          1: [(1, -1), (0, -1)],</span>
+    <span class="c1">#          2: [(2, -1), (1, 0),],</span>
+    <span class="c1">#          }</span>
     <span class="c1"># Use staticmethod to get graph</span>
     <span class="n">graph</span> <span class="o">=</span> <span class="n">CausalEffects</span><span class="o">.</span><span class="n">get_graph_from_dict</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     
     <span class="c1"># We are interested in lagged total effect of X on Y</span>
     <span class="n">X</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)]</span>
-    <span class="n">Y</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
+    <span class="n">Y</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
 
     <span class="c1"># Initialize class as `stationary_dag`</span>
     <span class="n">causal_effects</span> <span class="o">=</span> <span class="n">CausalEffects</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">graph_type</span><span class="o">=</span><span class="s1">&#39;stationary_dag&#39;</span><span class="p">,</span> 
                                 <span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="n">Y</span><span class="p">,</span> <span class="n">S</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
                                 <span class="n">hidden_variables</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
-                                <span class="n">verbosity</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+                                <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="c1"># print(data)</span>
     <span class="c1"># Optimal adjustment set (is used by default)</span>
     <span class="c1"># print(causal_effects.get_optimal_set())</span>
 
     <span class="c1"># # Fit causal effect model from observational data</span>
-    <span class="c1"># causal_effects.fit_total_effect(</span>
-    <span class="c1">#     dataframe=dataframe, </span>
-    <span class="c1">#     # mask_type=&#39;y&#39;,</span>
-    <span class="c1">#     estimator=LinearRegression(),</span>
-    <span class="c1">#     )</span>
+    <span class="n">causal_effects</span><span class="o">.</span><span class="n">fit_total_effect</span><span class="p">(</span>
+        <span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span> 
+        <span class="c1"># mask_type=&#39;y&#39;,</span>
+        <span class="n">estimator</span><span class="o">=</span><span class="n">LinearRegression</span><span class="p">(),</span>
+        <span class="p">)</span>
+
+
+    <span class="c1"># # Fit causal effect model from observational data</span>
+    <span class="n">causal_effects</span><span class="o">.</span><span class="n">fit_bootstrap_of</span><span class="p">(</span>
+        <span class="n">method</span><span class="o">=</span><span class="s1">&#39;fit_total_effect&#39;</span><span class="p">,</span>
+        <span class="n">method_args</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;dataframe&#39;</span><span class="p">:</span><span class="n">dataframe</span><span class="p">,</span>  
+        <span class="c1"># mask_type=&#39;y&#39;,</span>
+        <span class="s1">&#39;estimator&#39;</span><span class="p">:</span><span class="n">LinearRegression</span><span class="p">()</span>
+        <span class="p">},</span>
+        <span class="n">seed</span><span class="o">=</span><span class="mi">4</span>
+        <span class="p">)</span>
+
+
+    <span class="c1"># Predict effect of interventions do(X=0.), ..., do(X=1.) in one go</span>
+    <span class="n">dox_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.</span><span class="p">])</span> <span class="c1">#np.linspace(0., 1., 1)</span>
+    <span class="n">intervention_data</span> <span class="o">=</span> <span class="n">dox_vals</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dox_vals</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
+    <span class="n">pred_Y</span> <span class="o">=</span> <span class="n">causal_effects</span><span class="o">.</span><span class="n">predict_total_effect</span><span class="p">(</span> 
+            <span class="n">intervention_data</span><span class="o">=</span><span class="n">intervention_data</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">pred_Y</span><span class="p">)</span>
+
+
+
+
+    <span class="c1"># Predict effect of interventions do(X=0.), ..., do(X=1.) in one go</span>
+    <span class="n">dox_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.</span><span class="p">])</span> <span class="c1">#np.linspace(0., 1., 1)</span>
+    <span class="n">intervention_data</span> <span class="o">=</span> <span class="n">dox_vals</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dox_vals</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
+    <span class="n">conf</span> <span class="o">=</span> <span class="n">causal_effects</span><span class="o">.</span><span class="n">predict_bootstrap_of</span><span class="p">(</span>
+        <span class="n">method</span><span class="o">=</span><span class="s1">&#39;predict_total_effect&#39;</span><span class="p">,</span>
+        <span class="n">method_args</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;intervention_data&#39;</span><span class="p">:</span><span class="n">intervention_data</span><span class="p">})</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">conf</span><span class="p">)</span>
+
+
 
     <span class="c1"># # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go</span>
-    <span class="c1"># dox_vals = np.linspace(0., 1., 5)</span>
+    <span class="c1"># dox_vals = np.array([1.]) #np.linspace(0., 1., 1)</span>
     <span class="c1"># intervention_data = dox_vals.reshape(len(dox_vals), len(X))</span>
     <span class="c1"># pred_Y = causal_effects.predict_total_effect( </span>
     <span class="c1">#         intervention_data=intervention_data)</span>
     <span class="c1"># print(pred_Y)</span>
 
-    <span class="c1"># Fit causal effect model from observational data</span>
-    <span class="n">causal_effects</span><span class="o">.</span><span class="n">fit_wright_effect</span><span class="p">(</span>
-        <span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span> 
-        <span class="c1"># mask_type=&#39;y&#39;,</span>
-        <span class="c1"># estimator=LinearRegression(),</span>
-        <span class="p">)</span>
 
-    <span class="c1"># Predict effect of interventions do(X=0.), ..., do(X=1.) in one go</span>
-    <span class="n">dox_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
-    <span class="n">intervention_data</span> <span class="o">=</span> <span class="n">dox_vals</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dox_vals</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
-    <span class="n">pred_Y</span> <span class="o">=</span> <span class="n">causal_effects</span><span class="o">.</span><span class="n">predict_wright_effect</span><span class="p">(</span> 
-            <span class="n">intervention_data</span><span class="o">=</span><span class="n">intervention_data</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">pred_Y</span><span class="p">)</span>
+
+    <span class="c1"># # Fit causal effect model from observational data</span>
+    <span class="c1"># causal_effects.fit_wright_effect(</span>
+    <span class="c1">#     dataframe=dataframe, </span>
+    <span class="c1">#     # mask_type=&#39;y&#39;,</span>
+    <span class="c1">#     # estimator=LinearRegression(),</span>
+    <span class="c1">#     )</span>
+
+    <span class="c1"># # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go</span>
+    <span class="c1"># dox_vals = np.linspace(0., 1., 5)</span>
+    <span class="c1"># intervention_data = dox_vals.reshape(len(dox_vals), len(X))</span>
+    <span class="c1"># pred_Y = causal_effects.predict_wright_effect( </span>
+    <span class="c1">#         intervention_data=intervention_data)</span>
+    <span class="c1"># print(pred_Y)</span>
 </pre></div>
 
           </div>
