@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="50112"
+version="50113"
 
 # Steps to move from github to pip
 # (Make sure pypi token exists)
@@ -18,6 +18,7 @@ cd /home/rung_ja/work/code/python_code/tigramite/tigramite_v4/tigramitepipdistri
 
 # Make sure to be in a clean anaconda
 conda create --name tigramite-release-$version python=3.9 anaconda -y
+source ~/anaconda3/etc/profile.d/conda.sh
 conda activate tigramite-release-$version
 
 # Pull tigramite github
