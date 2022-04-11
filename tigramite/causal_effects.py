@@ -2064,10 +2064,8 @@ class CausalEffects():
             Dictionary of format: {0:[((i, -tau), coeff),...], 1:[...],
             ...} for all variables where i must be in [0..N-1] and tau >= 0 with
             number of variables N. coeff must be a float.
-        data_transform : sklearn preprocessing object, optional (default: None)
-            Used to transform data prior to fitting. For example,
-            sklearn.preprocessing.StandardScaler for simple standardization. The
-            fitted parameters are stored.
+        data_transform : None
+            Not implemented for Wright estimator. Complicated for missing samples.
         mask_type : {None, 'y','x','z','xy','xz','yz','xyz'}
             Masking mode: Indicators for which variables in the dependence
             measure I(X; Y | Z) the samples should be masked. If None, the mask
@@ -2079,6 +2077,10 @@ class CausalEffects():
                 print("No causal path from X to Y exists.")
             return self
 
+        if data_transform is not None:
+            raise ValueError("data_transform not implemented for Wright estimator."
+                             " You can preprocess data yourself beforehand.")
+
         import sklearn.linear_model
 
         self.dataframe = dataframe
@@ -2089,7 +2091,7 @@ class CausalEffects():
         self.model = Models(
                         dataframe=dataframe,
                         model=estimator,
-                        data_transform=data_transform,
+                        data_transform=None, #data_transform,
                         mask_type=mask_type,
                         verbosity=self.verbosity)
 
@@ -2144,7 +2146,6 @@ class CausalEffects():
                         cut_off='tau_max',
                         return_data=False)
                     coeffs[medy][par] = fit_res[medy]['model'].coef_[0]
-                    # print(mediators, par, medy, coeffs[medy][par])
 
         elif method == 'parents':
             if 'dag' not in self.graph_type:
@@ -2259,11 +2260,11 @@ class CausalEffects():
             if y not in self.model.fit_results:
                 raise ValueError("y = %s not yet fitted" % str(y))
 
+            # data_transform is too complicated for Wright estimator
             # Transform the data if needed
-            a_transform = self.model.fit_results[y]['data_transform']
-            if a_transform is not None:
-                intervention_data = a_transform.transform(X=intervention_data)
-        
+            # fitted_data_transform = self.model.fit_results[y]['fitted_data_transform']
+            # if fitted_data_transform is not None:
+            #     intervention_data = fitted_data_transform['X'].transform(X=intervention_data)
 
             # Now iterate through interventions (and potentially S)
             for index, dox_vals in enumerate(intervention_data):
@@ -2274,6 +2275,11 @@ class CausalEffects():
                 predicted_vals = self.model.fit_results[y]['model'].predict(
                 X=predictor_array, **pred_params)
                 predicted_array[index, iy] = predicted_vals.mean()
+
+                # data_transform is too complicated for Wright estimator
+                # if fitted_data_transform is not None:
+                #     rescaled = fitted_data_transform['Y'].inverse_transform(X=predicted_array[index, iy].reshape(-1, 1))
+                #     predicted_array[index, iy] = rescaled.squeeze()
 
         return predicted_array
 
@@ -2512,6 +2518,7 @@ if __name__ == '__main__':
 
     import sklearn
     from sklearn.linear_model import LinearRegression
+    from sklearn.preprocessing import StandardScaler
 
     T = 100
     def lin_f(x): return x
@@ -2602,16 +2609,17 @@ if __name__ == '__main__':
 
 
 
-    # # Fit causal effect model from observational data
-    # causal_effects.fit_wright_effect(
-    #     dataframe=dataframe, 
-    #     # mask_type='y',
-    #     # estimator=LinearRegression(),
-    #     )
+    # Fit causal effect model from observational data
+    causal_effects.fit_wright_effect(
+        dataframe=dataframe, 
+        # mask_type='y',
+        # estimator=LinearRegression(),
+        # data_transform=StandardScaler(),
+        )
 
     # # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go
-    # dox_vals = np.linspace(0., 1., 5)
-    # intervention_data = dox_vals.reshape(len(dox_vals), len(X))
-    # pred_Y = causal_effects.predict_wright_effect( 
-    #         intervention_data=intervention_data)
-    # print(pred_Y)
+    dox_vals = np.linspace(0., 1., 5)
+    intervention_data = dox_vals.reshape(len(dox_vals), len(X))
+    pred_Y = causal_effects.predict_wright_effect( 
+            intervention_data=intervention_data)
+    print(pred_Y)
