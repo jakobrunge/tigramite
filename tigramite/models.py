@@ -333,8 +333,8 @@ class Models():
                     predicted_array[index, iy] = predicted_vals.mean()
 
                 if fitted_data_transform is not None:
-                     rescaled = fitted_data_transform['Y'].inverse_transform(X=predicted_array[index, iy].reshape(-1, 1))
-                     predicted_array[index, iy] = rescaled.squeeze()
+                    rescaled = fitted_data_transform['Y'].inverse_transform(X=predicted_array[index, iy].reshape(-1, 1))
+                    predicted_array[index, iy] = rescaled.squeeze()
 
         if return_further_pred_results:
             return predicted_array, pred_dict
