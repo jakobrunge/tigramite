@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="50115"
+version="50116"
 
 # Steps to move from github to pip
 # (Make sure pypi token exists)
