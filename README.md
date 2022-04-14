@@ -7,6 +7,8 @@ Version 5.0
 
 [Documentation](https://jakobrunge.github.io/tigramite/)
 
+[Tutorials](https://github.com/jakobrunge/tigramite/tree/master/tutorials/)
+
 [Simple GUI](https://github.com/stbachinger/TigramiteGui)
 
 ## Overview
