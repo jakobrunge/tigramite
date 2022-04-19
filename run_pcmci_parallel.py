@@ -116,12 +116,12 @@ links_coeffs = {0: [((0, -1), 0.7)],
                 2: [((2, -1), 0.5), ((1, -2), 0.5)],
                 }
 
-T = 500     # time series length
+T = 5000     # time series length
 data, true_parents_neighbors = toys.var_process(links_coeffs, T=T)
 T, N = data.shape
 
 # Optionally specify variable names
-var_names = [r'$X^0$', r'$X^1$', r'$X^2$', r'$X^3$']
+var_names = [r'$X^0$', r'$X^1$', r'$X^2$']
 
 # Initialize dataframe object
 dataframe = pp.DataFrame(data, var_names=var_names)
@@ -136,7 +136,7 @@ selected_variables = list(range(N))  #[2] # [2]  # [2]
 tau_max = 3
 
 # Optional minimum time lag in MCI step (in PC-step this is 1)
-tau_min = 0
+tau_min = 1
 
 # Maximum cardinality of conditions in PC condition-selection step. The
 # recommended default choice is None to leave it unrestricted.
@@ -150,6 +150,8 @@ max_conds_px = None
 # Used to tell pcmci.run_pc_stable() and pcmci.run_mci() to only search for links into j variable.
 selected_links = {n: {m: [(i, -t) for i in range(N) for \
                           t in range(tau_min, tau_max)] if m == n else [] for m in range(N)} for n in range(N)}
+
+print("selected_links: {}".format(selected_links))
 
 # Alpha level for MCI tests (just used for printing since all p-values are 
 # stored anyways)
@@ -242,6 +244,8 @@ else:
               "" % COMM.rank)
     (all_parents, pcmci_objects) = COMM.recv(source=0)
 
+print(all_parents)
+
 
 ##
 ##   MCI step
@@ -319,13 +323,8 @@ if COMM.rank == 0:
 
             print(string)
 
-    if verbosity > -1:
-        print("Pickling to ", file_name)
-    file = open(file_name, 'wb')
-    pickle.dump(all_results, file, protocol=-1)
-    file.close()
-    # PCMCI._print_significant_links(
-    #        p_matrix=all_results['p_matrix'],
-    #        val_matrix=all_results['val_matrix'],
-    #        alpha_level=alpha_level,
-    #        conf_matrix=all_results['conf_matrix'])
+    #if verbosity > -1:
+    #    print("Pickling to ", file_name)
+    #file = open(file_name, 'w+')
+    #pickle.dump(all_results, file, protocol=-1)
+    #file.close()
