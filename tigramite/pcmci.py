@@ -795,6 +795,26 @@ class PCMCI():
         if self.verbosity > 0:
             print("\n## Resulting lagged parent (super)sets:")
             self._print_parents(all_parents, val_min, pval_max)
+        # Construct the results (for plotting purposes)
+        """JC Update:
+        Let stable_pc algorithm to return the same format of results as PCMCI
+        """
+        final_graph = self.p_matrix <= pc_alpha  # Threshold p_matrix to get graph
+        graph = self.convert_to_string_graph(final_graph) # Convert to string graph representation
+        # Symmetrize p_matrix and val_matrix
+        symmetrized_results = self.symmetrize_p_and_val_matrix(
+                    p_matrix=self.p_matrix,
+                    val_matrix=self.val_matrix,
+                    selected_links=_int_sel_links,
+                    conf_matrix=None)
+        # Construct the result matrix
+        results = {
+            'graph': graph,
+            'p_matrix': symmetrized_results['p_matrix'],
+            'val_matrix': symmetrized_results['val_matrix'],
+            'conf_matrix': symmetrized_results['conf_matrix'],
+        }
+        self.results = results
         # Return the parents
         return all_parents
 
