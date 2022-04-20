@@ -272,7 +272,7 @@ class CondIndTest():
                                               do_checks=True,
                                               cut_off=cut_off,
                                               verbosity=verbosity)
-    
+
     def _get_array_hash(self, array, xyz, XYZ):
         """Helper function to get hash of array.
 
@@ -317,7 +317,7 @@ class CondIndTest():
         sorted_xy = sorted([x_hash, y_hash])
         combined_hash = (sorted_xy[0], sorted_xy[1], z_hash)
         return combined_hash
-
+    
 
     def run_test(self, X, Y, Z=None, tau_max=0, cut_off='2xtau_max'):
         """Perform conditional independence test.
@@ -436,6 +436,7 @@ class CondIndTest():
         # Return the value and the pvalue
         return val, pval
 
+
     def _get_dependence_measure_recycle(self, X, Y, Z, xyz, array):
         """Get the dependence_measure, optionally recycling residuals
 
@@ -507,7 +508,7 @@ class CondIndTest():
                 self.residuals[self._keyfy(x_nodes, z_nodes)] = x_resid
         # Return these residuals
         return x_resid
-
+    
     def get_significance(self, val, array, xyz, T, dim, sig_override=None):
         """
         Returns the p-value from whichever significance function is specified

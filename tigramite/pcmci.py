@@ -11,6 +11,7 @@ from collections import defaultdict
 from copy import deepcopy
 import numpy as np
 import scipy.stats
+import time
 
 
 def _create_nested_dictionary(depth=0, lowest_type=dict):
@@ -401,7 +402,8 @@ class PCMCI():
             print(
                 "\nAlgorithm not yet converged, but max_conds_dim = %d"
                 " reached." % max_conds_dim)
-
+    
+    
     def _run_pc_stable_single(self, j,
                               selected_links=None,
                               tau_min=1,
@@ -488,6 +490,7 @@ class PCMCI():
                 print("\nTesting condition sets of dimension %d:" % conds_dim)
 
             # Iterate through all possible pairs (that have not converged yet)
+            time_list = []
             for index_parent, parent in enumerate(parents):
                 # Print info about this link
                 if self.verbosity > 1:
@@ -498,6 +501,7 @@ class PCMCI():
                         enumerate(self._iter_conditions(parent, conds_dim,
                                                         parents)):
                     # Break if we try too many combinations
+                    start = time.time()
                     if comb_index >= max_combinations:
                         break
                     # Perform independence test
@@ -507,6 +511,10 @@ class PCMCI():
                                                     tau_max=tau_max,
                                                     # verbosity=self.verbosity
                                                     )
+                    end = time.time()
+                    time_list.append((end - start) * 1.0)
+                    if self.verbosity > 1:
+                        print("* Average testing time: {} seconds".format(sum(time_list)/len(time_list)))
                     # Print some information if needed
                     if self.verbosity > 1:
                         self._print_cond_info(Z, comb_index, pval, val)
@@ -699,6 +707,7 @@ class PCMCI():
             Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}
             containing estimated parents.
         """
+        # Time testing
         # Create an internal copy of pc_alpha
         _int_pc_alpha = deepcopy(pc_alpha)
         # Check if we are selecting an optimal alpha value

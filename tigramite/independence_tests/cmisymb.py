@@ -6,6 +6,7 @@
 
 from __future__ import print_function
 import warnings
+from numba import jit
 import numpy as np
 
 from .independence_tests_base import CondIndTest
@@ -85,6 +86,8 @@ class CMIsymb(CondIndTest):
                           "autocorrelation may not be sensical for discrete "
                           "data")
 
+    
+    
     def _bincount_hist(self, symb_array, weights=None):
         """Computes histogram from symbolic array.
 
@@ -111,7 +114,8 @@ class CMIsymb(CondIndTest):
         else:
             n_symbs = self.n_symbs
             if n_symbs < int(symb_array.max() + 1):
-                raise ValueError("n_symbs must be >= symb_array.max() + 1 = {}".format(symb_array.max() + 1))
+                exit()
+                #raise ValueError("n_symbs must be >= symb_array.max() + 1 = {}".format(symb_array.max() + 1))
 
         if 'int' not in str(symb_array.dtype):
             raise ValueError("Input data must of integer type, where each "
@@ -142,7 +146,7 @@ class CMIsymb(CondIndTest):
                                       [n_symbs for i in range(dim - 2)])).T
 
         return hist
-
+    
     def get_dependence_measure(self, array, xyz):
         """Returns CMI estimate based on bincount histogram.
 
@@ -181,7 +185,7 @@ class CMIsymb(CondIndTest):
         hz = (-(plogp(hist.sum(axis=0).sum(axis=0))).sum()+plogp(T)) / float(T)
         val = hxz + hyz - hz - hxyz
         return val
-
+    
     def get_shuffle_significance(self, array, xyz, value,
                                  return_null_dist=False):
         """Returns p-value for shuffle significance test.
