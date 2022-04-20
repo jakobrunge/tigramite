@@ -8,6 +8,7 @@ from __future__ import print_function
 import warnings
 from numba import jit
 import numpy as np
+import time
 
 from .independence_tests_base import CondIndTest
 
@@ -86,8 +87,7 @@ class CMIsymb(CondIndTest):
                           "autocorrelation may not be sensical for discrete "
                           "data")
 
-    
-    
+
     def _bincount_hist(self, symb_array, weights=None):
         """Computes histogram from symbolic array.
 
@@ -208,7 +208,6 @@ class CMIsymb(CondIndTest):
         pval : float
             p-value
         """
-
         null_dist = self._get_shuffle_dist(array, xyz,
                                            self.get_dependence_measure,
                                            sig_samples=self.sig_samples,

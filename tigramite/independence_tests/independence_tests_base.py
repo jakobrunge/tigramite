@@ -10,6 +10,8 @@ import math
 import abc
 import numpy as np
 import six
+from numba import jit
+import time
 from hashlib import sha1
 
 
@@ -89,7 +91,7 @@ class CondIndTest():
                  mask_type=None,
                  significance='analytic',
                  fixed_thres=0.1,
-                 sig_samples=1000,
+                 sig_samples=100, 
                  sig_blocklength=None,
                  confidence=None,
                  conf_lev=0.9,
@@ -97,6 +99,7 @@ class CondIndTest():
                  conf_blocklength=None,
                  recycle_residuals=False,
                  verbosity=0):
+        # JC NOTE: Here we reduce sig_samples from 1000 to 100, in order to speed up the discovery 
         # Set the dataframe to None for now, will be reset during pcmci call
         self.dataframe = None
         # Set the options
@@ -318,7 +321,6 @@ class CondIndTest():
         combined_hash = (sorted_xy[0], sorted_xy[1], z_hash)
         return combined_hash
     
-
     def run_test(self, X, Y, Z=None, tau_max=0, cut_off='2xtau_max'):
         """Perform conditional independence test.
 
@@ -870,6 +872,7 @@ class CondIndTest():
         block_len = min(block_len, int(0.1 * T))
         return block_len
 
+    @jit(forceobj=True) 
     def _get_shuffle_dist(self, array, xyz, dependence_measure,
                           sig_samples, sig_blocklength=None,
                           verbosity=0):
@@ -907,7 +910,6 @@ class CondIndTest():
             Contains the sorted test statistic values estimated from the
             shuffled arrays.
         """
-
         dim, T = array.shape
 
         x_indices = np.where(xyz == 0)[0]
@@ -931,6 +933,9 @@ class CondIndTest():
         tail = array[x_indices, n_blks*sig_blocklength:]
 
         null_dist = np.zeros(sig_samples)
+
+        # JC NOTE: This loops consumes time most. Specifically, the part before line 957 consumes roughly the same time with the line 957.
+        # start = time.time()
         for sam in range(sig_samples):
 
             blk_starts = self.random_state.permutation(block_starts)[:n_blks]
@@ -954,6 +959,8 @@ class CondIndTest():
 
             null_dist[sam] = dependence_measure(array=array_shuffled,
                                                 xyz=xyz)
+        # end = time.time()
+        # print("The shuffle test consumes time {} seconds".format( (end - start) * 1.0 ))
 
         return null_dist
 
