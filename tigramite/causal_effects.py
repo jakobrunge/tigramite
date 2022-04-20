@@ -9,7 +9,7 @@ import math
 import itertools
 from copy import deepcopy
 from collections import defaultdict
-from tigramite.models import Models
+from src.tigramite.tigramite.models import Models
 import struct
 
 class CausalEffects():

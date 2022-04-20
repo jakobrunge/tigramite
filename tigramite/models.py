@@ -26,7 +26,8 @@ try:
             raise Exception('Version mismatch. Installed version of networkx', metadata.version('networkx'),
                           'Please install networkx>=', packages['networkx'])
 except Exception as e:
-    warnings.warn(str(e))
+    pass
+    # warnings.warn(str(e))
 from tigramite.data_processing import DataFrame
 from tigramite.pcmci import PCMCI
 
