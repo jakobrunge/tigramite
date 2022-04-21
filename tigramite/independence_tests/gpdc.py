@@ -24,7 +24,8 @@ try:
             raise Exception('Version mismatch. Installed version of scikit-learn', metadata.version('scikit-learn'),
                           'Please install scikit-learn>=', packages['scikit-learn'])
 except Exception as e:
-    warnings.warn(str(e))
+    #warnings.warn(str(e))
+    pass
 from .independence_tests_base import CondIndTest
 
 class GaussProcReg():

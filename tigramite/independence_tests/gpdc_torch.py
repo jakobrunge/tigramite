@@ -30,7 +30,8 @@ try:
             raise Exception('Version mismatch. Installed version of gpytorch', metadata.version('gpytorch'),
                           'Please install gpytorch>=', packages['gpytorch'])
 except Exception as e:
-    warnings.warn(str(e))
+    #warnings.warn(str(e))
+    pass
 from .independence_tests_base import CondIndTest
 
 class GaussProcRegTorch():
