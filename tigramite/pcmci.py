@@ -250,7 +250,10 @@ class PCMCI():
         cond :  list
             List of form [(0, -1), (3, -2), ...] for the next condition.
         """
-        all_parents_excl_current = [p for p in all_parents if p != parent]
+        # JC NOTE: We update the condition selection here.
+        # Specifically, all variables which are later than (or at the same time with) the testing parents should be removed from the conditional set.
+        all_parents_excl_current = [p for p in all_parents if (p != parent) and (p[1] < parent[1])]
+        
         for cond in itertools.combinations(all_parents_excl_current, conds_dim):
             yield list(cond)
 
