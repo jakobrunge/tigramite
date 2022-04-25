@@ -518,7 +518,7 @@ class PCMCI():
                     end = time.time()
                     time_list.append((end - start) * 1.0)
                     if self.verbosity > 1:
-                        print("* Average testing time: {} seconds".format(sum(time_list)/len(time_list)))
+                        print("* Time for single conditional independence test: {} seconds".format((end - start) * 1.0))
                     # Print some information if needed
                     if self.verbosity > 1:
                         self._print_cond_info(Z, comb_index, pval, val)

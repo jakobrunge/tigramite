@@ -872,7 +872,6 @@ class CondIndTest():
         block_len = min(block_len, int(0.1 * T))
         return block_len
 
-    @jit(forceobj=True) 
     def _get_shuffle_dist(self, array, xyz, dependence_measure,
                           sig_samples, sig_blocklength=None,
                           verbosity=0):
@@ -920,7 +919,6 @@ class CondIndTest():
                                                      mode='significance')
 
         n_blks = int(math.floor(float(T)/sig_blocklength))
-        # print 'n_blks ', n_blks
         if verbosity > 2:
             print("            Significance test with block-length = %d "
                   "..." % (sig_blocklength))
@@ -934,7 +932,7 @@ class CondIndTest():
 
         null_dist = np.zeros(sig_samples)
 
-        # JC NOTE: This loops consumes time most. Specifically, the part before line 957 consumes roughly the same time with the line 957.
+        # JC NOTE: This loop consumes most time for a single conditional dependence test. Specifically, the part before line 957 consumes roughly the same time with the line 957.
         # start = time.time()
         for sam in range(sig_samples):
 
