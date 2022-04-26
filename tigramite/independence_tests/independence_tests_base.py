@@ -8,12 +8,20 @@ from __future__ import print_function
 import warnings
 import math
 import abc
+import random
 import numpy as np
 import six
 from numba import jit
 import time
 from hashlib import sha1
 
+@jit(nopython=True)
+def _permutation_and_shuffle(block_starts, n_blks, x_array):
+    blk_starts = np.copy(block_starts)
+    random.shuffle(blk_starts)
+    x_shuffled = np.zeros(n_blks, dtype=np.int64)
+    x_shuffled[0::1] = x_array[blk_starts]
+    return x_shuffled
 
 @six.add_metaclass(abc.ABCMeta)
 class CondIndTest():
@@ -104,6 +112,7 @@ class CondIndTest():
         self.dataframe = None
         # Set the options
         self.random_state = np.random.default_rng(seed)
+        random.seed(seed)
         self.significance = significance
         self.sig_samples = sig_samples
         self.sig_blocklength = sig_blocklength
@@ -437,7 +446,6 @@ class CondIndTest():
         pval = self.get_significance(val, array, xyz, T, dim)
         # Return the value and the pvalue
         return val, pval
-
 
     def _get_dependence_measure_recycle(self, X, Y, Z, xyz, array):
         """Get the dependence_measure, optionally recycling residuals
@@ -929,8 +937,6 @@ class CondIndTest():
         # Dividing the array up into n_blks of length sig_blocklength may
         # leave a tail. This tail is later randomly inserted
         tail = array[x_indices, n_blks*sig_blocklength:]
-        if sig_blocklength == 1:
-            assert(tail.shape[1] == 0)
 
         null_dist = np.zeros(sig_samples)
 
@@ -938,31 +944,32 @@ class CondIndTest():
         # By doing so, the loop uses a shuffled way to estimate the p-value.
         # start = time.time()
         for sam in range(sig_samples):
-            permutation_start = time.time()
-            blk_starts = self.random_state.permutation(block_starts)[:n_blks]
-            permutation_end = time.time()
-            #print("Permutation cost: {} seconds".format(permutation_end - permutation_start))
-
             shuffle_start = time.time()
-            x_shuffled = np.zeros((dim_x, n_blks*sig_blocklength),
-                                  dtype=array.dtype)
-            
-            for i, index in enumerate(x_indices): # Randomly rearrange the blocks (consisting of sig_blocklength of records about x) in original array
-                for blk in range(sig_blocklength):
-                    x_shuffled[i, blk::sig_blocklength] = \
-                            array[index, blk_starts + blk] 
+            #JC NOTE: Numba optimization here for the permutation-and-shuffle operation. As a result, the speed increases by 20%
+            x_shuffled = None
+            if dim_x == 1 and sig_blocklength == 1:
+                x_shuffled = _permutation_and_shuffle(block_starts, n_blks, array[x_indices[0]])
+                array_shuffled[x_indices[0]] = x_shuffled
+            else:
+                blk_starts = self.random_state.permutation(block_starts)[:n_blks]
+                x_shuffled = np.zeros((dim_x, n_blks*sig_blocklength),
+                                      dtype=array.dtype)
+                for i, index in enumerate(x_indices): # Randomly rearrange the blocks (consisting of sig_blocklength of records about x) in original array
+                    for blk in range(sig_blocklength):
+                        x_shuffled[i, blk::sig_blocklength] = \
+                                array[index, blk_starts + blk]
 
-            # Insert tail randomly somewhere
-            if tail.shape[1] > 0:
-                insert_tail_at = self.random_state.choice(block_starts)
-                x_shuffled = np.insert(x_shuffled, insert_tail_at,
-                                       tail.T, axis=1)
+                # Insert tail randomly somewhere
+                if tail.shape[1] > 0:
+                    insert_tail_at = self.random_state.choice(block_starts)
+                    x_shuffled = np.insert(x_shuffled, insert_tail_at,
+                                           tail.T, axis=1)
 
-            for i, index in enumerate(x_indices):
-                array_shuffled[index] = x_shuffled[i]
-            
+                for i, index in enumerate(x_indices):
+                    array_shuffled[index] = x_shuffled[i]
             shuffle_end = time.time()
-            #print("Shuffle cost: {} seconds".format(shuffle_end - shuffle_start))
+            print("Permutation + Shuffle time cost: {} seconds".format(shuffle_end - shuffle_start))
+            
 
             cmi_computation_start = time.time()
             null_dist[sam] = dependence_measure(array=array_shuffled,
@@ -971,7 +978,6 @@ class CondIndTest():
             #print("CMI computation cost: {} seconds".format(cmi_computation_end - cmi_computation_start))
         # end = time.time()
         # print("The shuffle test consumes time {} seconds".format( (end - start) * 1.0 ))
-
         return null_dist
 
     def get_fixed_thres_significance(self, value, fixed_thres):
