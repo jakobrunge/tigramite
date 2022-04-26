@@ -929,22 +929,28 @@ class CondIndTest():
         # Dividing the array up into n_blks of length sig_blocklength may
         # leave a tail. This tail is later randomly inserted
         tail = array[x_indices, n_blks*sig_blocklength:]
+        if sig_blocklength == 1:
+            assert(tail.shape[1] == 0)
 
         null_dist = np.zeros(sig_samples)
 
-        # JC NOTE: This loop consumes most time for a single conditional dependence test. Specifically, the part before line 957 consumes roughly the same time with the line 957.
+        # JC NOTE: Inside the loop, the function first generates shuffled array, then compute the CMI for this array.
+        # By doing so, the loop uses a shuffled way to estimate the p-value.
         # start = time.time()
         for sam in range(sig_samples):
-
+            permutation_start = time.time()
             blk_starts = self.random_state.permutation(block_starts)[:n_blks]
+            permutation_end = time.time()
+            #print("Permutation cost: {} seconds".format(permutation_end - permutation_start))
 
+            shuffle_start = time.time()
             x_shuffled = np.zeros((dim_x, n_blks*sig_blocklength),
                                   dtype=array.dtype)
-
-            for i, index in enumerate(x_indices):
+            
+            for i, index in enumerate(x_indices): # Randomly rearrange the blocks (consisting of sig_blocklength of records about x) in original array
                 for blk in range(sig_blocklength):
                     x_shuffled[i, blk::sig_blocklength] = \
-                            array[index, blk_starts + blk]
+                            array[index, blk_starts + blk] 
 
             # Insert tail randomly somewhere
             if tail.shape[1] > 0:
@@ -954,9 +960,15 @@ class CondIndTest():
 
             for i, index in enumerate(x_indices):
                 array_shuffled[index] = x_shuffled[i]
+            
+            shuffle_end = time.time()
+            #print("Shuffle cost: {} seconds".format(shuffle_end - shuffle_start))
 
+            cmi_computation_start = time.time()
             null_dist[sam] = dependence_measure(array=array_shuffled,
                                                 xyz=xyz)
+            cmi_computation_end = time.time()
+            #print("CMI computation cost: {} seconds".format(cmi_computation_end - cmi_computation_start))
         # end = time.time()
         # print("The shuffle test consumes time {} seconds".format( (end - start) * 1.0 ))
 

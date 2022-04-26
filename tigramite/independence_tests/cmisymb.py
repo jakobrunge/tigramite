@@ -148,7 +148,10 @@ class CMIsymb(CondIndTest):
         return hist
     
     def get_dependence_measure(self, array, xyz):
-        """Returns CMI estimate based on bincount histogram.
+        """Returns CMI estimate based on bincount histogram. 
+
+        This function calculates the mutual information I(X;Y | Z) = H(X|Z) - H(X|Z, Y) = H(X|Z) - ( H(X, Y, Z) - H(Y, Z) )
+                                                                   = H(X|Z) - ( H(X, Y, Z) - ( H(Y|Z) + H(Z) ) ) = H(X|Z) - H(X,Y,Z) + H(Y|Z) - H(Z)
 
         Parameters
         ----------
@@ -189,6 +192,8 @@ class CMIsymb(CondIndTest):
     def get_shuffle_significance(self, array, xyz, value,
                                  return_null_dist=False):
         """Returns p-value for shuffle significance test.
+
+        Because it is difficult to set a fixed threshold of the mutual information for the null hypothesis (e.g., MI < 0.1?), here it takes the shuffle method to compute the significance level.
 
         For residual-based test statistics only the residuals are shuffled.
 
