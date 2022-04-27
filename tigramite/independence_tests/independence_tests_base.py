@@ -940,14 +940,19 @@ class CondIndTest():
 
         null_dist = np.zeros(sig_samples)
 
-        # JC NOTE: Inside the loop, the function first generates shuffled array, then compute the CMI for this array.
+        """
+         JC NOTE: Inside the loop, the function first performs permutation-shuffle, then CMI-computation operations.
+         Here we use numba to speed up the permutation-shuffle operation. As a result, the speed increases by 20%.
+         For the optimization of CMI-computation, please refer to the function get_dependence_measure(self, array, xyz) in cmisymb.py.
+        """
         # By doing so, the loop uses a shuffled way to estimate the p-value.
-        # start = time.time()
+        permutation_shuffle_time_list = []
+        histgen_cmicomp_time_list = []
+        start = time.time()
         for sam in range(sig_samples):
             shuffle_start = time.time()
-            #JC NOTE: Numba optimization here for the permutation-and-shuffle operation. As a result, the speed increases by 20%
             x_shuffled = None
-            if dim_x == 1 and sig_blocklength == 1:
+            if dim_x == 1 and sig_blocklength == 1: # If decide to use the optimization, set dim_x = 1 and sig_blocklength = 1
                 x_shuffled = _permutation_and_shuffle(block_starts, n_blks, array[x_indices[0]])
                 array_shuffled[x_indices[0]] = x_shuffled
             else:
@@ -968,16 +973,17 @@ class CondIndTest():
                 for i, index in enumerate(x_indices):
                     array_shuffled[index] = x_shuffled[i]
             shuffle_end = time.time()
-            print("Permutation + Shuffle time cost: {} seconds".format(shuffle_end - shuffle_start))
-            
-
-            cmi_computation_start = time.time()
-            null_dist[sam] = dependence_measure(array=array_shuffled,
-                                                xyz=xyz)
-            cmi_computation_end = time.time()
-            #print("CMI computation cost: {} seconds".format(cmi_computation_end - cmi_computation_start))
-        # end = time.time()
-        # print("The shuffle test consumes time {} seconds".format( (end - start) * 1.0 ))
+            #print("Permutation + Shuffle time cost: {} seconds".format(shuffle_end - shuffle_start))
+            permutation_shuffle_time_list.append(shuffle_end - shuffle_start)
+            cmi_comp_start = time.time()
+            null_dist[sam] = dependence_measure(array=array_shuffled, xyz=xyz)
+            cmi_comp_end = time.time()
+            # print("Hist-generation + CMI-computation consumes time : {} seconds".format(cmi_comp_end - cmi_comp_start))
+            histgen_cmicomp_time_list.append(cmi_comp_end - cmi_comp_start)
+        end = time.time()
+        print("Average time cost of permutation + shuffle operations: {} seconds".format(1.0 * sum(permutation_shuffle_time_list) / sig_samples))
+        print("Average time cost of hist-generation + cmi-computation operations: {} seconds".format(1.0 * sum(histgen_cmicomp_time_list) / sig_samples))
+        print("The permutation-shuffle + CMI-computation for single test ends. Consumed time: {} seconds".format( (end - start) * 1.0 ))
         return null_dist
 
     def get_fixed_thres_significance(self, value, fixed_thres):
