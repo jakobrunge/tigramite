@@ -385,7 +385,7 @@ class CondIndTest():
             pval = self.get_significance(val, array, xyz, T, dim)
             self.cached_ci_results[combined_hash] = (val, pval)
 
-        if self.verbosity > 1:
+        if self.verbosity > 2:
             self._print_cond_ind_results(val=val, pval=pval, cached=cached,
                                          conf=None)
         # Return the value and the pvalue
@@ -751,7 +751,7 @@ class CondIndTest():
         n_blks = int(math.ceil(float(T)/conf_blocklength))
 
         # Print some information
-        if verbosity > 1:
+        if verbosity > 2:
             print("            block_bootstrap confidence intervals"
                   " with block-length = %d ..." % conf_blocklength)
 
@@ -927,7 +927,7 @@ class CondIndTest():
                                                      mode='significance')
 
         n_blks = int(math.floor(float(T)/sig_blocklength))
-        if verbosity > 1:
+        if verbosity > 2:
             print("            Significance test with block-length = %d "
                   "..." % (sig_blocklength))
 
@@ -983,7 +983,7 @@ class CondIndTest():
             # print("Hist-generation + CMI-computation consumes time : {} seconds".format(cmi_comp_end - cmi_comp_start))
             histgen_cmicomp_time_list.append(cmi_comp_end - cmi_comp_start)
         end = time.time()
-        if verbosity > 1:
+        if verbosity > 2:
             print("Average time cost of permutation + shuffle operations: {} seconds".format(1.0 * sum(permutation_shuffle_time_list) / sig_samples))
             print("Average time cost of hist-generation + cmi-computation operations: {} seconds".format(1.0 * sum(histgen_cmicomp_time_list) / sig_samples))
             print("The permutation-shuffle + CMI-computation for single test ends. Consumed time: {} seconds".format( (end - start) * 1.0 ))
