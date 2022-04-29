@@ -65,10 +65,10 @@ def _calculate_cmi_numba_scalar(symb_array, hist_shape):
 
 @jit(nopython=True)
 def _calculate_cmi_numba_array(symb_array, hist_shape):
-    n_symbs = symb_array.max() + 1
+    n_symbs = int(symb_array.max() + 1)
     dim, T = symb_array.shape
-    flathist = np.zeros((n_symbs ** dim), dtype=np.int64)
-    multisymb = np.zeros(T, dtype=np.int64)
+    flathist = np.zeros((n_symbs ** dim), dtype='int16')
+    multisymb = np.zeros(T, dtype='int64')
     for i in range(dim):
         multisymb += symb_array[i, :] * n_symbs ** i
 
@@ -217,14 +217,20 @@ class CMIsymb(CondIndTest):
         else:
             n_symbs = self.n_symbs
             if n_symbs < int(symb_array.max() + 1):
-                exit()
-                #raise ValueError("n_symbs must be >= symb_array.max() + 1 = {}".format(symb_array.max() + 1))
+                raise ValueError("n_symbs must be >= symb_array.max() + 1 = {}".format(symb_array.max() + 1))
 
         if 'int' not in str(symb_array.dtype):
             raise ValueError("Input data must of integer type, where each "
                              "number indexes a symbol.")
 
         dim, T = symb_array.shape
+        
+        """
+        JC NOTE: When the dim is high (especially because of the number of conditioning variables),
+        the computation of histogram is memory-intensive and time-intensive, even for binary vairables.
+        Unfortunately, currently we can only limit the maximum number of conditioning variables (through parameter specification).
+        Future work can be explored to implement a new way to compute the histogram.
+        """
 
         flathist = np.zeros((n_symbs ** dim), dtype='int16')
         multisymb = np.zeros(T, dtype='int64')
@@ -275,7 +281,8 @@ class CMIsymb(CondIndTest):
         JC NOTE: Optimize the hist-generation + MCI-computation using numba
         The evaluation result shows that the optimization has a speed up at least 50%.
         """
-        n_symbs = array.max() + 1
+        n_symbs = int(array.max() + 1)
+        assert(n_symbs == 2) # JC NOTE: In binary settings, the state of each variable is a binary.
         hist_shape = tuple([n_symbs, n_symbs] + [n_symbs for i in range(dim - 2)])
         val_numba = 0.0
         if len(hist_shape) <= 2:

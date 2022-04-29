@@ -1119,7 +1119,6 @@ class PCMCI():
         self._check_tau_limits(tau_min, tau_max)
         # Set the selected links
         _int_sel_links = self._set_sel_links(selected_links, tau_min, tau_max)
-
         # Set the maximum condition dimension for Y and X
         max_conds_py = self._set_max_condition_dim(max_conds_py,
                                                    tau_min, tau_max)

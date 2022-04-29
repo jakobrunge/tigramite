@@ -952,8 +952,10 @@ class CondIndTest():
         for sam in range(sig_samples):
             shuffle_start = time.time()
             x_shuffled = None
-            if dim_x == 1 and sig_blocklength == 1: # If decide to use the optimization, set dim_x = 1 and sig_blocklength = 1
+            # JC NOTE: If decide to use the optimization, set dim_x = 1 and sig_blocklength = 1
+            if dim_x == 1 and sig_blocklength == 1:
                 x_shuffled = _permutation_and_shuffle(block_starts, n_blks, array[x_indices[0]])
+                assert(x_shuffled is not None)
                 array_shuffled[x_indices[0]] = x_shuffled
             else:
                 blk_starts = self.random_state.permutation(block_starts)[:n_blks]
