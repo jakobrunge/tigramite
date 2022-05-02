@@ -1742,13 +1742,15 @@ class PCMCI():
         else:
             sig_links = (p_matrix <= alpha_level)
 
-        print("\n## Significant links at alpha = %s:" % alpha_level)
+        print("\n## Significant links for alpha = {}:".format(alpha_level))
         for j in range(self.N):
             links = {(p[0], -p[1]): np.abs(val_matrix[p[0], j, abs(p[1])])
                      for p in zip(*np.where(sig_links[:, j, :]))}
             # Sort by value
             sorted_links = sorted(links, key=links.get, reverse=True)
             n_links = len(links)
+            if n_links == 0: # JC NOTE: Skip printing those variable information with 0 edges
+                continue
             string = ("\n    Variable %s has %d "
                       "link(s):" % (self.var_names[j], n_links))
             for p in sorted_links:
