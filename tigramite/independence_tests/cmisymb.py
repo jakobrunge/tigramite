@@ -14,8 +14,7 @@ import time
 from .independence_tests_base import CondIndTest
 
 @jit(nopython=True)
-def _calculate_cmi_numba_scalar(symb_array, hist_shape):
-    n_symbs = symb_array.max() + 1
+def _calculate_cmi_numba_scalar(symb_array, hist_shape, n_symbs):
     dim, T = symb_array.shape
     flathist = np.zeros((n_symbs ** dim), dtype=np.int64)
     multisymb = np.zeros(T, dtype=np.int64)
@@ -64,8 +63,7 @@ def _calculate_cmi_numba_scalar(symb_array, hist_shape):
     return val
 
 @jit(nopython=True)
-def _calculate_cmi_numba_array(symb_array, hist_shape):
-    n_symbs = int(symb_array.max() + 1)
+def _calculate_cmi_numba_array(symb_array, hist_shape, n_symbs):
     dim, T = symb_array.shape
     flathist = np.zeros((n_symbs ** dim), dtype='int16')
     multisymb = np.zeros(T, dtype='int64')
@@ -285,9 +283,9 @@ class CMIsymb(CondIndTest):
         hist_shape = tuple([n_symbs, n_symbs] + [n_symbs for i in range(dim - 2)])
         val_numba = 0.0
         if len(hist_shape) <= 2:
-            val_numba = _calculate_cmi_numba_scalar(array, hist_shape)
+            val_numba = _calculate_cmi_numba_scalar(array, hist_shape, n_symbs)
         else:
-            val_numba = _calculate_cmi_numba_array(array, hist_shape)
+            val_numba = _calculate_cmi_numba_array(array, hist_shape, n_symbs)
 
         #"""Followings are original codes."""
         #hist = self._bincount_hist(array, weights=None)
