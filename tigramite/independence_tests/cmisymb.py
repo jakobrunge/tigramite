@@ -282,6 +282,8 @@ class CMIsymb(CondIndTest):
         The evaluation result shows that the optimization has a speed up at least 50%.
         """
         n_symbs = int(array.max() + 1)
+        if n_symbs != 2: #JC TODO: Remove Ad-hoc codes for figuring out n_symbs
+            print("Now n_symbs is {}. The value is strange.".format(n_symbs))
         assert(n_symbs == 2) # JC NOTE: In binary settings, the state of each variable is a binary.
         hist_shape = tuple([n_symbs, n_symbs] + [n_symbs for i in range(dim - 2)])
         val_numba = 0.0
