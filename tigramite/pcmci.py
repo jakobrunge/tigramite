@@ -540,6 +540,7 @@ class PCMCI():
                         a_iter[comb_index]['pval'] = pval
                     # Delete link later and break while-loop if non-significant
                     if pval > pc_alpha:
+                        print("JC identified non-significant links {} -> {} ({} -> {})!".format(parent, j, self.var_names[parent], self.var_names[j]))
                         nonsig_parents.append((j, parent))
                         nonsig = True
                         break
