@@ -491,7 +491,7 @@ class PCMCI():
                 break
             # Print information about
             if self.verbosity > 1:
-                print("\nTesting condition sets of dimension %d:" % conds_dim)
+                print("\nTesting condition sets of dimension {} for variable {} :".format(conds_dim, self.var_names[j]))
 
             # Iterate through all possible pairs (that have not converged yet)
             time_list = []
@@ -501,9 +501,7 @@ class PCMCI():
                     self._print_link_info(j, index_parent, parent, len(parents))
                 # Iterate through all possible combinations
                 nonsig = False
-                for comb_index, Z in \
-                        enumerate(self._iter_conditions(parent, conds_dim,
-                                                        parents)):
+                for comb_index, Z in enumerate(self._iter_conditions(parent, conds_dim, parents)):
                     # Break if we try too many combinations
                     start = time.time()
                     if comb_index >= max_combinations:
@@ -518,7 +516,7 @@ class PCMCI():
                     end = time.time()
                     time_list.append((end - start) * 1.0)
                     if self.verbosity > 1:
-                        print("* Time for single conditional independence test: {} seconds".format((end - start) * 1.0))
+                        print("* Time for single conditional independence test {} -> {} at dimension {}: {} seconds".format(self.var_names[parent[0]], self.var_names[j], conds_dim, (end - start) * 1.0))
                     # Print some information if needed
                     if self.verbosity > 1:
                         self._print_cond_info(Z, comb_index, pval, val)
@@ -540,7 +538,7 @@ class PCMCI():
                         a_iter[comb_index]['pval'] = pval
                     # Delete link later and break while-loop if non-significant
                     if pval > pc_alpha:
-                        print("JC identified non-significant links {} -> {} ({} -> {})!".format(parent, j, self.var_names[parent[0]], self.var_names[j[0]]))
+                        print("JC identified non-significant links {} -> {} ({} -> {}) at dimension {}!".format(parent, j, self.var_names[parent[0]], self.var_names[j], conds_dim))
                         nonsig_parents.append((j, parent))
                         nonsig = True
                         break
