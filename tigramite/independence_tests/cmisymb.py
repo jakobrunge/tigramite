@@ -94,7 +94,7 @@ class CMIsymb(CondIndTest):
         Parameters
         ----------
         symb_array : integer array
-            Data array of shape (dim, T).
+            Data array of shape (dim, T). If a float is passed, it will be converted to int.
 
         weights : float array, optional (default: None)
             Optional weights array of shape (dim, T).
@@ -106,16 +106,20 @@ class CMIsymb(CondIndTest):
             dimensions with Z-dimensions coming first.
         """
 
+        if 'int' not in str(symb_array.dtype):
+            # raise ValueError("Input data must of integer type, where each "
+            #                  "number indexes a symbol.")
+            warnings.warn("Input data should be of integer type, where each "
+                          "number indexes a symbol. If you provide a float,"
+                          " then the array will still be converted to int.")
+            symb_array = symb_array.astype('int')
+
         if self.n_symbs is None:
             n_symbs = int(symb_array.max() + 1)
         else:
             n_symbs = self.n_symbs
             if n_symbs < int(symb_array.max() + 1):
                 raise ValueError("n_symbs must be >= symb_array.max() + 1 = {}".format(symb_array.max() + 1))
-
-        if 'int' not in str(symb_array.dtype):
-            raise ValueError("Input data must of integer type, where each "
-                             "number indexes a symbol.")
 
         dim, T = symb_array.shape
 
