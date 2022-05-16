@@ -1064,9 +1064,9 @@ class PCMCI():
         alpha_level : float, optional (default: 0.05)
             Significance level at which the p_matrix is thresholded to 
             get graph.
-        fdr_method : str, optional (default: 'fdr_bh')
+        fdr_method : str, optional (default: 'none')
             Correction method, currently implemented is Benjamini-Hochberg
-            False Discovery Rate method. 
+            False Discovery Rate method ('fdr_bh'). 
 
         Returns
         -------
@@ -1218,9 +1218,9 @@ class PCMCI():
         alpha_level : float, optional (default: 0.05)
             Significance level at which the p_matrix is thresholded to 
             get graph.
-        fdr_method : str, optional (default: 'fdr_bh')
+        fdr_method : str, optional (default: 'none')
             Correction method, currently implemented is Benjamini-Hochberg
-            False Discovery Rate method. 
+            False Discovery Rate method ('fdr_bh'). 
 
         Returns
         -------
@@ -1287,9 +1287,9 @@ class PCMCI():
         alpha_level : float, optional (default: 0.05)
             Significance level at which the p_matrix is thresholded to 
             get graph.
-        fdr_method : str, optional (default: 'fdr_bh')
+        fdr_method : str, optional (default: 'none')
             Correction method, currently implemented is Benjamini-Hochberg
-            False Discovery Rate method. 
+            False Discovery Rate method ('fdr_bh').  
 
         Returns
         -------
@@ -1354,9 +1354,9 @@ class PCMCI():
         alpha_level : float, optional (default: 0.05)
             Significance level at which the p_matrix is thresholded to 
             get graph.
-        fdr_method : str, optional (default: 'fdr_bh')
+        fdr_method : str, optional (default: 'none')
             Correction method, currently implemented is Benjamini-Hochberg
-            False Discovery Rate method. 
+            False Discovery Rate method ('fdr_bh').  
 
         Returns
         -------
@@ -1526,7 +1526,7 @@ class PCMCI():
         else:
             # Create a mask for these values
             mask = np.ones((N, N, tau_max_plusone), dtype='bool')
-        # Ignore values from autocorrelation indices
+        # Ignore values from lag-zero 'autocorrelation' indices
         mask[range(N), range(N), 0] = False
         # Exclude all contemporaneous values if requested
         if exclude_contemporaneous:
