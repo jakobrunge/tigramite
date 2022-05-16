@@ -111,8 +111,6 @@ class CausalEffects():
         if len(self.hidden_variables.intersection(self.X.union(self.Y).union(self.S))) > 0:
             raise ValueError("XYS overlaps with hidden_variables!")
 
-
-
         # Only needed for later extension to MAG/PAGs
         if 'pag' in graph_type:
             self.possible = True 
@@ -146,8 +144,6 @@ class CausalEffects():
             self.no_causal_path = True
             if self.verbosity > 0:
                 print("No causal path from X to Y exists.")
-
-            # raise ValueError("No causal path from X to Y exists.")
         else:
             self.no_causal_path = False
 
@@ -164,17 +160,17 @@ class CausalEffects():
                 raise ValueError("X, Y, S must have time lags inside graph.")
 
         if len(self.X.intersection(self.Y)) > 0:
-            raise ValueError("Overlap between X and Y")
+            raise ValueError("Overlap between X and Y.")
 
         if len(self.S.intersection(self.Y.union(self.X))) > 0:
-            raise ValueError("Conditions S overlap with X or Y")
+            raise ValueError("Conditions S overlap with X or Y.")
 
         # # TODO: need to prove that this is sufficient for non-identifiability!
         # if len(self.X.intersection(self._get_descendants(self.M))) > 0:
         #     raise ValueError("Not identifiable: Overlap between X and des(M)")
 
         if check_SM_overlap and len(self.S.intersection(self.M)) > 0:
-            raise ValueError("Conditions S overlap with mediators M!")
+            raise ValueError("Conditions S overlap with mediators M.")
 
         self.desX = self._get_descendants(self.X)
         self.desY = self._get_descendants(self.Y)
@@ -194,7 +190,7 @@ class CausalEffects():
         # Here only check if S overlaps with des(Y), leave the option that S
         # contains variables in des(M) to the user
         if len(self.S.intersection(self.desY)) > 0:
-            raise ValueError("Not identifiable: Conditions S overlap with des(Y)")
+            raise ValueError("Not identifiable: Conditions S overlap with des(Y).")
 
         if self.verbosity > 0:
             print("\n##\n## Initializing CausalEffects class\n##"
@@ -1861,6 +1857,10 @@ class CausalEffects():
         self.dataframe = dataframe
         self.conditional_estimator = conditional_estimator
 
+        if self.N != self.dataframe.N:
+            raise ValueError("Dataset dimensions inconsistent with number of variables in graph.")
+
+
         if adjustment_set == 'optimal':
             # Check optimality and use either optimal or colliders_only set
             adjustment_set = self.get_optimal_set()
@@ -2380,7 +2380,8 @@ class CausalEffects():
 
 
     def predict_bootstrap_of(self, method, method_args, 
-                        conf_lev=0.9):
+                        conf_lev=0.9,
+                        return_individual_bootstrap_results=False):
         """Predicts with fitted bootstraps.
 
         To be used after fitting with fit_bootstrap_of. Only uses the 
@@ -2394,6 +2395,8 @@ class CausalEffects():
             Arguments passed to method.
         conf_lev : float, optional (default: 0.9)
             Two-sided confidence interval.
+        return_individual_bootstrap_results : bool
+            Returns the individual bootstrap predictions.
 
         Returns
         -------
@@ -2430,6 +2433,9 @@ class CausalEffects():
         confidence_interval = np.percentile(
                 bootstrap_predicted_array, axis=0,
                 q = [100*(1. - c_int), 100*c_int])[:,:,0]
+
+        if return_individual_bootstrap_results:
+            return bootstrap_predicted_array, confidence_interval
 
         return confidence_interval
 

@@ -67,7 +67,7 @@ class CMIknn(CondIndTest):
         computed as a fraction of T, hence knn=knn*T. For knn larger or equal to
         1, this is the absolute number.
 
-    shuffle_neighbors : int, optional (default: 10)
+    shuffle_neighbors : int, optional (default: 5)
         Number of nearest-neighbors within Z for the shuffle surrogates which
         determines the size of hyper-cubes around each (high-dimensional) sample
         point.
@@ -79,7 +79,7 @@ class CMIknn(CondIndTest):
 
     workers : int (optional, default = -1)
         Number of workers to use for parallel processing. If -1 is given
-        all processors are used. Default: 1.
+        all processors are used. Default: -1.
 
     significance : str, optional (default: 'shuffle_test')
         Type of significance test to use. For CMIknn only 'fixed_thres' and
