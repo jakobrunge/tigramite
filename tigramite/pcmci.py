@@ -808,9 +808,7 @@ class PCMCI():
             print("\n## Resulting lagged parent (super)sets:")
             self._print_parents(all_parents, val_min, pval_max)
         # Construct the results (for plotting purposes)
-        """JC Update:
-        Let stable_pc algorithm to return the same format of results as PCMCI
-        """
+        # JC Update: Let stable_pc algorithm to return the same format of results as PCMCI
         final_graph = self.p_matrix <= pc_alpha  # Threshold p_matrix to get graph
         graph = self.convert_to_string_graph(final_graph) # Convert to string graph representation
         # Symmetrize p_matrix and val_matrix
