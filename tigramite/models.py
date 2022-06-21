@@ -172,6 +172,7 @@ class Models():
                                                tau_max=self.tau_max,
                                                mask_type=self.mask_type,
                                                cut_off=self.cut_off,
+                                               remove_overlaps=True,
                                                verbosity=self.verbosity)
 
             # Transform the data if needed
@@ -411,6 +412,7 @@ class Models():
                                                tau_max=self.tau_max,
                                                mask_type=self.mask_type,
                                                cut_off=cut_off,
+                                               remove_overlaps=True,
                                                verbosity=self.verbosity)
             # Get the dimensions out of the constructed array
             dim, T = array.shape
@@ -1220,16 +1222,20 @@ class Prediction(Models, PCMCI):
                  data_transform=None,
                  verbosity=0):
 
+        if dataframe.analysis_mode != 'single':
+            raise ValueError("Prediction class currently only supports single "
+                             "datasets.")
+
         # Default value for the mask
-        mask = dataframe.mask
+        mask = dataframe.mask[0]
         if mask is None:
-            mask = np.zeros(dataframe.values.shape, dtype='bool')
+            mask = np.zeros(dataframe.values[0].shape, dtype='bool')
         # Get the dataframe shape
         T = len(dataframe.values)
         # Have the default dataframe be the training data frame
         train_mask = np.copy(mask)
         train_mask[[t for t in range(T) if t not in train_indices]] = True
-        self.dataframe = DataFrame(dataframe.values,
+        self.dataframe = DataFrame(dataframe.values[0],
                                    mask=train_mask,
                                    missing_flag=dataframe.missing_flag)
         # Initialize the models baseclass with the training dataframe
@@ -1451,6 +1457,7 @@ class Prediction(Models, PCMCI):
                                                          mask=new_data_mask,
                                                          mask_type=self.mask_type,
                                                          cut_off=cut_off,
+                                                         remove_overlaps=True,
                                                          verbosity=self.verbosity)
             # Otherwise use the default values
             else:
@@ -1460,6 +1467,7 @@ class Prediction(Models, PCMCI):
                                                    mask=self.test_mask,
                                                    mask_type=self.mask_type,
                                                    cut_off=cut_off,
+                                                   remove_overlaps=True,
                                                    verbosity=self.verbosity)
             # Transform the data if needed
             a_transform = self.fitted_model[target]['data_transform']

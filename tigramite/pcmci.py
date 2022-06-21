@@ -137,8 +137,8 @@ class PCMCI():
         Dictionary containing further information on algorithm steps.
     N : int
         Number of variables.
-    T : int
-        Time series sample length.
+    T : dict
+        Time series sample length of dataset(s).
     """
 
     def __init__(self, dataframe,
@@ -4003,7 +4003,11 @@ class PCMCI():
         if method not in valid_methods:
             raise ValueError("method must be one of %s" % str(valid_methods))
 
-        T = self.T
+        if self.dataframe.analysis_mode != 'single':
+            raise ValueError("Sliding wwindows analysis currently only supports single "
+                             "datasets.")
+
+        T = self.T[0]
 
         if self.cond_ind_test.recycle_residuals:
             # recycle_residuals clashes with sliding windows...
@@ -4019,7 +4023,7 @@ class PCMCI():
         if self.dataframe.missing_flag is None:
             self.dataframe.missing_flag = True
 
-        original_data = deepcopy(self.dataframe.values)
+        original_data = deepcopy(self.dataframe.values[0])
 
         window_start_points = np.arange(0, T - window_length, window_step)
         n_windows = len(window_start_points)
@@ -4031,7 +4035,7 @@ class PCMCI():
             data_window[0:w] = np.nan
             data_window[w + window_length:] = np.nan
 
-            self.dataframe.values = data_window
+            self.dataframe.values[0] = data_window
             window_res = deepcopy(getattr(self, method)(**method_args))
 
             # Aggregate val_matrix and other arrays to new arrays with
@@ -4050,7 +4054,7 @@ class PCMCI():
                 window_results[key][iw] = res_item
 
         # Reset to original data for further analyses
-        self.dataframe.values = original_data
+        self.dataframe.values[0] = original_data
 
         # Generate summary results
         summary_results = {}
@@ -4077,11 +4081,11 @@ class PCMCI():
 
 
 if __name__ == '__main__':
-    from tigramite.independence_tests import ParCorr, CMIknn
-    import tigramite.data_processing as pp
+    from tigramite.independence_tests import ParCorr, CMIknn, ParCorrMult
+    import tigramite.data_processing_vector as pp
     from tigramite.toymodels import structural_causal_processes as toys
     import tigramite.plotting as tp
-
+    from matplotlib import pyplot as plt
     np.random.seed(43)
 
     # Example process to play around with
@@ -4090,27 +4094,24 @@ if __name__ == '__main__':
     def lin_f(x): return x
     def nonlin_f(x): return (x + 5. * x ** 2 * np.exp(-x ** 2 / 20.))
 
-    links = {0: [((0, -1), 0.9, lin_f)],
-             1: [((1, -1), 0.8, lin_f), ((0, -1), 0.5, lin_f)],
-             # 2: [((2, -1), 0.7, lin_f), ((1, 0), 0.1, lin_f)],
-             # 3: [((3, -1), 0.7, lin_f), ((2, 0), -0.1, lin_f)],
+    # 1. Illustration of
+    links_coeffs = {
+             0: [((0, -1), 0., lin_f)],
+             1: [((1, -1), 0., lin_f)],
+             2: [((2, -1), 0.5, lin_f), ((1, 0), 0.2, lin_f)],
+             3: [((3, -1), 0.5, lin_f), ((2, 0), 0.3, lin_f)],
              }
+    T = 1000
+    data, nonstat = toys.structural_causal_process(links_coeffs,
+                        T=T, seed=8)
 
-    data, nonstat = toys.structural_causal_process(links,
-                        T=10000, seed=7)
+    dataframe = pp.DataFrame(data) 
 
-    # Data must be array of shape (time, variables)
-    print(data.shape)
-    dataframe = pp.DataFrame(data)
-    cond_ind_test = ParCorr()
-    pcmci = PCMCI(dataframe=dataframe, cond_ind_test=cond_ind_test, verbosity=1)
-    # results = pcmci.run_pcmciplus(tau_min=0, tau_max=2, pc_alpha=0.01)
-    # pcmci.print_results(results, alpha_level=0.01)
+    pcmci = PCMCI(dataframe=dataframe, 
+        cond_ind_test=ParCorr(), verbosity=1)
+    results = pcmci.run_pcmciplus(tau_min=0, tau_max=2, 
+        pc_alpha=0.01)
 
-
-    print(pcmci.run_sliding_window_of(method='run_pcmciplus', 
-                    method_args={'tau_min':0, 'tau_max':3, 'pc_alpha':0.01}, 
-                        window_step=500,
-                        window_length=1000,
-                        conf_lev = 0.95)['summary_results'])
+    tp.plot_graph(results['graph'])
+    plt.show()
 

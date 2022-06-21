@@ -1,5 +1,6 @@
 from .independence_tests_base import CondIndTest
 from .parcorr import ParCorr
+from .parcorr_mult import ParCorrMult
 from .gpdc import GPDC
 from .gpdc_torch import GPDCtorch
 from .cmiknn import CMIknn
