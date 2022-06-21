@@ -143,8 +143,8 @@ class DataFrame():
     """
 
     def __init__(self, data, mask=None, missing_flag=None, vector_vars=None, var_names=None,
-        datatime=None, analysis_mode = 'single', reference_points = None,
-        time_offsets = None, remove_missing_upto_maxlag=False):
+        datatime=None, analysis_mode ='single', reference_points=None,
+        time_offsets=None, remove_missing_upto_maxlag=False):
 
         # Check that a valid analysis mode, specified by the argument
         # 'analysis_mode', has been chosen
@@ -283,7 +283,7 @@ class DataFrame():
         if self.vector_vars is None:
             self.vector_vars = dict(zip(range(self.Ndata), [[(i, 0)] 
                                 for i in range(self.Ndata)]))
-
+        # TODO: check vector_vars!
         self.N = len(self.vector_vars)
 
         # Warnings
@@ -355,12 +355,12 @@ class DataFrame():
         if require_mask and _use_mask is None:
             raise ValueError("Expected a mask, but got nothing!")
 
-        ########################################################################
-        ## HACK:
-        # (needed for compatibility with pcmci.py)
-        # (unsure about compatibility with models.py)
-        if _use_mask is self.mask:
-            return _use_mask
+        # ########################################################################
+        # ## HACK:
+        # # (needed for compatibility with pcmci.py)
+        # # (unsure about compatibility with models.py)
+        # if _use_mask is self.mask:
+        #     return _use_mask
         ########################################################################
 
         # If we have a mask, check it
@@ -425,7 +425,7 @@ class DataFrame():
             for ens_member_key, ens_member_data in self.values.items():
                 _use_mask_dict_data = _use_mask_dict[ens_member_key] 
                 if _use_mask_dict_data.shape == ens_member_data.shape:
-                    if np.isnan(np.sum(_use_mask_dict_data)) != 0:
+                    if np.sum(np.isnan(_use_mask_dict_data)) != 0:
                         raise ValueError("NaNs in the data mask")
 
                 else:
@@ -629,7 +629,7 @@ class DataFrame():
                 t_missing, ..., t_missing + max(max_lag(X, Y, Z), tau_max)
                 are cut out.
                 The latter part only holds if remove_missing_upto_maxlag=True.
-            If cut_off == '2xtau_max':
+            If cut_off == '2xtau_max_future':
                 First, the relevant time steps are determined as for cut_off ==
                 'max_lag'. Then, the temporally latest time steps are removed
                 such that the same number of time steps remains as there would
@@ -674,7 +674,6 @@ class DataFrame():
         Y = vectorize(Y) 
         Z = vectorize(Z) 
         extraZ = vectorize(extraZ) 
-
 
 
         # Remove duplicates in X, Y, Z, extraZ
@@ -815,7 +814,7 @@ class DataFrame():
                                      "choose smaller boot_blocklength!")
 
                 # Get the starting indices for the blocks
-                blk_strt = random_state.choice(ref_points_here, size=n_blks, replace=True)
+                blk_strt = random_state.choice(np.arange(len(ref_points_here) - boot_blocklength), size=n_blks, replace=True)
 
                 # Get the empty array of block resampled values
                 boot_draw = np.zeros(n_blks*boot_blocklength, dtype='int')
@@ -829,7 +828,7 @@ class DataFrame():
             # current dataset
             samples_ens_members[ens_member_key] = np.zeros((dim, len(ref_points_here)), dtype = ens_member_data.dtype)
             for i, (var, lag) in enumerate(XYZ):
-                samples_ens_members[ens_member_key][i, :] = ens_member_data[ref_points_here +  lag, var]
+                samples_ens_members[ens_member_key][i, :] = ens_member_data[ref_points_here + lag, var]
 
             # Build the mask array corresponding to this dataset
             if _mask is not None:
