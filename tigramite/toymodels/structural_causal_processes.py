@@ -577,12 +577,13 @@ class _Graph():
         # Sort starting from all vertices one by one 
         for i in range(self.V): 
           if visited[i] == False: 
-              self.topologicalSortUtil(i,visited,stack) 
+              self.topologicalSortUtil(i, visited,stack) 
 
         return stack
 
 def structural_causal_process(links, T, noises=None, 
                         intervention=None, intervention_type='hard',
+                        transient_fraction=0.2,
                         seed=None):
     """Returns a time series generated from a structural causal process.
 
@@ -615,8 +616,9 @@ def structural_causal_process(links, T, noises=None,
         callable of one argument.
     T : int
         Sample size.
-    noises : list of callables, optional (default: 'np.random.randn')
-        Random distribution function that is called with noises[j](T).
+    noises : list of callables or array, optional (default: 'np.random.randn')
+        Random distribution function that is called with noises[j](T). If an array,
+        it must be of shape ((transient_fraction + 1)*T, N).
     intervention : dict
         Dictionary of format: {1:np.array, ...} containing only keys of intervened
         variables with the value being the array of length T with interventional values.
@@ -625,6 +627,10 @@ def structural_causal_process(links, T, noises=None,
         Dictionary of format: {1:'hard',  3:'soft', ...} to specify whether intervention is 
         hard (set value) or soft (add value) for variable j. If str, all interventions have 
         the same type.
+    transient_fraction : float
+        Added percentage of T used as a transient. In total a realization of length
+        (transient_fraction + 1)*T will be generated, but then transient_fraction*T will be
+        cut off.
     seed : int, optional (default: None)
         Random seed.
 
@@ -642,8 +648,15 @@ def structural_causal_process(links, T, noises=None,
     if noises is None:
         noises = [random_state.randn for j in range(N)]
 
-    if N != max(links.keys())+1 or N != len(noises):
-        raise ValueError("links and noises keys must match N.")
+    if N != max(links.keys())+1:
+        raise ValueError("links keys must match N.")
+
+    if isinstance(noises, np.ndarray):
+        if noises.shape != (T + int(math.floor(transient_fraction*T)), N):
+            raise ValueError("noises.shape must match ((transient_fraction + 1)*T, N).")            
+    else:
+        if N != len(noises):
+            raise ValueError("noises keys must match N.")
 
     # Check parameters
     max_lag = 0
@@ -682,11 +695,14 @@ def structural_causal_process(links, T, noises=None,
             if j not in intervention_type.keys():        
                 raise ValueError("intervention_type dictionary must contain entry for %s" %(j))
 
-    transient = int(math.floor(.2*T))
+    transient = int(math.floor(transient_fraction*T))
 
     data = np.zeros((T+transient, N), dtype='float32')
     for j in range(N):
-        data[:, j] = noises[j](T+transient)
+        if isinstance(noises, np.ndarray):
+            data[:, j] = noises[:, j]
+        else:
+            data[:, j] = noises[j](T+transient)
 
     for t in range(max_lag, T+transient):
         for j in causal_order:
@@ -820,6 +836,31 @@ def links_to_graph(links, tau_max=None):
                     graph[j, var, 0] = "<--"
 
     return graph
+
+def dag_to_links(dag):
+    """Helper function to convert DAG graph to dictionary of parents.
+
+    Parameters
+    ---------
+    dag : array of shape (N, N, tau_max+1)
+        Matrix format of graph in string format. Must be DAG.
+
+    Returns
+    -------
+    parents : dict
+        Dictionary of form {0:[(0, -1), ...], 1:[...], ...}.
+    """
+    N = dag.shape[0]
+
+    parents = dict([(j, []) for j in range(N)])
+
+    if np.any(dag=='o-o') or np.any(dag=='x-x'):
+        raise ValueError("graph must be DAG.")
+
+    for (i, j, tau) in zip(*np.where(dag=='-->')):
+        parents[j].append((i, -tau))
+
+    return parents
 
 class _Logger(object):
     """Class to append print output to a string which can be saved"""

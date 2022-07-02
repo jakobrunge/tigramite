@@ -1,17 +1,17 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>tigramite.causal_effects &#8212; Tigramite 5.0 documentation</title>
-    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinxdoc.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
     <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
   </head><body>
@@ -25,23 +25,10 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 5.0 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">tigramite.causal_effects</a></li> 
       </ul>
-    </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script>$('#searchbox').show(0);</script>
-        </div>
-      </div>
+    </div>  
 
     <div class="document">
       <div class="documentwrapper">
@@ -162,8 +149,6 @@
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hidden_variables</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">)</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="p">)))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;XYS overlaps with hidden_variables!&quot;</span><span class="p">)</span>
 
-
-
         <span class="c1"># Only needed for later extension to MAG/PAGs</span>
         <span class="k">if</span> <span class="s1">&#39;pag&#39;</span> <span class="ow">in</span> <span class="n">graph_type</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">possible</span> <span class="o">=</span> <span class="kc">True</span> 
@@ -197,8 +182,6 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">no_causal_path</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No causal path from X to Y exists.&quot;</span><span class="p">)</span>
-
-            <span class="c1"># raise ValueError(&quot;No causal path from X to Y exists.&quot;)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">no_causal_path</span> <span class="o">=</span> <span class="kc">False</span>
 
@@ -215,17 +198,17 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;X, Y, S must have time lags inside graph.&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Overlap between X and Y&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Overlap between X and Y.&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">)))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Conditions S overlap with X or Y&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Conditions S overlap with X or Y.&quot;</span><span class="p">)</span>
 
         <span class="c1"># # TODO: need to prove that this is sufficient for non-identifiability!</span>
         <span class="c1"># if len(self.X.intersection(self._get_descendants(self.M))) &gt; 0:</span>
         <span class="c1">#     raise ValueError(&quot;Not identifiable: Overlap between X and des(M)&quot;)</span>
 
         <span class="k">if</span> <span class="n">check_SM_overlap</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Conditions S overlap with mediators M!&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Conditions S overlap with mediators M.&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">desX</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_descendants</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">desY</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_descendants</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">)</span>
@@ -245,7 +228,7 @@
         <span class="c1"># Here only check if S overlaps with des(Y), leave the option that S</span>
         <span class="c1"># contains variables in des(M) to the user</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">desY</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Not identifiable: Conditions S overlap with des(Y)&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Not identifiable: Conditions S overlap with des(Y).&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">##</span><span class="se">\n</span><span class="s2">## Initializing CausalEffects class</span><span class="se">\n</span><span class="s2">##&quot;</span>
@@ -1912,6 +1895,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span> <span class="o">=</span> <span class="n">dataframe</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">conditional_estimator</span> <span class="o">=</span> <span class="n">conditional_estimator</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">N</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Dataset dimensions inconsistent with number of variables in graph.&quot;</span><span class="p">)</span>
+
+
         <span class="k">if</span> <span class="n">adjustment_set</span> <span class="o">==</span> <span class="s1">&#39;optimal&#39;</span><span class="p">:</span>
             <span class="c1"># Check optimality and use either optimal or colliders_only set</span>
             <span class="n">adjustment_set</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_optimal_set</span><span class="p">()</span>
@@ -2115,10 +2102,8 @@
 <span class="sd">            Dictionary of format: {0:[((i, -tau), coeff),...], 1:[...],</span>
 <span class="sd">            ...} for all variables where i must be in [0..N-1] and tau &gt;= 0 with</span>
 <span class="sd">            number of variables N. coeff must be a float.</span>
-<span class="sd">        data_transform : sklearn preprocessing object, optional (default: None)</span>
-<span class="sd">            Used to transform data prior to fitting. For example,</span>
-<span class="sd">            sklearn.preprocessing.StandardScaler for simple standardization. The</span>
-<span class="sd">            fitted parameters are stored.</span>
+<span class="sd">        data_transform : None</span>
+<span class="sd">            Not implemented for Wright estimator. Complicated for missing samples.</span>
 <span class="sd">        mask_type : {None, &#39;y&#39;,&#39;x&#39;,&#39;z&#39;,&#39;xy&#39;,&#39;xz&#39;,&#39;yz&#39;,&#39;xyz&#39;}</span>
 <span class="sd">            Masking mode: Indicators for which variables in the dependence</span>
 <span class="sd">            measure I(X; Y | Z) the samples should be masked. If None, the mask</span>
@@ -2130,6 +2115,10 @@
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No causal path from X to Y exists.&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span>
 
+        <span class="k">if</span> <span class="n">data_transform</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;data_transform not implemented for Wright estimator.&quot;</span>
+                             <span class="s2">&quot; You can preprocess data yourself beforehand.&quot;</span><span class="p">)</span>
+
         <span class="kn">import</span> <span class="nn">sklearn.linear_model</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span> <span class="o">=</span> <span class="n">dataframe</span>
@@ -2140,7 +2129,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">Models</span><span class="p">(</span>
                         <span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span>
                         <span class="n">model</span><span class="o">=</span><span class="n">estimator</span><span class="p">,</span>
-                        <span class="n">data_transform</span><span class="o">=</span><span class="n">data_transform</span><span class="p">,</span>
+                        <span class="n">data_transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="c1">#data_transform,</span>
                         <span class="n">mask_type</span><span class="o">=</span><span class="n">mask_type</span><span class="p">,</span>
                         <span class="n">verbosity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
 
@@ -2195,7 +2184,6 @@
                         <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;tau_max&#39;</span><span class="p">,</span>
                         <span class="n">return_data</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
                     <span class="n">coeffs</span><span class="p">[</span><span class="n">medy</span><span class="p">][</span><span class="n">par</span><span class="p">]</span> <span class="o">=</span> <span class="n">fit_res</span><span class="p">[</span><span class="n">medy</span><span class="p">][</span><span class="s1">&#39;model&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">coef_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                    <span class="c1"># print(mediators, par, medy, coeffs[medy][par])</span>
 
         <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;parents&#39;</span><span class="p">:</span>
             <span class="k">if</span> <span class="s1">&#39;dag&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_type</span><span class="p">:</span>
@@ -2310,11 +2298,11 @@
             <span class="k">if</span> <span class="n">y</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fit_results</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;y = </span><span class="si">%s</span><span class="s2"> not yet fitted&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
 
+            <span class="c1"># data_transform is too complicated for Wright estimator</span>
             <span class="c1"># Transform the data if needed</span>
-            <span class="n">a_transform</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fit_results</span><span class="p">[</span><span class="n">y</span><span class="p">][</span><span class="s1">&#39;data_transform&#39;</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">a_transform</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">intervention_data</span> <span class="o">=</span> <span class="n">a_transform</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">intervention_data</span><span class="p">)</span>
-        
+            <span class="c1"># fitted_data_transform = self.model.fit_results[y][&#39;fitted_data_transform&#39;]</span>
+            <span class="c1"># if fitted_data_transform is not None:</span>
+            <span class="c1">#     intervention_data = fitted_data_transform[&#39;X&#39;].transform(X=intervention_data)</span>
 
             <span class="c1"># Now iterate through interventions (and potentially S)</span>
             <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">dox_vals</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">intervention_data</span><span class="p">):</span>
@@ -2325,6 +2313,11 @@
                 <span class="n">predicted_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fit_results</span><span class="p">[</span><span class="n">y</span><span class="p">][</span><span class="s1">&#39;model&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
                 <span class="n">X</span><span class="o">=</span><span class="n">predictor_array</span><span class="p">,</span> <span class="o">**</span><span class="n">pred_params</span><span class="p">)</span>
                 <span class="n">predicted_array</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="n">iy</span><span class="p">]</span> <span class="o">=</span> <span class="n">predicted_vals</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+                <span class="c1"># data_transform is too complicated for Wright estimator</span>
+                <span class="c1"># if fitted_data_transform is not None:</span>
+                <span class="c1">#     rescaled = fitted_data_transform[&#39;Y&#39;].inverse_transform(X=predicted_array[index, iy].reshape(-1, 1))</span>
+                <span class="c1">#     predicted_array[index, iy] = rescaled.squeeze()</span>
 
         <span class="k">return</span> <span class="n">predicted_array</span></div>
 
@@ -2357,6 +2350,10 @@
 <span class="sd">            Seed for RandomState (default_rng)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
+        <span class="c1"># if dataframe.analysis_mode != &#39;single&#39;:</span>
+        <span class="c1">#     raise ValueError(&quot;CausalEffects class currently only supports single &quot;</span>
+        <span class="c1">#                      &quot;datasets.&quot;)</span>
+
         <span class="n">valid_methods</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;fit_total_effect&#39;</span><span class="p">,</span>
                          <span class="s1">&#39;fit_wright_effect&#39;</span><span class="p">,</span>
                           <span class="p">]</span>
@@ -2370,25 +2367,25 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">original_model</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
 
-        <span class="n">T</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">T</span>
+        <span class="c1"># T = self.model.T</span>
 
         <span class="c1"># # Extract max_lag to construct bootstrap draws</span>
         <span class="c1"># XYZ = self.listY + \</span>
         <span class="c1">#       self.listX + \</span>
         <span class="c1">#       list(self.adjustment_set) + \</span>
         <span class="c1">#       self.listS</span>
-        <span class="n">max_lag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="c1">#max(abs(np.array(XYZ)[:, 1].min()), self.tau_max)</span>
+        <span class="c1"># max_lag = self.tau_max #max(abs(np.array(XYZ)[:, 1].min()), self.tau_max)</span>
 
         <span class="c1"># Init seed</span>
-        <span class="n">random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+        <span class="c1"># random_state = np.random.default_rng(seed)</span>
 
         <span class="c1"># Determine the number of blocks total, rounding up for non-integer</span>
         <span class="c1"># amounts</span>
-        <span class="n">n_blks</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">T</span><span class="o">-</span><span class="n">max_lag</span><span class="p">)</span><span class="o">/</span><span class="n">boot_blocklength</span><span class="p">))</span>
+        <span class="c1"># n_blks = int(math.ceil(float(T-max_lag)/boot_blocklength))</span>
 
-        <span class="k">if</span> <span class="n">n_blks</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only </span><span class="si">%d</span><span class="s2"> block(s) for block-sampling,&quot;</span>  <span class="o">%</span><span class="n">n_blks</span> <span class="o">+</span>
-                             <span class="s2">&quot;choose smaller boot_blocklength!&quot;</span><span class="p">)</span>
+        <span class="c1"># if n_blks &lt; 10:</span>
+        <span class="c1">#     raise ValueError(&quot;Only %d block(s) for block-sampling,&quot;  %n_blks +</span>
+        <span class="c1">#                      &quot;choose smaller boot_blocklength!&quot;)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">##</span><span class="se">\n</span><span class="s2">## Running Bootstrap of </span><span class="si">%s</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="n">method</span> <span class="o">+</span>
@@ -2401,18 +2398,25 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">bootstrap_results</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">boot_samples</span><span class="p">):</span>
-            <span class="c1"># Get the starting indices for the blocks</span>
-            <span class="n">blk_strt</span> <span class="o">=</span> <span class="n">random_state</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="n">max_lag</span><span class="p">,</span> <span class="n">T</span> <span class="o">-</span> <span class="n">boot_blocklength</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_blks</span><span class="p">)</span>
-            <span class="c1"># Get the empty array of block resampled values</span>
-            <span class="n">boot_draw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_blks</span><span class="o">*</span><span class="n">boot_blocklength</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
-            <span class="c1"># Fill the array of block resamples</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">boot_blocklength</span><span class="p">):</span>
-                <span class="n">boot_draw</span><span class="p">[</span><span class="n">i</span><span class="p">::</span><span class="n">boot_blocklength</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int&#39;</span><span class="p">)[</span><span class="n">blk_strt</span> <span class="o">+</span> <span class="n">i</span><span class="p">]</span>
-            <span class="c1"># Cut to proper length</span>
-            <span class="n">boot_draw</span> <span class="o">=</span> <span class="n">boot_draw</span><span class="p">[:</span><span class="n">T</span><span class="o">-</span><span class="n">max_lag</span><span class="p">]</span>
+            <span class="c1"># # Get the starting indices for the blocks</span>
+            <span class="c1"># blk_strt = random_state.integers(max_lag, T - boot_blocklength + 1, n_blks)</span>
+            <span class="c1"># # Get the empty array of block resampled values</span>
+            <span class="c1"># boot_draw = np.zeros(n_blks*boot_blocklength, dtype=&#39;int&#39;)</span>
+            <span class="c1"># # Fill the array of block resamples</span>
+            <span class="c1"># for i in range(boot_blocklength):</span>
+            <span class="c1">#     boot_draw[i::boot_blocklength] = np.arange(0, T, dtype=&#39;int&#39;)[blk_strt + i]</span>
+            <span class="c1"># # Cut to proper length</span>
+            <span class="c1"># boot_draw = boot_draw[:T-max_lag]</span>
 
-            <span class="c1"># Replace dataframe in method args by bootstrapped dataframe</span>
-            <span class="n">method_args_bootstrap</span><span class="p">[</span><span class="s1">&#39;dataframe&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">bootstrap</span> <span class="o">=</span> <span class="n">boot_draw</span>
+            <span class="c1"># # Replace dataframe in method args by bootstrapped dataframe</span>
+            <span class="c1"># method_args_bootstrap[&#39;dataframe&#39;].bootstrap = boot_draw</span>
+            <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="o">+</span><span class="n">b</span><span class="p">)</span>
+
+            <span class="n">method_args_bootstrap</span><span class="p">[</span><span class="s1">&#39;dataframe&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">bootstrap</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;boot_blocklength&#39;</span><span class="p">:</span><span class="n">boot_blocklength</span><span class="p">,</span>
+                                                            <span class="s1">&#39;random_state&#39;</span><span class="p">:</span><span class="n">random_state</span><span class="p">}</span>
 
             <span class="c1"># Call method and save fitted model</span>
             <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">)(</span><span class="o">**</span><span class="n">method_args_bootstrap</span><span class="p">)</span>
@@ -2425,7 +2429,8 @@
 
 
 <div class="viewcode-block" id="CausalEffects.predict_bootstrap_of"><a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.predict_bootstrap_of">[docs]</a>    <span class="k">def</span> <span class="nf">predict_bootstrap_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">method_args</span><span class="p">,</span> 
-                        <span class="n">conf_lev</span><span class="o">=</span><span class="mf">0.9</span><span class="p">):</span>
+                        <span class="n">conf_lev</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
+                        <span class="n">return_individual_bootstrap_results</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Predicts with fitted bootstraps.</span>
 
 <span class="sd">        To be used after fitting with fit_bootstrap_of. Only uses the </span>
@@ -2439,6 +2444,8 @@
 <span class="sd">            Arguments passed to method.</span>
 <span class="sd">        conf_lev : float, optional (default: 0.9)</span>
 <span class="sd">            Two-sided confidence interval.</span>
+<span class="sd">        return_individual_bootstrap_results : bool</span>
+<span class="sd">            Returns the individual bootstrap predictions.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -2475,6 +2482,9 @@
         <span class="n">confidence_interval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span>
                 <span class="n">bootstrap_predicted_array</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                 <span class="n">q</span> <span class="o">=</span> <span class="p">[</span><span class="mi">100</span><span class="o">*</span><span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">c_int</span><span class="p">),</span> <span class="mi">100</span><span class="o">*</span><span class="n">c_int</span><span class="p">])[:,:,</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">return_individual_bootstrap_results</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">bootstrap_predicted_array</span><span class="p">,</span> <span class="n">confidence_interval</span>
 
         <span class="k">return</span> <span class="n">confidence_interval</span></div>
 
@@ -2563,6 +2573,7 @@
 
     <span class="kn">import</span> <span class="nn">sklearn</span>
     <span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LinearRegression</span>
+    <span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">StandardScaler</span>
 
     <span class="n">T</span> <span class="o">=</span> <span class="mi">100</span>
     <span class="k">def</span> <span class="nf">lin_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span>
@@ -2653,22 +2664,38 @@
 
 
 
-    <span class="c1"># # Fit causal effect model from observational data</span>
-    <span class="c1"># causal_effects.fit_wright_effect(</span>
-    <span class="c1">#     dataframe=dataframe, </span>
-    <span class="c1">#     # mask_type=&#39;y&#39;,</span>
-    <span class="c1">#     # estimator=LinearRegression(),</span>
-    <span class="c1">#     )</span>
+    <span class="c1"># Fit causal effect model from observational data</span>
+    <span class="n">causal_effects</span><span class="o">.</span><span class="n">fit_wright_effect</span><span class="p">(</span>
+        <span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span> 
+        <span class="c1"># mask_type=&#39;y&#39;,</span>
+        <span class="c1"># estimator=LinearRegression(),</span>
+        <span class="c1"># data_transform=StandardScaler(),</span>
+        <span class="p">)</span>
 
     <span class="c1"># # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go</span>
-    <span class="c1"># dox_vals = np.linspace(0., 1., 5)</span>
-    <span class="c1"># intervention_data = dox_vals.reshape(len(dox_vals), len(X))</span>
-    <span class="c1"># pred_Y = causal_effects.predict_wright_effect( </span>
-    <span class="c1">#         intervention_data=intervention_data)</span>
-    <span class="c1"># print(pred_Y)</span>
+    <span class="n">dox_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+    <span class="n">intervention_data</span> <span class="o">=</span> <span class="n">dox_vals</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dox_vals</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
+    <span class="n">pred_Y</span> <span class="o">=</span> <span class="n">causal_effects</span><span class="o">.</span><span class="n">predict_wright_effect</span><span class="p">(</span> 
+            <span class="n">intervention_data</span><span class="o">=</span><span class="n">intervention_data</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">pred_Y</span><span class="p">)</span>
 </pre></div>
 
+            <div class="clearer"></div>
           </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -2683,12 +2710,13 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 5.0 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">tigramite.causal_effects</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2021, Jakob Runge.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
     </div>
   </body>
 </html>

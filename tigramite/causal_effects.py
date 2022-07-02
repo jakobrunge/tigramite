@@ -2312,6 +2312,10 @@ class CausalEffects():
             Seed for RandomState (default_rng)
         """
 
+        # if dataframe.analysis_mode != 'single':
+        #     raise ValueError("CausalEffects class currently only supports single "
+        #                      "datasets.")
+
         valid_methods = ['fit_total_effect',
                          'fit_wright_effect',
                           ]
@@ -2325,25 +2329,25 @@ class CausalEffects():
 
         self.original_model = deepcopy(self.model)
 
-        T = self.model.T
+        # T = self.model.T
 
         # # Extract max_lag to construct bootstrap draws
         # XYZ = self.listY + \
         #       self.listX + \
         #       list(self.adjustment_set) + \
         #       self.listS
-        max_lag = self.tau_max #max(abs(np.array(XYZ)[:, 1].min()), self.tau_max)
+        # max_lag = self.tau_max #max(abs(np.array(XYZ)[:, 1].min()), self.tau_max)
 
         # Init seed
-        random_state = np.random.default_rng(seed)
+        # random_state = np.random.default_rng(seed)
 
         # Determine the number of blocks total, rounding up for non-integer
         # amounts
-        n_blks = int(math.ceil(float(T-max_lag)/boot_blocklength))
+        # n_blks = int(math.ceil(float(T-max_lag)/boot_blocklength))
 
-        if n_blks < 10:
-            raise ValueError("Only %d block(s) for block-sampling,"  %n_blks +
-                             "choose smaller boot_blocklength!")
+        # if n_blks < 10:
+        #     raise ValueError("Only %d block(s) for block-sampling,"  %n_blks +
+        #                      "choose smaller boot_blocklength!")
 
         if self.verbosity > 0:
             print("\n##\n## Running Bootstrap of %s " % method +
@@ -2356,18 +2360,25 @@ class CausalEffects():
         self.bootstrap_results = {}
 
         for b in range(boot_samples):
-            # Get the starting indices for the blocks
-            blk_strt = random_state.integers(max_lag, T - boot_blocklength + 1, n_blks)
-            # Get the empty array of block resampled values
-            boot_draw = np.zeros(n_blks*boot_blocklength, dtype='int')
-            # Fill the array of block resamples
-            for i in range(boot_blocklength):
-                boot_draw[i::boot_blocklength] = np.arange(0, T, dtype='int')[blk_strt + i]
-            # Cut to proper length
-            boot_draw = boot_draw[:T-max_lag]
+            # # Get the starting indices for the blocks
+            # blk_strt = random_state.integers(max_lag, T - boot_blocklength + 1, n_blks)
+            # # Get the empty array of block resampled values
+            # boot_draw = np.zeros(n_blks*boot_blocklength, dtype='int')
+            # # Fill the array of block resamples
+            # for i in range(boot_blocklength):
+            #     boot_draw[i::boot_blocklength] = np.arange(0, T, dtype='int')[blk_strt + i]
+            # # Cut to proper length
+            # boot_draw = boot_draw[:T-max_lag]
 
-            # Replace dataframe in method args by bootstrapped dataframe
-            method_args_bootstrap['dataframe'].bootstrap = boot_draw
+            # # Replace dataframe in method args by bootstrapped dataframe
+            # method_args_bootstrap['dataframe'].bootstrap = boot_draw
+            if seed is None:
+                random_state = np.random.default_rng(seed)
+            else:
+                random_state = np.random.default_rng(seed+b)
+
+            method_args_bootstrap['dataframe'].bootstrap = {'boot_blocklength':boot_blocklength,
+                                                            'random_state':random_state}
 
             # Call method and save fitted model
             getattr(self, method)(**method_args_bootstrap)

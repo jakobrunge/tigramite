@@ -625,8 +625,9 @@ def test_order_independence_pcmciplus(a_pcmciplus_order_independence,
     dataframe, true_graph, links_coeffs, tau_min, tau_max = \
         a_pcmciplus_order_independence
 
-    data = dataframe.values
-    T, N = data.shape
+    data = dataframe.values[0]
+    T = dataframe.T[0]
+    N = dataframe.N
 
     # Unpack the parameters
     (pc_alpha,

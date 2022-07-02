@@ -60,7 +60,7 @@ def test_predictions(data_frame_a):
     # that they work!
     # Get the data
     (dataframe, true_parents), links_coeffs = data_frame_a
-    T, _ = dataframe.values.shape
+    T = dataframe.T[0]
     # Build the prediction
     a_cond_ind_test = ParCorr(significance='analytic',
                               fixed_thres=0.01)

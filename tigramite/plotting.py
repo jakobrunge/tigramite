@@ -163,6 +163,7 @@ def _add_timeseries(
     label_fontsize=10,
     color="black",
     grey_alpha=1.0,
+    selected_dataset=0,
 ):
     """Adds a time series plot to an axis.
     Plot of dataseries is added to axis. Allows for proper visualization of
@@ -213,6 +214,8 @@ def _add_timeseries(
         Line color.
     grey_alpha : float, optional (default: 1.)
         Opacity of line.
+    selected_dataset : int, optional (default: 0)
+        In case of multiple datasets in dataframe, plot this one.
     """
 
     # axes[i].xaxis.get_major_formatter().set_useOffset(False)
@@ -318,6 +321,7 @@ def plot_timeseries(
     skip_ticks_data_x=1,
     skip_ticks_data_y=2,
     label_fontsize=12,
+    selected_dataset=0,
 ):
     """Create and save figure of stacked panels with time series.
 
@@ -352,14 +356,19 @@ def plot_timeseries(
         Skip every other tickmark.
     label_fontsize : int, optional (default: 10)
         Fontsize of variable labels.
+    selected_dataset : int, optional (default: 0)
+        In case of multiple datasets in dataframe, plot this one.
     """
 
     # Read in all attributes from dataframe
-    data = dataframe.values
-    mask = dataframe.mask
+    data = dataframe.values[selected_dataset]
+    if dataframe.mask is not None:
+        mask = dataframe.mask[selected_dataset]
+    else:
+        mask = None
     var_names = dataframe.var_names
     missing_flag = dataframe.missing_flag
-    datatime = dataframe.datatime
+    datatime = dataframe.datatime[selected_dataset]
 
     T, N = data.shape
 
@@ -394,6 +403,7 @@ def plot_timeseries(
             last=(i == N - 1),
             time_label=time_label,
             label_fontsize=label_fontsize,
+            selected_dataset=selected_dataset,
         )
 
     fig.subplots_adjust(bottom=0.15, top=0.9, left=0.15, right=0.95, hspace=0.3)
@@ -405,7 +415,10 @@ def plot_timeseries(
         return fig, axes
 
 
-def plot_lagfuncs(val_matrix, name=None, setup_args={}, add_lagfunc_args={}):
+def plot_lagfuncs(val_matrix, 
+                  name=None, 
+                  setup_args={}, 
+                  add_lagfunc_args={}):
     """Wrapper helper function to plot lag functions.
     Sets up the matrix object and plots the lagfunction, see parameters in
     setup_matrix and add_lagfuncs.
@@ -811,7 +824,11 @@ class setup_matrix:
 
 
 
-def plot_scatterplots(dataframe, name=None, setup_args={}, add_scatterplot_args={}):
+def plot_scatterplots(dataframe, 
+                      name=None, 
+                      setup_args={}, 
+                      add_scatterplot_args={},
+                      selected_dataset=0):
     """Wrapper helper function to plot scatter plots.
     Sets up the matrix object and plots the scatter plots, see parameters in
     setup_scatter_matrix and add_scatterplot.
@@ -829,6 +846,8 @@ def plot_scatterplots(dataframe, name=None, setup_args={}, add_scatterplot_args=
         setup_scatter_matrix.
     add_scatterplot_args : dict
         Arguments for adding a scatter plot matrix.
+    selected_dataset : int, optional (default: 0)
+        In case of multiple datasets in dataframe, plot this one.
 
     Returns
     -------
@@ -840,7 +859,7 @@ def plot_scatterplots(dataframe, name=None, setup_args={}, add_scatterplot_args=
     N = dataframe.N
 
     matrix = setup_scatter_matrix(N=N, var_names=dataframe.var_names, **setup_args)
-    matrix.add_scatterplot(dataframe=dataframe, **add_scatterplot_args)
+    matrix.add_scatterplot(dataframe=dataframe, selected_dataset=selected_dataset, **add_scatterplot_args)
     matrix.adjustfig(name=name)
    
 
@@ -966,6 +985,7 @@ class setup_scatter_matrix:
         marker=".",
         markersize=5,
         alpha=1.0,
+        selected_dataset=0,
     ):
         """Add lag function plot from val_matrix array.
 
@@ -990,7 +1010,13 @@ class setup_scatter_matrix:
             Marker size.
         alpha : float, optional (default: 1.)
             Opacity.
+        selected_dataset : int, optional (default: 0)
+            In case of multiple datasets in dataframe, plot this one.
         """
+
+        data = dataframe.values[selected_dataset]
+        if dataframe.mask is not None:
+            mask = dataframe.mask[selected_dataset]
 
         if label is not None:
             self.labels.append((label, color, marker, markersize, alpha))
@@ -1006,14 +1032,14 @@ class setup_scatter_matrix:
             else:
                 lag = scatter_lags[i,j]
             if lag == 0:
-                x = np.copy(dataframe.values[:, i])
-                y = np.copy(dataframe.values[:, j])
+                x = np.copy(data[:, i])
+                y = np.copy(data[:, j])
             else:
-                x = np.copy(dataframe.values[:-lag, i])
-                y = np.copy(dataframe.values[lag:, j])
+                x = np.copy(data[:-lag, i])
+                y = np.copy(data[lag:, j])
             if dataframe.mask is not None:
-                x[dataframe.mask[:-lag, i]] = np.nan
-                y[dataframe.mask[lag:, j]] = np.nan
+                x[mask[:-lag, i]] = np.nan
+                y[mask[lag:, j]] = np.nan
             # print(i, j, lag, x.shape, y.shape)
             self.axes_dict[(i, j)].scatter(
                 x, y,

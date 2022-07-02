@@ -270,6 +270,7 @@ class CondIndTest():
                                               mask_type=self.mask_type,
                                               return_cleaned_xyz=True,
                                               do_checks=True,
+                                              remove_overlaps=True,
                                               cut_off=cut_off,
                                               verbosity=verbosity)
     
