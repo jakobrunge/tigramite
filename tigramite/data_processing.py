@@ -111,8 +111,8 @@ class DataFrame():
             Is var_names
         If var_names is None:
             Is {i: i for i in range(self.N)}
-    self.datatime : array-like
-        TO-DO
+    self.datatime : dictionary
+        Time axis for each of the multiple datasets.
     self.analysis_mode : string
         Is analysis_mode
     self.reference_points: array-like
@@ -312,7 +312,8 @@ class DataFrame():
 
         # Set the default datatime if unspecified
         if datatime is None:
-            self.datatime = {m: np.arange(self.time_offsets[m], self.time_offsets[m] + self.T[m]) for m in self.values.keys()}
+            self.datatime = {m: np.arange(self.time_offsets[m], 
+                self.time_offsets[m] + self.T[m]) for m in self.values.keys()}
         else:
             if not isinstance(datatime, dict):
                 self.datatime = {0: datatime}   
@@ -1354,13 +1355,9 @@ if __name__ == '__main__':
     # print(data.shape)
 
     frame = DataFrame(data_ens, missing_flag=999.,
-        # vector_vars = {0:[(0, 0) ,(0, -1)], 1:[(1, 0)], 2:[(2, 0)]},
         analysis_mode = 'multiple')
 
     print(frame.T)
-
-    print(frame.vector_vars)
-    # print(dict(zip(range(4), [[(i, 0)] for i in range(3)])))
 
     X=[(0, 0)]
     Y=[(0, 0)]

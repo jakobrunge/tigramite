@@ -1226,18 +1226,24 @@ class Prediction(Models, PCMCI):
             raise ValueError("Prediction class currently only supports single "
                              "datasets.")
 
+        # dataframe.values = {0: dataframe.values[0]}
+
         # Default value for the mask
-        mask = dataframe.mask[0]
-        if mask is None:
-            mask = np.zeros(dataframe.values[0].shape, dtype='bool')
+        if dataframe.mask is not None:
+            mask = dataframe.mask[0]
+        else:
+            mask = {0: np.zeros(dataframe.values[0].shape, dtype='bool')}
         # Get the dataframe shape
         T = len(dataframe.values)
         # Have the default dataframe be the training data frame
-        train_mask = np.copy(mask)
-        train_mask[[t for t in range(T) if t not in train_indices]] = True
-        self.dataframe = DataFrame(dataframe.values[0],
-                                   mask=train_mask,
-                                   missing_flag=dataframe.missing_flag)
+        train_mask = mask.copy()
+        train_mask[0][[t for t in range(T) if t not in train_indices]] = True
+        self.dataframe = dataframe
+        self.dataframe.mask = train_mask
+        self.dataframe._initialized_from = 'dict'
+                 # = DataFrame(dataframe.values[0],
+                 #                   mask=train_mask,
+                 #                   missing_flag=dataframe.missing_flag)
         # Initialize the models baseclass with the training dataframe
         Models.__init__(self,
                         dataframe=self.dataframe,
@@ -1247,8 +1253,8 @@ class Prediction(Models, PCMCI):
                         verbosity=verbosity)
 
         # Build the testing dataframe as well
-        self.test_mask = np.copy(mask)
-        self.test_mask[[t for t in range(T) if t not in test_indices]] = True
+        self.test_mask = mask.copy()
+        self.test_mask[0][[t for t in range(T) if t not in test_indices]] = True
 
         # Setup the PCMCI instance
         if cond_ind_test is not None:

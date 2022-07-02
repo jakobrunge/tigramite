@@ -368,7 +368,7 @@ def plot_timeseries(
         mask = None
     var_names = dataframe.var_names
     missing_flag = dataframe.missing_flag
-    datatime = dataframe.datatime[0]
+    datatime = dataframe.datatime[selected_dataset]
 
     T, N = data.shape
 
