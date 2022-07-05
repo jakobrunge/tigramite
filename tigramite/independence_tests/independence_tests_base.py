@@ -99,15 +99,14 @@ class CondIndTest():
                  mask_type=None,
                  significance='analytic',
                  fixed_thres=0.1,
-                 sig_samples=500, 
+                 sig_samples=500,  # JC NOTE: Here we reduce sig_samples from 1000 to 500, in order to speed up the discovery
                  sig_blocklength=None,
                  confidence=None,
                  conf_lev=0.9,
                  conf_samples=100,
                  conf_blocklength=None,
                  recycle_residuals=False,
-                 verbosity=0):
-        # JC NOTE: Here we reduce sig_samples from 1000 to 500, in order to speed up the discovery 
+                 verbosity=0): 
         # Set the dataframe to None for now, will be reset during pcmci call
         self.dataframe = None
         # Set the options
