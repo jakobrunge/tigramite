@@ -95,11 +95,11 @@ class CondIndTest():
         pass
 
     def __init__(self,
-                 seed=42,
+                 seed=52,
                  mask_type=None,
                  significance='analytic',
                  fixed_thres=0.1,
-                 sig_samples=500,  # JC NOTE: Here we reduce sig_samples from 1000 to 500, in order to speed up the discovery
+                 sig_samples=1000,  # JC NOTE: Here we reduce sig_samples from 1000 to 500, in order to speed up the discovery
                  sig_blocklength=None,
                  confidence=None,
                  conf_lev=0.9,
@@ -203,7 +203,6 @@ class CondIndTest():
                 err_msg = "mask_type = %s," % self.mask_type + " but must be" +\
                           " list containing 'x','y','z', or any combination"
                 raise ValueError(err_msg)
-
 
     def get_analytic_confidence(self, value, df, conf_lev):
         """
@@ -951,8 +950,9 @@ class CondIndTest():
         for sam in range(sig_samples):
             shuffle_start = time.time()
             x_shuffled = None
-            # JC NOTE: If decide to use the optimization, set dim_x = 1 and sig_blocklength = 1
-            if dim_x == 1 and sig_blocklength == 1:
+            # JC NOTE: If decide to use the optimization: Set numba_optimize
+            numba_optimize = True
+            if numba_optimize:
                 x_shuffled = _permutation_and_shuffle(block_starts, n_blks, array[x_indices[0]])
                 assert(x_shuffled is not None)
                 array_shuffled[x_indices[0]] = x_shuffled

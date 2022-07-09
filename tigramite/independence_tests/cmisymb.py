@@ -279,34 +279,31 @@ class CMIsymb(CondIndTest):
         JC NOTE: Optimize the hist-generation + MCI-computation using numba
         The evaluation result shows that the optimization has a speed up at least 50%.
         """
-        n_symbs = max(int(array.max() + 1), 2) # JC NOTE: At least it should be a binary setting. So min(n_symbs) should be 2
-        hist_shape = tuple([n_symbs, n_symbs] + [n_symbs for i in range(dim - 2)])
-        val_numba = 0.0
-        if len(hist_shape) <= 2:
-            val_numba = _calculate_cmi_numba_scalar(array, hist_shape, n_symbs)
-        else:
-            val_numba = _calculate_cmi_numba_array(array, hist_shape, n_symbs)
+        #n_symbs = max(int(array.max() + 1), 2) # JC NOTE: At least it should be a binary setting. So min(n_symbs) should be 2
+        #hist_shape = tuple([n_symbs, n_symbs] + [n_symbs for i in range(dim - 2)])
+        #val_numba = 0.0
+        #if len(hist_shape) <= 2:
+        #    val_numba = _calculate_cmi_numba_scalar(array, hist_shape, n_symbs)
+        #else:
+        #    val_numba = _calculate_cmi_numba_array(array, hist_shape, n_symbs)
+        #return val_numba
 
-        #"""Followings are original codes."""
-        #hist = self._bincount_hist(array, weights=None)
-        #def _plogp_vector(T):
-        #    """Precalculation of p*log(p) needed for entropies."""
-        #    gfunc = np.zeros(T + 1)
-        #    data = np.arange(1, T + 1, 1)
-        #    gfunc[1:] = data * np.log(data)
-        #    def plogp_func(time):
-        #        return gfunc[time]
-        #    return np.vectorize(plogp_func)
-        #plogp = _plogp_vector(T)
-        #hxyz = (-(plogp(hist)).sum() + plogp(T)) / float(T)
-        #hxz = (-(plogp(hist.sum(axis=1))).sum() + plogp(T)) / float(T)
-        #hyz = (-(plogp(hist.sum(axis=0))).sum() + plogp(T)) / float(T)
-        #hz = (-(plogp(hist.sum(axis=0).sum(axis=0))).sum()+plogp(T)) / float(T)
-        #val_origin = hxz + hyz - hz - hxyz
-        ##assert(round(val_numba, 5) == round(val_origin, 5))
-        #return val_origin
-
-        return val_numba
+        """Followings are original codes."""
+        hist = self._bincount_hist(array, weights=None)
+        def _plogp_vector(T): #Precalculation of p*log(p) needed for entropies.
+            gfunc = np.zeros(T + 1)
+            data = np.arange(1, T + 1, 1)
+            gfunc[1:] = data * np.log(data)
+            def plogp_func(time):
+                return gfunc[time]
+            return np.vectorize(plogp_func)
+        plogp = _plogp_vector(T)
+        hxyz = (-(plogp(hist)).sum() + plogp(T)) / float(T)
+        hxz = (-(plogp(hist.sum(axis=1))).sum() + plogp(T)) / float(T)
+        hyz = (-(plogp(hist.sum(axis=0))).sum() + plogp(T)) / float(T)
+        hz = (-(plogp(hist.sum(axis=0).sum(axis=0))).sum()+plogp(T)) / float(T)
+        val_origin = hxz + hyz - hz - hxyz
+        return val_origin
     
     def get_shuffle_significance(self, array, xyz, value,
                                  return_null_dist=False):
@@ -337,7 +334,6 @@ class CMIsymb(CondIndTest):
                                            sig_samples=self.sig_samples,
                                            sig_blocklength=self.sig_blocklength,
                                            verbosity=self.verbosity)
-
         pval = (null_dist >= value).mean()
 
         if return_null_dist:
