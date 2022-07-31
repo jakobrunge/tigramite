@@ -99,7 +99,7 @@ class CondIndTest():
                  mask_type=None,
                  significance='analytic',
                  fixed_thres=0.1,
-                 sig_samples=1000,  # JC NOTE: Here we reduce sig_samples from 1000 to 500, in order to speed up the discovery
+                 sig_samples=1000,
                  sig_blocklength=None,
                  confidence=None,
                  conf_lev=0.9,
@@ -377,10 +377,13 @@ class CondIndTest():
             val, pval = self.cached_ci_results[combined_hash]
         else:
             cached = False
-            # Get the dependence measure, reycling residuals if need be
-            val = self._get_dependence_measure_recycle(X, Y, Z, xyz, array)
-            # Get the p-value
-            pval = self.get_significance(val, array, xyz, T, dim)
+            # Get the dependence measure, recycling residuals if need be
+            if self.measure in ['chi-square']:
+                val, pval = self._get_dependence_measure_recycle(X, Y, Z, xyz, array)
+            else:
+                val = self._get_dependence_measure_recycle(X, Y, Z, xyz, array)
+                # Get the p-value
+                pval = self.get_significance(val, array, xyz, T, dim)
             self.cached_ci_results[combined_hash] = (val, pval)
 
         if self.verbosity > 2:
