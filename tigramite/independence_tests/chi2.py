@@ -7,10 +7,12 @@ from __future__ import print_function
 import warnings
 from numba import jit
 import numpy as np
+import pandas as pd
 from cmath import log
+import string
 import time
 
-from scipy.stats import chi2_contingency
+from pgmpy.estimators.CITests import g_sq
 
 from .independence_tests_base import CondIndTest
 
@@ -95,10 +97,14 @@ class ChiSquare(CondIndTest):
 
         hist = flathist.reshape(tuple([n_symbs, n_symbs] +
                                       [n_symbs for i in range(dim - 2)])).T
-
+        print(hist.shape)
+        print(hist[1,:,:])
         return hist
     
     def get_dependence_measure(self, array, xyz):
-        hist:'np.ndarray' = self._bincount_hist(array, weights=None)
-        val, pval, dof, ex = chi2_contingency(hist, correction=False)
-        return val, pval
+        dim, T = array.shape
+        col_names = (list(string.ascii_lowercase) + list(string.ascii_uppercase))[:dim]
+        assert(len(col_names) == dim)
+        data = pd.DataFrame(array, columns=col_names)
+        statistic_val, p_value, dof = g_sq(X=col_names[0], Y=col_names[1], Z=col_names[2:], data=data, boolean=False)
+        return statistic_val, p_value
