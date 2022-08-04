@@ -1230,7 +1230,7 @@ class Prediction(Models, PCMCI):
 
         # Default value for the mask
         if dataframe.mask is not None:
-            mask = dataframe.mask[0]
+            mask = {0: dataframe.mask[0]}
         else:
             mask = {0: np.zeros(dataframe.values[0].shape, dtype='bool')}
         # Get the dataframe shape
