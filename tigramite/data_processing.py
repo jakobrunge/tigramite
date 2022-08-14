@@ -356,71 +356,44 @@ class DataFrame():
         if require_mask and _use_mask is None:
             raise ValueError("Expected a mask, but got nothing!")
 
-        # ########################################################################
-        # ## HACK:
-        # # (needed for compatibility with pcmci.py)
-        # # (unsure about compatibility with models.py)
-        # if _use_mask is self.mask:
-        #     return _use_mask
-        ########################################################################
-
         # If we have a mask, check it
         if _use_mask is not None:
             # Check data type and generic format of 'mask', map to multiple datasets mode
             # dictionary representation
-            if self._initialized_from == "2d numpy array":
-                if isinstance(_use_mask, np.ndarray):
-                    if len(_use_mask.shape) == 2:
-                        _use_mask_dict = {0: _use_mask}
-                    else:
-                        raise TypeError("'data' given as 2d np.ndarray. "\
-                            "'mask' is np.ndarray of shape {}, must be of "\
-                            "shape (T, N).".format(_use_mask.shape))
-
-                else:
-                    raise TypeError("'data' given as np.ndarray. 'mask' is of "\
-                        "type {}, must also be np.ndarray.".format(
-                            type(_use_mask)))
-
-            elif self._initialized_from == "3d numpy array":
-                if isinstance(_use_mask, np.ndarray):
-                    if len(_use_mask.shape) == 3:
-                        if _use_mask.shape[0] == self.M:
-                            _use_mask_dict = {i: _use_mask[i, :, :] for i in range(self.M)}
-                        else:
-                            raise ValueError("Shape mismatch: {} datasets "\
-                                " in 'data' but {} in 'mask', must be "\
-                                "identical.".format(self.M, _use_mask.shape[0]))
-
-                    else:
-                        raise TypeError("'data' given as 3d np.ndarray. "\
-                            "'mask' is np.ndarray of shape {}, must be of "\
-                            "shape (M, T, N).".format(_use_mask.shape))
-
-                else:
-                    raise TypeError("'data' given as np.ndarray. 'mask' is of "\
-                        "type {}, must also be np.ndarray.".format(
-                            type(_use_mask)))
-
-            elif self._initialized_from == "dict":
-                if isinstance(_use_mask, dict):
-                    if len(_use_mask) == self.M:
-                        for ens_member_key in self.values.keys():
-                            if _use_mask.get(ens_member_key) is None:
-                                raise ValueError("'data' has key {} (type {}) "\
-                                    "but 'mask' does not, keys must be "\
-                                    "identical.".format(ens_member_key,
-                                        type(ens_member_key)))
-
-                        _use_mask_dict = _use_mask
-
+            if isinstance(_use_mask, np.ndarray):
+                if len(_use_mask.shape) == 2:
+                    _use_mask_dict = {0: _use_mask}
+                elif len(_use_mask.shape) == 3:
+                    if _use_mask.shape[0] == self.M:
+                        _use_mask_dict = {i: _use_mask[i, :, :] for i in range(self.M)}
                     else:
                         raise ValueError("Shape mismatch: {} datasets "\
-                            "in 'data' but {} in 'mask', must be "\
-                            "identical.".format(self.M, len(_use_mask)))
+                            " in 'data' but {} in 'mask', must be "\
+                            "identical.".format(self.M, _use_mask.shape[0]))
+
                 else:
-                    raise TypeError("'data' given as dict. 'mask' is of type "\
-                        "{}, must also be dict.".format(type(_use_mask)))
+                    raise TypeError("'data' given as 3d np.ndarray. "\
+                        "'mask' is np.ndarray of shape {}, must be of "\
+                        "shape (M, T, N).".format(_use_mask.shape))
+
+            elif isinstance(_use_mask, dict):
+                if len(_use_mask) == self.M:
+                    for ens_member_key in self.values.keys():
+                        if _use_mask.get(ens_member_key) is None:
+                            raise ValueError("'data' has key {} (type {}) "\
+                                "but 'mask' does not, keys must be "\
+                                "identical.".format(ens_member_key,
+                                    type(ens_member_key)))
+
+                    _use_mask_dict = _use_mask
+
+                else:
+                    raise ValueError("Shape mismatch: {} datasets "\
+                        "in 'data' but {} in 'mask', must be "\
+                        "identical.".format(self.M, len(_use_mask)))
+            else:
+                raise TypeError("'mask' is of type "\
+                    "{}, must be dict or array.".format(type(_use_mask)))
 
             # Check for consistency with shape of 'self.values' and for NaNs
             for ens_member_key, ens_member_data in self.values.items():
