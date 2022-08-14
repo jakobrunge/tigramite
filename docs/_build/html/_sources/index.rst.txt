@@ -145,6 +145,7 @@ Derived classes:
 .. automodule:: tigramite.plotting
    :members:
 
+
 Indices and tables
 ==================
 

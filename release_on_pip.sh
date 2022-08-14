@@ -1,7 +1,7 @@
 #!/bin/bash
 
 homename="jakobrunge"
-version="51000"
+version="51020"
 
 # Steps to move from github to pip
 # (Make sure pypi token exists)
