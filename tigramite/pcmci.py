@@ -473,6 +473,7 @@ class PCMCI():
         # Define a nested defaultdict of depth 4 to save all information about
         # iterations
         iterations = _create_nested_dictionary(4)
+        filtered_edges = defaultdict(dict)
         # Ensure tau_min is at least 1
         tau_min = max(1, tau_min)
 
@@ -538,7 +539,11 @@ class PCMCI():
                         a_iter[comb_index]['pval'] = pval
                     # Delete link later and break while-loop if non-significant
                     if pval > pc_alpha:
-                        #print("JC identified non-significant links {} -> {} ({} -> {}) at dimension {} with pval = {}!".format(parent, j, self.var_names[parent[0]], self.var_names[j], conds_dim, pval))
+                        #print("Non-significant link is identified {} -> {} ({} -> {}) at dimension {} ({}) with pval = {}!"\
+                        #    .format(parent, j, self.var_names[parent[0]], self.var_names[j], conds_dim, Z, pval))
+                        filtered_edges[(j, parent)]['conds'] = deepcopy(Z)
+                        filtered_edges[(j, parent)]['val'] = val
+                        filtered_edges[(j, parent)]['pval'] = pval
                         nonsig_parents.append((j, parent))
                         nonsig = True
                         break
@@ -566,7 +571,8 @@ class PCMCI():
         return {'parents': parents,
                 'val_min': val_min,
                 'pval_max': pval_max,
-                'iterations': _nested_to_normal(iterations)}
+                'iterations': _nested_to_normal(iterations),
+                'filtered_edges': filtered_edges}
 
     def _print_pc_params(self, selected_links, tau_min, tau_max, pc_alpha,
                          max_conds_dim, max_combinations):
@@ -743,6 +749,10 @@ class PCMCI():
 
         # Initialize all parents
         all_parents = dict()
+
+        # Initialize filtered edges
+        filtered_edges = dict()
+
         # Set the maximum condition dimension
         max_conds_dim = self._set_max_condition_dim(max_conds_dim,
                                                     tau_min, tau_max)
@@ -791,6 +801,7 @@ class PCMCI():
             val_min[j] = results[optimal_alpha]['val_min']
             pval_max[j] = results[optimal_alpha]['pval_max']
             iterations[j] = results[optimal_alpha]['iterations']
+            filtered_edges[j] = results[optimal_alpha]['filtered_edges']
             # Only save the optimal alpha if there is more than one pc_alpha
             if select_optimal_alpha:
                 iterations[j]['optimal_pc_alpha'] = optimal_alpha
@@ -801,6 +812,7 @@ class PCMCI():
         self.p_matrix = self._dict_to_matrix(pval_max, tau_max, self.N,
                                             default=1.)
         self.iterations = iterations
+        self.filtered_edges = filtered_edges
         self.val_min = val_min
         self.pval_max = pval_max
         # Print the results
