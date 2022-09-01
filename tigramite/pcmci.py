@@ -415,7 +415,8 @@ class PCMCI():
                               save_iterations=False,
                               pc_alpha=0.2,
                               max_conds_dim=None,
-                              max_combinations=1):
+                              max_combinations=1,
+                              debugging_pair=None):
         """Lagged PC algorithm for estimating lagged parents of single variable.
 
         Parameters
@@ -514,10 +515,10 @@ class PCMCI():
                                                     tau_max=tau_max,
                                                     # verbosity=self.verbosity
                                                     )
+                    if (parent[0],j) == debugging_pair:
+                        print("[Discovery Debugging] Testing {}->{} | {} : val = {}, pval = {}".format(parent, (j, 0), Z, val, pval))
                     end = time.time()
                     time_list.append((end - start) * 1.0)
-                    if self.verbosity > 1:
-                        print("* Time for single conditional independence test {} -> {} at dimension {}: {} seconds".format(self.var_names[parent[0]], self.var_names[j], conds_dim, (end - start) * 1.0))
                     # Print some information if needed
                     if self.verbosity > 1:
                         self._print_cond_info(Z, comb_index, pval, val)
@@ -541,10 +542,10 @@ class PCMCI():
                     if pval > pc_alpha:
                         #print("Non-significant link is identified {} -> {} ({} -> {}) at dimension {} ({}) with pval = {}!"\
                         #    .format(parent, j, self.var_names[parent[0]], self.var_names[j], conds_dim, Z, pval))
-                        filtered_edges[(j, parent)]['conds'] = deepcopy(Z)
-                        filtered_edges[(j, parent)]['val'] = val
-                        filtered_edges[(j, parent)]['pval'] = pval
-                        nonsig_parents.append((j, parent))
+                        filtered_edges[(parent, j)]['conds'] = deepcopy(Z)
+                        filtered_edges[(parent, j)]['val'] = val
+                        filtered_edges[(parent, j)]['pval'] = pval
+                        nonsig_parents.append((parent, j))
                         nonsig = True
                         break
 
@@ -679,7 +680,8 @@ class PCMCI():
                       save_iterations=False,
                       pc_alpha=0.2,
                       max_conds_dim=None,
-                      max_combinations=1):
+                      max_combinations=1,
+                      debugging_pair=None):
         """Lagged PC algorithm for estimating lagged parents of all variables.
 
         Parents are made available as self.all_parents
@@ -782,7 +784,8 @@ class PCMCI():
                                                save_iterations=save_iterations,
                                                pc_alpha=pc_alpha_here,
                                                max_conds_dim=max_conds_dim,
-                                               max_combinations=max_combinations)
+                                               max_combinations=max_combinations,
+                                               debugging_pair=debugging_pair)
                 # Figure out the best score if there is more than one pc_alpha
                 # value
                 if select_optimal_alpha:
