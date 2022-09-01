@@ -542,10 +542,10 @@ class PCMCI():
                     if pval > pc_alpha:
                         #print("Non-significant link is identified {} -> {} ({} -> {}) at dimension {} ({}) with pval = {}!"\
                         #    .format(parent, j, self.var_names[parent[0]], self.var_names[j], conds_dim, Z, pval))
-                        filtered_edges[(parent, j)]['conds'] = deepcopy(Z)
-                        filtered_edges[(parent, j)]['val'] = val
-                        filtered_edges[(parent, j)]['pval'] = pval
-                        nonsig_parents.append((parent, j))
+                        filtered_edges[(j, parent)]['conds'] = deepcopy(Z)
+                        filtered_edges[(j, parent)]['val'] = val
+                        filtered_edges[(j, parent)]['pval'] = pval
+                        nonsig_parents.append((j, parent))
                         nonsig = True
                         break
 
