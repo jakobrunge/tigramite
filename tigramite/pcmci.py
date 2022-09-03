@@ -516,7 +516,7 @@ class PCMCI():
                                                     # verbosity=self.verbosity
                                                     )
                     if (parent[0],j) == debugging_pair:
-                        print("[Discovery Debugging] Testing {}->{} | {} : val = {}, pval = {}".format(parent, (j, 0), Z, val, pval))
+                        print("[Discovery Debugging] Testing {}->{} | {} : val = {}, pval = {}, filtering = {}".format(parent, (j, 0), Z, val, pval, pval>pc_alpha))
                     end = time.time()
                     time_list.append((end - start) * 1.0)
                     # Print some information if needed
