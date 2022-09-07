@@ -47,7 +47,7 @@ class ParCorrMult(CondIndTest):
 
     def __init__(self, correlation_type='max_corr', **kwargs):
         self._measure = 'par_corr_mult'
-        self.two_sided = False
+        self.two_sided = True
         self.residual_based = True
 
         self.correlation_type = correlation_type
@@ -201,18 +201,24 @@ class ParCorrMult(CondIndTest):
         y = array[np.where(xyz==1)[0]]
 
         if self.correlation_type == 'max_corr':
-            # Get maximum correlation value
-            val = 0.
-            for x_vals in x:
-                for y_vals in y:
-                    val_here, _ = stats.pearsonr(x_vals, y_vals)
-                    val = max(val, np.abs(val_here))
+            # Get (positive or negative) absolute maximum correlation value
+            corr = np.corrcoef(x, y)[:len(x), len(x):].flatten()
+            val = corr[np.argmax(np.abs(corr))]
+
+            # val = 0.
+            # for x_vals in x:
+            #     for y_vals in y:
+            #         val_here, _ = stats.pearsonr(x_vals, y_vals)
+            #         val = max(val, np.abs(val_here))
         
         # elif self.correlation_type == 'linear_hsci':
         #     # For linear kernel and standardized data (centered and divided by std)
         #     # biased V -statistic of HSIC reduces to sum of squared inner products
         #     # over all dimensions
         #     val = ((x.dot(y.T)/float(n))**2).sum()
+        else:
+            raise NotImplementedError("Currently only"
+                                      "correlation_type == 'max_corr' implemented.")
 
         return val
 
@@ -258,15 +264,21 @@ class ParCorrMult(CondIndTest):
 
         pval = (null_dist >= np.abs(value)).mean()
 
+        # Adjust p-value for two-sided measures
+        if pval < 1.:
+            pval *= 2.
+
+        # Adjust p-value for dimensions of x and y (conservative Bonferroni-correction)
+        # pval *= dim_x*dim_y
 
         if return_null_dist:
             return pval, null_dist
         return pval
 
-    def get_analytic_significance(self, value, T, dim):
+    def get_analytic_significance(self, value, T, dim, xyz):
         """Returns analytic p-value depending on correlation_type.
 
-        If the degrees of freedom are less than
+        Assumes two-sided correlation. If the degrees of freedom are less than
         1, numpy.nan is returned.
 
         Parameters
@@ -280,6 +292,9 @@ class ParCorrMult(CondIndTest):
         dim : int
             Dimensionality, ie, number of features.
 
+        xyz : array of ints
+            XYZ identifier array of shape (dim,).
+
         Returns
         -------
         pval : float or numpy.nan
@@ -287,6 +302,9 @@ class ParCorrMult(CondIndTest):
         """
         # Get the number of degrees of freedom
         deg_f = T - dim
+
+        dim_x = (xyz==0).sum()
+        dim_y = (xyz==1).sum()
 
         if self.correlation_type == 'max_corr':
             if deg_f < 1:
@@ -297,6 +315,12 @@ class ParCorrMult(CondIndTest):
                 trafo_val = value * np.sqrt(deg_f/(1. - value*value))
                 # Two sided significance level
                 pval = stats.t.sf(np.abs(trafo_val), deg_f) * 2
+        else:
+            raise NotImplementedError("Currently only"
+                                      "correlation_type == 'max_corr' implemented.")
+
+        # Adjust p-value for dimensions of x and y (conservative Bonferroni-correction)
+        pval *= dim_x*dim_y
 
         return pval
 
@@ -315,3 +339,37 @@ class ParCorrMult(CondIndTest):
         """
         raise NotImplementedError("Model selection not"+\
                                   " implemented for %s" % self.measure)
+
+if __name__ == '__main__':
+    
+    import tigramite
+    from tigramite.data_processing import DataFrame
+    # import numpy as np
+    import timeit
+
+    # np.random.seed(3)
+    cmi = ParCorrMult(
+            # significance = 'shuffle_test',
+            # sig_samples=1000,
+        )
+
+    rate = np.zeros(100)
+    for i in range(100):
+        print(i)
+        data = np.random.randn(100, 6)
+        data[:,2] += -0.5*data[:,0]
+        # data[:,1] += data[:,2]
+        dataframe = DataFrame(data)
+
+        cmi.set_dataframe(dataframe)
+
+        pval = cmi.run_test(
+                X=[(0,0)], #, (1,0)], 
+                Y=[(2,0)], #, (3, 0)], 
+                # Z=[(5,0)]
+                Z = []
+                )[1]
+        
+        rate[i] = pval <= 0.1
+        # print(cmi.run_test(X=[(0,0),(1,0)], Y=[(2,0), (3, 0)], Z=[(5,0)]))
+    print(rate.mean())

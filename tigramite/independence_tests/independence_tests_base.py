@@ -546,7 +546,7 @@ class CondIndTest():
             use_sig = sig_override
         # Check if we are using the analytic significance
         if use_sig == 'analytic':
-            pval = self.get_analytic_significance(value=val, T=T, dim=dim)
+            pval = self.get_analytic_significance(value=val, T=T, dim=dim, xyz=xyz)
         # Check if we are using the shuffle significance
         elif use_sig == 'shuffle_test':
             pval = self.get_shuffle_significance(array=array,

@@ -1,6 +1,6 @@
 """Tigramite plotting package."""
 
-# Author: Jakob Runge <jakobrunge@posteo.de>
+# Author: Jakob Runge <jakob@jakob-runge.com>
 #
 # License: GNU General Public License v3.0
 
@@ -368,7 +368,7 @@ def plot_timeseries(
         mask = None
     var_names = dataframe.var_names
     missing_flag = dataframe.missing_flag
-    datatime = dataframe.datatime[0]
+    datatime = dataframe.datatime[selected_dataset]
 
     T, N = data.shape
 

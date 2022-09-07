@@ -1,17 +1,18 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>tigramite.pcmci &#8212; Tigramite 5.0 documentation</title>
-    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tigramite.pcmci &#8212; Tigramite 5.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinxdoc.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
   </head><body>
@@ -24,24 +25,11 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 5.0 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 5.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">tigramite.pcmci</a></li> 
       </ul>
-    </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script>$('#searchbox').show(0);</script>
-        </div>
-      </div>
+    </div>  
 
     <div class="document">
       <div class="documentwrapper">
@@ -188,8 +176,8 @@
 <span class="sd">        Dictionary containing further information on algorithm steps.</span>
 <span class="sd">    N : int</span>
 <span class="sd">        Number of variables.</span>
-<span class="sd">    T : int</span>
-<span class="sd">        Time series sample length.</span>
+<span class="sd">    T : dict</span>
+<span class="sd">        Time series sample length of dataset(s).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">,</span>
@@ -1115,9 +1103,9 @@
 <span class="sd">        alpha_level : float, optional (default: 0.05)</span>
 <span class="sd">            Significance level at which the p_matrix is thresholded to </span>
 <span class="sd">            get graph.</span>
-<span class="sd">        fdr_method : str, optional (default: &#39;fdr_bh&#39;)</span>
+<span class="sd">        fdr_method : str, optional (default: &#39;none&#39;)</span>
 <span class="sd">            Correction method, currently implemented is Benjamini-Hochberg</span>
-<span class="sd">            False Discovery Rate method. </span>
+<span class="sd">            False Discovery Rate method (&#39;fdr_bh&#39;). </span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1269,9 +1257,9 @@
 <span class="sd">        alpha_level : float, optional (default: 0.05)</span>
 <span class="sd">            Significance level at which the p_matrix is thresholded to </span>
 <span class="sd">            get graph.</span>
-<span class="sd">        fdr_method : str, optional (default: &#39;fdr_bh&#39;)</span>
+<span class="sd">        fdr_method : str, optional (default: &#39;none&#39;)</span>
 <span class="sd">            Correction method, currently implemented is Benjamini-Hochberg</span>
-<span class="sd">            False Discovery Rate method. </span>
+<span class="sd">            False Discovery Rate method (&#39;fdr_bh&#39;). </span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1338,9 +1326,9 @@
 <span class="sd">        alpha_level : float, optional (default: 0.05)</span>
 <span class="sd">            Significance level at which the p_matrix is thresholded to </span>
 <span class="sd">            get graph.</span>
-<span class="sd">        fdr_method : str, optional (default: &#39;fdr_bh&#39;)</span>
+<span class="sd">        fdr_method : str, optional (default: &#39;none&#39;)</span>
 <span class="sd">            Correction method, currently implemented is Benjamini-Hochberg</span>
-<span class="sd">            False Discovery Rate method. </span>
+<span class="sd">            False Discovery Rate method (&#39;fdr_bh&#39;).  </span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1405,9 +1393,9 @@
 <span class="sd">        alpha_level : float, optional (default: 0.05)</span>
 <span class="sd">            Significance level at which the p_matrix is thresholded to </span>
 <span class="sd">            get graph.</span>
-<span class="sd">        fdr_method : str, optional (default: &#39;fdr_bh&#39;)</span>
+<span class="sd">        fdr_method : str, optional (default: &#39;none&#39;)</span>
 <span class="sd">            Correction method, currently implemented is Benjamini-Hochberg</span>
-<span class="sd">            False Discovery Rate method. </span>
+<span class="sd">            False Discovery Rate method (&#39;fdr_bh&#39;).  </span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1577,7 +1565,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Create a mask for these values</span>
             <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">tau_max_plusone</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;bool&#39;</span><span class="p">)</span>
-        <span class="c1"># Ignore values from autocorrelation indices</span>
+        <span class="c1"># Ignore values from lag-zero &#39;autocorrelation&#39; indices</span>
         <span class="n">mask</span><span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">),</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="c1"># Exclude all contemporaneous values if requested</span>
         <span class="k">if</span> <span class="n">exclude_contemporaneous</span><span class="p">:</span>
@@ -4054,7 +4042,11 @@
         <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_methods</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;method must be one of </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">valid_methods</span><span class="p">))</span>
 
-        <span class="n">T</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">T</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">analysis_mode</span> <span class="o">!=</span> <span class="s1">&#39;single&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Sliding wwindows analysis currently only supports single &quot;</span>
+                             <span class="s2">&quot;datasets.&quot;</span><span class="p">)</span>
+
+        <span class="n">T</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span><span class="o">.</span><span class="n">recycle_residuals</span><span class="p">:</span>
             <span class="c1"># recycle_residuals clashes with sliding windows...</span>
@@ -4070,7 +4062,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">missing_flag</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">missing_flag</span> <span class="o">=</span> <span class="kc">True</span>
 
-        <span class="n">original_data</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+        <span class="n">original_data</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 
         <span class="n">window_start_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">T</span> <span class="o">-</span> <span class="n">window_length</span><span class="p">,</span> <span class="n">window_step</span><span class="p">)</span>
         <span class="n">n_windows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">window_start_points</span><span class="p">)</span>
@@ -4082,7 +4074,7 @@
             <span class="n">data_window</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">w</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
             <span class="n">data_window</span><span class="p">[</span><span class="n">w</span> <span class="o">+</span> <span class="n">window_length</span><span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
 
-            <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">values</span> <span class="o">=</span> <span class="n">data_window</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_window</span>
             <span class="n">window_res</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">)(</span><span class="o">**</span><span class="n">method_args</span><span class="p">))</span>
 
             <span class="c1"># Aggregate val_matrix and other arrays to new arrays with</span>
@@ -4101,7 +4093,7 @@
                 <span class="n">window_results</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">iw</span><span class="p">]</span> <span class="o">=</span> <span class="n">res_item</span>
 
         <span class="c1"># Reset to original data for further analyses</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">values</span> <span class="o">=</span> <span class="n">original_data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">original_data</span>
 
         <span class="c1"># Generate summary results</span>
         <span class="n">summary_results</span> <span class="o">=</span> <span class="p">{}</span>
@@ -4128,11 +4120,11 @@
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">tigramite.independence_tests</span> <span class="kn">import</span> <span class="n">ParCorr</span><span class="p">,</span> <span class="n">CMIknn</span>
-    <span class="kn">import</span> <span class="nn">tigramite.data_processing</span> <span class="k">as</span> <span class="nn">pp</span>
+    <span class="kn">from</span> <span class="nn">tigramite.independence_tests</span> <span class="kn">import</span> <span class="n">ParCorr</span><span class="p">,</span> <span class="n">CMIknn</span><span class="p">,</span> <span class="n">ParCorrMult</span>
+    <span class="kn">import</span> <span class="nn">tigramite.data_processing_vector</span> <span class="k">as</span> <span class="nn">pp</span>
     <span class="kn">from</span> <span class="nn">tigramite.toymodels</span> <span class="kn">import</span> <span class="n">structural_causal_processes</span> <span class="k">as</span> <span class="n">toys</span>
     <span class="kn">import</span> <span class="nn">tigramite.plotting</span> <span class="k">as</span> <span class="nn">tp</span>
-
+    <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
     <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">43</span><span class="p">)</span>
 
     <span class="c1"># Example process to play around with</span>
@@ -4141,33 +4133,45 @@
     <span class="k">def</span> <span class="nf">lin_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span>
     <span class="k">def</span> <span class="nf">nonlin_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mf">5.</span> <span class="o">*</span> <span class="n">x</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="mf">20.</span><span class="p">))</span>
 
-    <span class="n">links</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">[((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.9</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
-             <span class="mi">1</span><span class="p">:</span> <span class="p">[((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
-             <span class="c1"># 2: [((2, -1), 0.7, lin_f), ((1, 0), 0.1, lin_f)],</span>
-             <span class="c1"># 3: [((3, -1), 0.7, lin_f), ((2, 0), -0.1, lin_f)],</span>
+    <span class="c1"># 1. Illustration of</span>
+    <span class="n">links_coeffs</span> <span class="o">=</span> <span class="p">{</span>
+             <span class="mi">0</span><span class="p">:</span> <span class="p">[((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
+             <span class="mi">1</span><span class="p">:</span> <span class="p">[((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
+             <span class="mi">2</span><span class="p">:</span> <span class="p">[((</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
+             <span class="mi">3</span><span class="p">:</span> <span class="p">[((</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
              <span class="p">}</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="mi">1000</span>
+    <span class="n">data</span><span class="p">,</span> <span class="n">nonstat</span> <span class="o">=</span> <span class="n">toys</span><span class="o">.</span><span class="n">structural_causal_process</span><span class="p">(</span><span class="n">links_coeffs</span><span class="p">,</span>
+                        <span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
 
-    <span class="n">data</span><span class="p">,</span> <span class="n">nonstat</span> <span class="o">=</span> <span class="n">toys</span><span class="o">.</span><span class="n">structural_causal_process</span><span class="p">(</span><span class="n">links</span><span class="p">,</span>
-                        <span class="n">T</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+    <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> 
 
-    <span class="c1"># Data must be array of shape (time, variables)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-    <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-    <span class="n">cond_ind_test</span> <span class="o">=</span> <span class="n">ParCorr</span><span class="p">()</span>
-    <span class="n">pcmci</span> <span class="o">=</span> <span class="n">PCMCI</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span> <span class="n">cond_ind_test</span><span class="o">=</span><span class="n">cond_ind_test</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-    <span class="c1"># results = pcmci.run_pcmciplus(tau_min=0, tau_max=2, pc_alpha=0.01)</span>
-    <span class="c1"># pcmci.print_results(results, alpha_level=0.01)</span>
+    <span class="n">pcmci</span> <span class="o">=</span> <span class="n">PCMCI</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span> 
+        <span class="n">cond_ind_test</span><span class="o">=</span><span class="n">ParCorr</span><span class="p">(),</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">pcmci</span><span class="o">.</span><span class="n">run_pcmciplus</span><span class="p">(</span><span class="n">tau_min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> 
+        <span class="n">pc_alpha</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
 
-
-    <span class="nb">print</span><span class="p">(</span><span class="n">pcmci</span><span class="o">.</span><span class="n">run_sliding_window_of</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s1">&#39;run_pcmciplus&#39;</span><span class="p">,</span> 
-                    <span class="n">method_args</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;tau_min&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;tau_max&#39;</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;pc_alpha&#39;</span><span class="p">:</span><span class="mf">0.01</span><span class="p">},</span> 
-                        <span class="n">window_step</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
-                        <span class="n">window_length</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
-                        <span class="n">conf_lev</span> <span class="o">=</span> <span class="mf">0.95</span><span class="p">)[</span><span class="s1">&#39;summary_results&#39;</span><span class="p">])</span>
+    <span class="n">tp</span><span class="o">.</span><span class="n">plot_graph</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;graph&#39;</span><span class="p">])</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
 </pre></div>
 
+            <div class="clearer"></div>
           </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -4181,13 +4185,14 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 5.0 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 5.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">tigramite.pcmci</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2021, Jakob Runge.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.2.
     </div>
   </body>
 </html>

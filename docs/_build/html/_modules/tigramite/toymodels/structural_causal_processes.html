@@ -1,17 +1,18 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>tigramite.toymodels.structural_causal_processes &#8212; Tigramite 5.0 documentation</title>
-    <link rel="stylesheet" href="../../../_static/sphinxdoc.css" type="text/css" />
-    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tigramite.toymodels.structural_causal_processes &#8212; Tigramite 5.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinxdoc.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
     <script src="../../../_static/jquery.js"></script>
     <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../../_static/doctools.js"></script>
-    <script src="../../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
   </head><body>
@@ -24,24 +25,11 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">Tigramite 5.0 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Tigramite 5.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">tigramite.toymodels.structural_causal_processes</a></li> 
       </ul>
-    </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="../../../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script>$('#searchbox').show(0);</script>
-        </div>
-      </div>
+    </div>  
 
     <div class="document">
       <div class="documentwrapper">
@@ -628,12 +616,13 @@
         <span class="c1"># Sort starting from all vertices one by one </span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">V</span><span class="p">):</span> 
           <span class="k">if</span> <span class="n">visited</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span> 
-              <span class="bp">self</span><span class="o">.</span><span class="n">topologicalSortUtil</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">visited</span><span class="p">,</span><span class="n">stack</span><span class="p">)</span> 
+              <span class="bp">self</span><span class="o">.</span><span class="n">topologicalSortUtil</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">visited</span><span class="p">,</span><span class="n">stack</span><span class="p">)</span> 
 
         <span class="k">return</span> <span class="n">stack</span>
 
 <div class="viewcode-block" id="structural_causal_process"><a class="viewcode-back" href="../../../index.html#tigramite.toymodels.structural_causal_processes.structural_causal_process">[docs]</a><span class="k">def</span> <span class="nf">structural_causal_process</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">noises</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
                         <span class="n">intervention</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">intervention_type</span><span class="o">=</span><span class="s1">&#39;hard&#39;</span><span class="p">,</span>
+                        <span class="n">transient_fraction</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
                         <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns a time series generated from a structural causal process.</span>
 
@@ -666,8 +655,9 @@
 <span class="sd">        callable of one argument.</span>
 <span class="sd">    T : int</span>
 <span class="sd">        Sample size.</span>
-<span class="sd">    noises : list of callables, optional (default: &#39;np.random.randn&#39;)</span>
-<span class="sd">        Random distribution function that is called with noises[j](T).</span>
+<span class="sd">    noises : list of callables or array, optional (default: &#39;np.random.randn&#39;)</span>
+<span class="sd">        Random distribution function that is called with noises[j](T). If an array,</span>
+<span class="sd">        it must be of shape ((transient_fraction + 1)*T, N).</span>
 <span class="sd">    intervention : dict</span>
 <span class="sd">        Dictionary of format: {1:np.array, ...} containing only keys of intervened</span>
 <span class="sd">        variables with the value being the array of length T with interventional values.</span>
@@ -676,6 +666,10 @@
 <span class="sd">        Dictionary of format: {1:&#39;hard&#39;,  3:&#39;soft&#39;, ...} to specify whether intervention is </span>
 <span class="sd">        hard (set value) or soft (add value) for variable j. If str, all interventions have </span>
 <span class="sd">        the same type.</span>
+<span class="sd">    transient_fraction : float</span>
+<span class="sd">        Added percentage of T used as a transient. In total a realization of length</span>
+<span class="sd">        (transient_fraction + 1)*T will be generated, but then transient_fraction*T will be</span>
+<span class="sd">        cut off.</span>
 <span class="sd">    seed : int, optional (default: None)</span>
 <span class="sd">        Random seed.</span>
 
@@ -693,8 +687,15 @@
     <span class="k">if</span> <span class="n">noises</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">noises</span> <span class="o">=</span> <span class="p">[</span><span class="n">random_state</span><span class="o">.</span><span class="n">randn</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)]</span>
 
-    <span class="k">if</span> <span class="n">N</span> <span class="o">!=</span> <span class="nb">max</span><span class="p">(</span><span class="n">links</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">+</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">N</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">noises</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;links and noises keys must match N.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">N</span> <span class="o">!=</span> <span class="nb">max</span><span class="p">(</span><span class="n">links</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;links keys must match N.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">noises</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">noises</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">T</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">transient_fraction</span><span class="o">*</span><span class="n">T</span><span class="p">)),</span> <span class="n">N</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;noises.shape must match ((transient_fraction + 1)*T, N).&quot;</span><span class="p">)</span>            
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">N</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">noises</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;noises keys must match N.&quot;</span><span class="p">)</span>
 
     <span class="c1"># Check parameters</span>
     <span class="n">max_lag</span> <span class="o">=</span> <span class="mi">0</span>
@@ -733,11 +734,14 @@
             <span class="k">if</span> <span class="n">j</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">intervention_type</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>        
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;intervention_type dictionary must contain entry for </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="p">(</span><span class="n">j</span><span class="p">))</span>
 
-    <span class="n">transient</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="o">.</span><span class="mi">2</span><span class="o">*</span><span class="n">T</span><span class="p">))</span>
+    <span class="n">transient</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">transient_fraction</span><span class="o">*</span><span class="n">T</span><span class="p">))</span>
 
     <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">T</span><span class="o">+</span><span class="n">transient</span><span class="p">,</span> <span class="n">N</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
-        <span class="n">data</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">noises</span><span class="p">[</span><span class="n">j</span><span class="p">](</span><span class="n">T</span><span class="o">+</span><span class="n">transient</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">noises</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="n">data</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">noises</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">noises</span><span class="p">[</span><span class="n">j</span><span class="p">](</span><span class="n">T</span><span class="o">+</span><span class="n">transient</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_lag</span><span class="p">,</span> <span class="n">T</span><span class="o">+</span><span class="n">transient</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">causal_order</span><span class="p">:</span>
@@ -872,6 +876,31 @@
 
     <span class="k">return</span> <span class="n">graph</span></div>
 
+<div class="viewcode-block" id="dag_to_links"><a class="viewcode-back" href="../../../index.html#tigramite.toymodels.structural_causal_processes.dag_to_links">[docs]</a><span class="k">def</span> <span class="nf">dag_to_links</span><span class="p">(</span><span class="n">dag</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Helper function to convert DAG graph to dictionary of parents.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ---------</span>
+<span class="sd">    dag : array of shape (N, N, tau_max+1)</span>
+<span class="sd">        Matrix format of graph in string format. Must be DAG.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    parents : dict</span>
+<span class="sd">        Dictionary of form {0:[(0, -1), ...], 1:[...], ...}.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">parents</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">j</span><span class="p">,</span> <span class="p">[])</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)])</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">dag</span><span class="o">==</span><span class="s1">&#39;o-o&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">dag</span><span class="o">==</span><span class="s1">&#39;x-x&#39;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;graph must be DAG.&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">tau</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">dag</span><span class="o">==</span><span class="s1">&#39;--&gt;&#39;</span><span class="p">)):</span>
+        <span class="n">parents</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="n">tau</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">parents</span></div>
+
 <span class="k">class</span> <span class="nc">_Logger</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Class to append print output to a string which can be saved&quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -906,7 +935,22 @@
     <span class="nb">print</span><span class="p">(</span><span class="n">links_to_graph</span><span class="p">(</span><span class="n">links</span><span class="p">))</span>
 </pre></div>
 
+            <div class="clearer"></div>
           </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -920,13 +964,14 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">Tigramite 5.0 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Tigramite 5.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">tigramite.toymodels.structural_causal_processes</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2021, Jakob Runge.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.2.
     </div>
   </body>
 </html>

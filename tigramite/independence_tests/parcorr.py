@@ -187,7 +187,7 @@ class ParCorr(CondIndTest):
             return pval, null_dist
         return pval
 
-    def get_analytic_significance(self, value, T, dim):
+    def get_analytic_significance(self, value, T, dim, xyz):
         """Returns analytic p-value from Student's t-test for the Pearson
         correlation coefficient.
 
@@ -204,6 +204,9 @@ class ParCorr(CondIndTest):
 
         dim : int
             Dimensionality, ie, number of features.
+
+        xyz : array of ints
+            XYZ identifier array of shape (dim,).
 
         Returns
         -------

@@ -210,7 +210,7 @@ def test_shuffle_sig_parcorr(par_corr, data_sample_a):
     # Get the data sample values
     array, val, _, xyz, dim, T = data_sample_a
     # Get the analytic significance
-    pval_a = par_corr.get_analytic_significance(value=val, T=T, dim=dim)
+    pval_a = par_corr.get_analytic_significance(value=val, T=T, dim=dim, xyz=xyz)
     # Get the shuffle significance
     pval_s = par_corr.get_shuffle_significance(array, xyz, val)
     # Adjust p-value for two-sided measures
@@ -340,7 +340,7 @@ def test_shuffle_sig_gpdc(gpdc, data_sample_b):
     array = array[:, :T]
     # Get the value of the dependence measurement
     val = gpdc.get_dependence_measure(array, xyz)
-    pval_a = gpdc.get_analytic_significance(value=val, T=T, dim=dim)
+    pval_a = gpdc.get_analytic_significance(value=val, T=T, dim=dim, xyz=xyz)
     pval_s = gpdc.get_shuffle_significance(array, xyz, val)
     np.testing.assert_allclose(np.array(pval_a), np.array(pval_s), atol=0.05)
 
@@ -448,7 +448,7 @@ def test_shuffle_sig_gpdc_torch(gpdc_torch, data_sample_b):
     array = array[:, :T]
     # Get the value of the dependence measurement
     val = gpdc_torch.get_dependence_measure(array, xyz)
-    pval_a = gpdc_torch.get_analytic_significance(value=val, T=T, dim=dim)
+    pval_a = gpdc_torch.get_analytic_significance(value=val, T=T, dim=dim, xyz=xyz)
     pval_s = gpdc_torch.get_shuffle_significance(array, xyz, val)
     np.testing.assert_allclose(np.array(pval_a), np.array(pval_s), atol=0.05)
 
