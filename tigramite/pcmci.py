@@ -250,8 +250,8 @@ class PCMCI():
         cond :  list
             List of form [(0, -1), (3, -2), ...] for the next condition.
         """
-        # JC NOTE: We update the condition selection here. (Deprecated)
-        # Specifically, all variables which are later than (or at the same time with) the testing parents should be removed from the conditional set.
+        # JC NOTE: We update the condition selection here.
+        # Specifically, we remove the autocorrelation testing here.
         # all_parents_excl_current = [p for p in all_parents if (p != parent) and (p[1] < parent[1])]
         all_parents_excl_current = [p for p in all_parents if p != parent]
         
@@ -406,7 +406,6 @@ class PCMCI():
             print(
                 "\nAlgorithm not yet converged, but max_conds_dim = %d"
                 " reached." % max_conds_dim)
-    
     
     def _run_pc_stable_single(self, j,
                               selected_links=None,
