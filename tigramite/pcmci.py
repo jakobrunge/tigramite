@@ -231,7 +231,7 @@ class PCMCI():
         # Return the selected links
         return _int_sel_links
 
-    def _iter_conditions(self, parent, conds_dim, all_parents):
+    def _iter_conditions(self, child, parent, conds_dim, all_parents):
         """Yield next condition.
 
         Yields next condition from lexicographically ordered conditions.
@@ -252,10 +252,9 @@ class PCMCI():
         """
         # JC NOTE: We update the condition selection here.
         # Specifically, we remove the autocorrelation testing here.
-        # all_parents_excl_current = [p for p in all_parents if (p != parent) and (p[1] < parent[1])]
-        all_parents_excl_current = [p for p in all_parents if p != parent]
+        all_parents_excl_self = [p for p in all_parents if p[0] != child]
         
-        for cond in itertools.combinations(all_parents_excl_current, conds_dim):
+        for cond in itertools.combinations(all_parents_excl_self, conds_dim):
             yield list(cond)
 
     def _sort_parents(self, parents_vals):
@@ -502,7 +501,7 @@ class PCMCI():
                     self._print_link_info(j, index_parent, parent, len(parents))
                 # Iterate through all possible combinations
                 nonsig = False
-                for comb_index, Z in enumerate(self._iter_conditions(parent, conds_dim, parents)):
+                for comb_index, Z in enumerate(self._iter_conditions(child, parent, conds_dim, parents)):
                     # Break if we try too many combinations
                     start = time.time()
                     if comb_index >= max_combinations:
