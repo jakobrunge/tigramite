@@ -250,11 +250,11 @@ class PCMCI():
         cond :  list
             List of form [(0, -1), (3, -2), ...] for the next condition.
         """
-        # JC NOTE: We update the condition selection here.
+        # JC NOTE: We update the condition selection here. (Deprecated)
         # Specifically, we remove the autocorrelation testing here.
         all_parents_excl_self = [p for p in all_parents if p[0] != child]
         
-        for cond in itertools.combinations(all_parents_excl_self, conds_dim):
+        for cond in itertools.combinations(all_parents, conds_dim):
             yield list(cond)
 
     def _sort_parents(self, parents_vals):
@@ -501,7 +501,7 @@ class PCMCI():
                     self._print_link_info(j, index_parent, parent, len(parents))
                 # Iterate through all possible combinations
                 nonsig = False
-                for comb_index, Z in enumerate(self._iter_conditions(child, parent, conds_dim, parents)):
+                for comb_index, Z in enumerate(self._iter_conditions(j, parent, conds_dim, parents)):
                     # Break if we try too many combinations
                     start = time.time()
                     if comb_index >= max_combinations:
