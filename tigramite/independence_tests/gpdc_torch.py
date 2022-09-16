@@ -251,10 +251,25 @@ class GaussProcRegTorch():
 
         train_x = torch.tensor(z).float()
         train_y = torch.tensor(target_series).float()
-
+        
+        device_type = torch.device("mps") if torch.backends.mps.is_available() else 'cpu'
         device_type = 'cuda' if torch.cuda.is_available() else 'cpu'
         output_device = torch.device(device_type)
         train_x, train_y = train_x.to(output_device), train_y.to(output_device)
+
+        if device_type == 'mps':
+            # If mps on Apple silicon is available, use it
+            n_devices = device_type
+            class mExactGPModel(gpytorch.models.ExactGP):
+                def __init__(self, train_x, train_y, likelihood, n_devices):
+                    super(mExactGPModel, self).__init__(train_x, train_y, likelihood)
+                    self.mean_module = gpytorch.means.ConstantMean()
+                    base_covar_module = gpytorch.kernels.ScaleKernel(gpytorch.kernels.RBFKernel())
+
+                    self.covar_module = gpytorch.kernels.MultiDeviceKernel(
+                        base_covar_module, device_ids=range(n_devices),
+                        output_device=output_device
+                    )
 
         if device_type == 'cuda':
             # If GPU is available, use MultiGPU with Kernel Partitioning
