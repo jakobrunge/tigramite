@@ -166,7 +166,7 @@ class Models():
 
             # Construct array of shape (var, time)
             array, xyz = \
-                self.dataframe.construct_array(X=self.X, Y=[y], # + self.Z, 
+                self.dataframe.construct_array(X=self.X, Y=[y],  
                                                Z=self.conditions,
                                                extraZ=self.Z,
                                                tau_max=self.tau_max,
