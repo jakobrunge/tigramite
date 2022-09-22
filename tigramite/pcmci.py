@@ -253,9 +253,12 @@ class PCMCI():
         """
         # JC NOTE: We update the condition selection here. (Deprecated)
         # Specifically, we remove the autocorrelation testing here.
-        all_parents_excl_self = [p for p in all_parents if p[0] != child]
+        #all_parents_excl_self = [p for p in all_parents if p!=parent]
+        all_parents_excl_self = [p for p in all_parents if p!=parent and p[0]!=child]
+        #all_parents_excl_self = [p for p in all_parents if p[1]>parent[1] and p[0]!=child]
+        #all_parents_excl_self = [p for p in all_parents if p[0] not in [parent[0], child]]
         
-        for cond in itertools.combinations(all_parents, conds_dim):
+        for cond in itertools.combinations(all_parents_excl_self, conds_dim):
             yield list(cond)
 
     def _sort_parents(self, parents_vals):
