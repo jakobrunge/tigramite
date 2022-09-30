@@ -3138,8 +3138,8 @@ class PCMCI():
                 return subsets
 
             # We only consider contemporaneous adjacencies because only these
-            # can include the (contemp) k. Furthermore, we only need to check
-            # adjacencies of i for tau=0
+            # can include the (contemp) k. Furthermore, next to adjacencies of j,
+            # we only need to check adjacencies of i for tau=0
             if mode == 'contemp_conds':
                 adjt = self._get_adj_time_series_contemp(graph)
             elif mode == 'standard':
@@ -4003,11 +4003,12 @@ class PCMCI():
         if method not in valid_methods:
             raise ValueError("method must be one of %s" % str(valid_methods))
 
-        if self.dataframe.analysis_mode != 'single':
-            raise ValueError("Sliding wwindows analysis currently only supports single "
-                             "datasets.")
+        if self.dataframe.reference_points_is_none is False:
+            raise ValueError("Reference points are not accepted in "
+                             "sliding windows analysis, align data before and use masking"
+                             " and/or missing values.")
 
-        T = self.T[0]
+        T = self.dataframe.largest_time_step
 
         if self.cond_ind_test.recycle_residuals:
             # recycle_residuals clashes with sliding windows...
@@ -4020,22 +4021,19 @@ class PCMCI():
                   "\nwindow_length = %s \n" % window_length
                   )
 
-        if self.dataframe.missing_flag is None:
-            self.dataframe.missing_flag = True
-
-        original_data = deepcopy(self.dataframe.values[0])
+        original_reference_points = deepcopy(self.dataframe.reference_points)
 
         window_start_points = np.arange(0, T - window_length, window_step)
         n_windows = len(window_start_points)
 
         window_results = {}
         for iw, w in enumerate(window_start_points):
-            # Set values before and after window to np.nan
-            data_window = deepcopy(original_data)
-            data_window[0:w] = np.nan
-            data_window[w + window_length:] = np.nan
+            # Construct reference_points from window
+            time_window = np.arange(w, w + window_length, 1)
+            # Remove points beyond T
+            time_window = time_window[time_window < T]
 
-            self.dataframe.values[0] = data_window
+            self.dataframe.reference_points = time_window
             window_res = deepcopy(getattr(self, method)(**method_args))
 
             # Aggregate val_matrix and other arrays to new arrays with
@@ -4053,8 +4051,9 @@ class PCMCI():
                 
                 window_results[key][iw] = res_item
 
-        # Reset to original data for further analyses
-        self.dataframe.values[0] = original_data
+        # Reset to original_reference_points data for further analyses
+        # self.dataframe.values[0] = original_data
+        self.dataframe.reference_points = original_reference_points
 
         # Generate summary results
         summary_results = {}
@@ -4082,7 +4081,7 @@ class PCMCI():
 
 if __name__ == '__main__':
     from tigramite.independence_tests import ParCorr, CMIknn, ParCorrMult
-    import tigramite.data_processing_vector as pp
+    import tigramite.data_processing as pp
     from tigramite.toymodels import structural_causal_processes as toys
     import tigramite.plotting as tp
     from matplotlib import pyplot as plt
@@ -4094,24 +4093,58 @@ if __name__ == '__main__':
     def lin_f(x): return x
     def nonlin_f(x): return (x + 5. * x ** 2 * np.exp(-x ** 2 / 20.))
 
+
     # 1. Illustration of
     links_coeffs = {
              0: [((0, -1), 0., lin_f)],
-             1: [((1, -1), 0., lin_f)],
-             2: [((2, -1), 0.5, lin_f), ((1, 0), 0.2, lin_f)],
-             3: [((3, -1), 0.5, lin_f), ((2, 0), 0.3, lin_f)],
+             1: [((1, -1), 0., lin_f), ((0, -1), 0.7, lin_f)],
+             # 2: [((2, -1), 0.5, lin_f), ((1, 0), 0.2, lin_f)],
+             # 3: [((3, -1), 0.5, lin_f), ((2, 0), 0.3, lin_f)],
              }
     T = 1000
-    data, nonstat = toys.structural_causal_process(links_coeffs,
-                        T=T, seed=8)
+    data1, nonstat = toys.structural_causal_process(links_coeffs,
+                        T=T, seed=5)
 
-    dataframe = pp.DataFrame(data) 
+    links_coeffs = {
+             0: [((0, -1), 0., lin_f)],
+             1: [((1, -1), 0., lin_f), ((0, -1), -0.7, lin_f)],
+             # 2: [((2, -1), 0.5, lin_f), ((1, 0), 0.2, lin_f)],
+             # 3: [((3, -1), 0.5, lin_f), ((2, 0), 0.3, lin_f)],
+             }
+    T = 1000
+
+    data2, nonstat = toys.structural_causal_process(links_coeffs,
+                        T=T, seed=6)
+
+    # Create 
+    multidata = {}
+    multidata[0] = np.concatenate( (data1[0:500], data2[0:500]), axis=0)
+    multidata[1] = np.concatenate( (data1[500:1000], data2[500:700]), axis=0)
+    # multidata[1] = data1[500:900]
+
+    multidata[0][40:100, :] = 999.
+
+    dataframe = pp.DataFrame(multidata, analysis_mode='multiple',
+            missing_flag = 999.,
+            time_offsets = {0:50, 1:0}
+             # reference_points=list(range(500, 1000))
+             ) 
 
     pcmci = PCMCI(dataframe=dataframe, 
-        cond_ind_test=ParCorr(), verbosity=1)
-    results = pcmci.run_pcmciplus(tau_min=0, tau_max=2, 
-        pc_alpha=0.01)
+        cond_ind_test=ParCorr(verbosity=0), verbosity=0)
 
-    tp.plot_graph(results['graph'])
-    plt.show()
+
+    # results = pcmci.run_pcmciplus(tau_max=1)
+
+    results = pcmci.run_sliding_window_of(
+        window_step=499, window_length=500,
+        method='run_pcmciplus', method_args={'tau_max':1})
+
+    # tp.plot_graph(results['graph'])
+    print(multidata[0].shape, multidata[1].shape)
+    print(results['window_results']['val_matrix'])
+    print(results['window_results']['val_matrix'][0][0,1])
+    print(results['window_results']['val_matrix'][1][0,1])
+
+    # plt.show()
 

@@ -309,6 +309,7 @@ class DataFrame():
 
         # Check and prepare the time offsets
         self._check_and_set_time_offsets(time_offsets)
+        self.time_offsets_is_none = time_offsets is None
 
         # Set the default datatime if unspecified
         if datatime is None:
@@ -320,11 +321,13 @@ class DataFrame():
             else:
                 self.datatime = datatime
 
-        # Save the largest relevant time step
+        # Save the largest/smallest relevant time step
         self.largest_time_step = np.add(np.asarray(list(self.T.values())), np.asarray(list(self.time_offsets.values()))).max()
+        self.smallest_time_step = np.add(np.asarray(list(self.T.values())), np.asarray(list(self.time_offsets.values()))).min()
 
         # Check and prepare the reference points
         self._check_and_set_reference_points(reference_points)
+        self.reference_points_is_none = reference_points is None
 
         # Save the 'missing_flag' value
         self.missing_flag = missing_flag

@@ -40,7 +40,7 @@ class CondIndTest():
         If significance is 'fixed_thres', this specifies the threshold for the
         absolute value of the dependence measure.
 
-    sig_samples : int, optional (default: 1000)
+    sig_samples : int, optional (default: 500)
         Number of samples for shuffle significance test.
 
     sig_blocklength : int, optional (default: None)
@@ -89,7 +89,7 @@ class CondIndTest():
                  mask_type=None,
                  significance='analytic',
                  fixed_thres=0.1,
-                 sig_samples=1000,
+                 sig_samples=500,
                  sig_blocklength=None,
                  confidence=None,
                  conf_lev=0.9,
@@ -354,7 +354,7 @@ class CondIndTest():
         """
 
         # Get the array to test on
-        array, xyz, XYZ = self._get_array(X, Y, Z, tau_max, cut_off)
+        array, xyz, XYZ = self._get_array(X, Y, Z, tau_max, cut_off, self.verbosity)
         X, Y, Z = XYZ
         # Record the dimensions
         dim, T = array.shape
@@ -546,7 +546,7 @@ class CondIndTest():
             use_sig = sig_override
         # Check if we are using the analytic significance
         if use_sig == 'analytic':
-            pval = self.get_analytic_significance(value=val, T=T, dim=dim)
+            pval = self.get_analytic_significance(value=val, T=T, dim=dim, xyz=xyz)
         # Check if we are using the shuffle significance
         elif use_sig == 'shuffle_test':
             pval = self.get_shuffle_significance(array=array,
