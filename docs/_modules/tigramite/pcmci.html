@@ -5,35 +5,30 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>tigramite.pcmci &#8212; Tigramite 5.1 documentation</title>
+    <title>tigramite.pcmci &#8212; Tigramite 5.2 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/sphinxdoc.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
     <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" /> 
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../../genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="../../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 5.1 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">tigramite.pcmci</a></li> 
-      </ul>
-    </div>  
+  
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   <h1>Source code for tigramite.pcmci</h1><div class="highlight"><pre>
@@ -3177,8 +3172,8 @@
                 <span class="k">return</span> <span class="n">subsets</span>
 
             <span class="c1"># We only consider contemporaneous adjacencies because only these</span>
-            <span class="c1"># can include the (contemp) k. Furthermore, we only need to check</span>
-            <span class="c1"># adjacencies of i for tau=0</span>
+            <span class="c1"># can include the (contemp) k. Furthermore, next to adjacencies of j,</span>
+            <span class="c1"># we only need to check adjacencies of i for tau=0</span>
             <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;contemp_conds&#39;</span><span class="p">:</span>
                 <span class="n">adjt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_adj_time_series_contemp</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;standard&#39;</span><span class="p">:</span>
@@ -3998,7 +3993,7 @@
 <div class="viewcode-block" id="PCMCI.run_sliding_window_of"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.run_sliding_window_of">[docs]</a>    <span class="k">def</span> <span class="nf">run_sliding_window_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">method_args</span><span class="p">,</span> 
                         <span class="n">window_step</span><span class="p">,</span>
                         <span class="n">window_length</span><span class="p">,</span>
-                        <span class="n">conf_lev</span> <span class="o">=</span> <span class="mf">0.95</span><span class="p">,</span>
+                        <span class="n">conf_lev</span> <span class="o">=</span> <span class="mf">0.9</span><span class="p">,</span>
                         <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Runs chosen method on sliding windows taken from DataFrame.</span>
 
@@ -4042,11 +4037,12 @@
         <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_methods</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;method must be one of </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">valid_methods</span><span class="p">))</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">analysis_mode</span> <span class="o">!=</span> <span class="s1">&#39;single&#39;</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Sliding wwindows analysis currently only supports single &quot;</span>
-                             <span class="s2">&quot;datasets.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">reference_points_is_none</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Reference points are not accepted in &quot;</span>
+                             <span class="s2">&quot;sliding windows analysis, align data before and use masking&quot;</span>
+                             <span class="s2">&quot; and/or missing values.&quot;</span><span class="p">)</span>
 
-        <span class="n">T</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">T</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">largest_time_step</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span><span class="o">.</span><span class="n">recycle_residuals</span><span class="p">:</span>
             <span class="c1"># recycle_residuals clashes with sliding windows...</span>
@@ -4059,22 +4055,19 @@
                   <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">window_length = </span><span class="si">%s</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">window_length</span>
                   <span class="p">)</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">missing_flag</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">missing_flag</span> <span class="o">=</span> <span class="kc">True</span>
-
-        <span class="n">original_data</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">original_reference_points</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">reference_points</span><span class="p">)</span>
 
         <span class="n">window_start_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">T</span> <span class="o">-</span> <span class="n">window_length</span><span class="p">,</span> <span class="n">window_step</span><span class="p">)</span>
         <span class="n">n_windows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">window_start_points</span><span class="p">)</span>
 
         <span class="n">window_results</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">iw</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">window_start_points</span><span class="p">):</span>
-            <span class="c1"># Set values before and after window to np.nan</span>
-            <span class="n">data_window</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">original_data</span><span class="p">)</span>
-            <span class="n">data_window</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">w</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
-            <span class="n">data_window</span><span class="p">[</span><span class="n">w</span> <span class="o">+</span> <span class="n">window_length</span><span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            <span class="c1"># Construct reference_points from window</span>
+            <span class="n">time_window</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">w</span> <span class="o">+</span> <span class="n">window_length</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="c1"># Remove points beyond T</span>
+            <span class="n">time_window</span> <span class="o">=</span> <span class="n">time_window</span><span class="p">[</span><span class="n">time_window</span> <span class="o">&lt;</span> <span class="n">T</span><span class="p">]</span>
 
-            <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_window</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">reference_points</span> <span class="o">=</span> <span class="n">time_window</span>
             <span class="n">window_res</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">)(</span><span class="o">**</span><span class="n">method_args</span><span class="p">))</span>
 
             <span class="c1"># Aggregate val_matrix and other arrays to new arrays with</span>
@@ -4092,36 +4085,85 @@
                 
                 <span class="n">window_results</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">iw</span><span class="p">]</span> <span class="o">=</span> <span class="n">res_item</span>
 
-        <span class="c1"># Reset to original data for further analyses</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">original_data</span>
+        <span class="c1"># Reset to original_reference_points data for further analyses</span>
+        <span class="c1"># self.dataframe.values[0] = original_data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">reference_points</span> <span class="o">=</span> <span class="n">original_reference_points</span>
+
+        <span class="c1"># Generate summary results</span>
+        <span class="n">summary_results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_summary_results</span><span class="p">(</span><span class="n">results</span><span class="o">=</span><span class="n">window_results</span><span class="p">,</span> 
+                                                      <span class="n">conf_lev</span><span class="o">=</span><span class="n">conf_lev</span><span class="p">)</span>
+        <span class="c1"># summary_results = {}</span>
+
+        <span class="c1"># if &#39;graph&#39; in window_results:</span>
+        <span class="c1">#     most_frequent_links, counts = scipy.stats.mode(</span>
+        <span class="c1">#                 window_results[&#39;graph&#39;], axis=0)</span>
+        <span class="c1">#     summary_results[&#39;most_frequent_links&#39;] =\</span>
+        <span class="c1">#             most_frequent_links[0]  #.squeeze()</span>
+        <span class="c1">#     summary_results[&#39;link_frequency&#39;] =\</span>
+        <span class="c1">#             counts[0]/float(n_windows)   </span>
+
+        <span class="c1"># # Confidence intervals for val_matrix; interval is two-sided</span>
+        <span class="c1"># c_int = (1. - (1. - conf_lev)/2.)</span>
+        <span class="c1"># summary_results[&#39;val_matrix_mean&#39;] = np.mean(</span>
+        <span class="c1">#                             window_results[&#39;val_matrix&#39;], axis=0)</span>
+
+        <span class="c1"># summary_results[&#39;val_matrix_interval&#39;] = np.stack(np.percentile(</span>
+        <span class="c1">#                             window_results[&#39;val_matrix&#39;], axis=0,</span>
+        <span class="c1">#                             q = [100*(1. - c_int), 100*c_int]), axis=3)</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;summary_results&#39;</span><span class="p">:</span> <span class="n">summary_results</span><span class="p">,</span> 
+                <span class="s1">&#39;window_results&#39;</span><span class="p">:</span> <span class="n">window_results</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="PCMCI.return_summary_results"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.return_summary_results">[docs]</a>    <span class="k">def</span> <span class="nf">return_summary_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">conf_lev</span><span class="o">=</span><span class="mf">0.9</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return summary results for causal graphs.</span>
+
+<span class="sd">        The function returns summary_results of an array of PCMCI(+) results.</span>
+<span class="sd">        Summary_results contains val_matrix_mean and val_matrix_interval, the latter </span>
+<span class="sd">        containing the confidence bounds for conf_lev. If the method also returns a graph,</span>
+<span class="sd">        then &#39;most_frequent_links&#39; containing the most frequent link outcome </span>
+<span class="sd">        (either 0 or 1 or a specific link type) in each entry of graph, as well </span>
+<span class="sd">        as &#39;link_frequency&#39;, containing the occurence frequency of the most </span>
+<span class="sd">        frequent link outcome, are returned. </span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        results : dict</span>
+<span class="sd">            Results dictionary where the numpy arrays graph and val_matrix are</span>
+<span class="sd">            of shape (n_results, N, N, tau_max + 1).</span>
+<span class="sd">        conf_lev : float, optional (default: 0.9)</span>
+<span class="sd">            Two-sided confidence interval for summary results.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Dictionary of summary results.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># Generate summary results</span>
         <span class="n">summary_results</span> <span class="o">=</span> <span class="p">{}</span>
 
-        <span class="k">if</span> <span class="s1">&#39;graph&#39;</span> <span class="ow">in</span> <span class="n">window_results</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;graph&#39;</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+            <span class="n">n_results</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;graph&#39;</span><span class="p">])</span>
             <span class="n">most_frequent_links</span><span class="p">,</span> <span class="n">counts</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">mode</span><span class="p">(</span>
-                        <span class="n">window_results</span><span class="p">[</span><span class="s1">&#39;graph&#39;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                        <span class="n">results</span><span class="p">[</span><span class="s1">&#39;graph&#39;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
             <span class="n">summary_results</span><span class="p">[</span><span class="s1">&#39;most_frequent_links&#39;</span><span class="p">]</span> <span class="o">=</span>\
                     <span class="n">most_frequent_links</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1">#.squeeze()</span>
             <span class="n">summary_results</span><span class="p">[</span><span class="s1">&#39;link_frequency&#39;</span><span class="p">]</span> <span class="o">=</span>\
-                    <span class="n">counts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">n_windows</span><span class="p">)</span>   
+                    <span class="n">counts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">n_results</span><span class="p">)</span>   
 
         <span class="c1"># Confidence intervals for val_matrix; interval is two-sided</span>
         <span class="n">c_int</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">conf_lev</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span><span class="p">)</span>
         <span class="n">summary_results</span><span class="p">[</span><span class="s1">&#39;val_matrix_mean&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span>
-                                    <span class="n">window_results</span><span class="p">[</span><span class="s1">&#39;val_matrix&#39;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                                    <span class="n">results</span><span class="p">[</span><span class="s1">&#39;val_matrix&#39;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
         <span class="n">summary_results</span><span class="p">[</span><span class="s1">&#39;val_matrix_interval&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span>
-                                    <span class="n">window_results</span><span class="p">[</span><span class="s1">&#39;val_matrix&#39;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                    <span class="n">results</span><span class="p">[</span><span class="s1">&#39;val_matrix&#39;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                                     <span class="n">q</span> <span class="o">=</span> <span class="p">[</span><span class="mi">100</span><span class="o">*</span><span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">c_int</span><span class="p">),</span> <span class="mi">100</span><span class="o">*</span><span class="n">c_int</span><span class="p">]),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;summary_results&#39;</span><span class="p">:</span> <span class="n">summary_results</span><span class="p">,</span> 
-                <span class="s1">&#39;window_results&#39;</span><span class="p">:</span> <span class="n">window_results</span><span class="p">}</span></div></div>
+        <span class="k">return</span> <span class="n">summary_results</span></div></div>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">tigramite.independence_tests</span> <span class="kn">import</span> <span class="n">ParCorr</span><span class="p">,</span> <span class="n">CMIknn</span><span class="p">,</span> <span class="n">ParCorrMult</span>
-    <span class="kn">import</span> <span class="nn">tigramite.data_processing_vector</span> <span class="k">as</span> <span class="nn">pp</span>
+    <span class="kn">import</span> <span class="nn">tigramite.data_processing</span> <span class="k">as</span> <span class="nn">pp</span>
     <span class="kn">from</span> <span class="nn">tigramite.toymodels</span> <span class="kn">import</span> <span class="n">structural_causal_processes</span> <span class="k">as</span> <span class="n">toys</span>
     <span class="kn">import</span> <span class="nn">tigramite.plotting</span> <span class="k">as</span> <span class="nn">tp</span>
     <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
@@ -4133,35 +4175,89 @@
     <span class="k">def</span> <span class="nf">lin_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span>
     <span class="k">def</span> <span class="nf">nonlin_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mf">5.</span> <span class="o">*</span> <span class="n">x</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="mf">20.</span><span class="p">))</span>
 
+
     <span class="c1"># 1. Illustration of</span>
     <span class="n">links_coeffs</span> <span class="o">=</span> <span class="p">{</span>
              <span class="mi">0</span><span class="p">:</span> <span class="p">[((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
-             <span class="mi">1</span><span class="p">:</span> <span class="p">[((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
-             <span class="mi">2</span><span class="p">:</span> <span class="p">[((</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
-             <span class="mi">3</span><span class="p">:</span> <span class="p">[((</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
+             <span class="mi">1</span><span class="p">:</span> <span class="p">[((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.7</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
+             <span class="c1"># 2: [((2, -1), 0.5, lin_f), ((1, 0), 0.2, lin_f)],</span>
+             <span class="c1"># 3: [((3, -1), 0.5, lin_f), ((2, 0), 0.3, lin_f)],</span>
              <span class="p">}</span>
     <span class="n">T</span> <span class="o">=</span> <span class="mi">1000</span>
-    <span class="n">data</span><span class="p">,</span> <span class="n">nonstat</span> <span class="o">=</span> <span class="n">toys</span><span class="o">.</span><span class="n">structural_causal_process</span><span class="p">(</span><span class="n">links_coeffs</span><span class="p">,</span>
-                        <span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+    <span class="n">data1</span><span class="p">,</span> <span class="n">nonstat</span> <span class="o">=</span> <span class="n">toys</span><span class="o">.</span><span class="n">structural_causal_process</span><span class="p">(</span><span class="n">links_coeffs</span><span class="p">,</span>
+                        <span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 
-    <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> 
+    <span class="n">links_coeffs</span> <span class="o">=</span> <span class="p">{</span>
+             <span class="mi">0</span><span class="p">:</span> <span class="p">[((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
+             <span class="mi">1</span><span class="p">:</span> <span class="p">[((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="o">-</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
+             <span class="c1"># 2: [((2, -1), 0.5, lin_f), ((1, 0), 0.2, lin_f)],</span>
+             <span class="c1"># 3: [((3, -1), 0.5, lin_f), ((2, 0), 0.3, lin_f)],</span>
+             <span class="p">}</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="mi">1000</span>
+
+    <span class="n">data2</span><span class="p">,</span> <span class="n">nonstat</span> <span class="o">=</span> <span class="n">toys</span><span class="o">.</span><span class="n">structural_causal_process</span><span class="p">(</span><span class="n">links_coeffs</span><span class="p">,</span>
+                        <span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+
+    <span class="c1"># Create </span>
+    <span class="n">multidata</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">multidata</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span> <span class="p">(</span><span class="n">data1</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">500</span><span class="p">],</span> <span class="n">data2</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">500</span><span class="p">]),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">multidata</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span> <span class="p">(</span><span class="n">data1</span><span class="p">[</span><span class="mi">500</span><span class="p">:</span><span class="mi">1000</span><span class="p">],</span> <span class="n">data2</span><span class="p">[</span><span class="mi">500</span><span class="p">:</span><span class="mi">700</span><span class="p">]),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="c1"># multidata[1] = data1[500:900]</span>
+
+    <span class="n">multidata</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">40</span><span class="p">:</span><span class="mi">100</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mf">999.</span>
+
+    <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">multidata</span><span class="p">,</span> <span class="n">analysis_mode</span><span class="o">=</span><span class="s1">&#39;multiple&#39;</span><span class="p">,</span>
+            <span class="n">missing_flag</span> <span class="o">=</span> <span class="mf">999.</span><span class="p">,</span>
+            <span class="n">time_offsets</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span><span class="mi">50</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">0</span><span class="p">}</span>
+             <span class="c1"># reference_points=list(range(500, 1000))</span>
+             <span class="p">)</span> 
 
     <span class="n">pcmci</span> <span class="o">=</span> <span class="n">PCMCI</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span> 
-        <span class="n">cond_ind_test</span><span class="o">=</span><span class="n">ParCorr</span><span class="p">(),</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">results</span> <span class="o">=</span> <span class="n">pcmci</span><span class="o">.</span><span class="n">run_pcmciplus</span><span class="p">(</span><span class="n">tau_min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> 
-        <span class="n">pc_alpha</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+        <span class="n">cond_ind_test</span><span class="o">=</span><span class="n">ParCorr</span><span class="p">(</span><span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-    <span class="n">tp</span><span class="o">.</span><span class="n">plot_graph</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;graph&#39;</span><span class="p">])</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="c1"># results = pcmci.run_pcmciplus(tau_max=1)</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="n">pcmci</span><span class="o">.</span><span class="n">run_sliding_window_of</span><span class="p">(</span>
+        <span class="n">window_step</span><span class="o">=</span><span class="mi">499</span><span class="p">,</span> <span class="n">window_length</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+        <span class="n">method</span><span class="o">=</span><span class="s1">&#39;run_pcmciplus&#39;</span><span class="p">,</span> <span class="n">method_args</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;tau_max&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">})</span>
+
+    <span class="c1"># tp.plot_graph(results[&#39;graph&#39;])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">multidata</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">multidata</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;window_results&#39;</span><span class="p">][</span><span class="s1">&#39;val_matrix&#39;</span><span class="p">])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;window_results&#39;</span><span class="p">][</span><span class="s1">&#39;val_matrix&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;window_results&#39;</span><span class="p">][</span><span class="s1">&#39;val_matrix&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="c1"># plt.show()</span>
 
 </pre></div>
 
-            <div class="clearer"></div>
           </div>
+          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Tigramite</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
 <div id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
@@ -4172,27 +4268,29 @@
     </div>
 </div>
 <script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../../genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="../../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 5.1 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">tigramite.pcmci</a></li> 
-      </ul>
+    <div class="footer">
+      &copy;2022, Jakob Runge.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
     </div>
-    <div class="footer" role="contentinfo">
-        &#169; Copyright 2021, Jakob Runge.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.2.
-    </div>
+
+    
+
+    
   </body>
 </html>

@@ -20,7 +20,7 @@ from .independence_tests_base import CondIndTest
 class Gsquared(CondIndTest):
     r"""G-squared conditional independence test for categorical data.
 
-    Uses Chi2 as the null distribution and the method from [4]_ to
+    Uses Chi2 as the null distribution and the method from [7]_ to
     adjust the degrees of freedom. Valid only asymptotically, recommended are
     above 1000-2000 samples (depends on data). For smaller sample sizes use the
     CMIsymb class which includes a local permutation test.
@@ -41,7 +41,7 @@ class Gsquared(CondIndTest):
     References
     ----------
 
-    .. [4] Bishop, Y.M.M., Fienberg, S.E. and Holland, P.W. (1975) Discrete
+    .. [7] Bishop, Y.M.M., Fienberg, S.E. and Holland, P.W. (1975) Discrete
            Multivariate Analysis: Theory and Practice. MIT Press, Cambridge.
 
     Parameters

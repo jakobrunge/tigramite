@@ -12,8 +12,8 @@ class LPCMCI():
     Information Processing Systems, 2020, 33. https://proceedings.neurips.cc/paper/2020/hash/94e70705efae423efda1088614128d0b-Abstract.html
 
     NOTE:
-    This method is still EXPERIMENTAL since the default settings of hyperparameters are still being fine-tuned. We actually invite
-    feedback on which work best in applications and numerical experiments.
+    This method is still EXPERIMENTAL since the default settings of hyperparameters are still being fine-tuned. We actually invite feedback 
+    on which work best in applications and numerical experiments.
 
     The main function, which applies the algorithm, is 'run_lpcmci'.
 

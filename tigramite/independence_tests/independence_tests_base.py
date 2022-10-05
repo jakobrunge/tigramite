@@ -761,6 +761,7 @@ class CondIndTest():
         (conf_lower, conf_upper) : Tuple of floats
             Upper and lower confidence bound of confidence interval.
         """
+
         # Check if a dependence measure if provided or if to use default
         if not dependence_measure:
             dependence_measure = self.get_dependence_measure

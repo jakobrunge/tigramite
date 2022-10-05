@@ -5,35 +5,30 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>tigramite.data_processing &#8212; Tigramite 5.1 documentation</title>
+    <title>tigramite.data_processing &#8212; Tigramite 5.2 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/sphinxdoc.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
     <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" /> 
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../../genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="../../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 5.1 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">tigramite.data_processing</a></li> 
-      </ul>
-    </div>  
+  
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   <h1>Source code for tigramite.data_processing</h1><div class="highlight"><pre>
@@ -76,6 +71,10 @@
 <span class="sd">            N is fixed. </span>
 <span class="sd">    mask : array-like, optional (default: None)</span>
 <span class="sd">        Optional mask array, must be of same format and shape as data.</span>
+<span class="sd">   type_mask : array-like</span>
+<span class="sd">        Binary data array of same shape as array which describes whether </span>
+<span class="sd">        individual samples in a variable (or all samples) are continuous </span>
+<span class="sd">        or discrete: 0s for continuous variables and 1s for discrete variables.</span>
 <span class="sd">    missing_flag : number, optional (default: None)</span>
 <span class="sd">        Flag for missing values in dataframe. Dismisses all time slices of</span>
 <span class="sd">        samples where missing values occur in any variable. For </span>
@@ -143,6 +142,10 @@
 <span class="sd">    self.mask : dictionary</span>
 <span class="sd">        Mask internally mapped to a dictionary representation in the same way as</span>
 <span class="sd">        data is mapped to self.values</span>
+<span class="sd">    self.type_mask : array-like</span>
+<span class="sd">        Binary data array of same shape as array which describes whether </span>
+<span class="sd">        individual samples in a variable (or all samples) are continuous </span>
+<span class="sd">        or discrete: 0s for continuous variables and 1s for discrete variables.</span>
 <span class="sd">    self.missing_flag:</span>
 <span class="sd">        Is missing_flag</span>
 <span class="sd">    self.var_names:</span>
@@ -182,7 +185,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">missing_flag</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vector_vars</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">var_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">datatime</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">analysis_mode</span> <span class="o">=</span><span class="s1">&#39;single&#39;</span><span class="p">,</span> <span class="n">reference_points</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">type_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">datatime</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">analysis_mode</span> <span class="o">=</span><span class="s1">&#39;single&#39;</span><span class="p">,</span> <span class="n">reference_points</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">time_offsets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">remove_missing_upto_maxlag</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 
         <span class="c1"># Check that a valid analysis mode, specified by the argument</span>
@@ -345,9 +348,14 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_mask</span><span class="p">(</span><span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span><span class="p">)</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">type_mask</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">type_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">type_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_mask</span><span class="p">(</span><span class="n">mask</span> <span class="o">=</span> <span class="n">type_mask</span><span class="p">,</span> <span class="n">check_type_mask</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="c1"># Check and prepare the time offsets</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_and_set_time_offsets</span><span class="p">(</span><span class="n">time_offsets</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_offsets_is_none</span> <span class="o">=</span> <span class="n">time_offsets</span> <span class="ow">is</span> <span class="kc">None</span>
 
         <span class="c1"># Set the default datatime if unspecified</span>
         <span class="k">if</span> <span class="n">datatime</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -359,11 +367,13 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">datatime</span> <span class="o">=</span> <span class="n">datatime</span>
 
-        <span class="c1"># Save the largest relevant time step</span>
+        <span class="c1"># Save the largest/smallest relevant time step</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">largest_time_step</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">values</span><span class="p">())),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_offsets</span><span class="o">.</span><span class="n">values</span><span class="p">())))</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">smallest_time_step</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">values</span><span class="p">())),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_offsets</span><span class="o">.</span><span class="n">values</span><span class="p">())))</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
 
         <span class="c1"># Check and prepare the reference points</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_and_set_reference_points</span><span class="p">(</span><span class="n">reference_points</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reference_points_is_none</span> <span class="o">=</span> <span class="n">reference_points</span> <span class="ow">is</span> <span class="kc">None</span>
 
         <span class="c1"># Save the &#39;missing_flag&#39; value</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span> <span class="o">=</span> <span class="n">missing_flag</span>
@@ -378,88 +388,54 @@
 
     <span class="c1"># def _create_bootstrap(self)</span>
 
-    <span class="k">def</span> <span class="nf">_check_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">require_mask</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_check_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">check_type_mask</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Checks that the mask is:</span>
 <span class="sd">            * The same shape as the data</span>
 <span class="sd">            * Is an numpy ndarray (or subtype)</span>
-<span class="sd">            * Does not contain any NaN entrie</span>
+<span class="sd">            * Does not contain any NaN entries</span>
 
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        require_mask : bool (default : False)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Check that there is a mask if required</span>
         <span class="n">_use_mask</span> <span class="o">=</span> <span class="n">mask</span>
-        <span class="k">if</span> <span class="n">_use_mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">_use_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span>
-        <span class="k">if</span> <span class="n">require_mask</span> <span class="ow">and</span> <span class="n">_use_mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expected a mask, but got nothing!&quot;</span><span class="p">)</span>
-
-        <span class="c1"># ########################################################################</span>
-        <span class="c1"># ## HACK:</span>
-        <span class="c1"># # (needed for compatibility with pcmci.py)</span>
-        <span class="c1"># # (unsure about compatibility with models.py)</span>
-        <span class="c1"># if _use_mask is self.mask:</span>
-        <span class="c1">#     return _use_mask</span>
-        <span class="c1">########################################################################</span>
 
         <span class="c1"># If we have a mask, check it</span>
         <span class="k">if</span> <span class="n">_use_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Check data type and generic format of &#39;mask&#39;, map to multiple datasets mode</span>
             <span class="c1"># dictionary representation</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialized_from</span> <span class="o">==</span> <span class="s2">&quot;2d numpy array&quot;</span><span class="p">:</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_use_mask</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
-                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">_use_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-                        <span class="n">_use_mask_dict</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="n">_use_mask</span><span class="p">}</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;&#39;data&#39; given as 2d np.ndarray. &quot;</span>\
-                            <span class="s2">&quot;&#39;mask&#39; is np.ndarray of shape </span><span class="si">{}</span><span class="s2">, must be of &quot;</span>\
-                            <span class="s2">&quot;shape (T, N).&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">_use_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
-
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;&#39;data&#39; given as np.ndarray. &#39;mask&#39; is of &quot;</span>\
-                        <span class="s2">&quot;type </span><span class="si">{}</span><span class="s2">, must also be np.ndarray.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                            <span class="nb">type</span><span class="p">(</span><span class="n">_use_mask</span><span class="p">)))</span>
-
-            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialized_from</span> <span class="o">==</span> <span class="s2">&quot;3d numpy array&quot;</span><span class="p">:</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_use_mask</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
-                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">_use_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
-                        <span class="k">if</span> <span class="n">_use_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">:</span>
-                            <span class="n">_use_mask_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">_use_mask</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">)}</span>
-                        <span class="k">else</span><span class="p">:</span>
-                            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Shape mismatch: </span><span class="si">{}</span><span class="s2"> datasets &quot;</span>\
-                                <span class="s2">&quot; in &#39;data&#39; but </span><span class="si">{}</span><span class="s2"> in &#39;mask&#39;, must be &quot;</span>\
-                                <span class="s2">&quot;identical.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">,</span> <span class="n">_use_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
-
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;&#39;data&#39; given as 3d np.ndarray. &quot;</span>\
-                            <span class="s2">&quot;&#39;mask&#39; is np.ndarray of shape </span><span class="si">{}</span><span class="s2">, must be of &quot;</span>\
-                            <span class="s2">&quot;shape (M, T, N).&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">_use_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
-
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;&#39;data&#39; given as np.ndarray. &#39;mask&#39; is of &quot;</span>\
-                        <span class="s2">&quot;type </span><span class="si">{}</span><span class="s2">, must also be np.ndarray.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                            <span class="nb">type</span><span class="p">(</span><span class="n">_use_mask</span><span class="p">)))</span>
-
-            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialized_from</span> <span class="o">==</span> <span class="s2">&quot;dict&quot;</span><span class="p">:</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_use_mask</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">_use_mask</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">:</span>
-                        <span class="k">for</span> <span class="n">ens_member_key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                            <span class="k">if</span> <span class="n">_use_mask</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ens_member_key</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;data&#39; has key </span><span class="si">{}</span><span class="s2"> (type </span><span class="si">{}</span><span class="s2">) &quot;</span>\
-                                    <span class="s2">&quot;but &#39;mask&#39; does not, keys must be &quot;</span>\
-                                    <span class="s2">&quot;identical.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ens_member_key</span><span class="p">,</span>
-                                        <span class="nb">type</span><span class="p">(</span><span class="n">ens_member_key</span><span class="p">)))</span>
-
-                        <span class="n">_use_mask_dict</span> <span class="o">=</span> <span class="n">_use_mask</span>
-
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_use_mask</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">_use_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="n">_use_mask_dict</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="n">_use_mask</span><span class="p">}</span>
+                <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">_use_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">_use_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">:</span>
+                        <span class="n">_use_mask_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">_use_mask</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">)}</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Shape mismatch: </span><span class="si">{}</span><span class="s2"> datasets &quot;</span>\
-                            <span class="s2">&quot;in &#39;data&#39; but </span><span class="si">{}</span><span class="s2"> in &#39;mask&#39;, must be &quot;</span>\
-                            <span class="s2">&quot;identical.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">_use_mask</span><span class="p">)))</span>
+                            <span class="s2">&quot; in &#39;data&#39; but </span><span class="si">{}</span><span class="s2"> in &#39;mask&#39;, must be &quot;</span>\
+                            <span class="s2">&quot;identical.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">,</span> <span class="n">_use_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;&#39;data&#39; given as dict. &#39;mask&#39; is of type &quot;</span>\
-                        <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">, must also be dict.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">_use_mask</span><span class="p">)))</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;&#39;data&#39; given as 3d np.ndarray. &quot;</span>\
+                        <span class="s2">&quot;&#39;mask&#39; is np.ndarray of shape </span><span class="si">{}</span><span class="s2">, must be of &quot;</span>\
+                        <span class="s2">&quot;shape (M, T, N).&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">_use_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_use_mask</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">_use_mask</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">ens_member_key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                        <span class="k">if</span> <span class="n">_use_mask</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ens_member_key</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;data&#39; has key </span><span class="si">{}</span><span class="s2"> (type </span><span class="si">{}</span><span class="s2">) &quot;</span>\
+                                <span class="s2">&quot;but &#39;mask&#39; does not, keys must be &quot;</span>\
+                                <span class="s2">&quot;identical.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ens_member_key</span><span class="p">,</span>
+                                    <span class="nb">type</span><span class="p">(</span><span class="n">ens_member_key</span><span class="p">)))</span>
+
+                    <span class="n">_use_mask_dict</span> <span class="o">=</span> <span class="n">_use_mask</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Shape mismatch: </span><span class="si">{}</span><span class="s2"> datasets &quot;</span>\
+                        <span class="s2">&quot;in &#39;data&#39; but </span><span class="si">{}</span><span class="s2"> in &#39;mask&#39;, must be &quot;</span>\
+                        <span class="s2">&quot;identical.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">_use_mask</span><span class="p">)))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;&#39;mask&#39; is of type &quot;</span>\
+                    <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">, must be dict or array.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">_use_mask</span><span class="p">)))</span>
 
             <span class="c1"># Check for consistency with shape of &#39;self.values&#39; and for NaNs</span>
             <span class="k">for</span> <span class="n">ens_member_key</span><span class="p">,</span> <span class="n">ens_member_data</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -467,7 +443,9 @@
                 <span class="k">if</span> <span class="n">_use_mask_dict_data</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">ens_member_data</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">_use_mask_dict_data</span><span class="p">))</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
                         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;NaNs in the data mask&quot;</span><span class="p">)</span>
-
+                    <span class="k">if</span> <span class="n">check_type_mask</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">_use_mask_dict_data</span><span class="p">),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]):</span>
+                            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Type mask contains other values than 0 and 1&quot;</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">analysis_mode</span> <span class="o">==</span> <span class="s1">&#39;single&#39;</span><span class="p">:</span>
                         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Shape mismatch: &#39;data&#39; is of shape &quot;</span>\
@@ -597,6 +575,7 @@
                         <span class="n">extraZ</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                         <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                         <span class="n">mask_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">type_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                         <span class="n">return_cleaned_xyz</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                         <span class="n">do_checks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                         <span class="n">remove_overlaps</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -624,6 +603,10 @@
 <span class="sd">            Masking mode: Indicators for which variables in the dependence</span>
 <span class="sd">            measure I(X; Y | Z) the samples should be masked. If None, the mask</span>
 <span class="sd">            is not used. Explained in tutorial on masking and missing values.</span>
+<span class="sd">        type_mask : array-like</span>
+<span class="sd">            Binary data array of same shape as array which describes whether </span>
+<span class="sd">            individual samples in a variable (or all samples) are continuous </span>
+<span class="sd">            or discrete: 0s for continuous variables and 1s for discrete variables.</span>
 <span class="sd">        return_cleaned_xyz : bool, optional (default: False)</span>
 <span class="sd">            Whether to return cleaned X,Y,Z, where possible duplicates are</span>
 <span class="sd">            removed.</span>
@@ -684,9 +667,10 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        array, xyz [,XYZ] : Tuple of data array of shape (dim, n_samples) and</span>
+<span class="sd">        array, xyz [,XYZ], type_mask : Tuple of data array of shape (dim, n_samples),</span>
 <span class="sd">            xyz identifier array of shape (dim,) identifying which row in array</span>
-<span class="sd">            corresponds to X, Y, and Z. For example:: X = [(0, -1)],</span>
+<span class="sd">            corresponds to X, Y, and Z, and the type mask that indicates which samples</span>
+<span class="sd">            are continuous or discrete. For example:: X = [(0, -1)],</span>
 <span class="sd">            Y = [(1, 0)], Z = [(1, -1), (0, -2)] yields an array of shape</span>
 <span class="sd">            (4, n_samples) and xyz is xyz = numpy.array([0,1,2,2]). If</span>
 <span class="sd">            return_cleaned_xyz is True, also outputs the cleaned XYZ lists.</span>
@@ -740,6 +724,12 @@
             <span class="n">_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_mask</span><span class="p">(</span><span class="n">mask</span> <span class="o">=</span> <span class="n">_mask</span><span class="p">)</span>
+            
+        <span class="n">_type_mask</span> <span class="o">=</span> <span class="n">type_mask</span>
+        <span class="k">if</span> <span class="n">_type_mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_type_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">type_mask</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_type_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_mask</span><span class="p">(</span><span class="n">mask</span> <span class="o">=</span> <span class="n">_type_mask</span><span class="p">,</span> <span class="n">check_type_mask</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="c1"># Figure out what cut off we will be using</span>
         <span class="k">if</span> <span class="n">cut_off</span> <span class="o">==</span> <span class="s1">&#39;2xtau_max&#39;</span><span class="p">:</span>
@@ -769,6 +759,7 @@
         <span class="c1"># Run through all datasets and fill a dictionary holding the</span>
         <span class="c1"># samples taken from the individual datasets</span>
         <span class="n">samples_ens_members</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">type_masks</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">ens_member_key</span><span class="p">,</span> <span class="n">ens_member_data</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
 
             <span class="c1"># Apply time offset to the reference points</span>
@@ -872,13 +863,20 @@
 
             <span class="c1"># Build the mask array corresponding to this dataset</span>
             <span class="k">if</span> <span class="n">_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">mask_ens_member</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref_points_here</span><span class="p">)),</span> <span class="n">dtype</span> <span class="o">=</span> <span class="n">ens_member_data</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+                <span class="n">mask_ens_member</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref_points_here</span><span class="p">)),</span> <span class="n">dtype</span> <span class="o">=</span> <span class="s1">&#39;bool&#39;</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">lag</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">XYZ</span><span class="p">):</span>
                     <span class="n">mask_ens_member</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">_mask</span><span class="p">[</span><span class="n">ens_member_key</span><span class="p">][</span><span class="n">ref_points_here</span> <span class="o">+</span> <span class="n">lag</span><span class="p">,</span> <span class="n">var</span><span class="p">]</span>
 
             <span class="c1"># Take care of masking</span>
             <span class="n">use_indices_ens_member</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ref_points_here</span><span class="p">),</span> <span class="n">dtype</span> <span class="o">=</span> <span class="s1">&#39;int&#39;</span><span class="p">)</span>
 
+            <span class="c1"># Build the type mask array corresponding to this dataset</span>
+            <span class="k">if</span> <span class="n">_type_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">type_mask_ens_member</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref_points_here</span><span class="p">)),</span> <span class="n">dtype</span> <span class="o">=</span> <span class="s1">&#39;bool&#39;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">lag</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">XYZ</span><span class="p">):</span>
+                    <span class="n">type_mask_ens_member</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">_type_mask</span><span class="p">[</span><span class="n">ens_member_key</span><span class="p">][</span><span class="n">ref_points_here</span> <span class="o">+</span> <span class="n">lag</span><span class="p">,</span> <span class="n">var</span><span class="p">]</span>
+                <span class="n">type_masks</span><span class="p">[</span><span class="n">ens_member_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">type_mask_ens_member</span>
+            
             <span class="c1"># Remove all values that have missing value flag, and optionally as well the time</span>
             <span class="c1"># slices that occur up to max_lag after</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -922,6 +920,11 @@
 
         <span class="c1"># Concatenate the arrays of all datasets</span>
         <span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">samples_ens_members</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_type_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">type_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">type_masks</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">type_array</span> <span class="o">=</span> <span class="kc">None</span>
+        
         <span class="c1"># print(np.where(np.isnan(array)))</span>
         <span class="c1"># print(array.shape)</span>
 
@@ -931,13 +934,13 @@
 
         <span class="c1"># Print information about the constructed array</span>
         <span class="k">if</span> <span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">print_array_info</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span><span class="p">,</span> <span class="n">mask_type</span><span class="p">,</span> <span class="n">extraZ</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">print_array_info</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span><span class="p">,</span> <span class="n">mask_type</span><span class="p">,</span> <span class="n">type_array</span><span class="p">,</span> <span class="n">extraZ</span><span class="p">)</span>
 
         <span class="c1"># Return the array and xyz and optionally (X, Y, Z)</span>
         <span class="k">if</span> <span class="n">return_cleaned_xyz</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">),</span> <span class="n">type_array</span>
 
-        <span class="k">return</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span></div>
+        <span class="k">return</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">type_array</span></div>
 
     <span class="k">def</span> <span class="nf">_check_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">XYZ</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -973,7 +976,7 @@
         <span class="c1">#     raise ValueError(&quot;Y-nodes are %s, &quot; % str(Y) +</span>
         <span class="c1">#                      &quot;but one of the Y-nodes must have zero lag&quot;)</span>
 
-<div class="viewcode-block" id="DataFrame.print_array_info"><a class="viewcode-back" href="../../index.html#tigramite.data_processing.DataFrame.print_array_info">[docs]</a>    <span class="k">def</span> <span class="nf">print_array_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">missing_flag</span><span class="p">,</span> <span class="n">mask_type</span><span class="p">,</span> <span class="n">extraZ</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="DataFrame.print_array_info"><a class="viewcode-back" href="../../index.html#tigramite.data_processing.DataFrame.print_array_info">[docs]</a>    <span class="k">def</span> <span class="nf">print_array_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">missing_flag</span><span class="p">,</span> <span class="n">mask_type</span><span class="p">,</span> <span class="n">type_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">extraZ</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Print info about the constructed array</span>
 
@@ -995,6 +998,10 @@
 <span class="sd">            Masking mode: Indicators for which variables in the dependence</span>
 <span class="sd">            measure I(X; Y | Z) the samples should be masked. If None, the mask</span>
 <span class="sd">            is not used. Explained in tutorial on masking and missing values.</span>
+<span class="sd">        type_mask : array-like</span>
+<span class="sd">            Binary data array of same shape as array which describes whether </span>
+<span class="sd">            individual samples in a variable (or all samples) are continuous </span>
+<span class="sd">            or discrete: 0s for continuous variables and 1s for discrete variables.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">extraZ</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">extraZ</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1007,6 +1014,8 @@
             <span class="nb">print</span><span class="p">(</span><span class="n">indt</span> <span class="o">+</span> <span class="s2">&quot;extraZ = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">extraZ</span><span class="p">))</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">mask_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">indt</span><span class="o">+</span><span class="s2">&quot;with masked samples in </span><span class="si">%s</span><span class="s2"> removed&quot;</span> <span class="o">%</span> <span class="n">mask_type</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">indt</span><span class="o">+</span><span class="s2">&quot;with </span><span class="si">%s</span><span class="s2"> </span><span class="si">% d</span><span class="s2">iscrete values&quot;</span> <span class="o">%</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">type_mask</span><span class="p">)</span><span class="o">/</span><span class="n">type_mask</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">indt</span><span class="o">+</span><span class="s2">&quot;with missing values = </span><span class="si">%s</span><span class="s2"> removed&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span><span class="p">)</span></div></div>
 
@@ -1412,12 +1421,32 @@
                         <span class="n">verbosity</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 </pre></div>
 
-            <div class="clearer"></div>
           </div>
+          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Tigramite</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
 <div id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
@@ -1428,27 +1457,29 @@
     </div>
 </div>
 <script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../../genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="../../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">Tigramite 5.1 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">tigramite.data_processing</a></li> 
-      </ul>
+    <div class="footer">
+      &copy;2022, Jakob Runge.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
     </div>
-    <div class="footer" role="contentinfo">
-        &#169; Copyright 2021, Jakob Runge.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.2.
-    </div>
+
+    
+
+    
   </body>
 </html>

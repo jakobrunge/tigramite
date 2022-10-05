@@ -90,11 +90,7 @@ class CMIknnMixed(CondIndTest):
     References
     ----------
 
-    .. [3] J. Runge (2018): Conditional Independence Testing Based on a
-           Nearest-Neighbor Estimator of Conditional Mutual Information.
-           In Proceedings of the 21st International Conference on Artificial
-           Intelligence and Statistics.
-           http://proceedings.mlr.press/v84/runge18a.html
+    .. [8] ...
 
     Parameters
     ----------
