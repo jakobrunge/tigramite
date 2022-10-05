@@ -4,5 +4,7 @@ from .parcorr_mult import ParCorrMult
 from .gpdc import GPDC
 from .gpdc_torch import GPDCtorch
 from .cmiknn import CMIknn
+from .cmiknnmixed import CMIknnMixed
 from .cmisymb import CMIsymb
+from .gsquared import Gsquared
 from .oracle_conditional_independence import OracleCI

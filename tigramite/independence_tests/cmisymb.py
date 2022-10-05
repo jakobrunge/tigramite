@@ -7,21 +7,25 @@
 from __future__ import print_function
 import warnings
 import numpy as np
+from scipy.stats.contingency import crosstab
+# from numba import jit   # could make it even faster, also acticate @jit(forceobj=True)
 
 from .independence_tests_base import CondIndTest
 
 class CMIsymb(CondIndTest):
-    r"""Conditional mutual information test based on discrete estimator.
+    r"""Conditional mutual information test for discrete/categorical data.
 
     Conditional mutual information is the most general dependency measure
     coming from an information-theoretic framework. It makes no assumptions
     about the parametric form of the dependencies by directly estimating the
     underlying joint density. The test here is based on directly estimating
     the joint distribution assuming symbolic input, combined with a
-    shuffle test to generate  the distribution under the null hypothesis of
-    independence. The knn-estimator is suitable only for discrete variables.
-    For continuous variables, either pre-process the data using the functions
-    in data_processing or, better, use the CMIknn class.
+    local shuffle test to generate  the distribution under the null hypothesis of
+    independence. This estimator is suitable only for discrete variables.
+    For continuous variables use the CMIknn class and for mixed-variable
+    datasets the CMIknnMixed class (including mixed-type variables).
+
+    Assumes one-dimensional X, Y.
 
     Notes
     -----
@@ -82,9 +86,10 @@ class CMIsymb(CondIndTest):
 
         if self.conf_blocklength is None or self.sig_blocklength is None:
             warnings.warn("Automatic block-length estimations from decay of "
-                          "autocorrelation may not be sensical for discrete "
+                          "autocorrelation may not be correct for discrete "
                           "data")
 
+    # # @jit  #(forceobj=True)
     def _bincount_hist(self, symb_array, weights=None):
         """Computes histogram from symbolic array.
 
@@ -115,7 +120,7 @@ class CMIsymb(CondIndTest):
             symb_array = symb_array.astype('int')
 
         if self.n_symbs is None:
-            n_symbs = int(symb_array.max() + 1)
+            n_symbs = int(symb_array.max() + 1)   # + 1 accounts for the '0'
         else:
             n_symbs = self.n_symbs
             if n_symbs < int(symb_array.max() + 1):
@@ -147,6 +152,7 @@ class CMIsymb(CondIndTest):
 
         return hist
 
+
     def get_dependence_measure(self, array, xyz):
         """Returns CMI estimate based on bincount histogram.
 
@@ -166,8 +172,12 @@ class CMIsymb(CondIndTest):
 
         _, T = array.shape
 
-        # High-dimensional histogram
-        hist = self._bincount_hist(array, weights=None)
+        # High-dimensional histogram, ALSO SWAP summation below when using
+        # bincount!
+        # hist = self._bincount_hist(array, weights=None)  
+        array_flip = np.flipud(array)
+        _, hist = crosstab(*tuple(np.split(array_flip, len(xyz), axis=0)), 
+            levels=None, sparse=False)
 
         def _plogp_vector(T):
             """Precalculation of p*log(p) needed for entropies."""
@@ -178,45 +188,125 @@ class CMIsymb(CondIndTest):
                 return gfunc[time]
             return np.vectorize(plogp_func)
 
+        # Dimensions are (Z^dz, .... Z^1, Y, X) using crosstab, otherwise
+        # (X, Y, Z....)
         plogp = _plogp_vector(T)
         hxyz = (-(plogp(hist)).sum() + plogp(T)) / float(T)
-        hxz = (-(plogp(hist.sum(axis=1))).sum() + plogp(T)) / float(T)
-        hyz = (-(plogp(hist.sum(axis=0))).sum() + plogp(T)) / float(T)
-        hz = (-(plogp(hist.sum(axis=0).sum(axis=0))).sum()+plogp(T)) / float(T)
+        hxz = (-(plogp(hist.sum(axis=-1))).sum() + plogp(T)) / float(T)
+        hyz = (-(plogp(hist.sum(axis=-2))).sum() + plogp(T)) / float(T)
+        hz = (-(plogp(hist.sum(axis=-1).sum(axis=-1))).sum()+plogp(T)) / float(T)
         val = hxz + hyz - hz - hxyz
         return val
 
+    # @jit  #(forceobj=True)
     def get_shuffle_significance(self, array, xyz, value,
                                  return_null_dist=False):
         """Returns p-value for shuffle significance test.
 
-        For residual-based test statistics only the residuals are shuffled.
+        Performes a local permutation test: x_i values are only permuted with
+        those x_j for which z_i = z_j. Samples are drawn without replacement
+        as much as possible.
 
         Parameters
         ----------
         array : array-like
-            data array with X, Y, Z in rows and observations in columns
+            data array with X, Y, Z in rows and observations in columns.
 
         xyz : array of ints
             XYZ identifier array of shape (dim,).
 
         value : number
-            Value of test statistic for unshuffled estimate.
+            Value of test statistic for original (unshuffled) estimate.
 
         Returns
         -------
         pval : float
-            p-value
+            p-value.
         """
 
-        null_dist = self._get_shuffle_dist(array, xyz,
-                                           self.get_dependence_measure,
-                                           sig_samples=self.sig_samples,
-                                           sig_blocklength=self.sig_blocklength,
-                                           verbosity=self.verbosity)
+        dim, T = array.shape
+        x_indices = np.where(xyz == 0)[0]
+        z_indices = np.where(xyz == 2)[0]
+
+        if len(z_indices) > 0:
+            # Get neighbors around each sample point in z
+            z_array = array[z_indices, :].T
+            # Unique combinations of z in the data (z1, z2, z3 ...)
+            z_comb = np.unique(z_array, axis=0)
+
+            # Create neighbor indices of length z_comb with default as -1.
+            neighbors = np.full((len(z_comb), T), -1)
+            # Neighborhood indices for each unique combination in z_comb.
+            for i in range(len(z_comb)):
+                neighbor_indices = np.where((z_array == z_comb[i]).all(axis=1))[0]
+                neighbors[i, :len(neighbor_indices)] = neighbor_indices
+
+            null_dist = np.zeros(self.sig_samples)
+            for sam in range(self.sig_samples):
+                # Generate random order in which to go through samples.
+                order = self.random_state.permutation(T).astype('int32')
+                restricted_permutation = np.zeros(T, dtype='int32')
+                # A global list of used indices across time samples and combinations.
+                # Since there are no repetitive (z) indices across combinations, a global list can be used.
+                used = np.array([], dtype='int32')
+                for sample_index in order:
+                    # Get the index of the z combination for sample_index in z_comb
+                    z_choice_index = np.where((z_comb == array[z_indices, sample_index]).all(axis=1))[0][0]
+                    neighbors_choices = neighbors[z_choice_index][neighbors[z_choice_index] > -1]
+                    # Shuffle neighbors in-place to randomize the choice of indices
+                    self.random_state.shuffle(neighbors_choices)
+                    # Permuting indices
+                    m = 0
+                    use = neighbors_choices[m]
+                    while ((use in used) and (m < len(neighbors_choices))):
+                        m += 1
+                        use = neighbors_choices[m]
+
+                    restricted_permutation[sample_index] = use
+                    used = np.append(used, use)
+
+                array_shuffled = np.copy(array)
+                for i in x_indices:
+                    array_shuffled[i] = array[i, restricted_permutation]
+
+                null_dist[sam] = self.get_dependence_measure(array_shuffled,
+                                                             xyz)
+        else:
+            null_dist = \
+                self._get_shuffle_dist(array, xyz,
+                                       self.get_dependence_measure,
+                                       sig_samples=self.sig_samples,
+                                       sig_blocklength=self.sig_blocklength,
+                                       verbosity=self.verbosity)
 
         pval = (null_dist >= value).mean()
 
         if return_null_dist:
             return pval, null_dist
         return pval
+
+
+if __name__ == '__main__':
+    
+    import tigramite
+    from tigramite.data_processing import DataFrame
+    import tigramite.data_processing as pp
+    import numpy as np
+
+    np.random.seed(42)
+    cmi = CMIsymb(sig_samples=100, seed=4)
+
+    T = 1000
+    dimz = 10
+    z = np.random.binomial(n=1, p=0.5, size=(T, dimz)).reshape(T, dimz)
+    x = np.empty(T).reshape(T, 1)
+    y = np.empty(T).reshape(T, 1)
+    for t in range(T):
+        val = z[t, 0].squeeze()
+        prob = 0.2+val*0.6
+        x[t] = np.random.choice([0,1], p=[prob, 1.-prob])
+        y[t] = np.random.choice([0,1, 2], p=[prob, (1.-prob)/2., (1.-prob)/2.])
+
+    print('start')
+    print(cmi.run_test_raw(x, y, z=None))
+    print(cmi.run_test_raw(x, y, z=z))

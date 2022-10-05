@@ -289,7 +289,7 @@ class ParCorr(CondIndTest):
         Y = [(j, 0)]
         X = [(j, 0)]   # dummy variable here
         Z = parents
-        array, xyz = self.dataframe.construct_array(X=X, Y=Y, Z=Z,
+        array, xyz, _ = self.dataframe.construct_array(X=X, Y=Y, Z=Z,
                                                     tau_max=tau_max,
                                                     mask_type=self.mask_type,
                                                     return_cleaned_xyz=False,

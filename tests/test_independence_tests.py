@@ -5,7 +5,7 @@ from __future__ import print_function
 import numpy as np
 import pytest
 
-from tigramite.independence_tests import ParCorr, GPDC, GPDCtorch, CMIsymb, CMIknn
+from tigramite.independence_tests import ParCorr, GPDC, GPDCtorch, CMIsymb, CMIknn, Gsquared, CMIknnMixed
 import tigramite.data_processing as pp
 from tigramite.toymodels import structural_causal_processes as toys
 
@@ -50,10 +50,10 @@ def check_get_array(ind_test, sample):
     z_nds = true_parents[1]
     tau_max = 3
     # Get the array using the wrapper function
-    a_array, a_xyz, a_xyz_nodes = \
+    a_array, a_xyz, a_xyz_nodes, _ = \
             ind_test._get_array(x_nds, y_nds, z_nds, tau_max)
     # Get the array directly from the dataframe
-    b_array, b_xyz, b_xyz_nodes = \
+    b_array, b_xyz, b_xyz_nodes, _ = \
             dataframe.construct_array(x_nds, y_nds, z_nds,
                                       tau_max=tau_max,
                                       mask_type=ind_test.mask_type,
@@ -78,7 +78,7 @@ def check_run_test(ind_test, sample):
     # Run the test
     val, pval = ind_test.run_test(x_nds, y_nds, z_nds, tau_max)
     # Get the array the test is running on
-    array, xyz, _ = ind_test._get_array(x_nds, y_nds, z_nds, tau_max)
+    array, xyz, _, _ = ind_test._get_array(x_nds, y_nds, z_nds, tau_max)
     dim, T = array.shape
     # Get the correct dependence measure
     val_expt = ind_test.get_dependence_measure(array, xyz)
@@ -100,7 +100,7 @@ def check_get_measure(ind_test, sample):
     # Run the test
     val = ind_test.get_measure(x_nds, y_nds, z_nds, tau_max)
     # Get the array the test is running on
-    array, xyz, _ = ind_test._get_array(x_nds, y_nds, z_nds, tau_max)
+    array, xyz, _, _ = ind_test._get_array(x_nds, y_nds, z_nds, tau_max)
     # Get the correct dependence measure
     val_expt = ind_test.get_dependence_measure(array, xyz)
     # Check the values are close
@@ -126,7 +126,7 @@ def check_get_confidence(ind_test, sample):
     # Get the confidence interval
     conf_a = ind_test.get_confidence(x_nds, y_nds, z_nds, tau_max)
     # Get the array the test is running on
-    array, xyz, _ = ind_test._get_array(x_nds, y_nds, z_nds, tau_max)
+    array, xyz, _, _ = ind_test._get_array(x_nds, y_nds, z_nds, tau_max)
     # Test current confidence interval against bootstrapped interval
     conf_b = ind_test.get_bootstrap_confidence(
         array,
@@ -611,7 +611,7 @@ def test_cmi_symb(cmi_symb, data_sample_d):
     # Transform to symbolic data
     array = pp.quantile_bin_array(array.T, bins=16).T
     # Reset the dimension
-    xyz = np.array([0, 1, 2, 2, 2])
+    xyz = np.array([0, 1, 2])  #, 2, 2])
     # Get the estimated value
     val_est = cmi_symb.get_dependence_measure(array, xyz)
     np.testing.assert_allclose(np.array(_par_corr_to_cmi(corr_val)),

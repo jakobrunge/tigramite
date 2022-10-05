@@ -101,6 +101,12 @@ Test statistics:
 .. autoclass:: tigramite.independence_tests.ParCorrMult
    :members:
 
+.. autoclass:: tigramite.independence_tests.Gsquared
+   :members:
+
+.. autoclass:: tigramite.independence_tests.CMIknnMixed
+   :members:
+
 :mod:`tigramite.causal_effects`: Causal Effect analysis
 ===========================================================
 

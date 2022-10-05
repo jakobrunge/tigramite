@@ -71,7 +71,7 @@ class CondIndTest():
         Level of verbosity.
     """
     @abc.abstractmethod
-    def get_dependence_measure(self, array, xyz):
+    def get_dependence_measure(self, array, xyz, type_mask=None):
         """
         Abstract function that all concrete classes must instantiate.
         """
@@ -219,6 +219,7 @@ class CondIndTest():
                                   " implemented for %s" % self.measure)
 
     def get_shuffle_significance(self, array, xyz, value,
+                                 type_mask=None,
                                  return_null_dist=False):
         """
         Base class assumption that this is not implemented.  Concrete classes
@@ -250,7 +251,9 @@ class CondIndTest():
         """
         self.dataframe = dataframe
         if self.mask_type is not None:
-            dataframe._check_mask(require_mask=True)
+            if dataframe.mask is None:
+                raise ValueError("mask_type is not None, but no mask in dataframe.")
+            dataframe._check_mask(dataframe.mask)
 
     def _keyfy(self, x, z):
         """Helper function to make lists unique."""
@@ -260,7 +263,7 @@ class CondIndTest():
                    verbosity=0):
         """Convencience wrapper around construct_array."""
 
-        if self.measure in ['par_corr']:
+        if self.measure in ['par_corr', 'gsquared', 'gp_dc', 'cmi_symb']:
             if len(X) > 1 or len(Y) > 1:
                 raise ValueError("X and Y for %s must be univariate." %
                                         self.measure)
@@ -354,8 +357,9 @@ class CondIndTest():
         """
 
         # Get the array to test on
-        array, xyz, XYZ = self._get_array(X, Y, Z, tau_max, cut_off, self.verbosity)
+        array, xyz, XYZ, _ = self._get_array(X, Y, Z, tau_max, cut_off, self.verbosity)
         X, Y, Z = XYZ
+        
         # Record the dimensions
         dim, T = array.shape
         # Ensure it is a valid array
@@ -381,7 +385,7 @@ class CondIndTest():
         # Return the value and the pvalue
         return val, pval
 
-    def run_test_raw(self, x, y, z=None):
+    def run_test_raw(self, x, y, z=None, type_mask=None):
         """Perform conditional independence test directly on input arrays x, y, z.
 
         Calls the dependence measure and signficicance test functions. The child
@@ -392,6 +396,12 @@ class CondIndTest():
         ----------
         x, y, z : arrays
             x,y,z are of the form (samples, dimension).
+            
+       type_mask : array-like
+            Binary data array of same shape as array which describes whether 
+            individual samples in a variable (or all samples) are continuous 
+            or discrete: 0s for continuous variables and 1s for discrete variables.
+
 
         Returns
         -------
@@ -469,6 +479,7 @@ class CondIndTest():
             array_resid = np.array([x_resid, y_resid])
             xyz_resid = np.array([0, 1])
             # Return the dependence measure
+            # data type can only be continuous in this case
             return self.get_dependence_measure(array_resid, xyz_resid)
         # If not, return the dependence measure on the array and xyz
         return self.get_dependence_measure(array, xyz)
@@ -509,7 +520,9 @@ class CondIndTest():
         # Return these residuals
         return x_resid
 
-    def get_significance(self, val, array, xyz, T, dim, sig_override=None):
+    def get_significance(self, val, array, xyz, T, dim,
+                         type_mask=None,
+                         sig_override=None):
         """
         Returns the p-value from whichever significance function is specified
         for this test.  If an override is used, then it will call a different
@@ -531,6 +544,11 @@ class CondIndTest():
 
         dim : int
             Dimensionality, ie, number of features.
+            
+       type_mask : array-like
+            Binary data array of same shape as array which describes whether 
+            individual samples in a variable (or all samples) are continuous 
+            or discrete: 0s for continuous variables and 1s for discrete variables.
 
         sig_override : string
             Must be in 'analytic', 'shuffle_test', 'fixed_thres'
@@ -562,7 +580,8 @@ class CondIndTest():
         # Return the calculated value
         return pval
 
-    def get_measure(self, X, Y, Z=None, tau_max=0):
+    def get_measure(self, X, Y, Z=None, tau_max=0, 
+                    type_mask=None):
         """Estimate dependence measure.
 
         Calls the dependence measure function. The child classes must specify
@@ -577,6 +596,12 @@ class CondIndTest():
         tau_max : int, optional (default: 0)
             Maximum time lag. This may be used to make sure that estimates for
             different lags in X, Z, all have the same sample size.
+        
+       type_mask : array-like
+            Binary data array of same shape as array which describes whether 
+            individual samples in a variable (or all samples) are continuous 
+            or discrete: 0s for continuous variables and 1s for discrete variables.
+
 
         Returns
         -------
@@ -585,7 +610,7 @@ class CondIndTest():
 
         """
         # Make the array
-        array, xyz, (X, Y, Z) = self._get_array(X, Y, Z, tau_max)
+        array, xyz, (X, Y, Z), _ = self._get_array(X, Y, Z, tau_max)
         D, T = array.shape
         # Check it is valid
         if np.isnan(array).sum() != 0:
@@ -593,7 +618,8 @@ class CondIndTest():
         # Return the dependence measure
         return self._get_dependence_measure_recycle(X, Y, Z, xyz, array)
 
-    def get_confidence(self, X, Y, Z=None, tau_max=0):
+    def get_confidence(self, X, Y, Z=None, tau_max=0,
+                       type_mask=None):
         """Perform confidence interval estimation.
 
         Calls the dependence measure and confidence test functions. The child
@@ -610,6 +636,11 @@ class CondIndTest():
         tau_max : int, optional (default: 0)
             Maximum time lag. This may be used to make sure that estimates for
             different lags in X, Z, all have the same sample size.
+            
+       type_mask : array-like
+            Binary data array of same shape as array which describes whether 
+            individual samples in a variable (or all samples) are continuous 
+            or discrete: 0s for continuous variables and 1s for discrete variables.
 
         Returns
         -------
@@ -629,7 +660,7 @@ class CondIndTest():
 
         if self.confidence:
             # Make and check the array
-            array, xyz, _ = self._get_array(X, Y, Z, tau_max, verbosity=0)
+            array, xyz, _, type_mask = self._get_array(X, Y, Z, tau_max, verbosity=0)
             dim, T = array.shape
             if np.isnan(array).sum() != 0:
                 raise ValueError("nans in the array!")
@@ -687,7 +718,9 @@ class CondIndTest():
 
     def get_bootstrap_confidence(self, array, xyz, dependence_measure=None,
                                  conf_samples=100, conf_blocklength=None,
-                                 conf_lev=.95, verbosity=0):
+                                 conf_lev=.95, 
+                                 type_mask=None,
+                                 verbosity=0):
         """Perform bootstrap confidence interval estimation.
 
         With conf_blocklength > 1 or None a block-bootstrap is performed.
@@ -714,6 +747,11 @@ class CondIndTest():
             Block length for block-bootstrap. If None, the block length is
             determined from the decay of the autocovariance as explained in
             [1]_.
+
+       type_mask : array-like
+            Binary data array of same shape as array which describes whether 
+            individual samples in a variable (or all samples) are continuous 
+            or discrete: 0s for continuous variables and 1s for discrete variables.
 
         verbosity : int, optional (default: 0)
             Level of verbosity.

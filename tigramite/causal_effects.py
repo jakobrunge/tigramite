@@ -91,7 +91,7 @@ class CausalEffects():
                             'tsg_dag',
                             'tsg_admg',
                             'stationary_dag',
-                            # 'stationary_admg',
+                            'stationary_admg',
 
                             # 'mag',
                             # 'tsg_mag',
@@ -124,9 +124,6 @@ class CausalEffects():
 
         # Construct internal graph from input graph depending on graph type
         # and hidden variables
-        # (self.graph, self.graph_type, 
-        #  self.tau_max, self.hidden_variables) = 
-
         self._construct_graph(graph=graph, graph_type=graph_type,
                               hidden_variables=hidden_variables)
 
@@ -248,14 +245,15 @@ class CausalEffects():
             else:
                 self.graph_type = graph_type   
 
-        elif graph_type in ['stationary_dag']:
+        elif graph_type in ['stationary_dag', 'stationary_admg']:
             # Currently only stationary_dag without hidden variables is supported
             if graph.ndim != 3:
                 raise ValueError("stationary graph_type assumes graph.shape=(N, N, tau_max+1).")
-            # TODO: remove if theory for stationary ADMGs is clear
-            if graph_type == 'stationary_dag' and len(hidden_variables) > 0:
-                raise ValueError("Hidden variables currently not supported for "
-                                 "stationary_dag.")
+            
+            # # TODO: remove if theory for stationary ADMGs is clear
+            # if graph_type == 'stationary_dag' and len(hidden_variables) > 0:
+            #     raise ValueError("Hidden variables currently not supported for "
+            #                      "stationary_dag.")
 
             # For a stationary DAG without hidden variables it's sufficient to consider
             # a tau_max that includes the parents of X, Y, M, and S. A conservative
@@ -268,56 +266,61 @@ class CausalEffects():
 
             self.tau_max = maxlag_XYS + statgraph_tau_max
 
-            ###########################
-            # # self.graph = graph
-            # self.graph = self._get_latent_projection_graph(stationary=True)
-            # self.graph_type = 'tsg_admg'
-            ###########################
-
-
             stat_graph = deepcopy(graph)
 
-            allowed_edges = ["-->", "<--"]
-
-            # Construct tsg_graph
-            graph = np.zeros((self.N, self.N, self.tau_max + 1, self.tau_max + 1), dtype='<U3')
-            graph[:] = ""
-            for (i, j) in itertools.product(range(self.N), range(self.N)):
-                for jt, tauj in enumerate(range(0, self.tau_max + 1)):
-                    for it, taui in enumerate(range(tauj, self.tau_max + 1)):
-                        tau = abs(taui - tauj)
-                        if tau == 0 and j == i:
-                            continue
-                        if tau > statgraph_tau_max:
-                            continue                        
-
-                        # if tau == 0:
-                        #     if stat_graph[i, j, tau] == '-->':
-                        #         graph[i, j, taui, tauj] = "-->" 
-                        #         graph[j, i, tauj, taui] = "<--" 
-
-                        #     # elif stat_graph[i, j, tau] == '<--':
-                        #     #     graph[i, j, taui, tauj] = "<--"
-                        #     #     graph[j, i, tauj, taui] = "-->" 
-                        # else:
-                        if stat_graph[i, j, tau] == '-->':
-                            graph[i, j, taui, tauj] = "-->" 
-                            graph[j, i, tauj, taui] = "<--" 
-                        elif stat_graph[i, j, tau] == '<--':
-                            pass
-                        elif stat_graph[i, j, tau] == '':
-                            pass
-                        else:
-                            edge = stat_graph[i, j, tau]
-                            raise ValueError("Invalid graph edge %s. " %(edge) +
-                                 "For graph_type = %s only %s are allowed." %(graph_type, str(allowed_edges)))
-      
-                        # elif stat_graph[i, j, tau] == '<--':
-                        #     graph[i, j, taui, tauj] = "<--"
-                        #     graph[j, i, tauj, taui] = "-->" 
-
-            self.graph_type = 'tsg_dag'
+            #########################################		
+            # Use this tau_max and construct ADMG by assuming paths of
+            # maximal lag 10*tau_max... TO BE REVISED!
             self.graph = graph
+            self.graph = self._get_latent_projection_graph(stationary=True)
+            self.graph_type = "tsg_admg"
+            #########################################
+
+            # Also create stationary graph extended to tau_max
+            self.stationary_graph = np.zeros((self.N, self.N, self.tau_max + 1), dtype='<U3')
+            self.stationary_graph[:,:, :stat_graph.shape[2]] = stat_graph
+
+            # allowed_edges = ["-->", "<--"]
+
+            # # Construct tsg_graph
+            # graph = np.zeros((self.N, self.N, self.tau_max + 1, self.tau_max + 1), dtype='<U3')
+            # graph[:] = ""
+            # for (i, j) in itertools.product(range(self.N), range(self.N)):
+            #     for jt, tauj in enumerate(range(0, self.tau_max + 1)):
+            #         for it, taui in enumerate(range(tauj, self.tau_max + 1)):
+            #             tau = abs(taui - tauj)
+            #             if tau == 0 and j == i:
+            #                 continue
+            #             if tau > statgraph_tau_max:
+            #                 continue                        
+
+            #             # if tau == 0:
+            #             #     if stat_graph[i, j, tau] == '-->':
+            #             #         graph[i, j, taui, tauj] = "-->" 
+            #             #         graph[j, i, tauj, taui] = "<--" 
+
+            #             #     # elif stat_graph[i, j, tau] == '<--':
+            #             #     #     graph[i, j, taui, tauj] = "<--"
+            #             #     #     graph[j, i, tauj, taui] = "-->" 
+            #             # else:
+            #             if stat_graph[i, j, tau] == '-->':
+            #                 graph[i, j, taui, tauj] = "-->" 
+            #                 graph[j, i, tauj, taui] = "<--" 
+            #             elif stat_graph[i, j, tau] == '<--':
+            #                 pass
+            #             elif stat_graph[i, j, tau] == '':
+            #                 pass
+            #             else:
+            #                 edge = stat_graph[i, j, tau]
+            #                 raise ValueError("Invalid graph edge %s. " %(edge) +
+            #                      "For graph_type = %s only %s are allowed." %(graph_type, str(allowed_edges)))
+      
+            #             # elif stat_graph[i, j, tau] == '<--':
+            #             #     graph[i, j, taui, tauj] = "<--"
+            #             #     graph[j, i, tauj, taui] = "-->" 
+
+            # self.graph_type = 'tsg_dag'
+            # self.graph = graph
 
 
         # return (graph, graph_type, self.tau_max, hidden_variables)
@@ -1155,7 +1158,7 @@ class CausalEffects():
         # See Thm. XXXX - TO BE REVISED!
         XYZ = start.union(end).union(conditions)
         if stationary_graph:
-            max_lag = self._get_maximum_possible_lag(XYZ, self.graph)
+            max_lag = 10*self.tau_max  # TO BE REVISED! self._get_maximum_possible_lag(XYZ, self.graph)
             causal_children = list(self._get_mediators_stationary_graph(start, end, max_lag).union(end))
         else:
             max_lag = None
@@ -1968,6 +1971,7 @@ class CausalEffects():
         conditions_data=None,
         pred_params=None,
         return_further_pred_results=False,
+        aggregation_func=np.mean,
         ):
         """Predict effect of intervention with fitted model.
 
@@ -1984,6 +1988,8 @@ class CausalEffects():
         return_further_pred_results : bool, optional (default: False)
             In case the predictor class returns more than just the expected value,
             the entire results can be returned.
+        aggregation_func : callable
+            Callable applied to output of 'predict'. Default is 'np.mean'.
 
         Returns
         -------
@@ -2009,7 +2015,8 @@ class CausalEffects():
             intervention_data=intervention_data,
             conditions_data=conditions_data,
             pred_params=pred_params,
-            return_further_pred_results=return_further_pred_results) 
+            return_further_pred_results=return_further_pred_results,
+            aggregation_func=aggregation_func,) 
 
         return effect
 
@@ -2143,6 +2150,7 @@ class CausalEffects():
                                         check_SM_overlap=False,
                                         )
                     oset = causal_effects.get_optimal_set()
+                    # print(medy, par, list(set(all_parents)), oset)
                     if oset is False:
                         raise ValueError("Not identifiable via Wright's method.")
                     fit_res = self.model.get_general_fitted_model(
@@ -2166,6 +2174,7 @@ class CausalEffects():
 
                 # print(j, all_parents[j])
                 # if len(all_parents[j]) > 0:
+                # print(medy, list(all_parents))
                 fit_res = self.model.get_general_fitted_model(
                     Y=[medy], X=list(all_parents), Z=[],
                     conditions=None,
@@ -2173,7 +2182,8 @@ class CausalEffects():
                     cut_off='tau_max',
                     return_data=False)
 
-                for ipar, par in enumerate(all_parents):
+                for ipar, par in enumerate(list(all_parents)):
+                    # print(par, fit_res[medy]['model'].coef_[ipar])
                     coeffs[medy][par] = fit_res[medy]['model'].coef_[ipar]
 
         else:
@@ -2542,11 +2552,80 @@ if __name__ == '__main__':
     import tigramite.data_processing as pp
     import tigramite.plotting as tp
     from matplotlib import pyplot as plt
+    import sys
 
     import sklearn
-    from sklearn.linear_model import LinearRegression
+    from sklearn.linear_model import LinearRegression, LogisticRegression
     from sklearn.preprocessing import StandardScaler
 
+
+    graph =  np.array([['', '-->', '', '', '', '', ''],
+                       ['<--', '', '-->', '-->', '', '<--', ''],
+                       ['', '<--', '', '-->', '', '<--', ''],
+                       ['', '<--', '<--', '', '<->', '', '<--'],
+                       ['', '', '', '<->', '', '<--', ''],
+                       ['', '-->', '-->', '', '-->', '', ''],
+                       ['', '', '', '-->', '', '', '']], dtype='<U3')
+
+    X = [(0,0), (1,0)]
+    Y = [(3,0)]
+    causal_effects = CausalEffects(graph, graph_type='admg', X=X, Y=Y, S=None, hidden_variables=None, 
+                                verbosity=1)
+    # Just for plotting purposes
+    var_names = ['$X_1$', '$X_2$', '$M$', '$Y$', '$Z_1$', '$Z_2$', '$Z_3$'] 
+
+    def lin_f(x): return x
+
+    coeff = .5
+    links_coeffs = {
+                    0: [], 
+                    1: [((0, 0), coeff, lin_f), ((5, 0), coeff, lin_f)], 
+                    2: [((1, 0), -coeff, lin_f), ((5, 0), coeff, lin_f)],
+                    3: [((1, 0), 1., lin_f), ((2, 0), coeff, lin_f), ((6, 0), coeff, lin_f), ((7, 0), coeff, lin_f)],
+                    4: [((5, 0), coeff, lin_f), ((7, 0), coeff, lin_f)], 
+                    5: [],
+                    6: [],
+                    7: [],
+                    }
+    # Observational data
+    T = 100
+    data, nonstat = toys.structural_causal_process(links_coeffs, T=T, noises=None, seed=7)
+
+    # Let's make Y a categorical variable using quantile binning
+    data[:,Y[0][0]] = pp.quantile_bin_array(data[:,Y[0][0]].reshape(len(data), 1), 
+        bins=3).squeeze()
+
+    # Time series no 7 is unobserved confounder
+    data = data[:, [0,1,2,3,4,5,6]]
+    dataframe = pp.DataFrame(data)
+
+    # Interventional data for a range of intervention values
+    intervention_data = np.linspace(-10, 10, 5)
+
+    # Fit causal effect model from observational data
+    causal_effects.fit_total_effect(
+            dataframe=dataframe, 
+            estimator=LogisticRegression(),
+            adjustment_set='optimal',
+            conditional_estimator=None,  
+            data_transform=None,
+            mask_type=None,
+            )
+
+    # Predict effect of interventions
+    intervention_data_here = np.tile(intervention_data.reshape(len(intervention_data), 1), (1, 2))
+
+    def aggregation_func(x):
+        x = x.astype('int64')
+        return np.bincount(x, minlength=3)
+
+    estimated_causal_effects = causal_effects.predict_total_effect( 
+            intervention_data=intervention_data_here,
+    #         conditions_data=conditions_data,
+            return_further_pred_results=False,
+            aggregation_func = aggregation_func,
+            )
+    print(estimated_causal_effects)
 
     graph =  np.array([[['', '-->', ''],
                         ['', '', ''],
@@ -2561,7 +2640,7 @@ if __name__ == '__main__':
     X = [(1,-2)]
     Y = [(2,0)]
     causal_effects = CausalEffects(graph, graph_type='stationary_dag', X=X, Y=Y, S=None, 
-                                   hidden_variables=None, 
+                                   hidden_variables=[(2, -1), (2, -2)], 
                                 verbosity=1)
     var_names = ['$X^0$', '$X^1$', '$X^2$']
 
@@ -2580,10 +2659,12 @@ if __name__ == '__main__':
         
     tp.plot_time_series_graph(graph = causal_effects.graph,
             var_names=var_names, 
-    #         save_name='Example.pdf',
+            save_name='Example.pdf',
             figsize = (8, 4),
             special_nodes=special_nodes
-            ); plt.show()
+            ) 
+    # plt.show()
+
 
     def lin_f(x): return x
     coeff = .5
@@ -2615,6 +2696,13 @@ if __name__ == '__main__':
     beta = (y1 - y2)
     print("Causal effect is %.2f" %(beta))
 
+    tp.plot_time_series_graph(
+        graph = causal_effects.graph,
+        save_name='Example_graph.pdf',
+        # special_nodes=special_nodes,
+        var_names=var_names,
+        figsize=(8, 4),
+        )
 
     # T = 100
     # def lin_f(x): return x

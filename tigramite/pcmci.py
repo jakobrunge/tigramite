@@ -3959,7 +3959,7 @@ class PCMCI():
     def run_sliding_window_of(self, method, method_args, 
                         window_step,
                         window_length,
-                        conf_lev = 0.95,
+                        conf_lev = 0.9,
                         ):
         """Runs chosen method on sliding windows taken from DataFrame.
 
@@ -4056,27 +4056,75 @@ class PCMCI():
         self.dataframe.reference_points = original_reference_points
 
         # Generate summary results
+        summary_results = self.return_summary_results(results=window_results, 
+                                                      conf_lev=conf_lev)
+        # summary_results = {}
+
+        # if 'graph' in window_results:
+        #     most_frequent_links, counts = scipy.stats.mode(
+        #                 window_results['graph'], axis=0)
+        #     summary_results['most_frequent_links'] =\
+        #             most_frequent_links[0]  #.squeeze()
+        #     summary_results['link_frequency'] =\
+        #             counts[0]/float(n_windows)   
+
+        # # Confidence intervals for val_matrix; interval is two-sided
+        # c_int = (1. - (1. - conf_lev)/2.)
+        # summary_results['val_matrix_mean'] = np.mean(
+        #                             window_results['val_matrix'], axis=0)
+
+        # summary_results['val_matrix_interval'] = np.stack(np.percentile(
+        #                             window_results['val_matrix'], axis=0,
+        #                             q = [100*(1. - c_int), 100*c_int]), axis=3)
+
+        return {'summary_results': summary_results, 
+                'window_results': window_results}
+
+    def return_summary_results(self, results, conf_lev=0.9):
+        """Return summary results for causal graphs.
+
+        The function returns summary_results of an array of PCMCI(+) results.
+        Summary_results contains val_matrix_mean and val_matrix_interval, the latter 
+        containing the confidence bounds for conf_lev. If the method also returns a graph,
+        then 'most_frequent_links' containing the most frequent link outcome 
+        (either 0 or 1 or a specific link type) in each entry of graph, as well 
+        as 'link_frequency', containing the occurence frequency of the most 
+        frequent link outcome, are returned. 
+
+        Parameters
+        ----------
+        results : dict
+            Results dictionary where the numpy arrays graph and val_matrix are
+            of shape (n_results, N, N, tau_max + 1).
+        conf_lev : float, optional (default: 0.9)
+            Two-sided confidence interval for summary results.
+
+        Returns
+        -------
+        Dictionary of summary results.
+        """
+
+        # Generate summary results
         summary_results = {}
 
-        if 'graph' in window_results:
+        if 'graph' in results:
+            n_results = len(results['graph'])
             most_frequent_links, counts = scipy.stats.mode(
-                        window_results['graph'], axis=0)
+                        results['graph'], axis=0)
             summary_results['most_frequent_links'] =\
                     most_frequent_links[0]  #.squeeze()
             summary_results['link_frequency'] =\
-                    counts[0]/float(n_windows)   
+                    counts[0]/float(n_results)   
 
         # Confidence intervals for val_matrix; interval is two-sided
         c_int = (1. - (1. - conf_lev)/2.)
         summary_results['val_matrix_mean'] = np.mean(
-                                    window_results['val_matrix'], axis=0)
+                                    results['val_matrix'], axis=0)
 
         summary_results['val_matrix_interval'] = np.stack(np.percentile(
-                                    window_results['val_matrix'], axis=0,
+                                    results['val_matrix'], axis=0,
                                     q = [100*(1. - c_int), 100*c_int]), axis=3)
-
-        return {'summary_results': summary_results, 
-                'window_results': window_results}
+        return summary_results
 
 
 if __name__ == '__main__':

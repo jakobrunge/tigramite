@@ -2034,7 +2034,7 @@ def plot_graph(
     else:
         fig, ax = fig_ax
 
-    graph = graph.squeeze()
+    graph = np.copy(graph.squeeze())
 
     if graph.ndim == 4:
         raise ValueError("Time series graph of shape (N,N,tau_max+1,tau_max+1) cannot be represented by plot_graph,"
@@ -2067,7 +2067,7 @@ def plot_graph(
         diagonal = False
 
     if np.count_nonzero(graph == "") == graph.size or diagonal:
-        graph[0, 1, 0] = "---"
+        graph[0, 1, 0] = "xxx"  # Workaround, will not be plotted... 
         no_links = True
     else:
         no_links = False
@@ -2570,7 +2570,7 @@ def plot_time_series_graph(
             tsg_val[translate(i,   max_lag - 1 - taui), translate(j, max_lag-1-tauj)] = 1. #val_matrix[i, j, tau]
             tsg_style[translate(i,   max_lag - 1 - taui), translate(j, max_lag-1-tauj)] = graph[i, j, taui, tauj]
             if link_width is not None:
-                tsg_width[translate(i,   max_lag - 1 - taui), translate(j, max_lag-1-tauj)] = arrow_linewidth
+                tsg_width[translate(i,   max_lag - 1 - taui), translate(j, max_lag-1-tauj)] = link_width[i, j, tau] / link_width.max() * arrow_linewidth
             if link_attribute is not None:
                 tsg_attr[translate(i,   max_lag - 1 - taui), translate(j, max_lag-1-tauj)] = 'spurious'
         # print(tsg_style)   

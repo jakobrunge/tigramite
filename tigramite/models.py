@@ -165,7 +165,7 @@ class Models():
         for y in self.Y:
 
             # Construct array of shape (var, time)
-            array, xyz = \
+            array, xyz, _ = \
                 self.dataframe.construct_array(X=self.X, Y=[y],  
                                                Z=self.conditions,
                                                extraZ=self.Z,
@@ -231,6 +231,7 @@ class Models():
                 conditions_data=None,
                 pred_params=None,
                 return_further_pred_results=False,
+                aggregation_func=np.mean,
                 ):
         r"""Predict effect of intervention with fitted model.
 
@@ -247,6 +248,9 @@ class Models():
         return_further_pred_results : bool, optional (default: False)
             In case the predictor class returns more than just the expected value,
             the entire results can be returned.
+        aggregation_func : callable
+            Callable applied to output of 'predict'. Default is 'np.mean'.
+
         Returns
         -------
         Results from prediction.
@@ -266,7 +270,7 @@ class Models():
         lenS = len(self.conditions)
         lenY = len(self.Y)
 
-        predicted_array = np.zeros((intervention_T, lenY))
+        # predicted_array = np.zeros((intervention_T, lenY))
         pred_dict = {}
         for iy, y in enumerate(self.Y):
             pred_dict[iy] = {}
@@ -312,6 +316,7 @@ class Models():
                 predicted_vals = self.fit_results[y]['model'].predict(
                 X=predictor_array, **pred_params)
 
+                # print(predicted_vals)
                 if self.conditions is not None and conditions_data is not None:
  
                     a_conditional_model = deepcopy(self.conditional_model)
@@ -327,15 +332,26 @@ class Models():
                     predicted_vals = a_conditional_model.predict(
                         X=conditions_array, **pred_params)
 
-                if type(predicted_vals) is tuple:
-                    predicted_array[index, iy] = predicted_vals[0].mean()
-                    pred_dict[iy][index] = predicted_vals
-                else:
-                    predicted_array[index, iy] = predicted_vals.mean()
-
                 if fitted_data_transform is not None:
-                    rescaled = fitted_data_transform['Y'].inverse_transform(X=predicted_array[index, iy].reshape(-1, 1))
-                    predicted_array[index, iy] = rescaled.squeeze()
+                    predicted_vals = fitted_data_transform['Y'].inverse_transform(X=predicted_vals)
+
+                pred_dict[iy][index] = predicted_vals
+
+                # Apply aggregation function
+                if type(predicted_vals) is tuple:
+                    aggregated_pred = aggregation_func(predicted_vals[0])
+                else:
+                    aggregated_pred = aggregation_func(predicted_vals)
+
+                if iy == 0 and index == 0:
+                    predicted_array = np.empty((intervention_T, lenY,) + aggregated_pred.shape, 
+                                            dtype=aggregated_pred.dtype)
+
+                predicted_array[index, iy] = aggregated_pred
+
+                # if fitted_data_transform is not None:
+                #     rescaled = fitted_data_transform['Y'].inverse_transform(X=predicted_array[index, iy].reshape(-1, 1))
+                #     predicted_array[index, iy] = rescaled.squeeze()
 
         if return_further_pred_results:
             return predicted_array, pred_dict
@@ -407,7 +423,7 @@ class Models():
             Y = [(j, 0)]
             X = [(j, 0)]  # dummy
             Z = self.all_parents[j]
-            array, xyz = \
+            array, xyz, _ = \
                 self.dataframe.construct_array(X, Y, Z,
                                                tau_max=self.tau_max,
                                                mask_type=self.mask_type,
@@ -1458,7 +1474,7 @@ class Prediction(Models, PCMCI):
                 #     new_data_mask = self.test_mask
                 # else:
                 new_data_mask = new_data.mask
-                test_array, _ = new_data.construct_array(X, Y, Z,
+                test_array, _, _ = new_data.construct_array(X, Y, Z,
                                                          tau_max=self.tau_max,
                                                          mask=new_data_mask,
                                                          mask_type=self.mask_type,
@@ -1467,7 +1483,7 @@ class Prediction(Models, PCMCI):
                                                          verbosity=self.verbosity)
             # Otherwise use the default values
             else:
-                test_array, _ = \
+                test_array, _, _ = \
                     self.dataframe.construct_array(X, Y, Z,
                                                    tau_max=self.tau_max,
                                                    mask=self.test_mask,
