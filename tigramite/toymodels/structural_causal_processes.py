@@ -13,6 +13,7 @@ import numpy as np
 import scipy.sparse
 import scipy.sparse.linalg
 from numba import jit
+import itertools
 
 def _generate_noise(covar_matrix, time=1000, use_inverse=False):
     """
@@ -788,7 +789,6 @@ def _get_children(parents):
 
     return children
 
-
 def links_to_graph(links, tau_max=None):
     """Helper function to convert dictionary of links to graph array format.
 
@@ -862,6 +862,257 @@ def dag_to_links(dag):
 
     return parents
 
+def generate_structural_causal_process(
+                N=2, 
+                L=1, 
+                dependency_funcs=['linear'], 
+                dependency_coeffs=[-0.5, 0.5], 
+                auto_coeffs=[0.5, 0.7], 
+                contemp_fraction=0.,
+                max_lag=1, 
+                noise_dists=['gaussian'],
+                noise_means=[0.],
+                noise_sigmas=[0.5, 2.],
+                noise_seed=None,
+                seed=None):
+    """"Randomly generates a structural causal process based on input characteristics.
+
+    The process has the form 
+
+    .. math:: X^j_t = \\eta^j_t + a^j X^j_{t-1} + \\sum_{X^i_{t-\\tau}\\in pa(X^j_t)}
+              c^i_{\\tau} f^i_{\\tau}(X^i_{t-\\tau})
+
+    where ``j = 1, ..., N``. Here the properties of :math:`\\eta^j_t` are
+    randomly frawn from the noise parameters (see below), :math:`pa
+    (X^j_t)` are the causal parents drawn randomly such that in total ``L``
+    links occur out of which ``contemp_fraction`` are contemporaneous and
+    their time lags are drawn from ``[0 or 1..max_lag]``, the
+    coefficients :math:`c^i_{\\tau}` are drawn from
+    ``dependency_coeffs``, :math:`a^j` are drawn from ``auto_coeffs``,
+    and :math:`f^i_{\\tau}` are drawn from ``dependency_funcs``.
+
+    The returned dictionary links has the format 
+    ``{0:[((i, -tau), coeff, func),...], 1:[...], ...}`` 
+    where ``func`` can be an arbitrary (nonlinear) function provided
+    as a python callable with one argument and coeff is the multiplication
+    factor. The noise distributions of :math:`\\eta^j` are returned in
+    ``noises``, see specifics below.
+
+    The process might be non-stationary. In case of asymptotically linear
+    dependency functions and no contemporaneous links this can be checked with
+    ``check_stationarity(...)``. Otherwise check by generating a large sample
+    and test for np.inf.
+
+    Parameters
+    ---------
+    N : int
+        Number of variables.
+    L : int
+        Number of cross-links between two different variables.
+    dependency_funcs : list
+        List of callables or strings 'linear' or 'nonlinear' for a linear and a specific nonlinear function
+        that is asymptotically linear.
+    dependency_coeffs : list
+        List of floats from which the coupling coefficients are randomly drawn.
+    auto_coeffs : list
+        List of floats from which the lag-1 autodependencies are randomly drawn.
+    contemp_fraction : float [0., 1]
+        Fraction of the L links that are contemporaneous (lag zero).
+    max_lag : int
+        Maximum lag from which the time lags of links are drawn.
+    noise_dists : list
+        List of noise functions. Either in
+        {'gaussian', 'weibull', 'uniform'} or user-specified, in which case
+        it must be parametrized just by the size parameter. E.g. def beta
+        (T): return np.random.beta(a=1, b=0.5, T)
+    noise_means : list
+        Noise mean. Only used for noise in {'gaussian', 'weibull', 'uniform'}.
+    noise_sigmas : list
+        Noise standard deviation. Only used for noise in {'gaussian', 'weibull', 'uniform'}.   
+    seed : int
+        Random seed to draw the above random functions from.
+    noise_seed : int
+        Random seed for noise function random generator.
+
+    Returns
+    -------
+    links : dict
+        Dictionary of form {0:[((0, -1), coeff, func), ...], 1:[...], ...}.
+    noises : list
+        List of N noise functions to call by noise(T) where T is the time series length.
+    """
+    
+    # Init random states
+    random_state = np.random.RandomState(seed)
+    random_state_noise = np.random.RandomState(noise_seed)
+
+    def linear(x): return x
+    def nonlinear(x): return (x + 5. * x**2 * np.exp(-x**2 / 20.))
+
+    if max_lag == 0:
+        contemp_fraction = 1.
+
+    if contemp_fraction > 0.:
+        ordered_pairs = list(itertools.combinations(range(N), 2))
+        max_poss_links = min(L, len(ordered_pairs))
+        L_contemp = int(contemp_fraction*max_poss_links)
+        L_lagged = max_poss_links - L_contemp
+    else:
+        L_lagged = L
+        L_contemp = 0
+
+    # Random order
+    causal_order = list(random_state.permutation(N))
+
+    # Init link dict
+    links = dict([(i, []) for i in range(N)])
+
+    # Generate auto-dependencies at lag 1
+    if max_lag > 0:
+        for i in causal_order:
+            a = random_state.choice(auto_coeffs)
+            if a != 0.:
+                links[i].append(((int(i), -1), float(a), linear))
+
+    # Non-cyclic contemp random pairs of links such that
+    # index of cause < index of effect
+    # Take up to (!) L_contemp links
+    ordered_pairs = list(itertools.combinations(range(N), 2))
+    random_state.shuffle(ordered_pairs)
+    contemp_links = [(causal_order[pair[0]], causal_order[pair[1]]) 
+                    for pair in ordered_pairs[:L_contemp]]
+
+    # Possibly cyclic lagged random pairs of links 
+    # where we remove already chosen contemp links
+    # Take up to (!) L_contemp links
+    unordered_pairs = list(itertools.permutations(range(N), 2))
+    unordered_pairs = list(set(unordered_pairs) - set(ordered_pairs[:L_contemp]))
+    random_state.shuffle(unordered_pairs)
+    lagged_links = [(causal_order[pair[0]], causal_order[pair[1]]) 
+                    for pair in unordered_pairs[:L_lagged]]
+
+    chosen_links = lagged_links + contemp_links
+
+    # Populate links
+    for (i, j) in chosen_links:
+
+        # Choose lag
+        if (i, j) in contemp_links:
+            tau = 0
+        else:
+            tau = int(random_state.randint(1, max_lag+1))
+
+        # Choose dependency
+        c = float(random_state.choice(dependency_coeffs))
+        if c != 0:
+            func = random_state.choice(dependency_funcs)
+            if func == 'linear':
+                func = linear
+            elif func == 'nonlinear':
+                func = nonlinear
+
+            links[j].append(((int(i), -tau), c, func))
+
+    # Now generate noise functions
+    # Either choose among pre-defined noise types or supply your own
+    class NoiseModel:
+        def __init__(self, mean=0., sigma=1.):
+            self.mean = mean
+            self.sigma = sigma
+        def gaussian(self, T):
+            # Get zero-mean unit variance gaussian distribution
+            return self.mean + self.sigma*random_state_noise.randn(T)
+        def weibull(self, T): 
+            # Get zero-mean sigma variance weibull distribution
+            a = 2
+            mean = scipy.special.gamma(1./a + 1)
+            variance = scipy.special.gamma(2./a + 1) - scipy.special.gamma(1./a + 1)**2
+            return self.mean + self.sigma*(random_state_noise.weibull(a=a, size=T) - mean)/np.sqrt(variance)
+        def uniform(self, T): 
+            # Get zero-mean sigma variance uniform distribution
+            mean = 0.5
+            variance = 1./12.
+            return self.mean + self.sigma*(random_state_noise.uniform(size=T) - mean)/np.sqrt(variance)
+
+    noises = []
+    for j in links:
+        noise_dist = random_state.choice(noise_dists)
+        noise_mean = random_state.choice(noise_means)
+        noise_sigma = random_state.choice(noise_sigmas)
+
+        if noise_dist in ['gaussian', 'weibull', 'uniform']:
+            noise = getattr(NoiseModel(mean = noise_mean, sigma = noise_sigma), noise_dist)
+        else:
+            noise = noise_dist
+        
+        noises.append(noise)
+
+    return links, noises
+
+def check_stationarity(links):
+    """Returns stationarity according to a unit root test.
+
+    Assumes an at least asymptotically linear vector autoregressive process
+    without contemporaneous links.
+
+    Parameters
+    ---------
+    links : dict
+        Dictionary of form {0:[((0, -1), coeff, func), ...], 1:[...], ...}.
+        Also format {0:[(0, -1), ...], 1:[...], ...} is allowed.
+
+    Returns
+    -------
+    stationary : bool
+        True if VAR process is stationary.
+    """
+
+    N = len(links)
+    # Check parameters
+    max_lag = 0
+
+    for j in range(N):
+        for link_props in links[j]:
+            var, lag = link_props[0]
+            # coeff = link_props[1]
+            # coupling = link_props[2]
+
+            max_lag = max(max_lag, abs(lag))
+
+    graph = np.zeros((N,N,max_lag))
+    couplings = []
+
+    for j in range(N):
+        for link_props in links[j]:
+            var, lag = link_props[0]
+            coeff    = link_props[1]
+            coupling = link_props[2]
+            if abs(lag) > 0:
+                graph[j,var,abs(lag)-1] = coeff
+            couplings.append(coupling)
+
+    stabmat = np.zeros((N*max_lag,N*max_lag))
+    index = 0
+
+    for i in range(0,N*max_lag,N):
+        stabmat[:N,i:i+N] = graph[:,:,index]
+        if index < max_lag-1:
+            stabmat[i+N:i+2*N,i:i+N] = np.identity(N)
+        index += 1
+
+    eig = np.linalg.eig(stabmat)[0]
+
+    if np.all(np.abs(eig) < 1.):
+        stationary = True
+    else:
+        stationary = False
+
+    return stationary
+    # if len(eig) == 0:
+    #     return stationary, 0.
+    # else:
+    #     return stationary, np.abs(eig).max()
+
 class _Logger(object):
     """Class to append print output to a string which can be saved"""
     def __init__(self):
@@ -879,18 +1130,18 @@ if __name__ == '__main__':
     def lin_f(x): return x
     def nonlin_f(x): return (x + 5. * x**2 * np.exp(-x**2 / 20.))
 
-    links = {0: [((0, -1), 0.9, lin_f)],
-             1: [((1, -1), 0.8, lin_f), ((0, -1), 0.3, nonlin_f)],
-             2: [((2, -1), 0.7, lin_f), ((1, 0), -0.2, lin_f)],
-             }
-    noises = [np.random.randn, np.random.randn, np.random.randn]
+    links, noises = generate_structural_causal_process()
+    
     data, nonstat = structural_causal_process(links,
-     T=100, noises=noises)
-    print(data.shape)
+             T=100, noises=noises)
+    print(data)
 
-    # Construct graph
-    # links = {0: [(0, -1)],
-    #          1: [(1, -1), (0, -1)],
-    #          2: [(2, -1), (1, 0),],
+    # links = {0: [((0, -1), 0.9, lin_f)],
+    #          1: [((1, -1), 0.8, lin_f), ((0, -1), 0.3, nonlin_f)],
+    #          2: [((2, -1), 0.7, lin_f), ((1, 0), -0.2, lin_f)],
     #          }
-    print(links_to_graph(links))
+    # noises = [np.random.randn, np.random.randn, np.random.randn]
+
+    # data, nonstat = structural_causal_process(links,
+    #  T=100, noises=noises)
+

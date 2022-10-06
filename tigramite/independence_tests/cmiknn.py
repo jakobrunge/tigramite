@@ -470,7 +470,7 @@ if __name__ == '__main__':
                    knn=0.1,
                    verbosity=0)
 
-    T = 1000
+    T = 100
     dimz = 1
 
     # Continuous data

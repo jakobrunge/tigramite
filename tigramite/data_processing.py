@@ -726,6 +726,8 @@ class DataFrame():
         # samples taken from the individual datasets
         samples_ens_members = dict()
         type_masks = dict()
+        self.use_indices_ens_member_dict = dict()
+
         for ens_member_key, ens_member_data in self.values.items():
 
             # Apply time offset to the reference points
@@ -883,6 +885,9 @@ class DataFrame():
             samples_ens_members[ens_member_key] = samples_ens_members[ens_member_key][:, use_indices_ens_member == 1]
 
         ## end for ens_member_key, ens_member_data in self.values.items()
+
+        # Save deleted indices as attribute
+        self.use_indices_ens_member_dict = use_indices_ens_member.copy()
 
         # Concatenate the arrays of all datasets
         array = np.concatenate(tuple(samples_ens_members.values()), axis = 1)

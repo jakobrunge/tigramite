@@ -11,7 +11,7 @@ from sklearn import metrics
 from sklearn.utils.extmath import cartesian
 import numpy as np
 import math
-from .independence_tests_base import CondIndTest
+from independence_tests_base import CondIndTest
 from numba import jit
 import warnings
 
@@ -143,9 +143,9 @@ class CMIknnMixed(CondIndTest):
         return self._measure
 
     def __init__(self,
-                 knn=0.2,
+                 knn=0.1,
                  estimator='MS',
-                 use_local_knn=False,
+                 use_local_knn=False,    # 
                  shuffle_neighbors=5,
                  significance='shuffle_test',
                  transform='standardize',
@@ -227,7 +227,7 @@ class CMIknnMixed(CondIndTest):
             
         """
         
-        continuous_idxs = np.where(np.any(type_mask == 1, axis=1))[0]                                                               
+        continuous_idxs = np.where(np.any(type_mask == 0, axis=1))[0]                                                               
         cont_dim = len(continuous_idxs)
 
         if add_noise:
@@ -1315,45 +1315,67 @@ if __name__ == '__main__':
     import tigramite
     from tigramite.data_processing import DataFrame
     import tigramite.data_processing as pp
+    from tigramite.independence_tests import CMIknn
     import numpy as np
 
     np.random.seed(42)
     cmi = CMIknnMixed(mask_type=None,
                        significance='shuffle_test',
-                       estimator='FPinf',
+                       estimator='cond',
                        use_local_knn=True,
                        fixed_thres=None,
-                       sig_samples=1,
+                       sig_samples=500,
                        sig_blocklength=1,
                        transform='none',
                        knn=0.1,
                        verbosity=0)
 
-    T = 1000
+    # cmiknn = CMIknn(mask_type=None,
+    #                    significance='shuffle_test',
+    #                    # estimator='FPinf',
+    #                    # use_local_knn=True,
+    #                    fixed_thres=None,
+    #                    sig_samples=500,
+    #                    sig_blocklength=1,
+    #                    transform='none',
+    #                    knn=0.1,
+    #                    verbosity=0)
+
+
+    T = 10000
     dimz = 1
 
     # Discrete data
-    # z = np.random.binomial(n=1, p=0.5, size=(T, dimz)).reshape(T, dimz)
-    # x = np.empty(T).reshape(T, 1)
-    # y = np.empty(T).reshape(T, 1)
-    # for t in range(T):
-    #     val = z[t, 0].squeeze()
-    #     prob = 0.2+val*0.6
-    #     x[t] = np.random.choice([0,1], p=[prob, 1.-prob])
-    #     y[t] = np.random.choice([0,1, 2], p=[prob, (1.-prob)/2., (1.-prob)/2.])
+    z = np.random.binomial(n=1, p=0.5, size=(T, dimz)).reshape(T, dimz)
+    x = np.empty(T).reshape(T, 1)
+    y = np.empty(T).reshape(T, 1)
+    for t in range(T):
+        val = z[t, 0].squeeze()
+        prob = 0.2 + val*0.6
+        x[t] = np.random.choice([0,1], p=[prob, 1.-prob])
+        y[t] = np.random.choice([0,1, 2], p=[prob, (1.-prob)/2., (1.-prob)/2.])
 
     # Continuous data
     z = np.random.randn(T, dimz)
     x = (0.5*z[:,0] + np.random.randn(T)).reshape(T, 1)
     y = (0.5*z[:,0] + np.random.randn(T)).reshape(T, 1)
 
+    z2 = np.random.binomial(n=1, p=0.5, size=(T, dimz)).reshape(T, dimz)
+    zfull = np.concatenate((z, z2), axis=1)
+
     print('X _|_ Y')
-    print(cmi.run_test_raw(x, y, z=None, 
+    print(cmi.run_test_raw(x, y, z=zfull, 
                     x_type=np.zeros(T, dtype='bool'),
                     y_type=np.zeros(T, dtype='bool'),
-                    z_type=None, val_only=True))
+                    z_type=np.concatenate((np.zeros((T, dimz), dtype='bool'), np.ones((T, dimz), dtype='bool')), axis=1), 
+                    # val_only=True)
+                    ))
+
+    # print(cmiknn.run_test_raw(x, y, z=None))
+        #   
     # print('X _|_ Y | Z')
     # print(cmi.run_test_raw(x, y, z=z, 
     #                 x_type=np.zeros(T, dtype='bool'), 
     #                 y_type=np.zeros(T, dtype='bool'),
     #                 z_type=np.zeros(T, dtype='bool')))
+

@@ -4058,24 +4058,6 @@ class PCMCI():
         # Generate summary results
         summary_results = self.return_summary_results(results=window_results, 
                                                       conf_lev=conf_lev)
-        # summary_results = {}
-
-        # if 'graph' in window_results:
-        #     most_frequent_links, counts = scipy.stats.mode(
-        #                 window_results['graph'], axis=0)
-        #     summary_results['most_frequent_links'] =\
-        #             most_frequent_links[0]  #.squeeze()
-        #     summary_results['link_frequency'] =\
-        #             counts[0]/float(n_windows)   
-
-        # # Confidence intervals for val_matrix; interval is two-sided
-        # c_int = (1. - (1. - conf_lev)/2.)
-        # summary_results['val_matrix_mean'] = np.mean(
-        #                             window_results['val_matrix'], axis=0)
-
-        # summary_results['val_matrix_interval'] = np.stack(np.percentile(
-        #                             window_results['val_matrix'], axis=0,
-        #                             q = [100*(1. - c_int), 100*c_int]), axis=3)
 
         return {'summary_results': summary_results, 
                 'window_results': window_results}
