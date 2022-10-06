@@ -11,7 +11,7 @@ from sklearn import metrics
 from sklearn.utils.extmath import cartesian
 import numpy as np
 import math
-from independence_tests_base import CondIndTest
+from .independence_tests_base import CondIndTest
 from numba import jit
 import warnings
 
