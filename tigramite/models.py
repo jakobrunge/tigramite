@@ -449,6 +449,7 @@ class Models():
                 # Cache the data if needed
                 if return_data:
                     fit_results[j]['data'] = array
+                    fit_results[j]['used_indices'] = self.dataframe.use_indices_ens_member_dict
             # If there are no parents, skip this variable
             else:
                 fit_results[j] = None
