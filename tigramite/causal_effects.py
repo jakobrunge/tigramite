@@ -2128,12 +2128,16 @@ class CausalEffects():
             max_lag = 0
             for medy in [med for med in mediators] + [y for y in self.listY]:
                 coeffs[medy] = {}
+                j, tauj = medy
                 for ipar, par_coeff in enumerate(links_coeffs[medy[0]]):
                     par, coeff, _ = par_coeff
+                    i, taui = par
+                    taui_shifted = taui + tauj
                     max_lag = max(abs(par[1]), max_lag)
-                    coeffs[medy][par] = coeff #self.fit_results[j][(j, 0)]['model'].coef_[ipar]
+                    coeffs[medy][(i, taui_shifted)] = coeff #self.fit_results[j][(j, 0)]['model'].coef_[ipar]
 
             self.model.tau_max = max_lag
+            print(coeffs)
 
         elif method == 'optimal':
             # all_parents = {}
@@ -2201,6 +2205,7 @@ class CausalEffects():
                     i, taui = node
                     j, tauj = causal_path[index + 1]
                     # tau_ij = abs(tauj - taui)
+                    # print((j, tauj), (i, taui))
                     effect_here *= coeffs[(j, tauj)][(i, taui)]
 
                 effect[(x, y)] += effect_here
@@ -2559,119 +2564,12 @@ if __name__ == '__main__':
     from sklearn.preprocessing import StandardScaler
 
 
-    graph =  np.array([['', '-->', '', '', '', '', ''],
-                       ['<--', '', '-->', '-->', '', '<--', ''],
-                       ['', '<--', '', '-->', '', '<--', ''],
-                       ['', '<--', '<--', '', '<->', '', '<--'],
-                       ['', '', '', '<->', '', '<--', ''],
-                       ['', '-->', '-->', '', '-->', '', ''],
-                       ['', '', '', '-->', '', '', '']], dtype='<U3')
-
-    X = [(0,0), (1,0)]
-    Y = [(3,0)]
-    causal_effects = CausalEffects(graph, graph_type='admg', X=X, Y=Y, S=None, hidden_variables=None, 
-                                verbosity=1)
-    # Just for plotting purposes
-    var_names = ['$X_1$', '$X_2$', '$M$', '$Y$', '$Z_1$', '$Z_2$', '$Z_3$'] 
-
-    def lin_f(x): return x
-
-    coeff = .5
-    links_coeffs = {
-                    0: [], 
-                    1: [((0, 0), coeff, lin_f), ((5, 0), coeff, lin_f)], 
-                    2: [((1, 0), -coeff, lin_f), ((5, 0), coeff, lin_f)],
-                    3: [((1, 0), 1., lin_f), ((2, 0), coeff, lin_f), ((6, 0), coeff, lin_f), ((7, 0), coeff, lin_f)],
-                    4: [((5, 0), coeff, lin_f), ((7, 0), coeff, lin_f)], 
-                    5: [],
-                    6: [],
-                    7: [],
-                    }
-    # Observational data
-    T = 100
-    data, nonstat = toys.structural_causal_process(links_coeffs, T=T, noises=None, seed=7)
-
-    # Let's make Y a categorical variable using quantile binning
-    data[:,Y[0][0]] = pp.quantile_bin_array(data[:,Y[0][0]].reshape(len(data), 1), 
-        bins=3).squeeze()
-
-    # Time series no 7 is unobserved confounder
-    data = data[:, [0,1,2,3,4,5,6]]
-    dataframe = pp.DataFrame(data)
-
-    # Interventional data for a range of intervention values
-    intervention_data = np.linspace(-10, 10, 5)
-
-    # Fit causal effect model from observational data
-    causal_effects.fit_total_effect(
-            dataframe=dataframe, 
-            estimator=LogisticRegression(),
-            adjustment_set='optimal',
-            conditional_estimator=None,  
-            data_transform=None,
-            mask_type=None,
-            )
-
-    # Predict effect of interventions
-    intervention_data_here = np.tile(intervention_data.reshape(len(intervention_data), 1), (1, 2))
-
-    def aggregation_func(x):
-        x = x.astype('int64')
-        return np.bincount(x, minlength=3)
-
-    estimated_causal_effects = causal_effects.predict_total_effect( 
-            intervention_data=intervention_data_here,
-    #         conditions_data=conditions_data,
-            return_further_pred_results=False,
-            aggregation_func = aggregation_func,
-            )
-    print(estimated_causal_effects)
-
-    graph =  np.array([[['', '-->', ''],
-                        ['', '', ''],
-                        ['', '', '']],
-                       [['', '-->', ''],
-                        ['', '-->', ''],
-                        ['-->', '', '-->']],
-                       [['', '', ''],
-                        ['<--', '', ''],
-                        ['', '-->', '']]], dtype='<U3')
-
-    X = [(1,-2)]
-    Y = [(2,0)]
-    causal_effects = CausalEffects(graph, graph_type='stationary_dag', X=X, Y=Y, S=None, 
-                                   hidden_variables=[(2, -1), (2, -2)], 
-                                verbosity=1)
-    var_names = ['$X^0$', '$X^1$', '$X^2$']
-
-    opt = causal_effects.get_optimal_set()
-    print("Oset = ", [(var_names[v[0]], v[1]) for v in opt])
-    special_nodes = {}
-    for node in causal_effects.X:
-        special_nodes[node] = 'red'
-    for node in causal_effects.Y:
-        special_nodes[node] = 'blue'
-    for node in opt:
-        special_nodes[node] = 'orange'
-    for node in causal_effects.M:
-        special_nodes[node] = 'lightblue'
-
-        
-    tp.plot_time_series_graph(graph = causal_effects.graph,
-            var_names=var_names, 
-            save_name='Example.pdf',
-            figsize = (8, 4),
-            special_nodes=special_nodes
-            ) 
-    # plt.show()
-
-
     def lin_f(x): return x
     coeff = .5
     links_coeffs = {
-                    0: [], 
-                    1: [], 
-                    2: [((1, -2), coeff, lin_f)],
+                    0: [((0, -1), coeff, lin_f)], 
+                    1: [((1, -1), coeff, lin_f), ((0, -1), coeff, lin_f)], 
+                    # 2: [((1, -2), coeff, lin_f)],
                     # 3: [((1, 0), coeff, lin_f), ((2, 0), coeff, lin_f), ((6, 0), coeff, lin_f), ((4, 0), coeff, lin_f)],
                     # 4: [((5, 0), coeff, lin_f)], 
                     # 5: [],
@@ -2681,7 +2579,22 @@ if __name__ == '__main__':
     data, nonstat = toys.structural_causal_process(links_coeffs, T=T, noises=None, seed=7)
     dataframe = pp.DataFrame(data)
 
-    causal_effects.fit_wright_effect(dataframe=dataframe, method='parents')
+    graph = CausalEffects.get_graph_from_dict(links_coeffs)
+
+    X = [(0, -5)]
+    Y = [(1, 0)]
+
+    # Initialize class as `stationary_dag`
+    causal_effects = CausalEffects(graph, graph_type='stationary_dag', 
+                                X=X, Y=Y, S=None, 
+                                hidden_variables=None, 
+                                verbosity=0)
+
+    causal_effects.fit_wright_effect(dataframe=dataframe, 
+                            method='links_coeffs',
+                            links_coeffs = links_coeffs,
+                            # mediation = [(1, -1)]
+                            )
 
     intervention_data = 1.*np.ones((1, 1))
     y1 = causal_effects.predict_wright_effect( 
@@ -2696,13 +2609,13 @@ if __name__ == '__main__':
     beta = (y1 - y2)
     print("Causal effect is %.2f" %(beta))
 
-    tp.plot_time_series_graph(
-        graph = causal_effects.graph,
-        save_name='Example_graph.pdf',
-        # special_nodes=special_nodes,
-        var_names=var_names,
-        figsize=(8, 4),
-        )
+    # tp.plot_time_series_graph(
+    #     graph = causal_effects.graph,
+    #     save_name='Example_graph.pdf',
+    #     # special_nodes=special_nodes,
+    #     var_names=var_names,
+    #     figsize=(8, 4),
+    #     )
 
     # T = 100
     # def lin_f(x): return x
