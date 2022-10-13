@@ -1251,11 +1251,11 @@ class Prediction(Models, PCMCI):
         else:
             mask = {0: np.zeros(dataframe.values[0].shape, dtype='bool')}
         # Get the dataframe shape
-        T = len(dataframe.values)
+        T = dataframe.T[0]
         # Have the default dataframe be the training data frame
-        train_mask = mask.copy()
+        train_mask = deepcopy(mask)
         train_mask[0][[t for t in range(T) if t not in train_indices]] = True
-        self.dataframe = dataframe
+        self.dataframe = deepcopy(dataframe)
         self.dataframe.mask = train_mask
         self.dataframe._initialized_from = 'dict'
                  # = DataFrame(dataframe.values[0],
@@ -1270,7 +1270,7 @@ class Prediction(Models, PCMCI):
                         verbosity=verbosity)
 
         # Build the testing dataframe as well
-        self.test_mask = mask.copy()
+        self.test_mask = deepcopy(mask)
         self.test_mask[0][[t for t in range(T) if t not in test_indices]] = True
 
         # Setup the PCMCI instance
@@ -1528,7 +1528,7 @@ if __name__ == '__main__':
 
     def lin_f(x): return x
  
-    T = 10000
+    T = 10
     links = {0: [((0, -1), 0.8, lin_f)],
              1: [((1, -1), 0.8, lin_f), ((0, -1), 0.5, lin_f)],
              2: [((2, -1), 0.8, lin_f), ((1, 0), -0.6, lin_f)]}
@@ -1557,8 +1557,31 @@ if __name__ == '__main__':
     #         prediction_model = sklearn.gaussian_process.GaussianProcessRegressor(),
             # prediction_model = sklearn.neighbors.KNeighborsRegressor(),
         data_transform=sklearn.preprocessing.StandardScaler(),
-        train_indices= range(int(0.8*T)),
-        test_indices= range(int(0.8*T), T),
-        verbosity=1
+        train_indices= list(range(int(0.8*T))),
+        test_indices= list(range(int(0.8*T), T)),
+        verbosity=0
         )
+
+    # predictors = pred.get_predictors(
+    #                        selected_targets=[2],
+    #                        selected_links=None,
+    #                        steps_ahead=1,
+    #                        tau_max=1,
+    #                        pc_alpha=0.2,
+    #                        max_conds_dim=None,
+    #                        max_combinations=1)
+    predictors = {0: [(0, -1)],
+                 1: [(1, -1), (0, -1)],
+                 2: [(2, -1), (1, 0)]}
+    pred.fit(target_predictors=predictors,
+            selected_targets=None, tau_max=None, return_data=False)
+
+    res = pred.predict(target=2,
+                new_data=None,
+                pred_params=None,
+                cut_off='max_lag_or_tau_max')
+
+    print(data[:,2])
+    print(res)
+
 

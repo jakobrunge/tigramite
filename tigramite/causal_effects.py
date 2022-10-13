@@ -2575,13 +2575,13 @@ if __name__ == '__main__':
                     # 5: [],
                     # 6: [],
                     }
-    T = 10000
+    T = 100
     data, nonstat = toys.structural_causal_process(links_coeffs, T=T, noises=None, seed=7)
     dataframe = pp.DataFrame(data)
 
     graph = CausalEffects.get_graph_from_dict(links_coeffs)
 
-    X = [(0, -5)]
+    X = [(0, -7)]
     Y = [(1, 0)]
 
     # Initialize class as `stationary_dag`
@@ -2591,8 +2591,8 @@ if __name__ == '__main__':
                                 verbosity=0)
 
     causal_effects.fit_wright_effect(dataframe=dataframe, 
-                            method='links_coeffs',
-                            links_coeffs = links_coeffs,
+                            # method='links_coeffs',
+                            # links_coeffs = links_coeffs,
                             # mediation = [(1, -1)]
                             )
 
@@ -2607,7 +2607,7 @@ if __name__ == '__main__':
             )
 
     beta = (y1 - y2)
-    print("Causal effect is %.2f" %(beta))
+    print("Causal effect is %.5f" %(beta))
 
     # tp.plot_time_series_graph(
     #     graph = causal_effects.graph,
