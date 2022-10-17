@@ -2345,8 +2345,8 @@ def _check_matrices(graph, val_matrix, link_width, link_attribute):
             if tau == 0:
                 if graph[i, j, 0] != _reverse_patt(graph[j, i, 0]):
                     raise ValueError(
-                        "graph needs to have consistent lag-zero links (eg"
-                        " graph[i,j,0]='-->' requires graph[j,i,0]='<--')"
+                        "graph needs to have consistent lag-zero links, but "
+                        " graph[%d,%d,0]=%s and graph[%d,%d,0]=%s)" %(i, j, graph[i, j, 0], j, i, graph[j, i, 0])
                     )
                 if (
                     val_matrix is not None

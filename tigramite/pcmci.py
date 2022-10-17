@@ -4090,13 +4090,52 @@ class PCMCI():
         summary_results = {}
 
         if 'graph' in results:
-            n_results = len(results['graph'])
-            most_frequent_links, counts = scipy.stats.mode(
-                        results['graph'], axis=0)
-            summary_results['most_frequent_links'] =\
-                    most_frequent_links[0]  #.squeeze()
-            summary_results['link_frequency'] =\
-                    counts[0]/float(n_results)   
+            n_results, N, N, tau_max_plusone = results['graph'].shape
+            tau_max = tau_max_plusone - 1
+            # print(repr(results['graph']))
+            summary_results['most_frequent_links'] = np.zeros((N, N, tau_max_plusone),
+                                dtype=results['graph'][0].dtype)
+            summary_results['link_frequency'] = np.zeros((N, N, tau_max_plusone),
+                                dtype='float')
+            preferred_order = [ 
+                "", 
+                "x-x", 
+                # "x--",
+                # "--x",
+                # "x->",
+                # "<-x", 
+                # "x-o",
+                # "o-x",
+                "o-o",            
+                # "o--",
+                # "--o",
+                # "o->",
+                # "<-o",
+                # "---",
+                # "<->",
+                # "-->",
+                # "<--",
+                # "<-+",
+                # "+->",
+                ]
+
+            for (i, j) in itertools.product(range(N), range(N)):
+                for abstau in range(0, tau_max + 1):
+                    links, counts = np.unique(results['graph'][:,i,j,abstau], 
+                                        return_counts=True)
+                    list_of_most_freq = links[counts == counts.max()]
+                    if len(list_of_most_freq) == 1:
+                        choice = list_of_most_freq[0]
+                    else:
+                        ordered_list = [link for link in preferred_order
+                                         if link in list_of_most_freq]
+                        if len(ordered_list) == 0:
+                            choice = "x-x"
+                        else:
+                            choice = ordered_list[0]
+                    summary_results['most_frequent_links'][i,j, abstau] = choice
+                    summary_results['link_frequency'][i,j, abstau] = \
+                                counts[counts == counts.max()].sum()/float(n_results)
 
         # Confidence intervals for val_matrix; interval is two-sided
         c_int = (1. - (1. - conf_lev)/2.)
@@ -4163,7 +4202,6 @@ if __name__ == '__main__':
     pcmci = PCMCI(dataframe=dataframe, 
         cond_ind_test=ParCorr(verbosity=0), verbosity=0)
 
-
     # results = pcmci.run_pcmciplus(tau_max=1)
 
     results = pcmci.run_sliding_window_of(
@@ -4176,5 +4214,5 @@ if __name__ == '__main__':
     print(results['window_results']['val_matrix'][0][0,1])
     print(results['window_results']['val_matrix'][1][0,1])
 
-    # plt.show()
+    plt.show()
 

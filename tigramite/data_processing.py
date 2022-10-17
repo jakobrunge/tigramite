@@ -80,7 +80,7 @@ class DataFrame():
         if analysis_mode == 'multiple' and data is dictionary:
             Must be dictionary of the form {key(m): time_offset(m), ...} whose
             set of keys agrees with the set of keys of data and whose values are
-            non-negative integers, at least of one which is 0. The value
+            non-negative integers, at least one of which is 0. The value
             time_offset(m) defines the time offset of dataset m with
             respect to a shared time axis.
 
