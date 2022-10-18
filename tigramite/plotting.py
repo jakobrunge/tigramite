@@ -1580,7 +1580,8 @@ def _draw_network_with_curved_edges(
                 # linewidth = width*factor
             elif d.get("outer_edge_type") in ["o->", "-->", "<-o", "<--", "<-x", "x->", "+->", "<-+"]:
                 arrowstyle = "->, head_width=0.4, head_length=1"
-
+            else:
+                raise ValueError("edge type not valid.")
         else:
             rad = -1.0 * inner_edge_curved * curved_radius
             if cmap_links is not None:
@@ -1617,6 +1618,8 @@ def _draw_network_with_curved_edges(
                 arrowstyle = "<->, head_width=0.4, head_length=1"
             elif d.get("inner_edge_type") in ["o->", "-->", "<-o", "<--", "<-x", "x->", "+->"]:
                 arrowstyle = "->, head_width=0.4, head_length=1"
+            else:
+                raise ValueError("edge type not valid.")
 
             linestyle = d.get("inner_edge_style")
 

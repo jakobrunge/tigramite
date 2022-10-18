@@ -1273,6 +1273,9 @@ class Prediction(Models, PCMCI):
         self.test_mask = deepcopy(mask)
         self.test_mask[0][[t for t in range(T) if t not in test_indices]] = True
 
+        self.train_indices = train_indices
+        self.test_indices = test_indices
+
         # Setup the PCMCI instance
         if cond_ind_test is not None:
             # Force the masking
@@ -1381,6 +1384,22 @@ class Prediction(Models, PCMCI):
         self : instance of self
         """
 
+        if tau_max is None:
+            # Find the maximal parents lag
+            max_parents_lag = 0
+            for j in self.selected_targets:
+                if target_predictors[j]:
+                    this_parent_lag = np.abs(np.array(target_predictors[j])[:, 1]).max()
+                    max_parents_lag = max(max_parents_lag, this_parent_lag)
+        else:
+            max_parents_lag = tau_max
+
+        if len(set(np.array(self.test_indices) - max_parents_lag)
+                .intersection(self.train_indices)) > 0:
+            warnings.warn("test_indices - maxlag(predictors) [or tau_max] "
+                "overlaps with train_indices: Choose test_indices "
+                "such that there is a gap of max_lag to train_indices!")
+
         self.target_predictors = target_predictors
 
         if selected_targets is None:
@@ -1417,7 +1436,9 @@ class Prediction(Models, PCMCI):
         target : int or list of integers
             Index or indices of target variable(s).
         new_data : data object, optional
-            New Tigramite dataframe object with optional new mask.
+            New Tigramite dataframe object with optional new mask. Note that
+            the data will be cut off according to cut_off, see parameter
+            `cut_off` below.
         pred_params : dict, optional
             Optional parameters passed on to sklearn prediction function.
         cut_off : {'2xtau_max', 'max_lag', 'max_lag_or_tau_max'}
