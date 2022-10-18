@@ -3372,6 +3372,190 @@ class LPCMCI():
         return matrix
 
 
+
+    def run_sliding_window_of(self, method, method_args, 
+                        window_step,
+                        window_length,
+                        conf_lev = 0.9,
+                        ):
+        """Runs chosen method on sliding windows taken from DataFrame.
+
+        The function returns summary_results and all_results (containing the
+        individual window results). summary_results contains val_matrix_mean
+        and val_matrix_interval, the latter containing the confidence bounds for
+        conf_lev. If the method also returns a graph, then 'most_frequent_links'
+        containing the most frequent link outcome (either 0 or 1 or a specific
+        link type) in each entry of graph, as well as 'link_frequency',
+        containing the occurence frequency of the most frequent link outcome,
+        are returned. 
+
+        Parameters
+        ----------
+        method : str
+            Chosen method among valid functions in PCMCI.
+        method_args : dict
+            Arguments passed to method.
+        window_step : int
+            Time step of windows.
+        window_length : int
+            Length of sliding window.
+        conf_lev : float, optional (default: 0.9)
+            Two-sided confidence interval for summary results.
+
+        Returns
+        -------
+        Dictionary of results for every sliding window.
+        """
+
+        valid_methods = ['run_lpcmci',]
+
+        if method not in valid_methods:
+            raise ValueError("method must be one of %s" % str(valid_methods))
+
+        if self.dataframe.reference_points_is_none is False:
+            raise ValueError("Reference points are not accepted in "
+                             "sliding windows analysis, align data before and use masking"
+                             " and/or missing values.")
+
+        T = self.dataframe.largest_time_step
+
+        if self.cond_ind_test.recycle_residuals:
+            # recycle_residuals clashes with sliding windows...
+            raise ValueError("cond_ind_test.recycle_residuals must be False.")
+
+        if self.verbosity > 0:
+            print("\n##\n## Running sliding window analysis of %s " % method +
+                  "\n##\n" +
+                  "\nwindow_step = %s \n" % window_step +
+                  "\nwindow_length = %s \n" % window_length
+                  )
+
+        original_reference_points = deepcopy(self.dataframe.reference_points)
+
+        window_start_points = np.arange(0, T - window_length, window_step)
+        n_windows = len(window_start_points)
+
+        window_results = {}
+        for iw, w in enumerate(window_start_points):
+            # Construct reference_points from window
+            time_window = np.arange(w, w + window_length, 1)
+            # Remove points beyond T
+            time_window = time_window[time_window < T]
+
+            self.dataframe.reference_points = time_window
+            window_res = deepcopy(getattr(self, method)(**method_args))
+
+            # Aggregate val_matrix and other arrays to new arrays with
+            # windows as first dimension. Lists and other objects
+            # are stored in dictionary
+            for key in window_res:
+                res_item = window_res[key]
+                if iw == 0:
+                    if type(res_item) is np.ndarray:
+                        window_results[key] = np.empty((n_windows,) 
+                                                     + res_item.shape,
+                                                     dtype=res_item.dtype) 
+                    else:
+                        window_results[key] = {}
+                
+                window_results[key][iw] = res_item
+
+        # Reset to original_reference_points data for further analyses
+        # self.dataframe.values[0] = original_data
+        self.dataframe.reference_points = original_reference_points
+
+        # Generate summary results
+        summary_results = self.return_summary_results(results=window_results, 
+                                                      conf_lev=conf_lev)
+
+        return {'summary_results': summary_results, 
+                'window_results': window_results}
+
+    def return_summary_results(self, results, conf_lev=0.9):
+        """Return summary results for causal graphs.
+
+        The function returns summary_results of an array of PCMCI(+) results.
+        Summary_results contains val_matrix_mean and val_matrix_interval, the latter 
+        containing the confidence bounds for conf_lev. If the method also returns a graph,
+        then 'most_frequent_links' containing the most frequent link outcome 
+        (either 0 or 1 or a specific link type) in each entry of graph, as well 
+        as 'link_frequency', containing the occurence frequency of the most 
+        frequent link outcome, are returned. 
+
+        Parameters
+        ----------
+        results : dict
+            Results dictionary where the numpy arrays graph and val_matrix are
+            of shape (n_results, N, N, tau_max + 1).
+        conf_lev : float, optional (default: 0.9)
+            Two-sided confidence interval for summary results.
+
+        Returns
+        -------
+        Dictionary of summary results.
+        """
+
+        # Generate summary results
+        summary_results = {}
+
+        if 'graph' in results:
+            n_results, N, N, tau_max_plusone = results['graph'].shape
+            tau_max = tau_max_plusone - 1
+            # print(repr(results['graph']))
+            summary_results['most_frequent_links'] = np.zeros((N, N, tau_max_plusone),
+                                dtype=results['graph'][0].dtype)
+            summary_results['link_frequency'] = np.zeros((N, N, tau_max_plusone),
+                                dtype='float')
+            preferred_order = [ 
+                "", 
+                "x-x", 
+                # "x--",
+                # "--x",
+                # "x->",
+                # "<-x", 
+                # "x-o",
+                # "o-x",
+                "o-o",            
+                # "o--",
+                # "--o",
+                # "o->",
+                # "<-o",
+                # "---",
+                # "<->",
+                # "-->",
+                # "<--",
+                # "<-+",
+                # "+->",
+                ]
+
+            for (i, j) in product(range(N), range(N)):
+                for abstau in range(0, tau_max + 1):
+                    links, counts = np.unique(results['graph'][:,i,j,abstau], 
+                                        return_counts=True)
+                    list_of_most_freq = links[counts == counts.max()]
+                    if len(list_of_most_freq) == 1:
+                        choice = list_of_most_freq[0]
+                    else:
+                        ordered_list = [link for link in preferred_order
+                                         if link in list_of_most_freq]
+                        if len(ordered_list) == 0:
+                            choice = "x-x"
+                        else:
+                            choice = ordered_list[0]
+                    summary_results['most_frequent_links'][i,j, abstau] = choice
+                    summary_results['link_frequency'][i,j, abstau] = \
+                                counts[counts == counts.max()].sum()/float(n_results)
+
+        # Confidence intervals for val_matrix; interval is two-sided
+        c_int = (1. - (1. - conf_lev)/2.)
+        summary_results['val_matrix_mean'] = np.mean(
+                                    results['val_matrix'], axis=0)
+
+        summary_results['val_matrix_interval'] = np.stack(np.percentile(
+                                    results['val_matrix'], axis=0,
+                                    q = [100*(1. - c_int), 100*c_int]), axis=3)
+        return summary_results
+
 if __name__ == '__main__':
 
     from tigramite.independence_tests import ParCorr

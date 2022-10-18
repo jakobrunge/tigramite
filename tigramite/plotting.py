@@ -31,7 +31,7 @@ from matplotlib import pyplot, ticker
 from matplotlib.ticker import FormatStrFormatter
 import matplotlib.patches as mpatches
 from matplotlib.collections import PatchCollection
-
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 import sys
 from operator import sub
 import tigramite.data_processing as pp
@@ -987,7 +987,7 @@ class setup_scatter_matrix:
         alpha=1.0,
         selected_dataset=0,
     ):
-        """Add lag function plot from val_matrix array.
+        """Add scatter plot.
 
         Parameters
         ----------
@@ -1108,6 +1108,322 @@ class setup_scatter_matrix:
                     markersize=markersize,
                     label=label,
                     alpha=alpha,
+                )
+            axlegend.legend(
+                loc="upper left",
+                ncol=1,
+                bbox_to_anchor=(1.05, 0.0, 0.1, 1.0),
+                borderaxespad=0,
+                fontsize=self.legend_fontsize,
+            ).draw_frame(False)
+
+            self.fig.subplots_adjust(
+                bottom=0.05,
+                left=self.label_space_left,
+                right=1.0 - self.legend_width,
+                top=1.0 - self.label_space_top,
+                hspace=0.5,
+                wspace=0.35,
+            )
+      
+        else:
+            self.fig.subplots_adjust(
+                left=self.label_space_left,
+                bottom=0.05,
+                right=0.95,
+                top=1.0 - self.label_space_top,
+                hspace=0.35,
+                wspace=0.35,
+            )
+       
+        if name is not None:
+            self.fig.savefig(name)
+        else:
+            pyplot.show()
+
+
+def plot_densityplots(dataframe, 
+                      name=None, 
+                      setup_args={}, 
+                      add_densityplot_args={},
+                      selected_dataset=0):
+    """Wrapper helper function to plot density plots.
+    Sets up the matrix object and plots the density plots, see parameters in
+    setup_density_matrix and add_densityplot.
+
+    The diagonal shows the marginal densities. 
+
+    Requires seaborn.
+
+    Parameters
+    ----------
+    dataframe : data object
+        Tigramite dataframe object. It must have the attributes dataframe.values
+        yielding a numpy array of shape (observations T, variables N) and
+        optionally a mask of the same shape and a missing values flag.
+    name : str, optional (default: None)
+        File name. If None, figure is shown in window.
+    setup_args : dict
+        Arguments for setting up the density plot matrix, see doc of
+        setup_density_matrix.
+    add_densityplot_args : dict
+        Arguments for adding a density plot matrix.
+    selected_dataset : int, optional (default: 0)
+        In case of multiple datasets in dataframe, plot this one.
+
+    Returns
+    -------
+    matrix : object
+        Further density plots can be overlaid using the
+        matrix.add_densityplot function.
+    """
+
+    N = dataframe.N
+
+    matrix = setup_density_matrix(N=N, var_names=dataframe.var_names, **setup_args)
+    matrix.add_densityplot(dataframe=dataframe, selected_dataset=selected_dataset, 
+        **add_densityplot_args)
+    matrix.adjustfig(name=name)
+   
+
+    return matrix
+
+
+class setup_density_matrix:
+    """Create matrix of density plot panels.
+    Class to setup figure object. The function add_densityplot allows to plot
+    density plots of variables in the dataframe. 
+
+    Further density plots can be overlaid using the matrix.add_densityplot 
+    function.
+
+    Parameters
+    ----------
+    N : int
+        Number of variables
+    var_names : list, optional (default: None)
+        List of variable names. If None, range(N) is used.
+    figsize : tuple of floats, optional (default: None)
+        Figure size if new figure is created. If None, default pyplot figsize
+        is used.
+    label_space_left : float, optional (default: 0.1)
+        Fraction of horizontal figure space to allocate left of plot for labels.
+    label_space_top : float, optional (default: 0.05)
+        Fraction of vertical figure space to allocate top of plot for labels.
+    legend_width : float, optional (default: 0.15)
+        Fraction of horizontal figure space to allocate right of plot for
+        legend.
+    plot_gridlines : bool, optional (default: False)
+        Whether to show a grid.
+    label_fontsize : int, optional (default: 10)
+        Fontsize of variable labels.
+    """
+
+    def __init__(
+        self,
+        N,
+        var_names=None,
+        figsize=None,
+        label_space_left=0.1,
+        label_space_top=0.05,
+        legend_width=0.15,
+        legend_fontsize=10,
+        plot_gridlines=False,
+        label_fontsize=10,
+    ):
+
+        self.labels = []
+    
+        self.legend_width = legend_width
+        self.legend_fontsize = legend_fontsize
+
+        self.label_space_left = label_space_left
+        self.label_space_top = label_space_top
+        self.label_fontsize = label_fontsize
+
+        self.fig = pyplot.figure(figsize=figsize)
+
+        self.axes_dict = {}
+
+        if var_names is None:
+            var_names = range(N)
+
+        plot_index = 1
+        for i in range(N):
+            for j in range(N):
+                self.axes_dict[(i, j)] = self.fig.add_subplot(N, N, plot_index, axes_class=Axes)
+                # Plot process labels
+                if j == 0:
+                    trans = transforms.blended_transform_factory(
+                        self.fig.transFigure, self.axes_dict[(i, j)].transAxes
+                    )
+                    self.axes_dict[(i, j)].text(
+                        0.01,
+                        0.5,
+                        "%s" % str(var_names[i]),
+                        fontsize=label_fontsize,
+                        horizontalalignment="left",
+                        verticalalignment="center",
+                        transform=trans,
+                    )
+                if i == 0:
+                    trans = transforms.blended_transform_factory(
+                        self.axes_dict[(i, j)].transAxes, self.fig.transFigure
+                    )
+                    self.axes_dict[(i, j)].text(
+                        0.5,
+                        0.99,
+                        r"${\to}$ " + "%s" % str(var_names[j]),
+                        fontsize=label_fontsize,
+                        horizontalalignment="center",
+                        verticalalignment="top",
+                        transform=trans,
+                    )
+
+                self.axes_dict[(i, j)].axis["right"].set_visible(False)
+                self.axes_dict[(i, j)].axis["top"].set_visible(False)
+
+                # if j != 0:
+                #     self.axes_dict[(i, j)].get_yaxis().set_ticklabels([])
+                # if i != N - 1:
+                #     self.axes_dict[(i, j)].get_xaxis().set_ticklabels([])
+
+                if plot_gridlines:
+                    self.axes_dict[(i, j)].grid(
+                        True,
+                        which="major",
+                        color="black",
+                        linestyle="dotted",
+                        dashes=(1, 1),
+                        linewidth=0.05,
+                        zorder=-5,
+                    )
+
+                plot_index += 1
+
+    def add_densityplot(
+        self,
+        dataframe,
+        density_lags=None,
+        label=None,
+        label_color=None,
+        snskdeplot_args = {'cmap':'Greys'},
+        snskdeplot_diagonal_args = {},
+        selected_dataset=0,
+    ):
+        """Add density function plot.
+
+        Parameters
+        ----------
+        dataframe : data object
+            Tigramite dataframe object. It must have the attributes dataframe.values
+            yielding a numpy array of shape (observations T, variables N) and
+            optionally a mask of the same shape and a missing values flag.
+        scatter_lags : array
+            Lags to use in scatter plots. Either None or of shape (N, N). Then the
+            entry scatter_lags[i, j] = tau will depict the scatter plot of 
+            time series (i, -tau) vs (j, 0). If None, tau = 0 for i != j and for i = j
+            tau = 1. 
+        snskdeplot_args : dict
+            Optional parameters to pass to sns.kdeplot() for i != j for off-diagonal plots.
+        snskdeplot_diagonal_args : dict
+            Optional parameters to pass to sns.kdeplot() for i == j on diagonal.
+        label : string
+            Label of this plot.
+        label_color : string
+            Color of line created just for legend.
+        selected_dataset : int, optional (default: 0)
+            In case of multiple datasets in dataframe, plot this one.
+        """
+
+        # Use seaborn for this one
+        import seaborn as sns
+
+        # set seaborn style
+        sns.set_style("white")
+
+        data = dataframe.values[selected_dataset]
+        if dataframe.mask is not None:
+            mask = dataframe.mask[selected_dataset]
+
+        if label is not None:
+            self.labels.append((label, label_color))
+
+        for ij in list(self.axes_dict):                
+            i = ij[0]
+            j = ij[1]
+            if (density_lags is None) or (i == j):
+                lag = 0
+            else:
+                lag = density_lags[i,j]
+            if lag == 0:
+                x = np.copy(data[:, i])
+                y = np.copy(data[:, j])
+            else:
+                x = np.copy(data[:-lag, i])
+                y = np.copy(data[lag:, j])
+            if dataframe.mask is not None:
+                x[mask[:-lag, i]] = np.nan
+                y[mask[lag:, j]] = np.nan
+
+            if i == j:
+                sns.kdeplot(x,
+                    color = label_color,
+                    # label=r"$\tau{=}%d$" %lag,
+                    **snskdeplot_diagonal_args,
+                    ax = self.axes_dict[(i, j)])
+                self.axes_dict[(i, j)].set_ylabel("")
+            else:
+                sns.kdeplot(x=x, y=y, label=r"$\tau{=}%d$" %lag,
+                    **snskdeplot_args,
+                    ax = self.axes_dict[(i, j)])
+
+    def adjustfig(self, name=None):
+        """Adjust matrix figure.
+
+        Parameters
+        ----------
+        name : str, optional (default: None)
+            File name. If None, figure is shown in window.
+        """
+
+        # Trick to plot legends
+        colors = []
+        for item in self.labels:
+            colors.append(item[1])
+        for ij in list(self.axes_dict):                
+            i = ij[0]
+            j = ij[1]
+
+            leg = self.axes_dict[(i, j)].legend(
+                # loc="upper left",
+                ncol=1,
+                # bbox_to_anchor=(1.05, 0.0, 0.1, 1.0),
+                # borderaxespad=0,
+                fontsize=self.legend_fontsize-2,
+                labelcolor=colors,
+                ).draw_frame(False)
+        
+        if len(self.labels) > 0:
+            axlegend = self.fig.add_subplot(111, frameon=False)
+            axlegend.spines["left"].set_color("none")
+            axlegend.spines["right"].set_color("none")
+            axlegend.spines["bottom"].set_color("none")
+            axlegend.spines["top"].set_color("none")
+            axlegend.set_xticks([])
+            axlegend.set_yticks([])
+
+            # self.labels.append((label, color, marker, markersize, alpha))
+            for item in self.labels:
+                label = item[0]
+                color = item[1]
+
+                axlegend.plot(
+                    [],
+                    [],
+                    linestyle="-",
+                    color=color,
+                    label=label,
                 )
             axlegend.legend(
                 loc="upper left",
@@ -1706,15 +2022,31 @@ def _draw_network_with_curved_edges(
 
         # setup colorbar axes.
         if show_colorbar:
-            cax_e = pyplot.axes(
+            # cax_e = pyplot.axes(
+            #     [
+            #         0.55,
+            #         ax.get_subplotspec().get_position(ax.figure).bounds[1] + 0.02,
+            #         0.4,
+            #         0.025 + (len(all_links_edge_weights) == 0) * 0.035,
+            #     ],
+            #     frameon=False,
+            # )
+            bbox_ax = ax.get_position()
+            width = bbox_ax.xmax-bbox_ax.xmin
+            height = bbox_ax.ymax-bbox_ax.ymin
+            # print(bbox_ax.xmin, bbox_ax.xmax, bbox_ax.ymin, bbox_ax.ymax) 
+            cax_e = fig.add_axes(
                 [
-                    0.55,
-                    ax.get_subplotspec().get_position(ax.figure).bounds[1] + 0.02,
-                    0.4,
-                    0.025 + (len(all_links_edge_weights) == 0) * 0.035,
+                    bbox_ax.xmax - width*0.45,
+                    bbox_ax.ymin,
+                    width*0.4,
+                    0.05*height,   #0.025 + (len(all_links_edge_weights) == 0) * 0.035,
                 ],
                 frameon=False,
             )
+            # divider = make_axes_locatable(ax)
+
+            # cax_e = divider.append_axes('bottom', size='5%', pad=0.05, frameon=False,)
 
             cb_e = pyplot.colorbar(
                 data_to_rgb_links, cax=cax_e, orientation="horizontal"
@@ -1799,12 +2131,14 @@ def _draw_network_with_curved_edges(
                 # ax.get_subplotspec().get_position(ax.figure).bounds[1]+0.05, 0.025, 0.35], frameon=False) #
                 # setup colorbar axes.
                 # setup colorbar axes.
-                cax_n = pyplot.axes(
+                bbox_ax = ax.get_position()
+                # print(bbox_ax.xmin, bbox_ax.xmax, bbox_ax.ymin, bbox_ax.ymax) 
+                cax_n = fig.add_axes(
                     [
-                        0.05,
-                        ax.get_subplotspec().get_position(ax.figure).bounds[1] + 0.02 + ring * 0.11,
-                        0.4,
-                        0.025 + (len(node_rings) == 1) * 0.035,
+                        bbox_ax.xmin + width*0.05,
+                        bbox_ax.ymin,
+                        width*0.4,
+                        0.05*height,   #0.025 + (len(all_links_edge_weights) == 0) * 0.035,
                     ],
                     frameon=False,
                 )
@@ -3682,10 +4016,33 @@ if __name__ == "__main__":
             }
     data, nonstat = toys.structural_causal_process(links, T=T, 
                                 noises=None, seed=7)
-
     dataframe = pp.DataFrame(data, var_names=range(len(links)))
-    plot_scatterplots(dataframe) #, name='scattertest.pdf')
+
+    # links = {
+    #         0: [((0, -1), 1.5*auto_coeff, lin_f)], 
+    #         1: [((1, -1), 1.5*auto_coeff, lin_f), ((0, 0), 1.5*coeff, lin_f)], 
+    #         2: [((2, -1), 1.5*auto_coeff, lin_f), ((1, 0), 1.5*coeff, lin_f)],
+    #         }
+    # data2, nonstat = toys.structural_causal_process(links, T=T, 
+    #                             noises=None, seed=7)
+    # dataframe2 = pp.DataFrame(data2, var_names=range(len(links)))
+    # plot_densityplots(dataframe) #, name='scattertest.pdf')
     
+    N = len(links)
+    matrix = setup_density_matrix(N=N, var_names=dataframe.var_names)
+    matrix.add_densityplot(dataframe=dataframe, 
+        # selected_dataset=0, 
+        **{
+        # 'label':'Weak',
+        # 'label_color':'blue',
+        "snskdeplot_args" : {'cmap':'Reds'},
+        }), #{'cmap':'Blues', 'alpha':0.3}})
+    # matrix.add_densityplot(dataframe=dataframe2, selected_dataset=0, 
+    #     **{'label':'Strong',
+    #     'label_color':'red',
+    #     "snskdeplot_args" : {'cmap':'Reds', 'alpha':0.3}})
+    matrix.adjustfig(name='test.pdf')
+
     # matrix = setup_scatter_matrix(N=dataframe.N, 
     #     var_names=dataframe.var_names)
     # scatter_lags = np.ones((3, 3)).astype('int')
