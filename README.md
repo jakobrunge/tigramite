@@ -27,10 +27,12 @@ Further, Tigramite provides several causal discovery methods that can be used un
 
 | Conditional independence test | Assumptions                                  |
 |--------|---------------------------------------------------------------------------|
-| ParCorr  | univariate variables with continuous, linear Gaussian dependencies |
-| GPDC / GPDCtorch | univariate variables with continuous, additive dependencies        |
-| CMIknn | multivariate variables with continuous, general dependencies           |
-| CMIsymb | univariate with discrete/categorical dependencies           |
+| ParCorr  | univariate, continuous variables with linear dependencies and Gaussian noise |
+| RobustParCorr  | univariate, continuous variables with linear dependencies |
+| GPDC / GPDCtorch | univariate, continuous variables with additive dependencies        |
+| CMIknn | multivariate, continuous variables with more general dependencies           |
+| Gsquared | univariate discrete/categorical variables           |
+| CMIsymb | univariate discrete/categorical variables           |
 
 ## General Notes
 

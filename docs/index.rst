@@ -62,6 +62,7 @@ Tigramite is a causal time series analysis python package. It allows to efficien
    tigramite.lpcmci.LPCMCI
    tigramite.independence_tests.CondIndTest
    tigramite.independence_tests.ParCorr
+   tigramite.independence_tests.RobustParCorr
    tigramite.independence_tests.GPDC
    tigramite.independence_tests.GPDCtorch
    tigramite.independence_tests.CMIknn
@@ -102,6 +103,9 @@ Base class:
 Test statistics:
 
 .. autoclass:: tigramite.independence_tests.ParCorr
+   :members:
+
+.. autoclass:: tigramite.independence_tests.RobustParCorr
    :members:
 
 .. autoclass:: tigramite.independence_tests.GPDC
