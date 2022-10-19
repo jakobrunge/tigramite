@@ -979,12 +979,12 @@ class setup_scatter_matrix:
     def add_scatterplot(
         self,
         dataframe,
-        scatter_lags=None,
+        matrix_lags=None,
         color="black",
         label=None,
         marker=".",
         markersize=5,
-        alpha=1.0,
+        alpha=.2,
         selected_dataset=0,
     ):
         """Add scatter plot.
@@ -995,9 +995,9 @@ class setup_scatter_matrix:
             Tigramite dataframe object. It must have the attributes dataframe.values
             yielding a numpy array of shape (observations T, variables N) and
             optionally a mask of the same shape and a missing values flag.
-        scatter_lags : array
+        matrix_lags : array
             Lags to use in scatter plots. Either None or of shape (N, N). Then the
-            entry scatter_lags[i, j] = tau will depict the scatter plot of 
+            entry matrix_lags[i, j] = tau will depict the scatter plot of 
             time series (i, -tau) vs (j, 0). If None, tau = 0 for i != j and for i = j
             tau = 1. 
         color : str, optional (default: 'black')
@@ -1024,13 +1024,13 @@ class setup_scatter_matrix:
         for ij in list(self.axes_dict):                
             i = ij[0]
             j = ij[1]
-            if scatter_lags is None:
+            if matrix_lags is None:
                 if i == j:
                     lag = 1
                 else:
                     lag = 0
             else:
-                lag = scatter_lags[i,j]
+                lag = matrix_lags[i,j]
             if lag == 0:
                 x = np.copy(data[:, i])
                 y = np.copy(data[:, j])
@@ -1304,9 +1304,9 @@ class setup_density_matrix:
     def add_densityplot(
         self,
         dataframe,
-        density_lags=None,
+        matrix_lags=None,
         label=None,
-        label_color=None,
+        label_color='black',
         snskdeplot_args = {'cmap':'Greys'},
         snskdeplot_diagonal_args = {},
         selected_dataset=0,
@@ -1319,9 +1319,9 @@ class setup_density_matrix:
             Tigramite dataframe object. It must have the attributes dataframe.values
             yielding a numpy array of shape (observations T, variables N) and
             optionally a mask of the same shape and a missing values flag.
-        scatter_lags : array
+        matrix_lags : array
             Lags to use in scatter plots. Either None or of shape (N, N). Then the
-            entry scatter_lags[i, j] = tau will depict the scatter plot of 
+            entry matrix_lags[i, j] = tau will depict the scatter plot of 
             time series (i, -tau) vs (j, 0). If None, tau = 0 for i != j and for i = j
             tau = 1. 
         snskdeplot_args : dict
@@ -1342,20 +1342,22 @@ class setup_density_matrix:
         # set seaborn style
         sns.set_style("white")
 
+        self.matrix_lags = matrix_lags
+
         data = dataframe.values[selected_dataset]
         if dataframe.mask is not None:
             mask = dataframe.mask[selected_dataset]
 
-        if label is not None:
-            self.labels.append((label, label_color))
+        # if label is not None:
+        self.labels.append((label, label_color))
 
         for ij in list(self.axes_dict):                
             i = ij[0]
             j = ij[1]
-            if (density_lags is None) or (i == j):
+            if (matrix_lags is None) or (i == j):
                 lag = 0
             else:
-                lag = density_lags[i,j]
+                lag = matrix_lags[i,j]
             if lag == 0:
                 x = np.copy(data[:, i])
                 y = np.copy(data[:, j])
@@ -1374,8 +1376,10 @@ class setup_density_matrix:
                     ax = self.axes_dict[(i, j)])
                 self.axes_dict[(i, j)].set_ylabel("")
             else:
-                sns.kdeplot(x=x, y=y, label=r"$\tau{=}%d$" %lag,
+                sns.kdeplot(x=x, y=y, 
+                    # label=r"$\tau{=}%d$" %lag,
                     **snskdeplot_args,
+                    fill=True,
                     ax = self.axes_dict[(i, j)])
 
     def adjustfig(self, name=None):
@@ -1388,23 +1392,39 @@ class setup_density_matrix:
         """
 
         # Trick to plot legends
-        colors = []
-        for item in self.labels:
-            colors.append(item[1])
+        # colors = []
+        # for item in self.labels:
+        #     colors.append(item[1])
         for ij in list(self.axes_dict):                
             i = ij[0]
             j = ij[1]
-
-            leg = self.axes_dict[(i, j)].legend(
-                # loc="upper left",
-                ncol=1,
-                # bbox_to_anchor=(1.05, 0.0, 0.1, 1.0),
-                # borderaxespad=0,
-                fontsize=self.legend_fontsize-2,
-                labelcolor=colors,
-                ).draw_frame(False)
+            if self.matrix_lags is None:
+                lag = 0
+            else:
+                lag = self.matrix_lags[i,j]
+            if i != j:
+                colors = []
+                for item in self.labels:
+                    color = item[1]
+                    colors.append(color)
+                    self.axes_dict[(i, j)].plot(
+                        [],
+                        [],
+                        linestyle="",
+                        color=color,
+                        label=r"$\tau{=}%d$" %lag,
+                    )
+                # print('here')
+                leg = self.axes_dict[(i, j)].legend(
+                    # loc="best",
+                    ncol=1,
+                    # bbox_to_anchor=(1.05, 0.0, 0.1, 1.0),
+                    # borderaxespad=0,
+                    fontsize=self.legend_fontsize-2,
+                    labelcolor=colors,
+                    ).draw_frame(False)
         
-        if len(self.labels) > 0:
+        if len(self.labels) > 1:
             axlegend = self.fig.add_subplot(111, frameon=False)
             axlegend.spines["left"].set_color("none")
             axlegend.spines["right"].set_color("none")
@@ -4021,38 +4041,38 @@ if __name__ == "__main__":
                                 noises=None, seed=7)
     dataframe = pp.DataFrame(data, var_names=range(len(links)))
 
-    # links = {
-    #         0: [((0, -1), 1.5*auto_coeff, lin_f)], 
-    #         1: [((1, -1), 1.5*auto_coeff, lin_f), ((0, 0), 1.5*coeff, lin_f)], 
-    #         2: [((2, -1), 1.5*auto_coeff, lin_f), ((1, 0), 1.5*coeff, lin_f)],
-    #         }
-    # data2, nonstat = toys.structural_causal_process(links, T=T, 
-    #                             noises=None, seed=7)
-    # dataframe2 = pp.DataFrame(data2, var_names=range(len(links)))
-    # plot_densityplots(dataframe) #, name='scattertest.pdf')
+    links = {
+            0: [((0, -1), 1.5*auto_coeff, lin_f)], 
+            1: [((1, -1), 1.5*auto_coeff, lin_f), ((0, 0), 1.5*coeff, lin_f)], 
+            2: [((2, -1), 1.5*auto_coeff, lin_f), ((1, 0), 1.5*coeff, lin_f)],
+            }
+    data2, nonstat = toys.structural_causal_process(links, T=T, 
+                                noises=None, seed=7)
+    dataframe2 = pp.DataFrame(data2, var_names=range(len(links)))
+    plot_densityplots(dataframe, name='test.pdf')
     
-    N = len(links)
-    matrix = setup_density_matrix(N=N, var_names=dataframe.var_names)
-    matrix.add_densityplot(dataframe=dataframe, 
-        # selected_dataset=0, 
-        **{
-        # 'label':'Weak',
-        # 'label_color':'blue',
-        "snskdeplot_args" : {'cmap':'Reds'},
-        }), #{'cmap':'Blues', 'alpha':0.3}})
+    # N = len(links)
+    # matrix = setup_density_matrix(N=N, var_names=dataframe.var_names)
+    # matrix.add_densityplot(dataframe=dataframe, 
+    #     # selected_dataset=0, 
+    #     **{
+    #     'label':'Weak',
+    #     'label_color':'blue',
+    #     "snskdeplot_args" : {'cmap':'Reds'},
+    #     }), #{'cmap':'Blues', 'alpha':0.3}})
     # matrix.add_densityplot(dataframe=dataframe2, selected_dataset=0, 
     #     **{'label':'Strong',
     #     'label_color':'red',
-    #     "snskdeplot_args" : {'cmap':'Reds', 'alpha':0.3}})
-    matrix.adjustfig(name='test.pdf')
+    #     "snskdeplot_args" : {'cmap':'Blues', 'alpha':0.3}})
+    # matrix.adjustfig(name='test.pdf')
 
     # matrix = setup_scatter_matrix(N=dataframe.N, 
     #     var_names=dataframe.var_names)
-    # scatter_lags = np.ones((3, 3)).astype('int')
-    # matrix.add_scatterplot(dataframe=dataframe, scatter_lags=scatter_lags,
+    # matrix_lags = np.ones((3, 3)).astype('int')
+    # matrix.add_scatterplot(dataframe=dataframe, matrix_lags=matrix_lags,
     #             label='ones', alpha=0.4)
-    # scatter_lags = 2*np.ones((3, 3)).astype('int')
-    # matrix.add_scatterplot(dataframe=dataframe, scatter_lags=scatter_lags, 
+    # matrix_lags = 2*np.ones((3, 3)).astype('int')
+    # matrix.add_scatterplot(dataframe=dataframe, matrix_lags=matrix_lags, 
     #     label='twos', color='red', alpha=0.4)
 
     # matrix.savefig(name='scattertest.pdf')
