@@ -233,6 +233,8 @@ def _add_timeseries(
             np.zeros(dataseries.shape), dataseries
         )
 
+    ax.axhline(0., lw=1., color='grey')
+
     if use_mask:
 
         maskdata = np.ma.masked_where(mask, dataseries_nomissing)
@@ -1600,8 +1602,8 @@ def _draw_network_with_curved_edges(
                 # linewidth = width*factor
             elif d.get("outer_edge_type") in ["o->", "-->", "<-o", "<--", "<-x", "x->", "+->", "<-+"]:
                 arrowstyle = "->, head_width=0.4, head_length=1"
-            else:
-                raise ValueError("edge type not valid.")
+            # else:
+            #     raise ValueError("edge type %s not valid." %d.get("outer_edge_type"))
         else:
             rad = -1.0 * inner_edge_curved * curved_radius
             if cmap_links is not None:
@@ -1638,8 +1640,8 @@ def _draw_network_with_curved_edges(
                 arrowstyle = "<->, head_width=0.4, head_length=1"
             elif d.get("inner_edge_type") in ["o->", "-->", "<-o", "<--", "<-x", "x->", "+->"]:
                 arrowstyle = "->, head_width=0.4, head_length=1"
-            else:
-                raise ValueError("edge type not valid.")
+            # else:
+            #     raise ValueError("edge type %s not valid." %d.get("inner_edge_type"))
 
             linestyle = d.get("inner_edge_style")
 

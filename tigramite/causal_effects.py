@@ -678,7 +678,6 @@ class CausalEffects():
         return ((tauij >= 0 and self._match_link(pattern_ij, graph[i, j, tauij])) or
                (tauij < 0 and self._match_link(self._reverse_link(pattern_ij), graph[j, i, abs(tauij)])))
 
-    # @profile
     def _get_children(self, varlag):
         """Returns set of children (varlag --> ...) for (lagged) varlag."""
         if self.possible:
@@ -789,7 +788,6 @@ class CausalEffects():
 
         return descendants
 
-    # @profile
     def _get_descendants(self, W):
         """Get descendants of nodes in W up to time t.
         
@@ -1124,7 +1122,6 @@ class CausalEffects():
 
         return aux_graph
 
-    # @profile
     def _check_path(self, 
         # graph, 
         start, end,
@@ -1158,7 +1155,7 @@ class CausalEffects():
         # See Thm. XXXX - TO BE REVISED!
         XYZ = start.union(end).union(conditions)
         if stationary_graph:
-            max_lag = 10*self.tau_max  # TO BE REVISED! self._get_maximum_possible_lag(XYZ, self.graph)
+            max_lag = 1*self.tau_max  # TO BE REVISED! self._get_maximum_possible_lag(XYZ, self.graph)
             causal_children = list(self._get_mediators_stationary_graph(start, end, max_lag).union(end))
         else:
             max_lag = None
@@ -1326,7 +1323,6 @@ class CausalEffects():
         # print("Separated")
         return False
 
-    # @profile
     def get_optimal_set(self, 
         alternative_conditions=None,
         minimize=False,
@@ -1815,7 +1811,6 @@ class CausalEffects():
 
         return all_causal_paths
 
-    # @profile
     def fit_total_effect(self,
         dataframe, 
         estimator,
@@ -1965,7 +1960,6 @@ class CausalEffects():
 
         return self
 
-    # @profile
     def predict_total_effect(self, 
         intervention_data, 
         conditions_data=None,
@@ -2046,7 +2040,6 @@ class CausalEffects():
         # else:
         #     return effect
 
-    # @profile
     def fit_wright_effect(self,
         dataframe, 
         mediation=None,
@@ -2137,7 +2130,7 @@ class CausalEffects():
                     coeffs[medy][(i, taui_shifted)] = coeff #self.fit_results[j][(j, 0)]['model'].coef_[ipar]
 
             self.model.tau_max = max_lag
-            print(coeffs)
+            # print(coeffs)
 
         elif method == 'optimal':
             # all_parents = {}
@@ -2236,8 +2229,7 @@ class CausalEffects():
         # self.effect = effect
         self.model.fit_results = fit_results
         return self
-
-    # @profile 
+ 
     def predict_wright_effect(self, 
         intervention_data, 
         pred_params=None,
@@ -2567,8 +2559,8 @@ if __name__ == '__main__':
     def lin_f(x): return x
     coeff = .5
     links_coeffs = {
-                    0: [((0, -1), coeff, lin_f)], 
-                    1: [((1, -1), coeff, lin_f), ((0, -1), coeff, lin_f)], 
+                    0: [((0, -1), coeff, lin_f), ((0, -3), coeff, lin_f)], 
+                    1: [((1, -1), coeff, lin_f), ((1, -2), coeff, lin_f), ((0, 0), coeff, lin_f)], 
                     # 2: [((1, -2), coeff, lin_f)],
                     # 3: [((1, 0), coeff, lin_f), ((2, 0), coeff, lin_f), ((6, 0), coeff, lin_f), ((4, 0), coeff, lin_f)],
                     # 4: [((5, 0), coeff, lin_f)], 
@@ -2581,7 +2573,7 @@ if __name__ == '__main__':
 
     graph = CausalEffects.get_graph_from_dict(links_coeffs)
 
-    X = [(0, -7)]
+    X = [(0, -20)]
     Y = [(1, 0)]
 
     # Initialize class as `stationary_dag`
@@ -2591,7 +2583,6 @@ if __name__ == '__main__':
                                 verbosity=0)
 
     causal_effects.fit_wright_effect(dataframe=dataframe, 
-                            # method='links_coeffs',
                             # links_coeffs = links_coeffs,
                             # mediation = [(1, -1)]
                             )

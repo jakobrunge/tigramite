@@ -617,14 +617,14 @@ class LinearMediation(Models):
         tau_max : int, optional (default: None)
             Maximum time lag. If None, the maximum lag in all_parents is used.
         """
-        for j in all_parents.keys():
-            for parent in all_parents[j]:
-                var, lag = parent
-                if lag == 0:
-                    raise ValueError("all_parents cannot contain "
-                                     "contemporaneous links for the LinearMediation"
-                                     " class. Use the optimal causal effects "
-                                     "class.")
+        # for j in all_parents.keys():
+        #     for parent in all_parents[j]:
+        #         var, lag = parent
+        #         if lag == 0:
+        #             raise ValueError("all_parents cannot contain "
+        #                              "contemporaneous links for the LinearMediation"
+        #                              " class. Use the optimal causal effects "
+        #                              "class.")
 
         # Fit the model using the base class
         self.fit_results = self.get_fit(all_parents=all_parents,
@@ -667,7 +667,7 @@ class LinearMediation(Models):
         """
 
         phi = np.zeros((self.tau_max + 1, self.N, self.N))
-        phi[0] = np.identity(self.N)
+        # phi[0] = np.identity(self.N)
 
         for j in list(coeffs):
             for par in list(coeffs[j]):
@@ -692,11 +692,20 @@ class LinearMediation(Models):
 
         psi = np.zeros((self.tau_max + 1, self.N, self.N))
 
-        psi[0] = np.identity(self.N)
-        for n in range(1, self.tau_max + 1):
-            psi[n] = np.zeros((self.N, self.N))
-            for s in range(1, n + 1):
-                psi[n] += np.dot(phi[s], psi[n - s])
+        psi[0] = np.linalg.inv(np.identity(self.N) - phi[0])
+        for tau in range(1, self.tau_max + 1):
+            psi[tau] = np.matmul(psi[0], np.matmul(phi[tau], psi[0]))
+            for k in range(1, tau):
+                psi[tau] += np.matmul(psi[0], np.matmul(phi[k], psi[tau - k]) ) 
+
+        # Lagged-only effects:
+        # psi = np.zeros((self.tau_max + 1, self.N, self.N))
+
+        # psi[0] = np.identity(self.N)
+        # for n in range(1, self.tau_max + 1):
+        #     psi[n] = np.zeros((self.N, self.N))
+        #     for s in range(1, n + 1):
+        #         psi[n] += np.dot(phi[s], psi[n - s])
 
         return psi
 
@@ -717,14 +726,24 @@ class LinearMediation(Models):
         """
 
         psi_k = np.zeros((self.tau_max + 1, self.N, self.N))
-
-        psi_k[0] = np.identity(self.N)
+        
         phi_k = np.copy(phi)
-        phi_k[1:, k, :] = 0.
-        for n in range(1, self.tau_max + 1):
-            psi_k[n] = np.zeros((self.N, self.N))
-            for s in range(1, n + 1):
-                psi_k[n] += np.dot(phi_k[s], psi_k[n - s])
+        phi_k[:, k, :] = 0.
+
+        psi_k[0] = np.linalg.inv(np.identity(self.N) - phi_k[0])
+        for tau in range(1, self.tau_max + 1):
+            psi_k[tau] = np.matmul(psi_k[0], np.matmul(phi[tau], psi_k[0]))
+            for k in range(1, tau):
+                psi_k[tau] += np.matmul(psi_k[0], np.matmul(phi[k], psi_k[tau - k]) ) 
+
+
+        # psi_k[0] = np.identity(self.N)
+        # phi_k = np.copy(phi)
+        # phi_k[:, k, :] = 0.
+        # for n in range(1, self.tau_max + 1):
+        #     psi_k[n] = np.zeros((self.N, self.N))
+        #     for s in range(1, n + 1):
+        #         psi_k[n] += np.dot(phi_k[s], psi_k[n - s])
 
         return psi_k
 
@@ -804,7 +823,7 @@ class LinearMediation(Models):
         # Create TSG
         tsg = np.zeros((N * max_lag, N * max_lag))
         for i, j, tau in np.column_stack(np.where(link_matrix)):
-            if tau > 0 or include_neighbors:
+            # if tau > 0 or include_neighbors:
                 for t in range(max_lag):
                     link_start = self.net_to_tsg(i, t - tau, max_lag)
                     link_end = self.net_to_tsg(j, t, max_lag)
@@ -958,8 +977,57 @@ class LinearMediation(Models):
         -------
         ce : float
         """
-        argmax = np.abs(self.psi[1:, j, i]).argmax()
-        return self.psi[1:, j, i][argmax]
+        argmax = np.abs(self.psi[:, j, i]).argmax()
+        return self.psi[:, j, i][argmax]
+
+    def get_joint_ce(self, i, j):
+        """Returns the joint causal effect.
+
+        This is the causal effect from all lags [t, ..., t-tau_max]
+        of i on j at time t. Note that the joint effect does not
+        count links passing through parents of i itself.
+
+        Parameters
+        ----------
+        i : int
+            Index of cause variable.
+        j : int
+            Index of effect variable.
+
+        Returns
+        -------
+        joint_ce : array of shape (tau_max + 1)
+            Causal effect from each lag of i on j.
+        """
+        joint_ce = self.all_psi_k[i, :, j, i]
+        return joint_ce
+
+    def get_joint_ce_matrix(self, i, j):
+        """Returns the joint causal effect matrix of i on j.
+
+        This is the causal effect from all lags [t, ..., t-tau_max]
+        of i on j at times [t, ..., t-tau_max]. Note that the joint effect does not
+        count links passing through parents of i itself.
+
+        An entry (taui, tauj) stands for the effect of i at t-taui on j at t-tauj.
+
+        Parameters
+        ----------
+        i : int
+            Index of cause variable.
+        j : int
+            Index of effect variable.
+
+        Returns
+        -------
+        joint_ce_matrix : 2d array of shape (tau_max + 1, tau_max + 1)
+            Causal effect matrix from each lag of i on each lag of j.
+        """
+        joint_ce_matrix = np.zeros((self.tau_max + 1, self.tau_max + 1))
+        for tauj in range(self.tau_max + 1):
+            joint_ce_matrix[tauj:, tauj] = self.all_psi_k[i, tauj:, j, i][::-1]
+
+        return joint_ce_matrix
 
     def get_mce(self, i, tau, j, k):
         """Returns the mediated causal effect.
@@ -1014,9 +1082,9 @@ class LinearMediation(Models):
             all_but_i[i] = False
 
         if lag_mode == 'absmax':
-            return np.abs(self.psi[1:, all_but_i, i]).max(axis=0).mean()
+            return np.abs(self.psi[:, all_but_i, i]).max(axis=0).mean()
         elif lag_mode == 'all_lags':
-            return np.abs(self.psi[1:, all_but_i, i]).mean()
+            return np.abs(self.psi[:, all_but_i, i]).mean()
         else:
             raise ValueError("lag_mode = %s not implemented" % lag_mode)
 
@@ -1077,9 +1145,9 @@ class LinearMediation(Models):
             all_but_j[j] = False
 
         if lag_mode == 'absmax':
-            return np.abs(self.psi[1:, j, all_but_j]).max(axis=0).mean()
+            return np.abs(self.psi[:, j, all_but_j]).max(axis=0).mean()
         elif lag_mode == 'all_lags':
-            return np.abs(self.psi[1:, j, all_but_j]).mean()
+            return np.abs(self.psi[:, j, all_but_j]).mean()
         else:
             raise ValueError("lag_mode = %s not implemented" % lag_mode)
 
@@ -1150,10 +1218,10 @@ class LinearMediation(Models):
         else:
             weights = np.ones((N_new, N_new), dtype='bool')
 
-        if self.tau_max < 2:
-            raise ValueError("Mediation only nonzero for tau_max >= 2")
+        # if self.tau_max < 2:
+        #     raise ValueError("Mediation only nonzero for tau_max >= 2")
 
-        all_mce = self.psi[2:, :, :] - self.all_psi_k[k, 2:, :, :]
+        all_mce = self.psi[:, :, :] - self.all_psi_k[k, :, :, :]
         # all_mce[:, range(self.N), range(self.N)] = 0.
 
         if lag_mode == 'absmax':
@@ -1544,20 +1612,49 @@ if __name__ == '__main__':
     import tigramite.data_processing as pp
     from tigramite.toymodels import structural_causal_processes as toys
     from tigramite.independence_tests import ParCorr
+    import tigramite.plotting as tp
 
     np.random.seed(6)
 
     def lin_f(x): return x
  
-    T = 10
-    links = {0: [((0, -1), 0.8, lin_f)],
-             1: [((1, -1), 0.8, lin_f), ((0, -1), 0.5, lin_f)],
-             2: [((2, -1), 0.8, lin_f), ((1, 0), -0.6, lin_f)]}
+    T = 1000
+    links = {0: [((0, -1), 0.5, lin_f)],
+             1: [((1, -1), 0.5, lin_f), ((0, 0), 0.5, lin_f)],
+             2: [((2, -1), 0.5, lin_f), ((1, 0), 0.5, lin_f)]
+             }
     # noises = [np.random.randn for j in links.keys()]
     data, nonstat = toys.structural_causal_process(links, T=T)
     true_parents = toys._get_true_parent_neighbor_dict(links)
     dataframe = pp.DataFrame(data)
 
+    med = LinearMediation(dataframe=dataframe)
+    med.fit_model(all_parents=true_parents, tau_max=5)
+
+    # print (med.get_coeff(i=0, tau=-2, j=1))
+    print (med.get_ce(i=0, tau=-3,  j=2))
+    print (med.get_ce_max(i=0, j=2))
+    print (med.get_mce(i=0, tau=-3, k=1, j=2))
+    print(med.get_joint_ce(i=0, j=2))
+    print(med.get_joint_ce_matrix(i=0, j=2))
+
+    # i=0; tau=4; j=2
+    # graph_data = med.get_mediation_graph_data(i=i, tau=tau, j=j)
+    # tp.plot_mediation_time_series_graph(
+    #     # var_names=var_names,
+    #     path_node_array=graph_data['path_node_array'],
+    #     tsg_path_val_matrix=graph_data['tsg_path_val_matrix']
+    #     )
+    # tp.plot_mediation_graph(
+    #                     # var_names=var_names,
+    #                     path_val_matrix=graph_data['path_val_matrix'], 
+    #                     path_node_array=graph_data['path_node_array'],
+    #                     ); 
+    # plt.show()
+
+    print ("Average Causal Effect X=%.2f, Y=%.2f, Z=%.2f " % tuple(med.get_all_ace()))
+    print ("Average Causal Susceptibility X=%.2f, Y=%.2f, Z=%.2f " % tuple(med.get_all_acs()))
+    print ("Average Mediated Causal Effect X=%.2f, Y=%.2f, Z=%.2f " % tuple(med.get_all_amce()))
     # med = Models(dataframe=dataframe, model=sklearn.linear_model.LinearRegression(), data_transform=None)
     # # Fit the model
     # med.get_fit(all_parents=true_parents, tau_max=3)
@@ -1572,37 +1669,37 @@ if __name__ == '__main__':
     #     print(causal_coeff)
 
 
-    pred = Prediction(dataframe=dataframe,
-            cond_ind_test=ParCorr(),   #CMIknn ParCorr
-            prediction_model = sklearn.linear_model.LinearRegression(),
-    #         prediction_model = sklearn.gaussian_process.GaussianProcessRegressor(),
-            # prediction_model = sklearn.neighbors.KNeighborsRegressor(),
-        data_transform=sklearn.preprocessing.StandardScaler(),
-        train_indices= list(range(int(0.8*T))),
-        test_indices= list(range(int(0.8*T), T)),
-        verbosity=0
-        )
+    # pred = Prediction(dataframe=dataframe,
+    #         cond_ind_test=ParCorr(),   #CMIknn ParCorr
+    #         prediction_model = sklearn.linear_model.LinearRegression(),
+    # #         prediction_model = sklearn.gaussian_process.GaussianProcessRegressor(),
+    #         # prediction_model = sklearn.neighbors.KNeighborsRegressor(),
+    #     data_transform=sklearn.preprocessing.StandardScaler(),
+    #     train_indices= list(range(int(0.8*T))),
+    #     test_indices= list(range(int(0.8*T), T)),
+    #     verbosity=0
+    #     )
 
-    # predictors = pred.get_predictors(
-    #                        selected_targets=[2],
-    #                        selected_links=None,
-    #                        steps_ahead=1,
-    #                        tau_max=1,
-    #                        pc_alpha=0.2,
-    #                        max_conds_dim=None,
-    #                        max_combinations=1)
-    predictors = {0: [(0, -1)],
-                 1: [(1, -1), (0, -1)],
-                 2: [(2, -1), (1, 0)]}
-    pred.fit(target_predictors=predictors,
-            selected_targets=None, tau_max=None, return_data=False)
+    # # predictors = pred.get_predictors(
+    # #                        selected_targets=[2],
+    # #                        selected_links=None,
+    # #                        steps_ahead=1,
+    # #                        tau_max=1,
+    # #                        pc_alpha=0.2,
+    # #                        max_conds_dim=None,
+    # #                        max_combinations=1)
+    # predictors = {0: [(0, -1)],
+    #              1: [(1, -1), (0, -1)],
+    #              2: [(2, -1), (1, 0)]}
+    # pred.fit(target_predictors=predictors,
+    #         selected_targets=None, tau_max=None, return_data=False)
 
-    res = pred.predict(target=2,
-                new_data=None,
-                pred_params=None,
-                cut_off='max_lag_or_tau_max')
+    # res = pred.predict(target=2,
+    #             new_data=None,
+    #             pred_params=None,
+    #             cut_off='max_lag_or_tau_max')
 
-    print(data[:,2])
-    print(res)
+    # print(data[:,2])
+    # print(res)
 
 

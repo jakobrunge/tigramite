@@ -13,6 +13,7 @@ import math
 import numpy as np
 import scipy.sparse
 import scipy.sparse.linalg
+from scipy import stats
 from numba import jit
 
 class DataFrame():
@@ -1174,6 +1175,59 @@ def time_bin_with_mask(data, time_bin_length, mask=None):
     T, grid_size = bindata.shape
 
     return (bindata.squeeze(), T)
+
+def trafo2normal(data, mask=None, thres=0.001):
+    """Transforms input data to standard normal marginals.
+
+    Assumes data.shape = (T, dim)
+
+    Parameters
+    ----------
+    data : array
+        Data array of shape (time, variables).
+    thres : float
+        Set outer points in CDF to this value.
+    mask : bool array, optional (default: None)
+        Data mask where True labels masked samples.
+
+    Returns
+    -------
+    normal_data : array-like
+        data with standard normal marginals.
+    """
+
+    def trafo(xi):
+        xisorted = np.sort(xi)
+        yi = np.linspace(1. / len(xi), 1, len(xi))
+        return np.interp(xi, xisorted, yi)
+
+    normal_data = np.copy(data)
+
+    if np.ndim(data) == 1:
+        if mask is None:
+            nonmasked = np.arange(0, len(data), dtype='int')
+        else:
+            nonmasked = np.where(mask==0)
+        u = trafo(data[nonmasked])
+        u[u==0.] = thres
+        u[u==1.] = 1. - thres
+        normal_data[nonmasked] = stats.norm.ppf(u)
+    else:
+        for i in range(data.shape[1]):
+            if mask is None:
+                nonmasked = np.arange(0, len(data[:, i]), dtype='int')
+            else:
+                nonmasked = np.where(mask[:, i]==0)
+            # print(data[:, i].shape, nonmasked.shape)
+            uniform = trafo(data[:, i][nonmasked])
+            
+            # print(data[-3:, i][nonmasked])
+
+            uniform[uniform==0.] = thres
+            uniform[uniform==1.] = 1. - thres
+            normal_data[:, i][nonmasked] = stats.norm.ppf(uniform)
+
+    return normal_data
 
 @jit
 def _get_patterns(array, array_mask, patt, patt_mask, weights, dim, step, fac, N, T):
