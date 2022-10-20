@@ -505,8 +505,8 @@ class LinearMediation(Models):
     as causal effect, mediated causal effect, average causal effect, etc. as
     described in [4]_.
 
-    For general nonlinear, lagged and contemporaneous causal effect analysis, 
-    use the CausalEffects class.
+    For general linear and nonlinear causal effect analysis including latent
+    variables and further functionality use the CausalEffects class.
 
     Notes
     -----
@@ -669,6 +669,7 @@ class LinearMediation(Models):
         phi = np.zeros((self.tau_max + 1, self.N, self.N))
         # phi[0] = np.identity(self.N)
 
+        # Also includes contemporaneous lags
         for j in list(coeffs):
             for par in list(coeffs[j]):
                 i, tau = par
@@ -677,7 +678,8 @@ class LinearMediation(Models):
         return phi
 
     def _get_psi(self, phi):
-        """Returns the linear causal effect matrices for different lags.
+        """Returns the linear causal effect matrices for different lags incl
+        lag zero.
 
         Parameters
         ----------
@@ -687,12 +689,13 @@ class LinearMediation(Models):
         Returns
         -------
         psi : array-like, shape (tau_max + 1, N, N)
-            Matrices of causal effects for each time lag.
+            Matrices of causal effects for each time lag incl contemporaneous links.
         """
 
         psi = np.zeros((self.tau_max + 1, self.N, self.N))
 
-        psi[0] = np.linalg.inv(np.identity(self.N) - phi[0])
+        psi[0] = np.linalg.pinv(np.identity(self.N) - phi[0])
+
         for tau in range(1, self.tau_max + 1):
             psi[tau] = np.matmul(psi[0], np.matmul(phi[tau], psi[0]))
             for k in range(1, tau):
@@ -712,6 +715,9 @@ class LinearMediation(Models):
     def _get_psi_k(self, phi, k):
         """Returns the linear causal effect matrices excluding variable k.
 
+        Essentially, this blocks all path through parents of variable k
+        at any lag.
+
         Parameters
         ----------
         phi : array-like
@@ -730,11 +736,11 @@ class LinearMediation(Models):
         phi_k = np.copy(phi)
         phi_k[:, k, :] = 0.
 
-        psi_k[0] = np.linalg.inv(np.identity(self.N) - phi_k[0])
+        psi_k[0] = np.linalg.pinv(np.identity(self.N) - phi_k[0])
         for tau in range(1, self.tau_max + 1):
-            psi_k[tau] = np.matmul(psi_k[0], np.matmul(phi[tau], psi_k[0]))
+            psi_k[tau] = np.matmul(psi_k[0], np.matmul(phi_k[tau], psi_k[0]))
             for k in range(1, tau):
-                psi_k[tau] += np.matmul(psi_k[0], np.matmul(phi[k], psi_k[tau - k]) ) 
+                psi_k[tau] += np.matmul(psi_k[0], np.matmul(phi_k[k], psi_k[tau - k]) ) 
 
 
         # psi_k[0] = np.identity(self.N)
@@ -769,169 +775,17 @@ class LinearMediation(Models):
 
         return all_psi_k
 
-    def get_val_matrix(self, ):
-        """Returns the matrix of linear coefficients.
-
-        Requires fit_model() before. An entry val_matrix[i,j,tau] gives the
-        coefficient of the link from i to j at lag tau. Lag=0 is always set
-        to zero for LinearMediation, use Models class for contemporaneous 
-        models.
-
-        Returns
-        -------
-        val_matrix : array
-            Matrix of linear coefficients, shape (N, N, tau_max + 1).
-        """
-        return self.phi.transpose()
-
-    def net_to_tsg(self, row, lag, max_lag):
-        """Helper function to translate from network to time series graph."""
-        return row * max_lag + lag
-
-    def tsg_to_net(self, node, max_lag):
-        """Helper function to translate from time series graph to network."""
-        row = node // max_lag
-        lag = node % max_lag
-        return (row, -lag)
-
-    def get_tsg(self, link_matrix, val_matrix=None, include_neighbors=False):
-        """Returns time series graph matrix.
-
-        Constructs a matrix of shape (N*tau_max, N*tau_max) from link_matrix.
-        This matrix can be used for plotting the time series graph and analyzing
-        causal pathways.
-
-        Parameters
-        ----------
-        link_matrix : bool array-like, optional (default: None)
-            Matrix of significant links. Must be of same shape as val_matrix.
-            Either sig_thres or link_matrix has to be provided.
-        val_matrix : array_like
-            Matrix of shape (N, N, tau_max+1) containing test statistic values.
-        include_neighbors : bool, optional (default: False)
-            Whether to include causal paths emanating from neighbors of i
-
-        Returns
-        -------
-        tsg : array of shape (N*tau_max, N*tau_max)
-            Time series graph matrix.
-        """
-
-        N = len(link_matrix)
-        max_lag = link_matrix.shape[2] + 1
-
-        # Create TSG
-        tsg = np.zeros((N * max_lag, N * max_lag))
-        for i, j, tau in np.column_stack(np.where(link_matrix)):
-            # if tau > 0 or include_neighbors:
-                for t in range(max_lag):
-                    link_start = self.net_to_tsg(i, t - tau, max_lag)
-                    link_end = self.net_to_tsg(j, t, max_lag)
-                    if (0 <= link_start and
-                            (link_start % max_lag) <= (link_end % max_lag)):
-                        if val_matrix is not None:
-                            tsg[link_start, link_end] = val_matrix[i, j, tau]
-                        else:
-                            tsg[link_start, link_end] = 1
-        return tsg
-
-    def get_mediation_graph_data(self, i, tau, j, include_neighbors=False):
-        r"""Returns link and node weights for mediation analysis.
-
-        Returns array with non-zero entries for links that are on causal
-        paths between :math:`i` and :math:`j` at lag :math:`\tau`.
-        ``path_val_matrix`` contains the corresponding path coefficients and
-        ``path_node_array`` the MCE values. ``tsg_path_val_matrix`` contains the
-        corresponding values in the time series graph format.
-
-        Parameters
-        ----------
-        i : int
-            Index of cause variable.
-        tau : int
-            Lag of cause variable.
-        j : int
-            Index of effect variable.
-        include_neighbors : bool, optional (default: False)
-            Whether to include causal paths emanating from neighbors of i
-
-        Returns
-        -------
-        graph_data : dictionary
-            Dictionary of matrices for coloring mediation graph plots.
-        """
-
-        path_link_matrix = np.zeros((self.N, self.N, self.tau_max + 1))
-        path_val_matrix = np.zeros((self.N, self.N, self.tau_max + 1))
-
-        # Get mediation of path variables
-        path_node_array = (self.psi.reshape(1, self.tau_max + 1, self.N, self.N)
-                           - self.all_psi_k)[:, abs(tau), j, i]
-
-        # Get involved links
-        val_matrix = self.phi.transpose()
-        link_matrix = val_matrix != 0.
-
-        max_lag = link_matrix.shape[2] + 1
-
-        # include_neighbors = False because True would allow
-        # --> o -- motifs in networkx.all_simple_paths as paths, but
-        # these are blocked...
-        tsg = self.get_tsg(link_matrix, val_matrix=val_matrix,
-                           include_neighbors=False)
-
-        if include_neighbors:
-            # Add contemporaneous links only at source node
-            for m, n in zip(*np.where(link_matrix[:, :, 0])):
-                # print m,n
-                if m != n:
-                    tsg[self.net_to_tsg(m, max_lag - tau - 1, max_lag),
-                        self.net_to_tsg(n, max_lag - tau - 1, max_lag)
-                    ] = val_matrix[m, n, 0]
-
-        tsg_path_val_matrix = np.zeros(tsg.shape)
-
-        graph = networkx.DiGraph(tsg)
-        pathways = []
-
-        for path in networkx.all_simple_paths(graph,
-                                              source=self.net_to_tsg(i,
-                                                                     max_lag - tau - 1,
-                                                                     max_lag),
-                                              target=self.net_to_tsg(j,
-                                                                     max_lag - 0 - 1,
-                                                                     max_lag)):
-            pathways.append([self.tsg_to_net(p, max_lag) for p in path])
-            for ip, p in enumerate(path[1:]):
-                tsg_path_val_matrix[path[ip], p] = tsg[path[ip], p]
-
-                k, tau_k = self.tsg_to_net(p, max_lag)
-                link_start = self.tsg_to_net(path[ip], max_lag)
-                link_end = self.tsg_to_net(p, max_lag)
-                delta_tau = abs(link_end[1] - link_start[1])
-                path_val_matrix[link_start[0],
-                                link_end[0],
-                                delta_tau] = val_matrix[link_start[0],
-                                                        link_end[0],
-                                                        delta_tau]
-
-        graph_data = {'path_node_array': path_node_array,
-                      'path_val_matrix': path_val_matrix,
-                      'tsg_path_val_matrix': tsg_path_val_matrix}
-
-        return graph_data
-
     def get_coeff(self, i, tau, j):
         """Returns link coefficient.
 
-        This is the direct causal effect for a particular link (i, tau) --> j.
+        This is the direct causal effect for a particular link (i, -tau) --> j.
 
         Parameters
         ----------
         i : int
             Index of cause variable.
         tau : int
-            Lag of cause variable.
+            Lag of cause variable (incl lag zero).
         j : int
             Index of effect variable.
 
@@ -944,14 +798,14 @@ class LinearMediation(Models):
     def get_ce(self, i, tau, j):
         """Returns the causal effect.
 
-        This is the causal effect for  (i, tau) -- --> j.
+        This is the causal effect for  (i, -tau) -- --> j.
 
         Parameters
         ----------
         i : int
             Index of cause variable.
         tau : int
-            Lag of cause variable.
+            Lag of cause variable (incl lag zero).
         j : int
             Index of effect variable.
 
@@ -964,7 +818,8 @@ class LinearMediation(Models):
     def get_ce_max(self, i, j):
         """Returns the causal effect.
 
-        This is the maximum absolute causal effect for  i --> j across all lags.
+        This is the maximum absolute causal effect for  i --> j across all
+        lags (incl lag zero).
 
         Parameters
         ----------
@@ -997,7 +852,7 @@ class LinearMediation(Models):
         Returns
         -------
         joint_ce : array of shape (tau_max + 1)
-            Causal effect from each lag of i on j.
+            Causal effect from each lag [t, ..., t-tau_max] of i on j.
         """
         joint_ce = self.all_psi_k[i, :, j, i]
         return joint_ce
@@ -1265,6 +1120,159 @@ class LinearMediation(Models):
                                     exclude_self_effects=exclude_self_effects)
 
         return amce
+
+
+    def get_val_matrix(self, ):
+        """Returns the matrix of linear coefficients.
+
+        Requires fit_model() before. An entry val_matrix[i,j,tau] gives the
+        coefficient of the link from i to j at lag tau. Lag=0 is always set
+        to zero for LinearMediation, use Models class for contemporaneous 
+        models.
+
+        Returns
+        -------
+        val_matrix : array
+            Matrix of linear coefficients, shape (N, N, tau_max + 1).
+        """
+        return self.phi.transpose()
+
+    def net_to_tsg(self, row, lag, max_lag):
+        """Helper function to translate from network to time series graph."""
+        return row * max_lag + lag
+
+    def tsg_to_net(self, node, max_lag):
+        """Helper function to translate from time series graph to network."""
+        row = node // max_lag
+        lag = node % max_lag
+        return (row, -lag)
+
+    def get_tsg(self, link_matrix, val_matrix=None, include_neighbors=False):
+        """Returns time series graph matrix.
+
+        Constructs a matrix of shape (N*tau_max, N*tau_max) from link_matrix.
+        This matrix can be used for plotting the time series graph and analyzing
+        causal pathways.
+
+        Parameters
+        ----------
+        link_matrix : bool array-like, optional (default: None)
+            Matrix of significant links. Must be of same shape as val_matrix.
+            Either sig_thres or link_matrix has to be provided.
+        val_matrix : array_like
+            Matrix of shape (N, N, tau_max+1) containing test statistic values.
+        include_neighbors : bool, optional (default: False)
+            Whether to include causal paths emanating from neighbors of i
+
+        Returns
+        -------
+        tsg : array of shape (N*tau_max, N*tau_max)
+            Time series graph matrix.
+        """
+
+        N = len(link_matrix)
+        max_lag = link_matrix.shape[2] + 1
+
+        # Create TSG
+        tsg = np.zeros((N * max_lag, N * max_lag))
+        for i, j, tau in np.column_stack(np.where(link_matrix)):
+            # if tau > 0 or include_neighbors:
+                for t in range(max_lag):
+                    link_start = self.net_to_tsg(i, t - tau, max_lag)
+                    link_end = self.net_to_tsg(j, t, max_lag)
+                    if (0 <= link_start and
+                            (link_start % max_lag) <= (link_end % max_lag)):
+                        if val_matrix is not None:
+                            tsg[link_start, link_end] = val_matrix[i, j, tau]
+                        else:
+                            tsg[link_start, link_end] = 1
+        return tsg
+
+    def get_mediation_graph_data(self, i, tau, j, include_neighbors=False):
+        r"""Returns link and node weights for mediation analysis.
+
+        Returns array with non-zero entries for links that are on causal
+        paths between :math:`i` and :math:`j` at lag :math:`\tau`.
+        ``path_val_matrix`` contains the corresponding path coefficients and
+        ``path_node_array`` the MCE values. ``tsg_path_val_matrix`` contains the
+        corresponding values in the time series graph format.
+
+        Parameters
+        ----------
+        i : int
+            Index of cause variable.
+        tau : int
+            Lag of cause variable.
+        j : int
+            Index of effect variable.
+        include_neighbors : bool, optional (default: False)
+            Whether to include causal paths emanating from neighbors of i
+
+        Returns
+        -------
+        graph_data : dictionary
+            Dictionary of matrices for coloring mediation graph plots.
+        """
+
+        path_link_matrix = np.zeros((self.N, self.N, self.tau_max + 1))
+        path_val_matrix = np.zeros((self.N, self.N, self.tau_max + 1))
+
+        # Get mediation of path variables
+        path_node_array = (self.psi.reshape(1, self.tau_max + 1, self.N, self.N)
+                           - self.all_psi_k)[:, abs(tau), j, i]
+
+        # Get involved links
+        val_matrix = self.phi.transpose()
+        link_matrix = val_matrix != 0.
+
+        max_lag = link_matrix.shape[2] + 1
+
+        # include_neighbors = False because True would allow
+        # --> o -- motifs in networkx.all_simple_paths as paths, but
+        # these are blocked...
+        tsg = self.get_tsg(link_matrix, val_matrix=val_matrix,
+                           include_neighbors=False)
+
+        if include_neighbors:
+            # Add contemporaneous links only at source node
+            for m, n in zip(*np.where(link_matrix[:, :, 0])):
+                # print m,n
+                if m != n:
+                    tsg[self.net_to_tsg(m, max_lag - tau - 1, max_lag),
+                        self.net_to_tsg(n, max_lag - tau - 1, max_lag)
+                    ] = val_matrix[m, n, 0]
+
+        tsg_path_val_matrix = np.zeros(tsg.shape)
+
+        graph = networkx.DiGraph(tsg)
+        pathways = []
+
+        for path in networkx.all_simple_paths(graph,
+                                              source=self.net_to_tsg(i,
+                                                                     max_lag - tau - 1,
+                                                                     max_lag),
+                                              target=self.net_to_tsg(j,
+                                                                     max_lag - 0 - 1,
+                                                                     max_lag)):
+            pathways.append([self.tsg_to_net(p, max_lag) for p in path])
+            for ip, p in enumerate(path[1:]):
+                tsg_path_val_matrix[path[ip], p] = tsg[path[ip], p]
+
+                k, tau_k = self.tsg_to_net(p, max_lag)
+                link_start = self.tsg_to_net(path[ip], max_lag)
+                link_end = self.tsg_to_net(p, max_lag)
+                delta_tau = abs(link_end[1] - link_start[1])
+                path_val_matrix[link_start[0],
+                                link_end[0],
+                                delta_tau] = val_matrix[link_start[0],
+                                                        link_end[0],
+                                                        delta_tau]
+
+        graph_data = {'path_node_array': path_node_array,
+                      'path_val_matrix': path_val_matrix,
+                      'tsg_path_val_matrix': tsg_path_val_matrix}
+
+        return graph_data
 
 
 class Prediction(Models, PCMCI):
@@ -1620,23 +1628,23 @@ if __name__ == '__main__':
  
     T = 1000
     links = {0: [((0, -1), 0.5, lin_f)],
-             1: [((1, -1), 0.5, lin_f), ((0, 0), 0.5, lin_f)],
+             1: [((1, -1), 0.5, lin_f), ((0, -1), 0.5, lin_f)],
              2: [((2, -1), 0.5, lin_f), ((1, 0), 0.5, lin_f)]
              }
     # noises = [np.random.randn for j in links.keys()]
-    data, nonstat = toys.structural_causal_process(links, T=T)
+    data, nonstat = toys.structural_causal_process(links, T=T, noises=None, seed=7)
     true_parents = toys._get_true_parent_neighbor_dict(links)
     dataframe = pp.DataFrame(data)
 
-    med = LinearMediation(dataframe=dataframe)
-    med.fit_model(all_parents=true_parents, tau_max=5)
+    med = LinearMediation(dataframe=dataframe, data_transform=None)
+    med.fit_model(all_parents=true_parents, tau_max=10)
 
     # print (med.get_coeff(i=0, tau=-2, j=1))
-    print (med.get_ce(i=0, tau=-3,  j=2))
-    print (med.get_ce_max(i=0, j=2))
-    print (med.get_mce(i=0, tau=-3, k=1, j=2))
-    print(med.get_joint_ce(i=0, j=2))
-    print(med.get_joint_ce_matrix(i=0, j=2))
+    print (med.get_ce(i=0, tau=-2,  j=2))
+    # print (med.get_ce_max(i=0, j=2))
+    print (med.get_mce(i=0, tau=-2, k=1, j=2))
+    # print(med.get_joint_ce(i=0, j=2))
+    # print(med.get_joint_ce_matrix(i=0, j=2))
 
     # i=0; tau=4; j=2
     # graph_data = med.get_mediation_graph_data(i=i, tau=tau, j=j)
@@ -1652,9 +1660,9 @@ if __name__ == '__main__':
     #                     ); 
     # plt.show()
 
-    print ("Average Causal Effect X=%.2f, Y=%.2f, Z=%.2f " % tuple(med.get_all_ace()))
-    print ("Average Causal Susceptibility X=%.2f, Y=%.2f, Z=%.2f " % tuple(med.get_all_acs()))
-    print ("Average Mediated Causal Effect X=%.2f, Y=%.2f, Z=%.2f " % tuple(med.get_all_amce()))
+    # print ("Average Causal Effect X=%.2f, Y=%.2f, Z=%.2f " % tuple(med.get_all_ace()))
+    # print ("Average Causal Susceptibility X=%.2f, Y=%.2f, Z=%.2f " % tuple(med.get_all_acs()))
+    # print ("Average Mediated Causal Effect X=%.2f, Y=%.2f, Z=%.2f " % tuple(med.get_all_amce()))
     # med = Models(dataframe=dataframe, model=sklearn.linear_model.LinearRegression(), data_transform=None)
     # # Fit the model
     # med.get_fit(all_parents=true_parents, tau_max=3)

@@ -2558,23 +2558,20 @@ if __name__ == '__main__':
 
     def lin_f(x): return x
     coeff = .5
-    links_coeffs = {
-                    0: [((0, -1), coeff, lin_f), ((0, -3), coeff, lin_f)], 
-                    1: [((1, -1), coeff, lin_f), ((1, -2), coeff, lin_f), ((0, 0), coeff, lin_f)], 
-                    # 2: [((1, -2), coeff, lin_f)],
-                    # 3: [((1, 0), coeff, lin_f), ((2, 0), coeff, lin_f), ((6, 0), coeff, lin_f), ((4, 0), coeff, lin_f)],
-                    # 4: [((5, 0), coeff, lin_f)], 
-                    # 5: [],
-                    # 6: [],
-                    }
-    T = 100
-    data, nonstat = toys.structural_causal_process(links_coeffs, T=T, noises=None, seed=7)
+ 
+    links_coeffs = {0: [((0, -1), 0.5, lin_f)],
+             1: [((1, -1), 0.5, lin_f), ((0, -1), 0.5, lin_f)],
+             2: [((2, -1), 0.5, lin_f), ((1, 0), 0.5, lin_f)]
+             }
+    T = 1000
+    data, nonstat = toys.structural_causal_process(
+        links_coeffs, T=T, noises=None, seed=7)
     dataframe = pp.DataFrame(data)
 
     graph = CausalEffects.get_graph_from_dict(links_coeffs)
 
-    X = [(0, -20)]
-    Y = [(1, 0)]
+    X = [(0, -2)]
+    Y = [(2, 0)]
 
     # Initialize class as `stationary_dag`
     causal_effects = CausalEffects(graph, graph_type='stationary_dag', 
@@ -2584,7 +2581,7 @@ if __name__ == '__main__':
 
     causal_effects.fit_wright_effect(dataframe=dataframe, 
                             # links_coeffs = links_coeffs,
-                            # mediation = [(1, -1)]
+                            # mediation = [(1, 0), (1, -1), (1, -2)]
                             )
 
     intervention_data = 1.*np.ones((1, 1))
