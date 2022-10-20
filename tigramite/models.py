@@ -698,8 +698,8 @@ class LinearMediation(Models):
 
         for tau in range(1, self.tau_max + 1):
             psi[tau] = np.matmul(psi[0], np.matmul(phi[tau], psi[0]))
-            for k in range(1, tau):
-                psi[tau] += np.matmul(psi[0], np.matmul(phi[k], psi[tau - k]) ) 
+            for s in range(1, tau):
+                psi[tau] += np.matmul(psi[0], np.matmul(phi[s], psi[tau - s]) ) 
 
         # Lagged-only effects:
         # psi = np.zeros((self.tau_max + 1, self.N, self.N))
@@ -722,8 +722,8 @@ class LinearMediation(Models):
         ----------
         phi : array-like
             Coefficient matrices at different lags.
-        k : int
-            Variable index to exclude causal effects through.
+        k : int or list of ints
+            Variable indices to exclude causal effects through.
 
         Returns
         -------
@@ -734,13 +734,18 @@ class LinearMediation(Models):
         psi_k = np.zeros((self.tau_max + 1, self.N, self.N))
         
         phi_k = np.copy(phi)
-        phi_k[:, k, :] = 0.
+        if isinstance(k, int):
+            phi_k[:, k, :] = 0.
+        else:
+            for k_here in k:
+                phi_k[:, k_here, :] = 0.
+
 
         psi_k[0] = np.linalg.pinv(np.identity(self.N) - phi_k[0])
         for tau in range(1, self.tau_max + 1):
             psi_k[tau] = np.matmul(psi_k[0], np.matmul(phi_k[tau], psi_k[0]))
-            for k in range(1, tau):
-                psi_k[tau] += np.matmul(psi_k[0], np.matmul(phi_k[k], psi_k[tau - k]) ) 
+            for s in range(1, tau):
+                psi_k[tau] += np.matmul(psi_k[0], np.matmul(phi_k[s], psi_k[tau - s])) 
 
 
         # psi_k[0] = np.identity(self.N)
@@ -907,6 +912,35 @@ class LinearMediation(Models):
         """
         mce = self.psi[abs(tau), j, i] - self.all_psi_k[k, abs(tau), j, i]
         return mce
+
+    def get_joint_mce(self, i, j, k):
+        """Returns the joint causal effect mediated through k.
+
+        This is the mediated causal effect from all lags [t, ..., t-tau_max]
+        of i on j at time t for paths through k. Note that the joint effect
+        does not count links passing through parents of i itself.
+
+        Parameters
+        ----------
+        i : int
+            Index of cause variable.
+        j : int
+            Index of effect variable.
+        k : int or list of ints
+            Indices of mediator variables.
+
+        Returns
+        -------
+        joint_mce : array of shape (tau_max + 1)
+            Mediated causal effect from each lag [t, ..., t-tau_max] of i on j through k.
+        """
+        if isinstance(k, int):
+            k_here = [k]
+
+        effect_without_k = self._get_psi_k(self.phi, k=[i] + k_here)
+
+        joint_mce = self.all_psi_k[i, :, j, i] - effect_without_k[:, j, i]
+        return joint_mce
 
     def get_ace(self, i, lag_mode='absmax', exclude_i=True):
         """Returns the average causal effect.
@@ -1643,7 +1677,9 @@ if __name__ == '__main__':
     print (med.get_ce(i=0, tau=-2,  j=2))
     # print (med.get_ce_max(i=0, j=2))
     print (med.get_mce(i=0, tau=-2, k=1, j=2))
-    # print(med.get_joint_ce(i=0, j=2))
+    print(med.get_joint_ce(i=0, j=2))
+    print(med.get_joint_mce(i=0, j=2, k=1))
+
     # print(med.get_joint_ce_matrix(i=0, j=2))
 
     # i=0; tau=4; j=2
