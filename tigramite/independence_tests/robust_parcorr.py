@@ -15,13 +15,37 @@ from .independence_tests_base import CondIndTest
 class RobustParCorr(CondIndTest):
     r"""Robust partial correlation test based on non-paranormal models.
 
-    TODO: Partial correlation is estimated through linear ordinary least squares (OLS)
-    regression and a test for non-zero linear Pearson correlation on the
-    residuals.
+    Partial correlation is estimated through transformation to standard
+    normal marginals, ordinary least squares (OLS) regression, and a test for
+    non-zero linear Pearson correlation on the residuals.
 
     Notes
     -----
-    To test :math:`X \perp Y | Z`, first :math:`Z` is regressed out from
+    To test :math:`X \perp Y | Z`, firstly, each marginal is transformed to be
+    standard normally distributed. For that, the transform
+    :math:`\Phi^{-1}\circ\hat{F}` is used. Here, :math:`\Phi^{-1}` is the
+     quantile function of a standard normal distribution and 
+     :math:`\hat{F}` is the empirical distribution function for the respective
+     marginal.
+
+
+    This idea stems from the literature on nonparanormal models, see:
+
+    - Han Liu, John Lafferty, and Larry Wasserman. The nonparanormal:
+      semiparametric estimation of high dimensional undirected graphs. J.
+      Mach. Learn. Res., 10:2295–2328, 2009.
+
+    - Han Liu, Fang Han, Ming Yuan, John Lafferty, and Larry Wasserman.
+      High-dimensional semiparametric Gaussian copula graphical models. Ann.
+      Statist., 40(4):2293–2326, 2012a.
+
+    - Naftali Harris, Mathias Drton. PC Algorithm for Nonparanormal Graphical
+      Models. Journal of Machine Learning Research, 14: 3365-3383, 2013.
+
+    Afterwards (where Z, X, and Y are now assumed to be transformed to the
+    standard normal scale):
+
+    :math:`Z` is regressed out from
     :math:`X` and :math:`Y` assuming the  model
 
     .. math::  X & =  Z \beta_X + \epsilon_{X} \\
@@ -55,20 +79,29 @@ class RobustParCorr(CondIndTest):
 
         CondIndTest.__init__(self, **kwargs)
 
-    def trafo2normal(self, x, thres=0.001):
-        """Transforms input array to uniform marginals.
-
-        Assumes x.shape = (dim, T)
+    def trafo2normal(self, x, thres=0.00001):
+        """Transforms input array to standard normal marginals.
+        
+        For that, the code first transforms to uniform :math:`[0,1]` marginals
+        using the empirical distribution function, and then transforms to
+        normal marginals by applying the quantile function of a standard
+        normal. Assumes x.shape = (dim, T)
 
         Parameters
         ----------
         x : array-like
             Input array.
 
+        thres : float
+            Small number between 0 and 1; after transformation to the uniform
+            scale, all values that are too close to zero are replaced by thres,
+            similarly, all values that are too close to one, are replaced by
+            1-thres. This avoids NaNs.
+
         Returns
         -------
-        u : array-like
-            array with uniform marginals.
+        normal : array-like
+            array with normal marginals.
         """
 
         def trafo(xi):
@@ -158,8 +191,9 @@ class RobustParCorr(CondIndTest):
     def get_dependence_measure(self, array, xyz):
         """Return partial correlation.
 
-        Estimated as the Pearson correlation of the residuals of a linear
-        OLS regression.
+        Marginals are firstly transformed to standard normal scale. Dependence
+        Measure is then estimated as the Pearson correlation of the residuals
+        of a linear OLS regression.
 
         Parameters
         ----------
@@ -188,6 +222,7 @@ class RobustParCorr(CondIndTest):
                                  return_null_dist=False):
         """Returns p-value for shuffle significance test.
 
+        Firstly, each marginal is transformed to the standard normal scale.
         For residual-based test statistics only the residuals are shuffled.
 
         Parameters
@@ -308,10 +343,15 @@ class RobustParCorr(CondIndTest):
     def get_model_selection_criterion(self, j, parents, tau_max=0, corrected_aic=False):
         """Returns Akaike's Information criterion modulo constants.
 
-        Fits a linear model of the parents to variable j and returns the
-        score. Leave-one-out cross-validation is asymptotically equivalent to
-        AIC for ordinary linear regression models. Here used to determine
-        optimal hyperparameters in PCMCI, in particular the pc_alpha value.
+        First of all, each marginal is transformed to the standard normal
+        scale. For this, each marginal is transformed to the uniform scale
+        using the empirical distribution function and then, transformed to
+        the standard normal scale by applying the quantile function of a
+        standard normal. Afterwards, fits a linear model of the parents to
+        variable j and returns the score. Leave-one-out cross-validation is
+        asymptotically equivalent to AIC for ordinary linear regression
+        models. Here used to determine optimal hyperparameters in 
+        PCMCI(plus), in particular the pc_alpha value.
 
         Parameters
         ----------
