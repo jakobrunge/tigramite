@@ -233,7 +233,6 @@ def _add_timeseries(
             np.zeros(dataseries.shape), dataseries
         )
 
-    ax.axhline(0., lw=1., color='grey')
 
     if use_mask:
 
@@ -261,6 +260,7 @@ def _add_timeseries(
                 clip_on=False,
                 alpha=grey_alpha,
             )
+        ax.axhline(maskdata.mean(), lw=1., color='grey')
 
         ax.plot(
             time,
@@ -272,6 +272,8 @@ def _add_timeseries(
             clip_on=False,
         )
     else:
+        ax.axhline(dataseries_nomissing.mean(), lw=1., color='grey')
+
         ax.plot(
             time,
             dataseries_nomissing,
@@ -323,6 +325,7 @@ def plot_timeseries(
     skip_ticks_data_x=1,
     skip_ticks_data_y=2,
     label_fontsize=12,
+    color='black',
     selected_dataset=0,
 ):
     """Create and save figure of stacked panels with time series.
@@ -358,6 +361,8 @@ def plot_timeseries(
         Skip every other tickmark.
     label_fontsize : int, optional (default: 10)
         Fontsize of variable labels.
+    color : str, optional (default: black)
+        Line color.
     selected_dataset : int, optional (default: 0)
         In case of multiple datasets in dataframe, plot this one.
     """
@@ -391,6 +396,7 @@ def plot_timeseries(
             fig=fig,
             axes=axes,
             i=i,
+            color=color,
             time=datatime,
             dataseries=data[:, i],
             label=var_names[i],
@@ -1574,7 +1580,7 @@ def _draw_network_with_curved_edges(
                 rad = (rad + np.sign(rad) * 0.1) * -1.0
             arrowstyle = arrowstyle
             # link_edge = d['outer_edge_edge']
-            linestyle = d.get("outer_edge_style")
+            linestyle = 'solid' # d.get("outer_edge_style")
 
             if d.get("outer_edge_attribute", None) == "spurious":
                 facecolor = "grey"
@@ -1598,12 +1604,15 @@ def _draw_network_with_curved_edges(
                 arrowstyle = "-"
                 # linewidth = width*factor
             elif d.get("outer_edge_type") == "<->":
-                arrowstyle = "<->, head_width=0.4, head_length=1"
-                # linewidth = width*factor
+                # arrowstyle = "<->, head_width=0.4, head_length=1"
+                arrowstyle = "Simple, head_width=2, head_length=2, tail_width=1" #%float(width/20.)
             elif d.get("outer_edge_type") in ["o->", "-->", "<-o", "<--", "<-x", "x->", "+->", "<-+"]:
-                arrowstyle = "->, head_width=0.4, head_length=1"
-            # else:
-            #     raise ValueError("edge type %s not valid." %d.get("outer_edge_type"))
+                # arrowstyle = "->, head_width=0.4, head_length=1"
+                # arrowstyle = "->, head_width=0.4, head_length=1, width=10"
+                arrowstyle = "Simple, head_width=2, head_length=2, tail_width=1" # %float(width/20.)
+            else:
+                arrowstyle = "Simple, head_width=2, head_length=2, tail_width=1" # %float(width/20.)
+                # raise ValueError("edge type %s not valid." %d.get("outer_edge_type"))
         else:
             rad = -1.0 * inner_edge_curved * curved_radius
             if cmap_links is not None:
@@ -1637,13 +1646,17 @@ def _draw_network_with_curved_edges(
             ]:
                 arrowstyle = "-"
             elif d.get("inner_edge_type") == "<->":
-                arrowstyle = "<->, head_width=0.4, head_length=1"
+                # arrowstyle = "<->, head_width=0.4, head_length=1"
+                arrowstyle = "Simple, head_width=2, head_length=2, tail_width=1" #%float(width/20.)
             elif d.get("inner_edge_type") in ["o->", "-->", "<-o", "<--", "<-x", "x->", "+->", "<-+"]:
-                arrowstyle = "->, head_width=0.4, head_length=1"
-            # else:
+                # arrowstyle = "->, head_width=0.4, head_length=1"
+                arrowstyle = "Simple, head_width=2, head_length=2, tail_width=1" #%float(width/20.)
+            else:
+                arrowstyle = "Simple, head_width=2, head_length=2, tail_width=1" # %float(width/20.)
+
             #     raise ValueError("edge type %s not valid." %d.get("inner_edge_type"))
 
-            linestyle = d.get("inner_edge_style")
+            linestyle = 'solid' #d.get("inner_edge_style")
 
         coor1 = n1.center
         coor2 = n2.center
@@ -1652,25 +1665,79 @@ def _draw_network_with_curved_edges(
         figuresize = fig.get_size_inches()
 
         # print("COLOR ", facecolor)
-        e_p = FancyArrowPatch(
-            coor1,
-            coor2,
-            arrowstyle=arrowstyle,
-            connectionstyle=f"arc3,rad={rad}",
-            mutation_scale=width,
-            lw=width / 2,
-            alpha=alpha,
-            linestyle=linestyle,
-            color=facecolor,
-            clip_on=False,
-            patchA=n1,
-            patchB=n2,
-            shrinkA=0,
-            shrinkB=0,
-            zorder=-1,
-        )
+        # print(u, v, outer_edge, "outer ", d.get("outer_edge_type"),  "inner ",  d.get("inner_edge_type"), width, arrowstyle, linestyle)
+        
+        if ((outer_edge is True and d.get("outer_edge_type") == "<->")
+           or (outer_edge is False and d.get("inner_edge_type") == "<->")):
+            e_p = FancyArrowPatch(
+                coor1,
+                coor2,
+                arrowstyle=arrowstyle,
+                connectionstyle=f"arc3,rad={rad}",
+                mutation_scale=np.sqrt(width)*2,
+                lw=0., #width / 2.,
+                aa=True,
+                alpha=alpha,
+                linestyle=linestyle,
+                color=facecolor,
+                clip_on=False,
+                patchA=n1,
+                patchB=n2,
+                shrinkA=10,
+                shrinkB=0,
+                zorder=-1,
+                capstyle="butt",
+            )
+            ax.add_artist(e_p)
 
-        ax.add_artist(e_p)
+            e_p_back = FancyArrowPatch(
+              coor2,
+              coor1,
+              arrowstyle=arrowstyle,
+              connectionstyle=f"arc3,rad={-rad}",
+              mutation_scale=np.sqrt(width)*2,
+              lw=0., #width / 2.,
+              aa=True,
+              alpha=alpha,
+              linestyle=linestyle,
+              color=facecolor,
+              clip_on=False,
+              patchA=n2,
+              patchB=n1,
+              shrinkA=10,
+              shrinkB=0,
+              zorder=-1,
+              capstyle="butt",
+            )  
+            ax.add_artist(e_p_back)
+
+        else:
+            if arrowstyle == '-':
+                lw = np.sqrt(width)*2
+            else:
+                lw = 0.
+            e_p = FancyArrowPatch(
+                coor1,
+                coor2,
+                arrowstyle=arrowstyle,
+                connectionstyle=f"arc3,rad={rad}",
+                mutation_scale=np.sqrt(width)*2,
+                lw=lw, #width / 2.,
+                aa=True,
+                alpha=alpha,
+                linestyle=linestyle,
+                color=facecolor,
+                clip_on=False,
+                patchA=n1,
+                patchB=n2,
+                shrinkA=0,
+                shrinkB=0,
+                zorder=-1,
+                capstyle="butt",
+            )
+            ax.add_artist(e_p)
+
+
         path = e_p.get_path()
         vertices = path.vertices.copy()
         m, n = vertices.shape
@@ -2259,7 +2326,7 @@ def _draw_network_with_curved_edges(
             d["outer_edge_alpha"] = 1e-8
         if u != v:
             if d["outer_edge"]:
-                seen[(u, v)] = draw_edge(ax, u, v, d, seen, arrowstyle, outer_edge=True)
+                seen[(u, v)] = draw_edge(ax, u, v, d, seen, outer_edge=True)
             if d["inner_edge"]:
                 seen[(u, v)] = draw_edge(ax, u, v, d, seen, outer_edge=False)
 
@@ -2458,8 +2525,13 @@ def plot_graph(
         dic["no_links"] = no_links
         # average lagfunc for link u --> v ANDOR u -- v
         if tau_max > 0:
-            # argmax of absolute maximum
-            argmax = np.abs(val_matrix[u, v][1:]).argmax() + 1
+            # argmax of absolute maximum where a link exists!
+            links = np.where(link_matrix_upper[u, v, 1:] != "")[0]
+            if len(links) > 0:
+                argmax_links = np.abs(val_matrix[u, v][1:][links]).argmax()
+                argmax = links[argmax_links] + 1
+            else:
+                argmax = 0
         else:
             argmax = 0
 
@@ -2518,6 +2590,7 @@ def plot_graph(
                 dic["outer_edge"] = np.any(link_matrix_upper[u, v, 1:] != "")
             else:
                 dic["outer_edge"] = False
+            # print(u, v, dic["outer_edge"], argmax, link_matrix_upper[u, v, :])
 
             dic["outer_edge_type"] = link_matrix_upper[u, v, argmax]
 
