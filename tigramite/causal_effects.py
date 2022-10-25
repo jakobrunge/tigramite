@@ -278,7 +278,7 @@ class CausalEffects():
 
             # Also create stationary graph extended to tau_max
             self.stationary_graph = np.zeros((self.N, self.N, self.tau_max + 1), dtype='<U3')
-            self.stationary_graph[:,:, :stat_graph.shape[2]] = stat_graph
+            self.stationary_graph[:, :, :stat_graph.shape[2]] = stat_graph
 
             # allowed_edges = ["-->", "<--"]
 
@@ -1094,8 +1094,6 @@ class CausalEffects():
                                                  stationary_graph=stationary,
                                                  )))
 
-                    # print((i, -taui), (j, -tauj), cond_i_xy, cond_i_yx, cond_ii)
-
                     if cond_i_xy and not cond_i_yx and not cond_ii:
                         aux_graph[i, j, taui, tauj] = "-->"  #graph[i, j, tau]
                         # if tau == 0:
@@ -1119,6 +1117,7 @@ class CausalEffects():
                     elif cond_i_xy and cond_i_yx:
                         raise ValueError("Cycle between %s and %s!" %(str(i, -taui), str(j, -tauj)))
                     # print(aux_graph[i, j, taui, tauj])
+                    # print((i, -taui), (j, -tauj), cond_i_xy, cond_i_yx, cond_ii, aux_graph[i, j, taui, tauj], aux_graph[j, i, tauj, taui])
 
         return aux_graph
 
@@ -1155,7 +1154,7 @@ class CausalEffects():
         # See Thm. XXXX - TO BE REVISED!
         XYZ = start.union(end).union(conditions)
         if stationary_graph:
-            max_lag = 1*self.tau_max  # TO BE REVISED! self._get_maximum_possible_lag(XYZ, self.graph)
+            max_lag = 10*self.tau_max  # TO BE REVISED! self._get_maximum_possible_lag(XYZ, self.graph)
             causal_children = list(self._get_mediators_stationary_graph(start, end, max_lag).union(end))
         else:
             max_lag = None

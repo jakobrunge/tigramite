@@ -1579,7 +1579,7 @@ def _draw_network_with_curved_edges(
             if d.get("outer_edge_attribute", None) == "spurious":
                 facecolor = "grey"
 
-            if d.get("outer_edge_type") in ["<-o", "<--", "<-x"]:
+            if d.get("outer_edge_type") in ["<-o", "<--", "<-x", "<-+"]:
                 n1, n2 = n2, n1
 
             if d.get("outer_edge_type") in [
@@ -1638,7 +1638,7 @@ def _draw_network_with_curved_edges(
                 arrowstyle = "-"
             elif d.get("inner_edge_type") == "<->":
                 arrowstyle = "<->, head_width=0.4, head_length=1"
-            elif d.get("inner_edge_type") in ["o->", "-->", "<-o", "<--", "<-x", "x->", "+->"]:
+            elif d.get("inner_edge_type") in ["o->", "-->", "<-o", "<--", "<-x", "x->", "+->", "<-+"]:
                 arrowstyle = "->, head_width=0.4, head_length=1"
             # else:
             #     raise ValueError("edge type %s not valid." %d.get("inner_edge_type"))
@@ -2933,7 +2933,9 @@ def plot_time_series_graph(
             if link_attribute is not None:
                 tsg_attr[translate(i,   max_lag - 1 - taui), translate(j, max_lag-1-tauj)] = 'spurious'
         # print(tsg_style)   
-        # print(tsg)     
+            # print(tsg_style[translate(i,   max_lag - 1 - taui), translate(j, max_lag-1-tauj)] = graph[i, j, taui, tauj])    
+            # print(max_lag, (i, -taui), (j, -tauj), graph[i, j, taui, tauj], tsg_style[translate(i,   max_lag - 1 - taui), translate(j, max_lag-1-tauj)])
+ 
 
     else:
       link_matrix_tsg = np.copy(graph)
