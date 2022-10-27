@@ -1548,7 +1548,7 @@ def _draw_network_with_curved_edges(
         v,
         d,
         seen,
-        arrowstyle="->, head_width=0.4, head_length=1",
+        arrowstyle= "Simple, head_width=2.5, head_length=2.5, tail_width=1",
         outer_edge=True,
     ):
 
@@ -1605,13 +1605,13 @@ def _draw_network_with_curved_edges(
                 # linewidth = width*factor
             elif d.get("outer_edge_type") == "<->":
                 # arrowstyle = "<->, head_width=0.4, head_length=1"
-                arrowstyle = "Simple, head_width=2, head_length=2, tail_width=1" #%float(width/20.)
+                arrowstyle = "Simple, head_width=2, head_length=2, tail_width=0.75" #%float(width/20.)
             elif d.get("outer_edge_type") in ["o->", "-->", "<-o", "<--", "<-x", "x->", "+->", "<-+"]:
                 # arrowstyle = "->, head_width=0.4, head_length=1"
                 # arrowstyle = "->, head_width=0.4, head_length=1, width=10"
-                arrowstyle = "Simple, head_width=2, head_length=2, tail_width=1" # %float(width/20.)
+                arrowstyle = "Simple, head_width=2, head_length=2, tail_width=0.75" #%float(width/20.)
             else:
-                arrowstyle = "Simple, head_width=2, head_length=2, tail_width=1" # %float(width/20.)
+                arrowstyle = "Simple, head_width=2, head_length=2, tail_width=0.75" #%float(width/20.)
                 # raise ValueError("edge type %s not valid." %d.get("outer_edge_type"))
         else:
             rad = -1.0 * inner_edge_curved * curved_radius
@@ -1647,12 +1647,12 @@ def _draw_network_with_curved_edges(
                 arrowstyle = "-"
             elif d.get("inner_edge_type") == "<->":
                 # arrowstyle = "<->, head_width=0.4, head_length=1"
-                arrowstyle = "Simple, head_width=2, head_length=2, tail_width=1" #%float(width/20.)
+                arrowstyle = "Simple, head_width=2, head_length=2, tail_width=0.75" #%float(width/20.)
             elif d.get("inner_edge_type") in ["o->", "-->", "<-o", "<--", "<-x", "x->", "+->", "<-+"]:
                 # arrowstyle = "->, head_width=0.4, head_length=1"
-                arrowstyle = "Simple, head_width=2, head_length=2, tail_width=1" #%float(width/20.)
+                arrowstyle = "Simple, head_width=2, head_length=2, tail_width=0.75" #%float(width/20.)
             else:
-                arrowstyle = "Simple, head_width=2, head_length=2, tail_width=1" # %float(width/20.)
+                arrowstyle = "Simple, head_width=2, head_length=2, tail_width=0.75" #%float(width/20.)
 
             #     raise ValueError("edge type %s not valid." %d.get("inner_edge_type"))
 
@@ -2132,7 +2132,7 @@ def _draw_network_with_curved_edges(
                     bbox_ax.xmax - width*0.45,
                     bbox_ax.ymin,
                     width*0.4,
-                    0.05*height,   #0.025 + (len(all_links_edge_weights) == 0) * 0.035,
+                    0.075*height,   #0.025 + (len(all_links_edge_weights) == 0) * 0.035,
                 ],
                 frameon=False,
             )
@@ -2230,7 +2230,7 @@ def _draw_network_with_curved_edges(
                         bbox_ax.xmin + width*0.05,
                         bbox_ax.ymin,
                         width*0.4,
-                        0.05*height,   #0.025 + (len(all_links_edge_weights) == 0) * 0.035,
+                        0.075*height,   #0.025 + (len(all_links_edge_weights) == 0) * 0.035,
                     ],
                     frameon=False,
                 )
@@ -4105,28 +4105,28 @@ if __name__ == "__main__":
     import tigramite.toymodels.structural_causal_processes as toys
     import tigramite.data_processing as pp
 
-    T = 1000
-    def lin_f(x): return x
-    auto_coeff = 0.3
-    coeff = 1.
-    links = {
-            0: [((0, -1), auto_coeff, lin_f)], 
-            1: [((1, -1), auto_coeff, lin_f), ((0, 0), coeff, lin_f)], 
-            2: [((2, -1), auto_coeff, lin_f), ((1, 0), coeff, lin_f)],
-            }
-    data, nonstat = toys.structural_causal_process(links, T=T, 
-                                noises=None, seed=7)
-    dataframe = pp.DataFrame(data, var_names=range(len(links)))
+    # T = 1000
+    # def lin_f(x): return x
+    # auto_coeff = 0.3
+    # coeff = 1.
+    # links = {
+    #         0: [((0, -1), auto_coeff, lin_f)], 
+    #         1: [((1, -1), auto_coeff, lin_f), ((0, 0), coeff, lin_f)], 
+    #         2: [((2, -1), auto_coeff, lin_f), ((1, 0), coeff, lin_f)],
+    #         }
+    # data, nonstat = toys.structural_causal_process(links, T=T, 
+    #                             noises=None, seed=7)
+    # dataframe = pp.DataFrame(data, var_names=range(len(links)))
 
-    links = {
-            0: [((0, -1), 1.5*auto_coeff, lin_f)], 
-            1: [((1, -1), 1.5*auto_coeff, lin_f), ((0, 0), 1.5*coeff, lin_f)], 
-            2: [((2, -1), 1.5*auto_coeff, lin_f), ((1, 0), 1.5*coeff, lin_f)],
-            }
-    data2, nonstat = toys.structural_causal_process(links, T=T, 
-                                noises=None, seed=7)
-    dataframe2 = pp.DataFrame(data2, var_names=range(len(links)))
-    plot_densityplots(dataframe, name='test.pdf')
+    # links = {
+    #         0: [((0, -1), 1.5*auto_coeff, lin_f)], 
+    #         1: [((1, -1), 1.5*auto_coeff, lin_f), ((0, 0), 1.5*coeff, lin_f)], 
+    #         2: [((2, -1), 1.5*auto_coeff, lin_f), ((1, 0), 1.5*coeff, lin_f)],
+    #         }
+    # data2, nonstat = toys.structural_causal_process(links, T=T, 
+    #                             noises=None, seed=7)
+    # dataframe2 = pp.DataFrame(data2, var_names=range(len(links)))
+    # plot_densityplots(dataframe, name='test.pdf')
     
     # N = len(links)
     # matrix = setup_density_matrix(N=N, var_names=dataframe.var_names)
@@ -4156,7 +4156,7 @@ if __name__ == "__main__":
     
 
     # pyplot.show()
-    sys.exit(0)
+    # sys.exit(0)
 
 
     val_matrix = np.zeros((4, 4, 3))
@@ -4177,7 +4177,7 @@ if __name__ == "__main__":
 
     # plot_time_series_graph(graph=nolinks)
     plot_graph(graph=graph, 
-        save_name="/home/rung_ja/Downloads/tsg_test.pdf")
+        save_name="tsg_test.pdf")
 
     # pyplot.show()
 

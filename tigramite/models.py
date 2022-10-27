@@ -697,8 +697,8 @@ class LinearMediation(Models):
         psi[0] = np.linalg.pinv(np.identity(self.N) - phi[0])
 
         for tau in range(1, self.tau_max + 1):
-            psi[tau] = np.matmul(psi[0], np.matmul(phi[tau], psi[0]))
-            for s in range(1, tau):
+            # psi[tau] = np.matmul(psi[0], np.matmul(phi[tau], psi[0]))
+            for s in range(1, tau + 1):
                 psi[tau] += np.matmul(psi[0], np.matmul(phi[s], psi[tau - s]) ) 
 
         # Lagged-only effects:
@@ -743,8 +743,8 @@ class LinearMediation(Models):
 
         psi_k[0] = np.linalg.pinv(np.identity(self.N) - phi_k[0])
         for tau in range(1, self.tau_max + 1):
-            psi_k[tau] = np.matmul(psi_k[0], np.matmul(phi_k[tau], psi_k[0]))
-            for s in range(1, tau):
+            # psi_k[tau] = np.matmul(psi_k[0], np.matmul(phi_k[tau], psi_k[0]))
+            for s in range(1, tau + 1):
                 psi_k[tau] += np.matmul(psi_k[0], np.matmul(phi_k[s], psi_k[tau - s])) 
 
 

@@ -180,10 +180,10 @@ class DataFrame():
             if isinstance(data, np.ndarray):
                 _data_shape = data.shape
                 if len(_data_shape) == 2:
-                    self.values = {0: data}
+                    self.values = {0: np.copy(data)}
                     self._initialized_from = "2d numpy array"
                 elif len(_data_shape) == 3 and _data_shape[0] == 1:
-                    self.values = {0: data[0, :, :]}
+                    self.values = {0: np.copy(data[0, :, :])}
                     self._initialized_from = "3d numpy array"
                 else:
                     raise TypeError("In analysis mode 'single', 'data' given "\
@@ -195,7 +195,7 @@ class DataFrame():
                     _data = next(iter(data.values()))
                     if isinstance(_data, np.ndarray):
                         if len(_data.shape) == 2:
-                            self.values = data
+                            self.values = data.copy()
                             self._initialized_from = "dict"
                         else:
                             raise TypeError("In analysis mode 'single', "\
@@ -225,7 +225,7 @@ class DataFrame():
             if isinstance(data, np.ndarray):
                 _data_shape = data.shape
                 if len(_data_shape) == 3:
-                    self.values = {i: data[i, :, :] for i in range(_data_shape[0])}
+                    self.values = {i: np.copy(data[i, :, :]) for i in range(_data_shape[0])}
                     self._initialized_from = "3d numpy array"
                 else:
                     raise TypeError("In analysis mode 'multiple', 'data' "\
@@ -258,7 +258,7 @@ class DataFrame():
                                 type(ens_member_data)))
 
                 if len(_N_list) == 1:
-                    self.values = data
+                    self.values = data.copy()
                     self._initialized_from = "dict"
                 else:
                     raise ValueError("In analysis mode 'multiple', 'data' "\
@@ -477,7 +477,7 @@ class DataFrame():
                         "be int.".format(type(time_offset)))
 
             if not found_zero_time_offset:
-                raise ValueError("At least time offset must be 0.")
+                raise ValueError("At least one time offset must be 0.")
 
         else:
             # If no time offsets are specified, all of them are zero
@@ -1064,7 +1064,7 @@ def smooth(data, smooth_width, kernel='gaussian',
 
     print("%s %s smoothing with " % ({True: "Take residuals of a ",
                                       False: ""}[residuals], kernel) +
-          "window width %.2f (2*sigma for a gaussian!)" % (smooth_width))
+          "window width %.2f (=2*sigma for a gaussian!)" % (smooth_width))
 
     totaltime = len(data)
     if kernel == 'gaussian':
