@@ -232,7 +232,7 @@ class PCMCI():
         # Return the selected links
         return _int_sel_links
 
-    def _iter_conditions(self, child, parent, conds_dim, all_parents):
+    def _iter_conditions(self, child, parent, conds_dim, all_parents, nonsig_parents):
         """Yield next condition.
 
         Yields next condition from lexicographically ordered conditions.
@@ -245,16 +245,19 @@ class PCMCI():
             Cardinality in current step.
         all_parents : list
             List of form [(0, -1), (3, -2), ...].
+        nonsig_parents:
+            List of form [(child, nonsig_parents)]: Previously removed parents
 
         Yields
         -------
         cond :  list
             List of form [(0, -1), (3, -2), ...] for the next condition.
         """
+        filtered_parents = [nonsig_parent for _, nonsig_parent in nonsig_parents]
         # JC NOTE: We update the condition selection here. (Deprecated)
         # Specifically, we remove the autocorrelation testing here.
         #all_parents_excl_self = [p for p in all_parents if p!=parent]
-        all_parents_excl_self = [p for p in all_parents if p!=parent and p[0]!=child]
+        all_parents_excl_self = [p for p in all_parents if p!=parent and p[0]!=child and p not in filtered_parents]
         #all_parents_excl_self = [p for p in all_parents if p[1]>parent[1] and p[0]!=child]
         #all_parents_excl_self = [p for p in all_parents if p[0] not in [parent[0], child]]
         
@@ -505,7 +508,7 @@ class PCMCI():
                     self._print_link_info(j, index_parent, parent, len(parents))
                 # Iterate through all possible combinations
                 nonsig = False
-                for comb_index, Z in enumerate(self._iter_conditions(j, parent, conds_dim, parents)):
+                for comb_index, Z in enumerate(self._iter_conditions(j, parent, conds_dim, parents, nonsig_parents)):
                     # Break if we try too many combinations
                     start = time.time()
                     if comb_index >= max_combinations:
