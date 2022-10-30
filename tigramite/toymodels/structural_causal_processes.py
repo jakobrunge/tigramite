@@ -745,7 +745,7 @@ def _get_minmax_lag(links):
                 var, lag = link_props[0]
                 coeff = link_props[1]
                 # func = link_props[2]
-                if coeff != 0.:
+                if not isinstance(coeff, float) or coeff != 0.:
                     min_lag = min(min_lag, abs(lag))
                     max_lag = max(max_lag, abs(lag))
             else:

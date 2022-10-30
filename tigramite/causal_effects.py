@@ -1356,7 +1356,7 @@ class CausalEffects():
         else:
             S = alternative_conditions
             newancS = self._get_ancestors(S)
-            self.vancs = self.ancX.union(self.ancY).union(newancS) - self.forbidden_nodes
+            vancs = self.ancX.union(self.ancY).union(newancS) - self.forbidden_nodes
 
             # vancs = self._get_ancestors(list(self.X.union(self.Y).union(S))) - self.forbidden_nodes
 
@@ -1570,7 +1570,7 @@ class CausalEffects():
                 condition='I', 
                 inside_set=Oset.union(self.S), start_with_tail_or_head=False,
                 )
-           
+
         #
         # Cond. II
         #
@@ -1593,9 +1593,11 @@ class CausalEffects():
                     if self.verbosity > 1:
                         print("Non-optimal due to E = ", E)
                     break
-   
-        # print("Optimality = ", cond_0, cond_I, cond_II)
+
         optimality = (cond_0 or (cond_I and cond_II))
+        if self.verbosity > 0:
+            print("Optimality = %s with cond_0 = %s, cond_I = %s, cond_II = %s"
+                    %  (optimality, cond_0, cond_I, cond_II))
         return optimality
 
     def _check_validity(self, Z):
@@ -1896,67 +1898,6 @@ class CausalEffects():
                 cut_off='tau_max',
                 return_data=False)
 
-        # # Optionally estimate confidence bounds via bootstrap
-        # self.estimate_confidence = estimate_confidence
-        # self.conf_lev = conf_lev
-        # if self.estimate_confidence:
-        #     self.bootstrap_results = {}
-        #     random_state = np.random.default_rng(seed)
-
-        #     # Extract max_lag to construct bootstrap draws
-        #     XYZ = self.listY + \
-        #           self.listX + \
-        #           list(self.adjustment_set) + \
-        #           self.listS
-        #     max_lag = max(abs(np.array(XYZ)[:, 1].min()), self.tau_max)
-
-        #     # Determine the number of blocks total, rounding up for non-integer
-        #     # amounts
-        #     n_blks = int(math.ceil(float(T-max_lag)/boot_blocklength))
-
-        #     if n_blks < 10:
-        #         raise ValueError("Only %d block(s) for block-sampling,"  %n_blks +
-        #                          "choose smaller boot_blocklength!")
-
-
-        #     if self.verbosity > 0:
-        #         print("\n##\n## Running bootstrap confidence estimate"  +
-        #               "\n##\n" +
-        #               "\nboot_samples = %s \n" % boot_samples +
-        #               "\nboot_blocklength = %s \n" % boot_blocklength
-        #               )
-        #     boot_dataframe = deepcopy(dataframe)
-        #     for b in range(boot_samples):
-        #         # Get the starting indices for the blocks
-        #         blk_strt = random_state.integers(max_lag, T - boot_blocklength + 1, n_blks)
-        #         # Get the empty array of block resampled values
-        #         boot_draw = np.zeros(n_blks*boot_blocklength, dtype='int')
-        #         # Fill the array of block resamples
-        #         for i in range(boot_blocklength):
-        #             boot_draw[i::boot_blocklength] = np.arange(0, T, dtype='int')[blk_strt + i]
-        #         # Cut to proper length
-        #         boot_draw = boot_draw[:T-max_lag]
-
-        #         # boot_draw = random_state.integers(2*tau_max, T, size=T-2*tau_max)
-        #         boot_dataframe.bootstrap = boot_draw
-                
-        #         # Fit model of Y on X and Z (and conditions)
-        #         # Build the model
-        #         self.bootstrap_results[b] = Models(
-        #                         dataframe=boot_dataframe,
-        #                         model=estimator,
-        #                         conditional_model=conditional_estimator,
-        #                         data_transform=data_transform,
-        #                         mask_type=mask_type,
-        #                         verbosity=self.verbosity)      
-
-        #         self.bootstrap_results[b].get_general_fitted_model(
-        #                 Y=self.listY, X=self.listX, Z=list(self.adjustment_set),
-        #                 conditions=self.listS,
-        #                 tau_max=self.tau_max,
-        #                 cut_off='max_lag_or_tau_max',
-        #                 return_data=False)
-
         return self
 
     def predict_total_effect(self, 
@@ -2012,32 +1953,6 @@ class CausalEffects():
             aggregation_func=aggregation_func,) 
 
         return effect
-
-        # # Optionally get confidence bounds
-        # if self.estimate_confidence:
-        #     lenY = len(self.listY)
-        #     intervention_T, lenX = intervention_data.shape
-        #     boot_samples = len(self.bootstrap_results)
-        #     bootstrap_predicted_array = np.zeros((boot_samples, intervention_T, lenY))
-        #     for b in self.bootstrap_results.keys():
-        #         boot_effect = self.bootstrap_results[b].get_general_prediction(
-        #             intervention_data=intervention_data,
-        #             conditions_data=conditions_data,
-        #             pred_params=pred_params,
-        #             return_further_pred_results=return_further_pred_results) 
-        #         if return_further_pred_results:
-        #             bootstrap_predicted_array[b] = boot_effect[0]
-        #         else:
-        #             bootstrap_predicted_array[b] = boot_effect
-
-        #     # Confidence intervals for val_matrix; interval is two-sided
-        #     c_int = (1. - (1. - self.conf_lev)/2.)
-        #     confidence_interval = np.percentile(
-        #                             bootstrap_predicted_array, axis=0,
-        #                             q = [100*(1. - c_int), 100*c_int])
-        #     return effect, confidence_interval
-        # else:
-        #     return effect
 
     def fit_wright_effect(self,
         dataframe, 

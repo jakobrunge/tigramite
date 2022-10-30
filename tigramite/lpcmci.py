@@ -331,6 +331,9 @@ class LPCMCI():
         self.remember_only_parents = remember_only_parents
         self.no_apr = no_apr
 
+        if pc_alpha < 0. or pc_alpha > 1:
+            raise ValueError("Choose 0 <= pc_alpha <= 1")
+            
         # Check that validity of tau_min and tau_max
         self._check_tau_min_tau_max()
 

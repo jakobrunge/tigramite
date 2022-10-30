@@ -453,6 +453,10 @@ class PCMCI():
         iterations : dict
             Dictionary containing further information on algorithm steps.
         """
+
+        if pc_alpha < 0. or pc_alpha > 1.:
+            raise ValueError("Choose 0 <= pc_alpha <= 1")
+
         # Initialize the dictionaries for the pval_max, val_min parents_values
         # results
         pval_max = dict()
@@ -2213,6 +2217,9 @@ class PCMCI():
         # else:
         #     raise ValueError("pc_alpha=None not supported in PCMCIplus, choose"
         #                      " 0 < pc_alpha < 1 (e.g., 0.01)")
+
+        if pc_alpha < 0. or pc_alpha > 1:
+            raise ValueError("Choose 0 <= pc_alpha <= 1")
 
         # For the lagged PC algorithm only the strongest conditions are tested
         max_combinations = 1
@@ -4146,6 +4153,32 @@ class PCMCI():
                                     results['val_matrix'], axis=0,
                                     q = [100*(1. - c_int), 100*c_int]), axis=3)
         return summary_results
+
+    @staticmethod
+    def graph_to_dict(graph):
+        """Helper function to convert graph to dictionary of links.
+
+        Parameters
+        ---------
+        graph : array of shape (N, N, tau_max+1)
+            Matrix format of graph in string format.
+
+        Returns
+        -------
+        links : dict
+            Dictionary of form {0:[((0, -1), o-o), ...], 1:[...], ...}.
+        """
+        N = graph.shape[0]
+
+        links = dict([(j, []) for j in range(N)])
+
+        # if np.any(dag=='o-o') or np.any(dag=='x-x'):
+        #     raise ValueError("graph must be DAG.")
+
+        for (i, j, tau) in zip(*np.where(graph!='')):
+            links[j].append(((i, -tau), graph[i,j,tau]))
+
+        return links
 
 
 if __name__ == '__main__':

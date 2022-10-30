@@ -887,8 +887,8 @@ class DataFrame():
 
         ## end for ens_member_key, ens_member_data in self.values.items()
 
-        # Save deleted indices as attribute
-        self.use_indices_ens_member_dict = use_indices_ens_member.copy()
+        # Save used indices as attribute
+        self.use_indices_ens_member_dict[ens_member_key] = ref_points_here[use_indices_ens_member==1]
 
         # Concatenate the arrays of all datasets
         array = np.concatenate(tuple(samples_ens_members.values()), axis = 1)
@@ -1074,7 +1074,7 @@ def smooth(data, smooth_width, kernel='gaussian',
     elif kernel == 'heaviside':
         import scipy.linalg
         wtmp = np.zeros(totaltime)
-        wtmp[:np.ceil(smooth_width / 2.)] = 1
+        wtmp[:int(np.ceil(smooth_width / 2.))] = 1
         window = scipy.linalg.toeplitz(wtmp)
 
     if mask is None:
@@ -1379,6 +1379,7 @@ def quantile_bin_array(data, bins=6):
         axis=2) - 1
 
     return symb_array.astype('int32')
+
 
 def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
                 verbosity=0, initial_values=None):

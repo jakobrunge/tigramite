@@ -230,6 +230,7 @@ class Models():
                 intervention_data,
                 conditions_data=None,
                 pred_params=None,
+                transform_interventions_and_prediction=False,
                 return_further_pred_results=False,
                 aggregation_func=np.mean,
                 ):
@@ -245,6 +246,8 @@ class Models():
             Numpy array of shape (time, len(S)) that contains the S=s values.
         pred_params : dict, optional
             Optional parameters passed on to sklearn prediction function.
+        transform_interventions_and_prediction : bool (default: False)
+            Whether to perform the inverse data_transform on prediction results.
         return_further_pred_results : bool, optional (default: False)
             In case the predictor class returns more than just the expected value,
             the entire results can be returned.
@@ -289,7 +292,7 @@ class Models():
 
             # Transform the data if needed
             fitted_data_transform = self.fit_results[y]['fitted_data_transform']
-            if fitted_data_transform is not None:
+            if transform_interventions_and_prediction and fitted_data_transform is not None:
                 intervention_data = fitted_data_transform['X'].transform(X=intervention_data)
                 if self.conditions is not None and conditions_data is not None:
                     conditions_data = fitted_data_transform['S'].transform(X=conditions_data)
@@ -332,8 +335,8 @@ class Models():
                     predicted_vals = a_conditional_model.predict(
                         X=conditions_array, **pred_params)
 
-                if fitted_data_transform is not None:
-                    predicted_vals = fitted_data_transform['Y'].inverse_transform(X=predicted_vals)
+                if transform_interventions_and_prediction and fitted_data_transform is not None:
+                    predicted_vals = fitted_data_transform['Y'].inverse_transform(X=predicted_vals.reshape(-1, 1)).squeeze()
 
                 pred_dict[iy][index] = predicted_vals
 
@@ -567,7 +570,7 @@ class LinearMediation(Models):
         optionally a mask of the same shape and a missing values flag.
     model_params : dictionary, optional (default: None)
         Optional parameters passed on to sklearn model
-    data_transform : sklearn preprocessing object, optional (default: None)
+    data_transform : sklearn preprocessing object, optional (default: StandardScaler)
         Used to transform data prior to fitting. For example,
         sklearn.preprocessing.StandardScaler for simple standardization. The
         fitted parameters are stored.
@@ -1156,7 +1159,7 @@ class LinearMediation(Models):
         return amce
 
 
-    def get_val_matrix(self, ):
+    def get_val_matrix(self, symmetrize=False):
         """Returns the matrix of linear coefficients.
 
         Requires fit_model() before. An entry val_matrix[i,j,tau] gives the
@@ -1164,12 +1167,29 @@ class LinearMediation(Models):
         to zero for LinearMediation, use Models class for contemporaneous 
         models.
 
+        Parameters
+        ----------
+        symmetrize : bool
+            If True, the lag-zero entries will be symmetrized such that
+            no zeros appear. Useful since other parts of tigramite 
+            through an error for non-symmetric val_matrix, eg plotting.
+
         Returns
         -------
         val_matrix : array
             Matrix of linear coefficients, shape (N, N, tau_max + 1).
         """
-        return self.phi.transpose()
+        val_matrix = np.copy(self.phi.transpose())
+        N = val_matrix.shape[0]
+
+        if symmetrize:
+            # Symmetrize since otherwise other parts of tigramite through an error
+            for i in range(N):
+                for j in range(N):
+                    if val_matrix[i,j, 0] == 0.:
+                        val_matrix[i,j, 0] = val_matrix[j,i, 0]
+
+        return val_matrix
 
     def net_to_tsg(self, row, lag, max_lag):
         """Helper function to translate from network to time series graph."""

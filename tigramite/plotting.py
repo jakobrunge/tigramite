@@ -75,7 +75,7 @@ def _myround(x, base=5, round_mode="updown"):
     return base * round(float(x) / base)
 
 
-def _make_nice_axes(ax, where=None, skip=2, color=None):
+def _make_nice_axes(ax, where=None, skip=1, color=None):
     """Makes nice axes."""
 
     if where is None:
@@ -102,7 +102,6 @@ def _make_nice_axes(ax, where=None, skip=2, color=None):
             item for item in ["left", "bottom", "right", "top"] if item not in where
         ]:
             spine.set_color("none")  # don't draw spine
-
         else:
             raise ValueError("unknown spine location: %s" % loc)
 
@@ -111,19 +110,23 @@ def _make_nice_axes(ax, where=None, skip=2, color=None):
     # turn off ticks where there is no spine
     if "top" in where and "bottom" not in where:
         ax.xaxis.set_ticks_position("top")
-        ax.set_xticks(ax.get_xticks()[::skip_x])
+        if skip_x > 1:
+            ax.set_xticks(ax.get_xticks()[::skip_x])
     elif "bottom" in where:
         ax.xaxis.set_ticks_position("bottom")
-        ax.set_xticks(ax.get_xticks()[::skip_x])
+        if skip_x > 1:
+            ax.set_xticks(ax.get_xticks()[::skip_x])
     else:
         ax.xaxis.set_ticks_position("none")
         ax.xaxis.set_ticklabels([])
     if "right" in where and "left" not in where:
         ax.yaxis.set_ticks_position("right")
-        ax.set_yticks(ax.get_yticks()[::skip_y])
+        if skip_y > 1:
+            ax.set_yticks(ax.get_yticks()[::skip_y])
     elif "left" in where:
         ax.yaxis.set_ticks_position("left")
-        ax.set_yticks(ax.get_yticks()[::skip_y])
+        if skip_y > 1:
+            ax.set_yticks(ax.get_yticks()[::skip_y])
     else:
         ax.yaxis.set_ticks_position("none")
         ax.yaxis.set_ticklabels([])
@@ -144,23 +147,11 @@ def _get_absmax(val_matrix):
 
 
 def _add_timeseries(
-    fig,
-    axes,
-    i,
-    time,
-    dataseries,
-    label,
-    use_mask=False,
-    mask=None,
-    missing_flag=None,
+    dataframe,
+    fig_axes,
     grey_masked_samples=False,
+    show_meanline=False,
     data_linewidth=1.0,
-    skip_ticks_data_x=1,
-    skip_ticks_data_y=1,
-    unit=None,
-    last=False,
-    time_label="",
-    label_fontsize=10,
     color="black",
     grey_alpha=1.0,
     selected_dataset=0,
@@ -175,141 +166,98 @@ def _add_timeseries(
         Figure instance.
     axes : axis instance
         Either gridded axis object or single axis instance.
-    i : int
-        Index of axis in gridded axis object.
-    time : array
-        Timelabel array.
-    dataseries : array-like
-        One-dimensional data series array of variable.
-    missing_flag : number, optional (default: None)
-        Flag for missing values in dataframe. Dismisses all time slices of
-        samples where missing values occur in any variable and also flags
-        samples for all lags up to 2*tau_max. This avoids biases, see section on
-        masking in Supplement of [1]_.
-    label : str
-        Variable label.
-    use_mask : bool, optional (default: False)
-        Whether to use masked data.
-    mask : array-like, optional (default: None)
-        Data mask where True labels masked samples.
     grey_masked_samples : bool, optional (default: False)
         Whether to mark masked samples by grey fills ('fill') or grey data
         ('data').
+    show_meanline : bool
+        Show mean of data as horizontal line.
     data_linewidth : float, optional (default: 1.)
         Linewidth.
-    skip_ticks_data_x : int, optional (default: 1)
-        Skip every other tickmark.
-    skip_ticks_data_y : int, optional (default: 1)
-        Skip every other tickmark.
-    unit : str, optional (default: None)
-        Units of variable.
-    last : bool, optional (default: False)
-        Specifiy whether this is the last panel where also the bottom axis is
-        plotted.
-    time_label : str, optional (default: '')
-        Label of time axis.
-    label_fontsize : int, optional (default: 10)
-        Fontsize.
     color : str, optional (default: black)
         Line color.
     grey_alpha : float, optional (default: 1.)
-        Opacity of line.
+        Opacity of fill_between.
     selected_dataset : int, optional (default: 0)
         In case of multiple datasets in dataframe, plot this one.
     """
+    fig, axes = fig_axes
 
-    # axes[i].xaxis.get_major_formatter().set_useOffset(False)
-    try:
-        ax = axes[i]
-    except:
-        ax = axes
-
-    if missing_flag is not None:
-        dataseries_nomissing = np.ma.masked_where(
-            dataseries == missing_flag, dataseries
-        )
+    # Read in all attributes from dataframe
+    data = dataframe.values[selected_dataset]
+    if dataframe.mask is not None:
+        mask = dataframe.mask[selected_dataset]
     else:
-        dataseries_nomissing = np.ma.masked_where(
-            np.zeros(dataseries.shape), dataseries
-        )
+        mask = None
 
+    missing_flag = dataframe.missing_flag
+    time = dataframe.datatime[selected_dataset]
+    T = len(time)
 
-    if use_mask:
+    for j in range(dataframe.N):
+        
+        ax = axes[j]
+        dataseries = data[:,j]
 
-        maskdata = np.ma.masked_where(mask, dataseries_nomissing)
-
-        if grey_masked_samples == "fill":
-            ax.fill_between(
-                time,
-                maskdata.min(),
-                maskdata.max(),
-                where=mask,
-                color="grey",
-                interpolate=True,
-                linewidth=0.0,
-                alpha=grey_alpha,
+        if missing_flag is not None:
+            dataseries_nomissing = np.ma.masked_where(
+                dataseries == missing_flag, dataseries
             )
-        elif grey_masked_samples == "data":
+        else:
+            dataseries_nomissing = np.ma.masked_where(
+                np.zeros(dataseries.shape), dataseries
+            )
+
+
+        if mask is not None:
+            maskseries = mask[:,j]
+
+            maskdata = np.ma.masked_where(maskseries, dataseries_nomissing)
+
+            if grey_masked_samples == "fill":
+                ax.fill_between(
+                    time,
+                    maskdata.min(),
+                    maskdata.max(),
+                    where=maskseries,
+                    color="grey",
+                    interpolate=True,
+                    linewidth=0.0,
+                    alpha=grey_alpha,
+                )
+            elif grey_masked_samples == "data":
+                ax.plot(
+                    time,
+                    dataseries_nomissing,
+                    color="grey",
+                    marker=".",
+                    markersize=data_linewidth,
+                    linewidth=data_linewidth,
+                    clip_on=False,
+                    alpha=grey_alpha,
+                )
+            if show_meanline:
+                ax.plot(time, maskdata.mean()*np.ones(T), lw=data_linewidth/2., color=color)
+
+            ax.plot(
+                time,
+                maskdata,
+                color=color,
+                linewidth=data_linewidth,
+                marker=".",
+                markersize=data_linewidth,
+                clip_on=False,
+            )
+        else:
+            if show_meanline:
+                ax.plot(time, dataseries_nomissing.mean()*np.ones(T), lw=data_linewidth/2., color=color)
+
             ax.plot(
                 time,
                 dataseries_nomissing,
-                color="grey",
-                marker=".",
-                markersize=data_linewidth,
+                color=color,
                 linewidth=data_linewidth,
                 clip_on=False,
-                alpha=grey_alpha,
-            )
-        ax.axhline(maskdata.mean(), lw=1., color='grey')
-
-        ax.plot(
-            time,
-            maskdata,
-            color=color,
-            linewidth=data_linewidth,
-            marker=".",
-            markersize=data_linewidth,
-            clip_on=False,
-        )
-    else:
-        ax.axhline(dataseries_nomissing.mean(), lw=1., color='grey')
-
-        ax.plot(
-            time,
-            dataseries_nomissing,
-            color=color,
-            linewidth=data_linewidth,
-            clip_on=False,
-        )
-
-    if last:
-        _make_nice_axes(
-            ax, where=["left", "bottom"], skip=(skip_ticks_data_x, skip_ticks_data_y)
-        )
-        ax.set_xlabel(r"%s" % time_label, fontsize=label_fontsize)
-    else:
-        _make_nice_axes(ax, where=["left"], skip=(skip_ticks_data_x, skip_ticks_data_y))
-    # ax.get_xaxis().get_major_formatter().set_useOffset(False)
-
-    ax.xaxis.set_major_formatter(FormatStrFormatter("%.0f"))
-    ax.label_outer()
-
-    ax.set_xlim(time[0], time[-1])
-
-    trans = transforms.blended_transform_factory(fig.transFigure, ax.transAxes)
-    if unit:
-        ax.set_ylabel(r"%s [%s]" % (label, unit), fontsize=label_fontsize)
-    else:
-        ax.set_ylabel(r"%s" % (label), fontsize=label_fontsize)
-
-        # ax.text(.02, .5, r'%s [%s]' % (label, unit), fontsize=label_fontsize,
-        #         horizontalalignment='left', verticalalignment='center',
-        #         rotation=90, transform=trans)
-    # else:
-    #     ax.text(.02, .5, r'%s' % (label), fontsize=label_fontsize,
-    #             horizontalalignment='left', verticalalignment='center',
-    #             rotation=90, transform=trans)
-    pyplot.tight_layout()
+                )
 
 
 def plot_timeseries(
@@ -318,15 +266,17 @@ def plot_timeseries(
     fig_axes=None,
     figsize=None,
     var_units=None,
-    time_label="time",
+    time_label="",
     use_mask=False,
     grey_masked_samples=False,
+    show_meanline=False,
     data_linewidth=1.0,
     skip_ticks_data_x=1,
-    skip_ticks_data_y=2,
-    label_fontsize=12,
+    skip_ticks_data_y=1,
+    label_fontsize=10,
     color='black',
     selected_dataset=0,
+    adjust_plot=True,
 ):
     """Create and save figure of stacked panels with time series.
 
@@ -353,6 +303,8 @@ def plot_timeseries(
     grey_masked_samples : bool, optional (default: False)
         Whether to mark masked samples by grey fills ('fill') or grey data
         ('data').
+    show_meanline : bool, optional (default: False)
+        Whether to plot a horizontal line at the mean.
     data_linewidth : float, optional (default: 1.)
         Linewidth.
     skip_ticks_data_x : int, optional (default: 1)
@@ -367,17 +319,10 @@ def plot_timeseries(
         In case of multiple datasets in dataframe, plot this one.
     """
 
-    # Read in all attributes from dataframe
-    data = dataframe.values[selected_dataset]
-    if dataframe.mask is not None:
-        mask = dataframe.mask[selected_dataset]
-    else:
-        mask = None
     var_names = dataframe.var_names
-    missing_flag = dataframe.missing_flag
-    datatime = dataframe.datatime[selected_dataset]
+    time = dataframe.datatime[selected_dataset]
 
-    T, N = data.shape
+    N = dataframe.N
 
     if var_units is None:
         var_units = ["" for i in range(N)]
@@ -387,40 +332,50 @@ def plot_timeseries(
     else:
         fig, axes = fig_axes
 
-    for i in range(N):
-        if mask is None:
-            mask_i = None
-        else:
-            mask_i = mask[:, i]
-        _add_timeseries(
-            fig=fig,
-            axes=axes,
-            i=i,
-            color=color,
-            time=datatime,
-            dataseries=data[:, i],
-            label=var_names[i],
-            use_mask=use_mask,
-            mask=mask_i,
-            missing_flag=missing_flag,
-            grey_masked_samples=grey_masked_samples,
-            data_linewidth=data_linewidth,
-            skip_ticks_data_x=skip_ticks_data_x,
-            skip_ticks_data_y=skip_ticks_data_y,
-            unit=var_units[i],
-            last=(i == N - 1),
-            time_label=time_label,
-            label_fontsize=label_fontsize,
-            selected_dataset=selected_dataset,
+    if adjust_plot:
+        for i in range(N):
+
+            ax = axes[i]
+
+            if (i == N - 1):
+                _make_nice_axes(
+                    ax, where=["left", "bottom"], skip=(skip_ticks_data_x, skip_ticks_data_y)
+                )
+                ax.set_xlabel(r"%s" % time_label, fontsize=label_fontsize)
+            else:
+                _make_nice_axes(ax, where=["left"], skip=(skip_ticks_data_x, skip_ticks_data_y))
+            # ax.get_xaxis().get_major_formatter().set_useOffset(False)
+
+            ax.xaxis.set_major_formatter(FormatStrFormatter("%.0f"))
+            ax.label_outer()
+
+            ax.set_xlim(time[0], time[-1])
+
+            trans = transforms.blended_transform_factory(fig.transFigure, ax.transAxes)
+            if var_units[i]:
+                ax.set_ylabel(r"%s [%s]" % (var_names[i], var_units[i]), fontsize=label_fontsize)
+            else:
+                ax.set_ylabel(r"%s" % (var_names[i]), fontsize=label_fontsize)
+
+
+    _add_timeseries(
+        dataframe=dataframe,
+        fig_axes = (fig, axes),
+        grey_masked_samples=grey_masked_samples,
+        show_meanline=show_meanline,
+        data_linewidth=data_linewidth,
+        color=color,
+        selected_dataset=selected_dataset,
         )
 
-    fig.subplots_adjust(bottom=0.15, top=0.9, left=0.15, right=0.95, hspace=0.3)
-    pyplot.tight_layout()
+    if adjust_plot:
+        fig.subplots_adjust(bottom=0.15, top=0.9, left=0.15, right=0.95, hspace=0.3)
+        pyplot.tight_layout()
 
     if save_name is not None:
         fig.savefig(save_name)
-    else:
-        return fig, axes
+
+    return fig, axes
 
 
 def plot_lagfuncs(val_matrix, 
@@ -1232,7 +1187,7 @@ class setup_density_matrix:
         N,
         var_names=None,
         figsize=None,
-        label_space_left=0.1,
+        label_space_left=0.15,
         label_space_top=0.05,
         legend_width=0.15,
         legend_fontsize=10,
@@ -1259,7 +1214,7 @@ class setup_density_matrix:
         plot_index = 1
         for i in range(N):
             for j in range(N):
-                self.axes_dict[(i, j)] = self.fig.add_subplot(N, N, plot_index, axes_class=Axes)
+                self.axes_dict[(i, j)] = self.fig.add_subplot(N, N, plot_index)
                 # Plot process labels
                 if j == 0:
                     trans = transforms.blended_transform_factory(
@@ -1288,9 +1243,14 @@ class setup_density_matrix:
                         transform=trans,
                     )
 
-                self.axes_dict[(i, j)].axis["right"].set_visible(False)
-                self.axes_dict[(i, j)].axis["top"].set_visible(False)
-
+                # _make_nice_axes(self.axes_dict[(i, j)], where=["bottom"], skip=(1, 1)             )
+                # self.axes_dict[(i, j)].axis["right"].set_visible(False)
+                # self.axes_dict[(i, j)].axis["top"].set_visible(False)
+                if i == j:
+                    # self.axes_dict[(i, j)].axis["left"].set_visible(False)
+                    _make_nice_axes(self.axes_dict[(i, j)], where=["bottom"], skip=(1, 1))
+                else:
+                    _make_nice_axes(self.axes_dict[(i, j)], where=["left", "bottom"], skip=(1, 1))
                 # if j != 0:
                 #     self.axes_dict[(i, j)].get_yaxis().set_ticklabels([])
                 # if i != N - 1:
@@ -1359,9 +1319,10 @@ class setup_density_matrix:
         # if label is not None:
         self.labels.append((label, label_color))
 
-        for ij in list(self.axes_dict):                
+        for ij in list(self.axes_dict):  
             i = ij[0]
             j = ij[1]
+            ax = self.axes_dict[(i, j)]              
             if (matrix_lags is None) or (i == j):
                 lag = 0
             else:
@@ -1372,6 +1333,9 @@ class setup_density_matrix:
             else:
                 x = np.copy(data[:-lag, i])
                 y = np.copy(data[lag:, j])
+            if dataframe.missing_flag is not None:
+                x[x==dataframe.missing_flag] = np.nan
+                y[y==dataframe.missing_flag] = np.nan
             if dataframe.mask is not None:
                 x[mask[:-lag, i]] = np.nan
                 y[mask[lag:, j]] = np.nan
@@ -1381,16 +1345,19 @@ class setup_density_matrix:
                     color = label_color,
                     # label=r"$\tau{=}%d$" %lag,
                     **snskdeplot_diagonal_args,
-                    ax = self.axes_dict[(i, j)])
-                self.axes_dict[(i, j)].set_ylabel("")
+                    ax = ax)
+                ax.set_ylabel("")
+                # ax.yaxis.set_ticks_position("none")
+                # ax.yaxis.set_ticklabels([])
             else:
                 sns.kdeplot(x=x, y=y, 
                     # label=r"$\tau{=}%d$" %lag,
                     **snskdeplot_args,
-                    fill=True,
-                    ax = self.axes_dict[(i, j)])
+                    # fill=True,
+                    # alpha=0.3,
+                    ax = ax)
 
-    def adjustfig(self, name=None):
+    def adjustfig(self, name=None, show_labels=True):
         """Adjust matrix figure.
 
         Parameters
@@ -1415,12 +1382,13 @@ class setup_density_matrix:
                 for item in self.labels:
                     color = item[1]
                     colors.append(color)
-                    self.axes_dict[(i, j)].plot(
-                        [],
-                        [],
-                        linestyle="",
-                        color=color,
-                        label=r"$\tau{=}%d$" %lag,
+                    if show_labels:
+                        self.axes_dict[(i, j)].plot(
+                            [],
+                            [],
+                            linestyle="",
+                            color=color,
+                            label=r"$\tau{=}%d$" %lag,
                     )
                 # print('here')
                 leg = self.axes_dict[(i, j)].legend(
@@ -1432,7 +1400,13 @@ class setup_density_matrix:
                     labelcolor=colors,
                     ).draw_frame(False)
         
-        if len(self.labels) > 1:
+            # if i == j:
+            #     # self.axes_dict[(i, j)].axis["left"].set_visible(False)
+            #     _make_nice_axes(ax=self.axes_dict[(i, j)], where=["bottom"], skip=(1, 1))
+            # else:
+            # _make_nice_axes(ax=self.axes_dict[(i, j)], where=["left", "bottom"], skip=(1, 1))
+
+        if show_labels and len(self.labels) > 1:
             axlegend = self.fig.add_subplot(111, frameon=False)
             axlegend.spines["left"].set_color("none")
             axlegend.spines["right"].set_color("none")
@@ -1462,7 +1436,7 @@ class setup_density_matrix:
             ).draw_frame(False)
 
             self.fig.subplots_adjust(
-                bottom=0.05,
+                bottom=0.08,
                 left=self.label_space_left,
                 right=1.0 - self.legend_width,
                 top=1.0 - self.label_space_top,
@@ -1473,7 +1447,7 @@ class setup_density_matrix:
         else:
             self.fig.subplots_adjust(
                 left=self.label_space_left,
-                bottom=0.05,
+                bottom=0.08,
                 right=0.95,
                 top=1.0 - self.label_space_top,
                 hspace=0.35,
@@ -1548,7 +1522,7 @@ def _draw_network_with_curved_edges(
         v,
         d,
         seen,
-        arrowstyle= "Simple, head_width=2.5, head_length=2.5, tail_width=1",
+        arrowstyle= "Simple, head_width=2, head_length=2, tail_width=1",
         outer_edge=True,
     ):
 
@@ -1605,13 +1579,13 @@ def _draw_network_with_curved_edges(
                 # linewidth = width*factor
             elif d.get("outer_edge_type") == "<->":
                 # arrowstyle = "<->, head_width=0.4, head_length=1"
-                arrowstyle = "Simple, head_width=2, head_length=2, tail_width=0.75" #%float(width/20.)
+                arrowstyle = "Simple, head_width=2, head_length=2, tail_width=1" #%float(width/20.)
             elif d.get("outer_edge_type") in ["o->", "-->", "<-o", "<--", "<-x", "x->", "+->", "<-+"]:
                 # arrowstyle = "->, head_width=0.4, head_length=1"
                 # arrowstyle = "->, head_width=0.4, head_length=1, width=10"
-                arrowstyle = "Simple, head_width=2, head_length=2, tail_width=0.75" #%float(width/20.)
+                arrowstyle = "Simple, head_width=2, head_length=2, tail_width=1" #%float(width/20.)
             else:
-                arrowstyle = "Simple, head_width=2, head_length=2, tail_width=0.75" #%float(width/20.)
+                arrowstyle = "Simple, head_width=2, head_length=2, tail_width=1" #%float(width/20.)
                 # raise ValueError("edge type %s not valid." %d.get("outer_edge_type"))
         else:
             rad = -1.0 * inner_edge_curved * curved_radius
@@ -1647,12 +1621,12 @@ def _draw_network_with_curved_edges(
                 arrowstyle = "-"
             elif d.get("inner_edge_type") == "<->":
                 # arrowstyle = "<->, head_width=0.4, head_length=1"
-                arrowstyle = "Simple, head_width=2, head_length=2, tail_width=0.75" #%float(width/20.)
+                arrowstyle = "Simple, head_width=2, head_length=2, tail_width=1" #%float(width/20.)
             elif d.get("inner_edge_type") in ["o->", "-->", "<-o", "<--", "<-x", "x->", "+->", "<-+"]:
                 # arrowstyle = "->, head_width=0.4, head_length=1"
-                arrowstyle = "Simple, head_width=2, head_length=2, tail_width=0.75" #%float(width/20.)
+                arrowstyle = "Simple, head_width=2, head_length=2, tail_width=1" #%float(width/20.)
             else:
-                arrowstyle = "Simple, head_width=2, head_length=2, tail_width=0.75" #%float(width/20.)
+                arrowstyle = "Simple, head_width=2, head_length=2, tail_width=1" #%float(width/20.)
 
             #     raise ValueError("edge type %s not valid." %d.get("inner_edge_type"))
 
@@ -1674,7 +1648,7 @@ def _draw_network_with_curved_edges(
                 coor2,
                 arrowstyle=arrowstyle,
                 connectionstyle=f"arc3,rad={rad}",
-                mutation_scale=np.sqrt(width)*2,
+                mutation_scale=1*width,
                 lw=0., #width / 2.,
                 aa=True,
                 alpha=alpha,
@@ -1695,7 +1669,7 @@ def _draw_network_with_curved_edges(
               coor1,
               arrowstyle=arrowstyle,
               connectionstyle=f"arc3,rad={-rad}",
-              mutation_scale=np.sqrt(width)*2,
+              mutation_scale=1*width,
               lw=0., #width / 2.,
               aa=True,
               alpha=alpha,
@@ -1713,15 +1687,35 @@ def _draw_network_with_curved_edges(
 
         else:
             if arrowstyle == '-':
-                lw = np.sqrt(width)*2
+                lw = 1*width
             else:
                 lw = 0.
+            # e_p = FancyArrowPatch(
+            #     coor1,
+            #     coor2,
+            #     arrowstyle=arrowstyle,
+            #     connectionstyle=f"arc3,rad={rad}",
+            #     mutation_scale=np.sqrt(width)*2*1.1,
+            #     lw=lw*1.1, #width / 2.,
+            #     aa=True,
+            #     alpha=alpha,
+            #     linestyle=linestyle,
+            #     color='white',
+            #     clip_on=False,
+            #     patchA=n1,
+            #     patchB=n2,
+            #     shrinkA=0,
+            #     shrinkB=0,
+            #     zorder=-1,
+            #     capstyle="butt",
+            # )
+            # ax.add_artist(e_p)
             e_p = FancyArrowPatch(
                 coor1,
                 coor2,
                 arrowstyle=arrowstyle,
                 connectionstyle=f"arc3,rad={rad}",
-                mutation_scale=np.sqrt(width)*2,
+                mutation_scale=1*width,
                 lw=lw, #width / 2.,
                 aa=True,
                 alpha=alpha,
@@ -1737,11 +1731,32 @@ def _draw_network_with_curved_edges(
             )
             ax.add_artist(e_p)
 
+        e_p_marker = FancyArrowPatch(
+                coor1,
+                coor2,
+                arrowstyle='-',
+                connectionstyle=f"arc3,rad={rad}",
+                mutation_scale=1*width,
+                lw=0., #width / 2.,
+                aa=True,
+                alpha=0.,
+                linestyle=linestyle,
+                color=facecolor,
+                clip_on=False,
+                patchA=n1,
+                patchB=n2,
+                shrinkA=0,
+                shrinkB=0,
+                zorder=-10,
+                capstyle="butt",
+        )
+        ax.add_artist(e_p_marker)
 
-        path = e_p.get_path()
+        path = e_p_marker.get_path()
         vertices = path.vertices.copy()
         m, n = vertices.shape
 
+        # print(vertices)
         start = vertices[0]
         end = vertices[-1]
 
@@ -2130,7 +2145,7 @@ def _draw_network_with_curved_edges(
             cax_e = fig.add_axes(
                 [
                     bbox_ax.xmax - width*0.45,
-                    bbox_ax.ymin,
+                    bbox_ax.ymin-0.075*height+network_lower_bound-0.15,
                     width*0.4,
                     0.075*height,   #0.025 + (len(all_links_edge_weights) == 0) * 0.035,
                 ],
@@ -2228,7 +2243,7 @@ def _draw_network_with_curved_edges(
                 cax_n = fig.add_axes(
                     [
                         bbox_ax.xmin + width*0.05,
-                        bbox_ax.ymin,
+                        bbox_ax.ymin-0.075*height+network_lower_bound-0.15,
                         width*0.4,
                         0.075*height,   #0.025 + (len(all_links_edge_weights) == 0) * 0.035,
                     ],
@@ -2279,7 +2294,7 @@ def _draw_network_with_curved_edges(
                 clip_on=False,
                 facecolor=color_here,
                 edgecolor=color_here,
-                zorder=-ring - 1,
+                zorder=-ring - 1 + 2,
             )
 
             # else:
@@ -2316,6 +2331,7 @@ def _draw_network_with_curved_edges(
                     horizontalalignment="center",
                     verticalalignment="center",
                     alpha=1.0,
+                    zorder=5.
                 )
 
     # Draw edges
@@ -2330,7 +2346,7 @@ def _draw_network_with_curved_edges(
             if d["inner_edge"]:
                 seen[(u, v)] = draw_edge(ax, u, v, d, seen, outer_edge=False)
 
-    pyplot.subplots_adjust(bottom=network_lower_bound)
+    fig.subplots_adjust(bottom=network_lower_bound) #, right=0.97)
 
 
 def plot_graph(
@@ -2345,7 +2361,7 @@ def plot_graph(
     link_width=None,
     link_attribute=None,
     node_pos=None,
-    arrow_linewidth=10.0,
+    arrow_linewidth=8.0,
     vmin_edges=-1,
     vmax_edges=1.0,
     edge_ticks=0.4,
@@ -2624,9 +2640,9 @@ def plot_graph(
             else:
                 lags, sig_lags = [], []
             if lag_array is not None:
-                dic["label"] = str([lag_array[l] for l in lags if l in sig_lags])[1:-1]
+                dic["label"] = str([lag_array[l] for l in lags if l in sig_lags])[1:-1].replace(" ", "")
             else:
-                dic["label"] = str([l for l in lags if l in sig_lags])[1:-1]
+                dic["label"] = str([l for l in lags if l in sig_lags])[1:-1].replace(" ", "")
         else:
             # Node color is max of average autodependency
             if no_coloring:
@@ -2842,7 +2858,7 @@ def plot_time_series_graph(
     save_name=None,
     link_width=None,
     link_attribute=None,
-    arrow_linewidth=8,
+    arrow_linewidth=4,
     vmin_edges=-1,
     vmax_edges=1.0,
     edge_ticks=0.4,
@@ -3056,31 +3072,44 @@ def plot_time_series_graph(
     for (u, v, dic) in G.edges(data=True):
         dic["no_links"] = no_links
         if u != v:
-            dic["inner_edge"] = False
-            dic["outer_edge"] = True
+            # tau = np.abs((u - v) % max_lag)
+            # Determine neighbors in TSG
+            i = u // max_lag
+            taui = -(max_lag -1 - (u % max_lag))
+            j = v // max_lag
+            tauj = -(max_lag -1 - (v % max_lag))
 
-            dic["outer_edge_type"] = tsg_style[u, v]
+            if np.abs(i-j) <= 1 and np.abs(tauj-taui) <= 1:
+                inout = 'inner'
+                dic["inner_edge"] = True
+                dic["outer_edge"] = False
+            else:
+                inout = 'outer'
+                dic["inner_edge"] = False
+                dic["outer_edge"] = True
 
-            dic["outer_edge_alpha"] = alpha
+            dic["%s_edge_type" % inout] = tsg_style[u, v]
+
+            dic["%s_edge_alpha" % inout] = alpha
 
             if link_width is None:
                 # fraction of nonzero values
-                dic["outer_edge_width"] = dic["inner_edge_width"] = arrow_linewidth
+                dic["%s_edge_width" % inout] = dic["%s_edge_width" % inout] = arrow_linewidth
             else:
-                dic["outer_edge_width"] = dic["inner_edge_width"] = tsg_width[u, v]
+                dic["%s_edge_width" % inout] = dic["%s_edge_width" % inout] = tsg_width[u, v]
 
             if link_attribute is None:
-                dic["outer_edge_attribute"] = None
+                dic["%s_edge_attribute" % inout] = None
             else:
-                dic["outer_edge_attribute"] = tsg_attr[u, v]
+                dic["%s_edge_attribute" % inout] = tsg_attr[u, v]
 
             # value at argmax of average
             if no_coloring:
-                dic["outer_edge_color"] = None
+                dic["%s_edge_color" % inout] = None
             else:
-                dic["outer_edge_color"] = tsg_val[u, v]
+                dic["%s_edge_color" % inout] = tsg_val[u, v]
 
-            all_strengths.append(dic["outer_edge_color"])
+            all_strengths.append(dic["%s_edge_color" % inout])
             dic["label"] = None
         # print(u, v, dic)
 
@@ -3148,7 +3177,7 @@ def plot_time_series_graph(
         label_fontsize=label_fontsize,
         label_fraction=0.5,
         link_colorbar_label=link_colorbar_label,
-        inner_edge_curved=True,
+        inner_edge_curved=False,
         network_lower_bound=network_lower_bound,
         inner_edge_style=inner_edge_style,
         special_nodes=special_nodes,
@@ -3726,9 +3755,9 @@ def plot_mediation_graph(
             else:
                 lags, sig_lags = [], []
             if lag_array is not None:
-                dic["label"] = str([lag_array[l] for l in lags if l in sig_lags])[1:-1]
+                dic["label"] = str([lag_array[l] for l in lags if l in sig_lags])[1:-1].replace(" ", "")
             else:
-                dic["label"] = str([l for l in lags if l in sig_lags])[1:-1]
+                dic["label"] = str([l for l in lags if l in sig_lags])[1:-1].replace(" ", "")
         else:
             # Node color is max of average autodependency
             node_color[u] = val_matrix[u, v][argmax]
@@ -4163,20 +4192,25 @@ if __name__ == "__main__":
 
     # Complete test case
     graph = np.zeros((3,3,2), dtype='<U3')
-
+    graph[:] = ""
     graph[0, 1, 0] = "<-+"
     graph[1, 0, 0] = "+->"
 
-    # graph[1, 2, 0] = "x->"
-    # graph[2, 1, 0] = "<-x"
+    graph[0, 1, 1] = "+->"
+    graph[1, 0, 1] = "o-o"
 
-    # graph[0, 2, 0] = "x->"
-    # graph[2, 0, 0] = "<-x"
+    graph[1, 2, 0] = "x->"
+    graph[2, 1, 0] = "<-x"
+
+    graph[0, 2, 0] = "x-x"
+    graph[2, 0, 0] = "x-x"
     nolinks = np.zeros(graph.shape)
     # nolinks[range(4), range(4), 1] = 1
 
     # plot_time_series_graph(graph=nolinks)
     plot_graph(graph=graph, 
+        figsize=(5, 5),
+        arrow_linewidth=6,
         save_name="tsg_test.pdf")
 
     # pyplot.show()
