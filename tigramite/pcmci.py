@@ -508,7 +508,8 @@ class PCMCI():
                     self._print_link_info(j, index_parent, parent, len(parents))
                 # Iterate through all possible combinations
                 nonsig = False
-                for comb_index, Z in enumerate(self._iter_conditions(j, parent, conds_dim, parents, nonsig_parents)):
+                # JC NOTE: Here if we set nonsig_parents=[], it is stable-PC. Otherwise it is order-dependent PC.
+                for comb_index, Z in enumerate(self._iter_conditions(j, parent, conds_dim, parents, [])):
                     # Break if we try too many combinations
                     start = time.time()
                     if comb_index >= max_combinations:
