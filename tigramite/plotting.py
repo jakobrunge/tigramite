@@ -153,6 +153,7 @@ def _add_timeseries(
     show_meanline=False,
     data_linewidth=1.0,
     color="black",
+    alpha=1.,
     grey_alpha=1.0,
     selected_dataset=0,
 ):
@@ -175,6 +176,8 @@ def _add_timeseries(
         Linewidth.
     color : str, optional (default: black)
         Line color.
+    alpha : float
+        Alpha opacity.
     grey_alpha : float, optional (default: 1.)
         Opacity of fill_between.
     selected_dataset : int, optional (default: 0)
@@ -246,6 +249,7 @@ def _add_timeseries(
                 marker=".",
                 markersize=data_linewidth,
                 clip_on=False,
+                alpha=alpha,
             )
         else:
             if show_meanline:
@@ -257,6 +261,7 @@ def _add_timeseries(
                 color=color,
                 linewidth=data_linewidth,
                 clip_on=False,
+                alpha=alpha,
                 )
 
 
@@ -267,7 +272,6 @@ def plot_timeseries(
     figsize=None,
     var_units=None,
     time_label="",
-    use_mask=False,
     grey_masked_samples=False,
     show_meanline=False,
     data_linewidth=1.0,
@@ -275,6 +279,7 @@ def plot_timeseries(
     skip_ticks_data_y=1,
     label_fontsize=10,
     color='black',
+    alpha=1.,
     selected_dataset=0,
     adjust_plot=True,
 ):
@@ -298,8 +303,6 @@ def plot_timeseries(
         Units of variables.
     time_label : str, optional (default: '')
         Label of time axis.
-    use_mask : bool, optional (default: False)
-        Whether to use masked data.
     grey_masked_samples : bool, optional (default: False)
         Whether to mark masked samples by grey fills ('fill') or grey data
         ('data').
@@ -315,6 +318,8 @@ def plot_timeseries(
         Fontsize of variable labels.
     color : str, optional (default: black)
         Line color.
+    alpha : float
+        Alpha opacity.
     selected_dataset : int, optional (default: 0)
         In case of multiple datasets in dataframe, plot this one.
     """
@@ -366,6 +371,7 @@ def plot_timeseries(
         data_linewidth=data_linewidth,
         color=color,
         selected_dataset=selected_dataset,
+        alpha=alpha,
         )
 
     if adjust_plot:
@@ -1466,7 +1472,7 @@ def _draw_network_with_curved_edges(
     pos,
     node_rings,
     node_labels,
-    node_label_size,
+    node_label_size=10,
     node_alpha=1.0,
     standard_size=100,
     node_aspect=None,
@@ -1493,6 +1499,7 @@ def _draw_network_with_curved_edges(
     inner_edge_curved=False,
     inner_edge_style="solid",
     network_lower_bound=0.2,
+    network_left_bound=None,
     show_colorbar=True,
     special_nodes=None,
 ):
@@ -1657,7 +1664,7 @@ def _draw_network_with_curved_edges(
                 clip_on=False,
                 patchA=n1,
                 patchB=n2,
-                shrinkA=10,
+                shrinkA=5,
                 shrinkB=0,
                 zorder=-1,
                 capstyle="butt",
@@ -1678,7 +1685,7 @@ def _draw_network_with_curved_edges(
               clip_on=False,
               patchA=n2,
               patchB=n1,
-              shrinkA=10,
+              shrinkA=5,
               shrinkB=0,
               zorder=-1,
               capstyle="butt",
@@ -2346,7 +2353,11 @@ def _draw_network_with_curved_edges(
             if d["inner_edge"]:
                 seen[(u, v)] = draw_edge(ax, u, v, d, seen, outer_edge=False)
 
-    fig.subplots_adjust(bottom=network_lower_bound) #, right=0.97)
+    if network_left_bound is not None:
+        network_right_bound = 0.98
+    else:
+        network_right_bound = None
+    fig.subplots_adjust(bottom=network_lower_bound, left=network_left_bound, right=network_right_bound) #, right=0.97)
 
 
 def plot_graph(
@@ -2868,9 +2879,8 @@ def plot_time_series_graph(
     node_aspect=None,
     arrowhead_size=20,
     curved_radius=0.2,
-    label_fontsize=12,
+    label_fontsize=10,
     alpha=1.0,
-    node_label_size=12,
     label_space_left=0.1,
     label_space_top=0.0,
     network_lower_bound=0.2,
@@ -3159,7 +3169,7 @@ def plot_time_series_graph(
         pos=pos,
         node_rings=node_rings,
         node_labels=node_labels,
-        node_label_size=node_label_size,
+        # node_label_size=node_label_size,
         node_alpha=alpha,
         standard_size=node_size,
         node_aspect=node_aspect,
@@ -3171,6 +3181,7 @@ def plot_time_series_graph(
         links_vmin=vmin_edges,
         links_vmax=vmax_edges,
         links_ticks=edge_ticks,
+        # link_label_fontsize=link_label_fontsize,
         arrowstyle="simple",
         arrowhead_size=arrowhead_size,
         curved_radius=curved_radius,
@@ -3179,6 +3190,7 @@ def plot_time_series_graph(
         link_colorbar_label=link_colorbar_label,
         inner_edge_curved=False,
         network_lower_bound=network_lower_bound,
+        network_left_bound=label_space_left,
         inner_edge_style=inner_edge_style,
         special_nodes=special_nodes,
         show_colorbar=show_colorbar,
@@ -3187,7 +3199,7 @@ def plot_time_series_graph(
     for i in range(N):
         trans = transforms.blended_transform_factory(fig.transFigure, ax.transData)
         ax.text(
-            label_space_left,
+            0.,
             pos[order[i] * max_lag][1],
             f"{var_names[order[i]]}",
             fontsize=label_fontsize,
@@ -4199,8 +4211,8 @@ if __name__ == "__main__":
     graph[0, 1, 1] = "+->"
     graph[1, 0, 1] = "o-o"
 
-    graph[1, 2, 0] = "x->"
-    graph[2, 1, 0] = "<-x"
+    graph[1, 2, 0] = "<->"
+    graph[2, 1, 0] = "<->"
 
     graph[0, 2, 0] = "x-x"
     graph[2, 0, 0] = "x-x"

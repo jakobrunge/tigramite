@@ -1032,7 +1032,7 @@ def lowhighpass_filter(data, cutperiod, pass_periods='low'):
 
 
 def smooth(data, smooth_width, kernel='gaussian',
-           mask=None, residuals=False):
+           mask=None, residuals=False, verbosity=0):
     """Returns either smoothed time series or its residuals.
 
     the difference between the original and the smoothed time series
@@ -1055,6 +1055,8 @@ def smooth(data, smooth_width, kernel='gaussian',
         Data mask where True labels masked samples.
     residuals : bool, optional (default: False)
         True if residuals should be returned instead of smoothed data.
+    verbosity : int, optional (default: 0)
+        Level of verbosity.
 
     Returns
     -------
@@ -1062,7 +1064,8 @@ def smooth(data, smooth_width, kernel='gaussian',
         Smoothed/residual data.
     """
 
-    print("%s %s smoothing with " % ({True: "Take residuals of a ",
+    if verbosity > 0:
+        print("%s %s smoothing with " % ({True: "Take residuals of a ",
                                       False: ""}[residuals], kernel) +
           "window width %.2f (=2*sigma for a gaussian!)" % (smooth_width))
 
@@ -1159,7 +1162,10 @@ def time_bin_with_mask(data, time_bin_length, mask=None):
 
     if np.ndim(data) == 1.:
         data.shape = (T, 1)
-        mask.shape = (T, 1)
+        if mask is not None:
+            mask.shape = (T, 1)
+        else:
+            sample_selector = np.ones(data.shape)
 
     bindata = np.zeros(
         (T // time_bin_length,) + data.shape[1:], dtype="float32")

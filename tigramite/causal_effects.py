@@ -2214,7 +2214,7 @@ class CausalEffects():
 
 
     def fit_bootstrap_of(self, method, method_args, 
-                        boot_samples=1000,
+                        boot_samples=100,
                         boot_blocklength=1,
                         seed=None):
         """Runs chosen method on bootstrap samples drawn from DataFrame.
