@@ -1819,10 +1819,7 @@ class CausalEffects():
         conditional_estimator=None,  
         data_transform=None,
         mask_type=None,
-        # estimate_confidence=False,
-        # boot_samples=100,
-        # boot_blocklength=1,
-        # conf_lev=0.95, seed=None
+        ignore_identifiability=False,
         ):
         """Returns a fitted model for the total causal effect of X on Y 
            conditional on S.
@@ -1851,6 +1848,9 @@ class CausalEffects():
             Masking mode: Indicators for which variables in the dependence
             measure I(X; Y | Z) the samples should be masked. If None, the mask
             is not used. Explained in tutorial on masking and missing values.
+        ignore_identifiability : bool
+            Only applies to adjustment sets supplied by user. Ignores if that 
+            set leads to a non-identifiable effect.
         """
 
         if self.no_causal_path:
@@ -1873,7 +1873,7 @@ class CausalEffects():
         elif adjustment_set == 'minimized_optimal':
             adjustment_set = self.get_optimal_set(minimize=True)
         else:
-            if self._check_validity(adjustment_set) is False:
+            if ignore_identifiability is False and self._check_validity(adjustment_set) is False:
                 raise ValueError("Chosen adjustment_set is not valid.")
 
         if adjustment_set is False:
@@ -1934,11 +1934,16 @@ class CausalEffects():
         if intervention_data.shape[1] != len(self.listX):
             raise ValueError("intervention_data.shape[1] must be len(X).")
 
-        if conditions_data is not None:
+        if conditions_data is not None and len(self.listS) > 0:
             if conditions_data.shape[1] != len(self.listS):
                 raise ValueError("conditions_data.shape[1] must be len(S).")
             if conditions_data.shape[0] != intervention_data.shape[0]:
                 raise ValueError("conditions_data.shape[0] must match intervention_data.shape[0].")
+        elif conditions_data is not None and len(self.listS) == 0:
+            raise ValueError("conditions_data specified, but S=None or empty.")
+        elif conditions_data is None and len(self.listS) > 0:
+            raise ValueError("S specified, but conditions_data is None.")
+
 
         if self.no_causal_path:
             if self.verbosity > 0:

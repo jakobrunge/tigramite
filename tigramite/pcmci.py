@@ -4069,7 +4069,8 @@ class PCMCI():
         return {'summary_results': summary_results, 
                 'window_results': window_results}
 
-    def return_summary_results(self, results, conf_lev=0.9):
+    @staticmethod
+    def return_summary_results(results, conf_lev=0.9):
         """Return summary results for causal graphs.
 
         The function returns summary_results of an array of PCMCI(+) results.
