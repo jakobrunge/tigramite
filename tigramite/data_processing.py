@@ -888,7 +888,10 @@ class DataFrame():
         ## end for ens_member_key, ens_member_data in self.values.items()
 
         # Save used indices as attribute
-        self.use_indices_ens_member_dict[ens_member_key] = ref_points_here[use_indices_ens_member==1]
+        if len(ref_points_here) > 0:
+            self.use_indices_ens_member_dict[ens_member_key] = ref_points_here[use_indices_ens_member==1]
+        else:
+            self.use_indices_ens_member_dict[ens_member_key] = []
 
         # Concatenate the arrays of all datasets
         array = np.concatenate(tuple(samples_ens_members.values()), axis = 1)

@@ -280,6 +280,7 @@ def plot_timeseries(
     label_fontsize=10,
     color='black',
     alpha=1.,
+    tick_label_size=5,
     selected_dataset=0,
     adjust_plot=True,
 ):
@@ -316,6 +317,8 @@ def plot_timeseries(
         Skip every other tickmark.
     label_fontsize : int, optional (default: 10)
         Fontsize of variable labels.
+    tick_label_size : int, optional (default: 5)
+        Fontsize of tick labels.
     color : str, optional (default: black)
         Line color.
     alpha : float
@@ -362,6 +365,8 @@ def plot_timeseries(
             else:
                 ax.set_ylabel(r"%s" % (var_names[i]), fontsize=label_fontsize)
 
+            ax.tick_params(axis='both', which='major', labelsize=tick_label_size)
+            # ax.tick_params(axis='both', which='minor', labelsize=tick_label_size)
 
     _add_timeseries(
         dataframe=dataframe,
@@ -451,6 +456,8 @@ class setup_matrix:
     legend_width : float, optional (default: 0.15)
         Fraction of horizontal figure space to allocate right of plot for
         legend.
+    tick_label_size : int, optional (default: 5)
+        Fontsize of tick labels.
     x_base : float, optional (default: 1.)
         x-tick intervals to show.
     y_base : float, optional (default: .4)
@@ -478,6 +485,7 @@ class setup_matrix:
         legend_fontsize=10,
         x_base=1.0,
         y_base=0.5,
+        tick_label_size=5,
         plot_gridlines=False,
         lag_units="",
         lag_array=None,
@@ -594,6 +602,8 @@ class setup_matrix:
                         linewidth=0.05,
                         zorder=-5,
                     )
+                self.axes_dict[(i, j)].tick_params(axis='both', which='major', labelsize=tick_label_size)
+                self.axes_dict[(i, j)].tick_params(axis='both', which='minor', labelsize=tick_label_size)
 
                 plot_index += 1
 
@@ -857,6 +867,8 @@ class setup_scatter_matrix:
     legend_width : float, optional (default: 0.15)
         Fraction of horizontal figure space to allocate right of plot for
         legend.
+    tick_label_size : int, optional (default: 6)
+        Fontsize of tick labels.
     plot_gridlines : bool, optional (default: False)
         Whether to show a grid.
     label_fontsize : int, optional (default: 10)
@@ -873,6 +885,7 @@ class setup_scatter_matrix:
         legend_width=0.15,
         legend_fontsize=10,
         plot_gridlines=False,
+        tick_label_size=6,
         label_fontsize=10,
     ):
 
@@ -942,6 +955,7 @@ class setup_scatter_matrix:
                         linewidth=0.05,
                         zorder=-5,
                     )
+                self.axes_dict[(i, j)].tick_params(axis='both', which='major', labelsize=tick_label_size)
 
                 plot_index += 1
 
@@ -1182,6 +1196,8 @@ class setup_density_matrix:
     legend_width : float, optional (default: 0.15)
         Fraction of horizontal figure space to allocate right of plot for
         legend.
+    tick_label_size : int, optional (default: 6)
+        Fontsize of tick labels.
     plot_gridlines : bool, optional (default: False)
         Whether to show a grid.
     label_fontsize : int, optional (default: 10)
@@ -1197,6 +1213,7 @@ class setup_density_matrix:
         label_space_top=0.05,
         legend_width=0.15,
         legend_fontsize=10,
+        tick_label_size=6,
         plot_gridlines=False,
         label_fontsize=10,
     ):
@@ -1272,7 +1289,7 @@ class setup_density_matrix:
                         linewidth=0.05,
                         zorder=-5,
                     )
-
+                self.axes_dict[(i, j)].tick_params(axis='both', which='major', labelsize=tick_label_size)
                 plot_index += 1
 
     def add_densityplot(
@@ -1495,6 +1512,7 @@ def _draw_network_with_curved_edges(
     label_fontsize=4,
     label_fraction=0.5,
     link_colorbar_label="link",
+    tick_label_size=6,
     # link_edge_colorbar_label='link_edge',
     inner_edge_curved=False,
     inner_edge_style="solid",
@@ -2179,6 +2197,7 @@ def _draw_network_with_curved_edges(
             cax_e.set_xlabel(
                 link_colorbar_label, labelpad=1, fontsize=label_fontsize, zorder=-10
             )
+            cax_e.tick_params(axis='both', which='major', labelsize=tick_label_size)
 
     ##
     # Draw nodes
@@ -2272,6 +2291,7 @@ def _draw_network_with_curved_edges(
                 cax_n.set_xlabel(
                     node_rings[ring]["label"], labelpad=1, fontsize=label_fontsize
                 )
+                cax_n.tick_params(axis='both', which='major', labelsize=tick_label_size)
         else:
             colors = None
             vmin = None
@@ -2386,6 +2406,7 @@ def plot_graph(
     arrowhead_size=20,
     curved_radius=0.2,
     label_fontsize=10,
+    tick_label_size=6,
     alpha=1.0,
     node_label_size=10,
     link_label_fontsize=10,
@@ -2469,6 +2490,8 @@ def plot_graph(
         Fontsize of node labels.
     link_label_fontsize : int, optional (default: 6)
         Fontsize of link labels.
+    tick_label_size : int, optional (default: 6)
+        Fontsize of tick labels.
     lag_array : array, optional (default: None)
         Optional specification of lags overwriting np.arange(0, tau_max+1)
     network_lower_bound : float, optional (default: 0.2)
@@ -2726,6 +2749,7 @@ def plot_graph(
         links_vmin=vmin_edges,
         links_vmax=vmax_edges,
         links_ticks=edge_ticks,
+        tick_label_size=tick_label_size,
         # cmap_links_edges='YlOrRd', links_edges_vmin=-1., links_edges_vmax=1.,
         # links_edges_ticks=.2, link_edge_colorbar_label='link_edge',
         arrowstyle="simple",
@@ -2880,6 +2904,7 @@ def plot_time_series_graph(
     arrowhead_size=20,
     curved_radius=0.2,
     label_fontsize=10,
+    tick_label_size=6,
     alpha=1.0,
     label_space_left=0.1,
     label_space_top=0.0,
@@ -2944,6 +2969,8 @@ def plot_time_series_graph(
         Fontsize of node labels.
     link_label_fontsize : int, optional (default: 6)
         Fontsize of link labels.
+    tick_label_size : int, optional (default: 6)
+        Fontsize of tick labels.
     label_space_left : float, optional (default: 0.1)
         Fraction of horizontal figure space to allocate left of plot for labels.
     label_space_top : float, optional (default: 0.)
@@ -3186,6 +3213,7 @@ def plot_time_series_graph(
         arrowhead_size=arrowhead_size,
         curved_radius=curved_radius,
         label_fontsize=label_fontsize,
+        tick_label_size=tick_label_size,
         label_fraction=0.5,
         link_colorbar_label=link_colorbar_label,
         inner_edge_curved=False,
@@ -3264,6 +3292,7 @@ def plot_mediation_time_series_graph(
     label_fontsize=12,
     alpha=1.0,
     node_label_size=12,
+    tick_label_size=6,
     label_space_left=0.1,
     label_space_top=0.0,
     network_lower_bound=0.2,
@@ -3496,6 +3525,7 @@ def plot_mediation_time_series_graph(
         links_vmin=vmin_edges,
         links_vmax=vmax_edges,
         links_ticks=edge_ticks,
+        tick_label_size=tick_label_size,
         # cmap_links_edges='YlOrRd', links_edges_vmin=-1., links_edges_vmax=1.,
         # links_edges_ticks=.2, link_edge_colorbar_label='link_edge',
         arrowhead_size=arrowhead_size,
@@ -3576,6 +3606,7 @@ def plot_mediation_graph(
     arrowhead_size=20,
     curved_radius=0.2,
     label_fontsize=10,
+    tick_label_size=6,
     lag_array=None,
     alpha=1.0,
     node_label_size=10,
@@ -3828,6 +3859,7 @@ def plot_mediation_graph(
         links_vmin=vmin_edges,
         links_vmax=vmax_edges,
         links_ticks=edge_ticks,
+        tick_label_size=tick_label_size,
         # cmap_links_edges='YlOrRd', links_edges_vmin=-1., links_edges_vmax=1.,
         # links_edges_ticks=.2, link_edge_colorbar_label='link_edge',
         arrowhead_size=arrowhead_size,
