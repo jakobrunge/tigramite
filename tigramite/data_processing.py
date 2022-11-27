@@ -1214,9 +1214,10 @@ def trafo2normal(data, mask=None, thres=0.001):
 
     if np.ndim(data) == 1:
         if mask is None:
-            nonmasked = np.arange(0, len(data), dtype='int')
+            nonmasked = np.where(np.isnan(data) == False)[0]
         else:
-            nonmasked = np.where(mask==0)
+            nonmasked = np.where((mask==0)*(np.isnan(data) == False))
+
         u = trafo(data[nonmasked])
         u[u==0.] = thres
         u[u==1.] = 1. - thres
@@ -1224,9 +1225,10 @@ def trafo2normal(data, mask=None, thres=0.001):
     else:
         for i in range(data.shape[1]):
             if mask is None:
-                nonmasked = np.arange(0, len(data[:, i]), dtype='int')
+                nonmasked = np.where(np.isnan(data[:,i]) == False)[0]
             else:
-                nonmasked = np.where(mask[:, i]==0)
+                nonmasked = np.where((mask[:, i]==0)*(np.isnan(data[:, i]) == False))
+                # nonmasked = np.where(mask[:, i]==0)
             # print(data[:, i].shape, nonmasked.shape)
             uniform = trafo(data[:, i][nonmasked])
             

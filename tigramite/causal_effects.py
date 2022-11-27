@@ -512,7 +512,7 @@ class CausalEffects():
         mediators = set()
 
         # Walk along proper causal paths backwards from Y to X
-        potential_mediators = set()
+        # potential_mediators = set()
         for y in end:
             j, tau = y 
             this_level = [y]
@@ -521,6 +521,7 @@ class CausalEffects():
                 for varlag in this_level:
                     for parent in self._get_parents(varlag):
                         i, tau = parent
+                        # print(varlag, parent, des_X)
                         if (parent in des_X
                             and parent not in mediators
                             # and parent not in potential_mediators
@@ -551,7 +552,7 @@ class CausalEffects():
                 next_level = []
                 for varlag in this_level:
                     for _, parent in self._get_adjacents_stationary_graph(graph=self.graph, 
-                                node=varlag, patterns="<*-", max_lag=max_lag, exclude=None):
+                                node=varlag, patterns=["<*-", "<*+"], max_lag=max_lag, exclude=None):
                         i, tau = parent
                         if (parent in des_X
                             and parent not in mediators
@@ -599,11 +600,11 @@ class CausalEffects():
         else:
             left_mark, middle_mark, right_mark = pattern
             if left_mark != '*':
-                if link[0] != '+':
+                # if link[0] != '+':
                     if link[0] != left_mark: return False
 
             if right_mark != '*':
-                if link[2] != '+':
+                # if link[2] != '+':
                     if link[2] != right_mark: return False 
             
             if middle_mark != '*' and link[1] != middle_mark: return False    
@@ -683,7 +684,7 @@ class CausalEffects():
         if self.possible:
             patterns=['-*>', 'o*o', 'o*>']
         else:
-            patterns=['-*>']
+            patterns=['-*>', '+*>']
         return self._find_adj(node=varlag, patterns=patterns)
 
     def _get_parents(self, varlag):
@@ -691,12 +692,12 @@ class CausalEffects():
         if self.possible:
             patterns=['<*-', 'o*o', '<*o']
         else:
-            patterns=['<*-']
+            patterns=['<*-', '<*+']
         return self._find_adj(node=varlag, patterns=patterns)
 
     def _get_spouses(self, varlag):
         """Returns set of spouses (varlag <-> ...)  for (lagged) varlag."""
-        return self._find_adj(node=varlag, patterns=['<*>'])
+        return self._find_adj(node=varlag, patterns=['<*>', '+*>', '<*+'])
 
     def _get_neighbors(self, varlag):
         """Returns set of neighbors (varlag --- ...) for (lagged) varlag."""
@@ -776,7 +777,7 @@ class CausalEffects():
                 next_level = []
                 for varlag in this_level:
                     for _, child in self._get_adjacents_stationary_graph(graph=self.graph, 
-                                node=varlag, patterns="-*>", max_lag=max_lag, exclude=None):
+                                node=varlag, patterns=["-*>", "-*+"], max_lag=max_lag, exclude=None):
                         i, tau = child
                         if (child not in descendants 
                             # and (-self.tau_max <= tau <= 0 or self.ignore_time_bounds)
@@ -1049,8 +1050,8 @@ class CausalEffects():
                                                 start=[(i, -taui)],
                                                  end=[(j, -tauj)],
                                                  conditions=None,
-                                                 starts_with='-*>',
-                                                 ends_with='-*>',
+                                                 starts_with=['-*>', '+*>'],
+                                                 ends_with=['-*>', '+*>'],
                                                  path_type='causal',
                                                  hidden_by_taumax=False,
                                                  hidden_variables=hidden_variables_here,
@@ -1065,8 +1066,8 @@ class CausalEffects():
                                               start=[(j, -tauj)],
                                                end=[(i, -taui)],
                                                conditions=None,
-                                               starts_with='-*>',
-                                               ends_with='-*>',
+                                               starts_with=['-*>', '+*>'],
+                                               ends_with=['-*>', '+*>'],
                                                path_type='causal',
                                                hidden_by_taumax=False,
                                                hidden_variables=hidden_variables_here,
@@ -1076,6 +1077,7 @@ class CausalEffects():
                         hidden_by_taumax_here = True
                     else:
                         hidden_by_taumax_here = False
+
                     cond_ii = (
                         # tau <= graph_taumax 
                                 # and 
@@ -1086,8 +1088,8 @@ class CausalEffects():
                                                 start=[(i, -taui)],
                                                  end=[(j, -tauj)],
                                                  conditions=None,
-                                                 starts_with='<**',
-                                                 ends_with='**>',
+                                                 starts_with=['<**', '+**'],
+                                                 ends_with=['**>', '**+'],
                                                  path_type='any',
                                                  hidden_by_taumax=hidden_by_taumax_here,
                                                  hidden_variables=hidden_variables_here,
@@ -1117,6 +1119,7 @@ class CausalEffects():
                     elif cond_i_xy and cond_i_yx:
                         raise ValueError("Cycle between %s and %s!" %(str(i, -taui), str(j, -tauj)))
                     # print(aux_graph[i, j, taui, tauj])
+
                     # print((i, -taui), (j, -tauj), cond_i_xy, cond_i_yx, cond_ii, aux_graph[i, j, taui, tauj], aux_graph[j, i, tauj, taui])
 
         return aux_graph
@@ -1169,13 +1172,17 @@ class CausalEffects():
             hidden_variables = hidden_variables.union([(k, -tauk) for k in range(self.N) 
                                             for tauk in range(self.tau_max+1, max_lag + 1)])
 
-        # print("hidden_variables ", hidden_variables)
+        # print("causal_children ", causal_children)
+
         if starts_with is None:
-            starts_with = '***'
+            starts_with = ['***']
+        elif type(starts_with) == str:
+            starts_with = [starts_with]
 
         if ends_with is None:
-            ends_with = '***'
-
+            ends_with = ['***']
+        elif type(ends_with) == str:
+            ends_with = [ends_with]
         #
         # Breadth-first search to find connection
         #
@@ -1189,7 +1196,6 @@ class CausalEffects():
             else:
                 link_neighbors = self._find_adj(node=x, patterns=starts_with, exclude=list(start), return_link=True)
             
-            # print("link_neighbors ", link_neighbors)
             for link_neighbor in link_neighbors:
                 link, neighbor = link_neighbor
 
@@ -1205,7 +1211,7 @@ class CausalEffects():
                         and not self._match_link('+*>', link)):
                         continue
                 elif path_type == 'causal':
-                    if (neighbor not in causal_children or self._match_link('<**', link)):
+                    if (neighbor not in causal_children): # or self._match_link('<**', link)):
                         continue                    
                 start_from.add((x, link, neighbor))
 
@@ -1225,7 +1231,7 @@ class CausalEffects():
 
                 # print("varlag_k in end ", varlag_k in end, link_ik)
                 if varlag_k in end:
-                    if self._match_link(ends_with, link_ik):
+                    if np.any([self._match_link(patt, link_ik) for patt in ends_with]):
                         # print("Connected ", varlag_i, link_ik, varlag_k)
                         return True
                     else:
@@ -1263,7 +1269,7 @@ class CausalEffects():
                 # print("Not in visited")
 
                 if path_type == 'causal':
-                    if not self._match_link('-*>', link_kj):
+                    if not (self._match_link('-*>', link_kj) or self._match_link('+*>', link_kj)):
                         continue 
 
                 # If motif  i *-* k *-* j is open, 
@@ -1446,7 +1452,7 @@ class CausalEffects():
                 if (not self._check_path(#graph=self.graph, 
                     start=[node], end=self.Y, 
                             conditions=list(Oset - set([node])) + list(S) + list(self.X),
-                            ends_with='**>')): 
+                            ends_with=['**>', '**+'])): 
                     removable.append(node) 
 
             Oset = Oset - set(removable)
@@ -1906,6 +1912,7 @@ class CausalEffects():
         pred_params=None,
         return_further_pred_results=False,
         aggregation_func=np.mean,
+        transform_interventions_and_prediction=False,
         ):
         """Predict effect of intervention with fitted model.
 
@@ -1924,7 +1931,9 @@ class CausalEffects():
             the entire results can be returned.
         aggregation_func : callable
             Callable applied to output of 'predict'. Default is 'np.mean'.
-
+        transform_interventions_and_prediction : bool (default: False)
+            Whether to perform the inverse data_transform on prediction results.
+        
         Returns
         -------
         Results from prediction: an array of shape  (time, len(Y)).
@@ -1955,6 +1964,7 @@ class CausalEffects():
             conditions_data=conditions_data,
             pred_params=pred_params,
             return_further_pred_results=return_further_pred_results,
+            transform_interventions_and_prediction=transform_interventions_and_prediction,
             aggregation_func=aggregation_func,) 
 
         return effect

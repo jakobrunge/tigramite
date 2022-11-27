@@ -1680,7 +1680,8 @@ if __name__ == '__main__':
 
     def lin_f(x): return x
  
-    T = 1000
+    T = 10000
+    
     links = {0: [((0, -1), 0.5, lin_f)],
              1: [((1, -1), 0.5, lin_f), ((0, -1), 0.5, lin_f)],
              2: [((2, -1), 0.5, lin_f), ((1, 0), 0.5, lin_f)]
@@ -1690,15 +1691,18 @@ if __name__ == '__main__':
     true_parents = toys._get_true_parent_neighbor_dict(links)
     dataframe = pp.DataFrame(data)
 
-    med = LinearMediation(dataframe=dataframe, data_transform=None)
+    med = LinearMediation(dataframe=dataframe, 
+        data_transform=None)
     med.fit_model(all_parents=true_parents, tau_max=10)
 
-    # print (med.get_coeff(i=0, tau=-2, j=1))
-    print (med.get_ce(i=0, tau=-2,  j=2))
-    # print (med.get_ce_max(i=0, j=2))
-    print (med.get_mce(i=0, tau=-2, k=1, j=2))
-    print(med.get_joint_ce(i=0, j=2))
-    print(med.get_joint_mce(i=0, j=2, k=1))
+    print(med.get_val_matrix())
+
+    # # print (med.get_coeff(i=0, tau=-2, j=1))
+    # print (med.get_ce(i=0, tau=-2,  j=2))
+    # # print (med.get_ce_max(i=0, j=2))
+    # print (med.get_mce(i=0, tau=-2, k=1, j=2))
+    # print(med.get_joint_ce(i=0, j=2))
+    # print(med.get_joint_mce(i=0, j=2, k=1))
 
     # print(med.get_joint_ce_matrix(i=0, j=2))
 
