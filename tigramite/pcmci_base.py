@@ -71,6 +71,188 @@ class PCMCIbase():
         self.T = self.dataframe.T
         self.N = self.dataframe.N
 
+
+    # def _set_sel_links(self, selected_links, tau_min, tau_max,
+    #                    remove_contemp=False):
+    #     """Helper function to set and check the selected links argument
+
+    #     Parameters
+    #     ----------
+    #     selected_links : dict or None
+    #         Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}
+    #         specifying whether only selected links should be tested. If None is
+    #         passed, all links are returned.
+    #     tau_mix : int
+    #         Minimum time delay to test.
+    #     tau_max : int
+    #         Maximum time delay to test.
+    #     remove_contemp : bool
+    #         Whether contemporaneous links (at lag zero) should be removed.
+
+    #     Returns
+    #     -------
+    #     selected_links : dict
+    #         Cleaned links.
+    #     """
+    #     # Copy and pass into the function
+    #     _int_sel_links = deepcopy(selected_links)
+    #     # Set the default selected links if none are set
+    #     _vars = list(range(self.N))
+    #     _lags = list(range(-(tau_max), -tau_min + 1, 1))
+    #     if _int_sel_links is None:
+    #         _int_sel_links = {}
+    #         # Set the default as all combinations of the selected variables
+    #         for j in _vars:
+    #             _int_sel_links[j] = [(var, -lag) for var in _vars
+    #                                  for lag in range(tau_min, tau_max + 1) 
+    #                                  if not (var == j and lag == 0)]
+    #     else:
+    #         if remove_contemp:
+    #             for j in _int_sel_links.keys():
+    #                 _int_sel_links[j] = [link for link in _int_sel_links[j]
+    #                                      if link[1] != 0]
+    #     # Otherwise, check that our selection is sane
+    #     # Check that the selected links refer to links that are inside the
+    #     # data range
+    #     _key_set = set(_int_sel_links.keys())
+    #     valid_entries = _key_set == set(range(self.N))
+
+    #     for link in _int_sel_links.values():
+    #         if isinstance(link, list) and len(link) == 0:
+    #             continue
+    #         for var, lag in link:
+    #             if var not in _vars or lag not in _lags:
+    #                 valid_entries = False
+
+    #     if not valid_entries:
+    #         raise ValueError("selected_links"
+    #                          " must be dictionary with keys for all [0,...,N-1]"
+    #                          " variables and contain only links from "
+    #                          "these variables in range [tau_min, tau_max]")
+
+    #     # Return the selected links
+    #     return _int_sel_links
+
+    def _reverse_link(self, link):
+        """Reverse a given link, taking care to replace > with < and vice versa."""
+
+        if link == "":
+            return ""
+
+        if link[2] == ">":
+            left_mark = "<"
+        else:
+            left_mark = link[2]
+
+        if link[0] == "<":
+            right_mark = ">"
+        else:
+            right_mark = link[0]
+
+        return left_mark + link[1] + right_mark
+
+
+    def _set_link_assumptions(self, link_assumptions, tau_min, tau_max,
+                       remove_contemp=False):
+        """Helper function to set and check the link_assumptions argument
+
+        Parameters
+        ----------
+        link_assumptions : dict
+            Dictionary of form {j:{(i, -tau): link_type, ...}, ...} specifying
+            assumptions about links. This initializes the graph with 
+            graph[i,j,tau] = link_type. For example, graph[i,j,0] = '-->' implies
+            a link from i to j at lag 0. Valid link types
+            are 'o-o', '-->', '<--'. In addition, the middle mark can be '!'
+            instead of '-'. Then 'o!o' implies that this adjacency must exist
+            and '-!>' that this directed link must exist. Link assumptions
+            need to be consistent, i.e., graph[i,j,0] = '-->' requires 
+            graph[j,i,0] = '<--' and acyclicity must hold. If a link does not
+            appear in the dictionary, it is assumed absent.
+        tau_mix : int
+            Minimum time delay to test.
+        tau_max : int
+            Maximum time delay to test.
+        remove_contemp : bool
+            Whether contemporaneous links (at lag zero) should be removed.
+
+        Returns
+        -------
+        link_assumptions : dict
+            Cleaned links.
+        """
+        # Copy and pass into the function
+        _int_link_assumptions = deepcopy(link_assumptions)
+        # Set the default selected links if none are set
+        _vars = list(range(self.N))
+        _lags = list(range(-(tau_max), -tau_min + 1, 1))
+        if _int_link_assumptions is None:
+            _int_link_assumptions = {}
+            # Set the default as all combinations
+            for j in _vars:
+                _int_link_assumptions[j] = {}
+                for i in _vars:
+                    for lag in range(tau_min, tau_max + 1):
+                        if not (i == j and lag == 0):
+                            if lag == 0:
+                                _int_link_assumptions[j][(i, 0)] = 'o-o'
+                            else:
+                                _int_link_assumptions[j][(i, -lag)] = '-->'
+  
+        else:
+            if remove_contemp:
+                for j in _int_link_assumptions.keys():
+                    _int_link_assumptions[j] = {link:_int_link_assumptions[j][link] 
+                                        for link in _int_link_assumptions[j]
+                                         if link[1] != 0}
+
+        # Make contemporaneous assumptions consistent
+        for j in _vars:
+            for link in _int_link_assumptions[j]:
+                i, tau = link
+                if tau == 0:
+                    if (j, 0) in _int_link_assumptions[i]:
+                        if _int_link_assumptions[j][link] != self._reverse_link(_int_link_assumptions[i][(j, 0)]):
+                            raise ValueError("Inconsistent link assumptions for indices %d - %d " %(i, j))
+                    else:
+                        _int_link_assumptions[i][(j, 0)] = self._reverse_link(_int_link_assumptions[j][link])
+
+
+        # Otherwise, check that our assumpions are sane
+        # Check that the link_assumptions refer to links that are inside the
+        # data range and types
+        _key_set = set(_int_link_assumptions.keys())
+        valid_entries = _key_set == set(range(self.N))
+
+        valid_types = [
+                    'o-o',
+                    'o!o',
+                    '-->',
+                    '-!>',
+                    '<--',
+                    '<!-',
+                        ]
+
+        for links in _int_link_assumptions.values():
+            if isinstance(links, dict) and len(links) == 0:
+                continue
+            for var, lag in links:
+                if var not in _vars or lag not in _lags:
+                    valid_entries = False
+                if links[(var, lag)] not in valid_types:
+                    valid_entries = False
+
+
+        if not valid_entries:
+            raise ValueError("link_assumptions"
+                             " must be dictionary with keys for all [0,...,N-1]"
+                             " variables and contain only links from "
+                             "these variables in range [tau_min, tau_max] "
+                             "and with link types in %s" %str(valid_types))
+
+        # Return the _int_link_assumptions
+        return _int_link_assumptions
+
     def _dict_to_matrix(self, val_dict, tau_max, n_vars, default=1):
         """Helper function to convert dictionary to matrix format.
 
@@ -108,7 +290,7 @@ class PCMCIbase():
                               exclude_contemporaneous=True,
                               tau_min=0,
                               tau_max=1,
-                              selected_links=None,
+                              link_assumptions=None,
                               ):
         """Returns p-values corrected for multiple testing.
 
@@ -121,14 +303,12 @@ class PCMCIbase():
         p_matrix : array-like
             Matrix of p-values. Must be of shape (N, N, tau_max + 1).
         tau_min : int, default: 0
-            Minimum time lag. Only used as consistency check of selected_links. 
+            Minimum time lag. Only used as consistency check of link_assumptions. 
         tau_max : int, default: 1
             Maximum time lag. Must be larger or equal to tau_min. Only used as 
-            consistency check of selected_links. 
-        selected_links : dict or None
-            Dictionary of form {0: [(3, -2), ...], 1:[], ...}
-            specifying whether only selected links should be tested. If None is
-            passed, all links are tested.
+            consistency check of link_assumptions. 
+        link_assumptions : dict or None
+            ...
         fdr_method : str, optional (default: 'fdr_bh')
             Correction method, currently implemented is Benjamini-Hochberg
             False Discovery Rate method.     
@@ -151,14 +331,16 @@ class PCMCIbase():
         _, N, tau_max_plusone = p_matrix.shape
         # Check the limits on tau
         self._check_tau_limits(tau_min, tau_max)
-        # Include only selected_links if given
-        if selected_links != None:
+        # Include only link_assumptions if given
+        if link_assumptions != None:
             # Create a mask for these values
             mask = np.zeros((N, N, tau_max_plusone), dtype='bool')
-            _int_sel_links = self._set_sel_links(selected_links, tau_min, tau_max)
-            for node1, links_ in _int_sel_links.items():
-                for node2, lag in links_:
-                    mask[node2, node1, abs(lag)] = True
+            _int_link_assumptions = self._set_link_assumptions(link_assumptions, tau_min, tau_max)
+            for j, links_ in _int_link_assumptions.items():
+                for link in links_:
+                    i, lag = link
+                    if _int_link_assumptions[j][link] not in ["<--", "<!-"]:    
+                        mask[i, j, abs(lag)] = True
         else:
             # Create a mask for these values
             mask = np.ones((N, N, tau_max_plusone), dtype='bool')
@@ -421,8 +603,8 @@ class PCMCIbase():
 
         return graph
 
-    def symmetrize_p_and_val_matrix(self, p_matrix, val_matrix, selected_links, conf_matrix=None):
-        """Symmetrizes the p_matrix, val_matrix, and conf_matrix based on selected_links
+    def symmetrize_p_and_val_matrix(self, p_matrix, val_matrix, link_assumptions, conf_matrix=None):
+        """Symmetrizes the p_matrix, val_matrix, and conf_matrix based on link_assumptions
            and the larger p-value.
 
         Parameters
@@ -435,10 +617,8 @@ class PCMCIbase():
             Estimated matrix of confidence intervals of test statistic values.
             Only computed if set in cond_ind_test, where also the percentiles
             are set.
-        selected_links : dict or None
-            Dictionary of form {0: [(3, -2), ...], 1:[], ...}
-            specifying whether only selected links should be tested. If None is
-            passed, all links are tested.
+        link_assumptions : dict or None
+            ...
 
         Returns
         -------
@@ -456,23 +636,26 @@ class PCMCIbase():
         for i in range(self.N):
             for j in range(self.N):
                 # If both the links are present in selected_links, symmetrize using maximum p-value
-                if ((i, 0) in selected_links[j] and (j, 0) in selected_links[i]):
-                    if (p_matrix[i, j, 0]
-                            >= p_matrix[j, i, 0]):
+                # if ((i, 0) in selected_links[j] and (j, 0) in selected_links[i]):
+                if (i, 0) in link_assumptions[j]:
+                    if link_assumptions[j][(i, 0)] in ["o-o", 'o!o']:
+                        if (p_matrix[i, j, 0]
+                                >= p_matrix[j, i, 0]):
+                            p_matrix[j, i, 0] = p_matrix[i, j, 0]
+                            val_matrix[j, i, 0] = val_matrix[i, j, 0]
+                            if conf_matrix is not None:
+                                conf_matrix[j, i, 0] = conf_matrix[i, j, 0]
+
+                    # If only one of the links is present in selected_links, symmetrize using the p-value of the link present
+                    # elif ((i, 0) in selected_links[j] and (j, 0) not in selected_links[i]):
+                    elif link_assumptions[j][(i, 0)] in ["-->", '-!>']:
                         p_matrix[j, i, 0] = p_matrix[i, j, 0]
                         val_matrix[j, i, 0] = val_matrix[i, j, 0]
                         if conf_matrix is not None:
                             conf_matrix[j, i, 0] = conf_matrix[i, j, 0]
-
-                # If only one of the links is present in selected_links, symmetrize using the p-value of the link present
-                elif ((i, 0) in selected_links[j] and (j, 0) not in selected_links[i]):
-                    p_matrix[j, i, 0] = p_matrix[i, j, 0]
-                    val_matrix[j, i, 0] = val_matrix[i, j, 0]
-                    if conf_matrix is not None:
-                        conf_matrix[j, i, 0] = conf_matrix[i, j, 0]
-                else:
-                    # Links not present in selected_links
-                    pass
+                    else:
+                        # Links not present in link_assumptions
+                        pass
 
         # Return the values as a dictionary and store in class
         results = {'val_matrix': val_matrix,
@@ -690,17 +873,58 @@ class PCMCIbase():
         Returns
         -------
         links : dict
-            Dictionary of form {0:[((0, -1), o-o), ...], 1:[...], ...}.
+            Dictionary of form {0:{(0, -1): o-o, ...}, 1:{...}, ...}.
         """
         N = graph.shape[0]
 
-        links = dict([(j, []) for j in range(N)])
+        links = dict([(j, {}) for j in range(N)])
 
         # if np.any(dag=='o-o') or np.any(dag=='x-x'):
         #     raise ValueError("graph must be DAG.")
 
         for (i, j, tau) in zip(*np.where(graph!='')):
-            links[j].append(((i, -tau), graph[i,j,tau]))
+            links[j][(i, -tau)] = graph[i,j,tau]
 
         return links
 
+    # @staticmethod
+    def _dict_to_graph(self, links, tau_max=None):
+        """Helper function to convert dictionary of links to graph.
+
+        Parameters
+        ---------
+        links : dict
+            Dictionary of form {0:{(0, -1): o-o}, ...}, 1:{...}, ...}.
+
+        Returns
+        -------
+        graph : array of shape (N, N, tau_max+1)
+            Matrix format of graph in string format.
+        """
+
+        N = len(links)
+
+        # Get maximum time lag
+        max_lag = 0
+        for j in range(N):
+            for link in links[j]:
+                var, lag = link
+                link_type = links[j][link]
+                if link_type != "":
+                    max_lag = max(max_lag, abs(lag))
+
+        if tau_max is None:
+            tau_max = max_lag
+        else:
+            if tau_max < max_lag:
+                raise ValueError("maxlag(links) > tau_max")
+
+        graph = np.zeros((N, N, tau_max + 1), dtype='<U3')
+        graph[:] = ""
+        for j in range(N):
+            for link in links[j]:
+                i, tau = link
+                link_type = links[j][link]
+                graph[i, j, abs(tau)] = link_type
+
+        return graph

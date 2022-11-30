@@ -188,7 +188,7 @@ class RobustParCorr(CondIndTest):
             return (resid, mean)
         return resid
 
-    def get_dependence_measure(self, array, xyz):
+    def get_dependence_measure(self, array, xyz, type_mask=None):
         """Return partial correlation.
 
         Marginals are firstly transformed to standard normal scale. Dependence

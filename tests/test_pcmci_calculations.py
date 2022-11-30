@@ -171,7 +171,7 @@ def a_run_pc_stable(a_pcmci, a_pc_stable_params):
     # Unpack the pc_stable parameters
     pc_alpha, max_conds_dim, max_combinations, save_iter = a_pc_stable_params
     # Run PC stable
-    pcmci.run_pc_stable(selected_links=select_links,
+    pcmci.run_pc_stable(selected_links=None,
                         tau_min=tau_min,
                         tau_max=tau_max,
                         save_iterations=save_iter,
@@ -206,7 +206,7 @@ def a_run_mci(a_pcmci, a_mci_params):
     # Unpack the MCI parameters
     alpha_level, max_conds_px, max_conds_py = a_mci_params
     # Run the MCI algorithm with the given parameters
-    results = pcmci.run_mci(selected_links=select_links,
+    results = pcmci.run_mci(selected_links=None,
                             tau_min=tau_min,
                             tau_max=tau_max,
                             parents=true_parents,
@@ -235,7 +235,7 @@ def a_run_pcmci(a_pcmci, a_pc_stable_params, a_mci_params):
     # Unpack the MCI parameters
     alpha_level, max_conds_px, max_conds_py = a_mci_params
     # Run the PCMCI algorithm with the given parameters
-    results = pcmci.run_pcmci(selected_links=select_links,
+    results = pcmci.run_pcmci(selected_links=None,
                               tau_min=tau_min,
                               tau_max=tau_max,
                               save_iterations=save_iter,

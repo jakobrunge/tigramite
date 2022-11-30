@@ -1414,7 +1414,6 @@ class Prediction(Models, PCMCI):
             PCMCI.__init__(self,
                            dataframe=self.dataframe,
                            cond_ind_test=cond_ind_test,
-                           selected_variables=None,
                            verbosity=verbosity)
 
         # Set the member variables

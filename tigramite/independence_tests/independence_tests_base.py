@@ -71,7 +71,7 @@ class CondIndTest():
         Level of verbosity.
     """
     @abc.abstractmethod
-    def get_dependence_measure(self, array, xyz, type_mask=None):
+    def get_dependence_measure(self, array, xyz):
         """
         Abstract function that all concrete classes must instantiate.
         """
@@ -385,7 +385,7 @@ class CondIndTest():
         # Return the value and the pvalue
         return val, pval
 
-    def run_test_raw(self, x, y, z=None, type_mask=None):
+    def run_test_raw(self, x, y, z=None, x_type=None, y_type=None, z_type=None):
         """Perform conditional independence test directly on input arrays x, y, z.
 
         Calls the dependence measure and signficicance test functions. The child
@@ -396,12 +396,11 @@ class CondIndTest():
         ----------
         x, y, z : arrays
             x,y,z are of the form (samples, dimension).
-            
-       type_mask : array-like
-            Binary data array of same shape as array which describes whether 
-            individual samples in a variable (or all samples) are continuous 
-            or discrete: 0s for continuous variables and 1s for discrete variables.
 
+        x_type, y_type, z_type : array-like
+            data arrays of same shape as x, y and z respectively, which describes whether variables
+            are continuous or discrete: 0s for continuous variables and
+            1s for discrete variables
 
         Returns
         -------
@@ -418,9 +417,22 @@ class CondIndTest():
             raise ValueError("z must be array of shape (samples, dimension)"
                              " where dimension can be 1.")
 
+        if x_type is not None or y_type is not None or z_type is not None:
+            has_type_mask = True
+        else:
+            has_type_mask = False
+
+        if x_type is None and has_type_mask:
+            x_type = np.zeros(x.shape, dtype='int')
+
+        if y_type is None and has_type_mask:
+            y_type = np.zeros(y.shape, dtype='int')
+
         if z is None:
             # Get the array to test on
             array = np.vstack((x.T, y.T))
+            if has_type_mask:
+                type_mask = np.vstack((x_type.T, y_type.T))
 
             # xyz is the dimension indicator
             xyz = np.array([0 for i in range(x.shape[1])] +
@@ -429,7 +441,11 @@ class CondIndTest():
         else:
             # Get the array to test on
             array = np.vstack((x.T, y.T, z.T))
+            if z_type is None and has_type_mask:
+                z_type = np.zeros(z.shape, dtype='int')
 
+            if has_type_mask:
+                type_mask = np.vstack((x_type.T, y_type.T, z_type.T))
             # xyz is the dimension indicator
             xyz = np.array([0 for i in range(x.shape[1])] +
                            [1 for i in range(y.shape[1])] +
@@ -441,9 +457,18 @@ class CondIndTest():
         if np.isnan(array).sum() != 0:
             raise ValueError("nans in the array!")
         # Get the dependence measure
-        val = self.get_dependence_measure(array, xyz)
+        if has_type_mask:
+            val = self.get_dependence_measure(array, xyz, type_mask=type_mask)
+        else:
+            val = self.get_dependence_measure(array, xyz)
+
         # Get the p-value
-        pval = self.get_significance(val, array, xyz, T, dim)
+        if has_type_mask:
+            pval = self.get_significance(val=val, array=array, xyz=xyz, 
+                    T=T, dim=dim, type_mask=type_mask)
+        else:
+            pval = self.get_significance(val=val, array=array, xyz=xyz, 
+                    T=T, dim=dim)            
         # Return the value and the pvalue
         return val, pval
 

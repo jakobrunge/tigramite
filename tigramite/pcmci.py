@@ -150,67 +150,6 @@ class PCMCI(PCMCIbase):
                         verbosity=verbosity)
 
 
-    def _set_sel_links(self, selected_links, tau_min, tau_max,
-                       remove_contemp=False):
-        """Helper function to set and check the selected links argument
-
-        Parameters
-        ----------
-        selected_links : dict or None
-            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}
-            specifying whether only selected links should be tested. If None is
-            passed, all links are returned.
-        tau_mix : int
-            Minimum time delay to test.
-        tau_max : int
-            Maximum time delay to test.
-        remove_contemp : bool
-            Whether contemporaneous links (at lag zero) should be removed.
-
-        Returns
-        -------
-        selected_links : dict
-            Cleaned links.
-        """
-        # Copy and pass into the function
-        _int_sel_links = deepcopy(selected_links)
-        # Set the default selected links if none are set
-        _vars = list(range(self.N))
-        _lags = list(range(-(tau_max), -tau_min + 1, 1))
-        if _int_sel_links is None:
-            _int_sel_links = {}
-            # Set the default as all combinations of the selected variables
-            for j in _vars:
-                _int_sel_links[j] = [(var, -lag) for var in _vars
-                                     for lag in range(tau_min, tau_max + 1) 
-                                     if not (var == j and lag == 0)]
-        else:
-            if remove_contemp:
-                for j in _int_sel_links.keys():
-                    _int_sel_links[j] = [link for link in _int_sel_links[j]
-                                         if link[1] != 0]
-        # Otherwise, check that our selection is sane
-        # Check that the selected links refer to links that are inside the
-        # data range
-        _key_set = set(_int_sel_links.keys())
-        valid_entries = _key_set == set(range(self.N))
-
-        for link in _int_sel_links.values():
-            if isinstance(link, list) and len(link) == 0:
-                continue
-            for var, lag in link:
-                if var not in _vars or lag not in _lags:
-                    valid_entries = False
-
-        if not valid_entries:
-            raise ValueError("selected_links"
-                             " must be dictionary with keys for all [0,...,N-1]"
-                             " variables and contain only links from "
-                             "these variables in range [tau_min, tau_max]")
-
-        # Return the selected links
-        return _int_sel_links
-
     def _iter_conditions(self, parent, conds_dim, all_parents):
         """Yield next condition.
 
@@ -356,7 +295,7 @@ class PCMCI(PCMCIbase):
                 " reached." % max_conds_dim)
 
     def _run_pc_stable_single(self, j,
-                              selected_links=None,
+                              link_assumptions_j=None,
                               tau_min=1,
                               tau_max=1,
                               save_iterations=False,
@@ -369,10 +308,17 @@ class PCMCI(PCMCIbase):
         ----------
         j : int
             Variable index.
-        selected_links : list, optional (default: None)
-            List of form [(0, -1), (3, -2), ...]
-            specifying whether only selected links should be tested. If None is
-            passed, all links are tested.
+        link_assumptions_j : dict
+            list of form {(i, -tau): link_type, ...} specifying
+            assumptions about links. This initializes the graph with 
+            graph[i,j,tau] = link_type. For example, graph[i,j,0] = '-->' implies
+            a link from i to j at lag 0. Valid link types
+            are 'o-o', '-->', '<--'. In addition, the middle mark can be '!'
+            instead of '-'. Then 'o!o' implies that this adjacency must exist
+            and '-!>' that this directed link must exist. Link assumptions
+            need to be consistent, i.e., graph[i,j,0] = '-->' requires 
+            graph[j,i,0] = '<--' and acyclicity must hold. If a link does not
+            appear in the dictionary, it is assumed absent.
         tau_min : int, optional (default: 1)
             Minimum time lag to test. Useful for variable selection in
             multi-step ahead predictions. Must be greater zero.
@@ -417,7 +363,12 @@ class PCMCI(PCMCIbase):
         parents_values = dict()
         # Initialize the parents values from the selected links, copying to
         # ensure this initial argument is unchanged.
-        parents = deepcopy(selected_links)
+        parents = []
+        for itau in link_assumptions_j:
+            link_type = link_assumptions_j[itau]
+            if itau != (j, 0) and link_type not in ['<--', '<!-']:
+                parents.append(itau)
+
         val_min = {(p[0], p[1]): None for p in parents}
         pval_max = {(p[0], p[1]): None for p in parents}
 
@@ -458,7 +409,11 @@ class PCMCI(PCMCIbase):
                     if comb_index >= max_combinations:
                         break
                     # Perform independence test
-                    val, pval = self.cond_ind_test.run_test(X=[parent],
+                    if link_assumptions_j[parent] == '-!>':
+                        val = 1.
+                        pval = 0.
+                    else:
+                        val, pval = self.cond_ind_test.run_test(X=[parent],
                                                     Y=[(j, 0)],
                                                     Z=Z,
                                                     tau_max=tau_max,
@@ -514,13 +469,13 @@ class PCMCI(PCMCIbase):
                 'pval_max': pval_max,
                 'iterations': _nested_to_normal(iterations)}
 
-    def _print_pc_params(self, selected_links, tau_min, tau_max, pc_alpha,
+    def _print_pc_params(self, link_assumptions, tau_min, tau_max, pc_alpha,
                          max_conds_dim, max_combinations):
         """Print the setup of the current pc_stable run.
 
         Parameters
         ----------
-        selected_links : dict or None
+        link_assumptions : dict or None
             Dictionary of form specifying which links should be tested.
         tau_min : int, default: 1
             Minimum time lag to test.
@@ -535,8 +490,8 @@ class PCMCI(PCMCIbase):
         """
         print("\n##\n## Step 1: PC1 algorithm with lagged conditions\n##"
               "\n\nParameters:")
-        if selected_links is not None:
-            print("selected_links = %s" % selected_links)
+        if link_assumptions is not None:
+            print("link_assumptions = %s" % str(link_assumptions))
         print("independence test = %s" % self.cond_ind_test.measure
               + "\ntau_min = %d" % tau_min
               + "\ntau_max = %d" % tau_max
@@ -570,7 +525,7 @@ class PCMCI(PCMCIbase):
             names_parents += "]"
             print("    pc_alpha=%s got score %.4f with parents %s" %
                   (pc_alpha_here, score[iscore], names_parents))
-        print("\n--> optimal pc_alpha for variable %s is %s" %
+        print("\n==> optimal pc_alpha for variable %s is %s" %
               (self.var_names[j], optimal_alpha))
 
     def _check_tau_limits(self, tau_min, tau_max):
@@ -614,6 +569,7 @@ class PCMCI(PCMCIbase):
 
     def run_pc_stable(self,
                       selected_links=None,
+                      link_assumptions=None,
                       tau_min=1,
                       tau_max=1,
                       save_iterations=False,
@@ -627,9 +583,18 @@ class PCMCI(PCMCIbase):
         Parameters
         ----------
         selected_links : dict or None
-            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}
-            specifying whether only selected links should be tested. If None is
-            passed, all links are tested.
+            Deprecated, replaced by link_assumptions
+        link_assumptions : dict
+            Dictionary of form {j:{(i, -tau): link_type, ...}, ...} specifying
+            assumptions about links. This initializes the graph with 
+            graph[i,j,tau] = link_type. For example, graph[i,j,0] = '-->' implies
+            a link from i to j at lag 0. Valid link types
+            are 'o-o', '-->', '<--'. In addition, the middle mark can be '!'
+            instead of '-'. Then 'o!o' implies that this adjacency must exist
+            and '-!>' that this directed link must exist. Link assumptions
+            need to be consistent, i.e., graph[i,j,0] = '-->' requires 
+            graph[j,i,0] = '<--' and acyclicity must hold. If a link does not
+            appear in the dictionary, it is assumed absent.
         tau_min : int, default: 1
             Minimum time lag to test. Useful for multi-step ahead predictions.
             Must be greater zero.
@@ -656,6 +621,9 @@ class PCMCI(PCMCIbase):
             Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}
             containing estimated parents.
         """
+        if selected_links is not None:
+            raise ValueError("selected_links is DEPRECATED, use link_assumptions instead.")
+
         # Create an internal copy of pc_alpha
         _int_pc_alpha = deepcopy(pc_alpha)
         # Check if we are selecting an optimal alpha value
@@ -678,13 +646,15 @@ class PCMCI(PCMCIbase):
         iterations = defaultdict(dict)
 
         if self.verbosity > 0:
-            self._print_pc_params(selected_links, tau_min, tau_max,
+            self._print_pc_params(link_assumptions, tau_min, tau_max,
                               _int_pc_alpha, max_conds_dim,
                               max_combinations)
 
         # Set the selected links
-        _int_sel_links = self._set_sel_links(selected_links, tau_min, tau_max,
-                                             remove_contemp=True)
+        # _int_sel_links = self._set_sel_links(selected_links, tau_min, tau_max,
+        #                                      remove_contemp=True)
+        _int_link_assumptions = self._set_link_assumptions(link_assumptions, 
+            tau_min, tau_max, remove_contemp=True)
 
         # Initialize all parents
         all_parents = dict()
@@ -711,7 +681,7 @@ class PCMCI(PCMCIbase):
                 # Get the results for this alpha value
                 results[pc_alpha_here] = \
                     self._run_pc_stable_single(j,
-                                               selected_links=_int_sel_links[j],
+                                               link_assumptions_j=_int_link_assumptions[j],
                                                tau_min=tau_min,
                                                tau_max=tau_max,
                                                save_iterations=save_iterations,
@@ -929,7 +899,7 @@ class PCMCI(PCMCIbase):
 
     def _iter_indep_conds(self,
                           parents,
-                          selected_links,
+                          _int_link_assumptions,
                           max_conds_py,
                           max_conds_px):
         """Iterate through the conditions dictated by the arguments, yielding
@@ -940,9 +910,8 @@ class PCMCI(PCMCIbase):
         parents : dict
             Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}
             specifying the conditions for each variable.
-        selected_links : dict
-            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}
-            specifying whether only selected links should be tested.
+        _int_link_assumptions : dict
+            ...
         max_conds_py : int
             Maximum number of conditions of Y to use.
         max_conds_px : int
@@ -959,8 +928,13 @@ class PCMCI(PCMCIbase):
             # Get the conditions for node j
             conds_y = parents[j][:max_conds_py]
             # Create a parent list from links seperated in time and by node
-            parent_list = [(i, tau) for i, tau in selected_links[j]
-                           if (i, tau) != (j, 0)]
+            # parent_list = [(i, tau) for i, tau in _int_link_assumptions[j]
+            #                if (i, tau) != (j, 0)]
+            parent_list = []
+            for itau in _int_link_assumptions[j]:
+                link_type = _int_link_assumptions[j][itau]
+                if itau != (j, 0) and link_type not in ['<--', '<!-']:
+                    parent_list.append(itau)
             # Iterate through parents (except those in conditions)
             for cnt, (i, tau) in enumerate(parent_list):
                 # Get the conditions for node i
@@ -982,6 +956,7 @@ class PCMCI(PCMCIbase):
 
     def _run_mci_or_variants(self,
                              selected_links=None,
+                             link_assumptions=None,
                              tau_min=0,
                              tau_max=1,
                              parents=None,
@@ -999,9 +974,18 @@ class PCMCI(PCMCIbase):
         Parameters
         ----------
         selected_links : dict or None
-            Dictionary of form {0: [(3, -2), ...], 1:[], ...}
-            specifying whether only selected links should be tested. If None is
-            passed, all links are tested.
+            Deprecated, replaced by link_assumptions
+        link_assumptions : dict
+            Dictionary of form {j:{(i, -tau): link_type, ...}, ...} specifying
+            assumptions about links. This initializes the graph with 
+            graph[i,j,tau] = link_type. For example, graph[i,j,0] = '-->' implies
+            a link from i to j at lag 0. Valid link types
+            are 'o-o', '-->', '<--'. In addition, the middle mark can be '!'
+            instead of '-'. Then 'o!o' implies that this adjacency must exist
+            and '-!>' that this directed link must exist. Link assumptions
+            need to be consistent, i.e., graph[i,j,0] = '-->' requires 
+            graph[j,i,0] = '<--' and acyclicity must hold. If a link does not
+            appear in the dictionary, it is assumed absent.
         tau_min : int, default: 0
             Minimum time lag to test. Note that zero-lags are undirected.
         tau_max : int, default: 1
@@ -1039,10 +1023,14 @@ class PCMCI(PCMCIbase):
             Only computed if set in cond_ind_test, where also the percentiles
             are set.
         """
+        if selected_links is not None:
+            raise ValueError("selected_links is DEPRECATED, use link_assumptions instead.")
+
         # Check the limits on tau
         self._check_tau_limits(tau_min, tau_max)
         # Set the selected links
-        _int_sel_links = self._set_sel_links(selected_links, tau_min, tau_max)
+        # _int_sel_links = self._set_sel_links(selected_links, tau_min, tau_max)
+        _int_link_assumptions = self._set_link_assumptions(link_assumptions, tau_min, tau_max)
 
         # Set the maximum condition dimension for Y and X
         max_conds_py = self._set_max_condition_dim(max_conds_py,
@@ -1061,7 +1049,7 @@ class PCMCI(PCMCIbase):
 
         # Get the conditions as implied by the input arguments
         for j, i, tau, Z in self._iter_indep_conds(_int_parents,
-                                                   _int_sel_links,
+                                                   _int_link_assumptions,
                                                    max_conds_py,
                                                    max_conds_px):
             # Set X and Y (for clarity of code)
@@ -1070,7 +1058,12 @@ class PCMCI(PCMCIbase):
 
             if val_only is False:
                 # Run the independence tests and record the results
-                val, pval = self.cond_ind_test.run_test(X, Y, Z=Z,
+                if ((i, -tau) in _int_link_assumptions[j] 
+                     and _int_link_assumptions[j][(i, -tau)] in ['-!>', 'o!o']):
+                    val = 1. 
+                    pval = 0.
+                else:
+                    val, pval = self.cond_ind_test.run_test(X, Y, Z=Z,
                                                         tau_max=tau_max,
                                                         # verbosity=
                                                         # self.verbosity
@@ -1098,7 +1091,7 @@ class PCMCI(PCMCIbase):
         if fdr_method != 'none':
             p_matrix = self.get_corrected_pvalues(p_matrix=p_matrix, tau_min=tau_min, 
                                                   tau_max=tau_max, 
-                                                  selected_links=_int_sel_links,
+                                                  link_assumptions=_int_link_assumptions,
                                                   fdr_method=fdr_method)
 
         # Threshold p_matrix to get graph
@@ -1111,7 +1104,7 @@ class PCMCI(PCMCIbase):
         symmetrized_results = self.symmetrize_p_and_val_matrix(
                             p_matrix=p_matrix, 
                             val_matrix=val_matrix, 
-                            selected_links=_int_sel_links,
+                            link_assumptions=_int_link_assumptions,
                             conf_matrix=conf_matrix)
 
         if self.verbosity > 0:
@@ -1134,6 +1127,7 @@ class PCMCI(PCMCIbase):
 
     def run_mci(self,
                 selected_links=None,
+                link_assumptions=None,
                 tau_min=0,
                 tau_max=1,
                 parents=None,
@@ -1153,9 +1147,18 @@ class PCMCI(PCMCIbase):
         Parameters
         ----------
         selected_links : dict or None
-            Dictionary of form {0: [(3, -2), ...], 1:[], ...}
-            specifying whether only selected links should be tested. If None is
-            passed, all links are tested.
+            Deprecated, replaced by link_assumptions
+        link_assumptions : dict
+            Dictionary of form {j:{(i, -tau): link_type, ...}, ...} specifying
+            assumptions about links. This initializes the graph with 
+            graph[i,j,tau] = link_type. For example, graph[i,j,0] = '-->' implies
+            a link from i to j at lag 0. Valid link types
+            are 'o-o', '-->', '<--'. In addition, the middle mark can be '!'
+            instead of '-'. Then 'o!o' implies that this adjacency must exist
+            and '-!>' that this directed link must exist. Link assumptions
+            need to be consistent, i.e., graph[i,j,0] = '-->' requires 
+            graph[j,i,0] = '<--' and acyclicity must hold. If a link does not
+            appear in the dictionary, it is assumed absent.
         tau_min : int, default: 0
             Minimum time lag to test. Note that zero-lags are undirected.
         tau_max : int, default: 1
@@ -1194,6 +1197,10 @@ class PCMCI(PCMCIbase):
             are set.
         """
 
+        if selected_links is not None:
+            raise ValueError("selected_links is DEPRECATED, use link_assumptions instead.")
+
+
         if self.verbosity > 0:
             print("\n##\n## Step 2: MCI algorithm\n##"
                   "\n\nParameters:")
@@ -1204,7 +1211,7 @@ class PCMCI(PCMCIbase):
                   + "\nmax_conds_px = %s" % max_conds_px)
 
         return self._run_mci_or_variants(
-            selected_links=selected_links,
+            link_assumptions=link_assumptions,
             tau_min=tau_min,
             tau_max=tau_max,
             parents=parents,
@@ -1216,6 +1223,7 @@ class PCMCI(PCMCIbase):
 
     def get_lagged_dependencies(self,
                                 selected_links=None,
+                                link_assumptions=None,
                                 tau_min=0,
                                 tau_max=1,
                                 val_only=False,
@@ -1232,9 +1240,18 @@ class PCMCI(PCMCIbase):
         Parameters
         ----------
         selected_links : dict or None
-            Dictionary of form {0: [(3, -2), ...], 1:[], ...}
-            specifying whether only selected links should be tested. If None is
-            passed, all links are tested.
+            Deprecated, replaced by link_assumptions
+        link_assumptions : dict
+            Dictionary of form {j:{(i, -tau): link_type, ...}, ...} specifying
+            assumptions about links. This initializes the graph with 
+            graph[i,j,tau] = link_type. For example, graph[i,j,0] = '-->' implies
+            a link from i to j at lag 0. Valid link types
+            are 'o-o', '-->', '<--'. In addition, the middle mark can be '!'
+            instead of '-'. Then 'o!o' implies that this adjacency must exist
+            and '-!>' that this directed link must exist. Link assumptions
+            need to be consistent, i.e., graph[i,j,0] = '-->' requires 
+            graph[j,i,0] = '<--' and acyclicity must hold. If a link does not
+            appear in the dictionary, it is assumed absent.
         tau_min : int, default: 0
             Minimum time lag to test. Note that zero-lags are undirected.
         tau_max : int, default: 1
@@ -1263,6 +1280,9 @@ class PCMCI(PCMCIbase):
             are set.
         """
 
+        if selected_links is not None:
+            raise ValueError("selected_links is DEPRECATED, use link_assumptions instead.")
+
         if self.verbosity > 0:
             print("\n##\n## Estimating lagged dependencies \n##"
                   "\n\nParameters:")
@@ -1271,7 +1291,7 @@ class PCMCI(PCMCIbase):
                   + "\ntau_max = %d" % tau_max)
 
         return self._run_mci_or_variants(
-            selected_links=selected_links,
+            link_assumptions=link_assumptions,
             tau_min=tau_min,
             tau_max=tau_max,
             parents=None,
@@ -1283,6 +1303,7 @@ class PCMCI(PCMCIbase):
 
     def run_fullci(self,
                    selected_links=None,
+                   link_assumptions=None,
                    tau_min=0,
                    tau_max=1,
                    val_only=False,
@@ -1299,9 +1320,18 @@ class PCMCI(PCMCIbase):
         Parameters
         ----------
         selected_links : dict or None
-            Dictionary of form {0: [(3, -2), ...], 1:[], ...}
-            specifying whether only selected links should be tested. If None is
-            passed, all links are tested.
+            Deprecated, replaced by link_assumptions
+        link_assumptions : dict
+            Dictionary of form {j:{(i, -tau): link_type, ...}, ...} specifying
+            assumptions about links. This initializes the graph with 
+            graph[i,j,tau] = link_type. For example, graph[i,j,0] = '-->' implies
+            a link from i to j at lag 0. Valid link types
+            are 'o-o', '-->', '<--'. In addition, the middle mark can be '!'
+            instead of '-'. Then 'o!o' implies that this adjacency must exist
+            and '-!>' that this directed link must exist. Link assumptions
+            need to be consistent, i.e., graph[i,j,0] = '-->' requires 
+            graph[j,i,0] = '<--' and acyclicity must hold. If a link does not
+            appear in the dictionary, it is assumed absent.
         tau_min : int, default: 0
             Minimum time lag to test. Note that zero-lags are undirected.
         tau_max : int, default: 1
@@ -1330,6 +1360,10 @@ class PCMCI(PCMCIbase):
             are set.
         """
 
+        if selected_links is not None:
+            raise ValueError("selected_links is DEPRECATED, use link_assumptions instead.")
+
+
         if self.verbosity > 0:
             print("\n##\n## Running Tigramite FullCI algorithm\n##"
                   "\n\nParameters:")
@@ -1343,7 +1377,7 @@ class PCMCI(PCMCIbase):
                           for j in range(self.N)])
 
         return self._run_mci_or_variants(
-            selected_links=selected_links,
+            link_assumptions=link_assumptions,
             tau_min=tau_min,
             tau_max=tau_max,
             parents=full_past,
@@ -1355,6 +1389,7 @@ class PCMCI(PCMCIbase):
 
     def run_bivci(self,
                   selected_links=None,
+                  link_assumptions=None,
                   tau_min=0,
                   tau_max=1,
                   val_only=False,
@@ -1371,9 +1406,18 @@ class PCMCI(PCMCIbase):
         Parameters
         ----------
         selected_links : dict or None
-            Dictionary of form {0: [(3, -2), ...], 1:[], ...}
-            specifying whether only selected links should be tested. If None is
-            passed, all links are tested.
+            Deprecated, replaced by link_assumptions
+        link_assumptions : dict
+            Dictionary of form {j:{(i, -tau): link_type, ...}, ...} specifying
+            assumptions about links. This initializes the graph with 
+            graph[i,j,tau] = link_type. For example, graph[i,j,0] = '-->' implies
+            a link from i to j at lag 0. Valid link types
+            are 'o-o', '-->', '<--'. In addition, the middle mark can be '!'
+            instead of '-'. Then 'o!o' implies that this adjacency must exist
+            and '-!>' that this directed link must exist. Link assumptions
+            need to be consistent, i.e., graph[i,j,0] = '-->' requires 
+            graph[j,i,0] = '<--' and acyclicity must hold. If a link does not
+            appear in the dictionary, it is assumed absent.
         tau_min : int, default: 0
             Minimum time lag to test. Note that zero-lags are undirected.
         tau_max : int, default: 1
@@ -1402,6 +1446,9 @@ class PCMCI(PCMCIbase):
             are set.
         """
 
+        if selected_links is not None:
+            raise ValueError("selected_links is DEPRECATED, use link_assumptions instead.")
+
         if self.verbosity > 0:
             print("\n##\n## Running Tigramite BivCI algorithm\n##"
                   "\n\nParameters:")
@@ -1414,7 +1461,7 @@ class PCMCI(PCMCIbase):
                           for j in range(self.N)])
 
         return self._run_mci_or_variants(
-            selected_links=selected_links,
+            link_assumptions=link_assumptions,
             tau_min=tau_min,
             tau_max=tau_max,
             parents=auto_past,
@@ -1425,10 +1472,10 @@ class PCMCI(PCMCIbase):
             fdr_method=fdr_method)
 
     def get_graph_from_pmatrix(self, p_matrix, alpha_level, 
-            tau_min, tau_max, selected_links=None):
+            tau_min, tau_max, link_assumptions=None):
         """Construct graph from thresholding the p_matrix at an alpha-level.
 
-        Allows to take into account selected_links.
+        Allows to take into account link_assumptions.
 
         Parameters
         ----------
@@ -1442,25 +1489,37 @@ class PCMCI(PCMCIbase):
             Minimum time delay to test.
         tau_max : int
             Maximum time delay to test.
-        selected_links : dict or None
-            Dictionary of form {0: [(3, -2), ...], 1:[], ...}
-            specifying whether only selected links should be tested. If None is
-            passed, all links are tested.
-
+        link_assumptions : dict or None
+            Dictionary of form {j:{(i, -tau): link_type, ...}, ...} specifying
+            assumptions about links. This initializes the graph with 
+            graph[i,j,tau] = link_type. For example, graph[i,j,0] = '-->' implies
+            a link from i to j at lag 0. Valid link types
+            are 'o-o', '-->', '<--'. In addition, the middle mark can be '!'
+            instead of '-'. Then 'o!o' implies that this adjacency must exist
+            and '-!>' that this directed link must exist. Link assumptions
+            need to be consistent, i.e., graph[i,j,0] = '-->' requires 
+            graph[j,i,0] = '<--' and acyclicity must hold. If a link does not
+            appear in the dictionary, it is assumed absent.
         Returns
         -------
         graph : array of shape [N, N, tau_max+1]
             Causal graph, see description above for interpretation.
         """  
 
-        _int_sel_links = self._set_sel_links(selected_links, tau_min, tau_max)
+        # _int_sel_links = self._set_sel_links(selected_links, tau_min, tau_max)
+        _int_link_assumptions = self._set_link_assumptions(link_assumptions, tau_min, tau_max)
 
-        if selected_links != None:
+        if link_assumptions != None:
             # Create a mask for these values
             mask = np.zeros((self.N, self.N, tau_max + 1), dtype='bool')
-            for node1, links_ in _int_sel_links.items():
-                for node2, lag in links_:
-                    mask[node2, node1, abs(lag)] = True
+            # for node1, links_ in _int_sel_links.items():
+            #     for node2, lag in links_:
+            #         mask[node2, node1, abs(lag)] = True
+            for j, links_ in _int_link_assumptions.items():
+                for i, lag in links_:
+                    if _int_link_assumptions[j][(i, lag)] not in ["<--", "<!-"]:
+                        mask[i, j, abs(lag)] = True
+
         else:
             # Create a mask for these values
             mask = np.ones((self.N, self.N, tau_max + 1), dtype='bool')
@@ -1649,6 +1708,7 @@ class PCMCI(PCMCIbase):
 
     def run_pcmci(self,
                   selected_links=None,
+                  link_assumptions=None,
                   tau_min=0,
                   tau_max=1,
                   save_iterations=False,
@@ -1759,9 +1819,18 @@ class PCMCI(PCMCIbase):
         Parameters
         ----------
         selected_links : dict or None
-            Dictionary of form {0: [(3, -2), ...], 1:[], ...}
-            specifying whether only selected links should be tested. If None is
-            passed, all links are tested.
+            Deprecated, replaced by link_assumptions
+        link_assumptions : dict
+            Dictionary of form {j:{(i, -tau): link_type, ...}, ...} specifying
+            assumptions about links. This initializes the graph with 
+            graph[i,j,tau] = link_type. For example, graph[i,j,0] = '-->' implies
+            a link from i to j at lag 0. Valid link types
+            are 'o-o', '-->', '<--'. In addition, the middle mark can be '!'
+            instead of '-'. Then 'o!o' implies that this adjacency must exist
+            and '-!>' that this directed link must exist. Link assumptions
+            need to be consistent, i.e., graph[i,j,0] = '-->' requires 
+            graph[j,i,0] = '<--' and acyclicity must hold. If a link does not
+            appear in the dictionary, it is assumed absent.
         tau_min : int, optional (default: 0)
             Minimum time lag to test. Note that zero-lags are undirected.
         tau_max : int, optional (default: 1)
@@ -1806,8 +1875,12 @@ class PCMCI(PCMCIbase):
 
         """
 
+        if selected_links is not None:
+            raise ValueError("selected_links is DEPRECATED, use link_assumptions instead.")
+
+
         # Get the parents from run_pc_stable
-        all_parents = self.run_pc_stable(selected_links=selected_links,
+        all_parents = self.run_pc_stable(link_assumptions=link_assumptions,
                                          tau_min=tau_min,
                                          tau_max=tau_max,
                                          save_iterations=save_iterations,
@@ -1815,7 +1888,7 @@ class PCMCI(PCMCIbase):
                                          max_conds_dim=max_conds_dim,
                                          max_combinations=max_combinations)
         # Get the results from run_mci, using the parents as the input
-        results = self.run_mci(selected_links=selected_links,
+        results = self.run_mci(link_assumptions=link_assumptions,
                                tau_min=tau_min,
                                tau_max=tau_max,
                                parents=all_parents,
@@ -1836,6 +1909,7 @@ class PCMCI(PCMCIbase):
 
     def run_pcmciplus(self,
                       selected_links=None,
+                      link_assumptions=None,
                       tau_min=0,
                       tau_max=1,
                       pc_alpha=0.01,
@@ -2000,9 +2074,18 @@ class PCMCI(PCMCIbase):
         Parameters
         ----------
         selected_links : dict or None
-            Dictionary of form {0: [(3, 0), (0, -1), ...], 1:[], ...}
-            specifying whether only selected links should be tested. If None is
-            passed, all links are tested.
+            Deprecated, replaced by link_assumptions
+        link_assumptions : dict
+            Dictionary of form {j:{(i, -tau): link_type, ...}, ...} specifying
+            assumptions about links. This initializes the graph with 
+            graph[i,j,tau] = link_type. For example, graph[i,j,0] = '-->' implies
+            a link from i to j at lag 0. Valid link types
+            are 'o-o', '-->', '<--'. In addition, the middle mark can be '!'
+            instead of '-'. Then 'o!o' implies that this adjacency must exist
+            and '-!>' that this directed link must exist. Link assumptions
+            need to be consistent, i.e., graph[i,j,0] = '-->' requires 
+            graph[j,i,0] = '<--' and acyclicity must hold. If a link does not
+            appear in the dictionary, it is assumed absent.
         tau_min : int, optional (default: 0)
             Minimum time lag to test.
         tau_max : int, optional (default: 1)
@@ -2056,11 +2139,14 @@ class PCMCI(PCMCIbase):
             'conservative' rules, see paper for details.
         """
 
+        if selected_links is not None:
+            raise ValueError("selected_links is DEPRECATED, use link_assumptions instead.")
+
         # Check if pc_alpha is chosen to optimze over a list
         if pc_alpha is None or isinstance(pc_alpha, (list, tuple, np.ndarray)):
             # Call optimizer wrapper around run_pcmciplus()
             return self._optimize_pcmciplus_alpha(
-                        selected_links=selected_links,
+                        link_assumptions=link_assumptions,
                         tau_min=tau_min,
                         tau_max=tau_max,
                         pc_alpha=pc_alpha,
@@ -2086,10 +2172,11 @@ class PCMCI(PCMCIbase):
         # Check the limits on tau
         self._check_tau_limits(tau_min, tau_max)
         # Set the selected links
-        _int_sel_links = self._set_sel_links(selected_links, tau_min, tau_max)
+        # _int_sel_links = self._set_sel_links(selected_links, tau_min, tau_max)
+        _int_link_assumptions = self._set_link_assumptions(link_assumptions, tau_min, tau_max)
 
         # Step 1: Get a superset of lagged parents from run_pc_stable
-        lagged_parents = self.run_pc_stable(selected_links=selected_links,
+        lagged_parents = self.run_pc_stable(link_assumptions=link_assumptions,
                                             tau_min=tau_min,
                                             tau_max=tau_max,
                                             pc_alpha=pc_alpha,
@@ -2104,8 +2191,8 @@ class PCMCI(PCMCIbase):
             print("\n##\n## Step 2: PC algorithm with contemp. conditions "
                   "and MCI tests\n##"
                   "\n\nParameters:")
-            if selected_links is not None:
-                print("\nselected_links = %s" % _int_sel_links)
+            if link_assumptions is not None:
+                print("\nlink_assumptions = %s" % str(_int_link_assumptions))
             print("\nindependence test = %s" % self.cond_ind_test.measure
                   + "\ntau_min = %d" % tau_min
                   + "\ntau_max = %d" % tau_max
@@ -2129,19 +2216,25 @@ class PCMCI(PCMCIbase):
         if reset_lagged_links:
             # Run PCalg on full graph, ignoring that some lagged links
             # were determined as non-significant in PC1 step
-            links_for_pc = deepcopy(_int_sel_links)
+            links_for_pc = deepcopy(_int_link_assumptions)
         else:
             # Run PCalg only on lagged parents found with PC1 
             # plus all contemporaneous links
-            links_for_pc = deepcopy(lagged_parents)
+            links_for_pc = {}  #deepcopy(lagged_parents)
             for j in range(self.N):
-                for link in _int_sel_links[j]:
+                links_for_pc[j] = {}
+                for parent in lagged_parents[j]:
+                    if _int_link_assumptions[j][parent] in ['-!>', '-->']:
+                        links_for_pc[j][parent] = _int_link_assumptions[j][parent]
+                # Add Contemporaneous links
+                for link in _int_link_assumptions[j]:
                     i, tau = link
+                    link_type = _int_link_assumptions[j][link]
                     if abs(tau) == 0:
-                        links_for_pc[j].append((i, 0))
+                        links_for_pc[j][(i, 0)] = link_type
 
         results = self.run_pcalg(
-            selected_links=links_for_pc,
+            link_assumptions=links_for_pc,
             pc_alpha=pc_alpha,
             tau_min=tau_min,
             tau_max=tau_max,
@@ -2161,9 +2254,10 @@ class PCMCI(PCMCIbase):
         for j in range(self.N):
             for link in links_for_pc[j]:
                 i, tau = link
-                p_matrix[i, j, abs(tau)] = results['p_matrix'][i, j, abs(tau)]
-                val_matrix[i, j, abs(tau)] = results['val_matrix'][i, j, 
-                                                                   abs(tau)]
+                if links_for_pc[j][link] not in ['<--', '<!-']:
+                    p_matrix[i, j, abs(tau)] = results['p_matrix'][i, j, abs(tau)]
+                    val_matrix[i, j, abs(tau)] = results['val_matrix'][i, j, 
+                                                                       abs(tau)]
 
         # Update p_matrix and val_matrix for indices of symmetrical links
         p_matrix[:, :, 0] = results['p_matrix'][:, :, 0]
@@ -2180,7 +2274,7 @@ class PCMCI(PCMCIbase):
         if fdr_method != 'none':
             p_matrix = self.get_corrected_pvalues(p_matrix=p_matrix, tau_min=tau_min, 
                                                   tau_max=tau_max, 
-                                                  selected_links=_int_sel_links,
+                                                  link_assumptions=_int_link_assumptions,
                                                   fdr_method=fdr_method)
 
         # Store the parents in the pcmci member
@@ -2199,12 +2293,21 @@ class PCMCI(PCMCIbase):
         self.results = return_dict
         return return_dict
 
-    def run_pcalg(self, selected_links=None, pc_alpha=0.01, tau_min=0,
-                  tau_max=1, max_conds_dim=None, max_combinations=None,
-                  lagged_parents=None, max_conds_py=None, max_conds_px=None,
-                  max_conds_px_lagged=None,
-                  mode='standard', contemp_collider_rule='majority',
-                  conflict_resolution=True):
+    def run_pcalg(self, 
+                    selected_links=None, 
+                    link_assumptions=None,
+                    pc_alpha=0.01, 
+                    tau_min=0,
+                    tau_max=1, 
+                    max_conds_dim=None, 
+                    max_combinations=None,
+                    lagged_parents=None, 
+                    max_conds_py=None, 
+                    max_conds_px=None,
+                    max_conds_px_lagged=None,
+                    mode='standard', 
+                    contemp_collider_rule='majority',
+                    conflict_resolution=True):
 
         """Runs PC algorithm for time-lagged and contemporaneous causal
         discovery for time series.
@@ -2216,9 +2319,18 @@ class PCMCI(PCMCIbase):
         Parameters
         ----------
         selected_links : dict or None
-            Dictionary of form {0: [(3, 0), (0, -1), ...], 1:[], ...}
-            specifying whether only selected links should be tested. If None is
-            passed, all links are tested.
+            Deprecated, replaced by link_assumptions
+        link_assumptions : dict
+            Dictionary of form {j:{(i, -tau): link_type, ...}, ...} specifying
+            assumptions about links. This initializes the graph with 
+            graph[i,j,tau] = link_type. For example, graph[i,j,0] = '-->' implies
+            a link from i to j at lag 0. Valid link types
+            are 'o-o', '-->', '<--'. In addition, the middle mark can be '!'
+            instead of '-'. Then 'o!o' implies that this adjacency must exist
+            and '-!>' that this directed link must exist. Link assumptions
+            need to be consistent, i.e., graph[i,j,0] = '-->' requires 
+            graph[j,i,0] = '<--' and acyclicity must hold. If a link does not
+            appear in the dictionary, it is assumed absent.
         lagged_parents : dictionary
             Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing
             additional conditions for each CI test. As part of PCMCIplus
@@ -2273,6 +2385,9 @@ class PCMCI(PCMCIbase):
         """
         # TODO: save_iterations
 
+        if selected_links is not None:
+            raise ValueError("selected_links is DEPRECATED, use link_assumptions instead.")
+
         # Sanity checks
         if pc_alpha is None:
             raise ValueError("pc_alpha=None not supported in PC algorithm, "
@@ -2285,7 +2400,8 @@ class PCMCI(PCMCIbase):
         # Check the limits on tau
         self._check_tau_limits(tau_min, tau_max)
         # Set the selected links
-        _int_sel_links = self._set_sel_links(selected_links, tau_min, tau_max)
+        # _int_sel_links = self._set_sel_links(selected_links, tau_min, tau_max)
+        _int_link_assumptions = self._set_link_assumptions(link_assumptions, tau_min, tau_max)
 
         if max_conds_dim is None:
             if mode == 'standard':
@@ -2297,21 +2413,23 @@ class PCMCI(PCMCIbase):
         if max_combinations is None:
             max_combinations = np.inf
 
-        # Initialize initial graph from selected_links
-        initial_graph = np.zeros((self.N, self.N, tau_max + 1), dtype='<U3')
-        initial_graph[:] = ""
-        for j in range(self.N):
-            for link in _int_sel_links[j]:
-                i, tau = link
-                if tau == 0:
-                    if (j, 0) in _int_sel_links[i]:
-                        initial_graph[i, j, abs(tau)] = "o-o"
-                        initial_graph[j, i, abs(tau)] = "o-o"
-                    else:
-                        initial_graph[i, j, abs(tau)] = "-->"
-                        initial_graph[j, i, abs(tau)] = "<--"
-                else:
-                    initial_graph[i, j, abs(tau)] = "-->"
+        # # Initialize initial graph from selected_links
+        # initial_graph = np.zeros((self.N, self.N, tau_max + 1), dtype='<U3')
+        # initial_graph[:] = ""
+        # for j in range(self.N):
+        #     for link in _int_sel_links[j]:
+        #         i, tau = link
+        #         if tau == 0:
+        #             if (j, 0) in _int_sel_links[i]:
+        #                 initial_graph[i, j, abs(tau)] = "o-o"
+        #                 initial_graph[j, i, abs(tau)] = "o-o"
+        #             else:
+        #                 initial_graph[i, j, abs(tau)] = "-->"
+        #                 initial_graph[j, i, abs(tau)] = "<--"
+        #         else:
+        #             initial_graph[i, j, abs(tau)] = "-->"
+
+        initial_graph = self._dict_to_graph(_int_link_assumptions, tau_max=tau_max)
 
         skeleton_results = self._pcalg_skeleton(
             initial_graph=initial_graph,
@@ -2329,6 +2447,11 @@ class PCMCI(PCMCIbase):
 
         skeleton_graph = skeleton_results['graph']
         sepset = skeleton_results['sepset']
+
+        # Now change assumed links mark
+        skeleton_graph[skeleton_graph=='o!o'] == 'o-o'
+        skeleton_graph[skeleton_graph=='-!>'] == '-->'
+        skeleton_graph[skeleton_graph=='<!-'] == '<--'
 
         colliders_step_results = self._pcalg_colliders(
             graph=skeleton_graph,
@@ -2357,7 +2480,7 @@ class PCMCI(PCMCIbase):
         symmetrized_results = self.symmetrize_p_and_val_matrix(
                             p_matrix=skeleton_results['p_matrix'], 
                             val_matrix=skeleton_results['val_matrix'], 
-                            selected_links=_int_sel_links,
+                            link_assumptions=_int_link_assumptions,
                             conf_matrix=None)
 
         # Convert numerical graph matrix to string
@@ -2450,12 +2573,14 @@ class PCMCI(PCMCIbase):
         return results
 
 
-    def _run_pcalg_test(self, i, abstau, j, S, lagged_parents, max_conds_py,
+    def _run_pcalg_test(self, graph, i, abstau, j, S, lagged_parents, max_conds_py,
                         max_conds_px, max_conds_px_lagged, tau_max):
         """MCI conditional independence tests within PCMCIplus or PC algorithm.
 
         Parameters
         ----------
+        graph : array
+            ...
         i : int
             Variable index.
         abstau : int
@@ -2509,7 +2634,12 @@ class PCMCI(PCMCIbase):
         # Remove overlapping nodes between conds_x_lagged and conds_y
         Z += [node for node in conds_x_lagged if node not in Z]
 
-        val, pval = self.cond_ind_test.run_test(X=[(i, -abstau)], Y=[(j, 0)],
+        # If middle mark is !, then set pval=0
+        if graph[i,j,abstau] != "" and graph[i,j,abstau][1] == '!':
+            val = 1. 
+            pval = 0.
+        else:
+            val, pval = self.cond_ind_test.run_test(X=[(i, -abstau)], Y=[(j, 0)],
                                                 Z=Z, tau_max=tau_max,
                                                 # verbosity=self.verbosity
                                                 )
@@ -2715,7 +2845,7 @@ class PCMCI(PCMCIbase):
                             break
 
                         # Run MCI test
-                        val, pval, Z = self._run_pcalg_test(
+                        val, pval, Z = self._run_pcalg_test(graph,
                             i, abstau, j, S, lagged_parents, max_conds_py,
                             max_conds_px, max_conds_px_lagged, tau_max)
 
@@ -2995,7 +3125,7 @@ class PCMCI(PCMCIbase):
                 # Test which neighbor subsets separate i and j
                 neighbor_sepsets = []
                 for iss, S in enumerate(neighbor_subsets):
-                    val, pval, Z = self._run_pcalg_test(
+                    val, pval, Z = self._run_pcalg_test(graph,
                         i, abs(tau), j, S, lagged_parents, max_conds_py,
                         max_conds_px, max_conds_px_lagged, tau_max)
 
@@ -3481,7 +3611,7 @@ class PCMCI(PCMCIbase):
         return graph_new
 
     def _optimize_pcmciplus_alpha(self,
-                      selected_links,
+                      link_assumptions,
                       tau_min,
                       tau_max,
                       pc_alpha,
@@ -3529,7 +3659,7 @@ class PCMCI(PCMCIbase):
                                                       score.shape[0]))
             # Get the results for this alpha value
             results[pc_alpha_here] = \
-                self.run_pcmciplus(selected_links=selected_links,
+                self.run_pcmciplus(link_assumptions=link_assumptions,
                                     tau_min=tau_min,
                                     tau_max=tau_max,
                                     pc_alpha=pc_alpha_here,
@@ -3605,8 +3735,8 @@ if __name__ == '__main__':
 
     # 1. Illustration of
     links_coeffs = {
-             0: [((0, -1), 0., lin_f)],
-             1: [((1, -1), 0., lin_f), ((0, -1), 0.7, lin_f)],
+             0: [((0, -1), 0.5, lin_f)],
+             1: [((1, -1), 0.5, lin_f), ((0, -1), 0.7, lin_f)],
              # 2: [((2, -1), 0.5, lin_f), ((1, 0), 0.2, lin_f)],
              # 3: [((3, -1), 0.5, lin_f), ((2, 0), 0.3, lin_f)],
              }
@@ -3615,8 +3745,8 @@ if __name__ == '__main__':
                         T=T, seed=5)
 
     links_coeffs = {
-             0: [((0, -1), 0., lin_f)],
-             1: [((1, -1), 0., lin_f), ((0, -1), -0.7, lin_f)],
+             0: [((0, -1), 0.5, lin_f)],
+             1: [((1, -1), 0.5, lin_f), ((0, -1), -0.7, lin_f)],
              # 2: [((2, -1), 0.5, lin_f), ((1, 0), 0.2, lin_f)],
              # 3: [((3, -1), 0.5, lin_f), ((2, 0), 0.3, lin_f)],
              }
@@ -3646,7 +3776,12 @@ if __name__ == '__main__':
 
     results = pcmci.run_sliding_window_of(
         window_step=499, window_length=500,
-        method='run_pcmciplus', method_args={'tau_max':1})
+        method='run_pcmciplus', method_args={'tau_max':1, 
+        'link_assumptions':{
+        0: {(0, -1): '-->'},
+        1: {(1, -1): '-->', (0, -1): '-!>'},
+        }
+        })
 
     # tp.plot_graph(results['graph'])
     print(multidata[0].shape, multidata[1].shape)
