@@ -14,7 +14,11 @@ from tigramite.toymodels import structural_causal_processes as toys
 
 
 def generate_linear_model_from_data(dataframe, parents, tau_max, realizations=100, 
-                generate_noise_from='covariance',  verbosity=0):
+                generate_noise_from='covariance',  
+                model_params=None,
+                data_transform=None,
+                mask_type='y',
+                verbosity=0):
     """
     Fits a (contemporaneous and lagged) linear SCM to data, computes
     residuals, and then generates surrogate realizations with noise drawn
@@ -35,6 +39,8 @@ def generate_linear_model_from_data(dataframe, parents, tau_max, realizations=10
 
     assert np.any(np.isnan(dataframe.values[0])) == False
 
+    if model_params is None:
+        model_params = {}
 
     N = dataframe.N
     T = dataframe.T[0]
@@ -46,9 +52,9 @@ def generate_linear_model_from_data(dataframe, parents, tau_max, realizations=10
     # Build the model
     model = Models(
                     dataframe=dataframe,
-                    model=LinearRegression(),
-                    data_transform=None, #data_transform,
-                    mask_type='y',
+                    model=LinearRegression(**model_params),
+                    data_transform=data_transform, #data_transform,
+                    mask_type=mask_type,
                     verbosity=0)
     links_coeffs = {}
     for j in range(N):
@@ -108,7 +114,7 @@ def generate_linear_model_from_data(dataframe, parents, tau_max, realizations=10
     ## Construct linear Gaussian structural causal model with this noise structure and generate many realizations with same sample size as data
     transient_fraction = 0.2
     size = T + int(math.floor(transient_fraction*T))
-    datasets = {}
+    # datasets = {}
     for r in range(realizations):
         if generate_noise_from == 'covariance':
             noises = np.random.multivariate_normal(mean=mean, cov=cov, size=size)
@@ -116,11 +122,14 @@ def generate_linear_model_from_data(dataframe, parents, tau_max, realizations=10
             draw = np.random.randint(0, len(overlapping_residuals), size)
             noises = overlapping_residuals[draw]
 
-        datasets[r] = toys.structural_causal_process(links=links_coeffs, noises=noises, T=T, 
+        dataset = toys.structural_causal_process(links=links_coeffs, noises=noises, T=T, 
                                                      transient_fraction=transient_fraction)[0]
-        if np.any(np.isinf(datasets[r])):
+        if np.any(np.isinf(dataset)):
             raise ValueError("Infinite data")
-    return datasets
+
+        yield dataset
+
+    return self   #datasets
 
 
 if __name__ == '__main__':

@@ -30,9 +30,7 @@ except Exception as e:
 from tigramite.data_processing import DataFrame
 from tigramite.pcmci import PCMCI
 
-### remove!!!
-from matplotlib import pyplot as plt
-from scipy.stats import kde
+from tigramite.toymodels import surrogate_generator
 
 class Models():
     """Base class for time series models.
@@ -592,6 +590,15 @@ class LinearMediation(Models):
         self.phi = None
         self.psi = None
         self.all_psi_k = None
+        self.dataframe = dataframe
+        self.mask_type = mask_type
+        self.data_transform = data_transform
+        if model_params is None:
+            self.model_params = {}
+        else:
+            self.model_params = model_params
+
+        self.bootstrap_available = False
 
         # Build the model using the parameters
         if model_params is None:
@@ -630,7 +637,12 @@ class LinearMediation(Models):
         self.psi = self._get_psi(self.phi)
         self.all_psi_k = self._get_all_psi_k(self.phi)
 
-    def fit_model_bootstrap(self, all_parents, tau_max=None, boot_samples=100):
+        self.all_parents = all_parents
+        self.tau_max = tau_max
+
+    def fit_model_bootstrap(self, 
+            generate_noise_from='covariance',
+            realizations=100):
         """Fits boostrap-versions of Phi, Psi, etc.
 
         Uses residual-based bootstrap procedure as described in:
@@ -639,29 +651,124 @@ class LinearMediation(Models):
             complex spatio-temporal systems.
             Nature Communications, 6, 8502. http://doi.org/10.1038/ncomms9502
 
+        Requires to first apply fit_model(...)
+
         Parameters
         ----------
-        all_parents : dictionary
-            Dictionary of form {0:[(0, -1), (3, 0), ...], 1:[], ...} containing
-            the parents estimated with PCMCI.
-        tau_max : int, optional (default: None)
-            Maximum time lag. If None, the maximum lag in all_parents is used.
         boot_samples : int
             Number of boostrap realizations.
         """
 
         # from tigramite.toymodels import surrogate_generator 
+        model_data_generator = surrogate_generator.generate_linear_model_from_data(
+                    dataframe=self.dataframe, 
+                    mask_type=self.mask_type,
+                    data_transform=self.data_transform,
+                    model_params=self.model_params,
+                    parents=self.all_parents, 
+                    tau_max=self.tau_max, 
+                    realizations=realizations, 
+                    generate_noise_from=generate_noise_from,  
+                    verbosity=0)
 
 
-        # Fit the model using the base class
-        self.fit_results = self.get_fit(all_parents=all_parents,
-                                        selected_variables=None,
-                                        tau_max=tau_max)
-        # Cache the results in the member variables
-        coeffs = self.get_coefs()
-        self.phi = self._get_phi(coeffs)
-        self.psi = self._get_psi(self.phi)
-        self.all_psi_k = self._get_all_psi_k(self.phi)
+        self.phi_boots = np.empty((realizations,) + self.phi.shape)
+        self.psi_boots = np.empty((realizations,) + self.psi.shape)
+        self.all_psi_k_boots = np.empty((realizations,) + self.all_psi_k.shape)
+
+        for r in range(realizations):
+            data = next(model_data_generator)
+
+            dataframe_here = deepcopy(self.dataframe)
+            dataframe_here.values[0] = data
+            model = Models(dataframe=dataframe_here,
+                           model=sklearn.linear_model.LinearRegression(**self.model_params),
+                           data_transform=self.data_transform,
+                           mask_type=self.mask_type,
+                           verbosity=0)
+
+            model.get_fit(all_parents=self.all_parents,
+                           tau_max=self.tau_max)
+
+            # Cache the results in the member variables
+            coeffs = model.get_coefs()
+            phi = self._get_phi(coeffs)
+            self.phi_boots[r] = phi
+            self.psi_boots[r] = self._get_psi(phi)
+            self.all_psi_k_boots[r] = self._get_all_psi_k(phi)
+
+        self.bootstrap_available = True
+
+        return self
+
+    def get_bootstrap_of(self, function, function_args, conf_lev=0.9):
+        """Applies bootstrap-versions of Phi, Psi, etc. to any function in 
+        this class.
+
+        Parameters
+        ----------
+        function : string
+            Valid function from LinearMediation class
+        function_args : dict
+            Optional function arguments.
+        conf_lev : float
+            Confidence interval.
+
+        Returns
+        -------
+        Upper/Lower confidence interval of function.
+        """
+
+        valid_functions = [
+            'get_coeff',
+            'get_ce',
+            'get_ce_max',
+            'get_joint_ce',
+            'get_joint_ce_matrix',
+            'get_mce',
+            'get_joint_mce',
+            'get_ace',
+            'get_all_ace',
+            'get_acs',
+            'get_all_acs',
+            'get_amce',
+            'get_all_amce',
+            'get_val_matrix',
+            ]
+
+        if function not in valid_functions:
+            raise ValueError("function must be in %s" %valid_functions)
+
+        realizations = self.phi_boots.shape[0]
+
+        original_phi = deepcopy(self.phi)
+        original_psi = deepcopy(self.psi)
+        original_all_psi_k = deepcopy(self.all_psi_k)
+
+        for r in range(realizations):
+            self.phi = self.phi_boots[r]
+            self.psi = self.psi_boots[r]
+            self.all_psi_k = self.all_psi_k_boots[r]
+
+            boot_effect = getattr(self, function)(**function_args)
+
+            if r == 0:
+                bootstrap_result = np.empty((realizations, ) + boot_effect.shape)
+
+            bootstrap_result[r] = boot_effect
+
+        # Confidence intervals for val_matrix; interval is two-sided
+        c_int = (1. - (1. - conf_lev)/2.)
+        confidence_interval = np.percentile(
+                bootstrap_result, axis=0,
+                q = [100*(1. - c_int), 100*c_int])
+
+        self.phi = original_phi
+        self.psi = original_psi 
+        self.all_psi_k = original_all_psi_k 
+
+        return confidence_interval
+
 
     def _check_sanity(self, X, Y, k=None):
         """Checks validity of some parameters."""
@@ -1699,15 +1806,15 @@ if __name__ == '__main__':
     from tigramite.independence_tests import ParCorr
     import tigramite.plotting as tp
 
-    np.random.seed(6)
+    # np.random.seed(6)
 
     def lin_f(x): return x
  
     T = 10000
     
     links = {0: [((0, -1), 0.5, lin_f)],
-             1: [((1, -1), 0.5, lin_f), ((0, 0), 0.5, lin_f)],
-             2: [((2, -1), 0.5, lin_f), ((1, 0), 0.5, lin_f)]
+             1: [((1, -1), 0.5, lin_f), ((0, 0), 0.8, lin_f)],
+             2: [((2, -1), 0.5, lin_f), ((1, 0), 0.8, lin_f)]
              }
     # noises = [np.random.randn for j in links.keys()]
     data, nonstat = toys.structural_causal_process(links, T=T, noises=None, seed=7)
@@ -1717,11 +1824,16 @@ if __name__ == '__main__':
     med = LinearMediation(dataframe=dataframe, 
         data_transform=None)
     med.fit_model(all_parents=true_parents, tau_max=2)
+    med.fit_model_bootstrap()
 
-    print(med.get_val_matrix())
+    # print(med.get_val_matrix())
 
-    # # print (med.get_coeff(i=0, tau=-2, j=1))
-    print (med.get_ce(i=0, tau=1,  j=2))
+    print (med.get_joint_ce_matrix(i=0,  j=2))
+    print(med.get_bootstrap_of(function='get_joint_ce_matrix', 
+        function_args={'i':0,   'j':2}, conf_lev=0.9))
+
+    # print (med.get_coeff(i=0, tau=-2, j=1))
+
     # # print (med.get_ce_max(i=0, j=2))
     # print (med.get_mce(i=0, tau=-2, k=1, j=2))
     # print(med.get_joint_ce(i=0, j=2))
