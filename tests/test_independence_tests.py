@@ -332,12 +332,12 @@ def test_parcorr(par_corr, data_sample_a):
     # Generate par_corr_wls test instances
     # test ParCorr-WLS on homoskedastic data
     # sig,      recycle, confidence, std_matrix, expert_knowledge
-    ('analytic', True, 'bootstrap', None, "homoskedasticity", False),
-    ('analytic', True, 'bootstrap', np.ones((1000, 2)), "homoskedasticity", False),
+    # ('analytic', True, 'bootstrap', None, "homoskedasticity", False),
+    # ('analytic', True, 'bootstrap', np.ones((1000, 2)), "homoskedasticity", False),
     ('analytic', False, 'bootstrap', None, "homoskedasticity", False),
     ('shuffle_test', False, 'bootstrap', None, "homoskedasticity", False),
     ('fixed_thres', False, 'bootstrap', None, "homoskedasticity", False),
-    ('analytic', True, 'bootstrap', None, "homoskedasticity", True),
+    # ('analytic', True, 'bootstrap', None, "homoskedasticity", True),
 ])
 
 def par_corr_wls(request):
@@ -356,7 +356,6 @@ def par_corr_wls(request):
                       conf_lev=0.9,
                       conf_samples=10000,
                       conf_blocklength=1,
-                      recycle_residuals=recycle,
                       verbosity=0,
                       robustify=robustify)
 
@@ -364,8 +363,8 @@ def par_corr_wls(request):
     # Generate par_corr test instances
     # basically test ParCorr-WLS on homoskedastic data
     # sig,      recycle, confidence, expert_knowledge, robustify
-    ('analytic', True, 'bootstrap', None, {0: [(2, -1)], 1: [(2, -1)]}, False),
-    ('analytic', True, 'bootstrap', None, {0: [(2, -1)], 1: [(2, -1)]}, True),
+    ('analytic', False, 'bootstrap', None, {0: [(2, -1)], 1: [(2, -1)]}, False),
+    ('analytic', False, 'bootstrap', None, {0: [(2, -1)], 1: [(2, -1)]}, True),
 ])
 
 def par_corr_wls_expert(request):
@@ -383,7 +382,7 @@ def par_corr_wls_expert(request):
                       conf_lev=0.9,
                       conf_samples=10000,
                       conf_blocklength=1,
-                      recycle_residuals=recycle,
+                      # recycle_residuals=recycle,
                       verbosity=0,
                       robustify=robustify)
 
@@ -412,7 +411,7 @@ def par_corr_wls_expert_time(request):
                       conf_lev=0.9,
                       conf_samples=10000,
                       conf_blocklength=1,
-                      recycle_residuals=recycle,
+                      # recycle_residuals=recycle,
                       verbosity=0,
                       robustify=robustify)
 

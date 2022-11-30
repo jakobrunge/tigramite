@@ -280,7 +280,7 @@ def plot_timeseries(
     label_fontsize=10,
     color='black',
     alpha=1.,
-    tick_label_size=5,
+    tick_label_size=6,
     selected_dataset=0,
     adjust_plot=True,
 ):
@@ -317,7 +317,7 @@ def plot_timeseries(
         Skip every other tickmark.
     label_fontsize : int, optional (default: 10)
         Fontsize of variable labels.
-    tick_label_size : int, optional (default: 5)
+    tick_label_size : int, optional (default: 6)
         Fontsize of tick labels.
     color : str, optional (default: black)
         Line color.
@@ -456,7 +456,7 @@ class setup_matrix:
     legend_width : float, optional (default: 0.15)
         Fraction of horizontal figure space to allocate right of plot for
         legend.
-    tick_label_size : int, optional (default: 5)
+    tick_label_size : int, optional (default: 6)
         Fontsize of tick labels.
     x_base : float, optional (default: 1.)
         x-tick intervals to show.
@@ -485,7 +485,7 @@ class setup_matrix:
         legend_fontsize=10,
         x_base=1.0,
         y_base=0.5,
-        tick_label_size=5,
+        tick_label_size=6,
         plot_gridlines=False,
         lag_units="",
         lag_array=None,

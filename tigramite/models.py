@@ -506,7 +506,7 @@ class LinearMediation(Models):
 
     Fits linear model to parents and provides functions to return measures such
     as causal effect, mediated causal effect, average causal effect, etc. as
-    described in [4]_.
+    described in [4]_. Also allows for contemporaneous links.
 
     For general linear and nonlinear causal effect analysis including latent
     variables and further functionality use the CausalEffects class.
@@ -609,25 +609,49 @@ class LinearMediation(Models):
 
         Fits a sklearn.linear_model.LinearRegression model to the parents of
         each variable and computes the coefficient matrices :math:`\Phi` and
-        :math:`\Psi` as described in [4]_. Does not accepted
-        contemporaneous links.
+        :math:`\Psi` as described in [4]_. Does accept contemporaneous links.
 
         Parameters
         ----------
         all_parents : dictionary
-            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing
+            Dictionary of form {0:[(0, -1), (3, 0), ...], 1:[], ...} containing
             the parents estimated with PCMCI.
         tau_max : int, optional (default: None)
             Maximum time lag. If None, the maximum lag in all_parents is used.
         """
-        # for j in all_parents.keys():
-        #     for parent in all_parents[j]:
-        #         var, lag = parent
-        #         if lag == 0:
-        #             raise ValueError("all_parents cannot contain "
-        #                              "contemporaneous links for the LinearMediation"
-        #                              " class. Use the optimal causal effects "
-        #                              "class.")
+
+        # Fit the model using the base class
+        self.fit_results = self.get_fit(all_parents=all_parents,
+                                        selected_variables=None,
+                                        tau_max=tau_max)
+        # Cache the results in the member variables
+        coeffs = self.get_coefs()
+        self.phi = self._get_phi(coeffs)
+        self.psi = self._get_psi(self.phi)
+        self.all_psi_k = self._get_all_psi_k(self.phi)
+
+    def fit_model_bootstrap(self, all_parents, tau_max=None, boot_samples=100):
+        """Fits boostrap-versions of Phi, Psi, etc.
+
+        Uses residual-based bootstrap procedure as described in:
+
+        J. Runge et al. (2015): Identifying causal gateways and mediators in
+            complex spatio-temporal systems.
+            Nature Communications, 6, 8502. http://doi.org/10.1038/ncomms9502
+
+        Parameters
+        ----------
+        all_parents : dictionary
+            Dictionary of form {0:[(0, -1), (3, 0), ...], 1:[], ...} containing
+            the parents estimated with PCMCI.
+        tau_max : int, optional (default: None)
+            Maximum time lag. If None, the maximum lag in all_parents is used.
+        boot_samples : int
+            Number of boostrap realizations.
+        """
+
+        # from tigramite.toymodels import surrogate_generator 
+
 
         # Fit the model using the base class
         self.fit_results = self.get_fit(all_parents=all_parents,
@@ -1682,7 +1706,7 @@ if __name__ == '__main__':
     T = 10000
     
     links = {0: [((0, -1), 0.5, lin_f)],
-             1: [((1, -1), 0.5, lin_f), ((0, -1), 0.5, lin_f)],
+             1: [((1, -1), 0.5, lin_f), ((0, 0), 0.5, lin_f)],
              2: [((2, -1), 0.5, lin_f), ((1, 0), 0.5, lin_f)]
              }
     # noises = [np.random.randn for j in links.keys()]
@@ -1692,12 +1716,12 @@ if __name__ == '__main__':
 
     med = LinearMediation(dataframe=dataframe, 
         data_transform=None)
-    med.fit_model(all_parents=true_parents, tau_max=10)
+    med.fit_model(all_parents=true_parents, tau_max=2)
 
     print(med.get_val_matrix())
 
     # # print (med.get_coeff(i=0, tau=-2, j=1))
-    # print (med.get_ce(i=0, tau=-2,  j=2))
+    print (med.get_ce(i=0, tau=1,  j=2))
     # # print (med.get_ce_max(i=0, j=2))
     # print (med.get_mce(i=0, tau=-2, k=1, j=2))
     # print(med.get_joint_ce(i=0, j=2))

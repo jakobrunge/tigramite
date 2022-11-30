@@ -1,6 +1,7 @@
 from .independence_tests_base import CondIndTest
 from .parcorr import ParCorr
 from .robust_parcorr import RobustParCorr
+from .parcorr_wls import ParCorrWLS
 from .parcorr_mult import ParCorrMult
 from .gpdc import GPDC
 from .gpdc_torch import GPDCtorch
@@ -8,4 +9,5 @@ from .cmiknn import CMIknn
 from .cmiknnmixed import CMIknnMixed
 from .cmisymb import CMIsymb
 from .gsquared import Gsquared
+from .regressionCI import RegressionCI
 from .oracle_conditional_independence import OracleCI
