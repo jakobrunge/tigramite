@@ -309,7 +309,7 @@ class PCMCI(PCMCIbase):
         j : int
             Variable index.
         link_assumptions_j : dict
-            list of form {(i, -tau): link_type, ...} specifying
+            dict of form {(i, -tau): link_type, ...} specifying
             assumptions about links. This initializes the graph with 
             graph[i,j,tau] = link_type. For example, graph[i,j,0] = '-->' implies
             a link from i to j at lag 0. Valid link types
@@ -1887,6 +1887,7 @@ class PCMCI(PCMCIbase):
                                          pc_alpha=pc_alpha,
                                          max_conds_dim=max_conds_dim,
                                          max_combinations=max_combinations)
+
         # Get the results from run_mci, using the parents as the input
         results = self.run_mci(link_assumptions=link_assumptions,
                                tau_min=tau_min,
@@ -2449,9 +2450,9 @@ class PCMCI(PCMCIbase):
         sepset = skeleton_results['sepset']
 
         # Now change assumed links mark
-        skeleton_graph[skeleton_graph=='o!o'] == 'o-o'
-        skeleton_graph[skeleton_graph=='-!>'] == '-->'
-        skeleton_graph[skeleton_graph=='<!-'] == '<--'
+        skeleton_graph[skeleton_graph=='o!o'] = 'o-o'
+        skeleton_graph[skeleton_graph=='-!>'] = '-->'
+        skeleton_graph[skeleton_graph=='<!-'] = '<--'
 
         colliders_step_results = self._pcalg_colliders(
             graph=skeleton_graph,

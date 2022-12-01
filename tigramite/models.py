@@ -663,7 +663,7 @@ class LinearMediation(Models):
         model_data_generator = surrogate_generator.generate_linear_model_from_data(
                     dataframe=self.dataframe, 
                     mask_type=self.mask_type,
-                    data_transform=self.data_transform,
+                    data_transform=None, #self.data_transform,
                     model_params=self.model_params,
                     parents=self.all_parents, 
                     tau_max=self.tau_max, 

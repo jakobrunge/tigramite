@@ -200,23 +200,28 @@ class PCMCIbase():
                                 _int_link_assumptions[j][(i, -lag)] = '-->'
   
         else:
+
             if remove_contemp:
                 for j in _int_link_assumptions.keys():
                     _int_link_assumptions[j] = {link:_int_link_assumptions[j][link] 
                                         for link in _int_link_assumptions[j]
                                          if link[1] != 0}
 
-        # Make contemporaneous assumptions consistent
+        # Make contemporaneous assumptions consistent and orient lagged links
         for j in _vars:
             for link in _int_link_assumptions[j]:
                 i, tau = link
+                link_type = _int_link_assumptions[j][link]
                 if tau == 0:
                     if (j, 0) in _int_link_assumptions[i]:
                         if _int_link_assumptions[j][link] != self._reverse_link(_int_link_assumptions[i][(j, 0)]):
                             raise ValueError("Inconsistent link assumptions for indices %d - %d " %(i, j))
                     else:
                         _int_link_assumptions[i][(j, 0)] = self._reverse_link(_int_link_assumptions[j][link])
-
+                else:
+                    # Orient lagged links by time order while leaving the middle mark
+                    new_link_type = '-' + link_type[1] + '>'
+                    _int_link_assumptions[j][link] = new_link_type
 
         # Otherwise, check that our assumpions are sane
         # Check that the link_assumptions refer to links that are inside the
