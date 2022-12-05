@@ -13,7 +13,7 @@ Version 5.0
 
 ## Overview
 
-__Update:__ Tigramite now has a new CausalEffects class that allows to estimate (conditional) causal effects and mediation based on a causal graph. Have a look at the tutorial.
+__Update:__ Tigramite now has a new CausalEffects class that allows to estimate (conditional) causal effects and mediation based on assuming a causal graph. Have a look at the tutorial.
 
 Further, Tigramite provides several causal discovery methods that can be used under different sets of assumptions. An application always consists of a method and a chosen conditional independence test, e.g. PCMCI together with ParCorr. The following two tables give an overview of the assumptions involved:
 

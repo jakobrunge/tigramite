@@ -353,7 +353,6 @@ class DataFrame():
         # bootstrap random draw can be set here
         self.bootstrap = None
 
-    # def _create_bootstrap(self)
 
     def _check_mask(self, mask, check_type_mask=False):
         """Checks that the mask is:
@@ -411,7 +410,7 @@ class DataFrame():
                     if np.sum(np.isnan(_use_mask_dict_data)) != 0:
                         raise ValueError("NaNs in the data mask")
                     if check_type_mask:
-                        if not np.array_equal(np.unique(_use_mask_dict_data), [0, 1]):
+                        if not set(np.unique(_use_mask_dict_data)).issubset(set([0, 1])):
                             raise ValueError("Type mask contains other values than 0 and 1")
                 else:
                     if self.analysis_mode == 'single':
@@ -574,6 +573,7 @@ class DataFrame():
             Binary data array of same shape as array which describes whether 
             individual samples in a variable (or all samples) are continuous 
             or discrete: 0s for continuous variables and 1s for discrete variables.
+            If it is set, then it overrides the self.type_mask assigned to the dataframe.
         return_cleaned_xyz : bool, optional (default: False)
             Whether to return cleaned X,Y,Z, where possible duplicates are
             removed.

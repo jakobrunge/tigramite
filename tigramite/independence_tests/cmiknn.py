@@ -460,7 +460,7 @@ if __name__ == '__main__':
     import tigramite.data_processing as pp
     import numpy as np
 
-    np.random.seed(42)
+    # np.random.seed(42)
     cmi = CMIknn(mask_type=None,
                    significance='shuffle_test',
                    fixed_thres=None,
@@ -470,17 +470,15 @@ if __name__ == '__main__':
                    knn=0.1,
                    verbosity=0)
 
-    T = 100
+    T = 1000
     dimz = 1
 
     # Continuous data
     z = np.random.randn(T, dimz)
-    x = (0.5*z[:,0] + np.random.randn(T)).reshape(T, 1)
-    y = (0.5*z[:,0] + np.random.randn(T)).reshape(T, 1)
+    x = (0.8*z[:,0] + np.random.randn(T)).reshape(T, 1)
+    y = (0.8*z[:,0] + np.random.randn(T)).reshape(T, 1)
 
     print('X _|_ Y')
     print(cmi.run_test_raw(x, y, z=None))
     print('X _|_ Y | Z')
     print(cmi.run_test_raw(x, y, z=z))
-
-    

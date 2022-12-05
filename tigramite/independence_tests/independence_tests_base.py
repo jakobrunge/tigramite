@@ -357,7 +357,7 @@ class CondIndTest():
         """
 
         # Get the array to test on
-        array, xyz, XYZ, _ = self._get_array(X, Y, Z, tau_max, cut_off, self.verbosity)
+        array, xyz, XYZ, type_mask = self._get_array(X, Y, Z, tau_max, cut_off, self.verbosity)
         X, Y, Z = XYZ
         
         # Record the dimensions
@@ -374,7 +374,7 @@ class CondIndTest():
         else:
             cached = False
             # Get the dependence measure, reycling residuals if need be
-            val = self._get_dependence_measure_recycle(X, Y, Z, xyz, array)
+            val = self._get_dependence_measure_recycle(X, Y, Z, xyz, array, type_mask)
             # Get the p-value
             pval = self.get_significance(val, array, xyz, T, dim)
             self.cached_ci_results[combined_hash] = (val, pval)
@@ -472,7 +472,7 @@ class CondIndTest():
         # Return the value and the pvalue
         return val, pval
 
-    def _get_dependence_measure_recycle(self, X, Y, Z, xyz, array):
+    def _get_dependence_measure_recycle(self, X, Y, Z, xyz, array, type_mask=None):
         """Get the dependence_measure, optionally recycling residuals
 
         If self.recycle_residuals is True, also _get_single_residuals must be
@@ -490,6 +490,11 @@ class CondIndTest():
         array : array
             Data array of shape (dim, T)
 
+       type_mask : array-like
+            Binary data array of same shape as array which describes whether 
+            individual samples in a variable (or all samples) are continuous 
+            or discrete: 0s for continuous variables and 1s for discrete variables.
+
         Return
         ------
         val : float
@@ -506,8 +511,13 @@ class CondIndTest():
             # Return the dependence measure
             # data type can only be continuous in this case
             return self.get_dependence_measure(array_resid, xyz_resid)
+
         # If not, return the dependence measure on the array and xyz
-        return self.get_dependence_measure(array, xyz)
+        if type_mask is not None:
+            return self.get_dependence_measure(array, xyz, 
+                                        type_mask=type_mask)
+        else:
+            return self.get_dependence_measure(array, xyz)
 
     def _get_cached_residuals(self, x_nodes, z_nodes, array, target_var):
         """

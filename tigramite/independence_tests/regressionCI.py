@@ -53,6 +53,29 @@ class RegressionCI(CondIndTest):
 
         CondIndTest.__init__(self, **kwargs)
 
+    def set_dataframe(self, dataframe):
+        """Initialize and check the dataframe.
+
+        Parameters
+        ----------
+        dataframe : data object
+            Set tigramite dataframe object. It must have the attributes
+            dataframe.values yielding a numpy array of shape (observations T,
+            variables N) and optionally a mask of the same shape and a missing
+            values flag.
+
+        """
+        self.dataframe = dataframe
+        
+        if self.mask_type is not None:
+            if dataframe.mask is None:
+                raise ValueError("mask_type is not None, but no mask in dataframe.")
+            dataframe._check_mask(dataframe.mask)
+        
+        if dataframe.type_mask is None:
+            raise ValueError("type_mask cannot be None for RegressionCI.")
+        dataframe._check_mask(dataframe.type_mask, check_type_mask=True)
+
     # @jit(forceobj=True)
     def get_dependence_measure(self, array, xyz, type_mask):
         """Returns test statistic.
@@ -257,13 +280,13 @@ if __name__ == '__main__':
 
     T = 100
 
-    reals = 1000
+    reals = 100
     rate = np.zeros(reals)
 
     x_example = "continuous"
-    y_example = "continuous"
+    y_example = "discrete"
     dimz = 2
-    z_example = ["continuous", "continuous"]
+    z_example = ["discrete", "continuous"]
     # z_example = ["continuous", "discrete"]
     # z_example = None
     rate = np.zeros(reals)
@@ -281,18 +304,21 @@ if __name__ == '__main__':
         y = np.empty(T).reshape(T, 1)
         for t in range(T):
             if dimz > 0:
-                val = z[t, 0].squeeze()
+                if z_example[0] == "discrete":
+                    val = z[t, 0].squeeze()
+                    prob = 0.2 + val * 0.6
+                else:
+                    prob = z[t, 0].squeeze()
             else:
-                val = 0
-            prob = 0.2 + val * 0.6
+                prob = 0.2
             if x_example == "discrete":
                 x[t] = np.random.choice([0, 1], p=[prob, 1. - prob])
             else:
-                x[t] = np.random.normal(0, 1)
+                x[t] = np.random.normal(prob, 1)
             if y_example == "discrete":
                 y[t] = np.random.choice([0, 1], p=[prob, (1. - prob)]) # + x[t]
             else:
-                y[t] = np.random.normal(0, 1) # + x[t]
+                y[t] = np.random.normal(prob, 1) # + x[t]
 
         # # Continuous data
         # z = np.random.randn(T, dimz)
@@ -317,9 +343,21 @@ if __name__ == '__main__':
         else:
             z_type = None
 
-        val, pval = ci.run_test_raw(x, y, z=z, x_type=x_type, y_type=y_type, z_type=z_type)
+        # val, pval = ci.run_test_raw(x, y, z=z, x_type=x_type, y_type=y_type, z_type=z_type)
+        # rate[i] = pval
+
+        data = data=np.hstack((x, y, z))
+        type_mask = np.zeros(data.shape)
+        type_mask[:, 0] = x_example == "discrete"
+        type_mask[:, 1] = y_example == "discrete"
+        type_mask[:, 2] = z_example == "discrete"
+        type_mask = type_mask.astype('int')
+        # print(type_mask)
+        dataframe = pp.DataFrame(data=data, type_mask=type_mask)
+        ci.set_dataframe(dataframe)
+        
+        val, pval = ci.run_test(X=[(0, 0)], Y=[(1, 0)], Z=[(2, 0)])
         rate[i] = pval
-        # print("pval ", pval)
 
     print((rate <= 0.05).mean())
 
