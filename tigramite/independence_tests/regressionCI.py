@@ -17,18 +17,25 @@ from .independence_tests_base import CondIndTest
 class RegressionCI(CondIndTest):
     r"""Flexible parametric conditional independence tests for continuous, categorical, or mixed data.
 
-    .......... TODO: UPDATE BELOW..................
-    
     Assumes one-dimensional X, Y.
 
     Notes
     -----
-    The general formula is
-
-    .. math:: ...
+    To test :math:`X \perp Y | Z`, the regressions Y|XZ vs Y|Z, or, depending
+    on certain criteria, X|YZ vs X|Z are compared. For that, the notion of
+    the deviance is employed. If the fits of the respective regressions do
+    not differ significantly (measured using the deviance), the null
+    hypotheses of conditional independence is "accepted". This approach
+    assumes that X and Y are univariate, and Z can be either empty,
+    univariate or multivariate. Moreover, this approach works for all
+    combinations of "discrete" and "continuous" X, Y and respective columns
+    of Z; depending on the case, linear regression or multinomial regression
+    is employed.
 
     References
     ----------
+    
+    Assumes one-dimensional X, Y.
 
     Parameters
     ----------

@@ -24,15 +24,20 @@ Further, Tigramite provides several causal discovery methods that can be used un
 | PCMCIplus | Causal stationarity, no hidden variables    | Directed lagged links, directed and undirected contemp. links (Time series CPDAG) |
 | LPCMCI | Causal stationarity    | Time series PAG |
 
+(Also consider the bootstrap-versions of above methods called by *get_bootsrap_of(...)*.)
+
 
 | Conditional independence test | Assumptions                                  |
 |--------|---------------------------------------------------------------------------|
 | ParCorr  | univariate, continuous variables with linear dependencies and Gaussian noise |
 | RobustParCorr  | univariate, continuous variables with linear dependencies, robust for different marginal distributions |
+| ParCorrWLS  | univariate, continuous variables with linear dependencies, can account for heteroskedastic data |
 | GPDC / GPDCtorch | univariate, continuous variables with additive dependencies        |
 | CMIknn | multivariate, continuous variables with more general dependencies (permutation-based test)          |
 | Gsquared | univariate discrete/categorical variables           |
 | CMIsymb | univariate discrete/categorical variables (permutation-based test)           |
+| RegressionCI | mixed datasets with univariate discrete/categorical and (linear) continuous variables           |
+
 
 ## General Notes
 

@@ -997,9 +997,14 @@ class setup_scatter_matrix:
             In case of multiple datasets in dataframe, plot this one.
         """
 
+        if matrix_lags is not None and np.any(matrix_lags < 0):
+            raise ValueError("matrix_lags must be non-negative!")
+
         data = dataframe.values[selected_dataset]
         if dataframe.mask is not None:
             mask = dataframe.mask[selected_dataset]
+
+        T, dim = data.shape
 
         if label is not None:
             self.labels.append((label, color, marker, markersize, alpha))
@@ -1007,22 +1012,16 @@ class setup_scatter_matrix:
         for ij in list(self.axes_dict):                
             i = ij[0]
             j = ij[1]
-            if matrix_lags is None:
-                if i == j:
-                    lag = 1
-                else:
-                    lag = 0
+            if (matrix_lags is None) or (i == j):
+                lag = 0
             else:
                 lag = matrix_lags[i,j]
-            if lag == 0:
-                x = np.copy(data[:, i])
-                y = np.copy(data[:, j])
-            else:
-                x = np.copy(data[:-lag, i])
-                y = np.copy(data[lag:, j])
+            x = np.copy(data[:T-lag, i])
+            y = np.copy(data[lag:, j])
             if dataframe.mask is not None:
-                x[mask[:-lag, i]] = np.nan
-                y[mask[lag:, j]] = np.nan
+                x[mask[:T-lag, i]==1] = np.nan
+                y[mask[lag:, j]==1] = np.nan
+
             # print(i, j, lag, x.shape, y.shape)
             self.axes_dict[(i, j)].scatter(
                 x, y,
@@ -1311,7 +1310,7 @@ class setup_density_matrix:
             yielding a numpy array of shape (observations T, variables N) and
             optionally a mask of the same shape and a missing values flag.
         matrix_lags : array
-            Lags to use in scatter plots. Either None or of shape (N, N). Then the
+            Lags to use in scatter plots. Either None or non-neg array of shape (N, N). Then the
             entry matrix_lags[i, j] = tau will depict the scatter plot of 
             time series (i, -tau) vs (j, 0). If None, tau = 0 for i != j and for i = j
             tau = 1. 
@@ -1335,9 +1334,14 @@ class setup_density_matrix:
 
         self.matrix_lags = matrix_lags
 
+        if matrix_lags is not None and np.any(matrix_lags < 0):
+            raise ValueError("matrix_lags must be non-negative!")
+
         data = dataframe.values[selected_dataset]
         if dataframe.mask is not None:
             mask = dataframe.mask[selected_dataset]
+
+        T, dim = data.shape
 
         # if label is not None:
         self.labels.append((label, label_color))
@@ -1350,18 +1354,15 @@ class setup_density_matrix:
                 lag = 0
             else:
                 lag = matrix_lags[i,j]
-            if lag == 0:
-                x = np.copy(data[:, i])
-                y = np.copy(data[:, j])
-            else:
-                x = np.copy(data[:-lag, i])
-                y = np.copy(data[lag:, j])
-            if dataframe.missing_flag is not None:
-                x[x==dataframe.missing_flag] = np.nan
-                y[y==dataframe.missing_flag] = np.nan
+            x = np.copy(data[:T-lag, i])
+            y = np.copy(data[lag:, j])
+            # Data is set to NaN in dataframe init already
+            # if dataframe.missing_flag is not None:
+            #     x[x==dataframe.missing_flag] = np.nan
+            #     y[y==dataframe.missing_flag] = np.nan
             if dataframe.mask is not None:
-                x[mask[:-lag, i]] = np.nan
-                y[mask[lag:, j]] = np.nan
+                x[mask[:T-lag, i]==1] = np.nan
+                y[mask[lag:, j]==1] = np.nan
 
             if i == j:
                 sns.kdeplot(x,
