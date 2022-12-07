@@ -15,6 +15,7 @@ from tigramite.toymodels import structural_causal_processes as toys
 
 def generate_linear_model_from_data(dataframe, parents, tau_max, realizations=100, 
                 generate_noise_from='covariance',  
+                T_data = None,
                 model_params=None,
                 data_transform=None,
                 mask_type='y',
@@ -30,32 +31,24 @@ def generate_linear_model_from_data(dataframe, parents, tau_max, realizations=10
 
     assert dataframe.analysis_mode == 'single'
 
-    if dataframe.mask is not None:
-        for j in range(dataframe.N):
-            # print(j) #, dataframe.mask[0][:, 0])
-            np.testing.assert_allclose(dataframe.mask[0][:, 0], dataframe.mask[0][:, j])
-    else:
-        dataframe.mask = {0: np.zeros(dataframe.values[0].shape)}
-
-    assert np.any(np.isnan(dataframe.values[0])) == False
-
     if model_params is None:
         model_params = {}
 
     N = dataframe.N
     T = dataframe.T[0]
-
+    if T_data is None:
+        T_data = T
 
     ## Fit linear structural causal model to causal parents taken from graph
     def lin_f(x): return x
 
     # Build the model
-    model = Models(
-                    dataframe=dataframe,
-                    model=LinearRegression(**model_params),
-                    data_transform=data_transform, #data_transform,
-                    mask_type=mask_type,
-                    verbosity=0)
+    model = Models(dataframe=dataframe,
+                   model=LinearRegression(**model_params),
+                   data_transform=data_transform, #data_transform,
+                   mask_type=mask_type,
+                   verbosity=0)
+
     links_coeffs = {}
     for j in range(N):
         links_coeffs[j] = []
@@ -83,13 +76,19 @@ def generate_linear_model_from_data(dataframe, parents, tau_max, realizations=10
     prediction.fit(target_predictors=parents, tau_max=tau_max, return_data=True)
 
     # Get overlapping samples
+    used_indices = {}
     overlapping = set(list(range(0, T)))
     for j in parents:
         # print(j, prediction.fitted_model[j])
         if prediction.fitted_model[j] is not None:
-            overlapping = overlapping.intersection(set(prediction.fitted_model[j]['used_indices'][0]))
+            used_indices[j] = set(prediction.fitted_model[j]['used_indices'][0])
+            overlapping = overlapping.intersection(used_indices[j])
 
     overlapping = sorted(list(overlapping))
+
+    if len(overlapping) <= 10:
+        raise ValueError("Less than 10 overlapping samples due to masking and/or missing values,"
+                         " cannot compute residual covariance!")
 
     predicted = prediction.predict(target=[j for j in parents if len(parents[j]) > 0])
 
@@ -97,7 +96,7 @@ def generate_linear_model_from_data(dataframe, parents, tau_max, realizations=10
     residuals = dataframe.values[0].copy()
 
     for index, j in enumerate([j for j in parents if len(parents[j]) > 0]):
-        residuals[tau_max:][dataframe.mask[0][tau_max:, j]==False, j] -= predicted[index]
+        residuals[list(used_indices[j]), j] -= predicted[index]
     
     overlapping_residuals = residuals[overlapping]
 
@@ -113,7 +112,7 @@ def generate_linear_model_from_data(dataframe, parents, tau_max, realizations=10
 
     ## Construct linear Gaussian structural causal model with this noise structure and generate many realizations with same sample size as data
     transient_fraction = 0.2
-    size = T + int(math.floor(transient_fraction*T))
+    size = T_data + int(math.floor(transient_fraction*T_data))
     # datasets = {}
     for r in range(realizations):
         if generate_noise_from == 'covariance':
@@ -122,14 +121,14 @@ def generate_linear_model_from_data(dataframe, parents, tau_max, realizations=10
             draw = np.random.randint(0, len(overlapping_residuals), size)
             noises = overlapping_residuals[draw]
 
-        dataset = toys.structural_causal_process(links=links_coeffs, noises=noises, T=T, 
+        dataset = toys.structural_causal_process(links=links_coeffs, noises=noises, T=T_data, 
                                                      transient_fraction=transient_fraction)[0]
         if np.any(np.isinf(dataset)):
             raise ValueError("Infinite data")
 
         yield dataset
 
-    return self   #datasets
+    # return self   #datasets
 
 
 if __name__ == '__main__':
@@ -146,7 +145,7 @@ if __name__ == '__main__':
                     3: [((3, -1), 0., lin_f)], #, ((4, -1), 0.4, lin_f)],
                     4: [((4, -1), 0., lin_f), ((3, 0), 0.5, lin_f)], #, ((3, -1), 0.3, lin_f)],
                     }
-    T = 200     # time series length
+    T = 100     # time series length
     # Make some noise with different variance, alternatively just noises=None
     noises = np.array([(1. + 0.2*float(j))*np.random.randn((T + int(math.floor(0.2*T)))) 
                        for j in range(len(links_coeffs))]).T
@@ -155,14 +154,20 @@ if __name__ == '__main__':
     T, N = data.shape
 
     # For generality, we include some masking
-    # mask = np.zeros(data.shape, dtype='int')
-    # mask[:int(T/2)] = True
-    mask=None
+    mask = np.zeros(data.shape, dtype='int')
+    mask[:int(T/2),0] = True
+    # mask[int(T/2)+30:,1] = True
+    # Create some missing samples at different time points
+    data[11,0] = 9999.
+    data[22,2] = 9999.
+    data[33,3] = 9999.
+
     tau_max = 4
     # Initialize dataframe object, specify time axis and variable names
     var_names = [r'$X^0$', r'$X^1$', r'$X^2$', r'$X^3$', r'$X^4$']
     dataframe = pp.DataFrame(data, 
                              mask=mask,
+                             missing_flag = 9999.,
                              datatime = {0:np.arange(len(data))}, 
                              var_names=var_names)
     parents = {}
@@ -171,7 +176,8 @@ if __name__ == '__main__':
         for par in links_coeffs[j]:
             parents[j].append(par[0])
     print(parents)
-    datasets = generate_linear_model_from_data(dataframe, parents=parents, 
+    datasets = list(generate_linear_model_from_data(dataframe, parents=parents, 
                 tau_max=tau_max, realizations=100, 
                 generate_noise_from='covariance',
-                verbosity=0)
+                verbosity=0))
+    print(datasets[0].shape)
