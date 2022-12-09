@@ -6,25 +6,8 @@
 
 import numpy as np
 import json, warnings, os, pathlib
-try:
-    from importlib import metadata
-except ImportError:
-    import importlib_metadata as metadata  # python<=3.7
-try:
-    import matplotlib
-    import networkx as nx
-    with open(pathlib.Path(os.path.dirname(__file__)) / '../versions.py', 'r') as vfile:
-        packages = json.loads(vfile.read())['all']
-        packages = dict(map(lambda s: s.split('>='), packages))
-        if metadata.version('matplotlib') < packages['matplotlib']:
-            raise Exception('Version mismatch. Installed version of matplotlib', metadata.version('matplotlib'),
-                          'Please install matplotlib>=', packages['matplotlib'])
-        if metadata.version('networkx') < packages['networkx']:
-            raise Exception('Version mismatch. Installed version of networkx', metadata.version('networkx'),
-                          'Please install networkx>=', packages['networkx'])
-except Exception as e:
-    warnings.warn(str(e))
-
+import matplotlib
+import networkx as nx
 from matplotlib.colors import ListedColormap
 import matplotlib.transforms as transforms
 from matplotlib import pyplot, ticker

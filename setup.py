@@ -47,9 +47,6 @@ EXTRAS_REQUIRE = {
     ]
 }
 
-with open('versions.py', 'w') as vfile:
-    vfile.write(json.dumps(EXTRAS_REQUIRE))
-
 # Define the packages needed for testing
 TESTS_REQUIRE = ["nose", "pytest", "networkx>=2.4", "scikit-learn>=0.21", 
                  "torch>=1.11.0", "gpytorch>=1.4", "dcor>=0.5.3"]

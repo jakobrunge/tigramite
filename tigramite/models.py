@@ -8,25 +8,9 @@ from __future__ import print_function
 from copy import deepcopy
 import json, warnings, os, pathlib
 import numpy as np
-try:
-    from importlib import metadata
-except ImportError:
-    import importlib_metadata as metadata  # python<=3.7
-try:
-    import sklearn
-    import sklearn.linear_model
-    import networkx
-    with open(pathlib.Path(os.path.dirname(__file__)) / '../versions.py', 'r') as vfile:
-        packages = json.loads(vfile.read())['all']
-        packages = dict(map(lambda s: s.split('>='), packages))
-        if metadata.version('scikit-learn') < packages['scikit-learn']:
-            raise Exception('Version mismatch. Installed version of scikit-learn', metadata.version('scikit-learn'),
-                          'Please install scikit-learn>=', packages['scikit-learn'])
-        if metadata.version('networkx') < packages['networkx']:
-            raise Exception('Version mismatch. Installed version of networkx', metadata.version('networkx'),
-                          'Please install networkx>=', packages['networkx'])
-except Exception as e:
-    warnings.warn(str(e))
+import sklearn
+import sklearn.linear_model
+import networkx
 from tigramite.data_processing import DataFrame
 from tigramite.pcmci import PCMCI
 

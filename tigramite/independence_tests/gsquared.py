@@ -1,6 +1,6 @@
 """Tigramite causal discovery for time series."""
 
-# Author: Sagar Simha, Jakob Runge <jakob@jakob-runge.com>
+# Author: Sagar Nagaraj Simha, Jakob Runge <jakob@jakob-runge.com>
 #
 # License: GNU General Public License v3.0
 
@@ -14,8 +14,6 @@ from scipy.stats.contingency import crosstab
 from scipy.stats.contingency import expected_freq
 from scipy.stats.contingency import margins
 from .independence_tests_base import CondIndTest
-# from numba import jit   # could make it even faster, also acticate @jit(forceobj=True)
-
 
 class Gsquared(CondIndTest):
     r"""G-squared conditional independence test for categorical data.
@@ -72,7 +70,6 @@ class Gsquared(CondIndTest):
             print("n_symbs = %s" % self.n_symbs)
             print("")
 
-    # @jit(forceobj=True)
     def get_dependence_measure(self, array, xyz):
         """Returns Gsquared/G-test test statistic.
 
@@ -89,7 +86,7 @@ class Gsquared(CondIndTest):
         val : float
             G-squared estimate.
         """
-
+        _, T = array.shape
         z_indices = np.where(xyz == 2)[0]
 
         # Flip 2D-array so that order is ([zn...z0, ym...y0, xk...x0], T). The
@@ -109,8 +106,9 @@ class Gsquared(CondIndTest):
             levels = np.tile(np.arange(self.n_symbs), (len(xyz), 1))  
             # Assuming same list of levels for (z, y, x).
 
-        _, observed = crosstab(*tuple(np.split(array_flip, len(xyz), axis=0)), 
-            levels=levels, sparse=False)
+        _, observed = crosstab(*(np.asarray(np.split(array_flip, len(xyz), axis=0)).reshape((-1, T))), levels=levels,
+                           sparse=False)
+
         observed_shape = observed.shape
 
         gsquare = 0.0

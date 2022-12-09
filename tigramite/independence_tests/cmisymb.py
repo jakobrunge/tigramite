@@ -1,6 +1,6 @@
 """Tigramite causal discovery for time series."""
 
-# Author: Jakob Runge <jakob@jakob-runge.com>
+# Author: Sagar Nagaraj Simha, Jakob Runge <jakob@jakob-runge.com>
 #
 # License: GNU General Public License v3.0
 
@@ -8,7 +8,9 @@ from __future__ import print_function
 import warnings
 import numpy as np
 from scipy.stats.contingency import crosstab
-# from numba import jit   # could make it even faster, also acticate @jit(forceobj=True)
+from joblib import Parallel, delayed
+import multiprocessing
+from numba import jit
 
 from .independence_tests_base import CondIndTest
 
@@ -89,72 +91,9 @@ class CMIsymb(CondIndTest):
                           "autocorrelation may not be correct for discrete "
                           "data")
 
-    # # @jit  #(forceobj=True)
-    def _bincount_hist(self, symb_array, weights=None):
-        """Computes histogram from symbolic array.
-
-        The maximum of the symbolic array determines the alphabet / number
-        of bins.
-
-        Parameters
-        ----------
-        symb_array : integer array
-            Data array of shape (dim, T). If a float is passed, it will be converted to int.
-
-        weights : float array, optional (default: None)
-            Optional weights array of shape (dim, T).
-
-        Returns
-        -------
-        hist : array
-            Histogram array of shape (base, base, base, ...)*number of
-            dimensions with Z-dimensions coming first.
-        """
-
-        if 'int' not in str(symb_array.dtype):
-            # raise ValueError("Input data must of integer type, where each "
-            #                  "number indexes a symbol.")
-            warnings.warn("Input data should be of integer type, where each "
-                          "number indexes a symbol. If you provide a float,"
-                          " then the array will still be converted to int.")
-            symb_array = symb_array.astype('int')
-
-        if self.n_symbs is None:
-            n_symbs = int(symb_array.max() + 1)   # + 1 accounts for the '0'
-        else:
-            n_symbs = self.n_symbs
-            if n_symbs < int(symb_array.max() + 1):
-                raise ValueError("n_symbs must be >= symb_array.max() + 1 = {}".format(symb_array.max() + 1))
-
-        dim, T = symb_array.shape
-
-        flathist = np.zeros((n_symbs ** dim), dtype='int16')
-        multisymb = np.zeros(T, dtype='int64')
-        if weights is not None:
-            flathist = np.zeros((n_symbs ** dim), dtype='float32')
-            multiweights = np.ones(T, dtype='float32')
-
-        for i in range(dim):
-            multisymb += symb_array[i, :] * n_symbs ** i
-            if weights is not None:
-                multiweights *= weights[i, :]
-
-        if weights is None:
-            result = np.bincount(multisymb)
-        else:
-            result = (np.bincount(multisymb, weights=multiweights)
-                      / multiweights.sum())
-
-        flathist[:len(result)] += result
-
-        hist = flathist.reshape(tuple([n_symbs, n_symbs] +
-                                      [n_symbs for i in range(dim - 2)])).T
-
-        return hist
-
-
     def get_dependence_measure(self, array, xyz):
-        """Returns CMI estimate based on bincount histogram.
+        """Returns CMI estimate based on contingency table from scipy's crosstab
+        to approximate probability mass.
 
         Parameters
         ----------
@@ -172,12 +111,15 @@ class CMIsymb(CondIndTest):
 
         _, T = array.shape
 
-        # High-dimensional histogram, ALSO SWAP summation below when using
-        # bincount!
-        # hist = self._bincount_hist(array, weights=None)  
-        array_flip = np.flipud(array)
-        _, hist = crosstab(*tuple(np.split(array_flip, len(xyz), axis=0)), 
-            levels=None, sparse=False)
+        if self.n_symbs is None:
+            levels = None
+        else:
+            # Assuming same list of levels for (z, y, x).
+            levels = np.tile(np.arange(self.n_symbs), (len(xyz), 1))
+
+        # High-dimensional contingency table
+        _, hist = crosstab(*(np.asarray(np.split(array, len(xyz), axis=0)).reshape((-1, T))), levels=levels,
+                           sparse=False)
 
         def _plogp_vector(T):
             """Precalculation of p*log(p) needed for entropies."""
@@ -188,17 +130,16 @@ class CMIsymb(CondIndTest):
                 return gfunc[time]
             return np.vectorize(plogp_func)
 
-        # Dimensions are (Z^dz, .... Z^1, Y, X) using crosstab, otherwise
-        # (X, Y, Z....)
+        # Dimensions are hist are (X, Y, Z^1, .... Z^dz)
         plogp = _plogp_vector(T)
         hxyz = (-(plogp(hist)).sum() + plogp(T)) / float(T)
-        hxz = (-(plogp(hist.sum(axis=-1))).sum() + plogp(T)) / float(T)
-        hyz = (-(plogp(hist.sum(axis=-2))).sum() + plogp(T)) / float(T)
-        hz = (-(plogp(hist.sum(axis=-1).sum(axis=-1))).sum()+plogp(T)) / float(T)
+        hxz = (-(plogp(hist.sum(axis=1))).sum() + plogp(T)) / float(T)
+        hyz = (-(plogp(hist.sum(axis=0))).sum() + plogp(T)) / float(T)
+        hz = (-(plogp(hist.sum(axis=0).sum(axis=0))).sum() + plogp(T)) / float(T)
         val = hxz + hyz - hz - hxyz
+
         return val
 
-    # @jit  #(forceobj=True)
     def get_shuffle_significance(self, array, xyz, value,
                                  return_null_dist=False):
         """Returns p-value for shuffle significance test.
@@ -241,36 +182,12 @@ class CMIsymb(CondIndTest):
                 neighbor_indices = np.where((z_array == z_comb[i]).all(axis=1))[0]
                 neighbors[i, :len(neighbor_indices)] = neighbor_indices
 
-            null_dist = np.zeros(self.sig_samples)
-            for sam in range(self.sig_samples):
-                # Generate random order in which to go through samples.
-                order = self.random_state.permutation(T).astype('int32')
-                restricted_permutation = np.zeros(T, dtype='int32')
-                # A global list of used indices across time samples and combinations.
-                # Since there are no repetitive (z) indices across combinations, a global list can be used.
-                used = np.array([], dtype='int32')
-                for sample_index in order:
-                    # Get the index of the z combination for sample_index in z_comb
-                    z_choice_index = np.where((z_comb == array[z_indices, sample_index]).all(axis=1))[0][0]
-                    neighbors_choices = neighbors[z_choice_index][neighbors[z_choice_index] > -1]
-                    # Shuffle neighbors in-place to randomize the choice of indices
-                    self.random_state.shuffle(neighbors_choices)
-                    # Permuting indices
-                    m = 0
-                    use = neighbors_choices[m]
-                    while ((use in used) and (m < len(neighbors_choices))):
-                        m += 1
-                        use = neighbors_choices[m]
+            num_cores = multiprocessing.cpu_count()
+            random_seeds = self.random_state.integers(np.iinfo(np.int32).max, size=self.sig_samples)
+            null_dist = Parallel(n_jobs=num_cores)(
+                delayed(self.parallelize_shuffles)(array, xyz, z_indices, x_indices, T, z_comb, neighbors, seed=seed) for seed in random_seeds)
+            null_dist = np.asarray(null_dist)
 
-                    restricted_permutation[sample_index] = use
-                    used = np.append(used, use)
-
-                array_shuffled = np.copy(array)
-                for i in x_indices:
-                    array_shuffled[i] = array[i, restricted_permutation]
-
-                null_dist[sam] = self.get_dependence_measure(array_shuffled,
-                                                             xyz)
         else:
             null_dist = \
                 self._get_shuffle_dist(array, xyz,
@@ -284,6 +201,42 @@ class CMIsymb(CondIndTest):
         if return_null_dist:
             return pval, null_dist
         return pval
+
+    @jit(forceobj=True)
+    def parallelize_shuffles(self, array, xyz, z_indices, x_indices, T, z_comb, neighbors, seed=None):
+        # Generate random order in which to go through samples.
+        # order = self.random_state.permutation(T).astype('int32')
+        rng = np.random.default_rng(seed)
+        order = rng.permutation(T).astype('int32')
+
+        restricted_permutation = np.zeros(T, dtype='int32')
+        # A global list of used indices across time samples and combinations.
+        # Since there are no repetitive (z) indices across combinations, a global list can be used.
+        used = np.array([], dtype='int32')
+        for sample_index in order:
+            # Get the index of the z combination for sample_index in z_comb
+            z_choice_index = np.where((z_comb == array[z_indices, sample_index]).all(axis=1))[0][0]
+            neighbors_choices = neighbors[z_choice_index][neighbors[z_choice_index] > -1]
+            # Shuffle neighbors in-place to randomize the choice of indices
+            # self.random_state.shuffle(neighbors_choices)
+            rng.shuffle(neighbors_choices)
+
+            # Permuting indices
+            m = 0
+            use = neighbors_choices[m]
+            while ((use in used) and (m < len(neighbors_choices))):
+                m += 1
+                use = neighbors_choices[m]
+
+            restricted_permutation[sample_index] = use
+            used = np.append(used, use)
+
+        array_shuffled = np.copy(array)
+        for i in x_indices:
+            array_shuffled[i] = array[i, restricted_permutation]
+
+        return self.get_dependence_measure(array_shuffled,
+                                                     xyz)
 
 
 if __name__ == '__main__':
