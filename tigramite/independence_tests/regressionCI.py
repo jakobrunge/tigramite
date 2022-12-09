@@ -10,7 +10,7 @@ from scipy.stats import chi2, normaltest
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn import metrics
 
-from .independence_tests_base import CondIndTest
+from independence_tests_base import CondIndTest
 # from numba import jit   # could make it even faster, also acticate @jit(forceobj=True)
 
 
@@ -32,9 +32,6 @@ class RegressionCI(CondIndTest):
     of Z; depending on the case, linear regression or multinomial regression
     is employed.
 
-    References
-    ----------
-    
     Assumes one-dimensional X, Y.
 
     Parameters
@@ -54,7 +51,7 @@ class RegressionCI(CondIndTest):
         
         # Setup the member variables
         self._measure = 'regression_ci'
-        self.two_sided = False  # TODO: is this the case?
+        self.two_sided = False
         self.residual_based = False
         self.recycle_residuals = False
 
@@ -86,8 +83,6 @@ class RegressionCI(CondIndTest):
     # @jit(forceobj=True)
     def get_dependence_measure(self, array, xyz, type_mask):
         """Returns test statistic.
-
-        TODO: expand a bit, see other CI test's descriptions
 
         Parameters
         ----------
@@ -220,7 +215,8 @@ class RegressionCI(CondIndTest):
             dev1, dof1 = calc_deviance_linear(z, dep_var, var_type = z_type)
             # Fit Y | ZX
             dev2, dof2 = calc_deviance_linear(rest, dep_var, var_type=rest_type)
-        
+            # print(dev1, dev2, np.abs(dev1 - dev2))
+
         # Case 2: X discrete, Y continuous
         elif (x_type == 1) and (y_type == 0):
             xz = np.hstack((x, z))
@@ -283,6 +279,7 @@ if __name__ == '__main__':
     import tigramite.data_processing as pp
     import numpy as np
 
+    np.random.seed(43)
     ci = RegressionCI()
 
     T = 100
@@ -291,10 +288,10 @@ if __name__ == '__main__':
     rate = np.zeros(reals)
 
     x_example = "continuous"
-    y_example = "discrete"
-    dimz = 2
-    z_example = ["discrete", "continuous"]
-    # z_example = ["continuous", "discrete"]
+    y_example = "continuous"
+    dimz = 1
+    # z_example = ["discrete", "continuous"]
+    z_example = ["continuous"] #, "discrete"]
     # z_example = None
     rate = np.zeros(reals)
     for i in range(reals):
@@ -321,11 +318,11 @@ if __name__ == '__main__':
             if x_example == "discrete":
                 x[t] = np.random.choice([0, 1], p=[prob, 1. - prob])
             else:
-                x[t] = np.random.normal(prob, 1)
+                x[t] = 0.1*np.random.rand() # np.random.uniform(prob, 1)  #np.random.normal(prob, 1)
             if y_example == "discrete":
                 y[t] = np.random.choice([0, 1], p=[prob, (1. - prob)]) # + x[t]
             else:
-                y[t] = np.random.normal(prob, 1) # + x[t]
+                y[t] = np.random.normal(prob, 1) + 0.5*x[t]
 
         # # Continuous data
         # z = np.random.randn(T, dimz)
@@ -350,21 +347,21 @@ if __name__ == '__main__':
         else:
             z_type = None
 
-        # val, pval = ci.run_test_raw(x, y, z=z, x_type=x_type, y_type=y_type, z_type=z_type)
-        # rate[i] = pval
-
-        data = data=np.hstack((x, y, z))
-        type_mask = np.zeros(data.shape)
-        type_mask[:, 0] = x_example == "discrete"
-        type_mask[:, 1] = y_example == "discrete"
-        type_mask[:, 2] = z_example == "discrete"
-        type_mask = type_mask.astype('int')
-        # print(type_mask)
-        dataframe = pp.DataFrame(data=data, type_mask=type_mask)
-        ci.set_dataframe(dataframe)
-        
-        val, pval = ci.run_test(X=[(0, 0)], Y=[(1, 0)], Z=[(2, 0)])
+        val, pval = ci.run_test_raw(x, y, z=z, x_type=x_type, y_type=y_type, z_type=z_type)
         rate[i] = pval
+
+        # data = np.hstack((x, y, z))
+        # type_mask = np.zeros(data.shape)
+        # type_mask[:, 0] = x_example == "discrete"
+        # type_mask[:, 1] = y_example == "discrete"
+        # type_mask[:, 2] = z_example == "discrete"
+        # type_mask = type_mask.astype('int')
+        # # print(type_mask)
+        # dataframe = pp.DataFrame(data=data, type_mask=type_mask)
+        # ci.set_dataframe(dataframe)
+        
+        # val, pval = ci.run_test(X=[(0, 0)], Y=[(1, 0)], Z=[(2, 0)])
+        # rate[i] = pval
 
     print((rate <= 0.05).mean())
 
