@@ -10,7 +10,7 @@ from scipy.stats import chi2, normaltest
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn import metrics
 
-from independence_tests_base import CondIndTest
+from .independence_tests_base import CondIndTest
 # from numba import jit   # could make it even faster, also acticate @jit(forceobj=True)
 
 

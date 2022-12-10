@@ -24,8 +24,6 @@ Further, Tigramite provides several causal discovery methods that can be used un
 | PCMCIplus | Causal stationarity, no hidden variables    | Directed lagged links, directed and undirected contemp. links (Time series CPDAG) |
 | LPCMCI | Causal stationarity    | Time series PAG |
 
-(Also consider the bootstrap-versions of above methods called by *get_bootsrap_of(...)*.)
-
 
 | Conditional independence test | Assumptions                                  |
 |--------|---------------------------------------------------------------------------|
