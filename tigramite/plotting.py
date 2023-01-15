@@ -3026,12 +3026,12 @@ def plot_time_series_graph(
     if link_attribute is not None:
         tsg_attr = np.zeros((N * max_lag, N * max_lag), dtype=link_attribute.dtype)
 
-    # Only draw link in one direction
-    # Remove lower triangle
     if graph.ndim == 4:
+        # Only draw link in one direction
         for i, j, taui, tauj in np.column_stack(np.where(graph)):
             tau = taui - tauj
-            if tau <= 0 and j <= i:
+            # if tau <= 0 and j <= i:
+            if translate(i,   max_lag - 1 - taui) >= translate(j, max_lag-1-tauj):
                 continue
             # print(max_lag, (i, -taui), (j, -tauj), aux_graph[i, j, taui, tauj])
             # print(translate(i, max_lag - 1 - taui), translate(j, max_lag-1-tauj))
@@ -3048,6 +3048,8 @@ def plot_time_series_graph(
  
 
     else:
+      # Only draw link in one direction
+      # Remove lower triangle
       link_matrix_tsg = np.copy(graph)
       link_matrix_tsg[:, :, 0] = np.triu(graph[:, :, 0])
 
@@ -4161,6 +4163,7 @@ if __name__ == "__main__":
     import tigramite
     import tigramite.toymodels.structural_causal_processes as toys
     import tigramite.data_processing as pp
+    from tigramite.causal_effects import CausalEffects
 
     # T = 1000
     # def lin_f(x): return x
@@ -4216,30 +4219,54 @@ if __name__ == "__main__":
     # sys.exit(0)
 
 
-    val_matrix = np.zeros((4, 4, 3))
+    # val_matrix = np.zeros((4, 4, 3))
 
-    # Complete test case
-    graph = np.zeros((3,3,2), dtype='<U3')
-    graph[:] = ""
-    graph[0, 1, 0] = "<-+"
-    graph[1, 0, 0] = "+->"
+    # # Complete test case
+    # graph = np.zeros((3,3,2), dtype='<U3')
+    # graph[:] = ""
+    # graph[0, 1, 0] = "<-+"
+    # graph[1, 0, 0] = "+->"
 
-    graph[0, 1, 1] = "+->"
-    graph[1, 0, 1] = "o-o"
+    # graph[0, 1, 1] = "+->"
+    # graph[1, 0, 1] = "o-o"
 
-    graph[1, 2, 0] = "<->"
-    graph[2, 1, 0] = "<->"
+    # graph[1, 2, 0] = "<->"
+    # graph[2, 1, 0] = "<->"
 
-    graph[0, 2, 0] = "x-x"
-    graph[2, 0, 0] = "x-x"
-    nolinks = np.zeros(graph.shape)
-    # nolinks[range(4), range(4), 1] = 1
+    # graph[0, 2, 0] = "x-x"
+    # graph[2, 0, 0] = "x-x"
+    # nolinks = np.zeros(graph.shape)
+    # # nolinks[range(4), range(4), 1] = 1
 
-    # plot_time_series_graph(graph=nolinks)
-    plot_graph(graph=graph, 
-        figsize=(5, 5),
-        arrow_linewidth=6,
-        save_name="tsg_test.pdf")
+    # # plot_time_series_graph(graph=nolinks)
+    # plot_graph(graph=graph, 
+    #     figsize=(5, 5),
+    #     arrow_linewidth=6,
+    #     save_name="tsg_test.pdf")
 
     # pyplot.show()
 
+    def lin_f(x): return x
+
+    links_coeffs = {0: [((0, -1), 0.3, lin_f)], #, ((1, -1), 0.5, lin_f)],
+                1: [((1, -1), 0.3, lin_f), ((0, 0), 0.7, lin_f), ((2, -1), 0.5, lin_f)],
+                2: [],
+                3: [((3, -1), 0., lin_f), ((2, 0), 0.6, lin_f),]
+                }
+    graph = CausalEffects.get_graph_from_dict(links_coeffs, tau_max=None)
+    # print(graph)
+    X = [(0,-1)]
+    Y = [(1,0)]
+    causal_effects = CausalEffects(graph, graph_type='stationary_dag', X=X, Y=Y, S=None, 
+                                   hidden_variables=[(2, 0), (2, -1), (2, -2)], 
+                                   verbosity=0)
+
+
+    plot_time_series_graph(
+            graph = causal_effects.graph,
+            # var_names=var_names, 
+            save_name='Example.pdf',
+            figsize = (4, 4),
+            # special_nodes=special_nodes
+            )
+    # pyplot.show()

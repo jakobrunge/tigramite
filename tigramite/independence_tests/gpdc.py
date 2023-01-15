@@ -291,7 +291,7 @@ class GaussProcReg():
         Y = [(j, 0)]
         X = [(j, 0)]   # dummy variable here
         Z = parents
-        array, xyz = \
+        array, xyz, _ = \
                 self.cond_ind_test.dataframe.construct_array(
                     X=X, Y=Y, Z=Z,
                     tau_max=tau_max,
