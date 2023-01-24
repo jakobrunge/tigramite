@@ -29,7 +29,7 @@ def _generate_noise(covar_matrix, time=1000, use_inverse=False):
         Negate the off-diagonal elements and invert the covariance matrix
         before use
 
-    Returns
+    return_eigenvectors
     -------
     noise : array
         Random noise generated according to covar_matrix

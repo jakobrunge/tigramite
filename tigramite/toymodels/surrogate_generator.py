@@ -117,9 +117,10 @@ def generate_linear_model_from_data(dataframe, parents, tau_max, realizations=10
     for r in range(realizations):
         if generate_noise_from == 'covariance':
             noises = np.random.multivariate_normal(mean=mean, cov=cov, size=size)
-        else:
+        elif generate_noise_from == 'residuals':
             draw = np.random.randint(0, len(overlapping_residuals), size)
             noises = overlapping_residuals[draw]
+        else: raise ValueError("generate_noise_from has to be either 'covariance' or 'residuals'")
 
         dataset = toys.structural_causal_process(links=links_coeffs, noises=noises, T=T_data, 
                                                      transient_fraction=transient_fraction)[0]
@@ -178,6 +179,6 @@ if __name__ == '__main__':
     print(parents)
     datasets = list(generate_linear_model_from_data(dataframe, parents=parents, 
                 tau_max=tau_max, realizations=100, 
-                generate_noise_from='covariance',
+                generate_noise_from='residuals',
                 verbosity=0))
     print(datasets[0].shape)

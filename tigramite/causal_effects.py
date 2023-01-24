@@ -2304,20 +2304,10 @@ class CausalEffects():
         self.bootstrap_results = {}
 
         for b in range(boot_samples):
-            # # Get the starting indices for the blocks
-            # blk_strt = random_state.integers(max_lag, T - boot_blocklength + 1, n_blks)
-            # # Get the empty array of block resampled values
-            # boot_draw = np.zeros(n_blks*boot_blocklength, dtype='int')
-            # # Fill the array of block resamples
-            # for i in range(boot_blocklength):
-            #     boot_draw[i::boot_blocklength] = np.arange(0, T, dtype='int')[blk_strt + i]
-            # # Cut to proper length
-            # boot_draw = boot_draw[:T-max_lag]
-
             # # Replace dataframe in method args by bootstrapped dataframe
             # method_args_bootstrap['dataframe'].bootstrap = boot_draw
             if seed is None:
-                random_state = np.random.default_rng(seed)
+                random_state = np.random.default_rng(None)
             else:
                 random_state = np.random.default_rng(seed+b)
 

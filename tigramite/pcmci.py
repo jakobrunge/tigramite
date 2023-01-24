@@ -2414,22 +2414,6 @@ class PCMCI(PCMCIbase):
         if max_combinations is None:
             max_combinations = np.inf
 
-        # # Initialize initial graph from selected_links
-        # initial_graph = np.zeros((self.N, self.N, tau_max + 1), dtype='<U3')
-        # initial_graph[:] = ""
-        # for j in range(self.N):
-        #     for link in _int_sel_links[j]:
-        #         i, tau = link
-        #         if tau == 0:
-        #             if (j, 0) in _int_sel_links[i]:
-        #                 initial_graph[i, j, abs(tau)] = "o-o"
-        #                 initial_graph[j, i, abs(tau)] = "o-o"
-        #             else:
-        #                 initial_graph[i, j, abs(tau)] = "-->"
-        #                 initial_graph[j, i, abs(tau)] = "<--"
-        #         else:
-        #             initial_graph[i, j, abs(tau)] = "-->"
-
         initial_graph = self._dict_to_graph(_int_link_assumptions, tau_max=tau_max)
 
         skeleton_results = self._pcalg_skeleton(

@@ -1021,14 +1021,20 @@ class LinearMediation(Models):
             Lag of cause variable.
         j : int
             Index of effect variable.
-        k : int
-            Index of mediator variable.
+        k : int or list of ints
+            Indices of mediator variables.
 
         Returns
         -------
         mce : float
         """
-        mce = self.psi[abs(tau), j, i] - self.all_psi_k[k, abs(tau), j, i]
+        if isinstance(k, int):
+            effect_without_k = self.all_psi_k[k, abs(tau), j, i]
+        else:
+            effect_without_k = self._get_psi_k(self.phi, k=k)[abs(tau), j, i]
+
+
+        mce = self.psi[abs(tau), j, i] - effect_without_k
         return mce
 
     def get_joint_mce(self, i, j, k):
@@ -1796,9 +1802,10 @@ if __name__ == '__main__':
  
     T = 10000
     
-    links = {0: [((0, -1), 0.5, lin_f)],
-             1: [((1, -1), 0.5, lin_f), ((0, 0), 0.8, lin_f)],
-             2: [((2, -1), 0.5, lin_f), ((1, 0), 0.8, lin_f)]
+    links = {0: [((0, -1), 0., lin_f)],
+             1: [((1, -1), 0., lin_f), ((0, 0), 0.8, lin_f)],
+             2: [((2, -1), 0., lin_f), ((0, 0), 0.9, lin_f),  ((1, 0), 0.8, lin_f)],
+             3: [((3, -1), 0., lin_f), ((1, 0), 0.8, lin_f),  ((2, 0), 0.9, lin_f)]
              }
     # noises = [np.random.randn for j in links.keys()]
     data, nonstat = toys.structural_causal_process(links, T=T, noises=None, seed=7)
@@ -1807,19 +1814,22 @@ if __name__ == '__main__':
 
     med = LinearMediation(dataframe=dataframe, 
         data_transform=None)
-    med.fit_model(all_parents=true_parents, tau_max=2)
-    med.fit_model_bootstrap()
+    med.fit_model(all_parents=true_parents, tau_max=1)
+    # med.fit_model_bootstrap()
 
     # print(med.get_val_matrix())
 
-    print (med.get_joint_ce_matrix(i=0,  j=2))
-    print(med.get_bootstrap_of(function='get_joint_ce_matrix', 
-        function_args={'i':0,   'j':2}, conf_lev=0.9))
+    # print (med.get_joint_ce_matrix(i=0,  j=2))
+    # print(med.get_bootstrap_of(function='get_joint_ce_matrix', 
+    #     function_args={'i':0,   'j':2}, conf_lev=0.9))
 
     # print (med.get_coeff(i=0, tau=-2, j=1))
 
     # # print (med.get_ce_max(i=0, j=2))
-    # print (med.get_mce(i=0, tau=-2, k=1, j=2))
+    print (med.get_ce(i=0, tau=0, j=3))
+    print (med.get_mce(i=0, tau=0, k=[2], j=3))
+    print (med.get_mce(i=0, tau=0, k=[1,2], j=3) - med.get_mce(i=0, tau=0, k=[1], j=3))
+
     # print(med.get_joint_ce(i=0, j=2))
     # print(med.get_joint_mce(i=0, j=2, k=1))
 
