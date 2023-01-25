@@ -13,23 +13,39 @@ import numpy as np
 from tigramite.toymodels import structural_causal_processes as toys
 
 
+
 def generate_linear_model_from_data(dataframe, parents, tau_max, realizations=100, 
                 generate_noise_from='covariance',  
                 T_data = None,
                 model_params=None,
                 data_transform=None,
                 mask_type='y',
+                boot_blocklength=1,
+                seed=42,
                 verbosity=0):
     """
     Fits a (contemporaneous and lagged) linear SCM to data, computes
     residuals, and then generates surrogate realizations with noise drawn
     with replacement from residuals or from a multivariate normal.
+    
+    Parameters
+    ----------
+    generate_noise_from : {'coveriance', 'residuals'}
+        Whether to generate the noise from a gaussian with same mean and covariance
+        as residuals, or by drawing (with replacement) from the resisuals.
+    boot_blocklength : int, optional (default: 1)
+        Block length for block-bootstrap, which only applies to generate_noise_from='residuals'. 
+         None, the block length is determined from the decay of the autocovariance and if 'cuberoot' it
+         is the cube root of the time series length.
+
     """
 
     from tigramite.models import Models, Prediction
     from sklearn.linear_model import LinearRegression
 
     assert dataframe.analysis_mode == 'single'
+
+    random_state = np.random.default_rng(seed)
 
     if model_params is None:
         model_params = {}
@@ -100,6 +116,8 @@ def generate_linear_model_from_data(dataframe, parents, tau_max, realizations=10
     
     overlapping_residuals = residuals[overlapping]
 
+    len_residuals = len(overlapping_residuals)
+
     if generate_noise_from == 'covariance':
         cov = np.cov(overlapping_residuals, rowvar=0)
         mean = np.mean(overlapping_residuals, axis=0)   # residuals should have zero mean due to prediction including constant
@@ -118,8 +136,36 @@ def generate_linear_model_from_data(dataframe, parents, tau_max, realizations=10
         if generate_noise_from == 'covariance':
             noises = np.random.multivariate_normal(mean=mean, cov=cov, size=size)
         elif generate_noise_from == 'residuals':
-            draw = np.random.randint(0, len(overlapping_residuals), size)
+            if boot_blocklength == 'cube_root':
+                boot_blocklength = max(1, int(T_data**(1/3)))
+            elif boot_blocklength is None:
+                boot_blocklength = \
+                    get_block_length(overlapping_residuals.T, xyz=np.zeros(N), mode='confidence')
+
+            # Determine the number of blocks total, rounding up for non-integer
+            # amounts
+            n_blks = int(math.ceil(float(size)/boot_blocklength))
+
+            if n_blks < 10:
+                raise ValueError("Only %d block(s) for block-sampling,"  %n_blks +
+                                 "choose smaller boot_blocklength!")
+
+            # Get the starting indices for the blocks
+            blk_strt = random_state.choice(np.arange(len_residuals - boot_blocklength), size=n_blks, replace=True)
+
+            # Get the empty array of block resampled values
+            boot_draw = np.zeros(n_blks*boot_blocklength, dtype='int')
+            # Fill the array of block resamples
+            for i in range(boot_blocklength):
+                boot_draw[i::boot_blocklength] = np.arange(size)[blk_strt + i]
+            # Cut to proper length
+            draw = boot_draw[:size]
+            # print(draw.shape, overlapping_residuals.shape)
+
+            # draw = np.random.randint(0, len(overlapping_residuals), size)
+            
             noises = overlapping_residuals[draw]
+            # print(noises.shape)
         else: raise ValueError("generate_noise_from has to be either 'covariance' or 'residuals'")
 
         dataset = toys.structural_causal_process(links=links_coeffs, noises=noises, T=T_data, 
@@ -130,6 +176,109 @@ def generate_linear_model_from_data(dataframe, parents, tau_max, realizations=10
         yield dataset
 
     # return self   #datasets
+
+
+def get_acf(series, max_lag=None):
+    """Returns autocorrelation function.
+
+    Parameters
+    ----------
+    series : 1D-array
+        data series to compute autocorrelation from
+
+    max_lag : int, optional (default: None)
+        maximum lag for autocorrelation function. If None is passed, 10% of
+        the data series length are used.
+
+    Returns
+    -------
+    autocorr : array of shape (max_lag + 1,)
+        Autocorrelation function.
+    """
+    # Set the default max lag
+    if max_lag is None:
+        max_lag = int(max(5, 0.1*len(series)))
+    # Initialize the result
+    autocorr = np.ones(max_lag + 1)
+    # Iterate over possible lags
+    for lag in range(1, max_lag + 1):
+        # Set the values
+        y1_vals = series[lag:]
+        y2_vals = series[:len(series) - lag]
+        # Calculate the autocorrelation
+        autocorr[lag] = np.corrcoef(y1_vals, y2_vals, ddof=0)[0, 1]
+    return autocorr
+
+def get_block_length(array, xyz, mode):
+    """Returns optimal block length for significance and confidence tests.
+
+    Determine block length using approach in Mader (2013) [Eq. (6)] which
+    improves the method of Pfeifer (2005) with non-overlapping blocks In
+    case of multidimensional X, the max is used. Further details in [1]_.
+    Two modes are available. For mode='significance', only the indices
+    corresponding to X are shuffled in array. For mode='confidence' all
+    variables are jointly shuffled. If the autocorrelation curve fit fails,
+    a block length of 5% of T is used. The block length is limited to a
+    maximum of 10% of T.
+
+    Parameters
+    ----------
+    array : array-like
+        data array with X, Y, Z in rows and observations in columns
+
+    xyz : array of ints
+        XYZ identifier array of shape (dim,).
+
+    mode : str
+        Which mode to use.
+
+    Returns
+    -------
+    block_len : int
+        Optimal block length.
+    """
+    # Inject a dependency on siganal, optimize
+    from scipy import signal, optimize
+    # Get the shape of the array
+    dim, T = array.shape
+    # Initiailize the indices
+    indices = range(dim)
+    if mode == 'significance':
+        indices = np.where(xyz == 0)[0]
+
+    # Maximum lag for autocov estimation
+    max_lag = int(0.1*T)
+    # Define the function to optimize against
+    def func(x_vals, a_const, decay):
+        return a_const * decay**x_vals
+
+    # Calculate the block length
+    block_len = 1
+    for i in indices:
+        # Get decay rate of envelope of autocorrelation functions
+        # via hilbert trafo
+        autocov = get_acf(series=array[i], max_lag=max_lag)
+        autocov[0] = 1.
+        hilbert = np.abs(signal.hilbert(autocov))
+        # Try to fit the curve
+        try:
+            popt, _ = optimize.curve_fit(
+                f=func,
+                xdata=np.arange(0, max_lag+1),
+                ydata=hilbert,
+            )
+            phi = popt[1]
+            # Formula of Pfeifer (2005) assuming non-overlapping blocks
+            l_opt = (4. * T * (phi / (1. - phi) + phi**2 / (1. - phi)**2)**2
+                     / (1. + 2. * phi / (1. - phi))**2)**(1. / 3.)
+            block_len = max(block_len, int(l_opt))
+        except RuntimeError:
+            warnings.warn("Error - curve_fit failed for estimating block_shuffle length, using"
+                  " block_len = %d" % (int(.05 * T)))
+            # block_len = max(int(.05 * T), block_len)
+    # Limit block length to a maximum of 10% of T
+    block_len = min(block_len, int(0.1 * T))
+    return block_len
 
 
 if __name__ == '__main__':
@@ -180,5 +329,6 @@ if __name__ == '__main__':
     datasets = list(generate_linear_model_from_data(dataframe, parents=parents, 
                 tau_max=tau_max, realizations=100, 
                 generate_noise_from='residuals',
+                boot_blocklength='cube_root',
                 verbosity=0))
     print(datasets[0].shape)

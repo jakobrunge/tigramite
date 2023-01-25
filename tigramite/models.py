@@ -626,6 +626,7 @@ class LinearMediation(Models):
 
     def fit_model_bootstrap(self, 
             generate_noise_from='covariance',
+            boot_blocklength=1,
             realizations=100):
         """Fits boostrap-versions of Phi, Psi, etc.
 
@@ -639,8 +640,15 @@ class LinearMediation(Models):
 
         Parameters
         ----------
-        boot_samples : int
-            Number of boostrap realizations.
+        generate_noise_from : {'coveriance', 'residuals'}
+            Whether to generate the noise from a gaussian with same mean and covariance
+            as residuals, or by drawing (with replacement) from the resisuals.
+        boot_blocklength : int, optional (default: 1)
+            Block length for block-bootstrap, which only applies to generate_noise_from='residuals'. 
+             None, the block length is determined from the decay of the autocovariance and if 'cube_root' it
+             is the cube root of the time series length.
+        realizations : int
+            Number of realizations.
         """
 
         # from tigramite.toymodels import surrogate_generator 
@@ -652,7 +660,8 @@ class LinearMediation(Models):
                     parents=self.all_parents, 
                     tau_max=self.tau_max, 
                     realizations=realizations, 
-                    generate_noise_from=generate_noise_from,  
+                    generate_noise_from=generate_noise_from, 
+                    boot_blocklength= boot_blocklength,
                     verbosity=0)
 
 
@@ -1815,7 +1824,7 @@ if __name__ == '__main__':
     med = LinearMediation(dataframe=dataframe, 
         data_transform=None)
     med.fit_model(all_parents=true_parents, tau_max=1)
-    # med.fit_model_bootstrap()
+    med.fit_model_bootstrap(generate_noise_from='residuals', boot_blocklength=None)
 
     # print(med.get_val_matrix())
 

@@ -939,7 +939,7 @@ class CondIndTest():
             except RuntimeError:
                 print("Error - curve_fit failed in block_shuffle, using"
                       " block_len = %d" % (int(.05 * T)))
-                block_len = max(int(.05 * T), 2)
+                # block_len = max(int(.05 * T), block_len)
         # Limit block length to a maximum of 10% of T
         block_len = min(block_len, int(0.1 * T))
         return block_len

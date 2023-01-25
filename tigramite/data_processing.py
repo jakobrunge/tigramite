@@ -746,36 +746,6 @@ class DataFrame():
                 ref_points_here_2_tau_max = ref_points_here_2_tau_max[ref_points_here_2_tau_max  >= 2*tau_max]
                 ref_points_here_2_tau_max = ref_points_here_2_tau_max[ref_points_here_2_tau_max  < self.T[ens_member_key]]
 
-            # # Take care of missing values by removing reference points for which
-            # #  there is a missing value
-            # # - at the time point specified by the reference point
-            # # - at a time point 1, ..., max_lag time steps after (temporally,
-            # # i.e., later in time) that time point
-            # if self.missing_flag is not None:
-            #     # Determine the time steps where at least one data value is
-            #     # missing
-            #     # missing_anywhere = np.any(ens_member_data == self.missing_flag, axis=1)
-            #     # missing_anywhere_idx = np.nonzero(missing_anywhere)[0]
-            #     missing_anywhere_idx = np.array(np.where(np.any(np.isnan(ens_member_data), axis=1))[0])
-
-            #     # Determine the time steps that need to be removed
-            #     if self.remove_missing_upto_maxlag:
-            #         idx_to_remove = set(idx + tau for idx in missing_anywhere_idx for tau in range(max_lag + 1))
-            #     else:
-            #         idx_to_remove = set(idx for idx in missing_anywhere_idx)
-            #     print(idx_to_remove)
-            #     # Determine the valid reference points
-            #     ref_points_here = set(ref_points_here).difference(idx_to_remove)
-            #     ref_points_here = np.array(list(ref_points_here))
-
-            #     # Keep track of which reference points would have remained for
-            #     # max_lag == 2*tau_max
-            #     if cut_off == '2xtau_max_future':
-            #         # TODO: Check this one regarding self.remove_missing_upto_maxlag=False
-            #         idx_to_remove_2_tau_max = set(idx + tau for idx in missing_anywhere_idx for tau in range(2*tau_max + 1))
-            #         ref_points_here_2_tau_max = set(ref_points_here_2_tau_max).difference(idx_to_remove_2_tau_max)
-            #         ref_points_here_2_tau_max = np.array(list(ref_points_here_2_tau_max))
-
             # Sort the valid reference points (not needed, but might be useful
             # for detailed debugging)
             ref_points_here = np.sort(ref_points_here)
@@ -797,6 +767,11 @@ class DataFrame():
             if self.bootstrap is not None:
 
                 boot_blocklength = self.bootstrap['boot_blocklength']
+
+                if boot_blocklength == 'cube_root':
+                    boot_blocklength = max(1, int(len(ref_points_here)**(1/3)))
+                    # boot_blocklength = \
+                    #     get_block_length(array, xyz, mode='confidence')
 
                 # Chooses THE SAME random seed for every dataset, maybe that's what we want...
                 # If the reference points are all the same, this will give the same bootstrap
@@ -850,14 +825,6 @@ class DataFrame():
             # slices that occur up to max_lag after
             if self.missing_flag is not None:
                 missing_anywhere = np.array(np.where(np.any(np.isnan(samples_ens_members[ens_member_key]), axis=0))[0])
-                # if self.remove_missing_upto_maxlag:
-
-                #     for tau in range(max_lag+1):
-                #         delete = missing_anywhere + tau 
-                #         delete = delete[delete < len(ref_points_here)]
-                #         use_indices_ens_member[delete] = 0
-                # else:
-                #     use_indices_ens_member[missing_anywhere] = 0
 
                 if self.remove_missing_upto_maxlag:
                     idx_to_remove = set(idx + tau for idx in missing_anywhere for tau in range(max_lag + 1))
@@ -994,6 +961,108 @@ class DataFrame():
         if self.missing_flag is not None:
             print(indt+"with missing values = %s removed" % self.missing_flag)
 
+
+def get_acf(series, max_lag=None):
+    """Returns autocorrelation function.
+
+    Parameters
+    ----------
+    series : 1D-array
+        data series to compute autocorrelation from
+
+    max_lag : int, optional (default: None)
+        maximum lag for autocorrelation function. If None is passed, 10% of
+        the data series length are used.
+
+    Returns
+    -------
+    autocorr : array of shape (max_lag + 1,)
+        Autocorrelation function.
+    """
+    # Set the default max lag
+    if max_lag is None:
+        max_lag = int(max(5, 0.1*len(series)))
+    # Initialize the result
+    autocorr = np.ones(max_lag + 1)
+    # Iterate over possible lags
+    for lag in range(1, max_lag + 1):
+        # Set the values
+        y1_vals = series[lag:]
+        y2_vals = series[:len(series) - lag]
+        # Calculate the autocorrelation
+        autocorr[lag] = np.corrcoef(y1_vals, y2_vals, ddof=0)[0, 1]
+    return autocorr
+
+def get_block_length(array, xyz, mode):
+    """Returns optimal block length for significance and confidence tests.
+
+    Determine block length using approach in Mader (2013) [Eq. (6)] which
+    improves the method of Pfeifer (2005) with non-overlapping blocks In
+    case of multidimensional X, the max is used. Further details in [1]_.
+    Two modes are available. For mode='significance', only the indices
+    corresponding to X are shuffled in array. For mode='confidence' all
+    variables are jointly shuffled. If the autocorrelation curve fit fails,
+    a block length of 5% of T is used. The block length is limited to a
+    maximum of 10% of T.
+
+    Parameters
+    ----------
+    array : array-like
+        data array with X, Y, Z in rows and observations in columns
+
+    xyz : array of ints
+        XYZ identifier array of shape (dim,).
+
+    mode : str
+        Which mode to use.
+
+    Returns
+    -------
+    block_len : int
+        Optimal block length.
+    """
+    # Inject a dependency on siganal, optimize
+    from scipy import signal, optimize
+    # Get the shape of the array
+    dim, T = array.shape
+    # Initiailize the indices
+    indices = range(dim)
+    if mode == 'significance':
+        indices = np.where(xyz == 0)[0]
+
+    # Maximum lag for autocov estimation
+    max_lag = int(0.1*T)
+    # Define the function to optimize against
+    def func(x_vals, a_const, decay):
+        return a_const * decay**x_vals
+
+    # Calculate the block length
+    block_len = 1
+    for i in indices:
+        # Get decay rate of envelope of autocorrelation functions
+        # via hilbert trafo
+        autocov = get_acf(series=array[i], max_lag=max_lag)
+        autocov[0] = 1.
+        hilbert = np.abs(signal.hilbert(autocov))
+        # Try to fit the curve
+        try:
+            popt, _ = optimize.curve_fit(
+                f=func,
+                xdata=np.arange(0, max_lag+1),
+                ydata=hilbert,
+            )
+            phi = popt[1]
+            # Formula of Pfeifer (2005) assuming non-overlapping blocks
+            l_opt = (4. * T * (phi / (1. - phi) + phi**2 / (1. - phi)**2)**2
+                     / (1. + 2. * phi / (1. - phi))**2)**(1. / 3.)
+            block_len = max(block_len, int(l_opt))
+        except RuntimeError:
+            warnings.warn("Error - curve_fit failed for estimating block_shuffle length, using"
+                  " block_len = %d" % (int(.05 * T)))
+            # block_len = max(int(.05 * T), block_len)
+    # Limit block length to a maximum of 10% of T
+    block_len = min(block_len, int(0.1 * T))
+    return block_len
 
 
 def lowhighpass_filter(data, cutperiod, pass_periods='low'):
