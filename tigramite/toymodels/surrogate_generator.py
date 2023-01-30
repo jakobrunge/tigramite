@@ -33,11 +33,11 @@ def generate_linear_model_from_data(dataframe, parents, tau_max, realizations=10
     generate_noise_from : {'coveriance', 'residuals'}
         Whether to generate the noise from a gaussian with same mean and covariance
         as residuals, or by drawing (with replacement) from the resisuals.
-    boot_blocklength : int, optional (default: 1)
-        Block length for block-bootstrap, which only applies to generate_noise_from='residuals'. 
-         None, the block length is determined from the decay of the autocovariance and if 'cuberoot' it
-         is the cube root of the time series length.
-
+    boot_blocklength : int, or in {'cube_root', 'from_autocorrelation'}
+        Block length for block-bootstrap, which only applies to
+        generate_noise_from='residuals'. If 'from_autocorrelation', the block
+        length is determined from the decay of the autocovariance and
+        if 'cube_root' it is the cube root of the time series length.
     """
 
     from tigramite.models import Models, Prediction
@@ -65,21 +65,6 @@ def generate_linear_model_from_data(dataframe, parents, tau_max, realizations=10
                    mask_type=mask_type,
                    verbosity=0)
 
-    links_coeffs = {}
-    for j in range(N):
-        links_coeffs[j] = []
-        if len(parents[j]) > 0:
-            fit_res = model.get_general_fitted_model(
-                Y=[(j, 0)], X=list(parents[j]), Z=[],
-                conditions=None,
-                tau_max=tau_max,
-                cut_off='tau_max',
-                return_data=False)
-
-            for ipar, par in enumerate(parents[j]):
-                links_coeffs[j].append(((par[0], int(par[1])), fit_res[(j,0)]['model'].coef_[ipar], lin_f))
-                if verbosity > 0:
-                    print(j, ((par[0], int(par[1])), np.round(fit_res[(j,0)]['model'].coef_[ipar], 2),) )
 
     ## Estimate noise covariance matrix of residuals
     prediction = Prediction(dataframe=dataframe,
@@ -91,11 +76,19 @@ def generate_linear_model_from_data(dataframe, parents, tau_max, realizations=10
 
     prediction.fit(target_predictors=parents, tau_max=tau_max, return_data=True)
 
+    links_coeffs = {}
+    for j in range(N):
+        links_coeffs[j] = []
+        if len(parents[j]) > 0:
+            for ipar, par in enumerate(parents[j]):
+                links_coeffs[j].append(((par[0], int(par[1])), prediction.fitted_model[j]['model'].coef_[ipar], lin_f))
+                if verbosity > 0:
+                    print(j, ((par[0], int(par[1])), np.round(prediction.fitted_model[j]['model'].coef_[ipar], 2),) )
+
     # Get overlapping samples
     used_indices = {}
     overlapping = set(list(range(0, T)))
     for j in parents:
-        # print(j, prediction.fitted_model[j])
         if prediction.fitted_model[j] is not None:
             used_indices[j] = set(prediction.fitted_model[j]['used_indices'][0])
             overlapping = overlapping.intersection(used_indices[j])
@@ -127,28 +120,33 @@ def generate_linear_model_from_data(dataframe, parents, tau_max, realizations=10
             print('mean')
             print(np.round(mean, 2))
 
-
     ## Construct linear Gaussian structural causal model with this noise structure and generate many realizations with same sample size as data
     transient_fraction = 0.2
     size = T_data + int(math.floor(transient_fraction*T_data))
     # datasets = {}
+
+    if generate_noise_from == 'residuals':
+        if boot_blocklength == 'cube_root':
+            boot_blocklength = max(1, int(T_data**(1/3)))
+        elif boot_blocklength == 'from_autocorrelation':
+            boot_blocklength = \
+                get_block_length(overlapping_residuals.T, xyz=np.zeros(N), mode='confidence')
+        elif type(boot_blocklength) is int and boot_blocklength > 0:
+            pass
+        else:
+            raise ValueError("boot_blocklength must be integer > 0, 'cube_root', or 'from_autocorrelation'")
+
+        # Determine the number of blocks total, rounding up for non-integer
+        # amounts
+        n_blks = int(math.ceil(float(size)/boot_blocklength))
+        if n_blks < 10:
+            raise ValueError("Only %d block(s) for block-sampling,"  %n_blks +
+                             "choose smaller boot_blocklength!")
+
     for r in range(realizations):
         if generate_noise_from == 'covariance':
             noises = np.random.multivariate_normal(mean=mean, cov=cov, size=size)
         elif generate_noise_from == 'residuals':
-            if boot_blocklength == 'cube_root':
-                boot_blocklength = max(1, int(T_data**(1/3)))
-            elif boot_blocklength is None:
-                boot_blocklength = \
-                    get_block_length(overlapping_residuals.T, xyz=np.zeros(N), mode='confidence')
-
-            # Determine the number of blocks total, rounding up for non-integer
-            # amounts
-            n_blks = int(math.ceil(float(size)/boot_blocklength))
-
-            if n_blks < 10:
-                raise ValueError("Only %d block(s) for block-sampling,"  %n_blks +
-                                 "choose smaller boot_blocklength!")
 
             # Get the starting indices for the blocks
             blk_strt = random_state.choice(np.arange(len_residuals - boot_blocklength), size=n_blks, replace=True)
@@ -160,12 +158,9 @@ def generate_linear_model_from_data(dataframe, parents, tau_max, realizations=10
                 boot_draw[i::boot_blocklength] = np.arange(size)[blk_strt + i]
             # Cut to proper length
             draw = boot_draw[:size]
-            # print(draw.shape, overlapping_residuals.shape)
-
-            # draw = np.random.randint(0, len(overlapping_residuals), size)
-            
+            # draw = np.random.randint(0, len(overlapping_residuals), size)    
             noises = overlapping_residuals[draw]
-            # print(noises.shape)
+
         else: raise ValueError("generate_noise_from has to be either 'covariance' or 'residuals'")
 
         dataset = toys.structural_causal_process(links=links_coeffs, noises=noises, T=T_data, 
@@ -206,7 +201,7 @@ def get_acf(series, max_lag=None):
         y1_vals = series[lag:]
         y2_vals = series[:len(series) - lag]
         # Calculate the autocorrelation
-        autocorr[lag] = np.corrcoef(y1_vals, y2_vals, ddof=0)[0, 1]
+        autocorr[lag] = np.corrcoef(y1_vals, y2_vals)[0, 1]
     return autocorr
 
 def get_block_length(array, xyz, mode):
@@ -268,14 +263,16 @@ def get_block_length(array, xyz, mode):
                 ydata=hilbert,
             )
             phi = popt[1]
-            # Formula of Pfeifer (2005) assuming non-overlapping blocks
+            # Formula of Peifer (2005) assuming non-overlapping blocks
             l_opt = (4. * T * (phi / (1. - phi) + phi**2 / (1. - phi)**2)**2
                      / (1. + 2. * phi / (1. - phi))**2)**(1. / 3.)
             block_len = max(block_len, int(l_opt))
+
         except RuntimeError:
             warnings.warn("Error - curve_fit failed for estimating block_shuffle length, using"
                   " block_len = %d" % (int(.05 * T)))
             # block_len = max(int(.05 * T), block_len)
+
     # Limit block length to a maximum of 10% of T
     block_len = min(block_len, int(0.1 * T))
     return block_len
@@ -289,16 +286,16 @@ if __name__ == '__main__':
     
     np.random.seed(14)     # Fix random seed
     lin_f = lambda x: x
-    links_coeffs = {0: [((0, -1), 0.7, lin_f)],
-                    1: [((1, -1), 0.8, lin_f), ((0, -1), 0.3, lin_f)],
-                    2: [((2, -1), 0.5, lin_f), ((0, -2), -0.5, lin_f)],
-                    3: [((3, -1), 0., lin_f)], #, ((4, -1), 0.4, lin_f)],
-                    4: [((4, -1), 0., lin_f), ((3, 0), 0.5, lin_f)], #, ((3, -1), 0.3, lin_f)],
+    links_coeffs = {0: [((0, -1), 0.98, lin_f), ((0, -2), -0.7, lin_f)],
+                    1: [((1, -1), 0.9, lin_f), ((0, -1), 0.3, lin_f)],
+                    2: [((2, -1), 0.9, lin_f), ((0, -2), -0.5, lin_f)],
+                    3: [((3, -1), 0.9, lin_f)], #, ((4, -1), 0.4, lin_f)],
+                    4: [((4, -1), 0.9, lin_f), ((3, 0), 0.5, lin_f)], #, ((3, -1), 0.3, lin_f)],
                     }
-    T = 100     # time series length
+    T = 2000     # time series length
     # Make some noise with different variance, alternatively just noises=None
-    noises = np.array([(1. + 0.2*float(j))*np.random.randn((T + int(math.floor(0.2*T)))) 
-                       for j in range(len(links_coeffs))]).T
+    noises = None  # np.array([(1. + 0.2*float(j))*np.random.randn((T + int(math.floor(0.2*T)))) 
+                       # for j in range(len(links_coeffs))]).T
 
     data, _ = toys.structural_causal_process(links_coeffs, T=T, noises=noises)
     T, N = data.shape
@@ -323,12 +320,12 @@ if __name__ == '__main__':
     parents = {}
     for j in links_coeffs:
         parents[j] = []
-        for par in links_coeffs[j]:
-            parents[j].append(par[0])
+        # for par in links_coeffs[j]:
+        #     parents[j].append(par[0])
     print(parents)
     datasets = list(generate_linear_model_from_data(dataframe, parents=parents, 
                 tau_max=tau_max, realizations=100, 
                 generate_noise_from='residuals',
-                boot_blocklength='cube_root',
+                boot_blocklength='from_autocorrelation',
                 verbosity=0))
     print(datasets[0].shape)

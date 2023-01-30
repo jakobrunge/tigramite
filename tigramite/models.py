@@ -421,23 +421,22 @@ class Models():
             # Transform the data if needed
             if self.data_transform is not None:
                 array = self.data_transform.fit_transform(X=array.T).T
+            # Cache the results
+            fit_results[j] = {}
+            # Cache the data transform
+            fit_results[j]['data_transform'] = deepcopy(self.data_transform)
+
+            if return_data:
+                # Cache the data if needed
+                fit_results[j]['data'] = array
+                fit_results[j]['used_indices'] = self.dataframe.use_indices_ens_member_dict
             # Fit the model if there are any parents for this variable to fit
             if dim_z > 0:
                 # Copy and fit the model
                 a_model = deepcopy(self.model)
                 a_model.fit(X=array[2:].T, y=array[1])
-                # Cache the results
-                fit_results[j] = {}
+
                 fit_results[j]['model'] = a_model
-                # Cache the data transform
-                fit_results[j]['data_transform'] = deepcopy(self.data_transform)
-                # Cache the data if needed
-                if return_data:
-                    fit_results[j]['data'] = array
-                    fit_results[j]['used_indices'] = self.dataframe.use_indices_ens_member_dict
-            # If there are no parents, skip this variable
-            else:
-                fit_results[j] = None
 
         # Cache and return the fit results
         self.fit_results = fit_results
@@ -643,10 +642,11 @@ class LinearMediation(Models):
         generate_noise_from : {'coveriance', 'residuals'}
             Whether to generate the noise from a gaussian with same mean and covariance
             as residuals, or by drawing (with replacement) from the resisuals.
-        boot_blocklength : int, optional (default: 1)
-            Block length for block-bootstrap, which only applies to generate_noise_from='residuals'. 
-             None, the block length is determined from the decay of the autocovariance and if 'cube_root' it
-             is the cube root of the time series length.
+        boot_blocklength : int, or in {'cube_root', 'from_autocorrelation'}
+            Block length for block-bootstrap, which only applies to
+            generate_noise_from='residuals'. If 'from_autocorrelation', the block
+            length is determined from the decay of the autocovariance and
+            if 'cube_root' it is the cube root of the time series length.
         realizations : int
             Number of realizations.
         """
@@ -661,7 +661,7 @@ class LinearMediation(Models):
                     tau_max=self.tau_max, 
                     realizations=realizations, 
                     generate_noise_from=generate_noise_from, 
-                    boot_blocklength= boot_blocklength,
+                    boot_blocklength=boot_blocklength,
                     verbosity=0)
 
 
@@ -719,6 +719,7 @@ class LinearMediation(Models):
             'get_joint_ce',
             'get_joint_ce_matrix',
             'get_mce',
+            'get_conditional_mce',
             'get_joint_mce',
             'get_ace',
             'get_all_ace',
@@ -1042,9 +1043,51 @@ class LinearMediation(Models):
         else:
             effect_without_k = self._get_psi_k(self.phi, k=k)[abs(tau), j, i]
 
-
         mce = self.psi[abs(tau), j, i] - effect_without_k
         return mce
+
+    def get_conditional_mce(self, i, tau, j, k, notk):
+        """Returns the conditional mediated causal effect.
+
+        This is the causal effect for  i --> j for all paths going through k, but not through notk.
+
+        Parameters
+        ----------
+        i : int
+            Index of cause variable.
+        tau : int
+            Lag of cause variable.
+        j : int
+            Index of effect variable.
+        k : int or list of ints
+            Indices of mediator variables.
+        notk : int or list of ints
+            Indices of mediator variables to exclude.
+
+        Returns
+        -------
+        mce : float
+        """
+        if isinstance(k, int):
+            k = set([k])
+        else:
+            k = set(k)
+        if isinstance(notk, int):
+            notk = set([notk])
+        else:
+            notk = set(notk)
+
+        bothk = list(k.union(notk))
+        notk = list(notk)
+  
+        effect_without_bothk = self._get_psi_k(self.phi, k=bothk)[abs(tau), j, i]
+        effect_without_notk = self._get_psi_k(self.phi, k=notk)[abs(tau), j, i]
+
+        # mce = self.psi[abs(tau), j, i] - effect_without_k
+        mce = effect_without_notk - effect_without_bothk
+
+        return mce
+
 
     def get_joint_mce(self, i, j, k):
         """Returns the joint causal effect mediated through k.
@@ -1809,12 +1852,12 @@ if __name__ == '__main__':
 
     def lin_f(x): return x
  
-    T = 10000
+    T = 1000
     
-    links = {0: [((0, -1), 0., lin_f)],
-             1: [((1, -1), 0., lin_f), ((0, 0), 0.8, lin_f)],
-             2: [((2, -1), 0., lin_f), ((0, 0), 0.9, lin_f),  ((1, 0), 0.8, lin_f)],
-             3: [((3, -1), 0., lin_f), ((1, 0), 0.8, lin_f),  ((2, 0), 0.9, lin_f)]
+    links = {0: [((0, -1), 0.2, lin_f)],
+             1: [((1, -1), 0.2, lin_f), ((0, 0), 0.8, lin_f)],
+             2: [((2, -1), 0.2, lin_f), ((0, 0), 0.9, lin_f),  ((1, 0), 0.8, lin_f)],
+             3: [((3, -1), 0.2, lin_f), ((1, 0), 0.8, lin_f),  ((2, 0), 0.9, lin_f)]
              }
     # noises = [np.random.randn for j in links.keys()]
     data, nonstat = toys.structural_causal_process(links, T=T, noises=None, seed=7)
@@ -1824,7 +1867,11 @@ if __name__ == '__main__':
     med = LinearMediation(dataframe=dataframe, 
         data_transform=None)
     med.fit_model(all_parents=true_parents, tau_max=1)
-    med.fit_model_bootstrap(generate_noise_from='residuals', boot_blocklength=None)
+    med.fit_model_bootstrap(generate_noise_from='residuals', 
+                boot_blocklength='from_autocorrelation',
+                # boot_blocklength='cube_root',
+                # boot_blocklength=-10,
+                )
 
     # print(med.get_val_matrix())
 
@@ -1838,6 +1885,8 @@ if __name__ == '__main__':
     print (med.get_ce(i=0, tau=0, j=3))
     print (med.get_mce(i=0, tau=0, k=[2], j=3))
     print (med.get_mce(i=0, tau=0, k=[1,2], j=3) - med.get_mce(i=0, tau=0, k=[1], j=3))
+    print (med.get_conditional_mce(i=0, tau=0, k=[2], notk=[1], j=3))
+    print (med.get_bootstrap_of('get_conditional_mce', {'i':0, 'tau':0, 'k':[2], 'notk':[1], 'j':3}))
 
     # print(med.get_joint_ce(i=0, j=2))
     # print(med.get_joint_mce(i=0, j=2, k=1))
