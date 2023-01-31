@@ -240,22 +240,22 @@ class DataFrame():
 
             elif isinstance(data, dict):
                 _N_list = set()
-                for ens_member_key, ens_member_data in data.items():
-                    if isinstance(ens_member_data, np.ndarray):
-                        _ens_member_data_shape = ens_member_data.shape
-                        if len(_ens_member_data_shape) == 2:
-                            _N_list.add(_ens_member_data_shape[1])
+                for dataset_key, dataset_data in data.items():
+                    if isinstance(dataset_data, np.ndarray):
+                        _dataset_data_shape = dataset_data.shape
+                        if len(_dataset_data_shape) == 2:
+                            _N_list.add(_dataset_data_shape[1])
                         else:
                             raise TypeError("In analysis mode 'multiple', "\
                                 "'data' given as dictionary. 'data'[{}] is of "\
                                 "shape {}, must be of shape (T_i, N).".format(
-                                    ens_member_key, _ens_member_data_shape))
+                                    dataset_key, _dataset_data_shape))
 
                     else:
                         raise TypeError("In analysis mode 'multiple', 'data' "\
                             "given as dictionary. 'data'[{}] is of type {}, "\
-                            "must be np.ndarray.".format(ens_member_key,
-                                type(ens_member_data)))
+                            "must be np.ndarray.".format(dataset_key,
+                                type(dataset_data)))
 
                 if len(_N_list) == 1:
                     self.values = data.copy()
@@ -278,13 +278,13 @@ class DataFrame():
         self.M = len(self.values) # (Number of datasets)
 
         self.T = dict() # (Time lengths of the individual datasets)
-        for ens_member_key, ens_member_data in self.values.items():
-            if np.isnan(ens_member_data).sum() != 0:
+        for dataset_key, dataset_data in self.values.items():
+            if np.isnan(dataset_data).sum() != 0:
                 raise ValueError("NaNs in the data.")
 
-            _ens_member_data_shape = ens_member_data.shape
-            self.T[ens_member_key] = _ens_member_data_shape[0]
-            self.Ndata = _ens_member_data_shape[1] # (Number of variables) 
+            _dataset_data_shape = dataset_data.shape
+            self.T[dataset_key] = _dataset_data_shape[0]
+            self.Ndata = _dataset_data_shape[1] # (Number of variables) 
             # N does not vary across the datasets
 
         # Setup dictionary of variables for vector mode
@@ -345,8 +345,8 @@ class DataFrame():
         # Save the 'missing_flag' value
         self.missing_flag = missing_flag
         if self.missing_flag is not None:
-            for ens_member_key in self.values:
-                self.values[ens_member_key][self.values[ens_member_key] == self.missing_flag] = np.nan
+            for dataset_key in self.values:
+                self.values[dataset_key][self.values[dataset_key] == self.missing_flag] = np.nan
         self.remove_missing_upto_maxlag = remove_missing_upto_maxlag
 
         # If PCMCI.run_bootstrap_of is called, then the
@@ -386,12 +386,12 @@ class DataFrame():
 
             elif isinstance(_use_mask, dict):
                 if len(_use_mask) == self.M:
-                    for ens_member_key in self.values.keys():
-                        if _use_mask.get(ens_member_key) is None:
+                    for dataset_key in self.values.keys():
+                        if _use_mask.get(dataset_key) is None:
                             raise ValueError("'data' has key {} (type {}) "\
                                 "but 'mask' does not, keys must be "\
-                                "identical.".format(ens_member_key,
-                                    type(ens_member_key)))
+                                "identical.".format(dataset_key,
+                                    type(dataset_key)))
 
                     _use_mask_dict = _use_mask
 
@@ -404,9 +404,9 @@ class DataFrame():
                     "{}, must be dict or array.".format(type(_use_mask)))
 
             # Check for consistency with shape of 'self.values' and for NaNs
-            for ens_member_key, ens_member_data in self.values.items():
-                _use_mask_dict_data = _use_mask_dict[ens_member_key] 
-                if _use_mask_dict_data.shape == ens_member_data.shape:
+            for dataset_key, dataset_data in self.values.items():
+                _use_mask_dict_data = _use_mask_dict[dataset_key] 
+                if _use_mask_dict_data.shape == dataset_data.shape:
                     if np.sum(np.isnan(_use_mask_dict_data)) != 0:
                         raise ValueError("NaNs in the data mask")
                     if check_type_mask:
@@ -416,13 +416,13 @@ class DataFrame():
                     if self.analysis_mode == 'single':
                         raise ValueError("Shape mismatch: 'data' is of shape "\
                             "{}, 'mask' is of shape {}. Must be "\
-                            "identical.".format(ens_member_data.shape,
+                            "identical.".format(dataset_data.shape,
                                 _use_mask_dict_data.shape))
                     elif self.analysis_mode == 'multiple':
                         raise ValueError("Shape mismatch: dataset {} "\
                             "is of shape {} in 'data' and of shape {} in "\
-                            "'mask'. Must be identical.".format(ens_member_key,
-                                ens_member_data.shape,
+                            "'mask'. Must be identical.".format(dataset_key,
+                                dataset_data.shape,
                                 _use_mask_dict_data.shape))
 
             # Return the mask in dictionary format
@@ -441,12 +441,12 @@ class DataFrame():
             # dictionary representation
             if isinstance(time_offsets, dict):
                 if len(time_offsets) == self.M:
-                    for ens_member_key in self.values.keys():
-                        if time_offsets.get(ens_member_key) is None:
+                    for dataset_key in self.values.keys():
+                        if time_offsets.get(dataset_key) is None:
                             raise ValueError("'data' has key {} (type {}) but "\
                                 "'time_offsets' does not, keys must be "\
-                                "identical.".format(ens_member_key,
-                                    type(ens_member_key)))
+                                "identical.".format(dataset_key,
+                                    type(dataset_key)))
 
                     self.time_offsets = time_offsets
 
@@ -480,7 +480,7 @@ class DataFrame():
 
         else:
             # If no time offsets are specified, all of them are zero
-            self.time_offsets = {ens_member_key: 0 for ens_member_key in self.values.keys()}
+            self.time_offsets = {dataset_key: 0 for dataset_key in self.values.keys()}
 
     def _check_and_set_reference_points(self, reference_points):
         """Check the argument 'reference_point' for consistency and bring into
@@ -725,26 +725,26 @@ class DataFrame():
 
         # Run through all datasets and fill a dictionary holding the
         # samples taken from the individual datasets
-        samples_ens_members = dict()
+        samples_datasets = dict()
         type_masks = dict()
-        self.use_indices_ens_member_dict = dict()
+        self.use_indices_dataset_dict = dict()
 
-        for ens_member_key, ens_member_data in self.values.items():
+        for dataset_key, dataset_data in self.values.items():
 
             # Apply time offset to the reference points
-            ref_points_here = self.reference_points - self.time_offsets[ens_member_key]
+            ref_points_here = self.reference_points - self.time_offsets[dataset_key]
 
             # Remove reference points that are out of bounds or are to be
             # excluded given the choice of 'cut_off'
             ref_points_here = ref_points_here[ref_points_here >= max_lag]
-            ref_points_here = ref_points_here[ref_points_here < self.T[ens_member_key]]
+            ref_points_here = ref_points_here[ref_points_here < self.T[dataset_key]]
 
             # Keep track of which reference points would have remained for
             # max_lag == 2*tau_max
             if cut_off == '2xtau_max_future':
-                ref_points_here_2_tau_max = self.reference_points - self.time_offsets[ens_member_key]
+                ref_points_here_2_tau_max = self.reference_points - self.time_offsets[dataset_key]
                 ref_points_here_2_tau_max = ref_points_here_2_tau_max[ref_points_here_2_tau_max  >= 2*tau_max]
-                ref_points_here_2_tau_max = ref_points_here_2_tau_max[ref_points_here_2_tau_max  < self.T[ens_member_key]]
+                ref_points_here_2_tau_max = ref_points_here_2_tau_max[ref_points_here_2_tau_max  < self.T[dataset_key]]
 
             # Sort the valid reference points (not needed, but might be useful
             # for detailed debugging)
@@ -770,8 +770,13 @@ class DataFrame():
 
                 if boot_blocklength == 'cube_root':
                     boot_blocklength = max(1, int(len(ref_points_here)**(1/3)))
-                    # boot_blocklength = \
-                    #     get_block_length(array, xyz, mode='confidence')
+                # elif boot_blocklength == 'from_autocorrelation':
+                #     boot_blocklength = \
+                #         get_block_length(overlapping_residuals.T, xyz=np.zeros(N), mode='confidence')
+                elif type(boot_blocklength) is int and boot_blocklength > 0:
+                    pass
+                else:
+                    raise ValueError("boot_blocklength must be integer > 0, 'cube_root', or 'from_autocorrelation'")
 
                 # Chooses THE SAME random seed for every dataset, maybe that's what we want...
                 # If the reference points are all the same, this will give the same bootstrap
@@ -801,37 +806,37 @@ class DataFrame():
 
             # Construct the data array holding the samples taken from the
             # current dataset
-            samples_ens_members[ens_member_key] = np.zeros((dim, len(ref_points_here)), dtype = ens_member_data.dtype)
+            samples_datasets[dataset_key] = np.zeros((dim, len(ref_points_here)), dtype = dataset_data.dtype)
             for i, (var, lag) in enumerate(XYZ):
-                samples_ens_members[ens_member_key][i, :] = ens_member_data[ref_points_here + lag, var]
+                samples_datasets[dataset_key][i, :] = dataset_data[ref_points_here + lag, var]
 
             # Build the mask array corresponding to this dataset
             if _mask is not None:
-                mask_ens_member = np.zeros((dim, len(ref_points_here)), dtype = 'bool')
+                mask_dataset = np.zeros((dim, len(ref_points_here)), dtype = 'bool')
                 for i, (var, lag) in enumerate(XYZ):
-                    mask_ens_member[i, :] = _mask[ens_member_key][ref_points_here + lag, var]
+                    mask_dataset[i, :] = _mask[dataset_key][ref_points_here + lag, var]
 
             # Take care of masking
-            use_indices_ens_member = np.ones(len(ref_points_here), dtype = 'int')
+            use_indices_dataset = np.ones(len(ref_points_here), dtype = 'int')
 
             # Build the type mask array corresponding to this dataset
             if _type_mask is not None:
-                type_mask_ens_member = np.zeros((dim, len(ref_points_here)), dtype = 'bool')
+                type_mask_dataset = np.zeros((dim, len(ref_points_here)), dtype = 'bool')
                 for i, (var, lag) in enumerate(XYZ):
-                    type_mask_ens_member[i, :] = _type_mask[ens_member_key][ref_points_here + lag, var]
-                type_masks[ens_member_key] = type_mask_ens_member
+                    type_mask_dataset[i, :] = _type_mask[dataset_key][ref_points_here + lag, var]
+                type_masks[dataset_key] = type_mask_dataset
             
             # Remove all values that have missing value flag, and optionally as well the time
             # slices that occur up to max_lag after
             if self.missing_flag is not None:
-                missing_anywhere = np.array(np.where(np.any(np.isnan(samples_ens_members[ens_member_key]), axis=0))[0])
+                missing_anywhere = np.array(np.where(np.any(np.isnan(samples_datasets[dataset_key]), axis=0))[0])
 
                 if self.remove_missing_upto_maxlag:
                     idx_to_remove = set(idx + tau for idx in missing_anywhere for tau in range(max_lag + 1))
                 else:
                     idx_to_remove = set(idx for idx in missing_anywhere)
                 
-                use_indices_ens_member[np.array(list(idx_to_remove), dtype='int')] = 0
+                use_indices_dataset[np.array(list(idx_to_remove), dtype='int')] = 0
             
             if _mask is not None:
                 # Remove samples with mask == 1 conditional on which mask_type
@@ -846,22 +851,22 @@ class DataFrame():
                         # letter index is masked by taking the product along the
                         # node-data to return a time slice selection, where 0
                         # means the time slice will not be used
-                        slice_select = np.prod(mask_ens_member[xyz == cde, :] == False, axis=0)
-                        use_indices_ens_member *= slice_select
+                        slice_select = np.prod(mask_dataset[xyz == cde, :] == False, axis=0)
+                        use_indices_dataset *= slice_select
 
             # Accordingly update the data array
-            samples_ens_members[ens_member_key] = samples_ens_members[ens_member_key][:, use_indices_ens_member == 1]
+            samples_datasets[dataset_key] = samples_datasets[dataset_key][:, use_indices_dataset == 1]
 
-        ## end for ens_member_key, ens_member_data in self.values.items()
+        ## end for dataset_key, dataset_data in self.values.items()
 
         # Save used indices as attribute
         if len(ref_points_here) > 0:
-            self.use_indices_ens_member_dict[ens_member_key] = ref_points_here[use_indices_ens_member==1]
+            self.use_indices_dataset_dict[dataset_key] = ref_points_here[use_indices_dataset==1]
         else:
-            self.use_indices_ens_member_dict[ens_member_key] = []
+            self.use_indices_dataset_dict[dataset_key] = []
 
         # Concatenate the arrays of all datasets
-        array = np.concatenate(tuple(samples_ens_members.values()), axis = 1)
+        array = np.concatenate(tuple(samples_datasets.values()), axis = 1)
         if _type_mask is not None:
             type_array = np.concatenate(tuple(type_masks.values()), axis = 1)
         else:
@@ -1004,6 +1009,9 @@ def get_block_length(array, xyz, mode):
     variables are jointly shuffled. If the autocorrelation curve fit fails,
     a block length of 5% of T is used. The block length is limited to a
     maximum of 10% of T.
+
+    Mader et al., Journal of Neuroscience Methods,
+    Volume 219, Issue 2, 15 October 2013, Pages 285-291
 
     Parameters
     ----------

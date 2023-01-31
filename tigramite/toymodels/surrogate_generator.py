@@ -38,6 +38,8 @@ def generate_linear_model_from_data(dataframe, parents, tau_max, realizations=10
         generate_noise_from='residuals'. If 'from_autocorrelation', the block
         length is determined from the decay of the autocovariance and
         if 'cube_root' it is the cube root of the time series length.
+    seed : int, optional(default = None)
+        Seed for RandomState (default_rng)
     """
 
     from tigramite.models import Models, Prediction
@@ -138,7 +140,7 @@ def generate_linear_model_from_data(dataframe, parents, tau_max, realizations=10
 
         # Determine the number of blocks total, rounding up for non-integer
         # amounts
-        n_blks = int(math.ceil(float(size)/boot_blocklength))
+        n_blks = int(math.ceil(float(size) / boot_blocklength))
         if n_blks < 10:
             raise ValueError("Only %d block(s) for block-sampling,"  %n_blks +
                              "choose smaller boot_blocklength!")
@@ -149,7 +151,8 @@ def generate_linear_model_from_data(dataframe, parents, tau_max, realizations=10
         elif generate_noise_from == 'residuals':
 
             # Get the starting indices for the blocks
-            blk_strt = random_state.choice(np.arange(len_residuals - boot_blocklength), size=n_blks, replace=True)
+            blk_strt = random_state.choice(np.arange(len_residuals - boot_blocklength), 
+                size=n_blks, replace=True)
 
             # Get the empty array of block resampled values
             boot_draw = np.zeros(n_blks*boot_blocklength, dtype='int')
@@ -216,6 +219,9 @@ def get_block_length(array, xyz, mode):
     a block length of 5% of T is used. The block length is limited to a
     maximum of 10% of T.
 
+    Mader et al., Journal of Neuroscience Methods,
+    Volume 219, Issue 2, 15 October 2013, Pages 285-291
+
     Parameters
     ----------
     array : array-like
@@ -247,6 +253,8 @@ def get_block_length(array, xyz, mode):
     def func(x_vals, a_const, decay):
         return a_const * decay**x_vals
 
+    from matplotlib import pylab
+
     # Calculate the block length
     block_len = 1
     for i in indices:
@@ -263,18 +271,25 @@ def get_block_length(array, xyz, mode):
                 ydata=hilbert,
             )
             phi = popt[1]
-            # Formula of Peifer (2005) assuming non-overlapping blocks
+            # Formula of Mader (2013) assuming non-overlapping blocks
             l_opt = (4. * T * (phi / (1. - phi) + phi**2 / (1. - phi)**2)**2
                      / (1. + 2. * phi / (1. - phi))**2)**(1. / 3.)
             block_len = max(block_len, int(l_opt))
 
+            # pylab.plot(np.arange(0, max_lag+1), hilbert)
+            # pylab.plot(np.arange(0, max_lag+1), func(np.arange(0, max_lag+1), popt[0], popt[1]))
+            # print("block_len ", block_len, int(l_opt))
+            # pylab.show()
         except RuntimeError:
             warnings.warn("Error - curve_fit failed for estimating block_shuffle length, using"
                   " block_len = %d" % (int(.05 * T)))
             # block_len = max(int(.05 * T), block_len)
 
+    # print("chosen ", block_len)
     # Limit block length to a maximum of 10% of T
     block_len = min(block_len, int(0.1 * T))
+    # print("chosen ", block_len)
+
     return block_len
 
 
@@ -292,7 +307,7 @@ if __name__ == '__main__':
                     3: [((3, -1), 0.9, lin_f)], #, ((4, -1), 0.4, lin_f)],
                     4: [((4, -1), 0.9, lin_f), ((3, 0), 0.5, lin_f)], #, ((3, -1), 0.3, lin_f)],
                     }
-    T = 2000     # time series length
+    T = 50     # time series length
     # Make some noise with different variance, alternatively just noises=None
     noises = None  # np.array([(1. + 0.2*float(j))*np.random.randn((T + int(math.floor(0.2*T)))) 
                        # for j in range(len(links_coeffs))]).T
@@ -326,6 +341,6 @@ if __name__ == '__main__':
     datasets = list(generate_linear_model_from_data(dataframe, parents=parents, 
                 tau_max=tau_max, realizations=100, 
                 generate_noise_from='residuals',
-                boot_blocklength='from_autocorrelation',
+                boot_blocklength=3, #'from_autocorrelation',
                 verbosity=0))
     print(datasets[0].shape)

@@ -877,13 +877,16 @@ class CondIndTest():
         """Returns optimal block length for significance and confidence tests.
 
         Determine block length using approach in Mader (2013) [Eq. (6)] which
-        improves the method of Pfeifer (2005) with non-overlapping blocks In
+        improves the method of Peifer (2005) with non-overlapping blocks In
         case of multidimensional X, the max is used. Further details in [1]_.
         Two modes are available. For mode='significance', only the indices
         corresponding to X are shuffled in array. For mode='confidence' all
         variables are jointly shuffled. If the autocorrelation curve fit fails,
         a block length of 5% of T is used. The block length is limited to a
         maximum of 10% of T.
+
+        Mader et al., Journal of Neuroscience Methods,
+        Volume 219, Issue 2, 15 October 2013, Pages 285-291
 
         Parameters
         ----------

@@ -2273,26 +2273,6 @@ class CausalEffects():
 
         self.original_model = deepcopy(self.model)
 
-        # T = self.model.T
-
-        # # Extract max_lag to construct bootstrap draws
-        # XYZ = self.listY + \
-        #       self.listX + \
-        #       list(self.adjustment_set) + \
-        #       self.listS
-        # max_lag = self.tau_max #max(abs(np.array(XYZ)[:, 1].min()), self.tau_max)
-
-        # Init seed
-        # random_state = np.random.default_rng(seed)
-
-        # Determine the number of blocks total, rounding up for non-integer
-        # amounts
-        # n_blks = int(math.ceil(float(T-max_lag)/boot_blocklength))
-
-        # if n_blks < 10:
-        #     raise ValueError("Only %d block(s) for block-sampling,"  %n_blks +
-        #                      "choose smaller boot_blocklength!")
-
         if self.verbosity > 0:
             print("\n##\n## Running Bootstrap of %s " % method +
                   "\n##\n" +

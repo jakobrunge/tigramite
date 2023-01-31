@@ -624,56 +624,66 @@ class LinearMediation(Models):
         self.tau_max = tau_max
 
     def fit_model_bootstrap(self, 
-            generate_noise_from='covariance',
             boot_blocklength=1,
-            realizations=100):
+            seed=None,
+            boot_samples=100):
         """Fits boostrap-versions of Phi, Psi, etc.
 
-        Uses residual-based bootstrap procedure as described in:
-
-        J. Runge et al. (2015): Identifying causal gateways and mediators in
-            complex spatio-temporal systems.
-            Nature Communications, 6, 8502. http://doi.org/10.1038/ncomms9502
-
-        Requires to first apply fit_model(...)
+        Random draws are generated
 
         Parameters
         ----------
-        generate_noise_from : {'coveriance', 'residuals'}
-            Whether to generate the noise from a gaussian with same mean and covariance
-            as residuals, or by drawing (with replacement) from the resisuals.
         boot_blocklength : int, or in {'cube_root', 'from_autocorrelation'}
             Block length for block-bootstrap, which only applies to
             generate_noise_from='residuals'. If 'from_autocorrelation', the block
             length is determined from the decay of the autocovariance and
             if 'cube_root' it is the cube root of the time series length.
-        realizations : int
-            Number of realizations.
+        seed : int, optional(default = None)
+            Seed for RandomState (default_rng)
+        boot_samples : int
+            Number of bootstrap samples.
         """
 
-        # from tigramite.toymodels import surrogate_generator 
-        model_data_generator = surrogate_generator.generate_linear_model_from_data(
-                    dataframe=self.dataframe, 
-                    mask_type=self.mask_type,
-                    data_transform=None, #self.data_transform,
-                    model_params=self.model_params,
-                    parents=self.all_parents, 
-                    tau_max=self.tau_max, 
-                    realizations=realizations, 
-                    generate_noise_from=generate_noise_from, 
-                    boot_blocklength=boot_blocklength,
-                    verbosity=0)
+        # # from tigramite.toymodels import surrogate_generator 
+        # model_data_generator = surrogate_generator.generate_linear_model_from_data(
+        #             dataframe=self.dataframe, 
+        #             mask_type=self.mask_type,
+        #             data_transform=None, #self.data_transform,
+        #             model_params=self.model_params,
+        #             parents=self.all_parents, 
+        #             tau_max=self.tau_max, 
+        #             realizations=realizations, 
+        #             generate_noise_from=generate_noise_from, 
+        #             boot_blocklength=boot_blocklength,
+        #             seed=seed,
+        #             verbosity=0)
 
 
-        self.phi_boots = np.empty((realizations,) + self.phi.shape)
-        self.psi_boots = np.empty((realizations,) + self.psi.shape)
-        self.all_psi_k_boots = np.empty((realizations,) + self.all_psi_k.shape)
+        self.phi_boots = np.empty((boot_samples,) + self.phi.shape)
+        self.psi_boots = np.empty((boot_samples,) + self.psi.shape)
+        self.all_psi_k_boots = np.empty((boot_samples,) + self.all_psi_k.shape)
 
-        for r in range(realizations):
-            data = next(model_data_generator)
+        if self.verbosity > 0:
+            print("\n##\n## Generating bootstrap samples of Phi, Psi, etc "  +
+                  "\n##\n" +
+                  "\nboot_samples = %s \n" % boot_samples +
+                  "\nboot_blocklength = %s \n" % boot_blocklength
+                  )
+
+
+        for b in range(boot_samples):
+            # # Replace dataframe in method args by bootstrapped dataframe
+            # method_args_bootstrap['dataframe'].bootstrap = boot_draw
+            if seed is None:
+                random_state = np.random.default_rng(None)
+            else:
+                random_state = np.random.default_rng(seed+b)
 
             dataframe_here = deepcopy(self.dataframe)
-            dataframe_here.values[0] = data
+
+            dataframe_here.bootstrap = {'boot_blocklength':boot_blocklength,
+                                        'random_state':random_state}
+
             model = Models(dataframe=dataframe_here,
                            model=sklearn.linear_model.LinearRegression(**self.model_params),
                            data_transform=self.data_transform,
@@ -686,9 +696,9 @@ class LinearMediation(Models):
             # Cache the results in the member variables
             coeffs = model.get_coefs()
             phi = self._get_phi(coeffs)
-            self.phi_boots[r] = phi
-            self.psi_boots[r] = self._get_psi(phi)
-            self.all_psi_k_boots[r] = self._get_all_psi_k(phi)
+            self.phi_boots[b] = phi
+            self.psi_boots[b] = self._get_psi(phi)
+            self.all_psi_k_boots[b] = self._get_all_psi_k(phi)
 
         self.bootstrap_available = True
 
@@ -1854,34 +1864,40 @@ if __name__ == '__main__':
  
     T = 1000
     
-    links = {0: [((0, -1), 0.2, lin_f)],
-             1: [((1, -1), 0.2, lin_f), ((0, 0), 0.8, lin_f)],
-             2: [((2, -1), 0.2, lin_f), ((0, 0), 0.9, lin_f),  ((1, 0), 0.8, lin_f)],
-             3: [((3, -1), 0.2, lin_f), ((1, 0), 0.8, lin_f),  ((2, 0), 0.9, lin_f)]
+    links = {0: [((0, -1), 0.9, lin_f)],
+             1: [((1, -1), 0.9, lin_f), ((0, 0), -0.8, lin_f)],
+             2: [((2, -1), 0.9, lin_f), ((0, 0), 0.9, lin_f),  ((1, 0), 0.8, lin_f)],
+             3: [((3, -1), 0.9, lin_f), ((1, 0), 0.8, lin_f),  ((2, 0), -0.9, lin_f)]
              }
     # noises = [np.random.randn for j in links.keys()]
     data, nonstat = toys.structural_causal_process(links, T=T, noises=None, seed=7)
-    true_parents = toys._get_true_parent_neighbor_dict(links)
-    dataframe = pp.DataFrame(data)
+
+    missing_flag = 999
+    for i in range(0, 20):
+        data[i::100] = missing_flag
+
+    parents = toys._get_true_parent_neighbor_dict(links)
+    dataframe = pp.DataFrame(data, missing_flag = missing_flag)
 
     med = LinearMediation(dataframe=dataframe, 
         data_transform=None)
-    med.fit_model(all_parents=true_parents, tau_max=1)
-    med.fit_model_bootstrap(generate_noise_from='residuals', 
-                boot_blocklength='from_autocorrelation',
-                # boot_blocklength='cube_root',
+    med.fit_model(all_parents=parents, tau_max=10)
+    med.fit_model_bootstrap( 
+                # boot_blocklength='from_autocorrelation',
+                boot_blocklength='cube_root',
+                seed = 42,
                 # boot_blocklength=-10,
                 )
 
     # print(med.get_val_matrix())
 
-    # print (med.get_joint_ce_matrix(i=0,  j=2))
-    # print(med.get_bootstrap_of(function='get_joint_ce_matrix', 
-    #     function_args={'i':0,   'j':2}, conf_lev=0.9))
+    print (med.get_ce(i=0, tau=0,  j=3))
+    print(med.get_bootstrap_of(function='get_ce', 
+        function_args={'i':0, 'tau':0,   'j':3}, conf_lev=0.9))
 
-    # print (med.get_coeff(i=0, tau=-2, j=1))
+    print (med.get_coeff(i=0, tau=-2, j=1))
 
-    # # print (med.get_ce_max(i=0, j=2))
+    print (med.get_ce_max(i=0, j=2))
     print (med.get_ce(i=0, tau=0, j=3))
     print (med.get_mce(i=0, tau=0, k=[2], j=3))
     print (med.get_mce(i=0, tau=0, k=[1,2], j=3) - med.get_mce(i=0, tau=0, k=[1], j=3))
