@@ -865,7 +865,6 @@ class PCMCIbase():
 
         boot_results = {}
         for b in range(boot_samples):
-
             # Generate random state for this boot and set it in dataframe
             # which will generate a draw with replacement
             boot_seed = global_random_state.integers(0, boot_samples, 1)

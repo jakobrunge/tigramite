@@ -8,7 +8,7 @@ from __future__ import print_function
 from collections import defaultdict, OrderedDict
 import sys
 import warnings
-import copy
+from copy import deepcopy
 import math
 import numpy as np
 import scipy.sparse
@@ -783,7 +783,8 @@ class DataFrame():
                 # draw. However, if they are NOT the same, they will differ. 
                 # TODO: Decide whether bootstrap draws should be the same for each dataset and
                 # how to achieve that if the reference points differ...
-                random_state = self.bootstrap['random_state']
+                # random_state = self.bootstrap['random_state']
+                random_state = deepcopy(self.bootstrap['random_state'])
 
                 # Determine the number of blocks total, rounding up for non-integer
                 # amounts
@@ -795,7 +796,6 @@ class DataFrame():
 
                 # Get the starting indices for the blocks
                 blk_strt = random_state.choice(np.arange(len(ref_points_here) - boot_blocklength), size=n_blks, replace=True)
-
                 # Get the empty array of block resampled values
                 boot_draw = np.zeros(n_blks*boot_blocklength, dtype='int')
                 # Fill the array of block resamples
