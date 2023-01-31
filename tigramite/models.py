@@ -429,7 +429,7 @@ class Models():
             if return_data:
                 # Cache the data if needed
                 fit_results[j]['data'] = array
-                fit_results[j]['used_indices'] = self.dataframe.use_indices_ens_member_dict
+                fit_results[j]['used_indices'] = self.dataframe.use_indices_dataset_dict
             # Fit the model if there are any parents for this variable to fit
             if dim_z > 0:
                 # Copy and fit the model
@@ -1883,10 +1883,8 @@ if __name__ == '__main__':
         data_transform=None)
     med.fit_model(all_parents=parents, tau_max=10)
     med.fit_model_bootstrap( 
-                # boot_blocklength='from_autocorrelation',
                 boot_blocklength='cube_root',
                 seed = 42,
-                # boot_blocklength=-10,
                 )
 
     # print(med.get_val_matrix())

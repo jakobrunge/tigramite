@@ -253,8 +253,6 @@ def get_block_length(array, xyz, mode):
     def func(x_vals, a_const, decay):
         return a_const * decay**x_vals
 
-    from matplotlib import pylab
-
     # Calculate the block length
     block_len = 1
     for i in indices:
