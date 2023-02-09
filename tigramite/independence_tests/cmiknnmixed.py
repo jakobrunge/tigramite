@@ -12,7 +12,7 @@ from sklearn.preprocessing import OneHotEncoder, MinMaxScaler
 from sklearn.utils.extmath import cartesian
 import numpy as np
 import math
-from independence_tests_base import CondIndTest
+from .independence_tests_base import CondIndTest
 from numba import jit
 import warnings
 
@@ -1462,7 +1462,7 @@ if __name__ == '__main__':
     #                    verbosity=0)
 
 
-    T = 10000
+    T = 1000
     dimz = 1
 
     # Discrete data

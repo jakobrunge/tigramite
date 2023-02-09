@@ -27,7 +27,7 @@ class CMIsymb(CondIndTest):
     For continuous variables use the CMIknn class and for mixed-variable
     datasets the CMIknnMixed class (including mixed-type variables).
 
-    Assumes one-dimensional X, Y.
+    Allows for multi-dimensional X, Y.
 
     Notes
     -----
@@ -131,11 +131,18 @@ class CMIsymb(CondIndTest):
             return np.vectorize(plogp_func)
 
         # Dimensions are hist are (X, Y, Z^1, .... Z^dz)
+        # plogp = _plogp_vector(T)
+        # hxyz = (-(plogp(hist)).sum() + plogp(T)) / float(T)
+        # hxz = (-(plogp(hist.sum(axis=1))).sum() + plogp(T)) / float(T)
+        # hyz = (-(plogp(hist.sum(axis=0))).sum() + plogp(T)) / float(T)
+        # hz = (-(plogp(hist.sum(axis=0).sum(axis=0))).sum() + plogp(T)) / float(T)
+
+        # Multivariate X, Y version
         plogp = _plogp_vector(T)
         hxyz = (-(plogp(hist)).sum() + plogp(T)) / float(T)
-        hxz = (-(plogp(hist.sum(axis=1))).sum() + plogp(T)) / float(T)
-        hyz = (-(plogp(hist.sum(axis=0))).sum() + plogp(T)) / float(T)
-        hz = (-(plogp(hist.sum(axis=0).sum(axis=0))).sum() + plogp(T)) / float(T)
+        hxz = (-(plogp(hist.sum(axis=tuple(np.where(xyz==1)[0])))).sum() + plogp(T)) / float(T)
+        hyz = (-(plogp(hist.sum(axis=tuple(np.where(xyz==0)[0])))).sum() + plogp(T)) / float(T)
+        hz = (-(plogp(hist.sum(axis=tuple(np.where((xyz==0) | (xyz==1))[0])))).sum() + plogp(T)) / float(T)
         val = hxz + hyz - hz - hxyz
 
         return val
