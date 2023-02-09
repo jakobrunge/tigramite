@@ -8,41 +8,17 @@ from __future__ import print_function
 from scipy import special, spatial
 from sklearn.neighbors import BallTree, NearestNeighbors
 from sklearn import metrics
+from sklearn.preprocessing import OneHotEncoder, MinMaxScaler
 from sklearn.utils.extmath import cartesian
 import numpy as np
 import math
-from .independence_tests_base import CondIndTest
+from independence_tests_base import CondIndTest
 from numba import jit
 import warnings
 
 # profiling
 import cProfile, pstats, io
 from pstats import SortKey
-    
-    
-def zero_inf_distance_metric(a, b):
-        num_dims = a.shape[-1] // 2
-        coord_distances = np.ones(num_dims) * np.inf
-        for idx in range(num_dims):
-            if a[idx + num_dims] == b[idx + num_dims] == 0:
-                coord_distances[idx] =  abs(a[idx] - b[idx])
-            elif a[idx + num_dims] == b[idx + num_dims] == 1 or a[idx + num_dims] != b[idx + num_dims]:
-                if a[idx] == b[idx]:
-                    coord_distances[idx] = 0.
-        return np.max(coord_distances)
-    
-def zero_one_distance_metric(a, b):
-    num_dims = a.shape[-1] // 2
-    coord_distances = np.ones(num_dims) * 10
-    for idx in range(num_dims):
-        if a[idx + num_dims] == b[idx + num_dims] == 1:
-            if a[idx] == b[idx]:
-                coord_distances[idx] = 0.
-            else:
-                coord_distances[idx] = 1.
-        else:
-            coord_distances[idx] =  abs(a[idx] - b[idx])
-    return np.max(coord_distances)
 
 
 class CMIknnMixed(CondIndTest):
@@ -90,7 +66,11 @@ class CMIknnMixed(CondIndTest):
     References
     ----------
 
-    .. [8] ...
+    .. [3] J. Runge (2018): Conditional Independence Testing Based on a
+           Nearest-Neighbor Estimator of Conditional Mutual Information.
+           In Proceedings of the 21st International Conference on Artificial
+           Intelligence and Statistics.
+           http://proceedings.mlr.press/v84/runge18a.html
 
     Parameters
     ----------
@@ -145,10 +125,12 @@ class CMIknnMixed(CondIndTest):
     def __init__(self,
                  knn=0.1,
                  estimator='MS',
-                 use_local_knn=False,    # 
+                 use_local_knn=False,
                  shuffle_neighbors=5,
                  significance='shuffle_test',
                  transform='standardize',
+                 scale_range=(0, 1),
+                 perc=None,
                  workers=-1,
                  **kwargs):
         # Set the member variables
@@ -157,11 +139,17 @@ class CMIknnMixed(CondIndTest):
         self.use_local_knn = use_local_knn
         self.shuffle_neighbors = shuffle_neighbors
         self.transform = transform
+        if perc is None:
+            self.perc = self.knn
+        else:
+            self.perc = perc
+        self.scale_range = scale_range
         self._measure = 'cmi_knn_mixed'
         self.two_sided = False
         self.residual_based = False
         self.recycle_residuals = False
         self.workers = workers
+        self.eps = 1e-5
             
         # Call the parent constructor
         CondIndTest.__init__(self, significance=significance, **kwargs)
@@ -203,6 +191,10 @@ class CMIknnMixed(CondIndTest):
             # raise ValueError("nans after standardizing, "
             #                  "possibly constant array!")
         return array
+    
+    def _scale_array(self, array, minmax=(0, 1)):
+        scaler = MinMaxScaler(minmax)
+        return scaler.fit_transform(array.T).T
             
     def _transform_mixed_data(self, array, type_mask=None, add_noise=False):
         """Applies data transformations to the continuous dimensions of the given data.
@@ -226,24 +218,91 @@ class CMIknnMixed(CondIndTest):
             The array with the continuous data transformed. 
             
         """
-        
-        continuous_idxs = np.where(np.any(type_mask == 0, axis=1))[0]                                                               
+        continuous_idxs = np.where(np.all(type_mask == 0, axis=1))[0]  
         cont_dim = len(continuous_idxs)
 
         if add_noise:
             # Add noise to destroy ties
             array[continuous_idxs] += (1E-6 * array[continuous_idxs].std(axis=1).reshape(cont_dim, 1)
-                  * random_state.random((array[continuous_idxs].shape[0], array[continuous_idxs].shape[1])))
+                  * self.random_state.random((array[continuous_idxs].shape[0], array[continuous_idxs].shape[1])))
 
         if self.transform == 'standardize':
             array[continuous_idxs] = self._standardize_array(array[continuous_idxs], cont_dim)
-        elif self.transform == 'uniform':
-            warnings.warn('Uniform transform not supported for mixed data')
-        elif self.transform == 'ranks':
-            warnings.warn('Rank transform not supported for mixed data')
+        elif self.transform == 'scale':
+            array[continuous_idxs] = self._scale_array(array[continuous_idxs], minmax=self.scale_range)
+        else:
+            warnings.warn('Unknown transform')
 
         return array
+         
     
+    def _transform_to_one_hot_mixed(self, array, xyz, 
+                                    type_mask,
+                                    zero_inf=False):
+        
+        discrete_idx_list = np.where(np.all(type_mask == 1, axis=0), 1, 0)
+        mixed_idx_list = np.where(np.any(type_mask == 1, axis=0), 1, 0)
+
+        narray = np.copy(array)
+        nxyz = np.copy(xyz)
+        ntype_mask = np.copy(type_mask)
+
+        appended_columns = 0
+        for i in range(len(discrete_idx_list)):
+            # print(i)
+            if discrete_idx_list[i] == 1:
+                encoder = OneHotEncoder(handle_unknown='ignore')
+                i += appended_columns
+                data = narray[:, i]
+                xyz_val = nxyz[i]
+                encoder_df = encoder.fit_transform(data.reshape(-1, 1)).toarray()
+                if zero_inf:
+                    encoder_df = np.where(encoder_df == 1, 9999999, 0)
+
+                xyz_val = [nxyz[i]] * encoder_df.shape[-1]
+                narray = np.concatenate([narray[:, :i], encoder_df, narray[:, i+1:]], axis=-1)
+
+                nxyz = np.concatenate([nxyz[:i], xyz_val, nxyz[i+1:]])
+                ntype_mask = np.concatenate([ntype_mask[:, :i],
+                                             np.ones(encoder_df.shape), 
+                                             ntype_mask[:, i+1:]], 
+                                            axis=-1)
+                appended_columns += encoder_df.shape[-1] - 1
+
+            elif mixed_idx_list[i] == 1:
+                i += appended_columns
+                data = narray[:, i]
+                xyz_val = nxyz[i]
+
+                # print(i, narray[:, i], ntype_mask[:, i])
+                # find categories 
+                categories = np.unique(narray[:, i] * ntype_mask[:, i])
+                cont_vars = np.unique(narray[:, i] * (1 - ntype_mask[:, i]))
+
+                encoder = OneHotEncoder(categories=[categories], handle_unknown='ignore')
+                xyz_val = nxyz[i]
+                encoder_df = encoder.fit_transform(data.reshape(-1, 1)).toarray()
+                if zero_inf:
+                    encoder_df = np.where(encoder_df == 1, 9999999 + np.max(cont_vars), 0)
+
+                xyz_val = [nxyz[i]] * (encoder_df.shape[-1] + 1)
+                cont_column = np.expand_dims(narray[:, i] * (1 - ntype_mask[:, i]), -1)
+                narray = np.concatenate([narray[:, :i], cont_column, encoder_df, narray[:, i+1:]], axis=-1)
+
+                nxyz = np.concatenate([nxyz[:i], xyz_val, nxyz[i+1:]])
+                ntype_mask = np.concatenate([ntype_mask[:, :i], 
+                                             np.zeros(cont_column.shape), 
+                                             np.ones(encoder_df.shape), 
+                                             ntype_mask[:, i+1:]], 
+                                            axis=-1)
+                appended_columns += encoder_df.shape[-1]
+
+        ndiscrete_idx_list = np.where(np.any(ntype_mask == 1, axis=0), 1, 0)
+
+        return narray, nxyz, ntype_mask, ndiscrete_idx_list         
+
+        
+
     def run_test(self, X, Y, Z=None, tau_max=0, cut_off='2xtau_max'):
         """Perform conditional independence test.
 
@@ -294,7 +353,7 @@ class CMIknnMixed(CondIndTest):
         else:
             cached = False
             # Get the dependence measure, reycling residuals if need be
-            val = self.get_dependence_measure(array, xyz,
+            val, _ = self.get_dependence_measure(array, xyz,
                                               type_mask=type_mask) 
             # Get the p-value
             pval = self.get_significance(val, array, xyz, T, dim,
@@ -368,7 +427,7 @@ class CMIknnMixed(CondIndTest):
         if np.isnan(array).sum() != 0:
             raise ValueError("nans in the array!")
         # Get the dependence measure
-        val = self.get_dependence_measure(array, xyz, type_mask=type_mask)
+        val, _ = self.get_dependence_measure(array, xyz, type_mask=type_mask)
 
         if val_only:
             return val
@@ -439,8 +498,35 @@ class CMIknnMixed(CondIndTest):
         return pval
     
     
+    def _compute_discrete_entropy(self, array, disc_values, discrete_idxs, num_samples):
+        current_array = array[np.sum(array[:, discrete_idxs] == disc_values, axis=-1) == len(discrete_idxs)]
+
+        count, dim = current_array.shape
+
+        if count == 0:
+            return 0.
+
+        prob = float(count) / num_samples
+        # print(prob)
+        disc_entropy = prob * np.log(prob)
+        # print('d', disc_entropy)
+        return disc_entropy
+    
+    
+    def compute_discrete_entropy(self, array, disc_values, discrete_idxs, num_samples):
+        current_array = array[np.sum(array[:, discrete_idxs] == disc_values, axis=-1) == len(discrete_idxs)]
+
+        count, dim = current_array.shape
+
+        if count == 0:
+            return 0.
+
+        prob = float(count) / num_samples
+        disc_entropy = prob * np.log(prob)
+        return disc_entropy
+    
     @jit(forceobj=True)
-    def _get_nearest_neighbors_zeroinf(self, array, xyz, knn,
+    def _get_nearest_neighbors_zeroinf_onehot(self, array, xyz, knn,
                                    type_mask=None):
         """Returns nearest neighbors according to Frenzel and Pompe (2007).
 
@@ -484,61 +570,61 @@ class CMIknnMixed(CondIndTest):
         array = array.T
         type_mask = type_mask.T
         
+        array, xyz, type_mask, discrete_idx_list = self._transform_to_one_hot_mixed(array, 
+                                                                                    xyz, 
+                                                                                    type_mask,
+                                                                                    zero_inf=True)
+            
         # Subsample indices
         x_indices = np.where(xyz == 0)[0]
         y_indices = np.where(xyz == 1)[0]
         z_indices = np.where(xyz == 2)[0]
-
+        xz_indices = np.concatenate([x_indices, z_indices])
+        yz_indices = np.concatenate([y_indices, z_indices])
+     
         # Fit trees
-        xyz_array = np.concatenate([array, type_mask], axis=-1)
-        tree_xyz = NearestNeighbors(metric=zero_inf_distance_metric, algorithm='ball_tree')
-        tree_xyz.fit(xyz_array)
-        
-        neighbors = tree_xyz.kneighbors(xyz_array,
-                                   n_neighbors=knn+1,
-                                   return_distance=True)
-        
-        noninf_neighbors = np.count_nonzero(neighbors[0] != np.inf, axis=1)
+        tree_xyz = spatial.cKDTree(array)
+        neighbors = tree_xyz.query(array, k=knn+1, p=np.inf,
+                                   distance_upper_bound=9999999)
         
         n, k = neighbors[0].shape
         
-        epsarray = np.zeros(n)
         
+        epsarray = np.zeros(n)
         for i in range(n):
             if neighbors[0][i, knn] == np.inf:
                 replacement_idx = np.where(neighbors[0][i] != np.inf)[0][-1]
-                epsarray[i] = neighbors[0][i, replacement_idx]
+                r = max(int(replacement_idx * self.perc), 1)
+                epsarray[i] = neighbors[0][i, r]
             else:
                 epsarray[i] = neighbors[0][i, knn]
                 
-        neighbors_radius_xyz = tree_xyz.radius_neighbors(xyz_array,
-                                                         radius=epsarray,
-                                                         return_distance=False)
-        k_tilde = [len(neighbors_radius_xyz[i]) for i in range(len(neighbors_radius_xyz))]
+        
+        neighbors_radius_xyz = tree_xyz.query_ball_point(array, epsarray, p=np.inf)
+        
+        k_tilde = [len(neighbors_radius_xyz[i]) - 1 if len(neighbors_radius_xyz[i]) > 1 else len(neighbors_radius_xyz[i]) for i in range(len(neighbors_radius_xyz))]
             
         # compute entropies
-        xz_indices = np.concatenate((x_indices, z_indices))
-        xz_array = np.concatenate([array[:, xz_indices], type_mask[:, xz_indices]], axis=-1)
-        tree_xz = BallTree(xz_array, metric=zero_inf_distance_metric)
-        k_xz = tree_xz.query_radius(xz_array, r=epsarray, count_only=True)
+        xz = array[:, xz_indices]
+        tree_xz = spatial.cKDTree(xz)
+        k_xz = tree_xz.query_ball_point(xz, r=epsarray, p=np.inf, return_length=True)
         
-        yz_indices = np.concatenate((y_indices, z_indices))
-        yz_array = np.concatenate([array[:, yz_indices], type_mask[:, yz_indices]], axis=-1)
-        tree_yz = BallTree(yz_array, metric=zero_inf_distance_metric)
-        k_yz = tree_yz.query_radius(yz_array, r=epsarray, count_only=True)
+        yz = array[:, yz_indices]
+        tree_yz = spatial.cKDTree(yz)
+        k_yz = tree_yz.query_ball_point(yz, r=epsarray, p=np.inf, return_length=True)
             
         if len(z_indices) > 0:
-            z_array = np.concatenate([array[:, z_indices], type_mask[:, z_indices]], axis=-1)
-            tree_z = BallTree(z_array, metric=zero_inf_distance_metric)
-            k_z = tree_z.query_radius(z_array, r=epsarray, count_only=True)
+            z = array[:, z_indices]
+            tree_z = spatial.cKDTree(z)
+            k_z = tree_z.query_ball_point(z, r=epsarray, p=np.inf, return_length=True)
         else:
             # Number of neighbors is T when z is empty.
             k_z = np.full(T, T, dtype='float')
             
-        k_xz = [i - 1 if i > 0 else i for i in k_xz]
-        k_yz = [i - 1 if i > 0 else i for i in k_yz]
-        k_z = [i - 1 if i > 0 else i for i in k_z]
-            
+        k_xz = np.asarray([i - 1 if i > 1 else i for i in k_xz])
+        k_yz = np.asarray([i - 1 if i > 1 else i for i in k_yz])
+        k_z = np.asarray([i - 1 if i > 1 else i for i in k_z])
+
         return k_tilde, k_xz, k_yz, k_z
     
     def get_dependence_measure_zeroinf(self, array, xyz, 
@@ -574,26 +660,26 @@ class CMIknnMixed(CondIndTest):
         else:
             knn = max(1, self.knn)
         
-        knn_tilde, k_xz, k_yz, k_z = self._get_nearest_neighbors_zeroinf(array=array,
-                                                      xyz=xyz,
-                                                      knn=knn,
-                                                      type_mask=type_mask)
-    
+
+        knn_tilde, k_xz, k_yz, k_z = self._get_nearest_neighbors_zeroinf_onehot(array=array,
+                                                                                 xyz=xyz,
+                                                                                 knn=knn,
+                                                                                 type_mask=type_mask)
+        non_zero = knn_tilde - k_xz - k_yz + k_z
+        
+        non_zero_count = np.count_nonzero(non_zero) / len(non_zero)
         
         val = (special.digamma(knn_tilde) - special.digamma(k_xz) -
                                            special.digamma(k_yz) +
                                            special.digamma(k_z))
+        
+        val = val[np.isfinite(val)].mean() 
 
-        # digamma(0) is -inf
-        val = val[np.isfinite(val)].mean()
-        # if val < 0.:
-        #     val = 0.
-            
-        return val
-
+        return val, non_zero_count
+    
     @jit(forceobj=True)
-    def _get_nearest_neighbors_MS(self, array, xyz, 
-                                  knn, type_mask=None):
+    def _get_nearest_neighbors_MS_one_hot(self, array, xyz, 
+                                          knn, type_mask=None):
         """Returns nearest neighbors according to Messner and Shalizi (2021).
 
         Retrieves the distances eps to the k-th nearest neighbors for every
@@ -636,49 +722,58 @@ class CMIknnMixed(CondIndTest):
         array = array.T
         type_mask = type_mask.T
         
+        discrete_idx_list = np.where(np.all(type_mask == 1, axis=0), 1, 0)
+        
+        array, xyz, type_mask, discrete_idx_list = self._transform_to_one_hot_mixed(array, 
+                                                                                    xyz, 
+                                                                                    type_mask)
+        
         # Subsample indices
         x_indices = np.where(xyz == 0)[0]
         y_indices = np.where(xyz == 1)[0]
         z_indices = np.where(xyz == 2)[0]
+
+        xz_indices = np.concatenate([x_indices, z_indices])
+        yz_indices = np.concatenate([y_indices, z_indices])
             
         # Fit trees
-        xyz_array = np.concatenate([array, type_mask], axis=-1)
-        tree_xyz = NearestNeighbors(metric=zero_one_distance_metric, algorithm='ball_tree')
-        tree_xyz.fit(xyz_array)
+        tree_xyz = spatial.cKDTree(array)
+        neighbors = tree_xyz.query(array, k=knn+1, p=np.inf, workers=self.workers)
         
-        epsarray = tree_xyz.kneighbors(xyz_array,
-                                   n_neighbors=knn+1,
-                                   return_distance=True)[0][:, -1].astype(np.float64)
         
-        neighbors_radius_xyz = tree_xyz.radius_neighbors(radius=epsarray,
-                                    return_distance=False)
+        epsarray = neighbors[0][:, -1].astype(np.float64)
+        
+        neighbors_radius_xyz = tree_xyz.query_ball_point(array, epsarray, p=np.inf, 
+                                                         workers=self.workers)
         
         # search again for neighbors in the radius to find all of them
         # in the discrete case k_tilde can be larger than the given knn
-        k_tilde = [len(neighbors_radius_xyz[i]) for i in range(len(neighbors_radius_xyz))]
+        k_tilde = np.asarray([len(neighbors_radius_xyz[i]) - 1 if len(neighbors_radius_xyz[i]) > 1 else len(neighbors_radius_xyz[i]) for i in range(len(neighbors_radius_xyz))])
             
         # compute entropies
-        xz_indices = np.concatenate((x_indices, z_indices))
-        xz_array = np.concatenate([array[:, xz_indices], type_mask[:, xz_indices]], axis=-1)
-        tree_xz = BallTree(xz_array, metric=zero_one_distance_metric)
-        k_xz = tree_xz.query_radius(xz_array, r=epsarray, count_only=True)
+        xz = array[:, xz_indices]
+        tree_xz = spatial.cKDTree(xz)
+        k_xz = tree_xz.query_ball_point(xz, r=epsarray, p=np.inf,
+                                        workers=self.workers, return_length=True)
         
-        yz_indices = np.concatenate((y_indices, z_indices))
-        yz_array = np.concatenate([array[:, yz_indices], type_mask[:, yz_indices]], axis=-1)
-        tree_yz = BallTree(yz_array, metric=zero_one_distance_metric)
-        k_yz = tree_yz.query_radius(yz_array, r=epsarray, count_only=True)
-            
+        yz = array[:, yz_indices]
+        tree_yz = spatial.cKDTree(yz)
+        k_yz = tree_yz.query_ball_point(yz, r=epsarray, p=np.inf, 
+                                        workers=self.workers, return_length=True)
+
         if len(z_indices) > 0:
-            z_array = np.concatenate([array[:, z_indices], type_mask[:, z_indices]], axis=-1)
-            tree_z = BallTree(z_array, metric=zero_one_distance_metric)
-            k_z = tree_z.query_radius(z_array, r=epsarray, count_only=True)
+            z = array[:, z_indices]
+            tree_z = spatial.cKDTree(z)
+            k_z = tree_z.query_ball_point(z, r=epsarray, p=np.inf,
+                                          workers=self.workers, return_length=True)
+            
         else:
             # Number of neighbors is T when z is empty.
             k_z = np.full(T, T, dtype='float')
         
-        k_xz = [i - 1 if i > 0 else i for i in k_xz]
-        k_yz = [i - 1 if i > 0 else i for i in k_yz]
-        k_z = [i - 1 if i > 0 else i for i in k_z]
+        k_xz = np.asarray([i - 1 if i > 1 else i for i in k_xz])
+        k_yz = np.asarray([i - 1 if i > 1 else i for i in k_yz])
+        k_z = np.asarray([i - 1 if i > 1 else i for i in k_z])
 
         return k_tilde, k_xz, k_yz, k_z
     
@@ -716,19 +811,21 @@ class CMIknnMixed(CondIndTest):
             knn = max(1, self.knn)
         
         
-        knn_tilde, k_xz, k_yz, k_z = self._get_nearest_neighbors_MS(array=array,
-                                                                    xyz=xyz,
-                                                                    knn=knn,
-                                                                    type_mask=type_mask)
+        knn_tilde, k_xz, k_yz, k_z = self._get_nearest_neighbors_MS_one_hot(array=array,
+                                                                            xyz=xyz,
+                                                                            knn=knn,
+                                                                            type_mask=type_mask)
+        
+        non_zero = knn_tilde - k_xz - k_yz + k_z
+        
+        non_zero_count = np.count_nonzero(non_zero) / len(non_zero)
         
         val = (special.digamma(knn_tilde) - special.digamma(k_xz) -
                                            special.digamma(k_yz) +
-                                           special.digamma(k_z)).mean()
+                                           special.digamma(k_z))
+        val = val[np.isfinite(val)].mean() 
 
-        # if val < 0.:
-        #     val = 0.
-                
-        return val
+        return val, non_zero_count
 
     @jit(forceobj=True)
     def _compute_continuous_entropy(self, array, knn):
@@ -876,10 +973,16 @@ class CMIknnMixed(CondIndTest):
         array = array.T
         type_mask = type_mask.T
         
+        #TODO
+        
         # continue working with discrete idx list
-        discrete_idx_list = np.where(np.all(type_mask == 1, axis=0), 1, 0)
+        discrete_idx_list = np.where(np.any(type_mask == 1, axis=0), 1, 0)
+        
         if np.sum(discrete_idx_list) == 0:
-            raise ValueError("No variables are fully discrete, cannot use CMIknnMixed conditional!")
+            raise ValueError("Variables are continuous, cannot use CMIknnMixed conditional!")
+            
+#         if np.sum(discrete_idx_list) != np.sum(any_discrete_idx_list):
+#             raise ValueError("Variables contain mixtures, cannot use CMIknnMixed conditional!")
             
         # Subsample indices
         x_indices = np.where(xyz == 0)[0]
@@ -908,6 +1011,8 @@ class CMIknnMixed(CondIndTest):
         num_yz_classes = [np.unique(array[:, yz_indices][:, index]) for index in range(len(discrete_yz_indices)) if (discrete_yz_indices[index] == 1)]
         num_z_classes = [np.unique(array[:, z_indices][:, index]) for index in range(len(discrete_z_indices)) if (discrete_z_indices[index] == 1)]
         num_xyz_classes = [np.unique(array[:, index]) for index in range(len(discrete_idx_list)) if (discrete_idx_list[index] == 1)]
+        
+        # print('num classes', num_xyz_classes, num_xz_classes, num_yz_classes, num_z_classes)siz
 
         xyz_cartesian_product = []
         xz_cartesian_product = []
@@ -934,7 +1039,9 @@ class CMIknnMixed(CondIndTest):
             z_cartesian_product = cartesian(num_z_classes)
         elif len(num_z_classes) > 0:
             z_cartesian_product = num_z_classes[0]
-
+    
+        # print('cartesian', xyz_cartesian_product)
+        # , xz_cartesian_product, yz_cartesian_product, z_cartesian_product)
                 
         # compute entropies in XYZ subspace 
         if len(xyz_cartesian_product) > 0:
@@ -1011,11 +1118,9 @@ class CMIknnMixed(CondIndTest):
         # put it all together for the CMI estimation
         val = xz_cmi + yz_cmi - xyz_cmi - z_cmi + xz_entropy + yz_entropy - xyz_entropy - z_entropy
         
-        # CMI cannot be negative, so set to 0 if it is so 
-#         if val < 0.:
-#             val = 0.
+        entropies = (xz_cmi, yz_cmi, xyz_cmi, z_cmi, xz_entropy, yz_entropy, xyz_entropy, z_entropy)
             
-        return val
+        return val, entropies
     
     def get_dependence_measure(self, array, xyz, 
                                type_mask=None):
@@ -1056,38 +1161,61 @@ class CMIknnMixed(CondIndTest):
             return self.get_dependence_measure_zeroinf(array,
                                                    xyz,
                                                    type_mask)
+        else:
+            raise ValueError('No such estimator available!')
+            
+    @jit(forceobj=True)
+    def get_restricted_permutation(self, T, shuffle_neighbors, neighbors, order):
+
+        restricted_permutation = np.zeros(T, dtype=np.int32)
+        used = np.array([], dtype=np.int32)
+
+        for sample_index in order:
+            neighbors_to_use = neighbors[sample_index]
+            m = 0
+            use = neighbors_to_use[m]
+            while ((use in used) and (m < shuffle_neighbors - 1)):
+                m += 1
+                use = neighbors_to_use[m]
+            restricted_permutation[sample_index] = use
+            used = np.append(used, use)
+
+        return restricted_permutation
 
 
+    @jit(forceobj=True)
     def _generate_random_permutation(self, array, neighbors, x_indices, type_mask):
-        
-        dim, T = array.shape
-        
+
+        T, dim = array.shape
         # Generate random order in which to go through indices loop in
         # next step
         order = self.random_state.permutation(T).astype(np.int32)
 
-        # Shuffle neighbor indices for each sample index
-        for i in range(len(neighbors)):
-            self.random_state.shuffle(neighbors[i])
-        # neighbors = self.random_state.permuted(neighbors, axis=1)
+        n = np.empty(neighbors.shape[0], dtype=object)
+
+        for i in range(neighbors.shape[0]):
+                v = np.unique(neighbors[i])
+                self.random_state.shuffle(v)
+                n[i] = v
 
         # Select a series of neighbor indices that contains as few as
         # possible duplicates
         restricted_permutation = self.get_restricted_permutation(
                 T=T,
                 shuffle_neighbors=self.shuffle_neighbors,
-                neighbors=neighbors,
+                neighbors=n,
                 order=order)
 
         array_shuffled = np.copy(array)
         type_mask_shuffled = np.copy(type_mask)
-        
+
         for i in x_indices:
-            array_shuffled[i] = array[i, restricted_permutation]
-            type_mask_shuffled[i] = type_mask[i, restricted_permutation]
-            
+            array_shuffled[:, i] = array[restricted_permutation, i]
+            type_mask_shuffled[:, i] = type_mask[restricted_permutation, i]
+
         return array_shuffled, type_mask_shuffled
-    
+
+    @jit(forceobj=True)
     def get_shuffle_significance(self, array, xyz, value,
                                  return_null_dist=False,
                                  type_mask=None):
@@ -1124,23 +1252,35 @@ class CMIknnMixed(CondIndTest):
         """
             
         dim, T = array.shape
-        
-        # max_neighbors = max(1, int(max_neighbor_ratio*T))
-        x_indices = np.where(xyz == 0)[0]
         z_indices = np.where(xyz == 2)[0]
         
         if len(z_indices) > 0 and self.shuffle_neighbors < T:
+            
+            array = array.T
+            type_mask = type_mask.T
+
+            # discrete_idx_list = np.where(np.all(type_mask == 1, axis=0), 1, 0)
+
+            array, xyz, type_mask, discrete_idx_list = self._transform_to_one_hot_mixed(array, xyz, type_mask,
+                                                                                        zero_inf=True)
+
+            # max_neighbors = max(1, int(max_neighbor_ratio*T))
+            x_indices = np.where(xyz == 0)[0]
+            z_indices = np.where(xyz == 2)[0]
+        
             if self.verbosity > 2:
                 print("            nearest-neighbor shuffle significance "
                       "test with n = %d and %d surrogates" % (
                       self.shuffle_neighbors, self.sig_samples))
             # Get nearest neighbors around each sample point in Z
-            z_array = np.concatenate([np.fastCopyAndTranspose(array[z_indices, :]), 
-                                      type_mask[z_indices, :].T], axis=-1)
-            tree_z = NearestNeighbors(metric=zero_inf_distance_metric)
-            tree_z.fit(z_array)
-            neighbors = tree_z.kneighbors(z_array,
-                                          n_neighbors=self.shuffle_neighbors)
+            z_array = array[:, z_indices]
+            tree_xyz = spatial.cKDTree(z_array)
+            neighbors = tree_xyz.query(z_array,
+                                       k=self.shuffle_neighbors + 1,
+                                       p=np.inf,
+                                       workers=self.workers,
+                                       distance_upper_bound=9999999,
+                                       eps=0.)
             
             # remove all neighbors with distance infinite -> from another class 
             # for those that are discrete 
@@ -1148,14 +1288,8 @@ class CMIknnMixed(CondIndTest):
             # fill valid neighbors with point -> if infinite, the neighbor will 
             # be the point itself
             valid_neighbors = np.multiply(valid_neighbors, np.expand_dims(np.arange(valid_neighbors.shape[0]), axis=-1))
-
-            for i in range(z_array.shape[0]):
-                neighbors_i = []
-                for j in range(self.shuffle_neighbors):
-                    if neighbors[0][i, j] != np.inf:
-                        valid_neighbors[i,j] = neighbors[1][i,j]
-                        
-            valid_neighbors = valid_neighbors.astype(np.int32)
+            
+            valid_neighbors[neighbors[0] != np.inf] = neighbors[1][neighbors[0] != np.inf]
 
             null_dist = np.zeros(self.sig_samples)
             
@@ -1164,9 +1298,9 @@ class CMIknnMixed(CondIndTest):
                                                                                        valid_neighbors, 
                                                                                        x_indices,
                                                                                        type_mask)
-                null_dist[sam] = self.get_dependence_measure(array_shuffled,
-                                                             xyz,
-                                                             type_mask=type_mask_shuffled)
+                null_dist[sam], _ = self.get_dependence_measure(array_shuffled.T,
+                                                                xyz,
+                                                                type_mask=type_mask_shuffled.T)
 
         else:
             null_dist = \
@@ -1187,24 +1321,6 @@ class CMIknnMixed(CondIndTest):
 
 
 
-    @jit(forceobj=True)
-    def get_restricted_permutation(self, T, shuffle_neighbors, neighbors, order):
-
-        restricted_permutation = np.zeros(T, dtype=np.int32)
-        used = np.array([], dtype=np.int32)
-
-        for sample_index in order:
-            m = 0
-            use = neighbors[sample_index, m]
-
-            while ((use in used) and (m < shuffle_neighbors - 1)):
-                m += 1
-                use = neighbors[sample_index, m]
-
-            restricted_permutation[sample_index] = use
-            used = np.append(used, use)
-
-        return restricted_permutation
 
     
     def _get_shuffle_dist(self, array, xyz,
@@ -1258,8 +1374,9 @@ class CMIknnMixed(CondIndTest):
         if sig_blocklength is None:
             sig_blocklength = self._get_block_length(array, xyz,
                                                      mode='significance')
-
+            
         n_blks = int(math.floor(float(T)/sig_blocklength))
+        
         # print 'n_blks ', n_blks
         if verbosity > 2:
             print("            Significance test with block-length = %d "
@@ -1267,12 +1384,14 @@ class CMIknnMixed(CondIndTest):
 
         array_shuffled = np.copy(array)
         type_mask_shuffled = np.copy(type_mask)
-        block_starts = np.arange(0, T - sig_blocklength + 1, sig_blocklength)
-
+        # block_starts = np.arange(0, T - sig_blocklength, sig_blocklength)
+        block_starts = np.arange(0, n_blks * sig_blocklength, sig_blocklength)
+        
+    
         # Dividing the array up into n_blks of length sig_blocklength may
         # leave a tail. This tail is later randomly inserted
         tail = array[x_indices, n_blks*sig_blocklength:]
-
+        
         null_dist = np.zeros(sig_samples)
         for sam in range(sig_samples):
 
@@ -1298,12 +1417,13 @@ class CMIknnMixed(CondIndTest):
                                        tail.T, axis=1)
                 type_x_shuffled = np.insert(type_x_shuffled, insert_tail_at,
                                        tail.T, axis=1)
-
+                
+    
             for i, index in enumerate(x_indices):
                 array_shuffled[index] = x_shuffled[i]
                 type_mask_shuffled[index] = type_x_shuffled[i]
                 
-            null_dist[sam] = self.get_dependence_measure(array=array_shuffled,
+            null_dist[sam], _ = self.get_dependence_measure(array=array_shuffled,
                                                          xyz=xyz,
                                                          type_mask=type_mask_shuffled)
 
@@ -1321,12 +1441,12 @@ if __name__ == '__main__':
     np.random.seed(42)
     cmi = CMIknnMixed(mask_type=None,
                        significance='shuffle_test',
-                       estimator='cond',
+                       # estimator='cond',
                        use_local_knn=True,
                        fixed_thres=None,
                        sig_samples=500,
                        sig_blocklength=1,
-                       transform='none',
+                       transform='scale',
                        knn=0.1,
                        verbosity=0)
 
