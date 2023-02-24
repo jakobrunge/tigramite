@@ -121,7 +121,8 @@ def _var_network(graph,
                  invert_inno=False,
                  T=100,
                  initial_values=None):
-    """Returns a vector-autoregressive process with correlated innovations.
+    """
+    Returns a vector-autoregressive process with correlated innovations.
 
     Useful for testing.
 
@@ -162,6 +163,7 @@ def _var_network(graph,
     X : array
         Array of realization.
     """
+
     n_nodes, _, period = graph.shape
 
     time = T
