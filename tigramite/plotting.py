@@ -405,8 +405,8 @@ def plot_lagfuncs(val_matrix,
     matrix = setup_matrix(N=N, tau_max=tau_max, **setup_args)
     matrix.add_lagfuncs(val_matrix=val_matrix, **add_lagfunc_args)
 
-    if name is not None:
-        matrix.savefig(name=name)
+    # if name is not None:
+    matrix.savefig(name=name)
 
     return matrix
 
@@ -4156,27 +4156,29 @@ def plot_tsg(links, X, Y, Z=None, anc_x=None, anc_y=None, anc_xy=None):
 if __name__ == "__main__":
 
     import sys
-    matplotlib.rc('xtick', labelsize=6) 
-    matplotlib.rc('ytick', labelsize=6) 
 
     # Consider some toy data
     import tigramite
     import tigramite.toymodels.structural_causal_processes as toys
     import tigramite.data_processing as pp
     from tigramite.causal_effects import CausalEffects
+    from tigramite.pcmci import PCMCI 
+    from tigramite.independence_tests import ParCorr
+    from matplotlib import pyplot as plt
 
-    # T = 1000
-    # def lin_f(x): return x
-    # auto_coeff = 0.3
-    # coeff = 1.
-    # links = {
-    #         0: [((0, -1), auto_coeff, lin_f)], 
-    #         1: [((1, -1), auto_coeff, lin_f), ((0, 0), coeff, lin_f)], 
-    #         2: [((2, -1), auto_coeff, lin_f), ((1, 0), coeff, lin_f)],
-    #         }
-    # data, nonstat = toys.structural_causal_process(links, T=T, 
-    #                             noises=None, seed=7)
-    # dataframe = pp.DataFrame(data, var_names=range(len(links)))
+
+    T = 1000
+    def lin_f(x): return x
+    auto_coeff = 0.3
+    coeff = 1.
+    links = {
+            0: [((0, -1), auto_coeff, lin_f)], 
+            1: [((1, -1), auto_coeff, lin_f), ((0, 0), coeff, lin_f)], 
+            2: [((2, -1), auto_coeff, lin_f), ((1, 0), coeff, lin_f)],
+            }
+    data, nonstat = toys.structural_causal_process(links, T=T, 
+                                noises=None, seed=7)
+    dataframe = pp.DataFrame(data, var_names=range(len(links)))
 
     # links = {
     #         0: [((0, -1), 1.5*auto_coeff, lin_f)], 
@@ -4187,6 +4189,22 @@ if __name__ == "__main__":
     #                             noises=None, seed=7)
     # dataframe2 = pp.DataFrame(data2, var_names=range(len(links)))
     # plot_densityplots(dataframe, name='test.pdf')
+
+    N = len(links)
+
+
+    parcorr = ParCorr(significance='analytic')
+    pcmci = PCMCI(
+        dataframe=dataframe, 
+        cond_ind_test=parcorr,
+        verbosity=1)
+
+
+    correlations = pcmci.get_lagged_dependencies(tau_max=20, val_only=True)['val_matrix']
+    lag_func_matrix = plot_lagfuncs(val_matrix=correlations, setup_args={'label_space_left':0.05, 
+                                    'x_base':5, 'y_base':.5})
+    plt.show()
+
     
     # N = len(links)
     # matrix = setup_density_matrix(N=N, var_names=dataframe.var_names)
@@ -4246,27 +4264,27 @@ if __name__ == "__main__":
 
     # pyplot.show()
 
-    def lin_f(x): return x
+    # def lin_f(x): return x
 
-    links_coeffs = {0: [((0, -1), 0.3, lin_f)], #, ((1, -1), 0.5, lin_f)],
-                1: [((1, -1), 0.3, lin_f), ((0, 0), 0.7, lin_f), ((2, -1), 0.5, lin_f)],
-                2: [],
-                3: [((3, -1), 0., lin_f), ((2, 0), 0.6, lin_f),]
-                }
-    graph = CausalEffects.get_graph_from_dict(links_coeffs, tau_max=None)
-    # print(graph)
-    X = [(0,-1)]
-    Y = [(1,0)]
-    causal_effects = CausalEffects(graph, graph_type='stationary_dag', X=X, Y=Y, S=None, 
-                                   hidden_variables=[(2, 0), (2, -1), (2, -2)], 
-                                   verbosity=0)
+    # links_coeffs = {0: [((0, -1), 0.3, lin_f)], #, ((1, -1), 0.5, lin_f)],
+    #             1: [((1, -1), 0.3, lin_f), ((0, 0), 0.7, lin_f), ((2, -1), 0.5, lin_f)],
+    #             2: [],
+    #             3: [((3, -1), 0., lin_f), ((2, 0), 0.6, lin_f),]
+    #             }
+    # graph = CausalEffects.get_graph_from_dict(links_coeffs, tau_max=None)
+    # # print(graph)
+    # X = [(0,-1)]
+    # Y = [(1,0)]
+    # causal_effects = CausalEffects(graph, graph_type='stationary_dag', X=X, Y=Y, S=None, 
+    #                                hidden_variables=[(2, 0), (2, -1), (2, -2)], 
+    #                                verbosity=0)
 
 
-    plot_time_series_graph(
-            graph = causal_effects.graph,
-            # var_names=var_names, 
-            save_name='Example.pdf',
-            figsize = (4, 4),
-            # special_nodes=special_nodes
-            )
+    # plot_time_series_graph(
+    #         graph = causal_effects.graph,
+    #         # var_names=var_names, 
+    #         save_name='Example.pdf',
+    #         figsize = (4, 4),
+    #         # special_nodes=special_nodes
+    #         )
     # pyplot.show()

@@ -84,7 +84,7 @@ class OracleCI:
         # Initialize observed vars
         self.observed_vars = observed_vars
         if self.observed_vars is None:
-            self.observed_vars = range(self.N)
+            self.observed_vars = list(range(self.N))
         else:
             if not set(self.observed_vars).issubset(set(range(self.N))):
                 raise ValueError("observed_vars must be subset of range(N).")
@@ -1071,6 +1071,9 @@ class OracleCI:
             The test statistic value and the p-value.
         """
 
+        if Z is None:
+            Z = []
+
         # Translate from observed_vars index to full variable set index
         X = [(self.observed_vars[x[0]], x[1]) for x in X]
         Y = [(self.observed_vars[y[0]], y[1]) for y in Y]
@@ -1504,7 +1507,7 @@ if __name__ == '__main__':
     print(graph[:,:,0])
 
     tp.plot_time_series_graph(graph=graph, var_names=None, figsize=(5, 5),
-                save_name="/home/rung_ja/Downloads/tsg.pdf")
+                save_name="tsg.pdf")
 
     X = [(0, 0)]
     Y = [(2, 0)]
