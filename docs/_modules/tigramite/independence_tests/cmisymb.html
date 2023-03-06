@@ -34,7 +34,7 @@
   <h1>Source code for tigramite.independence_tests.cmisymb</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Tigramite causal discovery for time series.&quot;&quot;&quot;</span>
 
-<span class="c1"># Author: Jakob Runge &lt;jakob@jakob-runge.com&gt;</span>
+<span class="c1"># Author: Sagar Nagaraj Simha, Jakob Runge &lt;jakob@jakob-runge.com&gt;</span>
 <span class="c1">#</span>
 <span class="c1"># License: GNU General Public License v3.0</span>
 
@@ -42,7 +42,9 @@
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">scipy.stats.contingency</span> <span class="kn">import</span> <span class="n">crosstab</span>
-<span class="c1"># from numba import jit   # could make it even faster, also acticate @jit(forceobj=True)</span>
+<span class="kn">from</span> <span class="nn">joblib</span> <span class="kn">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span>
+<span class="kn">import</span> <span class="nn">multiprocessing</span>
+<span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">jit</span>
 
 <span class="kn">from</span> <span class="nn">.independence_tests_base</span> <span class="kn">import</span> <span class="n">CondIndTest</span>
 
@@ -59,7 +61,7 @@
 <span class="sd">    For continuous variables use the CMIknn class and for mixed-variable</span>
 <span class="sd">    datasets the CMIknnMixed class (including mixed-type variables).</span>
 
-<span class="sd">    Assumes one-dimensional X, Y.</span>
+<span class="sd">    Allows for multi-dimensional X, Y.</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
@@ -123,72 +125,9 @@
                           <span class="s2">&quot;autocorrelation may not be correct for discrete &quot;</span>
                           <span class="s2">&quot;data&quot;</span><span class="p">)</span>
 
-    <span class="c1"># # @jit  #(forceobj=True)</span>
-    <span class="k">def</span> <span class="nf">_bincount_hist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symb_array</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Computes histogram from symbolic array.</span>
-
-<span class="sd">        The maximum of the symbolic array determines the alphabet / number</span>
-<span class="sd">        of bins.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        symb_array : integer array</span>
-<span class="sd">            Data array of shape (dim, T). If a float is passed, it will be converted to int.</span>
-
-<span class="sd">        weights : float array, optional (default: None)</span>
-<span class="sd">            Optional weights array of shape (dim, T).</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        hist : array</span>
-<span class="sd">            Histogram array of shape (base, base, base, ...)*number of</span>
-<span class="sd">            dimensions with Z-dimensions coming first.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">if</span> <span class="s1">&#39;int&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">symb_array</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
-            <span class="c1"># raise ValueError(&quot;Input data must of integer type, where each &quot;</span>
-            <span class="c1">#                  &quot;number indexes a symbol.&quot;)</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Input data should be of integer type, where each &quot;</span>
-                          <span class="s2">&quot;number indexes a symbol. If you provide a float,&quot;</span>
-                          <span class="s2">&quot; then the array will still be converted to int.&quot;</span><span class="p">)</span>
-            <span class="n">symb_array</span> <span class="o">=</span> <span class="n">symb_array</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_symbs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">n_symbs</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">symb_array</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>   <span class="c1"># + 1 accounts for the &#39;0&#39;</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">n_symbs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_symbs</span>
-            <span class="k">if</span> <span class="n">n_symbs</span> <span class="o">&lt;</span> <span class="nb">int</span><span class="p">(</span><span class="n">symb_array</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;n_symbs must be &gt;= symb_array.max() + 1 = </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">symb_array</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
-
-        <span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">symb_array</span><span class="o">.</span><span class="n">shape</span>
-
-        <span class="n">flathist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_symbs</span> <span class="o">**</span> <span class="n">dim</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int16&#39;</span><span class="p">)</span>
-        <span class="n">multisymb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int64&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">weights</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">flathist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_symbs</span> <span class="o">**</span> <span class="n">dim</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span>
-            <span class="n">multiweights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dim</span><span class="p">):</span>
-            <span class="n">multisymb</span> <span class="o">+=</span> <span class="n">symb_array</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">*</span> <span class="n">n_symbs</span> <span class="o">**</span> <span class="n">i</span>
-            <span class="k">if</span> <span class="n">weights</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">multiweights</span> <span class="o">*=</span> <span class="n">weights</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span>
-
-        <span class="k">if</span> <span class="n">weights</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">multisymb</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">multisymb</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">multiweights</span><span class="p">)</span>
-                      <span class="o">/</span> <span class="n">multiweights</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
-
-        <span class="n">flathist</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)]</span> <span class="o">+=</span> <span class="n">result</span>
-
-        <span class="n">hist</span> <span class="o">=</span> <span class="n">flathist</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">tuple</span><span class="p">([</span><span class="n">n_symbs</span><span class="p">,</span> <span class="n">n_symbs</span><span class="p">]</span> <span class="o">+</span>
-                                      <span class="p">[</span><span class="n">n_symbs</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)]))</span><span class="o">.</span><span class="n">T</span>
-
-        <span class="k">return</span> <span class="n">hist</span>
-
-
 <div class="viewcode-block" id="CMIsymb.get_dependence_measure"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.CMIsymb.get_dependence_measure">[docs]</a>    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns CMI estimate based on bincount histogram.</span>
+        <span class="sd">&quot;&quot;&quot;Returns CMI estimate based on contingency table from scipy&#39;s crosstab</span>
+<span class="sd">        to approximate probability mass.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -206,12 +145,15 @@
 
         <span class="n">_</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
 
-        <span class="c1"># High-dimensional histogram, ALSO SWAP summation below when using</span>
-        <span class="c1"># bincount!</span>
-        <span class="c1"># hist = self._bincount_hist(array, weights=None)  </span>
-        <span class="n">array_flip</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flipud</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
-        <span class="n">_</span><span class="p">,</span> <span class="n">hist</span> <span class="o">=</span> <span class="n">crosstab</span><span class="p">(</span><span class="o">*</span><span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">array_flip</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">xyz</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)),</span> 
-            <span class="n">levels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sparse</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_symbs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">levels</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Assuming same list of levels for (z, y, x).</span>
+            <span class="n">levels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_symbs</span><span class="p">),</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">xyz</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
+
+        <span class="c1"># High-dimensional contingency table</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">hist</span> <span class="o">=</span> <span class="n">crosstab</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">xyz</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">T</span><span class="p">))),</span> <span class="n">levels</span><span class="o">=</span><span class="n">levels</span><span class="p">,</span>
+                           <span class="n">sparse</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
         <span class="k">def</span> <span class="nf">_plogp_vector</span><span class="p">(</span><span class="n">T</span><span class="p">):</span>
             <span class="sd">&quot;&quot;&quot;Precalculation of p*log(p) needed for entropies.&quot;&quot;&quot;</span>
@@ -222,17 +164,23 @@
                 <span class="k">return</span> <span class="n">gfunc</span><span class="p">[</span><span class="n">time</span><span class="p">]</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span><span class="n">plogp_func</span><span class="p">)</span>
 
-        <span class="c1"># Dimensions are (Z^dz, .... Z^1, Y, X) using crosstab, otherwise</span>
-        <span class="c1"># (X, Y, Z....)</span>
+        <span class="c1"># Dimensions are hist are (X, Y, Z^1, .... Z^dz)</span>
+        <span class="c1"># plogp = _plogp_vector(T)</span>
+        <span class="c1"># hxyz = (-(plogp(hist)).sum() + plogp(T)) / float(T)</span>
+        <span class="c1"># hxz = (-(plogp(hist.sum(axis=1))).sum() + plogp(T)) / float(T)</span>
+        <span class="c1"># hyz = (-(plogp(hist.sum(axis=0))).sum() + plogp(T)) / float(T)</span>
+        <span class="c1"># hz = (-(plogp(hist.sum(axis=0).sum(axis=0))).sum() + plogp(T)) / float(T)</span>
+
+        <span class="c1"># Multivariate X, Y version</span>
         <span class="n">plogp</span> <span class="o">=</span> <span class="n">_plogp_vector</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
         <span class="n">hxyz</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">plogp</span><span class="p">(</span><span class="n">hist</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">+</span> <span class="n">plogp</span><span class="p">(</span><span class="n">T</span><span class="p">))</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
-        <span class="n">hxz</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">plogp</span><span class="p">(</span><span class="n">hist</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">+</span> <span class="n">plogp</span><span class="p">(</span><span class="n">T</span><span class="p">))</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
-        <span class="n">hyz</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">plogp</span><span class="p">(</span><span class="n">hist</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">2</span><span class="p">)))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">+</span> <span class="n">plogp</span><span class="p">(</span><span class="n">T</span><span class="p">))</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
-        <span class="n">hz</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">plogp</span><span class="p">(</span><span class="n">hist</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">+</span><span class="n">plogp</span><span class="p">(</span><span class="n">T</span><span class="p">))</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">hxz</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">plogp</span><span class="p">(</span><span class="n">hist</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span><span class="o">==</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]))))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">+</span> <span class="n">plogp</span><span class="p">(</span><span class="n">T</span><span class="p">))</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">hyz</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">plogp</span><span class="p">(</span><span class="n">hist</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span><span class="o">==</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]))))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">+</span> <span class="n">plogp</span><span class="p">(</span><span class="n">T</span><span class="p">))</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">hz</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">plogp</span><span class="p">(</span><span class="n">hist</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">xyz</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">xyz</span><span class="o">==</span><span class="mi">1</span><span class="p">))[</span><span class="mi">0</span><span class="p">]))))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">+</span> <span class="n">plogp</span><span class="p">(</span><span class="n">T</span><span class="p">))</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
         <span class="n">val</span> <span class="o">=</span> <span class="n">hxz</span> <span class="o">+</span> <span class="n">hyz</span> <span class="o">-</span> <span class="n">hz</span> <span class="o">-</span> <span class="n">hxyz</span>
+
         <span class="k">return</span> <span class="n">val</span></div>
 
-    <span class="c1"># @jit  #(forceobj=True)</span>
 <div class="viewcode-block" id="CMIsymb.get_shuffle_significance"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.CMIsymb.get_shuffle_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_shuffle_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span>
                                  <span class="n">return_null_dist</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns p-value for shuffle significance test.</span>
@@ -275,36 +223,12 @@
                 <span class="n">neighbor_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">z_array</span> <span class="o">==</span> <span class="n">z_comb</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
                 <span class="n">neighbors</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:</span><span class="nb">len</span><span class="p">(</span><span class="n">neighbor_indices</span><span class="p">)]</span> <span class="o">=</span> <span class="n">neighbor_indices</span>
 
-            <span class="n">null_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sig_samples</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">sam</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sig_samples</span><span class="p">):</span>
-                <span class="c1"># Generate random order in which to go through samples.</span>
-                <span class="n">order</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
-                <span class="n">restricted_permutation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
-                <span class="c1"># A global list of used indices across time samples and combinations.</span>
-                <span class="c1"># Since there are no repetitive (z) indices across combinations, a global list can be used.</span>
-                <span class="n">used</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">sample_index</span> <span class="ow">in</span> <span class="n">order</span><span class="p">:</span>
-                    <span class="c1"># Get the index of the z combination for sample_index in z_comb</span>
-                    <span class="n">z_choice_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">z_comb</span> <span class="o">==</span> <span class="n">array</span><span class="p">[</span><span class="n">z_indices</span><span class="p">,</span> <span class="n">sample_index</span><span class="p">])</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-                    <span class="n">neighbors_choices</span> <span class="o">=</span> <span class="n">neighbors</span><span class="p">[</span><span class="n">z_choice_index</span><span class="p">][</span><span class="n">neighbors</span><span class="p">[</span><span class="n">z_choice_index</span><span class="p">]</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-                    <span class="c1"># Shuffle neighbors in-place to randomize the choice of indices</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">neighbors_choices</span><span class="p">)</span>
-                    <span class="c1"># Permuting indices</span>
-                    <span class="n">m</span> <span class="o">=</span> <span class="mi">0</span>
-                    <span class="n">use</span> <span class="o">=</span> <span class="n">neighbors_choices</span><span class="p">[</span><span class="n">m</span><span class="p">]</span>
-                    <span class="k">while</span> <span class="p">((</span><span class="n">use</span> <span class="ow">in</span> <span class="n">used</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">m</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">neighbors_choices</span><span class="p">))):</span>
-                        <span class="n">m</span> <span class="o">+=</span> <span class="mi">1</span>
-                        <span class="n">use</span> <span class="o">=</span> <span class="n">neighbors_choices</span><span class="p">[</span><span class="n">m</span><span class="p">]</span>
+            <span class="n">num_cores</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
+            <span class="n">random_seeds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">iinfo</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sig_samples</span><span class="p">)</span>
+            <span class="n">null_dist</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="n">num_cores</span><span class="p">)(</span>
+                <span class="n">delayed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parallelize_shuffles</span><span class="p">)(</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">z_indices</span><span class="p">,</span> <span class="n">x_indices</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">z_comb</span><span class="p">,</span> <span class="n">neighbors</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span> <span class="k">for</span> <span class="n">seed</span> <span class="ow">in</span> <span class="n">random_seeds</span><span class="p">)</span>
+            <span class="n">null_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">null_dist</span><span class="p">)</span>
 
-                    <span class="n">restricted_permutation</span><span class="p">[</span><span class="n">sample_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">use</span>
-                    <span class="n">used</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">used</span><span class="p">,</span> <span class="n">use</span><span class="p">)</span>
-
-                <span class="n">array_shuffled</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">x_indices</span><span class="p">:</span>
-                    <span class="n">array_shuffled</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">restricted_permutation</span><span class="p">]</span>
-
-                <span class="n">null_dist</span><span class="p">[</span><span class="n">sam</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span><span class="n">array_shuffled</span><span class="p">,</span>
-                                                             <span class="n">xyz</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">null_dist</span> <span class="o">=</span> \
                 <span class="bp">self</span><span class="o">.</span><span class="n">_get_shuffle_dist</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span>
@@ -317,7 +241,43 @@
 
         <span class="k">if</span> <span class="n">return_null_dist</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">pval</span><span class="p">,</span> <span class="n">null_dist</span>
-        <span class="k">return</span> <span class="n">pval</span></div></div>
+        <span class="k">return</span> <span class="n">pval</span></div>
+
+    <span class="nd">@jit</span><span class="p">(</span><span class="n">forceobj</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">parallelize_shuffles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">z_indices</span><span class="p">,</span> <span class="n">x_indices</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">z_comb</span><span class="p">,</span> <span class="n">neighbors</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># Generate random order in which to go through samples.</span>
+        <span class="c1"># order = self.random_state.permutation(T).astype(&#39;int32&#39;)</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
+
+        <span class="n">restricted_permutation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
+        <span class="c1"># A global list of used indices across time samples and combinations.</span>
+        <span class="c1"># Since there are no repetitive (z) indices across combinations, a global list can be used.</span>
+        <span class="n">used</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">sample_index</span> <span class="ow">in</span> <span class="n">order</span><span class="p">:</span>
+            <span class="c1"># Get the index of the z combination for sample_index in z_comb</span>
+            <span class="n">z_choice_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">z_comb</span> <span class="o">==</span> <span class="n">array</span><span class="p">[</span><span class="n">z_indices</span><span class="p">,</span> <span class="n">sample_index</span><span class="p">])</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">neighbors_choices</span> <span class="o">=</span> <span class="n">neighbors</span><span class="p">[</span><span class="n">z_choice_index</span><span class="p">][</span><span class="n">neighbors</span><span class="p">[</span><span class="n">z_choice_index</span><span class="p">]</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="c1"># Shuffle neighbors in-place to randomize the choice of indices</span>
+            <span class="c1"># self.random_state.shuffle(neighbors_choices)</span>
+            <span class="n">rng</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">neighbors_choices</span><span class="p">)</span>
+
+            <span class="c1"># Permuting indices</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">use</span> <span class="o">=</span> <span class="n">neighbors_choices</span><span class="p">[</span><span class="n">m</span><span class="p">]</span>
+            <span class="k">while</span> <span class="p">((</span><span class="n">use</span> <span class="ow">in</span> <span class="n">used</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">m</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">neighbors_choices</span><span class="p">))):</span>
+                <span class="n">m</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">use</span> <span class="o">=</span> <span class="n">neighbors_choices</span><span class="p">[</span><span class="n">m</span><span class="p">]</span>
+
+            <span class="n">restricted_permutation</span><span class="p">[</span><span class="n">sample_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">use</span>
+            <span class="n">used</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">used</span><span class="p">,</span> <span class="n">use</span><span class="p">)</span>
+
+        <span class="n">array_shuffled</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">x_indices</span><span class="p">:</span>
+            <span class="n">array_shuffled</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">restricted_permutation</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span><span class="n">array_shuffled</span><span class="p">,</span>
+                                                     <span class="n">xyz</span><span class="p">)</span></div>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>

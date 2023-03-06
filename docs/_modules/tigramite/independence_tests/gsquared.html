@@ -34,7 +34,7 @@
   <h1>Source code for tigramite.independence_tests.gsquared</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Tigramite causal discovery for time series.&quot;&quot;&quot;</span>
 
-<span class="c1"># Author: Sagar Simha, Jakob Runge &lt;jakob@jakob-runge.com&gt;</span>
+<span class="c1"># Author: Sagar Nagaraj Simha, Jakob Runge &lt;jakob@jakob-runge.com&gt;</span>
 <span class="c1">#</span>
 <span class="c1"># License: GNU General Public License v3.0</span>
 
@@ -48,8 +48,6 @@
 <span class="kn">from</span> <span class="nn">scipy.stats.contingency</span> <span class="kn">import</span> <span class="n">expected_freq</span>
 <span class="kn">from</span> <span class="nn">scipy.stats.contingency</span> <span class="kn">import</span> <span class="n">margins</span>
 <span class="kn">from</span> <span class="nn">.independence_tests_base</span> <span class="kn">import</span> <span class="n">CondIndTest</span>
-<span class="c1"># from numba import jit   # could make it even faster, also acticate @jit(forceobj=True)</span>
-
 
 <div class="viewcode-block" id="Gsquared"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.Gsquared">[docs]</a><span class="k">class</span> <span class="nc">Gsquared</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">&quot;&quot;&quot;G-squared conditional independence test for categorical data.</span>
@@ -106,7 +104,6 @@
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;n_symbs = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_symbs</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
-    <span class="c1"># @jit(forceobj=True)</span>
 <div class="viewcode-block" id="Gsquared.get_dependence_measure"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.Gsquared.get_dependence_measure">[docs]</a>    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns Gsquared/G-test test statistic.</span>
 
@@ -123,7 +120,7 @@
 <span class="sd">        val : float</span>
 <span class="sd">            G-squared estimate.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
+        <span class="n">_</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
         <span class="n">z_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="c1"># Flip 2D-array so that order is ([zn...z0, ym...y0, xk...x0], T). The</span>
@@ -143,8 +140,9 @@
             <span class="n">levels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_symbs</span><span class="p">),</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">xyz</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>  
             <span class="c1"># Assuming same list of levels for (z, y, x).</span>
 
-        <span class="n">_</span><span class="p">,</span> <span class="n">observed</span> <span class="o">=</span> <span class="n">crosstab</span><span class="p">(</span><span class="o">*</span><span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">array_flip</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">xyz</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)),</span> 
-            <span class="n">levels</span><span class="o">=</span><span class="n">levels</span><span class="p">,</span> <span class="n">sparse</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">observed</span> <span class="o">=</span> <span class="n">crosstab</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">array_flip</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">xyz</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">T</span><span class="p">))),</span> <span class="n">levels</span><span class="o">=</span><span class="n">levels</span><span class="p">,</span>
+                           <span class="n">sparse</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
         <span class="n">observed_shape</span> <span class="o">=</span> <span class="n">observed</span><span class="o">.</span><span class="n">shape</span>
 
         <span class="n">gsquare</span> <span class="o">=</span> <span class="mf">0.0</span>

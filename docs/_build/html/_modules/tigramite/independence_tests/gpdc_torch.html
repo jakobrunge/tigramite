@@ -42,29 +42,10 @@
 <span class="kn">import</span> <span class="nn">json</span><span class="o">,</span> <span class="nn">warnings</span><span class="o">,</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">pathlib</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">gc</span>
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">importlib</span> <span class="kn">import</span> <span class="n">metadata</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">importlib_metadata</span> <span class="k">as</span> <span class="nn">metadata</span>  <span class="c1"># python&lt;=3.7</span>
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">dcor</span>
-    <span class="kn">import</span> <span class="nn">torch</span>
-    <span class="kn">import</span> <span class="nn">gpytorch</span>
-    <span class="kn">from</span> <span class="nn">.LBFGS</span> <span class="kn">import</span> <span class="n">FullBatchLBFGS</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span> <span class="o">/</span> <span class="s1">&#39;../../versions.py&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">vfile</span><span class="p">:</span>
-        <span class="n">packages</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">vfile</span><span class="o">.</span><span class="n">read</span><span class="p">())[</span><span class="s1">&#39;all&#39;</span><span class="p">]</span>
-        <span class="n">packages</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;&gt;=&#39;</span><span class="p">),</span> <span class="n">packages</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">metadata</span><span class="o">.</span><span class="n">version</span><span class="p">(</span><span class="s1">&#39;dcor&#39;</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">packages</span><span class="p">[</span><span class="s1">&#39;dcor&#39;</span><span class="p">]:</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Version mismatch. Installed version of dcor&#39;</span><span class="p">,</span> <span class="n">metadata</span><span class="o">.</span><span class="n">version</span><span class="p">(</span><span class="s1">&#39;dcor&#39;</span><span class="p">),</span>
-                            <span class="s1">&#39;Please install dcor&gt;=&#39;</span><span class="p">,</span> <span class="n">packages</span><span class="p">[</span><span class="s1">&#39;dcor&#39;</span><span class="p">])</span>
-        <span class="k">if</span> <span class="n">metadata</span><span class="o">.</span><span class="n">version</span><span class="p">(</span><span class="s1">&#39;torch&#39;</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">packages</span><span class="p">[</span><span class="s1">&#39;torch&#39;</span><span class="p">]:</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Version mismatch. Installed version of torch&#39;</span><span class="p">,</span> <span class="n">metadata</span><span class="o">.</span><span class="n">version</span><span class="p">(</span><span class="s1">&#39;torch&#39;</span><span class="p">),</span>
-                            <span class="s1">&#39;Please install torch&gt;=&#39;</span><span class="p">,</span> <span class="n">packages</span><span class="p">[</span><span class="s1">&#39;torch&#39;</span><span class="p">])</span>
-        <span class="k">if</span> <span class="n">metadata</span><span class="o">.</span><span class="n">version</span><span class="p">(</span><span class="s1">&#39;gpytorch&#39;</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">packages</span><span class="p">[</span><span class="s1">&#39;gpytorch&#39;</span><span class="p">]:</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Version mismatch. Installed version of gpytorch&#39;</span><span class="p">,</span> <span class="n">metadata</span><span class="o">.</span><span class="n">version</span><span class="p">(</span><span class="s1">&#39;gpytorch&#39;</span><span class="p">),</span>
-                          <span class="s1">&#39;Please install gpytorch&gt;=&#39;</span><span class="p">,</span> <span class="n">packages</span><span class="p">[</span><span class="s1">&#39;gpytorch&#39;</span><span class="p">])</span>
-<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+<span class="kn">import</span> <span class="nn">dcor</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">gpytorch</span>
+<span class="kn">from</span> <span class="nn">.LBFGS</span> <span class="kn">import</span> <span class="n">FullBatchLBFGS</span>
 <span class="kn">from</span> <span class="nn">.independence_tests_base</span> <span class="kn">import</span> <span class="n">CondIndTest</span>
 
 <span class="k">class</span> <span class="nc">GaussProcRegTorch</span><span class="p">():</span>
@@ -503,7 +484,7 @@
         <span class="n">Y</span> <span class="o">=</span> <span class="p">[(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
         <span class="n">X</span> <span class="o">=</span> <span class="p">[(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>   <span class="c1"># dummy variable here</span>
         <span class="n">Z</span> <span class="o">=</span> <span class="n">parents</span>
-        <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span> <span class="o">=</span> \
+        <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> \
             <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">construct_array</span><span class="p">(</span>
                 <span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="n">Z</span><span class="p">,</span>
                 <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>

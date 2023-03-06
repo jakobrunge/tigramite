@@ -105,7 +105,7 @@
 <span class="sd">        Level of verbosity.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 <div class="viewcode-block" id="CondIndTest.get_dependence_measure"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.CondIndTest.get_dependence_measure">[docs]</a>    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
-    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">type_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Abstract function that all concrete classes must instantiate.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -391,7 +391,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># Get the array to test on</span>
-        <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">XYZ</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_array</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span> <span class="n">cut_off</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
+        <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">XYZ</span><span class="p">,</span> <span class="n">type_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_array</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span> <span class="n">cut_off</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
         <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span> <span class="o">=</span> <span class="n">XYZ</span>
         
         <span class="c1"># Record the dimensions</span>
@@ -408,7 +408,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">cached</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="c1"># Get the dependence measure, reycling residuals if need be</span>
-            <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dependence_measure_recycle</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">array</span><span class="p">)</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dependence_measure_recycle</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">type_mask</span><span class="p">)</span>
             <span class="c1"># Get the p-value</span>
             <span class="n">pval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_significance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">cached_ci_results</span><span class="p">[</span><span class="n">combined_hash</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">pval</span><span class="p">)</span>
@@ -419,7 +419,7 @@
         <span class="c1"># Return the value and the pvalue</span>
         <span class="k">return</span> <span class="n">val</span><span class="p">,</span> <span class="n">pval</span></div>
 
-<div class="viewcode-block" id="CondIndTest.run_test_raw"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.CondIndTest.run_test_raw">[docs]</a>    <span class="k">def</span> <span class="nf">run_test_raw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">type_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="CondIndTest.run_test_raw"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.CondIndTest.run_test_raw">[docs]</a>    <span class="k">def</span> <span class="nf">run_test_raw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">y_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">z_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Perform conditional independence test directly on input arrays x, y, z.</span>
 
 <span class="sd">        Calls the dependence measure and signficicance test functions. The child</span>
@@ -430,12 +430,11 @@
 <span class="sd">        ----------</span>
 <span class="sd">        x, y, z : arrays</span>
 <span class="sd">            x,y,z are of the form (samples, dimension).</span>
-<span class="sd">            </span>
-<span class="sd">       type_mask : array-like</span>
-<span class="sd">            Binary data array of same shape as array which describes whether </span>
-<span class="sd">            individual samples in a variable (or all samples) are continuous </span>
-<span class="sd">            or discrete: 0s for continuous variables and 1s for discrete variables.</span>
 
+<span class="sd">        x_type, y_type, z_type : array-like</span>
+<span class="sd">            data arrays of same shape as x, y and z respectively, which describes whether variables</span>
+<span class="sd">            are continuous or discrete: 0s for continuous variables and</span>
+<span class="sd">            1s for discrete variables</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -452,9 +451,22 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;z must be array of shape (samples, dimension)&quot;</span>
                              <span class="s2">&quot; where dimension can be 1.&quot;</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="n">x_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">y_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">z_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">has_type_mask</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">has_type_mask</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">x_type</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">has_type_mask</span><span class="p">:</span>
+            <span class="n">x_type</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">y_type</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">has_type_mask</span><span class="p">:</span>
+            <span class="n">y_type</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">z</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Get the array to test on</span>
             <span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">x</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">has_type_mask</span><span class="p">:</span>
+                <span class="n">type_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">x_type</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">y_type</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
 
             <span class="c1"># xyz is the dimension indicator</span>
             <span class="n">xyz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span> <span class="o">+</span>
@@ -463,7 +475,11 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Get the array to test on</span>
             <span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">x</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">z</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">z_type</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">has_type_mask</span><span class="p">:</span>
+                <span class="n">z_type</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
 
+            <span class="k">if</span> <span class="n">has_type_mask</span><span class="p">:</span>
+                <span class="n">type_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">x_type</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">y_type</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">z_type</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
             <span class="c1"># xyz is the dimension indicator</span>
             <span class="n">xyz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span> <span class="o">+</span>
                            <span class="p">[</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span> <span class="o">+</span>
@@ -475,13 +491,22 @@
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;nans in the array!&quot;</span><span class="p">)</span>
         <span class="c1"># Get the dependence measure</span>
-        <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">has_type_mask</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">type_mask</span><span class="o">=</span><span class="n">type_mask</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">)</span>
+
         <span class="c1"># Get the p-value</span>
-        <span class="n">pval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_significance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">has_type_mask</span><span class="p">:</span>
+            <span class="n">pval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_significance</span><span class="p">(</span><span class="n">val</span><span class="o">=</span><span class="n">val</span><span class="p">,</span> <span class="n">array</span><span class="o">=</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="o">=</span><span class="n">xyz</span><span class="p">,</span> 
+                    <span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span> <span class="n">type_mask</span><span class="o">=</span><span class="n">type_mask</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_significance</span><span class="p">(</span><span class="n">val</span><span class="o">=</span><span class="n">val</span><span class="p">,</span> <span class="n">array</span><span class="o">=</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="o">=</span><span class="n">xyz</span><span class="p">,</span> 
+                    <span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">)</span>            
         <span class="c1"># Return the value and the pvalue</span>
         <span class="k">return</span> <span class="n">val</span><span class="p">,</span> <span class="n">pval</span></div>
 
-    <span class="k">def</span> <span class="nf">_get_dependence_measure_recycle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">array</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_get_dependence_measure_recycle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">type_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get the dependence_measure, optionally recycling residuals</span>
 
 <span class="sd">        If self.recycle_residuals is True, also _get_single_residuals must be</span>
@@ -499,6 +524,11 @@
 <span class="sd">        array : array</span>
 <span class="sd">            Data array of shape (dim, T)</span>
 
+<span class="sd">       type_mask : array-like</span>
+<span class="sd">            Binary data array of same shape as array which describes whether </span>
+<span class="sd">            individual samples in a variable (or all samples) are continuous </span>
+<span class="sd">            or discrete: 0s for continuous variables and 1s for discrete variables.</span>
+
 <span class="sd">        Return</span>
 <span class="sd">        ------</span>
 <span class="sd">        val : float</span>
@@ -515,8 +545,13 @@
             <span class="c1"># Return the dependence measure</span>
             <span class="c1"># data type can only be continuous in this case</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span><span class="n">array_resid</span><span class="p">,</span> <span class="n">xyz_resid</span><span class="p">)</span>
+
         <span class="c1"># If not, return the dependence measure on the array and xyz</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">type_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> 
+                                        <span class="n">type_mask</span><span class="o">=</span><span class="n">type_mask</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_get_cached_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_nodes</span><span class="p">,</span> <span class="n">z_nodes</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -876,13 +911,16 @@
         <span class="sd">&quot;&quot;&quot;Returns optimal block length for significance and confidence tests.</span>
 
 <span class="sd">        Determine block length using approach in Mader (2013) [Eq. (6)] which</span>
-<span class="sd">        improves the method of Pfeifer (2005) with non-overlapping blocks In</span>
+<span class="sd">        improves the method of Peifer (2005) with non-overlapping blocks In</span>
 <span class="sd">        case of multidimensional X, the max is used. Further details in [1]_.</span>
 <span class="sd">        Two modes are available. For mode=&#39;significance&#39;, only the indices</span>
 <span class="sd">        corresponding to X are shuffled in array. For mode=&#39;confidence&#39; all</span>
 <span class="sd">        variables are jointly shuffled. If the autocorrelation curve fit fails,</span>
 <span class="sd">        a block length of 5% of T is used. The block length is limited to a</span>
 <span class="sd">        maximum of 10% of T.</span>
+
+<span class="sd">        Mader et al., Journal of Neuroscience Methods,</span>
+<span class="sd">        Volume 219, Issue 2, 15 October 2013, Pages 285-291</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -931,14 +969,14 @@
                     <span class="n">ydata</span><span class="o">=</span><span class="n">hilbert</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">phi</span> <span class="o">=</span> <span class="n">popt</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-                <span class="c1"># Formula of Pfeifer (2005) assuming non-overlapping blocks</span>
+                <span class="c1"># Formula of Peifer (2005) assuming non-overlapping blocks</span>
                 <span class="n">l_opt</span> <span class="o">=</span> <span class="p">(</span><span class="mf">4.</span> <span class="o">*</span> <span class="n">T</span> <span class="o">*</span> <span class="p">(</span><span class="n">phi</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">phi</span><span class="p">)</span> <span class="o">+</span> <span class="n">phi</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">phi</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
                          <span class="o">/</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">+</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">phi</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">phi</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="mf">3.</span><span class="p">)</span>
                 <span class="n">block_len</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">block_len</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">l_opt</span><span class="p">))</span>
             <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error - curve_fit failed in block_shuffle, using&quot;</span>
                       <span class="s2">&quot; block_len = </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="mf">.05</span> <span class="o">*</span> <span class="n">T</span><span class="p">)))</span>
-                <span class="n">block_len</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="mf">.05</span> <span class="o">*</span> <span class="n">T</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+                <span class="c1"># block_len = max(int(.05 * T), block_len)</span>
         <span class="c1"># Limit block length to a maximum of 10% of T</span>
         <span class="n">block_len</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">block_len</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.1</span> <span class="o">*</span> <span class="n">T</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">block_len</span>

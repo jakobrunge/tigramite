@@ -36,7 +36,9 @@
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span><span class="p">,</span> <span class="n">combinations</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 
-<div class="viewcode-block" id="LPCMCI"><a class="viewcode-back" href="../../index.html#tigramite.lpcmci.LPCMCI">[docs]</a><span class="k">class</span> <span class="nc">LPCMCI</span><span class="p">():</span>
+<span class="kn">from</span> <span class="nn">.pcmci_base</span> <span class="kn">import</span> <span class="n">PCMCIbase</span>
+
+<div class="viewcode-block" id="LPCMCI"><a class="viewcode-back" href="../../index.html#tigramite.lpcmci.LPCMCI">[docs]</a><span class="k">class</span> <span class="nc">LPCMCI</span><span class="p">(</span><span class="n">PCMCIbase</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    LPCMCI is an algorithm for causal discovery in large-scale times series that allows for latent confounders and learns lag-specific</span>
 <span class="sd">    causal relationships.</span>
@@ -159,19 +161,10 @@
 <span class="sd">                ii)     conditional independence test object</span>
 <span class="sd">                iii)    some instance attributes&quot;&quot;&quot;</span>
 
-        <span class="c1"># Save the time series data that the algorithm operates on</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span> <span class="o">=</span> <span class="n">dataframe</span>
-
-        <span class="c1"># Set the conditional independence test to be used</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span> <span class="o">=</span> <span class="n">cond_ind_test</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span><span class="o">.</span><span class="n">set_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="p">)</span>
-
-        <span class="c1"># Store the shape of the data in the T and N variables</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">N</span>
-
-        <span class="c1"># Save verbosity</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">=</span> <span class="n">verbosity</span>
-
+        <span class="c1"># Init base class</span>
+        <span class="n">PCMCIbase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span> 
+                        <span class="n">cond_ind_test</span><span class="o">=</span><span class="n">cond_ind_test</span><span class="p">,</span>
+                        <span class="n">verbosity</span><span class="o">=</span><span class="n">verbosity</span><span class="p">)</span>
 
 <div class="viewcode-block" id="LPCMCI.run_lpcmci"><a class="viewcode-back" href="../../index.html#tigramite.lpcmci.LPCMCI.run_lpcmci">[docs]</a>    <span class="k">def</span> <span class="nf">run_lpcmci</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                     <span class="n">selected_links</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -365,6 +358,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">remember_only_parents</span> <span class="o">=</span> <span class="n">remember_only_parents</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">no_apr</span> <span class="o">=</span> <span class="n">no_apr</span>
 
+        <span class="k">if</span> <span class="n">pc_alpha</span> <span class="o">&lt;</span> <span class="mf">0.</span> <span class="ow">or</span> <span class="n">pc_alpha</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Choose 0 &lt;= pc_alpha &lt;= 1&quot;</span><span class="p">)</span>
+            
         <span class="c1"># Check that validity of tau_min and tau_max</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_tau_min_tau_max</span><span class="p">()</span>
 
@@ -3388,22 +3384,7 @@
         <span class="k">if</span> <span class="n">lag_i</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">j</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">sepsets</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">X</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">sepsets</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">Y</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-
-    <span class="k">def</span> <span class="nf">_dict_to_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val_dict</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span> <span class="n">n_vars</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Convert a dictionary to matrix format&quot;&quot;&quot;</span>
-
-        <span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">n_vars</span><span class="p">,</span> <span class="n">n_vars</span><span class="p">,</span> <span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
-        <span class="n">matrix</span> <span class="o">*=</span> <span class="n">default</span>
-
-        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">val_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">val_dict</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                <span class="n">k</span><span class="p">,</span> <span class="n">tau</span> <span class="o">=</span> <span class="n">link</span>
-                <span class="k">if</span> <span class="n">tau</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="n">matrix</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">val_dict</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">link</span><span class="p">]</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">matrix</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">tau</span><span class="p">)]</span> <span class="o">=</span> <span class="n">val_dict</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">link</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">matrix</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sepsets</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">Y</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span></div>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
@@ -3436,14 +3417,17 @@
     <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
     <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
     <span class="n">cond_ind_test</span> <span class="o">=</span> <span class="n">ParCorr</span><span class="p">()</span>
-    <span class="n">pcmci</span> <span class="o">=</span> <span class="n">LPCMCI</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span> <span class="n">cond_ind_test</span><span class="o">=</span><span class="n">cond_ind_test</span><span class="p">)</span>
-    <span class="n">results</span> <span class="o">=</span> <span class="n">pcmci</span><span class="o">.</span><span class="n">run_lpcmci</span><span class="p">(</span><span class="n">tau_max</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">pc_alpha</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+    <span class="n">lpcmci</span> <span class="o">=</span> <span class="n">LPCMCI</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span> <span class="n">cond_ind_test</span><span class="o">=</span><span class="n">cond_ind_test</span><span class="p">)</span>
+    <span class="c1"># results = pcmci.run_lpcmci(tau_max=2, pc_alpha=0.01)</span>
 
-    <span class="c1"># For a proper causal interpretation of the graph see the paper!</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;graph&#39;</span><span class="p">])</span>
-    <span class="n">tp</span><span class="o">.</span><span class="n">plot_graph</span><span class="p">(</span><span class="n">graph</span><span class="o">=</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;graph&#39;</span><span class="p">],</span> <span class="n">val_matrix</span><span class="o">=</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;val_matrix&#39;</span><span class="p">])</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="c1"># # For a proper causal interpretation of the graph see the paper!</span>
+    <span class="c1"># print(results[&#39;graph&#39;])</span>
+    <span class="c1"># tp.plot_graph(graph=results[&#39;graph&#39;], val_matrix=results[&#39;val_matrix&#39;])</span>
+    <span class="c1"># plt.show()</span>
 
+    <span class="n">results</span> <span class="o">=</span> <span class="n">lpcmci</span><span class="o">.</span><span class="n">run_sliding_window_of</span><span class="p">(</span>
+        <span class="n">window_step</span><span class="o">=</span><span class="mi">499</span><span class="p">,</span> <span class="n">window_length</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+        <span class="n">method</span><span class="o">=</span><span class="s1">&#39;run_lpcmci&#39;</span><span class="p">,</span> <span class="n">method_args</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;tau_max&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">})</span>
 </pre></div>
 
           </div>

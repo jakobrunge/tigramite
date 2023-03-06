@@ -118,7 +118,7 @@
         <span class="c1"># Initialize observed vars</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">observed_vars</span> <span class="o">=</span> <span class="n">observed_vars</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">observed_vars</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">observed_vars</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">observed_vars</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observed_vars</span><span class="p">)</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">))):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;observed_vars must be subset of range(N).&quot;</span><span class="p">)</span>
@@ -1105,6 +1105,9 @@
 <span class="sd">            The test statistic value and the p-value.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
+        <span class="k">if</span> <span class="n">Z</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">Z</span> <span class="o">=</span> <span class="p">[]</span>
+
         <span class="c1"># Translate from observed_vars index to full variable set index</span>
         <span class="n">X</span> <span class="o">=</span> <span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">observed_vars</span><span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">X</span><span class="p">]</span>
         <span class="n">Y</span> <span class="o">=</span> <span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">observed_vars</span><span class="p">[</span><span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">y</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">Y</span><span class="p">]</span>
@@ -1538,7 +1541,7 @@
     <span class="nb">print</span><span class="p">(</span><span class="n">graph</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">])</span>
 
     <span class="n">tp</span><span class="o">.</span><span class="n">plot_time_series_graph</span><span class="p">(</span><span class="n">graph</span><span class="o">=</span><span class="n">graph</span><span class="p">,</span> <span class="n">var_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
-                <span class="n">save_name</span><span class="o">=</span><span class="s2">&quot;/home/rung_ja/Downloads/tsg.pdf&quot;</span><span class="p">)</span>
+                <span class="n">save_name</span><span class="o">=</span><span class="s2">&quot;tsg.pdf&quot;</span><span class="p">)</span>
 
     <span class="n">X</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
     <span class="n">Y</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>

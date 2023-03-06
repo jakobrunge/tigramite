@@ -2801,8 +2801,54 @@ def _check_matrices(graph, val_matrix, link_width, link_attribute):
                     graph[j, i, 0] = "o-o"
             else:
                 graph[i, j, tau] = "-->"
-    elif graph.ndim == 4:
-        pass
+    if graph.ndim == 4:
+        for i, j, taui, tauj in zip(*np.where(graph)):
+            if graph[i, j, taui, tauj] not in [
+                "---",
+                "o--",
+                "--o",
+                "o-o",
+                "o->",
+                "<-o",
+                "-->",
+                "<--",
+                "<->",
+                "x-o",
+                "o-x",
+                "x--",
+                "--x",
+                "x->",
+                "<-x",
+                "x-x",
+                "<-+",
+                "+->",
+            ]:
+                raise ValueError("Invalid graph entry.")
+            if graph[i, j, taui, tauj] != _reverse_patt(graph[j, i, tauj, taui]):
+                raise ValueError(
+                    "graph needs to have consistent entries: "
+                    "graph[i, j, taui, tauj] == _reverse_patt(graph[j, i, tauj, taui])")
+            if (
+                val_matrix is not None
+                and val_matrix[i, j, taui, tauj] != val_matrix[j, i, tauj, taui]
+            ):
+                raise ValueError(
+                    "val_matrix needs to have consistent entries: "
+                    "val_matrix[i, j, taui, tauj] == val_matrix[j, i, tauj, taui]")
+            if (
+                link_width is not None
+                and link_width[i, j, taui, tauj] != link_width[j, i, tauj, taui]
+            ):
+                raise ValueError(
+                    "link_width needs to have consistent entries: "
+                    "link_width[i, j, taui, tauj] == link_width[j, i, tauj, taui]")            
+            if (
+                link_attribute is not None
+                and link_attribute[i, j, taui, tauj] != link_attribute[j, i, tauj, taui]
+            ):
+                raise ValueError(
+                    "link_attribute needs to have consistent entries: "
+                    "link_attribute[i, j, taui, tauj] == link_attribute[j, i, tauj, taui]")
     else:
         # print(graph[:,:,0])
         # Assert that graph has valid and consistent lag-zero entries
@@ -2909,7 +2955,7 @@ def plot_time_series_graph(
         Either of shape (N, N, tau_max + 1) or as auxiliary graph of dims 
         (N, N, tau_max+1, tau_max+1) describing auxADMG. 
     val_matrix : array_like
-        Matrix of shape (N, N, tau_max+1) containing test statistic values.
+        Matrix of same shape as graph containing test statistic values.
     var_names : list, optional (default: None)
         List of variable names. If None, range(N) is used.
     fig_ax : tuple of figure and axis object, optional (default: None)
@@ -2923,6 +2969,8 @@ def plot_time_series_graph(
     link_width : array-like, optional (default: None)
         Array of val_matrix.shape specifying relative link width with maximum
         given by arrow_linewidth. If None, all links have same width.
+    link_attribute : array-like, optional (default: None)
+        Array of graph.shape specifying specific in drawing the graph (for internal use).
     order : list, optional (default: None)
         order of variables from top to bottom.
     arrow_linewidth : float, optional (default: 30)
@@ -3025,6 +3073,8 @@ def plot_time_series_graph(
         tsg_attr = np.zeros((N * max_lag, N * max_lag), dtype=link_attribute.dtype)
 
     if graph.ndim == 4:
+        # 4-dimensional graphs represent the finite-time window projection of stationary 3-d graphs
+        # They are internally created in some classes
         # Only draw link in one direction
         for i, j, taui, tauj in np.column_stack(np.where(graph)):
             tau = taui - tauj
@@ -3034,12 +3084,12 @@ def plot_time_series_graph(
             # print(max_lag, (i, -taui), (j, -tauj), aux_graph[i, j, taui, tauj])
             # print(translate(i, max_lag - 1 - taui), translate(j, max_lag-1-tauj))
             tsg[translate(i,   max_lag - 1 - taui), translate(j, max_lag-1-tauj)] = 1.0
-            tsg_val[translate(i,   max_lag - 1 - taui), translate(j, max_lag-1-tauj)] = 1. #val_matrix[i, j, tau]
+            tsg_val[translate(i,   max_lag - 1 - taui), translate(j, max_lag-1-tauj)] = val_matrix[i, j, taui, tauj]
             tsg_style[translate(i,   max_lag - 1 - taui), translate(j, max_lag-1-tauj)] = graph[i, j, taui, tauj]
             if link_width is not None:
-                tsg_width[translate(i,   max_lag - 1 - taui), translate(j, max_lag-1-tauj)] = link_width[i, j, tau] / link_width.max() * arrow_linewidth
+                tsg_width[translate(i,   max_lag - 1 - taui), translate(j, max_lag-1-tauj)] = link_width[i, j, taui, tauj] / link_width.max() * arrow_linewidth
             if link_attribute is not None:
-                tsg_attr[translate(i,   max_lag - 1 - taui), translate(j, max_lag-1-tauj)] = 'spurious'
+                tsg_attr[translate(i,   max_lag - 1 - taui), translate(j, max_lag-1-tauj)] = link_attribute[i, j, taui, tauj] #'spurious'
         # print(tsg_style)   
             # print(tsg_style[translate(i,   max_lag - 1 - taui), translate(j, max_lag-1-tauj)] = graph[i, j, taui, tauj])    
             # print(max_lag, (i, -taui), (j, -tauj), graph[i, j, taui, tauj], tsg_style[translate(i,   max_lag - 1 - taui), translate(j, max_lag-1-tauj)])
@@ -3168,7 +3218,7 @@ def plot_time_series_graph(
 
     node_labels = ["" for i in range(N * max_lag)]
 
-    if graph.ndim == 4:
+    if graph.ndim == 4 and val_matrix is None:
         show_colorbar = False
     else:
         show_colorbar = True
@@ -4165,18 +4215,18 @@ if __name__ == "__main__":
     from matplotlib import pyplot as plt
 
 
-    T = 1000
+    # T = 1000
     def lin_f(x): return x
-    auto_coeff = 0.3
-    coeff = 1.
-    links = {
-            0: [((0, -1), auto_coeff, lin_f)], 
-            1: [((1, -1), auto_coeff, lin_f), ((0, 0), coeff, lin_f)], 
-            2: [((2, -1), auto_coeff, lin_f), ((1, 0), coeff, lin_f)],
-            }
-    data, nonstat = toys.structural_causal_process(links, T=T, 
-                                noises=None, seed=7)
-    dataframe = pp.DataFrame(data, var_names=range(len(links)))
+    # auto_coeff = 0.3
+    # coeff = 1.
+    # links = {
+    #         0: [((0, -1), auto_coeff, lin_f)], 
+    #         1: [((1, -1), auto_coeff, lin_f), ((0, 0), coeff, lin_f)], 
+    #         2: [((2, -1), auto_coeff, lin_f), ((1, 0), coeff, lin_f)],
+    #         }
+    # data, nonstat = toys.structural_causal_process(links, T=T, 
+    #                             noises=None, seed=7)
+    # dataframe = pp.DataFrame(data, var_names=range(len(links)))
 
     # links = {
     #         0: [((0, -1), 1.5*auto_coeff, lin_f)], 
@@ -4188,20 +4238,20 @@ if __name__ == "__main__":
     # dataframe2 = pp.DataFrame(data2, var_names=range(len(links)))
     # plot_densityplots(dataframe, name='test.pdf')
 
-    N = len(links)
+    # N = len(links)
 
 
-    parcorr = ParCorr(significance='analytic')
-    pcmci = PCMCI(
-        dataframe=dataframe, 
-        cond_ind_test=parcorr,
-        verbosity=1)
+    # parcorr = ParCorr(significance='analytic')
+    # pcmci = PCMCI(
+    #     dataframe=dataframe, 
+    #     cond_ind_test=parcorr,
+    #     verbosity=1)
 
 
-    correlations = pcmci.get_lagged_dependencies(tau_max=20, val_only=True)['val_matrix']
-    lag_func_matrix = plot_lagfuncs(val_matrix=correlations, setup_args={'label_space_left':0.05, 
-                                    'x_base':5, 'y_base':.5})
-    plt.show()
+    # correlations = pcmci.get_lagged_dependencies(tau_max=20, val_only=True)['val_matrix']
+    # lag_func_matrix = plot_lagfuncs(val_matrix=correlations, setup_args={'label_space_left':0.05, 
+    #                                 'x_base':5, 'y_base':.5})
+    # plt.show()
 
     
     # N = len(links)
@@ -4264,25 +4314,37 @@ if __name__ == "__main__":
 
     # def lin_f(x): return x
 
-    # links_coeffs = {0: [((0, -1), 0.3, lin_f)], #, ((1, -1), 0.5, lin_f)],
-    #             1: [((1, -1), 0.3, lin_f), ((0, 0), 0.7, lin_f), ((2, -1), 0.5, lin_f)],
-    #             2: [],
-    #             3: [((3, -1), 0., lin_f), ((2, 0), 0.6, lin_f),]
-    #             }
-    # graph = CausalEffects.get_graph_from_dict(links_coeffs, tau_max=None)
-    # # print(graph)
-    # X = [(0,-1)]
-    # Y = [(1,0)]
-    # causal_effects = CausalEffects(graph, graph_type='stationary_dag', X=X, Y=Y, S=None, 
-    #                                hidden_variables=[(2, 0), (2, -1), (2, -2)], 
-    #                                verbosity=0)
+    links_coeffs = {0: [((0, -1), 0.3, lin_f)], #, ((1, -1), 0.5, lin_f)],
+                1: [((1, -1), 0.3, lin_f), ((0, 0), 0.7, lin_f), ((2, -1), 0.5, lin_f)],
+                2: [],
+                3: [((3, -1), 0., lin_f), ((2, 0), 0.6, lin_f),]
+                }
+    graph = CausalEffects.get_graph_from_dict(links_coeffs, tau_max=None)
+    # print(graph)
+    X = [(0,-1)]
+    Y = [(1,0)]
+    causal_effects = CausalEffects(graph, graph_type='stationary_dag', X=X, Y=Y, S=None, 
+                                   hidden_variables=[(2, 0), (2, -1), (2, -2)], 
+                                   verbosity=0)
 
+    link_attribute = np.zeros(causal_effects.graph.shape, dtype='<U30')
+    link_attribute[1, 3, 1, 2] = 'spurious'
+    link_attribute[3, 1, 2, 1] = 'spurious'
+    link_width = np.ones(causal_effects.graph.shape, dtype='float')
+    link_width[1, 3, 1, 2] = 0.5
+    link_width[3, 1, 2, 1] = 0.5
+    val_matrix = 0.8*np.ones(causal_effects.graph.shape, dtype='float')
+    val_matrix[1, 3, 1, 2] = 0.5
+    val_matrix[3, 1, 2, 1] = 0.5
 
-    # plot_time_series_graph(
-    #         graph = causal_effects.graph,
-    #         # var_names=var_names, 
-    #         save_name='Example.pdf',
-    #         figsize = (4, 4),
-    #         # special_nodes=special_nodes
-    #         )
-    # pyplot.show()
+    plot_time_series_graph(
+            graph = causal_effects.graph,
+            link_attribute=link_attribute,
+            link_width=link_width,
+            val_matrix=val_matrix,
+            # var_names=var_names, 
+            save_name='Example.pdf',
+            figsize = (4, 4),
+            # special_nodes=special_nodes
+            )
+    pyplot.show()

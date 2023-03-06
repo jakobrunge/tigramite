@@ -42,6 +42,7 @@
 <span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">special</span><span class="p">,</span> <span class="n">spatial</span>
 <span class="kn">from</span> <span class="nn">sklearn.neighbors</span> <span class="kn">import</span> <span class="n">BallTree</span><span class="p">,</span> <span class="n">NearestNeighbors</span>
 <span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">metrics</span>
+<span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">OneHotEncoder</span><span class="p">,</span> <span class="n">MinMaxScaler</span>
 <span class="kn">from</span> <span class="nn">sklearn.utils.extmath</span> <span class="kn">import</span> <span class="n">cartesian</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">math</span>
@@ -52,31 +53,6 @@
 <span class="c1"># profiling</span>
 <span class="kn">import</span> <span class="nn">cProfile</span><span class="o">,</span> <span class="nn">pstats</span><span class="o">,</span> <span class="nn">io</span>
 <span class="kn">from</span> <span class="nn">pstats</span> <span class="kn">import</span> <span class="n">SortKey</span>
-    
-    
-<span class="k">def</span> <span class="nf">zero_inf_distance_metric</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
-        <span class="n">num_dims</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
-        <span class="n">coord_distances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">num_dims</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
-        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_dims</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">a</span><span class="p">[</span><span class="n">idx</span> <span class="o">+</span> <span class="n">num_dims</span><span class="p">]</span> <span class="o">==</span> <span class="n">b</span><span class="p">[</span><span class="n">idx</span> <span class="o">+</span> <span class="n">num_dims</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">coord_distances</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span>  <span class="nb">abs</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">-</span> <span class="n">b</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
-            <span class="k">elif</span> <span class="n">a</span><span class="p">[</span><span class="n">idx</span> <span class="o">+</span> <span class="n">num_dims</span><span class="p">]</span> <span class="o">==</span> <span class="n">b</span><span class="p">[</span><span class="n">idx</span> <span class="o">+</span> <span class="n">num_dims</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">a</span><span class="p">[</span><span class="n">idx</span> <span class="o">+</span> <span class="n">num_dims</span><span class="p">]</span> <span class="o">!=</span> <span class="n">b</span><span class="p">[</span><span class="n">idx</span> <span class="o">+</span> <span class="n">num_dims</span><span class="p">]:</span>
-                <span class="k">if</span> <span class="n">a</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">==</span> <span class="n">b</span><span class="p">[</span><span class="n">idx</span><span class="p">]:</span>
-                    <span class="n">coord_distances</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">coord_distances</span><span class="p">)</span>
-    
-<span class="k">def</span> <span class="nf">zero_one_distance_metric</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
-    <span class="n">num_dims</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
-    <span class="n">coord_distances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">num_dims</span><span class="p">)</span> <span class="o">*</span> <span class="mi">10</span>
-    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_dims</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">a</span><span class="p">[</span><span class="n">idx</span> <span class="o">+</span> <span class="n">num_dims</span><span class="p">]</span> <span class="o">==</span> <span class="n">b</span><span class="p">[</span><span class="n">idx</span> <span class="o">+</span> <span class="n">num_dims</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">a</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">==</span> <span class="n">b</span><span class="p">[</span><span class="n">idx</span><span class="p">]:</span>
-                <span class="n">coord_distances</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">coord_distances</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">coord_distances</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span>  <span class="nb">abs</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">-</span> <span class="n">b</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">coord_distances</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="CMIknnMixed"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.CMIknnMixed">[docs]</a><span class="k">class</span> <span class="nc">CMIknnMixed</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
@@ -124,7 +100,11 @@
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
 
-<span class="sd">    .. [8] ...</span>
+<span class="sd">    .. [3] J. Runge (2018): Conditional Independence Testing Based on a</span>
+<span class="sd">           Nearest-Neighbor Estimator of Conditional Mutual Information.</span>
+<span class="sd">           In Proceedings of the 21st International Conference on Artificial</span>
+<span class="sd">           Intelligence and Statistics.</span>
+<span class="sd">           http://proceedings.mlr.press/v84/runge18a.html</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -177,12 +157,14 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_measure</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                 <span class="n">knn</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+                 <span class="n">knn</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
                  <span class="n">estimator</span><span class="o">=</span><span class="s1">&#39;MS&#39;</span><span class="p">,</span>
                  <span class="n">use_local_knn</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">shuffle_neighbors</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
                  <span class="n">significance</span><span class="o">=</span><span class="s1">&#39;shuffle_test&#39;</span><span class="p">,</span>
                  <span class="n">transform</span><span class="o">=</span><span class="s1">&#39;standardize&#39;</span><span class="p">,</span>
+                 <span class="n">scale_range</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                 <span class="n">perc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">workers</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
                  <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="c1"># Set the member variables</span>
@@ -191,11 +173,17 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">use_local_knn</span> <span class="o">=</span> <span class="n">use_local_knn</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">shuffle_neighbors</span> <span class="o">=</span> <span class="n">shuffle_neighbors</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">transform</span>
+        <span class="k">if</span> <span class="n">perc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">perc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">knn</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">perc</span> <span class="o">=</span> <span class="n">perc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scale_range</span> <span class="o">=</span> <span class="n">scale_range</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_measure</span> <span class="o">=</span> <span class="s1">&#39;cmi_knn_mixed&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">two_sided</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">residual_based</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">recycle_residuals</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">workers</span> <span class="o">=</span> <span class="n">workers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eps</span> <span class="o">=</span> <span class="mf">1e-5</span>
             
         <span class="c1"># Call the parent constructor</span>
         <span class="n">CondIndTest</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">significance</span><span class="o">=</span><span class="n">significance</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -237,6 +225,10 @@
             <span class="c1"># raise ValueError(&quot;nans after standardizing, &quot;</span>
             <span class="c1">#                  &quot;possibly constant array!&quot;)</span>
         <span class="k">return</span> <span class="n">array</span>
+    
+    <span class="k">def</span> <span class="nf">_scale_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">minmax</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)):</span>
+        <span class="n">scaler</span> <span class="o">=</span> <span class="n">MinMaxScaler</span><span class="p">(</span><span class="n">minmax</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">scaler</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
             
     <span class="k">def</span> <span class="nf">_transform_mixed_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">type_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">add_noise</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Applies data transformations to the continuous dimensions of the given data.</span>
@@ -260,24 +252,91 @@
 <span class="sd">            The array with the continuous data transformed. </span>
 <span class="sd">            </span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
-        <span class="n">continuous_idxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">type_mask</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>                                                               
+        <span class="n">continuous_idxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">type_mask</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>  
         <span class="n">cont_dim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">continuous_idxs</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">add_noise</span><span class="p">:</span>
             <span class="c1"># Add noise to destroy ties</span>
             <span class="n">array</span><span class="p">[</span><span class="n">continuous_idxs</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span><span class="mf">1E-6</span> <span class="o">*</span> <span class="n">array</span><span class="p">[</span><span class="n">continuous_idxs</span><span class="p">]</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">cont_dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-                  <span class="o">*</span> <span class="n">random_state</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="n">array</span><span class="p">[</span><span class="n">continuous_idxs</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">array</span><span class="p">[</span><span class="n">continuous_idxs</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])))</span>
+                  <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="n">array</span><span class="p">[</span><span class="n">continuous_idxs</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">array</span><span class="p">[</span><span class="n">continuous_idxs</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])))</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span> <span class="o">==</span> <span class="s1">&#39;standardize&#39;</span><span class="p">:</span>
             <span class="n">array</span><span class="p">[</span><span class="n">continuous_idxs</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_standardize_array</span><span class="p">(</span><span class="n">array</span><span class="p">[</span><span class="n">continuous_idxs</span><span class="p">],</span> <span class="n">cont_dim</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span> <span class="o">==</span> <span class="s1">&#39;uniform&#39;</span><span class="p">:</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Uniform transform not supported for mixed data&#39;</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span> <span class="o">==</span> <span class="s1">&#39;ranks&#39;</span><span class="p">:</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Rank transform not supported for mixed data&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span> <span class="o">==</span> <span class="s1">&#39;scale&#39;</span><span class="p">:</span>
+            <span class="n">array</span><span class="p">[</span><span class="n">continuous_idxs</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale_array</span><span class="p">(</span><span class="n">array</span><span class="p">[</span><span class="n">continuous_idxs</span><span class="p">],</span> <span class="n">minmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_range</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Unknown transform&#39;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">array</span>
+         
     
+    <span class="k">def</span> <span class="nf">_transform_to_one_hot_mixed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> 
+                                    <span class="n">type_mask</span><span class="p">,</span>
+                                    <span class="n">zero_inf</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        
+        <span class="n">discrete_idx_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">type_mask</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">mixed_idx_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">type_mask</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">narray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+        <span class="n">nxyz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">xyz</span><span class="p">)</span>
+        <span class="n">ntype_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">type_mask</span><span class="p">)</span>
+
+        <span class="n">appended_columns</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">discrete_idx_list</span><span class="p">)):</span>
+            <span class="c1"># print(i)</span>
+            <span class="k">if</span> <span class="n">discrete_idx_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">encoder</span> <span class="o">=</span> <span class="n">OneHotEncoder</span><span class="p">(</span><span class="n">handle_unknown</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
+                <span class="n">i</span> <span class="o">+=</span> <span class="n">appended_columns</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">narray</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span>
+                <span class="n">xyz_val</span> <span class="o">=</span> <span class="n">nxyz</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">encoder_df</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">zero_inf</span><span class="p">:</span>
+                    <span class="n">encoder_df</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">encoder_df</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">9999999</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+                <span class="n">xyz_val</span> <span class="o">=</span> <span class="p">[</span><span class="n">nxyz</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">*</span> <span class="n">encoder_df</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">narray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">narray</span><span class="p">[:,</span> <span class="p">:</span><span class="n">i</span><span class="p">],</span> <span class="n">encoder_df</span><span class="p">,</span> <span class="n">narray</span><span class="p">[:,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:]],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+                <span class="n">nxyz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">nxyz</span><span class="p">[:</span><span class="n">i</span><span class="p">],</span> <span class="n">xyz_val</span><span class="p">,</span> <span class="n">nxyz</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:]])</span>
+                <span class="n">ntype_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">ntype_mask</span><span class="p">[:,</span> <span class="p">:</span><span class="n">i</span><span class="p">],</span>
+                                             <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">encoder_df</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> 
+                                             <span class="n">ntype_mask</span><span class="p">[:,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:]],</span> 
+                                            <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">appended_columns</span> <span class="o">+=</span> <span class="n">encoder_df</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+
+            <span class="k">elif</span> <span class="n">mixed_idx_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">i</span> <span class="o">+=</span> <span class="n">appended_columns</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">narray</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span>
+                <span class="n">xyz_val</span> <span class="o">=</span> <span class="n">nxyz</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+                <span class="c1"># print(i, narray[:, i], ntype_mask[:, i])</span>
+                <span class="c1"># find categories </span>
+                <span class="n">categories</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">narray</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">ntype_mask</span><span class="p">[:,</span> <span class="n">i</span><span class="p">])</span>
+                <span class="n">cont_vars</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">narray</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">ntype_mask</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]))</span>
+
+                <span class="n">encoder</span> <span class="o">=</span> <span class="n">OneHotEncoder</span><span class="p">(</span><span class="n">categories</span><span class="o">=</span><span class="p">[</span><span class="n">categories</span><span class="p">],</span> <span class="n">handle_unknown</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
+                <span class="n">xyz_val</span> <span class="o">=</span> <span class="n">nxyz</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">encoder_df</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">zero_inf</span><span class="p">:</span>
+                    <span class="n">encoder_df</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">encoder_df</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">9999999</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">cont_vars</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+
+                <span class="n">xyz_val</span> <span class="o">=</span> <span class="p">[</span><span class="n">nxyz</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">*</span> <span class="p">(</span><span class="n">encoder_df</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">cont_column</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">narray</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">ntype_mask</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">narray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">narray</span><span class="p">[:,</span> <span class="p">:</span><span class="n">i</span><span class="p">],</span> <span class="n">cont_column</span><span class="p">,</span> <span class="n">encoder_df</span><span class="p">,</span> <span class="n">narray</span><span class="p">[:,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:]],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+                <span class="n">nxyz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">nxyz</span><span class="p">[:</span><span class="n">i</span><span class="p">],</span> <span class="n">xyz_val</span><span class="p">,</span> <span class="n">nxyz</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:]])</span>
+                <span class="n">ntype_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">ntype_mask</span><span class="p">[:,</span> <span class="p">:</span><span class="n">i</span><span class="p">],</span> 
+                                             <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">cont_column</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> 
+                                             <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">encoder_df</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> 
+                                             <span class="n">ntype_mask</span><span class="p">[:,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:]],</span> 
+                                            <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">appended_columns</span> <span class="o">+=</span> <span class="n">encoder_df</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">ndiscrete_idx_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">ntype_mask</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">narray</span><span class="p">,</span> <span class="n">nxyz</span><span class="p">,</span> <span class="n">ntype_mask</span><span class="p">,</span> <span class="n">ndiscrete_idx_list</span>         
+
+        
+
 <div class="viewcode-block" id="CMIknnMixed.run_test"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.CMIknnMixed.run_test">[docs]</a>    <span class="k">def</span> <span class="nf">run_test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;2xtau_max&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Perform conditional independence test.</span>
 
@@ -328,7 +387,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">cached</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="c1"># Get the dependence measure, reycling residuals if need be</span>
-            <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span>
+            <span class="n">val</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span>
                                               <span class="n">type_mask</span><span class="o">=</span><span class="n">type_mask</span><span class="p">)</span> 
             <span class="c1"># Get the p-value</span>
             <span class="n">pval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_significance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span>
@@ -402,7 +461,7 @@
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;nans in the array!&quot;</span><span class="p">)</span>
         <span class="c1"># Get the dependence measure</span>
-        <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">type_mask</span><span class="o">=</span><span class="n">type_mask</span><span class="p">)</span>
+        <span class="n">val</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">type_mask</span><span class="o">=</span><span class="n">type_mask</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">val_only</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">val</span>
@@ -473,8 +532,35 @@
         <span class="k">return</span> <span class="n">pval</span></div>
     
     
+    <span class="k">def</span> <span class="nf">_compute_discrete_entropy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">disc_values</span><span class="p">,</span> <span class="n">discrete_idxs</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">):</span>
+        <span class="n">current_array</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">array</span><span class="p">[:,</span> <span class="n">discrete_idxs</span><span class="p">]</span> <span class="o">==</span> <span class="n">disc_values</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">discrete_idxs</span><span class="p">)]</span>
+
+        <span class="n">count</span><span class="p">,</span> <span class="n">dim</span> <span class="o">=</span> <span class="n">current_array</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="k">if</span> <span class="n">count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">0.</span>
+
+        <span class="n">prob</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">count</span><span class="p">)</span> <span class="o">/</span> <span class="n">num_samples</span>
+        <span class="c1"># print(prob)</span>
+        <span class="n">disc_entropy</span> <span class="o">=</span> <span class="n">prob</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">prob</span><span class="p">)</span>
+        <span class="c1"># print(&#39;d&#39;, disc_entropy)</span>
+        <span class="k">return</span> <span class="n">disc_entropy</span>
+    
+    
+    <span class="k">def</span> <span class="nf">compute_discrete_entropy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">disc_values</span><span class="p">,</span> <span class="n">discrete_idxs</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">):</span>
+        <span class="n">current_array</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">array</span><span class="p">[:,</span> <span class="n">discrete_idxs</span><span class="p">]</span> <span class="o">==</span> <span class="n">disc_values</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">discrete_idxs</span><span class="p">)]</span>
+
+        <span class="n">count</span><span class="p">,</span> <span class="n">dim</span> <span class="o">=</span> <span class="n">current_array</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="k">if</span> <span class="n">count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">0.</span>
+
+        <span class="n">prob</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">count</span><span class="p">)</span> <span class="o">/</span> <span class="n">num_samples</span>
+        <span class="n">disc_entropy</span> <span class="o">=</span> <span class="n">prob</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">prob</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">disc_entropy</span>
+    
     <span class="nd">@jit</span><span class="p">(</span><span class="n">forceobj</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">_get_nearest_neighbors_zeroinf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">knn</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">_get_nearest_neighbors_zeroinf_onehot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">knn</span><span class="p">,</span>
                                    <span class="n">type_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns nearest neighbors according to Frenzel and Pompe (2007).</span>
 
@@ -518,61 +604,61 @@
         <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">T</span>
         <span class="n">type_mask</span> <span class="o">=</span> <span class="n">type_mask</span><span class="o">.</span><span class="n">T</span>
         
+        <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">type_mask</span><span class="p">,</span> <span class="n">discrete_idx_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform_to_one_hot_mixed</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> 
+                                                                                    <span class="n">xyz</span><span class="p">,</span> 
+                                                                                    <span class="n">type_mask</span><span class="p">,</span>
+                                                                                    <span class="n">zero_inf</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            
         <span class="c1"># Subsample indices</span>
         <span class="n">x_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">y_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">z_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-
+        <span class="n">xz_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">x_indices</span><span class="p">,</span> <span class="n">z_indices</span><span class="p">])</span>
+        <span class="n">yz_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">y_indices</span><span class="p">,</span> <span class="n">z_indices</span><span class="p">])</span>
+     
         <span class="c1"># Fit trees</span>
-        <span class="n">xyz_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">array</span><span class="p">,</span> <span class="n">type_mask</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">tree_xyz</span> <span class="o">=</span> <span class="n">NearestNeighbors</span><span class="p">(</span><span class="n">metric</span><span class="o">=</span><span class="n">zero_inf_distance_metric</span><span class="p">,</span> <span class="n">algorithm</span><span class="o">=</span><span class="s1">&#39;ball_tree&#39;</span><span class="p">)</span>
-        <span class="n">tree_xyz</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">xyz_array</span><span class="p">)</span>
-        
-        <span class="n">neighbors</span> <span class="o">=</span> <span class="n">tree_xyz</span><span class="o">.</span><span class="n">kneighbors</span><span class="p">(</span><span class="n">xyz_array</span><span class="p">,</span>
-                                   <span class="n">n_neighbors</span><span class="o">=</span><span class="n">knn</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span>
-                                   <span class="n">return_distance</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        
-        <span class="n">noninf_neighbors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">neighbors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">tree_xyz</span> <span class="o">=</span> <span class="n">spatial</span><span class="o">.</span><span class="n">cKDTree</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+        <span class="n">neighbors</span> <span class="o">=</span> <span class="n">tree_xyz</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">knn</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
+                                   <span class="n">distance_upper_bound</span><span class="o">=</span><span class="mi">9999999</span><span class="p">)</span>
         
         <span class="n">n</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="n">neighbors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
         
-        <span class="n">epsarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
         
+        <span class="n">epsarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">neighbors</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">,</span> <span class="n">knn</span><span class="p">]</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
                 <span class="n">replacement_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">neighbors</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-                <span class="n">epsarray</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">neighbors</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">,</span> <span class="n">replacement_idx</span><span class="p">]</span>
+                <span class="n">r</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">replacement_idx</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">perc</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">epsarray</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">neighbors</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">,</span> <span class="n">r</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">epsarray</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">neighbors</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">,</span> <span class="n">knn</span><span class="p">]</span>
                 
-        <span class="n">neighbors_radius_xyz</span> <span class="o">=</span> <span class="n">tree_xyz</span><span class="o">.</span><span class="n">radius_neighbors</span><span class="p">(</span><span class="n">xyz_array</span><span class="p">,</span>
-                                                         <span class="n">radius</span><span class="o">=</span><span class="n">epsarray</span><span class="p">,</span>
-                                                         <span class="n">return_distance</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="n">k_tilde</span> <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">neighbors_radius_xyz</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">neighbors_radius_xyz</span><span class="p">))]</span>
+        
+        <span class="n">neighbors_radius_xyz</span> <span class="o">=</span> <span class="n">tree_xyz</span><span class="o">.</span><span class="n">query_ball_point</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">epsarray</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+        
+        <span class="n">k_tilde</span> <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">neighbors_radius_xyz</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">neighbors_radius_xyz</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">neighbors_radius_xyz</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">neighbors_radius_xyz</span><span class="p">))]</span>
             
         <span class="c1"># compute entropies</span>
-        <span class="n">xz_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">x_indices</span><span class="p">,</span> <span class="n">z_indices</span><span class="p">))</span>
-        <span class="n">xz_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">array</span><span class="p">[:,</span> <span class="n">xz_indices</span><span class="p">],</span> <span class="n">type_mask</span><span class="p">[:,</span> <span class="n">xz_indices</span><span class="p">]],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">tree_xz</span> <span class="o">=</span> <span class="n">BallTree</span><span class="p">(</span><span class="n">xz_array</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">zero_inf_distance_metric</span><span class="p">)</span>
-        <span class="n">k_xz</span> <span class="o">=</span> <span class="n">tree_xz</span><span class="o">.</span><span class="n">query_radius</span><span class="p">(</span><span class="n">xz_array</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">epsarray</span><span class="p">,</span> <span class="n">count_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">xz</span> <span class="o">=</span> <span class="n">array</span><span class="p">[:,</span> <span class="n">xz_indices</span><span class="p">]</span>
+        <span class="n">tree_xz</span> <span class="o">=</span> <span class="n">spatial</span><span class="o">.</span><span class="n">cKDTree</span><span class="p">(</span><span class="n">xz</span><span class="p">)</span>
+        <span class="n">k_xz</span> <span class="o">=</span> <span class="n">tree_xz</span><span class="o">.</span><span class="n">query_ball_point</span><span class="p">(</span><span class="n">xz</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">epsarray</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">return_length</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         
-        <span class="n">yz_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">y_indices</span><span class="p">,</span> <span class="n">z_indices</span><span class="p">))</span>
-        <span class="n">yz_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">array</span><span class="p">[:,</span> <span class="n">yz_indices</span><span class="p">],</span> <span class="n">type_mask</span><span class="p">[:,</span> <span class="n">yz_indices</span><span class="p">]],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">tree_yz</span> <span class="o">=</span> <span class="n">BallTree</span><span class="p">(</span><span class="n">yz_array</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">zero_inf_distance_metric</span><span class="p">)</span>
-        <span class="n">k_yz</span> <span class="o">=</span> <span class="n">tree_yz</span><span class="o">.</span><span class="n">query_radius</span><span class="p">(</span><span class="n">yz_array</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">epsarray</span><span class="p">,</span> <span class="n">count_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">yz</span> <span class="o">=</span> <span class="n">array</span><span class="p">[:,</span> <span class="n">yz_indices</span><span class="p">]</span>
+        <span class="n">tree_yz</span> <span class="o">=</span> <span class="n">spatial</span><span class="o">.</span><span class="n">cKDTree</span><span class="p">(</span><span class="n">yz</span><span class="p">)</span>
+        <span class="n">k_yz</span> <span class="o">=</span> <span class="n">tree_yz</span><span class="o">.</span><span class="n">query_ball_point</span><span class="p">(</span><span class="n">yz</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">epsarray</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">return_length</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">z_indices</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">z_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">array</span><span class="p">[:,</span> <span class="n">z_indices</span><span class="p">],</span> <span class="n">type_mask</span><span class="p">[:,</span> <span class="n">z_indices</span><span class="p">]],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
-            <span class="n">tree_z</span> <span class="o">=</span> <span class="n">BallTree</span><span class="p">(</span><span class="n">z_array</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">zero_inf_distance_metric</span><span class="p">)</span>
-            <span class="n">k_z</span> <span class="o">=</span> <span class="n">tree_z</span><span class="o">.</span><span class="n">query_radius</span><span class="p">(</span><span class="n">z_array</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">epsarray</span><span class="p">,</span> <span class="n">count_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">array</span><span class="p">[:,</span> <span class="n">z_indices</span><span class="p">]</span>
+            <span class="n">tree_z</span> <span class="o">=</span> <span class="n">spatial</span><span class="o">.</span><span class="n">cKDTree</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+            <span class="n">k_z</span> <span class="o">=</span> <span class="n">tree_z</span><span class="o">.</span><span class="n">query_ball_point</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">epsarray</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">return_length</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Number of neighbors is T when z is empty.</span>
             <span class="n">k_z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
             
-        <span class="n">k_xz</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">k_xz</span><span class="p">]</span>
-        <span class="n">k_yz</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">k_yz</span><span class="p">]</span>
-        <span class="n">k_z</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">k_z</span><span class="p">]</span>
-            
+        <span class="n">k_xz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">k_xz</span><span class="p">])</span>
+        <span class="n">k_yz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">k_yz</span><span class="p">])</span>
+        <span class="n">k_z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">k_z</span><span class="p">])</span>
+
         <span class="k">return</span> <span class="n">k_tilde</span><span class="p">,</span> <span class="n">k_xz</span><span class="p">,</span> <span class="n">k_yz</span><span class="p">,</span> <span class="n">k_z</span>
     
 <div class="viewcode-block" id="CMIknnMixed.get_dependence_measure_zeroinf"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.CMIknnMixed.get_dependence_measure_zeroinf">[docs]</a>    <span class="k">def</span> <span class="nf">get_dependence_measure_zeroinf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> 
@@ -608,26 +694,26 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">knn</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">knn</span><span class="p">)</span>
         
-        <span class="n">knn_tilde</span><span class="p">,</span> <span class="n">k_xz</span><span class="p">,</span> <span class="n">k_yz</span><span class="p">,</span> <span class="n">k_z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_nearest_neighbors_zeroinf</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">array</span><span class="p">,</span>
-                                                      <span class="n">xyz</span><span class="o">=</span><span class="n">xyz</span><span class="p">,</span>
-                                                      <span class="n">knn</span><span class="o">=</span><span class="n">knn</span><span class="p">,</span>
-                                                      <span class="n">type_mask</span><span class="o">=</span><span class="n">type_mask</span><span class="p">)</span>
-    
+
+        <span class="n">knn_tilde</span><span class="p">,</span> <span class="n">k_xz</span><span class="p">,</span> <span class="n">k_yz</span><span class="p">,</span> <span class="n">k_z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_nearest_neighbors_zeroinf_onehot</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">array</span><span class="p">,</span>
+                                                                                 <span class="n">xyz</span><span class="o">=</span><span class="n">xyz</span><span class="p">,</span>
+                                                                                 <span class="n">knn</span><span class="o">=</span><span class="n">knn</span><span class="p">,</span>
+                                                                                 <span class="n">type_mask</span><span class="o">=</span><span class="n">type_mask</span><span class="p">)</span>
+        <span class="n">non_zero</span> <span class="o">=</span> <span class="n">knn_tilde</span> <span class="o">-</span> <span class="n">k_xz</span> <span class="o">-</span> <span class="n">k_yz</span> <span class="o">+</span> <span class="n">k_z</span>
+        
+        <span class="n">non_zero_count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">non_zero</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">non_zero</span><span class="p">)</span>
         
         <span class="n">val</span> <span class="o">=</span> <span class="p">(</span><span class="n">special</span><span class="o">.</span><span class="n">digamma</span><span class="p">(</span><span class="n">knn_tilde</span><span class="p">)</span> <span class="o">-</span> <span class="n">special</span><span class="o">.</span><span class="n">digamma</span><span class="p">(</span><span class="n">k_xz</span><span class="p">)</span> <span class="o">-</span>
                                            <span class="n">special</span><span class="o">.</span><span class="n">digamma</span><span class="p">(</span><span class="n">k_yz</span><span class="p">)</span> <span class="o">+</span>
                                            <span class="n">special</span><span class="o">.</span><span class="n">digamma</span><span class="p">(</span><span class="n">k_z</span><span class="p">))</span>
+        
+        <span class="n">val</span> <span class="o">=</span> <span class="n">val</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">val</span><span class="p">)]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> 
 
-        <span class="c1"># digamma(0) is -inf</span>
-        <span class="n">val</span> <span class="o">=</span> <span class="n">val</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">val</span><span class="p">)]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-        <span class="c1"># if val &lt; 0.:</span>
-        <span class="c1">#     val = 0.</span>
-            
-        <span class="k">return</span> <span class="n">val</span></div>
-
+        <span class="k">return</span> <span class="n">val</span><span class="p">,</span> <span class="n">non_zero_count</span></div>
+    
     <span class="nd">@jit</span><span class="p">(</span><span class="n">forceobj</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">_get_nearest_neighbors_MS</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> 
-                                  <span class="n">knn</span><span class="p">,</span> <span class="n">type_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_get_nearest_neighbors_MS_one_hot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> 
+                                          <span class="n">knn</span><span class="p">,</span> <span class="n">type_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns nearest neighbors according to Messner and Shalizi (2021).</span>
 
 <span class="sd">        Retrieves the distances eps to the k-th nearest neighbors for every</span>
@@ -670,49 +756,58 @@
         <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">T</span>
         <span class="n">type_mask</span> <span class="o">=</span> <span class="n">type_mask</span><span class="o">.</span><span class="n">T</span>
         
+        <span class="n">discrete_idx_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">type_mask</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        
+        <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">type_mask</span><span class="p">,</span> <span class="n">discrete_idx_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform_to_one_hot_mixed</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> 
+                                                                                    <span class="n">xyz</span><span class="p">,</span> 
+                                                                                    <span class="n">type_mask</span><span class="p">)</span>
+        
         <span class="c1"># Subsample indices</span>
         <span class="n">x_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">y_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">z_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">xz_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">x_indices</span><span class="p">,</span> <span class="n">z_indices</span><span class="p">])</span>
+        <span class="n">yz_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">y_indices</span><span class="p">,</span> <span class="n">z_indices</span><span class="p">])</span>
             
         <span class="c1"># Fit trees</span>
-        <span class="n">xyz_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">array</span><span class="p">,</span> <span class="n">type_mask</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">tree_xyz</span> <span class="o">=</span> <span class="n">NearestNeighbors</span><span class="p">(</span><span class="n">metric</span><span class="o">=</span><span class="n">zero_one_distance_metric</span><span class="p">,</span> <span class="n">algorithm</span><span class="o">=</span><span class="s1">&#39;ball_tree&#39;</span><span class="p">)</span>
-        <span class="n">tree_xyz</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">xyz_array</span><span class="p">)</span>
+        <span class="n">tree_xyz</span> <span class="o">=</span> <span class="n">spatial</span><span class="o">.</span><span class="n">cKDTree</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+        <span class="n">neighbors</span> <span class="o">=</span> <span class="n">tree_xyz</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">knn</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">workers</span><span class="p">)</span>
         
-        <span class="n">epsarray</span> <span class="o">=</span> <span class="n">tree_xyz</span><span class="o">.</span><span class="n">kneighbors</span><span class="p">(</span><span class="n">xyz_array</span><span class="p">,</span>
-                                   <span class="n">n_neighbors</span><span class="o">=</span><span class="n">knn</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span>
-                                   <span class="n">return_distance</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">][:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
         
-        <span class="n">neighbors_radius_xyz</span> <span class="o">=</span> <span class="n">tree_xyz</span><span class="o">.</span><span class="n">radius_neighbors</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="n">epsarray</span><span class="p">,</span>
-                                    <span class="n">return_distance</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">epsarray</span> <span class="o">=</span> <span class="n">neighbors</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        
+        <span class="n">neighbors_radius_xyz</span> <span class="o">=</span> <span class="n">tree_xyz</span><span class="o">.</span><span class="n">query_ball_point</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">epsarray</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> 
+                                                         <span class="n">workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">workers</span><span class="p">)</span>
         
         <span class="c1"># search again for neighbors in the radius to find all of them</span>
         <span class="c1"># in the discrete case k_tilde can be larger than the given knn</span>
-        <span class="n">k_tilde</span> <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">neighbors_radius_xyz</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">neighbors_radius_xyz</span><span class="p">))]</span>
+        <span class="n">k_tilde</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">neighbors_radius_xyz</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">neighbors_radius_xyz</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">neighbors_radius_xyz</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">neighbors_radius_xyz</span><span class="p">))])</span>
             
         <span class="c1"># compute entropies</span>
-        <span class="n">xz_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">x_indices</span><span class="p">,</span> <span class="n">z_indices</span><span class="p">))</span>
-        <span class="n">xz_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">array</span><span class="p">[:,</span> <span class="n">xz_indices</span><span class="p">],</span> <span class="n">type_mask</span><span class="p">[:,</span> <span class="n">xz_indices</span><span class="p">]],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">tree_xz</span> <span class="o">=</span> <span class="n">BallTree</span><span class="p">(</span><span class="n">xz_array</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">zero_one_distance_metric</span><span class="p">)</span>
-        <span class="n">k_xz</span> <span class="o">=</span> <span class="n">tree_xz</span><span class="o">.</span><span class="n">query_radius</span><span class="p">(</span><span class="n">xz_array</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">epsarray</span><span class="p">,</span> <span class="n">count_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">xz</span> <span class="o">=</span> <span class="n">array</span><span class="p">[:,</span> <span class="n">xz_indices</span><span class="p">]</span>
+        <span class="n">tree_xz</span> <span class="o">=</span> <span class="n">spatial</span><span class="o">.</span><span class="n">cKDTree</span><span class="p">(</span><span class="n">xz</span><span class="p">)</span>
+        <span class="n">k_xz</span> <span class="o">=</span> <span class="n">tree_xz</span><span class="o">.</span><span class="n">query_ball_point</span><span class="p">(</span><span class="n">xz</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">epsarray</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
+                                        <span class="n">workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">workers</span><span class="p">,</span> <span class="n">return_length</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         
-        <span class="n">yz_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">y_indices</span><span class="p">,</span> <span class="n">z_indices</span><span class="p">))</span>
-        <span class="n">yz_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">array</span><span class="p">[:,</span> <span class="n">yz_indices</span><span class="p">],</span> <span class="n">type_mask</span><span class="p">[:,</span> <span class="n">yz_indices</span><span class="p">]],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">tree_yz</span> <span class="o">=</span> <span class="n">BallTree</span><span class="p">(</span><span class="n">yz_array</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">zero_one_distance_metric</span><span class="p">)</span>
-        <span class="n">k_yz</span> <span class="o">=</span> <span class="n">tree_yz</span><span class="o">.</span><span class="n">query_radius</span><span class="p">(</span><span class="n">yz_array</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">epsarray</span><span class="p">,</span> <span class="n">count_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            
+        <span class="n">yz</span> <span class="o">=</span> <span class="n">array</span><span class="p">[:,</span> <span class="n">yz_indices</span><span class="p">]</span>
+        <span class="n">tree_yz</span> <span class="o">=</span> <span class="n">spatial</span><span class="o">.</span><span class="n">cKDTree</span><span class="p">(</span><span class="n">yz</span><span class="p">)</span>
+        <span class="n">k_yz</span> <span class="o">=</span> <span class="n">tree_yz</span><span class="o">.</span><span class="n">query_ball_point</span><span class="p">(</span><span class="n">yz</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">epsarray</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> 
+                                        <span class="n">workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">workers</span><span class="p">,</span> <span class="n">return_length</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">z_indices</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">z_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">array</span><span class="p">[:,</span> <span class="n">z_indices</span><span class="p">],</span> <span class="n">type_mask</span><span class="p">[:,</span> <span class="n">z_indices</span><span class="p">]],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
-            <span class="n">tree_z</span> <span class="o">=</span> <span class="n">BallTree</span><span class="p">(</span><span class="n">z_array</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">zero_one_distance_metric</span><span class="p">)</span>
-            <span class="n">k_z</span> <span class="o">=</span> <span class="n">tree_z</span><span class="o">.</span><span class="n">query_radius</span><span class="p">(</span><span class="n">z_array</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">epsarray</span><span class="p">,</span> <span class="n">count_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">array</span><span class="p">[:,</span> <span class="n">z_indices</span><span class="p">]</span>
+            <span class="n">tree_z</span> <span class="o">=</span> <span class="n">spatial</span><span class="o">.</span><span class="n">cKDTree</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+            <span class="n">k_z</span> <span class="o">=</span> <span class="n">tree_z</span><span class="o">.</span><span class="n">query_ball_point</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">epsarray</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
+                                          <span class="n">workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">workers</span><span class="p">,</span> <span class="n">return_length</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Number of neighbors is T when z is empty.</span>
             <span class="n">k_z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
         
-        <span class="n">k_xz</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">k_xz</span><span class="p">]</span>
-        <span class="n">k_yz</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">k_yz</span><span class="p">]</span>
-        <span class="n">k_z</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">k_z</span><span class="p">]</span>
+        <span class="n">k_xz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">k_xz</span><span class="p">])</span>
+        <span class="n">k_yz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">k_yz</span><span class="p">])</span>
+        <span class="n">k_z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">k_z</span><span class="p">])</span>
 
         <span class="k">return</span> <span class="n">k_tilde</span><span class="p">,</span> <span class="n">k_xz</span><span class="p">,</span> <span class="n">k_yz</span><span class="p">,</span> <span class="n">k_z</span>
     
@@ -750,19 +845,21 @@
             <span class="n">knn</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">knn</span><span class="p">)</span>
         
         
-        <span class="n">knn_tilde</span><span class="p">,</span> <span class="n">k_xz</span><span class="p">,</span> <span class="n">k_yz</span><span class="p">,</span> <span class="n">k_z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_nearest_neighbors_MS</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">array</span><span class="p">,</span>
-                                                                    <span class="n">xyz</span><span class="o">=</span><span class="n">xyz</span><span class="p">,</span>
-                                                                    <span class="n">knn</span><span class="o">=</span><span class="n">knn</span><span class="p">,</span>
-                                                                    <span class="n">type_mask</span><span class="o">=</span><span class="n">type_mask</span><span class="p">)</span>
+        <span class="n">knn_tilde</span><span class="p">,</span> <span class="n">k_xz</span><span class="p">,</span> <span class="n">k_yz</span><span class="p">,</span> <span class="n">k_z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_nearest_neighbors_MS_one_hot</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">array</span><span class="p">,</span>
+                                                                            <span class="n">xyz</span><span class="o">=</span><span class="n">xyz</span><span class="p">,</span>
+                                                                            <span class="n">knn</span><span class="o">=</span><span class="n">knn</span><span class="p">,</span>
+                                                                            <span class="n">type_mask</span><span class="o">=</span><span class="n">type_mask</span><span class="p">)</span>
+        
+        <span class="n">non_zero</span> <span class="o">=</span> <span class="n">knn_tilde</span> <span class="o">-</span> <span class="n">k_xz</span> <span class="o">-</span> <span class="n">k_yz</span> <span class="o">+</span> <span class="n">k_z</span>
+        
+        <span class="n">non_zero_count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">non_zero</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">non_zero</span><span class="p">)</span>
         
         <span class="n">val</span> <span class="o">=</span> <span class="p">(</span><span class="n">special</span><span class="o">.</span><span class="n">digamma</span><span class="p">(</span><span class="n">knn_tilde</span><span class="p">)</span> <span class="o">-</span> <span class="n">special</span><span class="o">.</span><span class="n">digamma</span><span class="p">(</span><span class="n">k_xz</span><span class="p">)</span> <span class="o">-</span>
                                            <span class="n">special</span><span class="o">.</span><span class="n">digamma</span><span class="p">(</span><span class="n">k_yz</span><span class="p">)</span> <span class="o">+</span>
-                                           <span class="n">special</span><span class="o">.</span><span class="n">digamma</span><span class="p">(</span><span class="n">k_z</span><span class="p">))</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+                                           <span class="n">special</span><span class="o">.</span><span class="n">digamma</span><span class="p">(</span><span class="n">k_z</span><span class="p">))</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">val</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">val</span><span class="p">)]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> 
 
-        <span class="c1"># if val &lt; 0.:</span>
-        <span class="c1">#     val = 0.</span>
-                
-        <span class="k">return</span> <span class="n">val</span></div>
+        <span class="k">return</span> <span class="n">val</span><span class="p">,</span> <span class="n">non_zero_count</span></div>
 
     <span class="nd">@jit</span><span class="p">(</span><span class="n">forceobj</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">_compute_continuous_entropy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">knn</span><span class="p">):</span>
@@ -910,10 +1007,16 @@
         <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">T</span>
         <span class="n">type_mask</span> <span class="o">=</span> <span class="n">type_mask</span><span class="o">.</span><span class="n">T</span>
         
+        <span class="c1">#TODO</span>
+        
         <span class="c1"># continue working with discrete idx list</span>
-        <span class="n">discrete_idx_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">type_mask</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">discrete_idx_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">type_mask</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">discrete_idx_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No variables are fully discrete, cannot use CMIknnMixed conditional!&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Variables are continuous, cannot use CMIknnMixed conditional!&quot;</span><span class="p">)</span>
+            
+<span class="c1">#         if np.sum(discrete_idx_list) != np.sum(any_discrete_idx_list):</span>
+<span class="c1">#             raise ValueError(&quot;Variables contain mixtures, cannot use CMIknnMixed conditional!&quot;)</span>
             
         <span class="c1"># Subsample indices</span>
         <span class="n">x_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
@@ -942,6 +1045,8 @@
         <span class="n">num_yz_classes</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">array</span><span class="p">[:,</span> <span class="n">yz_indices</span><span class="p">][:,</span> <span class="n">index</span><span class="p">])</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">discrete_yz_indices</span><span class="p">))</span> <span class="k">if</span> <span class="p">(</span><span class="n">discrete_yz_indices</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)]</span>
         <span class="n">num_z_classes</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">array</span><span class="p">[:,</span> <span class="n">z_indices</span><span class="p">][:,</span> <span class="n">index</span><span class="p">])</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">discrete_z_indices</span><span class="p">))</span> <span class="k">if</span> <span class="p">(</span><span class="n">discrete_z_indices</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)]</span>
         <span class="n">num_xyz_classes</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">array</span><span class="p">[:,</span> <span class="n">index</span><span class="p">])</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">discrete_idx_list</span><span class="p">))</span> <span class="k">if</span> <span class="p">(</span><span class="n">discrete_idx_list</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)]</span>
+        
+        <span class="c1"># print(&#39;num classes&#39;, num_xyz_classes, num_xz_classes, num_yz_classes, num_z_classes)siz</span>
 
         <span class="n">xyz_cartesian_product</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">xz_cartesian_product</span> <span class="o">=</span> <span class="p">[]</span>
@@ -968,7 +1073,9 @@
             <span class="n">z_cartesian_product</span> <span class="o">=</span> <span class="n">cartesian</span><span class="p">(</span><span class="n">num_z_classes</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">num_z_classes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">z_cartesian_product</span> <span class="o">=</span> <span class="n">num_z_classes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-
+    
+        <span class="c1"># print(&#39;cartesian&#39;, xyz_cartesian_product)</span>
+        <span class="c1"># , xz_cartesian_product, yz_cartesian_product, z_cartesian_product)</span>
                 
         <span class="c1"># compute entropies in XYZ subspace </span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">xyz_cartesian_product</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -1045,11 +1152,9 @@
         <span class="c1"># put it all together for the CMI estimation</span>
         <span class="n">val</span> <span class="o">=</span> <span class="n">xz_cmi</span> <span class="o">+</span> <span class="n">yz_cmi</span> <span class="o">-</span> <span class="n">xyz_cmi</span> <span class="o">-</span> <span class="n">z_cmi</span> <span class="o">+</span> <span class="n">xz_entropy</span> <span class="o">+</span> <span class="n">yz_entropy</span> <span class="o">-</span> <span class="n">xyz_entropy</span> <span class="o">-</span> <span class="n">z_entropy</span>
         
-        <span class="c1"># CMI cannot be negative, so set to 0 if it is so </span>
-<span class="c1">#         if val &lt; 0.:</span>
-<span class="c1">#             val = 0.</span>
+        <span class="n">entropies</span> <span class="o">=</span> <span class="p">(</span><span class="n">xz_cmi</span><span class="p">,</span> <span class="n">yz_cmi</span><span class="p">,</span> <span class="n">xyz_cmi</span><span class="p">,</span> <span class="n">z_cmi</span><span class="p">,</span> <span class="n">xz_entropy</span><span class="p">,</span> <span class="n">yz_entropy</span><span class="p">,</span> <span class="n">xyz_entropy</span><span class="p">,</span> <span class="n">z_entropy</span><span class="p">)</span>
             
-        <span class="k">return</span> <span class="n">val</span></div>
+        <span class="k">return</span> <span class="n">val</span><span class="p">,</span> <span class="n">entropies</span></div>
     
 <div class="viewcode-block" id="CMIknnMixed.get_dependence_measure"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.CMIknnMixed.get_dependence_measure">[docs]</a>    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> 
                                <span class="n">type_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -1089,40 +1194,63 @@
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span> <span class="o">==</span> <span class="s1">&#39;FPinf&#39;</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure_zeroinf</span><span class="p">(</span><span class="n">array</span><span class="p">,</span>
                                                    <span class="n">xyz</span><span class="p">,</span>
-                                                   <span class="n">type_mask</span><span class="p">)</span></div>
+                                                   <span class="n">type_mask</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No such estimator available!&#39;</span><span class="p">)</span></div>
+            
+    <span class="nd">@jit</span><span class="p">(</span><span class="n">forceobj</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">get_restricted_permutation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">shuffle_neighbors</span><span class="p">,</span> <span class="n">neighbors</span><span class="p">,</span> <span class="n">order</span><span class="p">):</span>
+
+        <span class="n">restricted_permutation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+        <span class="n">used</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">sample_index</span> <span class="ow">in</span> <span class="n">order</span><span class="p">:</span>
+            <span class="n">neighbors_to_use</span> <span class="o">=</span> <span class="n">neighbors</span><span class="p">[</span><span class="n">sample_index</span><span class="p">]</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">use</span> <span class="o">=</span> <span class="n">neighbors_to_use</span><span class="p">[</span><span class="n">m</span><span class="p">]</span>
+            <span class="k">while</span> <span class="p">((</span><span class="n">use</span> <span class="ow">in</span> <span class="n">used</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">m</span> <span class="o">&lt;</span> <span class="n">shuffle_neighbors</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)):</span>
+                <span class="n">m</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">use</span> <span class="o">=</span> <span class="n">neighbors_to_use</span><span class="p">[</span><span class="n">m</span><span class="p">]</span>
+            <span class="n">restricted_permutation</span><span class="p">[</span><span class="n">sample_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">use</span>
+            <span class="n">used</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">used</span><span class="p">,</span> <span class="n">use</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">restricted_permutation</span>
 
 
+    <span class="nd">@jit</span><span class="p">(</span><span class="n">forceobj</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">_generate_random_permutation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">neighbors</span><span class="p">,</span> <span class="n">x_indices</span><span class="p">,</span> <span class="n">type_mask</span><span class="p">):</span>
-        
-        <span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
-        
+
+        <span class="n">T</span><span class="p">,</span> <span class="n">dim</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
         <span class="c1"># Generate random order in which to go through indices loop in</span>
         <span class="c1"># next step</span>
         <span class="n">order</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
 
-        <span class="c1"># Shuffle neighbor indices for each sample index</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">neighbors</span><span class="p">)):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">neighbors</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-        <span class="c1"># neighbors = self.random_state.permuted(neighbors, axis=1)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">neighbors</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">neighbors</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">neighbors</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="n">n</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
 
         <span class="c1"># Select a series of neighbor indices that contains as few as</span>
         <span class="c1"># possible duplicates</span>
         <span class="n">restricted_permutation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_restricted_permutation</span><span class="p">(</span>
                 <span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">,</span>
                 <span class="n">shuffle_neighbors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shuffle_neighbors</span><span class="p">,</span>
-                <span class="n">neighbors</span><span class="o">=</span><span class="n">neighbors</span><span class="p">,</span>
+                <span class="n">neighbors</span><span class="o">=</span><span class="n">n</span><span class="p">,</span>
                 <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">)</span>
 
         <span class="n">array_shuffled</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
         <span class="n">type_mask_shuffled</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">type_mask</span><span class="p">)</span>
-        
+
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">x_indices</span><span class="p">:</span>
-            <span class="n">array_shuffled</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">restricted_permutation</span><span class="p">]</span>
-            <span class="n">type_mask_shuffled</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">type_mask</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">restricted_permutation</span><span class="p">]</span>
-            
+            <span class="n">array_shuffled</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">restricted_permutation</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
+            <span class="n">type_mask_shuffled</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">type_mask</span><span class="p">[</span><span class="n">restricted_permutation</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
+
         <span class="k">return</span> <span class="n">array_shuffled</span><span class="p">,</span> <span class="n">type_mask_shuffled</span>
-    
-<div class="viewcode-block" id="CMIknnMixed.get_shuffle_significance"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.CMIknnMixed.get_shuffle_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_shuffle_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span>
+
+<div class="viewcode-block" id="CMIknnMixed.get_shuffle_significance"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.CMIknnMixed.get_shuffle_significance">[docs]</a>    <span class="nd">@jit</span><span class="p">(</span><span class="n">forceobj</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">get_shuffle_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span>
                                  <span class="n">return_null_dist</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                                  <span class="n">type_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         
@@ -1158,23 +1286,35 @@
 <span class="sd">        &quot;&quot;&quot;</span>
             
         <span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
-        
-        <span class="c1"># max_neighbors = max(1, int(max_neighbor_ratio*T))</span>
-        <span class="n">x_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">z_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">z_indices</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">shuffle_neighbors</span> <span class="o">&lt;</span> <span class="n">T</span><span class="p">:</span>
+            
+            <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">type_mask</span> <span class="o">=</span> <span class="n">type_mask</span><span class="o">.</span><span class="n">T</span>
+
+            <span class="c1"># discrete_idx_list = np.where(np.all(type_mask == 1, axis=0), 1, 0)</span>
+
+            <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">type_mask</span><span class="p">,</span> <span class="n">discrete_idx_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform_to_one_hot_mixed</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">type_mask</span><span class="p">,</span>
+                                                                                        <span class="n">zero_inf</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="c1"># max_neighbors = max(1, int(max_neighbor_ratio*T))</span>
+            <span class="n">x_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">z_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;            nearest-neighbor shuffle significance &quot;</span>
                       <span class="s2">&quot;test with n = </span><span class="si">%d</span><span class="s2"> and </span><span class="si">%d</span><span class="s2"> surrogates&quot;</span> <span class="o">%</span> <span class="p">(</span>
                       <span class="bp">self</span><span class="o">.</span><span class="n">shuffle_neighbors</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sig_samples</span><span class="p">))</span>
             <span class="c1"># Get nearest neighbors around each sample point in Z</span>
-            <span class="n">z_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">fastCopyAndTranspose</span><span class="p">(</span><span class="n">array</span><span class="p">[</span><span class="n">z_indices</span><span class="p">,</span> <span class="p">:]),</span> 
-                                      <span class="n">type_mask</span><span class="p">[</span><span class="n">z_indices</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">T</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
-            <span class="n">tree_z</span> <span class="o">=</span> <span class="n">NearestNeighbors</span><span class="p">(</span><span class="n">metric</span><span class="o">=</span><span class="n">zero_inf_distance_metric</span><span class="p">)</span>
-            <span class="n">tree_z</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">z_array</span><span class="p">)</span>
-            <span class="n">neighbors</span> <span class="o">=</span> <span class="n">tree_z</span><span class="o">.</span><span class="n">kneighbors</span><span class="p">(</span><span class="n">z_array</span><span class="p">,</span>
-                                          <span class="n">n_neighbors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shuffle_neighbors</span><span class="p">)</span>
+            <span class="n">z_array</span> <span class="o">=</span> <span class="n">array</span><span class="p">[:,</span> <span class="n">z_indices</span><span class="p">]</span>
+            <span class="n">tree_xyz</span> <span class="o">=</span> <span class="n">spatial</span><span class="o">.</span><span class="n">cKDTree</span><span class="p">(</span><span class="n">z_array</span><span class="p">)</span>
+            <span class="n">neighbors</span> <span class="o">=</span> <span class="n">tree_xyz</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">z_array</span><span class="p">,</span>
+                                       <span class="n">k</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shuffle_neighbors</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                                       <span class="n">p</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
+                                       <span class="n">workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">workers</span><span class="p">,</span>
+                                       <span class="n">distance_upper_bound</span><span class="o">=</span><span class="mi">9999999</span><span class="p">,</span>
+                                       <span class="n">eps</span><span class="o">=</span><span class="mf">0.</span><span class="p">)</span>
             
             <span class="c1"># remove all neighbors with distance infinite -&gt; from another class </span>
             <span class="c1"># for those that are discrete </span>
@@ -1182,14 +1322,8 @@
             <span class="c1"># fill valid neighbors with point -&gt; if infinite, the neighbor will </span>
             <span class="c1"># be the point itself</span>
             <span class="n">valid_neighbors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">valid_neighbors</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">valid_neighbors</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span>
-
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">z_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-                <span class="n">neighbors_i</span> <span class="o">=</span> <span class="p">[]</span>
-                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shuffle_neighbors</span><span class="p">):</span>
-                    <span class="k">if</span> <span class="n">neighbors</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
-                        <span class="n">valid_neighbors</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">neighbors</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span>
-                        
-            <span class="n">valid_neighbors</span> <span class="o">=</span> <span class="n">valid_neighbors</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+            
+            <span class="n">valid_neighbors</span><span class="p">[</span><span class="n">neighbors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">]</span> <span class="o">=</span> <span class="n">neighbors</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">neighbors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">]</span>
 
             <span class="n">null_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sig_samples</span><span class="p">)</span>
             
@@ -1198,9 +1332,9 @@
                                                                                        <span class="n">valid_neighbors</span><span class="p">,</span> 
                                                                                        <span class="n">x_indices</span><span class="p">,</span>
                                                                                        <span class="n">type_mask</span><span class="p">)</span>
-                <span class="n">null_dist</span><span class="p">[</span><span class="n">sam</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span><span class="n">array_shuffled</span><span class="p">,</span>
-                                                             <span class="n">xyz</span><span class="p">,</span>
-                                                             <span class="n">type_mask</span><span class="o">=</span><span class="n">type_mask_shuffled</span><span class="p">)</span>
+                <span class="n">null_dist</span><span class="p">[</span><span class="n">sam</span><span class="p">],</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span><span class="n">array_shuffled</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+                                                                <span class="n">xyz</span><span class="p">,</span>
+                                                                <span class="n">type_mask</span><span class="o">=</span><span class="n">type_mask_shuffled</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
             <span class="n">null_dist</span> <span class="o">=</span> \
@@ -1221,24 +1355,6 @@
 
 
 
-    <span class="nd">@jit</span><span class="p">(</span><span class="n">forceobj</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">get_restricted_permutation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">shuffle_neighbors</span><span class="p">,</span> <span class="n">neighbors</span><span class="p">,</span> <span class="n">order</span><span class="p">):</span>
-
-        <span class="n">restricted_permutation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
-        <span class="n">used</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">sample_index</span> <span class="ow">in</span> <span class="n">order</span><span class="p">:</span>
-            <span class="n">m</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="n">use</span> <span class="o">=</span> <span class="n">neighbors</span><span class="p">[</span><span class="n">sample_index</span><span class="p">,</span> <span class="n">m</span><span class="p">]</span>
-
-            <span class="k">while</span> <span class="p">((</span><span class="n">use</span> <span class="ow">in</span> <span class="n">used</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">m</span> <span class="o">&lt;</span> <span class="n">shuffle_neighbors</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)):</span>
-                <span class="n">m</span> <span class="o">+=</span> <span class="mi">1</span>
-                <span class="n">use</span> <span class="o">=</span> <span class="n">neighbors</span><span class="p">[</span><span class="n">sample_index</span><span class="p">,</span> <span class="n">m</span><span class="p">]</span>
-
-            <span class="n">restricted_permutation</span><span class="p">[</span><span class="n">sample_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">use</span>
-            <span class="n">used</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">used</span><span class="p">,</span> <span class="n">use</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">restricted_permutation</span>
 
     
     <span class="k">def</span> <span class="nf">_get_shuffle_dist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span>
@@ -1292,8 +1408,9 @@
         <span class="k">if</span> <span class="n">sig_blocklength</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">sig_blocklength</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_block_length</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span>
                                                      <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;significance&#39;</span><span class="p">)</span>
-
+            
         <span class="n">n_blks</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">T</span><span class="p">)</span><span class="o">/</span><span class="n">sig_blocklength</span><span class="p">))</span>
+        
         <span class="c1"># print &#39;n_blks &#39;, n_blks</span>
         <span class="k">if</span> <span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;            Significance test with block-length = </span><span class="si">%d</span><span class="s2"> &quot;</span>
@@ -1301,12 +1418,14 @@
 
         <span class="n">array_shuffled</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
         <span class="n">type_mask_shuffled</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">type_mask</span><span class="p">)</span>
-        <span class="n">block_starts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">T</span> <span class="o">-</span> <span class="n">sig_blocklength</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sig_blocklength</span><span class="p">)</span>
-
+        <span class="c1"># block_starts = np.arange(0, T - sig_blocklength, sig_blocklength)</span>
+        <span class="n">block_starts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_blks</span> <span class="o">*</span> <span class="n">sig_blocklength</span><span class="p">,</span> <span class="n">sig_blocklength</span><span class="p">)</span>
+        
+    
         <span class="c1"># Dividing the array up into n_blks of length sig_blocklength may</span>
         <span class="c1"># leave a tail. This tail is later randomly inserted</span>
         <span class="n">tail</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">x_indices</span><span class="p">,</span> <span class="n">n_blks</span><span class="o">*</span><span class="n">sig_blocklength</span><span class="p">:]</span>
-
+        
         <span class="n">null_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">sig_samples</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">sam</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">sig_samples</span><span class="p">):</span>
 
@@ -1332,12 +1451,13 @@
                                        <span class="n">tail</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
                 <span class="n">type_x_shuffled</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">type_x_shuffled</span><span class="p">,</span> <span class="n">insert_tail_at</span><span class="p">,</span>
                                        <span class="n">tail</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-
+                
+    
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">x_indices</span><span class="p">):</span>
                 <span class="n">array_shuffled</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">x_shuffled</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
                 <span class="n">type_mask_shuffled</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">type_x_shuffled</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
                 
-            <span class="n">null_dist</span><span class="p">[</span><span class="n">sam</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">array_shuffled</span><span class="p">,</span>
+            <span class="n">null_dist</span><span class="p">[</span><span class="n">sam</span><span class="p">],</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">array_shuffled</span><span class="p">,</span>
                                                          <span class="n">xyz</span><span class="o">=</span><span class="n">xyz</span><span class="p">,</span>
                                                          <span class="n">type_mask</span><span class="o">=</span><span class="n">type_mask_shuffled</span><span class="p">)</span>
 
@@ -1349,48 +1469,70 @@
     <span class="kn">import</span> <span class="nn">tigramite</span>
     <span class="kn">from</span> <span class="nn">tigramite.data_processing</span> <span class="kn">import</span> <span class="n">DataFrame</span>
     <span class="kn">import</span> <span class="nn">tigramite.data_processing</span> <span class="k">as</span> <span class="nn">pp</span>
+    <span class="kn">from</span> <span class="nn">tigramite.independence_tests</span> <span class="kn">import</span> <span class="n">CMIknn</span>
     <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
     <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
     <span class="n">cmi</span> <span class="o">=</span> <span class="n">CMIknnMixed</span><span class="p">(</span><span class="n">mask_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                        <span class="n">significance</span><span class="o">=</span><span class="s1">&#39;shuffle_test&#39;</span><span class="p">,</span>
-                       <span class="n">estimator</span><span class="o">=</span><span class="s1">&#39;FPinf&#39;</span><span class="p">,</span>
+                       <span class="c1"># estimator=&#39;cond&#39;,</span>
                        <span class="n">use_local_knn</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                        <span class="n">fixed_thres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                       <span class="n">sig_samples</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                       <span class="n">sig_samples</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
                        <span class="n">sig_blocklength</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                       <span class="n">transform</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span>
+                       <span class="n">transform</span><span class="o">=</span><span class="s1">&#39;scale&#39;</span><span class="p">,</span>
                        <span class="n">knn</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
                        <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># cmiknn = CMIknn(mask_type=None,</span>
+    <span class="c1">#                    significance=&#39;shuffle_test&#39;,</span>
+    <span class="c1">#                    # estimator=&#39;FPinf&#39;,</span>
+    <span class="c1">#                    # use_local_knn=True,</span>
+    <span class="c1">#                    fixed_thres=None,</span>
+    <span class="c1">#                    sig_samples=500,</span>
+    <span class="c1">#                    sig_blocklength=1,</span>
+    <span class="c1">#                    transform=&#39;none&#39;,</span>
+    <span class="c1">#                    knn=0.1,</span>
+    <span class="c1">#                    verbosity=0)</span>
+
 
     <span class="n">T</span> <span class="o">=</span> <span class="mi">1000</span>
     <span class="n">dimz</span> <span class="o">=</span> <span class="mi">1</span>
 
     <span class="c1"># Discrete data</span>
-    <span class="c1"># z = np.random.binomial(n=1, p=0.5, size=(T, dimz)).reshape(T, dimz)</span>
-    <span class="c1"># x = np.empty(T).reshape(T, 1)</span>
-    <span class="c1"># y = np.empty(T).reshape(T, 1)</span>
-    <span class="c1"># for t in range(T):</span>
-    <span class="c1">#     val = z[t, 0].squeeze()</span>
-    <span class="c1">#     prob = 0.2+val*0.6</span>
-    <span class="c1">#     x[t] = np.random.choice([0,1], p=[prob, 1.-prob])</span>
-    <span class="c1">#     y[t] = np.random.choice([0,1, 2], p=[prob, (1.-prob)/2., (1.-prob)/2.])</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">dimz</span><span class="p">))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">dimz</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">T</span><span class="p">):</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">z</span><span class="p">[</span><span class="n">t</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+        <span class="n">prob</span> <span class="o">=</span> <span class="mf">0.2</span> <span class="o">+</span> <span class="n">val</span><span class="o">*</span><span class="mf">0.6</span>
+        <span class="n">x</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">p</span><span class="o">=</span><span class="p">[</span><span class="n">prob</span><span class="p">,</span> <span class="mf">1.</span><span class="o">-</span><span class="n">prob</span><span class="p">])</span>
+        <span class="n">y</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">p</span><span class="o">=</span><span class="p">[</span><span class="n">prob</span><span class="p">,</span> <span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="n">prob</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span><span class="p">,</span> <span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="n">prob</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span><span class="p">])</span>
 
     <span class="c1"># Continuous data</span>
     <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">dimz</span><span class="p">)</span>
     <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.5</span><span class="o">*</span><span class="n">z</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">T</span><span class="p">))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
     <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.5</span><span class="o">*</span><span class="n">z</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">T</span><span class="p">))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
+    <span class="n">z2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">dimz</span><span class="p">))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">dimz</span><span class="p">)</span>
+    <span class="n">zfull</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">z</span><span class="p">,</span> <span class="n">z2</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;X _|_ Y&#39;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">cmi</span><span class="o">.</span><span class="n">run_test_raw</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="nb">print</span><span class="p">(</span><span class="n">cmi</span><span class="o">.</span><span class="n">run_test_raw</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="n">zfull</span><span class="p">,</span> 
                     <span class="n">x_type</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;bool&#39;</span><span class="p">),</span>
                     <span class="n">y_type</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;bool&#39;</span><span class="p">),</span>
-                    <span class="n">z_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">val_only</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+                    <span class="n">z_type</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">T</span><span class="p">,</span> <span class="n">dimz</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;bool&#39;</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">T</span><span class="p">,</span> <span class="n">dimz</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;bool&#39;</span><span class="p">)),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> 
+                    <span class="c1"># val_only=True)</span>
+                    <span class="p">))</span>
+
+    <span class="c1"># print(cmiknn.run_test_raw(x, y, z=None))</span>
+        <span class="c1">#   </span>
     <span class="c1"># print(&#39;X _|_ Y | Z&#39;)</span>
     <span class="c1"># print(cmi.run_test_raw(x, y, z=z, </span>
     <span class="c1">#                 x_type=np.zeros(T, dtype=&#39;bool&#39;), </span>
     <span class="c1">#                 y_type=np.zeros(T, dtype=&#39;bool&#39;),</span>
     <span class="c1">#                 z_type=np.zeros(T, dtype=&#39;bool&#39;)))</span>
+
 </pre></div>
 
           </div>

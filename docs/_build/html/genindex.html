@@ -9,10 +9,8 @@
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" />
    
@@ -57,14 +55,20 @@
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#tigramite.plotting.setup_density_matrix.add_densityplot">add_densityplot() (tigramite.plotting.setup_density_matrix method)</a>
+</li>
       <li><a href="index.html#tigramite.plotting.setup_matrix.add_lagfuncs">add_lagfuncs() (tigramite.plotting.setup_matrix method)</a>
 </li>
       <li><a href="index.html#tigramite.plotting.setup_scatter_matrix.add_scatterplot">add_scatterplot() (tigramite.plotting.setup_scatter_matrix method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="index.html#tigramite.plotting.setup_scatter_matrix.adjustfig">adjustfig() (tigramite.plotting.setup_scatter_matrix method)</a>
+      <li><a href="index.html#tigramite.plotting.setup_density_matrix.adjustfig">adjustfig() (tigramite.plotting.setup_density_matrix method)</a>
+
+      <ul>
+        <li><a href="index.html#tigramite.plotting.setup_scatter_matrix.adjustfig">(tigramite.plotting.setup_scatter_matrix method)</a>
 </li>
+      </ul></li>
       <li><a href="index.html#tigramite.pcmci.PCMCI.all_parents">all_parents (tigramite.pcmci.PCMCI attribute)</a>
 </li>
   </ul></td>
@@ -79,12 +83,14 @@
 </li>
       <li><a href="index.html#tigramite.independence_tests.OracleCI.check_shortest_path">check_shortest_path() (tigramite.independence_tests.OracleCI method)</a>
 </li>
-      <li><a href="index.html#tigramite.causal_effects.CausalEffects.check_XYS_paths">check_XYS_paths() (tigramite.causal_effects.CausalEffects method)</a>
+      <li><a href="index.html#tigramite.toymodels.structural_causal_processes.check_stationarity">check_stationarity() (in module tigramite.toymodels.structural_causal_processes)</a>
 </li>
-      <li><a href="index.html#tigramite.independence_tests.CMIknn">CMIknn (class in tigramite.independence_tests)</a>
+      <li><a href="index.html#tigramite.causal_effects.CausalEffects.check_XYS_paths">check_XYS_paths() (tigramite.causal_effects.CausalEffects method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#tigramite.independence_tests.CMIknn">CMIknn (class in tigramite.independence_tests)</a>
+</li>
       <li><a href="index.html#tigramite.independence_tests.CMIknnMixed">CMIknnMixed (class in tigramite.independence_tests)</a>
 </li>
       <li><a href="index.html#tigramite.independence_tests.CMIsymb">CMIsymb (class in tigramite.independence_tests)</a>
@@ -92,8 +98,6 @@
       <li><a href="index.html#tigramite.independence_tests.CondIndTest">CondIndTest (class in tigramite.independence_tests)</a>
 </li>
       <li><a href="index.html#tigramite.data_processing.DataFrame.construct_array">construct_array() (tigramite.data_processing.DataFrame method)</a>
-</li>
-      <li><a href="index.html#tigramite.pcmci.PCMCI.convert_to_string_graph">convert_to_string_graph() (tigramite.pcmci.PCMCI method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -117,9 +121,11 @@
 </li>
       <li><a href="index.html#tigramite.causal_effects.CausalEffects.fit_bootstrap_of">fit_bootstrap_of() (tigramite.causal_effects.CausalEffects method)</a>
 </li>
+      <li><a href="index.html#tigramite.models.LinearMediation.fit_model">fit_model() (tigramite.models.LinearMediation method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="index.html#tigramite.models.LinearMediation.fit_model">fit_model() (tigramite.models.LinearMediation method)</a>
+      <li><a href="index.html#tigramite.models.LinearMediation.fit_model_bootstrap">fit_model_bootstrap() (tigramite.models.LinearMediation method)</a>
 </li>
       <li><a href="index.html#tigramite.causal_effects.CausalEffects.fit_total_effect">fit_total_effect() (tigramite.causal_effects.CausalEffects method)</a>
 </li>
@@ -143,7 +149,11 @@
         <li><a href="index.html#tigramite.independence_tests.GPDCtorch.generate_nulldist">(tigramite.independence_tests.GPDCtorch method)</a>
 </li>
       </ul></li>
+      <li><a href="index.html#tigramite.toymodels.structural_causal_processes.generate_structural_causal_process">generate_structural_causal_process() (in module tigramite.toymodels.structural_causal_processes)</a>
+</li>
       <li><a href="index.html#tigramite.models.LinearMediation.get_ace">get_ace() (tigramite.models.LinearMediation method)</a>
+</li>
+      <li><a href="index.html#tigramite.data_processing.get_acf">get_acf() (in module tigramite.data_processing)</a>
 </li>
       <li><a href="index.html#tigramite.models.LinearMediation.get_acs">get_acs() (tigramite.models.LinearMediation method)</a>
 </li>
@@ -162,6 +172,8 @@
 </li>
         <li><a href="index.html#tigramite.independence_tests.ParCorrMult.get_analytic_confidence">(tigramite.independence_tests.ParCorrMult method)</a>
 </li>
+        <li><a href="index.html#tigramite.independence_tests.RobustParCorr.get_analytic_confidence">(tigramite.independence_tests.RobustParCorr method)</a>
+</li>
       </ul></li>
       <li><a href="index.html#tigramite.independence_tests.CondIndTest.get_analytic_significance">get_analytic_significance() (tigramite.independence_tests.CondIndTest method)</a>
 
@@ -176,8 +188,14 @@
 </li>
         <li><a href="index.html#tigramite.independence_tests.ParCorrMult.get_analytic_significance">(tigramite.independence_tests.ParCorrMult method)</a>
 </li>
+        <li><a href="index.html#tigramite.independence_tests.RobustParCorr.get_analytic_significance">(tigramite.independence_tests.RobustParCorr method)</a>
+</li>
       </ul></li>
+      <li><a href="index.html#tigramite.data_processing.get_block_length">get_block_length() (in module tigramite.data_processing)</a>
+</li>
       <li><a href="index.html#tigramite.independence_tests.CondIndTest.get_bootstrap_confidence">get_bootstrap_confidence() (tigramite.independence_tests.CondIndTest method)</a>
+</li>
+      <li><a href="index.html#tigramite.models.LinearMediation.get_bootstrap_of">get_bootstrap_of() (tigramite.models.LinearMediation method)</a>
 </li>
       <li><a href="index.html#tigramite.models.LinearMediation.get_ce">get_ce() (tigramite.models.LinearMediation method)</a>
 </li>
@@ -189,14 +207,14 @@
 </li>
       <li><a href="index.html#tigramite.independence_tests.CMIknn.get_conditional_entropy">get_conditional_entropy() (tigramite.independence_tests.CMIknn method)</a>
 </li>
+      <li><a href="index.html#tigramite.models.LinearMediation.get_conditional_mce">get_conditional_mce() (tigramite.models.LinearMediation method)</a>
+</li>
       <li><a href="index.html#tigramite.independence_tests.CondIndTest.get_confidence">get_confidence() (tigramite.independence_tests.CondIndTest method)</a>
 
       <ul>
         <li><a href="index.html#tigramite.independence_tests.OracleCI.get_confidence">(tigramite.independence_tests.OracleCI method)</a>
 </li>
       </ul></li>
-      <li><a href="index.html#tigramite.pcmci.PCMCI.get_corrected_pvalues">get_corrected_pvalues() (tigramite.pcmci.PCMCI method)</a>
-</li>
       <li><a href="index.html#tigramite.independence_tests.CMIknn.get_dependence_measure">get_dependence_measure() (tigramite.independence_tests.CMIknn method)</a>
 
       <ul>
@@ -216,15 +234,17 @@
 </li>
         <li><a href="index.html#tigramite.independence_tests.ParCorrMult.get_dependence_measure">(tigramite.independence_tests.ParCorrMult method)</a>
 </li>
+        <li><a href="index.html#tigramite.independence_tests.RobustParCorr.get_dependence_measure">(tigramite.independence_tests.RobustParCorr method)</a>
+</li>
       </ul></li>
       <li><a href="index.html#tigramite.independence_tests.CMIknnMixed.get_dependence_measure_conditional">get_dependence_measure_conditional() (tigramite.independence_tests.CMIknnMixed method)</a>
 </li>
       <li><a href="index.html#tigramite.independence_tests.CMIknnMixed.get_dependence_measure_MS">get_dependence_measure_MS() (tigramite.independence_tests.CMIknnMixed method)</a>
 </li>
-      <li><a href="index.html#tigramite.independence_tests.CMIknnMixed.get_dependence_measure_zeroinf">get_dependence_measure_zeroinf() (tigramite.independence_tests.CMIknnMixed method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#tigramite.independence_tests.CMIknnMixed.get_dependence_measure_zeroinf">get_dependence_measure_zeroinf() (tigramite.independence_tests.CMIknnMixed method)</a>
+</li>
       <li><a href="index.html#tigramite.models.Models.get_fit">get_fit() (tigramite.models.Models method)</a>
 </li>
       <li><a href="index.html#tigramite.independence_tests.CondIndTest.get_fixed_thres_significance">get_fixed_thres_significance() (tigramite.independence_tests.CondIndTest method)</a>
@@ -238,6 +258,12 @@
       <li><a href="index.html#tigramite.independence_tests.OracleCI.get_graph_from_links">get_graph_from_links() (tigramite.independence_tests.OracleCI method)</a>
 </li>
       <li><a href="index.html#tigramite.pcmci.PCMCI.get_graph_from_pmatrix">get_graph_from_pmatrix() (tigramite.pcmci.PCMCI method)</a>
+</li>
+      <li><a href="index.html#tigramite.models.LinearMediation.get_joint_ce">get_joint_ce() (tigramite.models.LinearMediation method)</a>
+</li>
+      <li><a href="index.html#tigramite.models.LinearMediation.get_joint_ce_matrix">get_joint_ce_matrix() (tigramite.models.LinearMediation method)</a>
+</li>
+      <li><a href="index.html#tigramite.models.LinearMediation.get_joint_mce">get_joint_mce() (tigramite.models.LinearMediation method)</a>
 </li>
       <li><a href="index.html#tigramite.pcmci.PCMCI.get_lagged_dependencies">get_lagged_dependencies() (tigramite.pcmci.PCMCI method)</a>
 </li>
@@ -268,6 +294,8 @@
 </li>
         <li><a href="index.html#tigramite.independence_tests.ParCorrMult.get_model_selection_criterion">(tigramite.independence_tests.ParCorrMult method)</a>
 </li>
+        <li><a href="index.html#tigramite.independence_tests.RobustParCorr.get_model_selection_criterion">(tigramite.independence_tests.RobustParCorr method)</a>
+</li>
       </ul></li>
       <li><a href="index.html#tigramite.causal_effects.CausalEffects.get_optimal_set">get_optimal_set() (tigramite.causal_effects.CausalEffects method)</a>
 </li>
@@ -289,6 +317,8 @@
         <li><a href="index.html#tigramite.independence_tests.ParCorr.get_shuffle_significance">(tigramite.independence_tests.ParCorr method)</a>
 </li>
         <li><a href="index.html#tigramite.independence_tests.ParCorrMult.get_shuffle_significance">(tigramite.independence_tests.ParCorrMult method)</a>
+</li>
+        <li><a href="index.html#tigramite.independence_tests.RobustParCorr.get_shuffle_significance">(tigramite.independence_tests.RobustParCorr method)</a>
 </li>
       </ul></li>
       <li><a href="index.html#tigramite.independence_tests.CMIknnMixed.get_significance">get_significance() (tigramite.independence_tests.CMIknnMixed method)</a>
@@ -366,6 +396,8 @@
 </li>
         <li><a href="index.html#tigramite.independence_tests.ParCorrMult.measure">(tigramite.independence_tests.ParCorrMult property)</a>
 </li>
+        <li><a href="index.html#tigramite.independence_tests.RobustParCorr.measure">(tigramite.independence_tests.RobustParCorr property)</a>
+</li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -419,6 +451,8 @@
       <li><a href="index.html#tigramite.independence_tests.ParCorrMult">ParCorrMult (class in tigramite.independence_tests)</a>
 </li>
       <li><a href="index.html#tigramite.pcmci.PCMCI">PCMCI (class in tigramite.pcmci)</a>
+</li>
+      <li><a href="index.html#tigramite.plotting.plot_densityplots">plot_densityplots() (in module tigramite.plotting)</a>
 </li>
       <li><a href="index.html#tigramite.plotting.plot_graph">plot_graph() (in module tigramite.plotting)</a>
 </li>
@@ -476,7 +510,7 @@
 </li>
       <li><a href="index.html#tigramite.pcmci.PCMCI.return_significant_links">return_significant_links() (tigramite.pcmci.PCMCI method)</a>
 </li>
-      <li><a href="index.html#tigramite.pcmci.PCMCI.return_summary_results">return_summary_results() (tigramite.pcmci.PCMCI method)</a>
+      <li><a href="index.html#tigramite.independence_tests.RobustParCorr">RobustParCorr (class in tigramite.independence_tests)</a>
 </li>
       <li><a href="index.html#tigramite.pcmci.PCMCI.run_bivci">run_bivci() (tigramite.pcmci.PCMCI method)</a>
 </li>
@@ -488,17 +522,15 @@
 </li>
       <li><a href="index.html#tigramite.pcmci.PCMCI.run_pc_stable">run_pc_stable() (tigramite.pcmci.PCMCI method)</a>
 </li>
-      <li><a href="index.html#tigramite.pcmci.PCMCI.run_pcalg">run_pcalg() (tigramite.pcmci.PCMCI method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#tigramite.pcmci.PCMCI.run_pcalg">run_pcalg() (tigramite.pcmci.PCMCI method)</a>
+</li>
       <li><a href="index.html#tigramite.pcmci.PCMCI.run_pcalg_non_timeseries_data">run_pcalg_non_timeseries_data() (tigramite.pcmci.PCMCI method)</a>
 </li>
       <li><a href="index.html#tigramite.pcmci.PCMCI.run_pcmci">run_pcmci() (tigramite.pcmci.PCMCI method)</a>
 </li>
       <li><a href="index.html#tigramite.pcmci.PCMCI.run_pcmciplus">run_pcmciplus() (tigramite.pcmci.PCMCI method)</a>
-</li>
-      <li><a href="index.html#tigramite.pcmci.PCMCI.run_sliding_window_of">run_sliding_window_of() (tigramite.pcmci.PCMCI method)</a>
 </li>
       <li><a href="index.html#tigramite.independence_tests.CMIknnMixed.run_test">run_test() (tigramite.independence_tests.CMIknnMixed method)</a>
 
@@ -530,10 +562,12 @@
       </ul></li>
       <li><a href="index.html#tigramite.independence_tests.CondIndTest.set_mask_type">set_mask_type() (tigramite.independence_tests.CondIndTest method)</a>
 </li>
-      <li><a href="index.html#tigramite.plotting.setup_matrix">setup_matrix (class in tigramite.plotting)</a>
+      <li><a href="index.html#tigramite.plotting.setup_density_matrix">setup_density_matrix (class in tigramite.plotting)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#tigramite.plotting.setup_matrix">setup_matrix (class in tigramite.plotting)</a>
+</li>
       <li><a href="index.html#tigramite.plotting.setup_scatter_matrix">setup_scatter_matrix (class in tigramite.plotting)</a>
 </li>
       <li><a href="index.html#tigramite.data_processing.smooth">smooth() (in module tigramite.data_processing)</a>
@@ -544,8 +578,6 @@
         <li><a href="index.html#tigramite.toymodels.structural_causal_processes.structural_causal_process">(in module tigramite.toymodels.structural_causal_processes)</a>
 </li>
       </ul></li>
-      <li><a href="index.html#tigramite.pcmci.PCMCI.symmetrize_p_and_val_matrix">symmetrize_p_and_val_matrix() (tigramite.pcmci.PCMCI method)</a>
-</li>
   </ul></td>
 </tr></table>
 
@@ -579,6 +611,12 @@
       </ul></li>
       <li><a href="index.html#tigramite.data_processing.time_bin_with_mask">time_bin_with_mask() (in module tigramite.data_processing)</a>
 </li>
+      <li><a href="index.html#tigramite.data_processing.trafo2normal">trafo2normal() (in module tigramite.data_processing)</a>
+
+      <ul>
+        <li><a href="index.html#tigramite.independence_tests.RobustParCorr.trafo2normal">(tigramite.independence_tests.RobustParCorr method)</a>
+</li>
+      </ul></li>
       <li><a href="index.html#tigramite.models.LinearMediation.tsg_to_net">tsg_to_net() (tigramite.models.LinearMediation method)</a>
 </li>
   </ul></td>
@@ -660,8 +698,8 @@
       &copy;2022, Jakob Runge.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.1.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
     </div>
 
