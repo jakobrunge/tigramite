@@ -14,8 +14,6 @@ import networkx
 from tigramite.data_processing import DataFrame
 from tigramite.pcmci import PCMCI
 
-from tigramite.toymodels import surrogate_generator
-
 class Models():
     """Base class for time series models.
 
@@ -643,21 +641,6 @@ class LinearMediation(Models):
         boot_samples : int
             Number of bootstrap samples.
         """
-
-        # # from tigramite.toymodels import surrogate_generator 
-        # model_data_generator = surrogate_generator.generate_linear_model_from_data(
-        #             dataframe=self.dataframe, 
-        #             mask_type=self.mask_type,
-        #             data_transform=None, #self.data_transform,
-        #             model_params=self.model_params,
-        #             parents=self.all_parents, 
-        #             tau_max=self.tau_max, 
-        #             realizations=realizations, 
-        #             generate_noise_from=generate_noise_from, 
-        #             boot_blocklength=boot_blocklength,
-        #             seed=seed,
-        #             verbosity=0)
-
 
         self.phi_boots = np.empty((boot_samples,) + self.phi.shape)
         self.psi_boots = np.empty((boot_samples,) + self.psi.shape)

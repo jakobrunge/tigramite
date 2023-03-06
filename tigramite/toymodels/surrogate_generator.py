@@ -60,20 +60,13 @@ def generate_linear_model_from_data(dataframe, parents, tau_max, realizations=10
     ## Fit linear structural causal model to causal parents taken from graph
     def lin_f(x): return x
 
-    # Build the model
-    model = Models(dataframe=dataframe,
-                   model=LinearRegression(**model_params),
-                   data_transform=data_transform, #data_transform,
-                   mask_type=mask_type,
-                   verbosity=0)
-
-
     ## Estimate noise covariance matrix of residuals
     prediction = Prediction(dataframe=dataframe,
                      train_indices=range(T),
                      test_indices=range(T),
-                     prediction_model=LinearRegression(),
-                     # mask_type='y',
+                     prediction_model=LinearRegression(**model_params),
+                     data_transform=data_transform,
+                     mask_type=mask_type,
                      verbosity=0)
 
     prediction.fit(target_predictors=parents, tau_max=tau_max, return_data=True)

@@ -52,6 +52,14 @@ class DataFrame():
     var_names : list of strings, optional (default: range(N))
         Names of variables, must match the number of variables. If None is
         passed, variables are enumerated as [0, 1, ...]
+    vector_vars : dict
+        Dictionary of vector variables of the form,
+        Eg. {0: [(0, 0), (1, 0)], 1: [(2, 0), (2, -1)], 2: [(3, 0)], 3: [(4, 0)]}
+        The keys are the new vectorized variables and respective tuple values
+        are the individual components of the vector variables. Internally, the 
+        individual components are parsed from vector_vars and added (accounting 
+        for lags) X, Y and Z for conditional independence test and other methods
+        in tigramite.
     datatime : array-like, optional (default: None)
         Timelabel array. If None, range(T) is used.
     remove_missing_upto_maxlag : bool, optional (default: False)

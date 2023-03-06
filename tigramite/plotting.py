@@ -404,8 +404,6 @@ def plot_lagfuncs(val_matrix,
 
     matrix = setup_matrix(N=N, tau_max=tau_max, **setup_args)
     matrix.add_lagfuncs(val_matrix=val_matrix, **add_lagfunc_args)
-
-    # if name is not None:
     matrix.savefig(name=name)
 
     return matrix
