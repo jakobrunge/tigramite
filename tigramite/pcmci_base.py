@@ -73,67 +73,6 @@ class PCMCIbase():
         self.N = self.dataframe.N
 
 
-    # def _set_sel_links(self, selected_links, tau_min, tau_max,
-    #                    remove_contemp=False):
-    #     """Helper function to set and check the selected links argument
-
-    #     Parameters
-    #     ----------
-    #     selected_links : dict or None
-    #         Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}
-    #         specifying whether only selected links should be tested. If None is
-    #         passed, all links are returned.
-    #     tau_mix : int
-    #         Minimum time delay to test.
-    #     tau_max : int
-    #         Maximum time delay to test.
-    #     remove_contemp : bool
-    #         Whether contemporaneous links (at lag zero) should be removed.
-
-    #     Returns
-    #     -------
-    #     selected_links : dict
-    #         Cleaned links.
-    #     """
-    #     # Copy and pass into the function
-    #     _int_sel_links = deepcopy(selected_links)
-    #     # Set the default selected links if none are set
-    #     _vars = list(range(self.N))
-    #     _lags = list(range(-(tau_max), -tau_min + 1, 1))
-    #     if _int_sel_links is None:
-    #         _int_sel_links = {}
-    #         # Set the default as all combinations of the selected variables
-    #         for j in _vars:
-    #             _int_sel_links[j] = [(var, -lag) for var in _vars
-    #                                  for lag in range(tau_min, tau_max + 1) 
-    #                                  if not (var == j and lag == 0)]
-    #     else:
-    #         if remove_contemp:
-    #             for j in _int_sel_links.keys():
-    #                 _int_sel_links[j] = [link for link in _int_sel_links[j]
-    #                                      if link[1] != 0]
-    #     # Otherwise, check that our selection is sane
-    #     # Check that the selected links refer to links that are inside the
-    #     # data range
-    #     _key_set = set(_int_sel_links.keys())
-    #     valid_entries = _key_set == set(range(self.N))
-
-    #     for link in _int_sel_links.values():
-    #         if isinstance(link, list) and len(link) == 0:
-    #             continue
-    #         for var, lag in link:
-    #             if var not in _vars or lag not in _lags:
-    #                 valid_entries = False
-
-    #     if not valid_entries:
-    #         raise ValueError("selected_links"
-    #                          " must be dictionary with keys for all [0,...,N-1]"
-    #                          " variables and contain only links from "
-    #                          "these variables in range [tau_min, tau_max]")
-
-    #     # Return the selected links
-    #     return _int_sel_links
-
     def _reverse_link(self, link):
         """Reverse a given link, taking care to replace > with < and vice versa."""
 
@@ -152,6 +91,29 @@ class PCMCIbase():
 
         return left_mark + link[1] + right_mark
 
+    def _check_cyclic(self, link_dict):
+        """Return True if the link_dict has a contemporaneous cycle.
+
+        """
+
+        path = set()
+        visited = set()
+
+        def visit(vertex):
+            if vertex in visited:
+                return False
+            visited.add(vertex)
+            path.add(vertex)
+            for itaui in link_dict.get(vertex, ()):
+                i, taui = itaui
+                link_type = link_dict[vertex][itaui] 
+                if taui == 0 and link_type in ['-->', '-?>']:
+                    if i in path or visit(i):
+                        return True
+            path.remove(vertex)
+            return False
+
+        return any(visit(v) for v in link_dict)
 
     def _set_link_assumptions(self, link_assumptions, tau_min, tau_max,
                        remove_contemp=False):
@@ -161,15 +123,18 @@ class PCMCIbase():
         ----------
         link_assumptions : dict
             Dictionary of form {j:{(i, -tau): link_type, ...}, ...} specifying
-            assumptions about links. This initializes the graph with 
-            graph[i,j,tau] = link_type. For example, graph[i,j,0] = '-->' implies
-            a link from i to j at lag 0. Valid link types
-            are 'o-o', '-->', '<--'. In addition, the middle mark can be '!'
-            instead of '-'. Then 'o!o' implies that this adjacency must exist
-            and '-!>' that this directed link must exist. Link assumptions
-            need to be consistent, i.e., graph[i,j,0] = '-->' requires 
-            graph[j,i,0] = '<--' and acyclicity must hold. If a link does not
-            appear in the dictionary, it is assumed absent.
+            assumptions about links. This initializes the graph with entries
+            graph[i,j,tau] = link_type. For example, graph[i,j,0] = '-->'
+            implies that a directed link from i to j at lag 0 must exist.
+            Valid link types are 'o-o', '-->', '<--'. In addition, the middle
+            mark can be '?' instead of '-'. Then '-?>' implies that this link
+            may not exist, but if it exists, its orientation is '-->'. Link
+            assumptions need to be consistent, i.e., graph[i,j,0] = '-->'
+            requires graph[j,i,0] = '<--' and acyclicity must hold. If it is
+            known that a link is absent, then link_type='' (empty string). If
+            a link does not appear in the dictionary, it is by default
+            initialized as 'o?o' (or '-?>' for lagged links), that is, it is
+            determined by the method.
         tau_mix : int
             Minimum time delay to test.
         tau_max : int
@@ -196,12 +161,23 @@ class PCMCIbase():
                     for lag in range(tau_min, tau_max + 1):
                         if not (i == j and lag == 0):
                             if lag == 0:
-                                _int_link_assumptions[j][(i, 0)] = 'o-o'
+                                _int_link_assumptions[j][(i, 0)] = 'o?o'
                             else:
-                                _int_link_assumptions[j][(i, -lag)] = '-->'
+                                _int_link_assumptions[j][(i, -lag)] = '-?>'
   
         else:
-
+            # Set the absent entries per default as all combinations
+            for j in _vars:
+                if j not in _int_link_assumptions.keys():
+                    _int_link_assumptions[j] = {}
+                for i in _vars:
+                    for lag in range(tau_min, tau_max + 1):
+                        if not (i == j and lag == 0):
+                            if (i, -lag) not in _int_link_assumptions[j]:
+                                if lag == 0:
+                                    _int_link_assumptions[j][(i, 0)] = 'o?o'
+                                else:
+                                    _int_link_assumptions[j][(i, -lag)] = '-?>'
             if remove_contemp:
                 for j in _int_link_assumptions.keys():
                     _int_link_assumptions[j] = {link:_int_link_assumptions[j][link] 
@@ -220,9 +196,10 @@ class PCMCIbase():
                     else:
                         _int_link_assumptions[i][(j, 0)] = self._reverse_link(_int_link_assumptions[j][link])
                 else:
-                    # Orient lagged links by time order while leaving the middle mark
-                    new_link_type = '-' + link_type[1] + '>'
-                    _int_link_assumptions[j][link] = new_link_type
+                    if link_type != '':
+                        # Orient lagged links by time order while leaving the middle mark
+                        new_link_type = '-' + link_type[1] + '>'
+                        _int_link_assumptions[j][link] = new_link_type
 
         # Otherwise, check that our assumpions are sane
         # Check that the link_assumptions refer to links that are inside the
@@ -232,11 +209,12 @@ class PCMCIbase():
 
         valid_types = [
                     'o-o',
-                    'o!o',
+                    'o?o',
                     '-->',
-                    '-!>',
+                    '-?>',
                     '<--',
-                    '<!-',
+                    '<?-',
+                    '',
                         ]
 
         for links in _int_link_assumptions.values():
@@ -255,6 +233,10 @@ class PCMCIbase():
                              " variables and contain only links from "
                              "these variables in range [tau_min, tau_max] "
                              "and with link types in %s" %str(valid_types))
+
+        # Check for contemporaneous cycles
+        if self._check_cyclic(_int_link_assumptions):
+            raise ValueError("link_assumptions has contemporaneous cycle(s).")
 
         # Return the _int_link_assumptions
         return _int_link_assumptions
@@ -314,7 +296,19 @@ class PCMCIbase():
             Maximum time lag. Must be larger or equal to tau_min. Only used as 
             consistency check of link_assumptions. 
         link_assumptions : dict or None
-            ...
+            Dictionary of form {j:{(i, -tau): link_type, ...}, ...} specifying
+            assumptions about links. This initializes the graph with entries
+            graph[i,j,tau] = link_type. For example, graph[i,j,0] = '-->'
+            implies that a directed link from i to j at lag 0 must exist.
+            Valid link types are 'o-o', '-->', '<--'. In addition, the middle
+            mark can be '?' instead of '-'. Then '-?>' implies that this link
+            may not exist, but if it exists, its orientation is '-->'. Link
+            assumptions need to be consistent, i.e., graph[i,j,0] = '-->'
+            requires graph[j,i,0] = '<--' and acyclicity must hold. If it is
+            known that a link is absent, then link_type='' (empty string). If
+            a link does not appear in the dictionary, it is by default
+            initialized as 'o?o' (or '-?>' for lagged links), that is, it is
+            determined by the method.
         fdr_method : str, optional (default: 'fdr_bh')
             Correction method, currently implemented is Benjamini-Hochberg
             False Discovery Rate method.     
@@ -345,7 +339,7 @@ class PCMCIbase():
             for j, links_ in _int_link_assumptions.items():
                 for link in links_:
                     i, lag = link
-                    if _int_link_assumptions[j][link] not in ["<--", "<!-"]:    
+                    if _int_link_assumptions[j][link] not in ["<--", "<?-"]:    
                         mask[i, j, abs(lag)] = True
         else:
             # Create a mask for these values
@@ -412,7 +406,9 @@ class PCMCIbase():
                 adjt[j] = list(zip(*(where[0], -where[1])))
         else:
             for j in range(N):
-                where = np.where(np.logical_and(graph[:,j,:] != "", graph[:,j,:] != "x-x"))
+                where = np.where(np.logical_and.reduce((graph[:,j,:] != "", 
+                                                        graph[:,j,:] != "x-x",
+                                                        graph[:,j,:] != "x?x")))
                 # where = np.where(graph[:, j, :] == 1)
                 adjt[j] = list(zip(*(where[0], -where[1])))
 
@@ -476,7 +472,8 @@ class PCMCIbase():
         """
 
         for j in variable_order:
-            adj_j = np.where(circle_cpdag[:,j,0] == "o-o")[0].tolist()
+            adj_j = np.where(np.logical_or(circle_cpdag[:,j,0] == "o-o",
+                                           circle_cpdag[:,j,0] == "o?o"))[0].tolist()
 
             # Make sure the node has any adjacencies
             all_adjacent = len(adj_j) > 0
@@ -553,6 +550,8 @@ class PCMCIbase():
         circle_cpdag[circle_cpdag=="x-x"] = ""
         # Find undirected links, remove directed links
         for i, j, tau in zip(*np.where(circle_cpdag != "")):
+            if circle_cpdag[i,j,0][1] == '?':
+                raise ValueError("Invalid middle mark.")
             if circle_cpdag[i,j,0] == "-->":
                 circle_cpdag[i,j,0] = ""
 
@@ -624,7 +623,19 @@ class PCMCIbase():
             Only computed if set in cond_ind_test, where also the percentiles
             are set.
         link_assumptions : dict or None
-            ...
+            Dictionary of form {j:{(i, -tau): link_type, ...}, ...} specifying
+            assumptions about links. This initializes the graph with entries
+            graph[i,j,tau] = link_type. For example, graph[i,j,0] = '-->'
+            implies that a directed link from i to j at lag 0 must exist.
+            Valid link types are 'o-o', '-->', '<--'. In addition, the middle
+            mark can be '?' instead of '-'. Then '-?>' implies that this link
+            may not exist, but if it exists, its orientation is '-->'. Link
+            assumptions need to be consistent, i.e., graph[i,j,0] = '-->'
+            requires graph[j,i,0] = '<--' and acyclicity must hold. If it is
+            known that a link is absent, then link_type='' (empty string). If
+            a link does not appear in the dictionary, it is by default
+            initialized as 'o?o' (or '-?>' for lagged links), that is, it is
+            determined by the method.
 
         Returns
         -------
@@ -644,7 +655,7 @@ class PCMCIbase():
                 # If both the links are present in selected_links, symmetrize using maximum p-value
                 # if ((i, 0) in selected_links[j] and (j, 0) in selected_links[i]):
                 if (i, 0) in link_assumptions[j]:
-                    if link_assumptions[j][(i, 0)] in ["o-o", 'o!o']:
+                    if link_assumptions[j][(i, 0)] in ["o-o", 'o?o']:
                         if (p_matrix[i, j, 0]
                                 >= p_matrix[j, i, 0]):
                             p_matrix[j, i, 0] = p_matrix[i, j, 0]
@@ -654,7 +665,7 @@ class PCMCIbase():
 
                     # If only one of the links is present in selected_links, symmetrize using the p-value of the link present
                     # elif ((i, 0) in selected_links[j] and (j, 0) not in selected_links[i]):
-                    elif link_assumptions[j][(i, 0)] in ["-->", '-!>']:
+                    elif link_assumptions[j][(i, 0)] in ["-->", '-?>']:
                         p_matrix[j, i, 0] = p_matrix[i, j, 0]
                         val_matrix[j, i, 0] = val_matrix[i, j, 0]
                         if conf_matrix is not None:
