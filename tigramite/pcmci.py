@@ -476,19 +476,7 @@ class PCMCI(PCMCIbase):
         Parameters
         ----------
         link_assumptions : dict or None
-            Dictionary of form {j:{(i, -tau): link_type, ...}, ...} specifying
-            assumptions about links. This initializes the graph with entries
-            graph[i,j,tau] = link_type. For example, graph[i,j,0] = '-->'
-            implies that a directed link from i to j at lag 0 must exist.
-            Valid link types are 'o-o', '-->', '<--'. In addition, the middle
-            mark can be '?' instead of '-'. Then '-?>' implies that this link
-            may not exist, but if it exists, its orientation is '-->'. Link
-            assumptions need to be consistent, i.e., graph[i,j,0] = '-->'
-            requires graph[j,i,0] = '<--' and acyclicity must hold. If it is
-            known that a link is absent, then link_type='' (empty string). If
-            a link does not appear in the dictionary, it is by default
-            initialized as 'o?o' (or '-?>' for lagged links), that is, it is
-            determined by the method.
+            Dictionary of form specifying which links should be tested.
         tau_min : int, default: 1
             Minimum time lag to test.
         tau_max : int, default: 1
@@ -605,11 +593,10 @@ class PCMCI(PCMCIbase):
             mark can be '?' instead of '-'. Then '-?>' implies that this link
             may not exist, but if it exists, its orientation is '-->'. Link
             assumptions need to be consistent, i.e., graph[i,j,0] = '-->'
-            requires graph[j,i,0] = '<--' and acyclicity must hold. If it is
-            known that a link is absent, then link_type='' (empty string). If
-            a link does not appear in the dictionary, it is by default
-            initialized as 'o?o' (or '-?>' for lagged links), that is, it is
-            determined by the method.
+            requires graph[j,i,0] = '<--' and acyclicity must hold. If a link
+            does not appear in the dictionary, it is assumed absent. That is,
+            if link_assumptions is not None, then all links have to be specified
+            or the links are assumed absent.
         tau_min : int, default: 1
             Minimum time lag to test. Useful for multi-step ahead predictions.
             Must be greater zero.
@@ -934,11 +921,10 @@ class PCMCI(PCMCIbase):
             mark can be '?' instead of '-'. Then '-?>' implies that this link
             may not exist, but if it exists, its orientation is '-->'. Link
             assumptions need to be consistent, i.e., graph[i,j,0] = '-->'
-            requires graph[j,i,0] = '<--' and acyclicity must hold. If it is
-            known that a link is absent, then link_type='' (empty string). If
-            a link does not appear in the dictionary, it is by default
-            initialized as 'o?o' (or '-?>' for lagged links), that is, it is
-            determined by the method.
+            requires graph[j,i,0] = '<--' and acyclicity must hold. If a link
+            does not appear in the dictionary, it is assumed absent. That is,
+            if link_assumptions is not None, then all links have to be specified
+            or the links are assumed absent.
         max_conds_py : int
             Maximum number of conditions of Y to use.
         max_conds_px : int
@@ -1011,11 +997,10 @@ class PCMCI(PCMCIbase):
             mark can be '?' instead of '-'. Then '-?>' implies that this link
             may not exist, but if it exists, its orientation is '-->'. Link
             assumptions need to be consistent, i.e., graph[i,j,0] = '-->'
-            requires graph[j,i,0] = '<--' and acyclicity must hold. If it is
-            known that a link is absent, then link_type='' (empty string). If
-            a link does not appear in the dictionary, it is by default
-            initialized as 'o?o' (or '-?>' for lagged links), that is, it is
-            determined by the method.
+            requires graph[j,i,0] = '<--' and acyclicity must hold. If a link
+            does not appear in the dictionary, it is assumed absent. That is,
+            if link_assumptions is not None, then all links have to be specified
+            or the links are assumed absent.
         tau_min : int, default: 0
             Minimum time lag to test. Note that zero-lags are undirected.
         tau_max : int, default: 1
@@ -1187,11 +1172,10 @@ class PCMCI(PCMCIbase):
             mark can be '?' instead of '-'. Then '-?>' implies that this link
             may not exist, but if it exists, its orientation is '-->'. Link
             assumptions need to be consistent, i.e., graph[i,j,0] = '-->'
-            requires graph[j,i,0] = '<--' and acyclicity must hold. If it is
-            known that a link is absent, then link_type='' (empty string). If
-            a link does not appear in the dictionary, it is by default
-            initialized as 'o?o' (or '-?>' for lagged links), that is, it is
-            determined by the method.
+            requires graph[j,i,0] = '<--' and acyclicity must hold. If a link
+            does not appear in the dictionary, it is assumed absent. That is,
+            if link_assumptions is not None, then all links have to be specified
+            or the links are assumed absent.
         tau_min : int, default: 0
             Minimum time lag to test. Note that zero-lags are undirected.
         tau_max : int, default: 1
@@ -1283,11 +1267,10 @@ class PCMCI(PCMCIbase):
             mark can be '?' instead of '-'. Then '-?>' implies that this link
             may not exist, but if it exists, its orientation is '-->'. Link
             assumptions need to be consistent, i.e., graph[i,j,0] = '-->'
-            requires graph[j,i,0] = '<--' and acyclicity must hold. If it is
-            known that a link is absent, then link_type='' (empty string). If
-            a link does not appear in the dictionary, it is by default
-            initialized as 'o?o' (or '-?>' for lagged links), that is, it is
-            determined by the method.
+            requires graph[j,i,0] = '<--' and acyclicity must hold. If a link
+            does not appear in the dictionary, it is assumed absent. That is,
+            if link_assumptions is not None, then all links have to be specified
+            or the links are assumed absent.
         tau_min : int, default: 0
             Minimum time lag to test. Note that zero-lags are undirected.
         tau_max : int, default: 1
@@ -1366,11 +1349,10 @@ class PCMCI(PCMCIbase):
             mark can be '?' instead of '-'. Then '-?>' implies that this link
             may not exist, but if it exists, its orientation is '-->'. Link
             assumptions need to be consistent, i.e., graph[i,j,0] = '-->'
-            requires graph[j,i,0] = '<--' and acyclicity must hold. If it is
-            known that a link is absent, then link_type='' (empty string). If
-            a link does not appear in the dictionary, it is by default
-            initialized as 'o?o' (or '-?>' for lagged links), that is, it is
-            determined by the method.
+            requires graph[j,i,0] = '<--' and acyclicity must hold. If a link
+            does not appear in the dictionary, it is assumed absent. That is,
+            if link_assumptions is not None, then all links have to be specified
+            or the links are assumed absent.
         tau_min : int, default: 0
             Minimum time lag to test. Note that zero-lags are undirected.
         tau_max : int, default: 1
@@ -1455,11 +1437,10 @@ class PCMCI(PCMCIbase):
             mark can be '?' instead of '-'. Then '-?>' implies that this link
             may not exist, but if it exists, its orientation is '-->'. Link
             assumptions need to be consistent, i.e., graph[i,j,0] = '-->'
-            requires graph[j,i,0] = '<--' and acyclicity must hold. If it is
-            known that a link is absent, then link_type='' (empty string). If
-            a link does not appear in the dictionary, it is by default
-            initialized as 'o?o' (or '-?>' for lagged links), that is, it is
-            determined by the method.
+            requires graph[j,i,0] = '<--' and acyclicity must hold. If a link
+            does not appear in the dictionary, it is assumed absent. That is,
+            if link_assumptions is not None, then all links have to be specified
+            or the links are assumed absent.
         tau_min : int, default: 0
             Minimum time lag to test. Note that zero-lags are undirected.
         tau_max : int, default: 1
@@ -1540,11 +1521,10 @@ class PCMCI(PCMCIbase):
             mark can be '?' instead of '-'. Then '-?>' implies that this link
             may not exist, but if it exists, its orientation is '-->'. Link
             assumptions need to be consistent, i.e., graph[i,j,0] = '-->'
-            requires graph[j,i,0] = '<--' and acyclicity must hold. If it is
-            known that a link is absent, then link_type='' (empty string). If
-            a link does not appear in the dictionary, it is by default
-            initialized as 'o?o' (or '-?>' for lagged links), that is, it is
-            determined by the method.
+            requires graph[j,i,0] = '<--' and acyclicity must hold. If a link
+            does not appear in the dictionary, it is assumed absent. That is,
+            if link_assumptions is not None, then all links have to be specified
+            or the links are assumed absent.
         Returns
         -------
         graph : array of shape [N, N, tau_max+1]
@@ -1702,6 +1682,8 @@ class PCMCI(PCMCIbase):
                     if graph[p[0], j, abs(p[1])] == "x-x":
                         string += " | unclear orientation due to conflict"
             print(string)
+
+        # link_marker = {True:"o-o", False:"-->"}
 
         if ambiguous_triples is not None and len(ambiguous_triples) > 0:
             print("\n## Ambiguous triples (not used for orientation):\n")
@@ -1872,11 +1854,10 @@ class PCMCI(PCMCIbase):
             mark can be '?' instead of '-'. Then '-?>' implies that this link
             may not exist, but if it exists, its orientation is '-->'. Link
             assumptions need to be consistent, i.e., graph[i,j,0] = '-->'
-            requires graph[j,i,0] = '<--' and acyclicity must hold. If it is
-            known that a link is absent, then link_type='' (empty string). If
-            a link does not appear in the dictionary, it is by default
-            initialized as 'o?o' (or '-?>' for lagged links), that is, it is
-            determined by the method.
+            requires graph[j,i,0] = '<--' and acyclicity must hold. If a link
+            does not appear in the dictionary, it is assumed absent. That is,
+            if link_assumptions is not None, then all links have to be specified
+            or the links are assumed absent.
         tau_min : int, optional (default: 0)
             Minimum time lag to test. Note that zero-lags are undirected.
         tau_max : int, optional (default: 1)
@@ -2131,11 +2112,10 @@ class PCMCI(PCMCIbase):
             mark can be '?' instead of '-'. Then '-?>' implies that this link
             may not exist, but if it exists, its orientation is '-->'. Link
             assumptions need to be consistent, i.e., graph[i,j,0] = '-->'
-            requires graph[j,i,0] = '<--' and acyclicity must hold. If it is
-            known that a link is absent, then link_type='' (empty string). If
-            a link does not appear in the dictionary, it is by default
-            initialized as 'o?o' (or '-?>' for lagged links), that is, it is
-            determined by the method.
+            requires graph[j,i,0] = '<--' and acyclicity must hold. If a link
+            does not appear in the dictionary, it is assumed absent. That is,
+            if link_assumptions is not None, then all links have to be specified
+            or the links are assumed absent.
         tau_min : int, optional (default: 0)
             Minimum time lag to test.
         tau_max : int, optional (default: 1)
@@ -2274,9 +2254,10 @@ class PCMCI(PCMCIbase):
             for j in range(self.N):
                 links_for_pc[j] = {}
                 for parent in lagged_parents[j]:
-                    if _int_link_assumptions[j][parent] in ['-!>', '-->']:
+                    if _int_link_assumptions[j][parent] in ['-?>', '-->']:
                         links_for_pc[j][parent] = _int_link_assumptions[j][parent]
-                # Add Contemporaneous links
+
+                # Add contemporaneous links
                 for link in _int_link_assumptions[j]:
                     i, tau = link
                     link_type = _int_link_assumptions[j][link]
@@ -2379,11 +2360,10 @@ class PCMCI(PCMCIbase):
             mark can be '?' instead of '-'. Then '-?>' implies that this link
             may not exist, but if it exists, its orientation is '-->'. Link
             assumptions need to be consistent, i.e., graph[i,j,0] = '-->'
-            requires graph[j,i,0] = '<--' and acyclicity must hold. If it is
-            known that a link is absent, then link_type='' (empty string). If
-            a link does not appear in the dictionary, it is by default
-            initialized as 'o?o' (or '-?>' for lagged links), that is, it is
-            determined by the method.
+            requires graph[j,i,0] = '<--' and acyclicity must hold. If a link
+            does not appear in the dictionary, it is assumed absent. That is,
+            if link_assumptions is not None, then all links have to be specified
+            or the links are assumed absent.
         lagged_parents : dictionary
             Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing
             additional conditions for each CI test. As part of PCMCIplus
@@ -2521,7 +2501,7 @@ class PCMCI(PCMCIbase):
                             conf_matrix=None)
 
         # Convert numerical graph matrix to string
-        graph_str = final_graph
+        graph_str = final_graph # self.convert_to_string_graph(final_graph)
 
         pc_results = {
             'graph': graph_str,
@@ -2547,7 +2527,7 @@ class PCMCI(PCMCIbase):
         """Runs PC algorithm for non-time series data.
 
         Simply calls run_pcalg with tau_min = tau_max = 0.
-        Removes lags from ouput dictionaries.
+        Removes lags from output dictionaries.
 
         Parameters
         ----------
@@ -3745,76 +3725,75 @@ if __name__ == '__main__':
     def lin_f(x): return x
     def nonlin_f(x): return (x + 5. * x ** 2 * np.exp(-x ** 2 / 20.))
 
-    links_coeffs = {0: [((0, -1), 0.7, lin_f)],
-                    1: [((1, -1), 0.7, lin_f), ((0, 0), 0.2, lin_f), ((2, -2), 0.2, lin_f)],
-                    2: [((2, -1), 0.3, lin_f)],
-                    }
-    T = 100     # time series length
-    data, _ = toys.structural_causal_process(links_coeffs, T=T, seed=3)
-    T, N = data.shape
 
-    # Initialize dataframe object
-    dataframe = pp.DataFrame(data)
-    pcmci = PCMCI(
-        dataframe=dataframe, 
-        cond_ind_test=ParCorr(),
-        verbosity=0)
+    np.random.seed(42)
+    T = 2000
+    data = np.random.randn(T, 4)
+    # Simple sun
+    data[:,3] = np.sin(np.arange(T)*20/np.pi) + 0.1*np.random.randn(T)
+    c = 0.8
+    for t in range(1, T):
+        data[t, 0] += 0.4*data[t-1, 0] + 0.4*data[t-1, 1] + c*data[t-1,3]
+        data[t, 1] += 0.5*data[t-1, 1] + c*data[t-1,3]
+        data[t, 2] += 0.6*data[t-1, 2] + 0.3*data[t-2, 1] + c*data[t-1,3]
+    dataframe = pp.DataFrame(data, var_names=[r'$X^0$', r'$X^1$', r'$X^2$', 'Sun'])
+    # tp.plot_timeseries(dataframe); plt.show()
 
-    tau_max = 3
-    pc_alpha = 0.05
-
+    parcorr = ParCorr()
+    # dataframe_nosun = pp.DataFrame(data[:,[0,1,2]], var_names=[r'$X^0$', r'$X^1$', r'$X^2$'])
+    # pcmci_parcorr = PCMCI(
+    #     dataframe=dataframe_nosun, 
+    #     cond_ind_test=parcorr,
+    #     verbosity=0)
+    tau_max = 2
+    # results = pcmci_parcorr.run_pcmci(tau_max=tau_max, pc_alpha=0.2, alpha_level = 0.01)
+    # Remove parents of variable 3
+    # Only estimate parents of variables 0, 1, 2
     link_assumptions = {}
+    for j in range(4):
+        if j in [0, 1, 2]:
+            # Directed lagged links
+            link_assumptions[j] = {(var, -lag): '-?>' for var in [0, 1, 2]
+                             for lag in range(1, tau_max + 1)}
+            # Unoriented contemporaneous links
+            link_assumptions[j].update({(var, 0): 'o?o' for var in [0, 1, 2] if var != j})
+            # Directed lagged and contemporaneous links from the sun (3)
+            link_assumptions[j].update({(var, -lag): '-?>' for var in [3]
+                             for lag in range(0, tau_max + 1)})
+        else:
+            link_assumptions[j] = {}
 
-    # Exclude all links between 0 and 2
-    link_assumptions[0] = {(2, -tau):'' for tau in range(tau_max + 1)} 
-    link_assumptions[2] = {(0, -tau):'' for tau in range(tau_max + 1)} 
+    print(link_assumptions)
+    pcmci_parcorr = PCMCI(
+        dataframe=dataframe, 
+        cond_ind_test=parcorr,
+        verbosity=2)
+    results = pcmci_parcorr.run_pcmciplus(tau_max=tau_max, pc_alpha=0.01, 
+                                      link_assumptions=link_assumptions) #, alpha_level = 0.01)
+    print(results['graph'].shape)
+    print(results['graph'][:,3,:])
+    # Plot time series graph
+    # tp.plot_time_series_graph(
+    #     val_matrix=results['val_matrix'],
+    #     graph=results['graph'],
+    #     var_names=[r'$X^0$', r'$X^1$', r'$X^2$', 'Sun'],
+    #     link_colorbar_label='MCI',
+    #     ); plt.show()
 
-    # All other links are set per default to 'o?o' or '-?>' for lagged links.
+    # links_coeffs = {0: [((0, -1), 0.7, lin_f)],
+    #                 1: [((1, -1), 0.7, lin_f), ((0, 0), 0.2, lin_f), ((2, -2), 0.2, lin_f)],
+    #                 2: [((2, -1), 0.3, lin_f)],
+    #                 }
+    # T = 100     # time series length
+    # data, _ = toys.structural_causal_process(links_coeffs, T=T, seed=3)
+    # T, N = data.shape
 
-    # Set link 1 o-o 0 at lag 0
-    link_assumptions[1] = {}
-    link_assumptions[1][(0, 0)] = 'o-o'
-    link_assumptions[0][(1, 0)] = 'o-o'    # Required for consistency of contemporaneous links, but would also be internally added if not present
-    # Set link 2 --> 1 at lag 2
-    link_assumptions[1][(2, -2)] = '-->'
-
-    results = pcmci.run_pcmciplus(tau_max=tau_max, 
-                                  pc_alpha=pc_alpha,
-                                  link_assumptions=link_assumptions,
-                                 )
-    print(results['graph'][:,:,0])
-    tp.plot_graph(
-        val_matrix=results['val_matrix'],
-        graph=results['graph'],
-        ); plt.show()
-
-    # # 1. Illustration of
-    # links_coeffs = {
-    #          0: [((0, -1), 0.5, lin_f)],
-    #          1: [((1, -1), 0.5, lin_f), ((0, -1), 0.7, lin_f)],
-    #          # 2: [((2, -1), 0.5, lin_f), ((1, 0), 0.2, lin_f)],
-    #          # 3: [((3, -1), 0.5, lin_f), ((2, 0), 0.3, lin_f)],
-    #          }
-    # T = 1000
-    # data1, nonstat = toys.structural_causal_process(links_coeffs,
-    #                     T=T, seed=5)
-
-    # links_coeffs = {
-    #          0: [((0, -1), 0.5, lin_f)],
-    #          1: [((1, -1), 0.5, lin_f), ((0, -1), -0.7, lin_f)],
-    #          # 2: [((2, -1), 0.5, lin_f), ((1, 0), 0.2, lin_f)],
-    #          # 3: [((3, -1), 0.5, lin_f), ((2, 0), 0.3, lin_f)],
-    #          }
-    # T = 1000
-
-    # data2, nonstat = toys.structural_causal_process(links_coeffs,
-    #                     T=T, seed=6)
-
-    # # Create 
-    # multidata = {}
-    # multidata[0] = np.concatenate( (data1[0:500], data2[0:500]), axis=0)
-    # multidata[1] = np.concatenate( (data1[500:1000], data2[500:700]), axis=0)
-    # # multidata[1] = data1[500:900]
+    # # Initialize dataframe object
+    # dataframe = pp.DataFrame(data)
+    # pcmci = PCMCI(
+    #     dataframe=dataframe, 
+    #     cond_ind_test=ParCorr(),
+    #     verbosity=0)
 
     # multidata[0][40:100, :] = 999.
 
@@ -3833,8 +3812,8 @@ if __name__ == '__main__':
     #     window_step=499, window_length=500,
     #     method='run_pcmciplus', method_args={'tau_max':1, 
     #     'link_assumptions':{
-    #     0: {(0, -1): '-?>'},
-    #     1: {(1, -1): '-?>', (0, -1): '-->'},
+    #     0: {(0, -1): '-->'},
+    #     1: {(1, -1): '-->', (0, -1): '-!>'},
     #     }
     #     })
 

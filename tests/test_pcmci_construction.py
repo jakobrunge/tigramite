@@ -91,7 +91,7 @@ def get_expected_links(a_range, b_range, t_range):
     """
     Helper function to generate the expected links
     """
-    return {a_var : {(b_var, -lag):'-->' for b_var in b_range for lag in t_range}
+    return {a_var : {(b_var, -lag):'-?>' for b_var in b_range for lag in t_range}
             for a_var in a_range}
 
 def test_select_links_default(a_pcmci):

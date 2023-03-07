@@ -130,11 +130,10 @@ class PCMCIbase():
             mark can be '?' instead of '-'. Then '-?>' implies that this link
             may not exist, but if it exists, its orientation is '-->'. Link
             assumptions need to be consistent, i.e., graph[i,j,0] = '-->'
-            requires graph[j,i,0] = '<--' and acyclicity must hold. If it is
-            known that a link is absent, then link_type='' (empty string). If
-            a link does not appear in the dictionary, it is by default
-            initialized as 'o?o' (or '-?>' for lagged links), that is, it is
-            determined by the method.
+            requires graph[j,i,0] = '<--' and acyclicity must hold. If a link
+            does not appear in the dictionary, it is assumed absent. That is,
+            if link_assumptions is not None, then all links have to be specified
+            or the links are assumed absent.
         tau_mix : int
             Minimum time delay to test.
         tau_max : int
@@ -166,18 +165,7 @@ class PCMCIbase():
                                 _int_link_assumptions[j][(i, -lag)] = '-?>'
   
         else:
-            # Set the absent entries per default as all combinations
-            for j in _vars:
-                if j not in _int_link_assumptions.keys():
-                    _int_link_assumptions[j] = {}
-                for i in _vars:
-                    for lag in range(tau_min, tau_max + 1):
-                        if not (i == j and lag == 0):
-                            if (i, -lag) not in _int_link_assumptions[j]:
-                                if lag == 0:
-                                    _int_link_assumptions[j][(i, 0)] = 'o?o'
-                                else:
-                                    _int_link_assumptions[j][(i, -lag)] = '-?>'
+
             if remove_contemp:
                 for j in _int_link_assumptions.keys():
                     _int_link_assumptions[j] = {link:_int_link_assumptions[j][link] 
@@ -196,10 +184,9 @@ class PCMCIbase():
                     else:
                         _int_link_assumptions[i][(j, 0)] = self._reverse_link(_int_link_assumptions[j][link])
                 else:
-                    if link_type != '':
-                        # Orient lagged links by time order while leaving the middle mark
-                        new_link_type = '-' + link_type[1] + '>'
-                        _int_link_assumptions[j][link] = new_link_type
+                    # Orient lagged links by time order while leaving the middle mark
+                    new_link_type = '-' + link_type[1] + '>'
+                    _int_link_assumptions[j][link] = new_link_type
 
         # Otherwise, check that our assumpions are sane
         # Check that the link_assumptions refer to links that are inside the
@@ -214,7 +201,6 @@ class PCMCIbase():
                     '-?>',
                     '<--',
                     '<?-',
-                    '',
                         ]
 
         for links in _int_link_assumptions.values():
@@ -304,11 +290,10 @@ class PCMCIbase():
             mark can be '?' instead of '-'. Then '-?>' implies that this link
             may not exist, but if it exists, its orientation is '-->'. Link
             assumptions need to be consistent, i.e., graph[i,j,0] = '-->'
-            requires graph[j,i,0] = '<--' and acyclicity must hold. If it is
-            known that a link is absent, then link_type='' (empty string). If
-            a link does not appear in the dictionary, it is by default
-            initialized as 'o?o' (or '-?>' for lagged links), that is, it is
-            determined by the method.
+            requires graph[j,i,0] = '<--' and acyclicity must hold. If a link
+            does not appear in the dictionary, it is assumed absent. That is,
+            if link_assumptions is not None, then all links have to be specified
+            or the links are assumed absent.
         fdr_method : str, optional (default: 'fdr_bh')
             Correction method, currently implemented is Benjamini-Hochberg
             False Discovery Rate method.     
@@ -631,12 +616,10 @@ class PCMCIbase():
             mark can be '?' instead of '-'. Then '-?>' implies that this link
             may not exist, but if it exists, its orientation is '-->'. Link
             assumptions need to be consistent, i.e., graph[i,j,0] = '-->'
-            requires graph[j,i,0] = '<--' and acyclicity must hold. If it is
-            known that a link is absent, then link_type='' (empty string). If
-            a link does not appear in the dictionary, it is by default
-            initialized as 'o?o' (or '-?>' for lagged links), that is, it is
-            determined by the method.
-
+            requires graph[j,i,0] = '<--' and acyclicity must hold. If a link
+            does not appear in the dictionary, it is assumed absent. That is,
+            if link_assumptions is not None, then all links have to be specified
+            or the links are assumed absent.
         Returns
         -------
         val_matrix : array of shape [N, N, tau_max+1]
