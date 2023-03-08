@@ -309,16 +309,18 @@ class PCMCI(PCMCIbase):
         j : int
             Variable index.
         link_assumptions_j : dict
-            dict of form {(i, -tau): link_type, ...} specifying
-            assumptions about links. This initializes the graph with 
-            graph[i,j,tau] = link_type. For example, graph[i,j,0] = '-->' implies
-            a link from i to j at lag 0. Valid link types
-            are 'o-o', '-->', '<--'. In addition, the middle mark can be '!'
-            instead of '-'. Then 'o!o' implies that this adjacency must exist
-            and '-!>' that this directed link must exist. Link assumptions
-            need to be consistent, i.e., graph[i,j,0] = '-->' requires 
-            graph[j,i,0] = '<--' and acyclicity must hold. If a link does not
-            appear in the dictionary, it is assumed absent.
+            Dictionary of form {j:{(i, -tau): link_type, ...}, ...} specifying
+            assumptions about links. This initializes the graph with entries
+            graph[i,j,tau] = link_type. For example, graph[i,j,0] = '-->'
+            implies that a directed link from i to j at lag 0 must exist.
+            Valid link types are 'o-o', '-->', '<--'. In addition, the middle
+            mark can be '?' instead of '-'. Then '-?>' implies that this link
+            may not exist, but if it exists, its orientation is '-->'. Link
+            assumptions need to be consistent, i.e., graph[i,j,0] = '-->'
+            requires graph[j,i,0] = '<--' and acyclicity must hold. If a link
+            does not appear in the dictionary, it is assumed absent. That is,
+            if link_assumptions is not None, then all links have to be specified
+            or the links are assumed absent.
         tau_min : int, optional (default: 1)
             Minimum time lag to test. Useful for variable selection in
             multi-step ahead predictions. Must be greater zero.
@@ -3070,6 +3072,11 @@ class PCMCI(PCMCIbase):
             print("----------------------------")
             print("\ncontemp_collider_rule = %s" % contemp_collider_rule)
             print("conflict_resolution = %s\n" % conflict_resolution)
+
+        # Check that no middle mark '?' exists
+        for (i, j, tau) in zip(*np.where(graph!='')):
+            if graph[i,j,tau][1] != '-':
+                raise ValueError("Middle mark '?' exists!")
 
         # Find unshielded triples
         triples = self._find_unshielded_triples(graph)

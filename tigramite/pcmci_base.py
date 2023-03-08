@@ -1046,3 +1046,18 @@ class PCMCIbase():
                 graph[i, j, abs(tau)] = link_type
 
         return graph
+
+    @staticmethod
+    def build_link_assumptions(link_assumptions_absent_link_means_no_knowledge,
+                               n_component_time_series,
+                               tau_max,
+                               tau_min=0):
+        
+        out = {j: {(i, -tau_i): ("o?>" if tau_i > 0 else "o?o")
+             for i in range(n_component_time_series) for tau_i in range(tau_min, tau_max+1)
+             if (tau_i > 0 or i != j)} for j in range(n_component_time_series)}
+        
+        for j, links_j in link_assumptions_absent_links_means_no_knowledge.items():
+            for (i, lag_i), link_ij in links_j.items():
+                out[j][(i, lag_i)] = link_ij
+        return out
