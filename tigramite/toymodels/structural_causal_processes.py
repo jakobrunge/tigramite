@@ -641,7 +641,7 @@ def structural_causal_process(links, T, noises=None,
     -------
     data : array-like
         Data generated from this process, shape (T, N).
-    nonstationary : bool
+    nonvalid : bool
         Indicates whether data has NaNs or infinities.
 
     """
@@ -728,9 +728,9 @@ def structural_causal_process(links, T, noises=None,
 
     data = data[transient:]
 
-    nonstationary = (np.any(np.isnan(data)) or np.any(np.isinf(data)))
+    nonvalid = (np.any(np.isnan(data)) or np.any(np.isinf(data)))
 
-    return data, nonstationary
+    return data, nonvalid
 
 def _get_minmax_lag(links):
     """Helper function to retrieve tau_min and tau_max from links.

@@ -342,7 +342,7 @@ class Models():
             return predicted_array
 
 
-    def get_fit(self, all_parents,
+    def fit_full_model(self, all_parents,
                 selected_variables=None,
                 tau_max=None,
                 cut_off='max_lag_or_tau_max',
@@ -609,7 +609,7 @@ class LinearMediation(Models):
         """
 
         # Fit the model using the base class
-        self.fit_results = self.get_fit(all_parents=all_parents,
+        self.fit_results = self.fit_full_model(all_parents=all_parents,
                                         selected_variables=None,
                                         tau_max=tau_max)
         # Cache the results in the member variables
@@ -673,7 +673,7 @@ class LinearMediation(Models):
                            mask_type=self.mask_type,
                            verbosity=0)
 
-            model.get_fit(all_parents=self.all_parents,
+            model.fit_full_model(all_parents=self.all_parents,
                            tau_max=self.tau_max)
 
             # Cache the results in the member variables
@@ -1655,7 +1655,7 @@ class Prediction(Models, PCMCI):
             selected_targets=None, tau_max=None, return_data=False):
         r"""Fit time series model.
 
-        Wrapper around ``Models.get_fit()``. To each variable in
+        Wrapper around ``Models.fit_full_model()``. To each variable in
         ``selected_targets``, the sklearn model is fitted with :math:`y` given
         by the target variable, and :math:`X` given by its predictors. The
         fitted model class is returned for later use.
@@ -1707,7 +1707,7 @@ class Prediction(Models, PCMCI):
                 raise ValueError("No predictors given for target %s" % target)
 
         self.fitted_model = \
-            self.get_fit(all_parents=self.target_predictors,
+            self.fit_full_model(all_parents=self.target_predictors,
                          selected_variables=self.selected_targets,
                          tau_max=tau_max,
                          return_data=return_data)
