@@ -9,7 +9,7 @@ import pytest
 from scipy.special import comb
 
 from tigramite.pcmci import PCMCI
-from tigramite.independence_tests import ParCorr
+from tigramite.independence_tests.parcorr import ParCorr
 import tigramite.data_processing as pp
 from tigramite.toymodels import structural_causal_processes as toys
 

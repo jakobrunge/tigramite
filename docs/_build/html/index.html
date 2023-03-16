@@ -1355,7 +1355,7 @@ should override when possible.</p>
 <span class="sig-name descname"><span class="pre">get_bootstrap_confidence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xyz</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dependence_measure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf_blocklength</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf_lev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.95</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbosity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/independence_tests_base.html#CondIndTest.get_bootstrap_confidence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.independence_tests.independence_tests_base.CondIndTest.get_bootstrap_confidence" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform bootstrap confidence interval estimation.</p>
 <blockquote>
-<div><p>With conf_blocklength &gt; 1 or None a block-bootstrap is performed.</p>
+<div><p>With conf_blocklength greater 1 or None a block-bootstrap is performed.</p>
 <dl class="simple">
 <dt>array<span class="classifier">array-like</span></dt><dd><p>data array with X, Y, Z in rows and observations in columns</p>
 </dd>
@@ -5958,7 +5958,7 @@ tau = 1.</p></li>
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2022, Jakob Runge.
+      &copy;2023, Jakob Runge.
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 6.1.3</a>

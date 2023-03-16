@@ -9,7 +9,8 @@ from nose.tools import assert_equal
 import pytest
 
 from tigramite.pcmci import PCMCI
-from tigramite.independence_tests import ParCorr, OracleCI
+from tigramite.independence_tests.parcorr import ParCorr
+from tigramite.independence_tests.oracle_conditional_independence import OracleCI
 import tigramite.data_processing as pp
 from tigramite.toymodels import structural_causal_processes as toys
 

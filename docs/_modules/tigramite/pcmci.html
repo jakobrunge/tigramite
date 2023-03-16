@@ -862,9 +862,10 @@
         <span class="c1"># Get the condition string for node</span>
         <span class="n">condx_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mci_condition_to_string</span><span class="p">(</span><span class="n">conds_x_lagged</span><span class="p">)</span>
         <span class="c1"># Formate and print the information</span>
+        <span class="n">link_marker</span> <span class="o">=</span> <span class="p">{</span><span class="kc">True</span><span class="p">:</span><span class="s2">&quot;o?o&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">:</span><span class="s2">&quot;-?&gt;&quot;</span><span class="p">}</span>
         <span class="n">indent</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">        &quot;</span>
         <span class="n">print_str</span> <span class="o">=</span> <span class="n">indent</span> <span class="o">+</span> <span class="s2">&quot;link (</span><span class="si">%s</span><span class="s2"> </span><span class="si">% d</span><span class="s2">) &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">tau</span><span class="p">)</span>
-        <span class="n">print_str</span> <span class="o">+=</span> <span class="s2">&quot;to </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2">):&quot;</span> <span class="o">%</span> <span class="p">(</span>
+        <span class="n">print_str</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2">):&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">link_marker</span><span class="p">[</span><span class="n">tau</span><span class="o">==</span><span class="mi">0</span><span class="p">],</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">count</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_parents</span><span class="p">)</span>
         <span class="n">print_str</span> <span class="o">+=</span> <span class="n">indent</span> <span class="o">+</span> <span class="s2">&quot;with conds_y = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">condy_str</span><span class="p">)</span>
         <span class="n">print_str</span> <span class="o">+=</span> <span class="n">indent</span> <span class="o">+</span> <span class="s2">&quot;with conds_x = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">condx_str</span><span class="p">)</span>
@@ -3918,7 +3919,7 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2022, Jakob Runge.
+      &copy;2023, Jakob Runge.
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 6.1.3</a>
