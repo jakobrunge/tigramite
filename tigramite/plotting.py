@@ -993,8 +993,11 @@ class setup_scatter_matrix:
         for ij in list(self.axes_dict):                
             i = ij[0]
             j = ij[1]
-            if (matrix_lags is None) or (i == j):
-                lag = 0
+            if matrix_lags is None:
+                if i == j:
+                    lag = 1
+                else:
+                    lag = 0
             else:
                 lag = matrix_lags[i,j]
             x = np.copy(data[:T-lag, i])
@@ -1109,7 +1112,8 @@ def plot_densityplots(dataframe,
                       name=None, 
                       setup_args={}, 
                       add_densityplot_args={},
-                      selected_dataset=0):
+                      selected_dataset=0,
+                      show_marginal_densities_on_diagonal=True):
     """Wrapper helper function to plot density plots.
     Sets up the matrix object and plots the density plots, see parameters in
     setup_density_matrix and add_densityplot.
@@ -1133,6 +1137,8 @@ def plot_densityplots(dataframe,
         Arguments for adding a density plot matrix.
     selected_dataset : int, optional (default: 0)
         In case of multiple datasets in dataframe, plot this one.
+    show_marginal_densities_on_diagonal : bool, optional (default: True)
+        Flag to show marginal densities on the diagonal of the density plots
 
     Returns
     -------
@@ -1144,8 +1150,8 @@ def plot_densityplots(dataframe,
     N = dataframe.N
 
     matrix = setup_density_matrix(N=N, var_names=dataframe.var_names, **setup_args)
-    matrix.add_densityplot(dataframe=dataframe, selected_dataset=selected_dataset, 
-        **add_densityplot_args)
+    matrix.add_densityplot(dataframe=dataframe, selected_dataset=selected_dataset,
+                           show_marginal_densities_on_diagonal=show_marginal_densities_on_diagonal, **add_densityplot_args)
     matrix.adjustfig(name=name)
    
 
@@ -1281,6 +1287,7 @@ class setup_density_matrix:
         snskdeplot_args = {'cmap':'Greys'},
         snskdeplot_diagonal_args = {},
         selected_dataset=0,
+        show_marginal_densities_on_diagonal=True
     ):
         """Add density function plot.
 
@@ -1305,6 +1312,8 @@ class setup_density_matrix:
             Color of line created just for legend.
         selected_dataset : int, optional (default: 0)
             In case of multiple datasets in dataframe, plot this one.
+        show_marginal_densities_on_diagonal : bool, optional (default: True)
+            Flag to show marginal densities on the diagonal of the density plots
         """
 
         # Use seaborn for this one
@@ -1331,8 +1340,11 @@ class setup_density_matrix:
             i = ij[0]
             j = ij[1]
             ax = self.axes_dict[(i, j)]              
-            if (matrix_lags is None) or (i == j):
-                lag = 0
+            if (matrix_lags is None):
+                if i == j:
+                    lag = 1
+                else:
+                    lag = 0
             else:
                 lag = matrix_lags[i,j]
             x = np.copy(data[:T-lag, i])
@@ -1345,7 +1357,7 @@ class setup_density_matrix:
                 x[mask[:T-lag, i]==1] = np.nan
                 y[mask[lag:, j]==1] = np.nan
 
-            if i == j:
+            if i == j and show_marginal_densities_on_diagonal:
                 sns.kdeplot(x,
                     color = label_color,
                     # label=r"$\tau{=}%d$" %lag,
@@ -1356,7 +1368,7 @@ class setup_density_matrix:
                 # ax.yaxis.set_ticklabels([])
             else:
                 sns.kdeplot(x=x, y=y, 
-                    # label=r"$\tau{=}%d$" %lag,
+                    #label=r"$\tau{=}%d$" %lag,
                     **snskdeplot_args,
                     # fill=True,
                     # alpha=0.3,
@@ -1502,6 +1514,8 @@ def _draw_network_with_curved_edges(
     network_left_bound=None,
     show_colorbar=True,
     special_nodes=None,
+    autodep_sig_lags=None,
+    show_autodependency_lags=False
 ):
     """Function to draw a network from networkx graph instance.
     Various attributes are used to specify the graph's properties.
@@ -2342,6 +2356,17 @@ def _draw_network_with_curved_edges(
                     alpha=1.0,
                     zorder=5.
                 )
+                if show_autodependency_lags:
+                    ax.text(
+                        pos[n][0],
+                        pos[n][1],
+                        autodep_sig_lags[n],
+                        fontsize=link_label_fontsize,
+                        horizontalalignment="center",
+                        verticalalignment="center",
+                        color="black",
+                        zorder=5.
+                    )
 
     # Draw edges
     seen = {}
@@ -2379,10 +2404,10 @@ def plot_graph(
     vmax_edges=1.0,
     edge_ticks=0.4,
     cmap_edges="RdBu_r",
-    vmin_nodes=0,
+    vmin_nodes=-1,
     vmax_nodes=1.0,
     node_ticks=0.4,
-    cmap_nodes="OrRd",
+    cmap_nodes="RdBu_r",
     node_size=0.3,
     node_aspect=None,
     arrowhead_size=20,
@@ -2398,6 +2423,7 @@ def plot_graph(
     inner_edge_style="dashed",
     link_matrix=None,
     special_nodes=None,
+    show_autodependency_lags=False
 ):
     """Creates a network plot.
     
@@ -2480,6 +2506,8 @@ def plot_graph(
         Fraction of vertical space below graph plot.
     show_colorbar : bool
         Whether to show colorbars for links and nodes.
+    show_autodependency_lags : bool (default: False)
+        Shows significant autodependencies for a node.
     """
 
     if link_matrix is not None:
@@ -2550,6 +2578,12 @@ def plot_graph(
     # nx.draw(G, alpha=0, zorder=-10)
 
     node_color = list(np.zeros(N))
+
+    if show_autodependency_lags:
+        autodep_sig_lags = np.full(N, None, dtype='object')
+    else:
+        autodep_sig_lags = None
+
     # list of all strengths for color map
     all_strengths = []
     # Add attributes, contemporaneous and lagged links are handled separately
@@ -2665,6 +2699,14 @@ def plot_graph(
                 node_color[u] = None
             else:
                 node_color[u] = val_matrix[u, v][argmax]
+
+            if show_autodependency_lags:
+                autodep_sig_lags[u] = "\n\n\n" + ",".join(str(i) for i in (np.where(link_matrix_upper[u, v, 1:] != "")[0] + 1).tolist())
+                # Lags upto tau_max
+                #autodep_lags = np.argsort(val_matrix[u, v][1:])[::-1]
+                #autodep_lags += 1
+                #autodeplags[u] = "\n\n\n" + ",".join(str(i) for i in autodep_lags.tolist())
+
             dic["inner_edge_attribute"] = None
             dic["outer_edge_attribute"] = None
 
@@ -2744,6 +2786,8 @@ def plot_graph(
         show_colorbar=show_colorbar,
         # label_fraction=label_fraction,
         special_nodes=special_nodes,
+        autodep_sig_lags=autodep_sig_lags,
+        show_autodependency_lags=show_autodependency_lags
     )
 
     if save_name is not None:
@@ -3123,7 +3167,7 @@ def plot_time_series_graph(
                     tsg_attr[translate(i, t - tau), translate(j, t)] = link_attribute[
                         i, j, tau
                     ]
-       
+
 
     G = nx.DiGraph(tsg)
 
@@ -4204,15 +4248,14 @@ def plot_tsg(links, X, Y, Z=None, anc_x=None, anc_y=None, anc_xy=None):
 if __name__ == "__main__":
 
     import sys
+    matplotlib.rc('xtick', labelsize=6) 
+    matplotlib.rc('ytick', labelsize=6) 
 
     # Consider some toy data
     import tigramite
     import tigramite.toymodels.structural_causal_processes as toys
     import tigramite.data_processing as pp
     from tigramite.causal_effects import CausalEffects
-    from tigramite.pcmci import PCMCI 
-    from tigramite.independence_tests import ParCorr
-    from matplotlib import pyplot as plt
 
 
     # T = 1000
@@ -4327,24 +4370,4 @@ if __name__ == "__main__":
                                    hidden_variables=[(2, 0), (2, -1), (2, -2)], 
                                    verbosity=0)
 
-    link_attribute = np.zeros(causal_effects.graph.shape, dtype='<U30')
-    link_attribute[1, 3, 1, 2] = 'spurious'
-    link_attribute[3, 1, 2, 1] = 'spurious'
-    link_width = np.ones(causal_effects.graph.shape, dtype='float')
-    link_width[1, 3, 1, 2] = 0.5
-    link_width[3, 1, 2, 1] = 0.5
-    val_matrix = 0.8*np.ones(causal_effects.graph.shape, dtype='float')
-    val_matrix[1, 3, 1, 2] = 0.5
-    val_matrix[3, 1, 2, 1] = 0.5
-
-    plot_time_series_graph(
-            graph = causal_effects.graph,
-            link_attribute=link_attribute,
-            link_width=link_width,
-            val_matrix=val_matrix,
-            # var_names=var_names, 
-            save_name='Example.pdf',
-            figsize = (4, 4),
-            # special_nodes=special_nodes
-            )
     pyplot.show()

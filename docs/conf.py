@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'Tigramite'
-copyright = '2022, Jakob Runge'
+copyright = '2023, Jakob Runge'
 author = 'Jakob Runge'
 
 # The full version, including alpha/beta/rc tags

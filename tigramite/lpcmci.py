@@ -5,18 +5,13 @@ from copy import deepcopy
 from .pcmci_base import PCMCIbase
 
 class LPCMCI(PCMCIbase):
-    r"""
-    LPCMCI is an algorithm for causal discovery in large-scale times series that allows for latent confounders and learns lag-specific
-    causal relationships.
-
-    The algorithm is introduced and explained in:
-    [1] Gerhardus, A. & Runge, J. High-recall causal discovery for autocorrelated time series with latent confounders Advances in Neural
-    Information Processing Systems, 2020, 33. https://proceedings.neurips.cc/paper/2020/hash/94e70705efae423efda1088614128d0b-Abstract.html
-
-    NOTE:
-    This method is still EXPERIMENTAL since the default settings of hyperparameters are still being fine-tuned. We actually invite feedback 
-    on which work best in applications and numerical experiments.
-
+    """ LPCMCI is an algorithm for causal discovery in large-scale times series that allows for latent confounders and
+    learns lag-specific causal relationships. The algorithm is introduced and explained in:
+    [1] Gerhardus, A. & Runge, J. High-recall causal discovery for autocorrelated time series with latent confounders.
+    Advances in Neural Information Processing Systems, 2020, 33.
+    https://proceedings.neurips.cc/paper/2020/hash/94e70705efae423efda1088614128d0b-Abstract.html
+    NOTE: This method is still EXPERIMENTAL since the default settings of hyperparameters are still being fine-tuned.
+    We actually invite feedback on which work best in applications and numerical experiments.
     The main function, which applies the algorithm, is 'run_lpcmci'.
 
     Parameters passed to the constructor:

@@ -2,7 +2,8 @@ from __future__ import print_function
 import numpy as np
 import warnings
 
-from . import ParCorr, RobustParCorr
+from tigramite.independence_tests.parcorr import ParCorr
+from tigramite.independence_tests.robust_parcorr import RobustParCorr
 from tigramite import data_processing as pp
 
 
@@ -34,16 +35,16 @@ class ParCorrWLS(ParCorr):
 
     Parameters
     ----------
-    gt_std_matrix:
+    gt_std_matrix: array-like, optional (default: None)
         Standard deviations of the noise of shape (T, nb_nodes)
-    expert_knowledge:
+    expert_knowledge: string or dict (default: time-dependent heteroskedasticity)
         Either string "time-dependent heteroskedasticity" meaning that every variable only has time-dependent
         heteroskedasticity, or string "homoskedasticity" where we assume homoskedasticity for all variables, or
         dictionary containing expert knowledge about heteroskedastic relationships as list of tuples or strings.
-    window_size:
+    window_size: int (default: 10)
         Number of nearest neighbours that we are using for estimating the variance function.
-    robustify:
-        Boolean, indicates whether the robust partial correlation test should be used, i.e. whether the data should be
+    robustify: bool (default: False)
+        Indicates whether the robust partial correlation test should be used, i.e. whether the data should be
         transformed to normal marginals before testing
     **kwargs :
         Arguments passed on to Parent class ParCorr.

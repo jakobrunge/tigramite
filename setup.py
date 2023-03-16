@@ -33,13 +33,13 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 # Define the minimal classes needed to install and run tigramite
-INSTALL_REQUIRES =  ["numpy==1.21.5", "scipy==1.8.0", "numba==0.55.1", "six"]
-# INSTALL_REQUIRES = ["numpy", "scipy", "numba", "six"]
+INSTALL_REQUIRES =  ["numpy<1.24,>=1.18", "scipy", "numba==0.56.4", "six"]
 # Define all the possible extras needed
 EXTRAS_REQUIRE = {
     "all": [
         "scikit-learn>=0.21",  # Gaussian Process (GP) Regression
         "matplotlib>=3.4.0",   # plotting
+        "seaborn>=0.12.2",     # plotting
         "networkx>=2.4",       # plotting
         "torch>=1.11.0",       # GPDC torch version
         "gpytorch>=1.4",       # GPDC gpytorch version

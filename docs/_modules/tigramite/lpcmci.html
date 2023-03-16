@@ -9,10 +9,8 @@
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/jquery.js"></script>
-    <script src="../../_static/underscore.js"></script>
-    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
    
@@ -39,18 +37,13 @@
 <span class="kn">from</span> <span class="nn">.pcmci_base</span> <span class="kn">import</span> <span class="n">PCMCIbase</span>
 
 <div class="viewcode-block" id="LPCMCI"><a class="viewcode-back" href="../../index.html#tigramite.lpcmci.LPCMCI">[docs]</a><span class="k">class</span> <span class="nc">LPCMCI</span><span class="p">(</span><span class="n">PCMCIbase</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    LPCMCI is an algorithm for causal discovery in large-scale times series that allows for latent confounders and learns lag-specific</span>
-<span class="sd">    causal relationships.</span>
-
-<span class="sd">    The algorithm is introduced and explained in:</span>
-<span class="sd">    [1] Gerhardus, A. &amp; Runge, J. High-recall causal discovery for autocorrelated time series with latent confounders Advances in Neural</span>
-<span class="sd">    Information Processing Systems, 2020, 33. https://proceedings.neurips.cc/paper/2020/hash/94e70705efae423efda1088614128d0b-Abstract.html</span>
-
-<span class="sd">    NOTE:</span>
-<span class="sd">    This method is still EXPERIMENTAL since the default settings of hyperparameters are still being fine-tuned. We actually invite feedback </span>
-<span class="sd">    on which work best in applications and numerical experiments.</span>
-
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; LPCMCI is an algorithm for causal discovery in large-scale times series that allows for latent confounders and</span>
+<span class="sd">    learns lag-specific causal relationships. The algorithm is introduced and explained in:</span>
+<span class="sd">    [1] Gerhardus, A. &amp; Runge, J. High-recall causal discovery for autocorrelated time series with latent confounders.</span>
+<span class="sd">    Advances in Neural Information Processing Systems, 2020, 33.</span>
+<span class="sd">    https://proceedings.neurips.cc/paper/2020/hash/94e70705efae423efda1088614128d0b-Abstract.html</span>
+<span class="sd">    NOTE: This method is still EXPERIMENTAL since the default settings of hyperparameters are still being fine-tuned.</span>
+<span class="sd">    We actually invite feedback on which work best in applications and numerical experiments.</span>
 <span class="sd">    The main function, which applies the algorithm, is &#39;run_lpcmci&#39;.</span>
 
 <span class="sd">    Parameters passed to the constructor:</span>
@@ -63,9 +56,29 @@
 
 <span class="sd">    Parameters passed to self.run_lpcmci():</span>
 <span class="sd">    Note: The default values are still being tuned and some parameters might be removed in the future.</span>
-<span class="sd">    - selected_links: dict or None</span>
-<span class="sd">        Dictionary of the form {0: [(3, 0), (0, -1), ...], 1:[], ...} that specifys which links are potentially present. All other links</span>
-<span class="sd">        are assumed to be absent. If None is passed all links are potentially present.</span>
+<span class="sd">    - link_assumptions: dict or None</span>
+<span class="sd">        Two-level nested dictionary such that link_assumptions[j][(i, lag_i)], where 0 &lt;= j, i &lt;= N-1 (with N the number of component</span>
+<span class="sd">        time series) and -tau_max &lt;= lag_i &lt;= -tau_min, is a string which specifies background knowledge about the link from X^i_{t+lag_i} to</span>
+<span class="sd">        X^j_t. These are the possibilities for this string and the corresponding claim:</span>
+<span class="sd">            &#39;-?&gt;&#39;   : X^i_{t+lag_i} is an ancestor of X^j_t.</span>
+<span class="sd">            &#39;--&gt;&#39;   : X^i_{t+lag_i} is an ancestor of X^j_t, and there is a link between X^i_{t+lag_i} and X^j_t</span>
+<span class="sd">            &#39;&lt;?-&#39;   : Only allowed for lag_i = 0. X^j_t is an ancestor of X^i_t.</span>
+<span class="sd">            &#39;&lt;--&#39;   : Only allowed for lag_i = 0. X^j_t is an ancestor of X^i_t, and there is a link between X^i_t and X^j_t</span>
+<span class="sd">            &#39;&lt;?&gt;&#39;   : Neither X^i_{t+lag_i} is an ancestor of X^j_t nor the other way around</span>
+<span class="sd">            &#39;&lt;-&gt;&#39;   : Neither X^i_{t+lag_i} is an ancestor of X^j_t nor the other way around, and there is a link between X^i_{t+lag_i}</span>
+<span class="sd">                      and X^j_t</span>
+<span class="sd">            &#39;o?&gt;&#39;   : X^j_t is not an ancestor of X^i_{t+lag_i} (for lag_i &lt; 0 this background knowledge is (for the default settings of</span>
+<span class="sd">                      self.run_lpcmci()) imposed automatically)</span>
+<span class="sd">            &#39;o-&gt;&#39;   : X^j_t is not an ancestor of X^i_{t+lag_i}, and there is a link between X^i_{t+lag_i} and X^j_t</span>
+<span class="sd">            &#39;&lt;?o&#39;   : Only allowed for lag_i = 0. X^i_t is not an ancestor of X^j_t</span>
+<span class="sd">            &#39;&lt;-o&#39;   : Only allowed for lag_i = 0. X^i_t is not an ancestor of X^j_t, and there is a link between X^i_t and X^j_t</span>
+<span class="sd">            &#39;o-o&#39;   : Only allowed for lag_i = 0. There is a link between X^i_t and X^j_t</span>
+<span class="sd">            &#39;o?o&#39;   : Only allowed for lag_i = 0. No claim is made</span>
+<span class="sd">            &#39;&#39;      : There is no link between X^i_{t+lag_i} and X^j_t.</span>
+
+<span class="sd">        Another way to specify the absent link is if the form of the link between (i, lag_i) and (j, 0) is not specified by the dictionary, that is, if either</span>
+<span class="sd">        link_assumptions[j] does not exist or link_assumptions[j] does exist but link_assumptions[j][(i, lag_i)] does</span>
+<span class="sd">        not exist, then the link between (i, lag_i) and (j, 0) is assumed to be absent.</span>
 <span class="sd">    - tau_min:</span>
 <span class="sd">        The assumed minimum time lag, i.e., links with a lag smaller than tau_min are assumed to be absent.</span>
 <span class="sd">    - tau_max:</span>
@@ -156,7 +169,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">,</span> <span class="n">cond_ind_test</span><span class="p">,</span> <span class="n">verbosity</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Class constructor. Store:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Class constructor. Store:</span>
 <span class="sd">                i)      data</span>
 <span class="sd">                ii)     conditional independence test object</span>
 <span class="sd">                iii)    some instance attributes&quot;&quot;&quot;</span>
@@ -167,7 +180,7 @@
                         <span class="n">verbosity</span><span class="o">=</span><span class="n">verbosity</span><span class="p">)</span>
 
 <div class="viewcode-block" id="LPCMCI.run_lpcmci"><a class="viewcode-back" href="../../index.html#tigramite.lpcmci.LPCMCI.run_lpcmci">[docs]</a>    <span class="k">def</span> <span class="nf">run_lpcmci</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                    <span class="n">selected_links</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">link_assumptions</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                     <span class="n">tau_min</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
                     <span class="n">tau_max</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> 
                     <span class="n">pc_alpha</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
@@ -190,13 +203,13 @@
                     <span class="n">auto_first</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
                     <span class="n">remember_only_parents</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
                     <span class="n">no_apr</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Run LPCMCI on the dataset and with the conditional independence test passed to the class constructor and with the</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run LPCMCI on the dataset and with the conditional independence test passed to the class constructor and with the</span>
 <span class="sd">        options passed to this function.&quot;&quot;&quot;</span>
 
         <span class="c1">#######################################################################################################################</span>
         <span class="c1">#######################################################################################################################</span>
         <span class="c1"># Step 0: Initializations</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize</span><span class="p">(</span><span class="n">selected_links</span><span class="p">,</span> <span class="n">tau_min</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span> <span class="n">pc_alpha</span><span class="p">,</span> <span class="n">n_preliminary_iterations</span><span class="p">,</span> <span class="n">max_cond_px</span><span class="p">,</span> <span class="n">max_p_global</span><span class="p">,</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize</span><span class="p">(</span><span class="n">link_assumptions</span><span class="p">,</span> <span class="n">tau_min</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span> <span class="n">pc_alpha</span><span class="p">,</span> <span class="n">n_preliminary_iterations</span><span class="p">,</span> <span class="n">max_cond_px</span><span class="p">,</span> <span class="n">max_p_global</span><span class="p">,</span>
             <span class="n">max_p_non_ancestral</span><span class="p">,</span> <span class="n">max_q_global</span><span class="p">,</span> <span class="n">max_pds_set</span><span class="p">,</span> <span class="n">prelim_with_collider_rules</span><span class="p">,</span> <span class="n">parents_of_lagged</span><span class="p">,</span> <span class="n">prelim_only</span><span class="p">,</span>
             <span class="n">break_once_separated</span><span class="p">,</span> <span class="n">no_non_ancestral_phase</span><span class="p">,</span> <span class="n">use_a_pds_t_for_majority</span><span class="p">,</span> <span class="n">orient_contemp</span><span class="p">,</span> <span class="n">update_middle_marks</span><span class="p">,</span>
             <span class="n">prelim_rules</span><span class="p">,</span> <span class="n">fix_all_edges_before_final_orientation</span><span class="p">,</span> <span class="n">auto_first</span><span class="p">,</span> <span class="n">remember_only_parents</span><span class="p">,</span> <span class="n">no_apr</span><span class="p">)</span>
@@ -324,17 +337,17 @@
         <span class="k">return</span> <span class="n">return_dict</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selected_links</span><span class="p">,</span> <span class="n">tau_min</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span> <span class="n">pc_alpha</span><span class="p">,</span> <span class="n">n_preliminary_iterations</span><span class="p">,</span> <span class="n">max_cond_px</span><span class="p">,</span> <span class="n">max_p_global</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">_initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_assumptions</span><span class="p">,</span> <span class="n">tau_min</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span> <span class="n">pc_alpha</span><span class="p">,</span> <span class="n">n_preliminary_iterations</span><span class="p">,</span> <span class="n">max_cond_px</span><span class="p">,</span> <span class="n">max_p_global</span><span class="p">,</span>
         <span class="n">max_p_non_ancestral</span><span class="p">,</span> <span class="n">max_q_global</span><span class="p">,</span> <span class="n">max_pds_set</span><span class="p">,</span> <span class="n">prelim_with_collider_rules</span><span class="p">,</span> <span class="n">parents_of_lagged</span><span class="p">,</span> <span class="n">prelim_only</span><span class="p">,</span>
         <span class="n">break_once_separated</span><span class="p">,</span> <span class="n">no_non_ancestral_phase</span><span class="p">,</span> <span class="n">use_a_pds_t_for_majority</span><span class="p">,</span> <span class="n">orient_contemp</span><span class="p">,</span> <span class="n">update_middle_marks</span><span class="p">,</span> <span class="n">prelim_rules</span><span class="p">,</span>
         <span class="n">fix_all_edges_before_final_orientation</span><span class="p">,</span> <span class="n">auto_first</span><span class="p">,</span> <span class="n">remember_only_parents</span><span class="p">,</span> <span class="n">no_apr</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Function for</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Function for</span>
 <span class="sd">            i)      saving the arguments passed to self.run_lpcmci() as instance attributes</span>
 <span class="sd">            ii)     initializing various memory variables for storing the current graph, sepsets etc.</span>
 <span class="sd">            &quot;&quot;&quot;</span>
 
         <span class="c1"># Save the arguments passed to self.run_lpcmci()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">selected_links</span> <span class="o">=</span> <span class="n">selected_links</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">link_assumptions</span> <span class="o">=</span> <span class="n">link_assumptions</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tau_min</span> <span class="o">=</span> <span class="n">tau_min</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">=</span> <span class="n">tau_max</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pc_alpha</span> <span class="o">=</span> <span class="n">pc_alpha</span>
@@ -364,8 +377,9 @@
         <span class="c1"># Check that validity of tau_min and tau_max</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_tau_min_tau_max</span><span class="p">()</span>
 
-        <span class="c1"># Check the validity of &#39;selected_links&#39;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_check_and_set_selected_links</span><span class="p">()</span>
+        <span class="c1"># Check the validity of &#39;link_assumptions&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">link_assumptions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_link_assumptions</span><span class="p">()</span>
 
         <span class="c1"># Rules to be executed at the end of a preliminary phase</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_rules_prelim_final</span><span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;APR&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;ER-08&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;ER-02&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;ER-01&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;ER-09&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;ER-10&quot;</span><span class="p">]]</span>
@@ -383,50 +397,220 @@
         <span class="k">return</span> <span class="kc">True</span>
 
     <span class="k">def</span> <span class="nf">_check_tau_min_tau_max</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Check whether the choice of tau_min and tau_max is valid.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check whether the choice of tau_min and tau_max is valid.&quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau_min</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;tau_min = </span><span class="si">{}</span><span class="s2">, &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_min</span><span class="p">)</span> <span class="o">+</span> \
                              <span class="s2">&quot;tau_max = </span><span class="si">{}</span><span class="s2">, &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span><span class="p">)</span> <span class="o">+</span> \
                              <span class="s2">&quot;but 0 &lt;= tau_min &lt;= tau_max required.&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_check_and_set_selected_links</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;If &#39;selected_links&#39; is given check its validity, else set all links as selected.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_check_link_assumptions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check the validity of user-specified &#39;link_assumptions&#39;.</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_links</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<span class="sd">        The checks assert:</span>
+<span class="sd">        - Valid dictionary keys</span>
+<span class="sd">        - Valid edge types</span>
+<span class="sd">        - That no causal cycle is specified</span>
+<span class="sd">        - That no almost causal cycle is specified</span>
 
-            <span class="c1"># Check validity of keys</span>
-            <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_links</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)):</span>
+<span class="sd">        The checks do not assert that maximality is not violated.&quot;&quot;&quot;</span>
 
-                <span class="c1"># Check validity of entries</span>
-                <span class="n">var_allowed</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">))</span>
-                <span class="n">var_entries</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">var</span> <span class="k">for</span> <span class="n">parents</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_links</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">parents</span><span class="p">)</span>
+        <span class="c1"># Ancestorship matrices</span>
+        <span class="n">ancs_mat_contemp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">),</span> <span class="n">dtype</span> <span class="o">=</span> <span class="s2">&quot;int32&quot;</span><span class="p">)</span>
+        <span class="n">ancs_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)),</span> <span class="n">dtype</span> <span class="o">=</span> <span class="s2">&quot;int32&quot;</span><span class="p">)</span>
 
-                <span class="n">lag_allowed</span> <span class="o">=</span> <span class="nb">set</span> <span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_min</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
-                <span class="n">lag_entries</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">lag</span> <span class="k">for</span> <span class="n">parents</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_links</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">lag</span> <span class="ow">in</span> <span class="n">parents</span><span class="p">)</span>
-                
-                <span class="k">if</span> <span class="n">var_entries</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">var_allowed</span><span class="p">)</span> <span class="ow">and</span> <span class="n">lag_entries</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">lag_allowed</span><span class="p">):</span>
+        <span class="c1"># Run through the outer dictionary</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">links_j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">link_assumptions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
 
-                    <span class="c1"># Check symmetry of lag-zero links</span>
-                    <span class="n">lag_zero</span> <span class="o">=</span> <span class="nb">set</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">lag</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_links</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">if</span> <span class="n">lag</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="c1"># Check validity of keys of outer dictionary</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">j</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The argument &#39;link_assumption&#39; must be a &quot;</span>\
+                    <span class="s2">&quot;dictionary whose keys are in {0, 1, ..., N-1}, where N &quot;</span>\
+                    <span class="s2">&quot;is the number of component time series. Here, &quot;</span>\
+                    <span class="sa">f</span><span class="s2">&quot;N = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
 
-                    <span class="n">check_symmetry</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">))</span>
-                    <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">in</span> <span class="n">lag_zero</span><span class="p">:</span>
-                        <span class="n">check_symmetry</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="c1"># Run through the inner dictionary</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">lag_i</span><span class="p">),</span> <span class="n">link_ij</span> <span class="ow">in</span> <span class="n">links_j</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
 
-                    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">check_symmetry</span><span class="p">)</span> <span class="o">==</span> <span class="n">check_symmetry</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="o">**</span><span class="mi">2</span><span class="p">:</span>
-                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid &#39;selected_links&#39;: Zero-lag links must be symmetric.&quot;</span><span class="p">)</span>
+                <span class="c1"># Check validity of keys of inner dictionary</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">j</span> <span class="ow">and</span> <span class="n">lag_i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The dictionary &#39;link_assumptions[</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">] &quot;</span>\
+                        <span class="sa">f</span><span class="s2">&quot;must not have the key (</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">, 0), because this refers &quot;</span>\
+                        <span class="s2">&quot;to a self-link.&quot;</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="ow">or</span> <span class="ow">not</span> <span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">&lt;=</span> <span class="n">lag_i</span> <span class="o">&lt;=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_min</span><span class="p">)):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;All values of &#39;link_assumptions&#39; must &quot;</span>\
+                        <span class="s2">&quot;be dictionaries whose keys are of the form (i, &quot;</span>\
+                        <span class="s2">&quot;lag_i), where i in {0, 1, ..., N-1} with N the &quot;</span>\
+                        <span class="s2">&quot;number of component time series and lag_i in &quot;</span>\
+                        <span class="s2">&quot;{-tau_max, ..., -tau_min} with tau_max the maximum &quot;</span>\
+                        <span class="s2">&quot;considered time lag and tau_min the minimum assumed &quot;</span>\
+                        <span class="sa">f</span><span class="s2">&quot;time lag. Here, N = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="si">}</span><span class="s2"> and tau_max = &quot;</span>\
+                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span><span class="si">}</span><span class="s2"> and tau_min = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_min</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+                <span class="c1"># Check for validity of entries. At the same time mark the</span>
+                <span class="c1"># ancestorships in ancs_mat_contemp and ancs_mat</span>
+
+                <span class="k">if</span> <span class="n">link_ij</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+
+                    <span class="c1"># Check for symmetry of lag zero links</span>
+                    <span class="k">if</span> <span class="n">lag_i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+
+                        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">link_assumptions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
+                            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">link_assumptions</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="ow">is</span> <span class="kc">None</span>
+                            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">link_assumptions</span><span class="p">[</span><span class="n">i</span><span class="p">][(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
+                            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The lag zero links specified by &quot;</span>\
+                                <span class="s2">&quot;&#39;link_assumptions&#39; must be symmetric: Because&quot;</span>\
+                                <span class="sa">f</span><span class="s2">&quot;&#39;link_assumptions&#39;[</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">][(</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="mi">0</span><span class="si">}</span><span class="s2">)] = &#39;&#39;, &quot;</span>\
+                                <span class="s2">&quot; there must also be &quot;</span>\
+                                <span class="sa">f</span><span class="s2">&quot;&#39;link_assumptions&#39;[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">][(</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="mi">0</span><span class="si">}</span><span class="s2">)] = &#39;&#39;.&quot;</span><span class="p">)</span>
+                    <span class="k">continue</span>
+
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">link_ij</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">lag_i</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid link: &quot;</span>\
+                            <span class="sa">f</span><span class="s2">&quot;&#39;link_assumptions&#39;[</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">][(</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">lag_i</span><span class="si">}</span><span class="s2">)] = &quot;</span>\
+                            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">link_ij</span><span class="si">}</span><span class="s2">. Allowed are: &#39;-?&gt;&#39;, &#39;--&gt;&#39;, &#39;&lt;?&gt;&#39;, &quot;</span>\
+                            <span class="s2">&quot;&#39;&lt;-&gt;&#39;, &#39;o?&gt;&#39;, &#39;o-&gt;&#39;.&quot;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid link: &quot;</span>\
+                            <span class="sa">f</span><span class="s2">&quot;&#39;link_assumptions&#39;[</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">][(</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">lag_i</span><span class="si">}</span><span class="s2">)] = &quot;</span>\
+                            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">link_ij</span><span class="si">}</span><span class="s2">. Allowed are: &#39;-?&gt;&#39;, &#39;--&gt;&#39;, &#39;&lt;?&gt;&#39;, &quot;</span>\
+                            <span class="s2">&quot;&#39;&lt;-&gt;&#39;, &#39;o?&gt;&#39;, &#39;o-&gt;&#39;, &#39;&lt;?-&#39;, &#39;&lt;--&#39;, &#39;&lt;?o&#39;, &#39;&lt;--&#39;, &quot;</span>\
+                            <span class="s2">&quot;&#39;o-o&#39;, &#39;o?o&#39;.&quot;</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">link_ij</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;-&quot;</span><span class="p">:</span>
+
+                    <span class="k">if</span> <span class="n">link_ij</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid link: &quot;</span>\
+                            <span class="sa">f</span><span class="s2">&quot;&#39;link_assumptions&#39;[</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">][(</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">lag_i</span><span class="si">}</span><span class="s2">)] = &quot;</span>\
+                            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">link_ij</span><span class="si">}</span><span class="s2">. The first character &#39;-&#39;, which says &quot;</span>\
+                            <span class="sa">f</span><span class="s2">&quot;that (</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">lag_i</span><span class="si">}</span><span class="s2">) is an ancestor (cause) of &quot;</span>\
+                            <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">, 0). Hence, (</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">, 0) is a non-ancestor &quot;</span>\
+                            <span class="sa">f</span><span class="s2">&quot;(non-cause) of (</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">lag_i</span><span class="si">}</span><span class="s2">) and the third &quot;</span>\
+                            <span class="s2">&quot;character must be &#39;&gt;&#39;.&quot;</span><span class="p">)</span>
+
+                    <span class="c1"># Mark the ancestorship</span>
+                    <span class="k">if</span> <span class="n">lag_i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">ancs_mat_contemp</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                    <span class="k">for</span> <span class="n">Delta_t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">-</span> <span class="nb">abs</span><span class="p">(</span><span class="n">lag_i</span><span class="p">)):</span>
+                        <span class="n">ancs_mat</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="o">*</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">lag_i</span><span class="p">)</span> <span class="o">+</span> <span class="n">Delta_t</span><span class="p">)</span> <span class="o">+</span> <span class="n">i</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="o">*</span><span class="n">Delta_t</span> <span class="o">+</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+                <span class="k">elif</span> <span class="n">link_ij</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;&lt;&quot;</span><span class="p">,</span> <span class="s2">&quot;o&quot;</span><span class="p">]:</span>
+
+                    <span class="k">if</span> <span class="n">lag_i</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+
+                        <span class="k">if</span> <span class="n">link_ij</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">:</span>
+                            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid link: &quot;</span>\
+                                <span class="sa">f</span><span class="s2">&quot;&#39;link_assumptions&#39;[</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">][(</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">lag_i</span><span class="si">}</span><span class="s2">)] = &quot;</span>\
+                                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">link_ij</span><span class="si">}</span><span class="s2">. Since </span><span class="si">{</span><span class="n">lag_i</span><span class="si">}</span><span class="s2"> &lt; 0, (</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">, 0) &quot;</span>\
+                                <span class="sa">f</span><span class="s2">&quot;cannot be an ancestor (cause) of &quot;</span>\
+                                <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">lag_i</span><span class="si">}</span><span class="s2">). Hence, the third character &quot;</span>\
+                                <span class="sa">f</span><span class="s2">&quot;must be &#39;&gt;&#39;.&quot;</span><span class="p">)</span>
+
+                    <span class="k">else</span><span class="p">:</span>
+
+                        <span class="k">if</span> <span class="n">link_ij</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;o&quot;</span><span class="p">]:</span>
+                            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid link: &quot;</span>\
+                                <span class="sa">f</span><span class="s2">&quot;&#39;link_assumptions&#39;[</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">][(</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="mi">0</span><span class="si">}</span><span class="s2">)] = &quot;</span>\
+                                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">link_ij</span><span class="si">}</span><span class="s2">. The third character must be one &quot;</span>\
+                                <span class="s2">&quot;of the following: 1) &#39;-&#39;, which says that &quot;</span>\
+                                <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">, 0) is an ancestor (cause) of &quot;</span>\
+                                <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="mi">0</span><span class="si">}</span><span class="s2">). 2) &#39;&gt;&#39;, which says that &quot;</span>\
+                                <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">, 0) is a non-ancestor (non-cause) of &quot;</span>\
+                                <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="mi">0</span><span class="si">}</span><span class="s2">). 3) &#39;o&#39;, which says that it is &quot;</span>\
+                                <span class="sa">f</span><span class="s2">&quot;unknown whether or not (</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="mi">0</span><span class="si">}</span><span class="s2">) is an &quot;</span>\
+                                <span class="sa">f</span><span class="s2">&quot;ancestor (cause) of (</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="mi">0</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">)</span>
+
+                        <span class="k">if</span> <span class="n">link_ij</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;-&quot;</span><span class="p">:</span>
+
+                            <span class="k">if</span> <span class="n">link_ij</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;&lt;&quot;</span><span class="p">:</span>
+                                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid link: &quot;</span>\
+                                    <span class="sa">f</span><span class="s2">&quot;&#39;link_assumptions&#39;[</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">][(</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="mi">0</span><span class="si">}</span><span class="s2">)] = &quot;</span>\
+                                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">link_ij</span><span class="si">}</span><span class="s2">. The third character is &#39;-&#39;, &quot;</span>\
+                                    <span class="sa">f</span><span class="s2">&quot;which says that (</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="mi">0</span><span class="si">}</span><span class="s2">) is an &quot;</span>\
+                                    <span class="sa">f</span><span class="s2">&quot;ancestor (cause) of (</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">, 0). Hence, &quot;</span>\
+                                    <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">, 0) is a non-ancestor (non-cause) &quot;</span>\
+                                    <span class="sa">f</span><span class="s2">&quot;of (</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="mi">0</span><span class="si">}</span><span class="s2">) and the first character &quot;</span>\
+                                    <span class="s2">&quot;must be &#39;&lt;&#39;.&quot;</span><span class="p">)</span>
+
+                            <span class="c1"># Mark the ancestorship</span>
+                            <span class="n">ancs_mat_contemp</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                            <span class="k">for</span> <span class="n">Delta_t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                                <span class="n">ancs_mat</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="o">*</span><span class="n">Delta_t</span> <span class="o">+</span> <span class="n">j</span><span class="p">,</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="o">*</span><span class="n">Delta_t</span> <span class="o">+</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
 
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid link in at least one entry of &#39;selected_links&#39;. Must be of the form (i, lag_i), where i in {0, 1, ..., N-1} and lag_i in {-tau_max, ..., -tau_min}.&quot;</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;selected_links&#39; must be dictionary whose keys are exactly 0, 1, ..., N-1, where N is the number of component time series.&quot;</span><span class="p">)</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid link: &quot;</span>\
+                        <span class="sa">f</span><span class="s2">&quot;&#39;link_assumptions&#39;[</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">][(</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">lag_i</span><span class="si">}</span><span class="s2">)] = &quot;</span>\
+                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">link_ij</span><span class="si">}</span><span class="s2">. The first character must be one of the &quot;</span>\
+                        <span class="sa">f</span><span class="s2">&quot;following: 1) &#39;-&#39;, which says that (</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">lag_i</span><span class="si">}</span><span class="s2">) &quot;</span>\
+                        <span class="sa">f</span><span class="s2">&quot;is an ancestor (cause) of (</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">, 0). 2) &#39;&lt;&#39;, which &quot;</span>\
+                        <span class="sa">f</span><span class="s2">&quot;says that (</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">lag_i</span><span class="si">}</span><span class="s2">) is a non-ancestor &quot;</span>\
+                        <span class="sa">f</span><span class="s2">&quot;(non-cause) of (</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">, 0). 3) &#39;o&#39;, which says that it&quot;</span>\
+                        <span class="sa">f</span><span class="s2">&quot;is unknown whether or not (</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">lag_i</span><span class="si">}</span><span class="s2">) is an &quot;</span>\
+                        <span class="sa">f</span><span class="s2">&quot;ancestor (cause) of (</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="mi">0</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">)</span>
 
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">selected_links</span> <span class="o">=</span> <span class="p">{</span><span class="n">j</span><span class="p">:</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="n">tau</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span> <span class="k">for</span> <span class="n">tau</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_min</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="p">(</span><span class="n">tau</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">j</span> <span class="o">!=</span> <span class="n">i</span><span class="p">)]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)}</span>
+                <span class="k">if</span> <span class="n">link_ij</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="s2">&quot;?&quot;</span><span class="p">]:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid link: &quot;</span>\
+                        <span class="sa">f</span><span class="s2">&quot;&#39;link_assumptions&#39;[</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">][(</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">lag_i</span><span class="si">}</span><span class="s2">)] = &quot;</span>\
+                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">link_ij</span><span class="si">}</span><span class="s2">. The second character must be one of the &quot;</span>\
+                        <span class="s2">&quot;following: 1) &#39;-&#39;, which says that the link &quot;</span>\
+                        <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">lag_i</span><span class="si">}</span><span class="s2">) </span><span class="si">{</span><span class="n">link_ij</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">, 0) is definitely &quot;</span>\
+                        <span class="s2">&quot;part of the graph. 2) &#39;?&#39;, which says that link &quot;</span>\
+                        <span class="s2">&quot;might be but does not need to be part of the graph.&quot;</span><span class="p">)</span>
+
+                <span class="c1"># Check for symmetry of lag zero links</span>
+                <span class="k">if</span> <span class="n">lag_i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+
+                    <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">link_assumptions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
+                        <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">link_assumptions</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="ow">is</span> <span class="kc">None</span>
+                        <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">link_assumptions</span><span class="p">[</span><span class="n">i</span><span class="p">][(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reverse_link</span><span class="p">(</span><span class="n">link_ij</span><span class="p">)):</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The lag zero links specified by &quot;</span>\
+                            <span class="s2">&quot;&#39;link_assumptions&#39; must be symmetric: Because &quot;</span>\
+                            <span class="sa">f</span><span class="s2">&quot;&#39;link_assumptions&#39;[</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">][(</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="mi">0</span><span class="si">}</span><span class="s2">)] = &quot;</span>\
+                            <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">link_ij</span><span class="si">}</span><span class="s2">&#39; there must also be &quot;</span>\
+                            <span class="sa">f</span><span class="s2">&quot;&#39;link_assumptions&#39;[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">][(</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="mi">0</span><span class="si">}</span><span class="s2">)] = &quot;</span>\
+                            <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_reverse_link</span><span class="p">(</span><span class="n">link_ij</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Check for contemporaneous cycles</span>
+        <span class="n">ancs_mat_contemp_to_N</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">matrix_power</span><span class="p">(</span><span class="n">ancs_mat_contemp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">ancs_mat_contemp_to_N</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;According to &#39;link_assumptions&#39;, there is a &quot;</span>\
+                <span class="s2">&quot;contemporaneous causal cycle. Causal cycles are not allowed.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Check for almost directed cycles</span>
+        <span class="n">ancs_mat_summed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">ancs_mat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span> <span class="o">=</span> <span class="s2">&quot;int32&quot;</span><span class="p">)</span> <span class="o">-</span> <span class="n">ancs_mat</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">links_j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">link_assumptions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">lag_i</span><span class="p">),</span> <span class="n">link_ij</span> <span class="ow">in</span> <span class="n">links_j</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">link_ij</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span>
+                    <span class="ow">and</span> <span class="n">link_ij</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;&lt;&quot;</span>
+                    <span class="ow">and</span> <span class="n">ancs_mat_summed</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="o">*</span><span class="nb">abs</span><span class="p">(</span><span class="n">lag_i</span><span class="p">)</span> <span class="o">+</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Inconsistency in &#39;link_assumptions&#39;: &quot;</span>\
+                        <span class="sa">f</span><span class="s2">&quot;Since &#39;link_assumptions&#39;[</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">][(</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">lag_i</span><span class="si">}</span><span class="s2">)] &quot;</span>\
+                        <span class="sa">f</span><span class="s2">&quot;= </span><span class="si">{</span><span class="n">link_ij</span><span class="si">}</span><span class="s2">, variable (</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">lag_i</span><span class="si">}</span><span class="s2">) is a &quot;</span>\
+                        <span class="sa">f</span><span class="s2">&quot;non-ancestor (non-cause) of (</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">, 0). At the same &quot;</span>\
+                        <span class="s2">&quot;time, however, &#39;link_assumptions&#39; specifies a &quot;</span>\
+                        <span class="sa">f</span><span class="s2">&quot;directed path (causal path) from (</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">lag_i</span><span class="si">}</span><span class="s2">) to &quot;</span>\
+                        <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">, 0).&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Replace absent entries by &#39;&#39;</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">link_assumptions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">j</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">link_assumptions</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="p">{(</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="n">tau_i</span><span class="p">):</span> <span class="s2">&quot;&quot;</span>
+                    <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau_i</span><span class="p">)</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_min</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">tau_i</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">j</span><span class="p">)}</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">tau_i</span><span class="p">)</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_min</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span><span class="o">+</span><span class="mi">1</span><span class="p">)):</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">tau_i</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">j</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">link_assumptions</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="n">tau_i</span><span class="p">))</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">link_assumptions</span><span class="p">[</span><span class="n">j</span><span class="p">][(</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="n">tau_i</span><span class="p">)]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">_initialize_run_memory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Function for initializing various memory variables for storing the current graph, sepsets etc.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Function for initializing various memory variables for storing the current graph, sepsets etc.&quot;&quot;&quot;</span>
         
         <span class="c1"># Initialize the nested dictionary for storing the current graph.</span>
         <span class="c1"># Syntax: self.graph_dict[j][(i, -tau)] gives the string representing the link from X^i_{t-tau} to X^j_t</span>
@@ -468,14 +652,15 @@
         <span class="c1"># Apply the restriction imposed by tau_min</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_apply_tau_min_restriction</span><span class="p">()</span>
 
-        <span class="c1"># Apply the restriction imposed by selected_links</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_apply_selected_links_restriction</span><span class="p">()</span>
+        <span class="c1"># Apply the background knowledge given by background_knowledge</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">link_assumptions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_apply_link_assumptions</span><span class="p">()</span>
 
         <span class="c1"># Return</span>
         <span class="k">return</span> <span class="kc">True</span>
 
     <span class="k">def</span> <span class="nf">_apply_tau_min_restriction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Apply the restrictions imposed by a non-zero tau_min:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply the restrictions imposed by a non-zero tau_min:</span>
 <span class="sd">        - Remove all links of lag smaller than tau_min from self.graph_dict</span>
 <span class="sd">        - Set the corresponding entries in self.pval_max, self.pval_max_val, and self.pval_max_card to np.inf, -np.inf, np.inf</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -489,23 +674,31 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">pval_max_val</span><span class="p">[</span><span class="n">j</span><span class="p">][(</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="n">tau</span><span class="p">)]</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">pval_max_card</span><span class="p">[</span><span class="n">j</span><span class="p">][(</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="n">tau</span><span class="p">)]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
 
-    <span class="k">def</span> <span class="nf">_apply_selected_links_restriction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Apply the restrictions imposed by selected_links:</span>
-<span class="sd">        - Remove all links that have not been selected</span>
-<span class="sd">        - Set the corresponding entries in self.pval_max, self.pval_max_val, and self.pval_max_card to to np.inf, -np.inf, np.inf </span>
+    <span class="k">def</span> <span class="nf">_apply_link_assumptions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply the background knowledge specified by &#39;link_assumptions&#39;:</span>
+<span class="sd">        - Write the specified edge types to self.graph_dict</span>
+<span class="sd">        - Set the corresponding entries in self.pval_max to np.inf, in self.pval_max_val to -np.inf, and in</span>
+<span class="sd">        - to self.pval_max_card to np.inf</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">tau</span><span class="p">)</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_min</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)):</span>
-            <span class="k">if</span> <span class="p">(</span><span class="n">tau</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">j</span> <span class="o">!=</span> <span class="n">i</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="n">tau</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_links</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">graph_dict</span><span class="p">[</span><span class="n">j</span><span class="p">][(</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="n">tau</span><span class="p">)]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">links_j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">link_assumptions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">lag_i</span><span class="p">),</span> <span class="n">link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">link_assumptions</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
 
-            <span class="k">if</span> <span class="p">(</span><span class="n">tau</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">j</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="n">tau</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_links</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">pval_max</span><span class="p">[</span><span class="n">j</span><span class="p">][(</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="n">tau</span><span class="p">)]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">pval_max_val</span><span class="p">[</span><span class="n">j</span><span class="p">][(</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="n">tau</span><span class="p">)]</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">pval_max_card</span><span class="p">[</span><span class="n">j</span><span class="p">][(</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="n">tau</span><span class="p">)]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+                <span class="c1"># Apply background knowledge</span>
+                <span class="k">if</span> <span class="n">link</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span> <span class="ow">and</span> <span class="n">link</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;?&quot;</span> <span class="ow">and</span> <span class="n">lag_i</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_cond_px</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_middle_marks</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">graph_dict</span><span class="p">[</span><span class="n">j</span><span class="p">][(</span><span class="n">i</span><span class="p">,</span> <span class="n">lag_i</span><span class="p">)]</span> <span class="o">=</span> <span class="n">link</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;L&quot;</span> <span class="o">+</span> <span class="n">link</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">graph_dict</span><span class="p">[</span><span class="n">j</span><span class="p">][(</span><span class="n">i</span><span class="p">,</span> <span class="n">lag_i</span><span class="p">)]</span> <span class="o">=</span> <span class="n">link</span>
+
+                <span class="c1"># If background knowledge amounts to absence of link, set the corresponding entries in</span>
+                <span class="c1"># self.pval_max to 2, in self.pval_max_val to -np.inf, and in self.pval_max_card to None to np.inf</span>
+                <span class="k">if</span> <span class="n">link</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span> <span class="ow">and</span> <span class="p">(</span><span class="n">lag_i</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">j</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">pval_max</span><span class="p">[</span><span class="n">j</span><span class="p">][(</span><span class="n">i</span><span class="p">,</span> <span class="n">lag_i</span><span class="p">)]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">pval_max_val</span><span class="p">[</span><span class="n">j</span><span class="p">][(</span><span class="n">i</span><span class="p">,</span> <span class="n">lag_i</span><span class="p">)]</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">pval_max_card</span><span class="p">[</span><span class="n">j</span><span class="p">][(</span><span class="n">i</span><span class="p">,</span> <span class="n">lag_i</span><span class="p">)]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
 
     <span class="k">def</span> <span class="nf">_run_ancestral_removal_phase</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prelim</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Run an ancestral edge removal phase, this is Algorithm S2&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run an ancestral edge removal phase, this is Algorithm S2&quot;&quot;&quot;</span>
 
         <span class="c1"># Iterate until convergence</span>
         <span class="c1"># p_pc is the cardinality of the non-default part of the conditioning sets. The full conditioning sets may have</span>
@@ -833,7 +1026,7 @@
 
 
     <span class="k">def</span> <span class="nf">_run_non_ancestral_removal_phase</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Run the non-ancestral edge removal phase, this is Algorithm S3&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run the non-ancestral edge removal phase, this is Algorithm S3&quot;&quot;&quot;</span>
 
         <span class="c1"># Update of middle marks</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_middle_marks</span><span class="p">()</span>
@@ -1125,7 +1318,7 @@
 
 
     <span class="k">def</span> <span class="nf">_run_orientation_phase</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rule_list</span><span class="p">,</span> <span class="n">only_lagged</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Exhaustively apply the rules specified by rule_list, this is Algorithm S4&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Exhaustively apply the rules specified by rule_list, this is Algorithm S4&quot;&quot;&quot;</span>
 
         <span class="c1"># Verbose output</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
@@ -1300,7 +1493,7 @@
     <span class="c1">########################################################################################################################</span>
 
     <span class="k">def</span> <span class="nf">_get_default_and_search_sets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">phase</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the default conditioning set and PC search set&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the default conditioning set and PC search set&quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">phase</span> <span class="o">==</span> <span class="s2">&quot;ancestral&quot;</span><span class="p">:</span>
 
@@ -1334,7 +1527,7 @@
 
 
     <span class="k">def</span> <span class="nf">_apply_new_ancestral_information</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_non_ancs</span><span class="p">,</span> <span class="n">new_ancs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Apply the new ancestorships and non-ancestorships specified by new_non_ancs and new_ancs to the current graph. Conflicts</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply the new ancestorships and non-ancestorships specified by new_non_ancs and new_ancs to the current graph. Conflicts</span>
 <span class="sd">        are resolved by marking. Returns True if any circle mark was turned into a head or tail, else False.&quot;&quot;&quot;</span>
 
         <span class="c1">#######################################################################################################</span>
@@ -1512,7 +1705,7 @@
         <span class="k">return</span> <span class="n">put_head_or_tail</span>
 
     <span class="k">def</span> <span class="nf">_apply_rule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rule</span><span class="p">,</span> <span class="n">only_lagged</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Call the orientation-removal-rule specified by the string argument rule.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Call the orientation-removal-rule specified by the string argument rule.&quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">rule</span> <span class="o">==</span> <span class="s2">&quot;APR&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_APR</span><span class="p">(</span><span class="n">only_lagged</span><span class="p">)</span>
@@ -1541,7 +1734,7 @@
 
 
     <span class="k">def</span> <span class="nf">_get_na_pds_t</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the set na_pds_t(A, B), with at least one of them at lag 0&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the set na_pds_t(A, B), with at least one of them at lag 0&quot;&quot;&quot;</span>
 
         <span class="c1"># Unpack A and B, then assert that at least one of them is at lag 0</span>
         <span class="n">var_A</span><span class="p">,</span> <span class="n">lag_A</span> <span class="o">=</span> <span class="n">A</span>
@@ -1671,7 +1864,7 @@
 
 
     <span class="k">def</span> <span class="nf">_make_sepset_weakly_minimal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z_list</span><span class="p">,</span> <span class="n">ancs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        X and Y are conditionally independent given Z in Z_list However, it is not yet clear whether any of these Z are minimal</span>
 <span class="sd">        separating set.</span>
 
@@ -1755,7 +1948,7 @@
 
 
     <span class="k">def</span> <span class="nf">_B_not_in_SepSet_AC</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Is B in less than half of the sets in SepSets(A, C)?&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Is B in less than half of the sets in SepSets(A, C)?&quot;&quot;&quot;</span>
 
         <span class="c1"># Treat A - B - C as the same triple as C - B - A</span>
         <span class="c1"># Convention: A is before C or, if they are contemporaneous, the index of A is smaller than that of C</span>
@@ -1865,7 +2058,7 @@
 
 
     <span class="k">def</span> <span class="nf">_B_in_SepSet_AC</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Is B in more than half of the sets in SepSets(A, C)?&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Is B in more than half of the sets in SepSets(A, C)?&quot;&quot;&quot;</span>
 
         <span class="c1"># Treat A - B - C as the same triple as C - B - A</span>
         <span class="c1"># Convention: A is before C or, if they are contemporaneous, the index of A is smaller than that of C</span>
@@ -1993,7 +2186,7 @@
 
 
     <span class="k">def</span> <span class="nf">_get_parents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return all known parents of all nodes in node_list&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return all known parents of all nodes in node_list&quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parents_of_lagged</span> <span class="ow">or</span> <span class="n">A</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">B</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
 
@@ -2008,7 +2201,7 @@
 
 
     <span class="k">def</span> <span class="nf">_apply_middle_mark</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">char</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Update the middle mark on the link between X and Y with the character char&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update the middle mark on the link between X and Y with the character char&quot;&quot;&quot;</span>
 
         <span class="c1"># Get the old link</span>
         <span class="n">old_link</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_link</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
@@ -2029,7 +2222,7 @@
 
 
     <span class="k">def</span> <span class="nf">_update_middle_marks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Apply rule MMR&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply rule MMR&quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Middle mark updates</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -2087,7 +2280,7 @@
                         <span class="bp">self</span><span class="o">.</span><span class="n">_write_link</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">new_link</span><span class="p">,</span> <span class="n">verbosity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
     
     <span class="k">def</span> <span class="nf">_is_smaller</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A node X is said to be smaller than node Y if</span>
 <span class="sd">        i)  X is before Y or</span>
 <span class="sd">        ii) X and Y are contemporaneous and the variable index of X is smaller than that of Y.</span>
@@ -2099,7 +2292,7 @@
 
 
     <span class="k">def</span> <span class="nf">_get_a_pds_t</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the set a_pds_t(A, B)&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the set a_pds_t(A, B)&quot;&quot;&quot;</span>
 
         <span class="c1"># Unpack A and assert that A is at lag 0</span>
         <span class="n">var_A</span><span class="p">,</span> <span class="n">lag_A</span> <span class="o">=</span> <span class="n">A</span>
@@ -2120,7 +2313,7 @@
 
 
     <span class="k">def</span> <span class="nf">_get_ancs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_list</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the currently known set of ancestors of all nodes in the list node_list. The nodes are not required to be at</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the currently known set of ancestors of all nodes in the list node_list. The nodes are not required to be at</span>
 <span class="sd">        lag 0&quot;&quot;&quot;</span>
 
         <span class="c1"># Build the output set</span>
@@ -2138,7 +2331,7 @@
 
 
     <span class="k">def</span> <span class="nf">_get_non_ancs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_list</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the currently known set of non-ancestors of all nodes in the list node_list. The nodes are not required to be</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the currently known set of non-ancestors of all nodes in the list node_list. The nodes are not required to be</span>
 <span class="sd">        at lag 0&quot;&quot;&quot;</span>
 
         <span class="c1"># Build the output set</span>
@@ -2156,7 +2349,7 @@
 
 
     <span class="k">def</span> <span class="nf">_fix_all_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Remove all non-trivial orientations&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove all non-trivial orientations&quot;&quot;&quot;</span>
 
         <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
             <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">lag_i</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_dict</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
@@ -2171,7 +2364,7 @@
     <span class="c1">########################################################################################################################</span>
 
     <span class="k">def</span> <span class="nf">_apply_APR</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">only_lagged</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return all orientations implied by orientation rule APR&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return all orientations implied by orientation rule APR&quot;&quot;&quot;</span>
 
         <span class="c1"># Build the output list</span>
         <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
@@ -2203,7 +2396,7 @@
         <span class="k">return</span> <span class="n">out</span>
 
     <span class="k">def</span> <span class="nf">_apply_ER01</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">only_lagged</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return all orientations implied by orientation rule R1^prime&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return all orientations implied by orientation rule R1^prime&quot;&quot;&quot;</span>
 
         <span class="c1"># Build the output list</span>
         <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
@@ -2235,7 +2428,7 @@
         <span class="k">return</span> <span class="n">out</span>
 
     <span class="k">def</span> <span class="nf">_apply_ER02</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">only_lagged</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return all orientations implied by orientation rule R2^prime&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return all orientations implied by orientation rule R2^prime&quot;&quot;&quot;</span>
 
         <span class="c1"># Build the output list</span>
         <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
@@ -2262,7 +2455,7 @@
 
 
     <span class="k">def</span> <span class="nf">_apply_ER03</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">only_lagged</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return all orientations implied by orientation rule R3^prime&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return all orientations implied by orientation rule R3^prime&quot;&quot;&quot;</span>
 
         <span class="c1"># Build the output list</span>
         <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
@@ -2290,7 +2483,7 @@
 
 
     <span class="k">def</span> <span class="nf">_apply_R04</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">only_lagged</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return all orientations implied by orientation rule R4 (standard FCI rule)&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return all orientations implied by orientation rule R4 (standard FCI rule)&quot;&quot;&quot;</span>
 
         <span class="c1"># Build the output list</span>
         <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
@@ -2338,7 +2531,7 @@
 
 
     <span class="k">def</span> <span class="nf">_apply_ER08</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">only_lagged</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return all orientations implied by orientation rule R8^prime&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return all orientations implied by orientation rule R8^prime&quot;&quot;&quot;</span>
 
         <span class="c1"># Build the output list</span>
         <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
@@ -2364,7 +2557,7 @@
 
 
     <span class="k">def</span> <span class="nf">_apply_ER09</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">only_lagged</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return all orientations implied by orientation rule R9^prime&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return all orientations implied by orientation rule R9^prime&quot;&quot;&quot;</span>
 
         <span class="c1"># Build the output list</span>
         <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
@@ -2458,7 +2651,7 @@
 
 
     <span class="k">def</span> <span class="nf">_apply_ER10</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">only_lagged</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return all orientations implied by orientation rule R10^prime&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return all orientations implied by orientation rule R10^prime&quot;&quot;&quot;</span>
 
         <span class="c1"># Build the output list</span>
         <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
@@ -2544,7 +2737,7 @@
 
 
     <span class="k">def</span> <span class="nf">_apply_ER00a</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">only_lagged</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return all orientations implied by orientation rule R0^prime a&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return all orientations implied by orientation rule R0^prime a&quot;&quot;&quot;</span>
 
         <span class="c1"># Build the output list</span>
         <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
@@ -2707,7 +2900,7 @@
 
 
     <span class="k">def</span> <span class="nf">_apply_ER00b</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">only_lagged</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return all orientations implied by orientation rule R0^prime b&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return all orientations implied by orientation rule R0^prime b&quot;&quot;&quot;</span>
 
         <span class="c1"># Build the output list</span>
         <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
@@ -2813,7 +3006,7 @@
 
 
     <span class="k">def</span> <span class="nf">_apply_ER00c</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">only_lagged</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return all orientations implied by orientation rule R0^prime c&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return all orientations implied by orientation rule R0^prime c&quot;&quot;&quot;</span>
 
         <span class="c1"># Build the output list</span>
         <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
@@ -2846,7 +3039,7 @@
 
 
     <span class="k">def</span> <span class="nf">_apply_ER00d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">only_lagged</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return all orientations implied by orientation rule R0^prime d&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return all orientations implied by orientation rule R0^prime d&quot;&quot;&quot;</span>
 
         <span class="c1"># Build the output list</span>
         <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
@@ -2888,7 +3081,7 @@
     <span class="c1">########################################################################################################################</span>
 
     <span class="k">def</span> <span class="nf">_print_graph_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Print all links in graph_dict&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Print all links in graph_dict&quot;&quot;&quot;</span>
 
         <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
             <span class="k">for</span> <span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">lag_i</span><span class="p">),</span> <span class="n">link</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_dict</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -2897,7 +3090,7 @@
 
 
     <span class="k">def</span> <span class="nf">_get_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the current link from node A to B&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the current link from node A to B&quot;&quot;&quot;</span>
 
         <span class="p">(</span><span class="n">var_A</span><span class="p">,</span> <span class="n">lag_A</span><span class="p">)</span> <span class="o">=</span> <span class="n">A</span>
         <span class="p">(</span><span class="n">var_B</span><span class="p">,</span> <span class="n">lag_B</span><span class="p">)</span> <span class="o">=</span> <span class="n">B</span>
@@ -2911,7 +3104,7 @@
 
 
     <span class="k">def</span> <span class="nf">_get_non_future_adj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_list</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return all non-future adjacencies of all nodes in node_list&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return all non-future adjacencies of all nodes in node_list&quot;&quot;&quot;</span>
 
         <span class="c1"># Build the output starting from an empty set</span>
         <span class="n">out</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
@@ -2927,7 +3120,7 @@
         <span class="k">return</span> <span class="n">out</span>
 
     <span class="k">def</span> <span class="nf">_update_pval_val_card_dicts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">pval</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">card</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;If &#39;pval&#39; is larger than the current maximal p-value across all previous independence tests for X and Y (stored in self.pval_max)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;If &#39;pval&#39; is larger than the current maximal p-value across all previous independence tests for X and Y (stored in self.pval_max)</span>
 <span class="sd">        then: Replace the current values stored in self.pval_max, self.pval_max_val, self.pval_max_card respectively by &#39;pval&#39;, &#39;val&#39;, and &#39;card&#39;.&quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">X</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">Y</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
@@ -2942,7 +3135,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">pval_max_card</span><span class="p">[</span><span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="n">Y</span><span class="p">]</span> <span class="o">=</span> <span class="n">card</span>
 
     <span class="k">def</span> <span class="nf">_save_sepset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Save Z as separating sets of X and Y. Y is assumed to be at lag 0&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Save Z as separating sets of X and Y. Y is assumed to be at lag 0&quot;&quot;&quot;</span>
 
         <span class="c1"># Unpack X and Y</span>
         <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">lag_i</span><span class="p">)</span> <span class="o">=</span> <span class="n">X</span>
@@ -2957,7 +3150,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">sepsets</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">Y</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_reverse_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Reverse a given link, taking care to replace &gt; with &lt; and vice versa&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reverse a given link, taking care to replace &gt; with &lt; and vice versa&quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">link</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;&quot;</span>
@@ -2976,7 +3169,7 @@
 
 
     <span class="k">def</span> <span class="nf">_write_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">new_link</span><span class="p">,</span> <span class="n">verbosity</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Write the information that the link from node A to node B takes the form of new_link into self.graph_dict. Neither is it assumed</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write the information that the link from node A to node B takes the form of new_link into self.graph_dict. Neither is it assumed</span>
 <span class="sd">        that at least of the nodes is at lag 0, nor must A be before B. If A and B are contemporaneous, also the link from B to A is written</span>
 <span class="sd">        as the reverse of new_link&quot;&quot;&quot;</span>
 
@@ -3015,7 +3208,7 @@
 
 
     <span class="k">def</span> <span class="nf">_get_sepsets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;For two non-adjacent nodes, get the their separating stored in self.sepsets.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;For two non-adjacent nodes, get the their separating stored in self.sepsets.&quot;&quot;&quot;</span>
 
         <span class="p">(</span><span class="n">var_A</span><span class="p">,</span> <span class="n">lag_A</span><span class="p">)</span> <span class="o">=</span> <span class="n">A</span>
         <span class="p">(</span><span class="n">var_B</span><span class="p">,</span> <span class="n">lag_B</span><span class="p">)</span> <span class="o">=</span> <span class="n">B</span>
@@ -3034,7 +3227,7 @@
 
 
     <span class="k">def</span> <span class="nf">_initialize_full_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The function _get_na_pds_t() needs to know the future adjacencies of a given node, not only the non-future adjacencies that are</span>
 <span class="sd">        stored in self.graph_dict. To aid this, this function initializes the dictionary graph_full_dict:</span>
 
@@ -3061,7 +3254,7 @@
 
 
     <span class="k">def</span> <span class="nf">_get_pair_key_and_new_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">link_AB</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The link from A to B takes the form link_AB. Bring this information into a form appropriate for the output of rule applications&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The link from A to B takes the form link_AB. Bring this information into a form appropriate for the output of rule applications&quot;&quot;&quot;</span>
 
         <span class="p">(</span><span class="n">var_A</span><span class="p">,</span> <span class="n">lag_A</span><span class="p">)</span> <span class="o">=</span> <span class="n">A</span>
         <span class="p">(</span><span class="n">var_B</span><span class="p">,</span> <span class="n">lag_B</span><span class="p">)</span> <span class="o">=</span> <span class="n">B</span>
@@ -3073,7 +3266,7 @@
 
 
     <span class="k">def</span> <span class="nf">_match_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pattern</span><span class="p">,</span> <span class="n">link</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Matches pattern including wildcards with link.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Matches pattern including wildcards with link.&quot;&quot;&quot;</span>
         
         <span class="k">if</span> <span class="n">pattern</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span> <span class="ow">or</span> <span class="n">link</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">pattern</span> <span class="o">==</span> <span class="n">link</span> <span class="k">else</span> <span class="kc">False</span>
@@ -3097,7 +3290,7 @@
 
 
     <span class="k">def</span> <span class="nf">_dict2graph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Convert self.graph_dict to graph array of shape (N, N, self.tau_max + 1).&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert self.graph_dict to graph array of shape (N, N, self.tau_max + 1).&quot;&quot;&quot;</span>
 
         <span class="n">graph</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;U3&#39;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
@@ -3109,7 +3302,7 @@
 
 
     <span class="k">def</span> <span class="nf">_find_adj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">patterns</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ignore_time_bounds</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Find adjacencies of node matching patterns.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find adjacencies of node matching patterns.&quot;&quot;&quot;</span>
         
         <span class="c1"># Setup</span>
         <span class="n">i</span><span class="p">,</span> <span class="n">lag_i</span> <span class="o">=</span> <span class="n">node</span>
@@ -3139,7 +3332,7 @@
         
 
     <span class="k">def</span> <span class="nf">_is_match</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">pattern_ij</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Check whether the link between X and Y agrees with pattern_ij&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check whether the link between X and Y agrees with pattern_ij&quot;&quot;&quot;</span>
 
         <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">lag_i</span><span class="p">)</span> <span class="o">=</span> <span class="n">X</span>
         <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">lag_j</span><span class="p">)</span> <span class="o">=</span> <span class="n">Y</span>
@@ -3151,7 +3344,7 @@
 
 
     <span class="k">def</span> <span class="nf">_find_triples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pattern_ij</span><span class="p">,</span> <span class="n">pattern_jk</span><span class="p">,</span> <span class="n">pattern_ik</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Find triples (i, lag_i), (j, lag_j), (k, lag_k) that match patterns.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find triples (i, lag_i), (j, lag_j), (k, lag_k) that match patterns.&quot;&quot;&quot;</span>
   
         <span class="c1"># Graph as array makes it easier to search forward AND backward in time</span>
         <span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dict2graph</span><span class="p">()</span>
@@ -3190,7 +3383,7 @@
 
     <span class="k">def</span> <span class="nf">_find_quadruples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pattern_ij</span><span class="p">,</span> <span class="n">pattern_jk</span><span class="p">,</span> <span class="n">pattern_ik</span><span class="p">,</span> 
                                <span class="n">pattern_il</span><span class="p">,</span> <span class="n">pattern_jl</span><span class="p">,</span> <span class="n">pattern_kl</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Find quadruples (i, lag_i), (j, lag_j), (k, lag_k), (l, lag_l) that match patterns.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find quadruples (i, lag_i), (j, lag_j), (k, lag_k), (l, lag_l) that match patterns.&quot;&quot;&quot;</span>
   
         <span class="c1"># We assume this later</span>
         <span class="k">assert</span> <span class="n">pattern_il</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span>
@@ -3250,7 +3443,7 @@
 
 
     <span class="k">def</span> <span class="nf">_get_R4_discriminating_paths</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">triple</span><span class="p">,</span> <span class="n">max_length</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Find all discriminating paths starting from triple&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find all discriminating paths starting from triple&quot;&quot;&quot;</span>
 
         <span class="k">def</span> <span class="nf">_search</span><span class="p">(</span><span class="n">path_taken</span><span class="p">,</span> <span class="n">max_length</span><span class="p">):</span>
 
@@ -3291,7 +3484,7 @@
 
 
     <span class="k">def</span> <span class="nf">_get_potentially_directed_uncovered_paths</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_node</span><span class="p">,</span> <span class="n">end_node</span><span class="p">,</span> <span class="n">initial_allowed_patterns</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Find all potentiall directed uncoverged paths from start_node to end_node whose first link takes one the forms specified by</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find all potentiall directed uncoverged paths from start_node to end_node whose first link takes one the forms specified by</span>
 <span class="sd">        initial_allowed_patters&quot;&quot;&quot;</span>
 
         <span class="k">assert</span> <span class="n">start_node</span> <span class="o">!=</span> <span class="n">end_node</span>
@@ -3355,7 +3548,7 @@
 
 
     <span class="k">def</span> <span class="nf">_sort_search_set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">search_set</span><span class="p">,</span> <span class="n">reference_node</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Sort the nodes in search_set by their values in self.pval_max_val with respect to the reference_node. Nodes with higher absolute</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sort the nodes in search_set by their values in self.pval_max_val with respect to the reference_node. Nodes with higher absolute</span>
 <span class="sd">        values appear earlier&quot;&quot;&quot;</span>
 
         <span class="n">sort_by_potential_minus_infs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_pval_max_val</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">reference_node</span><span class="p">)</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">search_set</span><span class="p">]</span>
@@ -3364,7 +3557,7 @@
         <span class="k">return</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">sort_by</span><span class="p">,</span> <span class="n">search_set</span><span class="p">),</span> <span class="n">reverse</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)]</span>
 
     <span class="k">def</span> <span class="nf">_get_pval_max_val</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the test statistic value of that independence test for X and Y which, among all such tests, has the largest p-value.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the test statistic value of that independence test for X and Y which, among all such tests, has the largest p-value.&quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">X</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">Y</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pval_max_val</span><span class="p">[</span><span class="n">Y</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="n">X</span><span class="p">]</span>
@@ -3372,7 +3565,7 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pval_max_val</span><span class="p">[</span><span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="n">Y</span><span class="p">]</span>    
 
     <span class="k">def</span> <span class="nf">_delete_sepsets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Delete all separating sets of X and Y. Y is assumed to be at lag 0&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Delete all separating sets of X and Y. Y is assumed to be at lag 0&quot;&quot;&quot;</span>
 
         <span class="c1"># Unpack X and Y</span>
         <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">lag_i</span><span class="p">)</span> <span class="o">=</span> <span class="n">X</span>
@@ -3482,8 +3675,8 @@
       &copy;2022, Jakob Runge.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.1.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
     </div>
 

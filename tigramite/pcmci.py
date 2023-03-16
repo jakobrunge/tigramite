@@ -830,9 +830,10 @@ class PCMCI(PCMCIbase):
         # Get the condition string for node
         condx_str = self._mci_condition_to_string(conds_x_lagged)
         # Formate and print the information
+        link_marker = {True:"o?o", False:"-?>"}
         indent = "\n        "
         print_str = indent + "link (%s % d) " % (self.var_names[i], tau)
-        print_str += "to %s (%d/%d):" % (
+        print_str += "%s %s (%d/%d):" % (link_marker[tau==0],
             self.var_names[j], count + 1, n_parents)
         print_str += indent + "with conds_y = %s" % (condy_str)
         print_str += indent + "with conds_x = %s" % (condx_str)
@@ -1947,6 +1948,7 @@ class PCMCI(PCMCIbase):
                       conflict_resolution=True,
                       reset_lagged_links=False,
                       max_conds_dim=None,
+                      max_combinations=1,
                       max_conds_py=None,
                       max_conds_px=None,
                       max_conds_px_lagged=None,
@@ -2143,6 +2145,10 @@ class PCMCI(PCMCIbase):
         max_conds_dim : int, optional (default: None)
             Maximum number of conditions to test. If None is passed, this number
             is unrestricted.
+        max_combinations : int, optional (default: 1)
+            Maximum number of combinations of conditions of current cardinality
+            to test. Defaults to 1 for PC_1 algorithm. For original PC algorithm
+            a larger number, such as 10, can be used.
         max_conds_py : int, optional (default: None)
             Maximum number of lagged conditions of Y to use in MCI tests. If
             None is passed, this number is unrestricted.
@@ -2186,6 +2192,7 @@ class PCMCI(PCMCIbase):
                         conflict_resolution=conflict_resolution,
                         reset_lagged_links=reset_lagged_links,
                         max_conds_dim=max_conds_dim,
+                        max_combinations=max_combinations,
                         max_conds_py=max_conds_py,
                         max_conds_px=max_conds_px,
                         max_conds_px_lagged=max_conds_px_lagged,
@@ -2197,9 +2204,6 @@ class PCMCI(PCMCIbase):
 
         if pc_alpha < 0. or pc_alpha > 1:
             raise ValueError("Choose 0 <= pc_alpha <= 1")
-
-        # For the lagged PC algorithm only the strongest conditions are tested
-        max_combinations = 1
 
         # Check the limits on tau
         self._check_tau_limits(tau_min, tau_max)
@@ -2272,7 +2276,7 @@ class PCMCI(PCMCIbase):
             tau_min=tau_min,
             tau_max=tau_max,
             max_conds_dim=max_conds_dim,
-            max_combinations=None,
+            max_combinations=max_combinations,
             lagged_parents=lagged_parents,
             max_conds_py=max_conds_py,
             max_conds_px=max_conds_px,
@@ -3619,6 +3623,7 @@ class PCMCI(PCMCIbase):
                       conflict_resolution,
                       reset_lagged_links,
                       max_conds_dim,
+                      max_combinations,
                       max_conds_py,
                       max_conds_px,
                       max_conds_px_lagged,
@@ -3667,6 +3672,7 @@ class PCMCI(PCMCIbase):
                                     conflict_resolution=conflict_resolution,
                                     reset_lagged_links=reset_lagged_links,
                                     max_conds_dim=max_conds_dim,
+                                    max_combinations=max_combinations,
                                     max_conds_py=max_conds_py,
                                     max_conds_px=max_conds_px,
                                     max_conds_px_lagged=max_conds_px_lagged,
@@ -3724,20 +3730,18 @@ if __name__ == '__main__':
     from tigramite.toymodels import structural_causal_processes as toys
     import tigramite.plotting as tp
     from matplotlib import pyplot as plt
-    np.random.seed(43)
 
+    random_state = np.random.default_rng(seed=43)
     # Example process to play around with
     # Each key refers to a variable and the incoming links are supplied
     # as a list of format [((var, -lag), coeff, function), ...]
     def lin_f(x): return x
     def nonlin_f(x): return (x + 5. * x ** 2 * np.exp(-x ** 2 / 20.))
 
-
-    np.random.seed(42)
     T = 2000
-    data = np.random.randn(T, 4)
+    data = random_state.standar_normal((T, 4))
     # Simple sun
-    data[:,3] = np.sin(np.arange(T)*20/np.pi) + 0.1*np.random.randn(T)
+    data[:,3] = np.sin(np.arange(T)*20/np.pi) + 0.1*random_state.standar_normal((T))
     c = 0.8
     for t in range(1, T):
         data[t, 0] += 0.4*data[t-1, 0] + 0.4*data[t-1, 1] + c*data[t-1,3]

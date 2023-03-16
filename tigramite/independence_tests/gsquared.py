@@ -44,6 +44,10 @@ class Gsquared(CondIndTest):
 
     Parameters
     ----------
+    n_symbs : int, optional (default: None)
+        Number of symbols in input data. Should be at least as large as the
+        maximum array entry + 1. If None, n_symbs is inferred by scipy's crosstab
+
     **kwargs :
         Arguments passed on to parent class CondIndTest.
     """
@@ -165,19 +169,20 @@ if __name__ == '__main__':
     import tigramite.data_processing as pp
     import numpy as np
 
-    np.random.seed(42)
+    seed=42
+    random_state = np.random.default_rng(seed=seed)
     cmi = Gsquared()
 
     T = 1000
     dimz = 3
-    z = np.random.binomial(n=1, p=0.5, size=(T, dimz)).reshape(T, dimz)
+    z = random_state.binomial(n=1, p=0.5, size=(T, dimz)).reshape(T, dimz)
     x = np.empty(T).reshape(T, 1)
     y = np.empty(T).reshape(T, 1)
     for t in range(T):
         val = z[t, 0].squeeze()
         prob = 0.2+val*0.6
-        x[t] = np.random.choice([0,1], p=[prob, 1.-prob])
-        y[t] = np.random.choice([0,1, 2], p=[prob, (1.-prob)/2., (1.-prob)/2.])
+        x[t] = random_state.choice([0,1], p=[prob, 1.-prob])
+        y[t] = random_state.choice([0,1, 2], p=[prob, (1.-prob)/2., (1.-prob)/2.])
 
     print('start')
     print(cmi.run_test_raw(x, y, z=None))

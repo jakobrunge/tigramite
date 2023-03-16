@@ -514,9 +514,8 @@ class LinearMediation(Models):
 
     Examples
     --------
-    >>> numpy.random.seed(42)
     >>> links_coeffs = {0: [], 1: [((0, -1), 0.5)], 2: [((1, -1), 0.5)]}
-    >>> data, true_parents = toys.var_process(links_coeffs, T=1000)
+    >>> data, true_parents = toys.var_process(links_coeffs, T=1000, seed=42)
     >>> dataframe = pp.DataFrame(data)
     >>> med = LinearMediation(dataframe=dataframe)
     >>> med.fit_model(all_parents=true_parents, tau_max=3)
@@ -1840,8 +1839,6 @@ if __name__ == '__main__':
     from tigramite.toymodels import structural_causal_processes as toys
     from tigramite.independence_tests import ParCorr
     import tigramite.plotting as tp
-
-    # np.random.seed(6)
 
     def lin_f(x): return x
  

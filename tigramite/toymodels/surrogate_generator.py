@@ -30,9 +30,9 @@ def generate_linear_model_from_data(dataframe, parents, tau_max, realizations=10
     
     Parameters
     ----------
-    generate_noise_from : {'coveriance', 'residuals'}
+    generate_noise_from : {'covariance', 'residuals'}
         Whether to generate the noise from a gaussian with same mean and covariance
-        as residuals, or by drawing (with replacement) from the resisuals.
+        as residuals, or by drawing (with replacement) from the residuals.
     boot_blocklength : int, or in {'cube_root', 'from_autocorrelation'}
         Block length for block-bootstrap, which only applies to
         generate_noise_from='residuals'. If 'from_autocorrelation', the block
@@ -66,7 +66,7 @@ def generate_linear_model_from_data(dataframe, parents, tau_max, realizations=10
                      test_indices=range(T),
                      prediction_model=LinearRegression(**model_params),
                      data_transform=data_transform,
-                     mask_type=mask_type,
+                     # mask_type=mask_type,
                      verbosity=0)
 
     prediction.fit(target_predictors=parents, tau_max=tau_max, return_data=True)
@@ -140,7 +140,7 @@ def generate_linear_model_from_data(dataframe, parents, tau_max, realizations=10
 
     for r in range(realizations):
         if generate_noise_from == 'covariance':
-            noises = np.random.multivariate_normal(mean=mean, cov=cov, size=size)
+            noises = random_state.multivariate_normal(mean=mean, cov=cov, size=size)
         elif generate_noise_from == 'residuals':
 
             # Get the starting indices for the blocks
@@ -289,8 +289,7 @@ if __name__ == '__main__':
 
     import tigramite
     from tigramite import data_processing as pp
-    
-    np.random.seed(14)     # Fix random seed
+
     lin_f = lambda x: x
     links_coeffs = {0: [((0, -1), 0.98, lin_f), ((0, -2), -0.7, lin_f)],
                     1: [((1, -1), 0.9, lin_f), ((0, -1), 0.3, lin_f)],

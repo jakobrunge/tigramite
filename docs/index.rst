@@ -1,5 +1,5 @@
 .. Tigramite documentation master file, created by
-   sphinx-quickstart on Wed Oct  5 18:51:08 2022.
+   sphinx-quickstart on Wed Oct  5 18:51:08 2023.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
@@ -66,9 +66,13 @@ Tigramite is a causal time series analysis python package. It allows to efficien
    tigramite.independence_tests.gpdc.GPDC
    tigramite.independence_tests.gpdc_torch.GPDCtorch
    tigramite.independence_tests.cmiknn.CMIknn
-   tigramite.independence_tests.cmisymb.CMIsymb  
+   tigramite.independence_tests.cmiknnmixed.CMIknnMixed
+   tigramite.independence_tests.cmisymb.CMIsymb
    tigramite.independence_tests.oracle_conditional_independence.OracleCI
    tigramite.independence_tests.parcorr_mult.ParCorrMult
+   tigramite.independence_tests.gsquared.Gsquared
+   tigramite.independence_tests.parcorr_wls.ParCorrWLS
+   tigramite.independence_tests.regressionCI.RegressionCI
    tigramite.causal_effects.CausalEffects
    tigramite.models.Models
    tigramite.models.LinearMediation
@@ -97,39 +101,45 @@ Tigramite is a causal time series analysis python package. It allows to efficien
 
 Base class:
 
-.. autoclass:: tigramite.independence_tests.CondIndTest
+.. autoclass:: tigramite.independence_tests.independence_tests_base.CondIndTest
    :members:
 
 Test statistics:
 
-.. autoclass:: tigramite.independence_tests.ParCorr
+.. autoclass:: tigramite.independence_tests.parcorr.ParCorr
    :members:
 
-.. autoclass:: tigramite.independence_tests.RobustParCorr
+.. autoclass:: tigramite.independence_tests.robust_parcorr.RobustParCorr
    :members:
 
-.. autoclass:: tigramite.independence_tests.GPDC
+.. autoclass:: tigramite.independence_tests.gpdc.GPDC
    :members:
 
-.. autoclass:: tigramite.independence_tests.GPDCtorch
+.. autoclass:: tigramite.independence_tests.gpdc_torch.GPDCtorch
    :members:
 
-.. autoclass:: tigramite.independence_tests.CMIknn
+.. autoclass:: tigramite.independence_tests.cmiknn.CMIknn
+   :members:
+
+.. autoclass:: tigramite.independence_tests.cmiknnmixed.CMIknnMixed
    :members:
    
-.. autoclass:: tigramite.independence_tests.CMIsymb
+.. autoclass:: tigramite.independence_tests.cmisymb.CMIsymb
    :members:
 
-.. autoclass:: tigramite.independence_tests.OracleCI
+.. autoclass:: tigramite.independence_tests.oracle_conditional_independence.OracleCI
    :members:
 
-.. autoclass:: tigramite.independence_tests.ParCorrMult
+.. autoclass:: tigramite.independence_tests.parcorr_mult.ParCorrMult
    :members:
 
-.. autoclass:: tigramite.independence_tests.Gsquared
+.. autoclass:: tigramite.independence_tests.gsquared.Gsquared
    :members:
 
-.. autoclass:: tigramite.independence_tests.CMIknnMixed
+.. autoclass:: tigramite.independence_tests.parcorr_wls.ParCorrWLS
+   :members:
+
+.. autoclass:: tigramite.independence_tests.regressionCI.RegressionCI
    :members:
 
 :mod:`tigramite.causal_effects`: Causal Effect analysis

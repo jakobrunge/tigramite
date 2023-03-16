@@ -33,7 +33,7 @@ class GaussProcReg():
         Number of null samples to use
 
     cond_ind_test : CondIndTest
-        Conditional independence test that this Gaussian Proccess Regressor will
+        Conditional independence test that this Gaussian Process Regressor will
         calculate the null distribution for.  This is used to grab the
         get_dependence_measure function.
 

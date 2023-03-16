@@ -46,6 +46,7 @@ class GaussProcRegTorch():
                  null_samples,
                  cond_ind_test,
                  null_dist_filename=None,
+                 checkpoint_size=None,
                  verbosity=0):
         # Set the dependence measure function
         self.cond_ind_test = cond_ind_test
@@ -60,7 +61,7 @@ class GaussProcRegTorch():
             self.null_dists, self.null_samples = \
                 self._load_nulldist(self.null_dist_filename)
         # Size for batching
-        self.checkpoint_size = None
+        self.checkpoint_size = checkpoint_size
 
     def _load_nulldist(self, filename):
         r"""

@@ -1,5 +1,5 @@
 # Tigramite – Causal inference and causal discovery for time series datasets
-Version 5.0
+Version 5.2
 
 (Python Package)
 
@@ -9,7 +9,7 @@ Version 5.0
 
 [Tutorials](https://github.com/jakobrunge/tigramite/tree/master/tutorials/)
 
-[Simple GUI](https://github.com/stbachinger/TigramiteGui)
+[GUI for causal discovery](https://github.com/jakobrunge/tigramite/tree/master/tutorials/gui/)
 
 ## Overview
 
@@ -25,21 +25,22 @@ Further, Tigramite provides several causal discovery methods that can be used un
 | LPCMCI | Causal stationarity    | Time series PAG |
 
 
-| Conditional independence test | Assumptions                                  |
-|--------|---------------------------------------------------------------------------|
-| ParCorr  | univariate, continuous variables with linear dependencies and Gaussian noise |
-| RobustParCorr  | univariate, continuous variables with linear dependencies, robust for different marginal distributions |
-| ParCorrWLS  | univariate, continuous variables with linear dependencies, can account for heteroskedastic data |
-| GPDC / GPDCtorch | univariate, continuous variables with additive dependencies        |
-| CMIknn | multivariate, continuous variables with more general dependencies (permutation-based test)          |
-| Gsquared | univariate discrete/categorical variables           |
-| CMIsymb | univariate discrete/categorical variables (permutation-based test)           |
-| RegressionCI | mixed datasets with univariate discrete/categorical and (linear) continuous variables           |
+| Conditional independence test | Assumptions                                                                                            |
+|-------------------------------|--------------------------------------------------------------------------------------------------------|
+| ParCorr                       | univariate, continuous variables with linear dependencies and Gaussian noise                           |
+| RobustParCorr                 | univariate, continuous variables with linear dependencies, robust for different marginal distributions |
+| ParCorrWLS                    | univariate, continuous variables with linear dependencies, can account for heteroskedastic data        |
+| GPDC / GPDCtorch              | univariate, continuous variables with additive dependencies                                            |
+| CMIknn                        | multivariate, continuous variables with more general dependencies (permutation-based test)             |
+| Gsquared                      | univariate discrete/categorical variables                                                              |
+| CMIsymb                       | multivariate discrete/categorical variables (permutation-based test)                                   |
+| CMIknnmixed                   | mixed datasets with multivariate discrete/categorical and continuous variables                         |
+| RegressionCI                  | mixed datasets with univariate discrete/categorical and (linear) continuous variables                  |
 
 
 ## General Notes
 
-Tigramite is a causal time series analysis python package. It allows to efficiently estimate causal graphs from high-dimensional time series datasets (causal discovery) and to use graphs for robust forecasting and the estimation and prediction of direct, total, and mediated effects. Causal discovery is based on linear as well as non-parametric conditional independence tests applicable to discrete or continuously-valued time series. Also includes functions for high-quality plots of the results. You can find a simple GUI version on https://github.com/stbachinger/TigramiteGui. Please cite the following papers depending on which method you use:
+Tigramite is a causal time series analysis python package. It allows to efficiently estimate causal graphs from high-dimensional time series datasets (causal discovery) and to use graphs for robust forecasting and the estimation and prediction of direct, total, and mediated effects. Causal discovery is based on linear as well as non-parametric conditional independence tests applicable to discrete or continuously-valued time series. Also includes functions for high-quality plots of the results. Please cite the following papers depending on which method you use:
 
 - PCMCI: J. Runge, P. Nowack, M. Kretschmer, S. Flaxman, D. Sejdinovic, Detecting and quantifying causal associations in large nonlinear time series datasets. Sci. Adv. 5, eaau4996 (2019). https://advances.sciencemag.org/content/5/11/eaau4996
 - PCMCI+: J. Runge (2020): Discovering contemporaneous and lagged causal relations in autocorrelated nonlinear time series datasets. Proceedings of the 36th Conference on Uncertainty in Artificial Intelligence, UAI 2020,Toronto, Canada, 2019, AUAI Press, 2020. http://auai.org/uai2020/proceedings/579_main_paper.pdf
@@ -55,7 +56,7 @@ Tigramite is a causal time series analysis python package. It allows to efficien
 
 - high detection power even for large-scale time series datasets
 - flexible conditional independence test statistics adapted to
-  continuously-valued or discrete data, and different assumptions about
+  continuously-valued, discrete and mixed data, and different assumptions about
   linear or nonlinear dependencies
 - automatic hyperparameter optimization for most tests
 - parallel computing script based on mpi4py
@@ -63,23 +64,26 @@ Tigramite is a causal time series analysis python package. It allows to efficien
 - p-value correction and confidence interval estimation
 - causal effect class to  non-parametrically estimate (conditional) causal effects and also linear mediated causal effects
 - prediction class based on sklearn models including causal feature selection
-- GUI covering basic functionality on https://github.com/stbachinger/TigramiteGui
+- GUI covering basic functionality in tutorials folder. Based on https://github.com/stbachinger/TigramiteGui
 
 
 ## Required python packages
 
-- python=3.7/3.8/3.9
-- numpy==1.21.5
-- scipy==1.8.0
-- numba==0.55.1
+- python=3.7/3.8/3.9/3.10
+- numpy <1.24,>=1.18
+- scipy>=1.10.0
+- numba==0.56.4
 
 ## Optional packages depending on used functions
 - scikit-learn>=0.21  # Gaussian Process (GP) Regression
 - matplotlib>=3.4.0   # Plotting
+- seaborn>=0.12.2     # Plotting
 - networkx>=2.4       # Plotting
 - torch>=1.11.0       # GPDC pytorch version (in conda install pytorch)
 - gpytorch>=1.4       # GPDC gpytorch version
 - dcor>=0.5.3         # GPDC distance correlation version
+- joblib>=1.2.0       # CMIsymb shuffle parallelization
+- ipywidgets>=8.0.4   # Interactive visualization (Needs mpi.h. For ubuntu - apt install libopenmpi-dev mpi)
 
 ## Installation
 
@@ -93,7 +97,7 @@ To use just the ParCorr, CMIknn, and CMIsymb independence tests, only numpy/numb
 
 - GPDCtorch: gpytorch is required for Gaussian Process regression
 
-Note: Due to incompatibility issues between numba and numpy/scipy, we currently freeze their versions.
+Note: Due to incompatibility issues between numba and numpy, we currently enforce soft dependencies on the versions.
 
 ## User Agreement
 
@@ -104,7 +108,7 @@ You commit to cite above papers in your reports or publications.
 
 ## License
 
-Copyright (C) 2014-2022 Jakob Runge
+Copyright (C) 2014-2023 Jakob Runge
 
 See license.txt for full text.
 

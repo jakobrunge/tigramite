@@ -44,22 +44,22 @@ class DataFrame():
         or discrete: 0s for continuous variables and 1s for discrete variables.
     missing_flag : number, optional (default: None)
         Flag for missing values in dataframe. Dismisses all time slices of
-        samples where missing values occur in any variable. For 
-        remove_missing_upto_maxlag=True also flags samples for all lags up 
-        to 2*tau_max (more precisely, this depends on
-        the cut_off argument in self.construct_array(), see further below). 
-        This avoids biases, see section on masking in Supplement of [1]_.
+        samples where missing values occur in any variable. For
+        remove_missing_upto_maxlag=True also flags samples for all lags up to
+        2*tau_max (more precisely, this depends on the cut_off argument in
+        self.construct_array(), see further below). This avoids biases, see
+        section on masking in Supplement of [1]_.
+    vector_vars : dict
+        Dictionary of vector variables of the form,
+        Eg. {0: [(0, 0), (1, 0)], 1: [(2, 0)], 2: [(3, 0)], 3: [(4, 0)]}
+        The keys are the new vectorized variables and respective tuple values
+        are the individual components of the vector variables. In the method of
+        construct_array(), the individual components are parsed from vector_vars
+        and added (accounting for lags) to the list that creates X, Y and Z for
+        conditional independence test.
     var_names : list of strings, optional (default: range(N))
         Names of variables, must match the number of variables. If None is
         passed, variables are enumerated as [0, 1, ...]
-    vector_vars : dict
-        Dictionary of vector variables of the form,
-        Eg. {0: [(0, 0), (1, 0)], 1: [(2, 0), (2, -1)], 2: [(3, 0)], 3: [(4, 0)]}
-        The keys are the new vectorized variables and respective tuple values
-        are the individual components of the vector variables. Internally, the 
-        individual components are parsed from vector_vars and added (accounting 
-        for lags) X, Y and Z for conditional independence test and other methods
-        in tigramite.
     datatime : array-like, optional (default: None)
         Timelabel array. If None, range(T) is used.
     remove_missing_upto_maxlag : bool, optional (default: False)
@@ -1409,8 +1409,7 @@ def ordinal_patt_array(array, array_mask=None, dim=2, step=1,
 
     # Add noise to destroy ties...
     array += (1E-6 * array.std(axis=0)
-              * np.random.rand(array.shape[0], array.shape[1]).astype('float64'))
-
+              * random_state.random((array.shape[0], array.shape[1])).astype('float64'))
 
     patt_time = int(array.shape[0] - step * (dim - 1))
     T, N = array.shape
@@ -1513,7 +1512,12 @@ if __name__ == '__main__':
              1: [((1, -1), 0.8, lin_f), ((0, -1), 0.3, nonlin_f)],
              2: [((2, -1), 0.7, lin_f), ((1, 0), -0.2, lin_f)],
              }
-    noises = [np.random.randn, np.random.randn, np.random.randn]
+
+    random_state_1 = np.random.default_rng(seed=1)
+    random_state_2 = np.random.default_rng(seed=2)
+    random_state_3 = np.random.default_rng(seed=3)
+
+    noises = [random_state_1.standard_normal, random_state_2.standard_normal, random_state_3.standard_normal]
 
     ens = 3
     data_ens = {}

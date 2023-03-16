@@ -84,7 +84,7 @@ class OracleCI:
         # Initialize observed vars
         self.observed_vars = observed_vars
         if self.observed_vars is None:
-            self.observed_vars = list(range(self.N))
+            self.observed_vars = range(self.N)
         else:
             if not set(self.observed_vars).issubset(set(range(self.N))):
                 raise ValueError("observed_vars must be subset of range(N).")

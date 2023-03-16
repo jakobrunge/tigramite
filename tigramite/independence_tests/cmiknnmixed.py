@@ -30,7 +30,7 @@ class CMIknnMixed(CondIndTest):
     joint density. The test here is based on the estimator in  S. Frenzel and B.
     Pompe, Phys. Rev. Lett. 99, 204101 (2007), combined with a shuffle test to
     generate  the distribution under the null hypothesis of independence first
-    used in [3]_. The knn-estimator is suitable only for variables taking a
+    used in the reference below. The knn-estimator is suitable only for variables taking a
     continuous range of values. For discrete variables use the CMIsymb class.
 
     Notes
@@ -66,7 +66,7 @@ class CMIknnMixed(CondIndTest):
     References
     ----------
 
-    .. [3] J. Runge (2018): Conditional Independence Testing Based on a
+    J. Runge (2018): Conditional Independence Testing Based on a
            Nearest-Neighbor Estimator of Conditional Mutual Information.
            In Proceedings of the 21st International Conference on Artificial
            Intelligence and Statistics.
@@ -80,7 +80,7 @@ class CMIknnMixed(CondIndTest):
         computed as a fraction of T, hence knn=knn*T. For knn larger or equal to
         1, this is the absolute number.
         
-    estimator : string, optinal (default: 'MS')
+    estimator : string, optional (default: 'MS')
         The type of estimator to be used. Three options are available:
         Mesner and Shalizi (2021): 'MS', Frenzel and Pompe (2007) with 
         infinite distance for points from different categories: 'FPinf',
@@ -1438,7 +1438,7 @@ if __name__ == '__main__':
     from tigramite.independence_tests import CMIknn
     import numpy as np
 
-    np.random.seed(42)
+    random_state_ = np.random.default_rng(seed=seed)
     cmi = CMIknnMixed(mask_type=None,
                        significance='shuffle_test',
                        # estimator='cond',
@@ -1466,21 +1466,21 @@ if __name__ == '__main__':
     dimz = 1
 
     # Discrete data
-    z = np.random.binomial(n=1, p=0.5, size=(T, dimz)).reshape(T, dimz)
+    z = random_state_.binomial(n=1, p=0.5, size=(T, dimz)).reshape(T, dimz)
     x = np.empty(T).reshape(T, 1)
     y = np.empty(T).reshape(T, 1)
     for t in range(T):
         val = z[t, 0].squeeze()
         prob = 0.2 + val*0.6
-        x[t] = np.random.choice([0,1], p=[prob, 1.-prob])
-        y[t] = np.random.choice([0,1, 2], p=[prob, (1.-prob)/2., (1.-prob)/2.])
+        x[t] = random_state_.choice([0,1], p=[prob, 1.-prob])
+        y[t] = random_state_.choice([0,1, 2], p=[prob, (1.-prob)/2., (1.-prob)/2.])
 
     # Continuous data
-    z = np.random.randn(T, dimz)
-    x = (0.5*z[:,0] + np.random.randn(T)).reshape(T, 1)
-    y = (0.5*z[:,0] + np.random.randn(T)).reshape(T, 1)
+    z = random_state_.standard_normal((T, dimz))
+    x = (0.5*z[:,0] + random_state_.standard_normal(T)).reshape(T, 1)
+    y = (0.5*z[:,0] + random_state_.standard_normal(T)).reshape(T, 1)
 
-    z2 = np.random.binomial(n=1, p=0.5, size=(T, dimz)).reshape(T, dimz)
+    z2 = random_state_.binomial(n=1, p=0.5, size=(T, dimz)).reshape(T, dimz)
     zfull = np.concatenate((z, z2), axis=1)
 
     print('X _|_ Y')

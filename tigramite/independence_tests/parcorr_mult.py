@@ -347,7 +347,8 @@ if __name__ == '__main__':
     # import numpy as np
     import timeit
 
-    # np.random.seed(3)
+    seed=3
+    random_state = np.random.default_rng(seed=seed)
     cmi = ParCorrMult(
             # significance = 'shuffle_test',
             # sig_samples=1000,
@@ -356,7 +357,7 @@ if __name__ == '__main__':
     rate = np.zeros(100)
     for i in range(100):
         print(i)
-        data = np.random.randn(100, 6)
+        data = random_state.standard_normal((100, 6))
         data[:,2] += -0.5*data[:,0]
         # data[:,1] += data[:,2]
         dataframe = DataFrame(data)

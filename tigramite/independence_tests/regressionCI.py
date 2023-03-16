@@ -279,7 +279,8 @@ if __name__ == '__main__':
     import tigramite.data_processing as pp
     import numpy as np
 
-    np.random.seed(43)
+    seed=43
+    random_state = np.random.default_rng(seed=seed)
     ci = RegressionCI()
 
     T = 100
@@ -299,9 +300,9 @@ if __name__ == '__main__':
             z = np.zeros((T, dimz))
             for k in range(0, len(z_example)):
                 if z_example[k] == "discrete":
-                    z[:, k] = np.random.binomial(n=1, p=0.5, size=T)
+                    z[:, k] = random_state.binomial(n=1, p=0.5, size=T)
                 else:
-                    z[:, k] = np.random.uniform(low = 0, high = 1, size=T)
+                    z[:, k] = random_state.uniform(low = 0, high = 1, size=T)
         else:
             z = None
         x = np.empty(T).reshape(T, 1)
@@ -316,13 +317,13 @@ if __name__ == '__main__':
             else:
                 prob = 0.2
             if x_example == "discrete":
-                x[t] = np.random.choice([0, 1], p=[prob, 1. - prob])
+                x[t] = random_state.choice([0, 1], p=[prob, 1. - prob])
             else:
-                x[t] = 0.1*np.random.rand() # np.random.uniform(prob, 1)  #np.random.normal(prob, 1)
+                x[t] = 0.1*random_state.random() # np.random.uniform(prob, 1)  #np.random.normal(prob, 1)
             if y_example == "discrete":
-                y[t] = np.random.choice([0, 1], p=[prob, (1. - prob)]) # + x[t]
+                y[t] = random_state.choice([0, 1], p=[prob, (1. - prob)]) # + x[t]
             else:
-                y[t] = np.random.normal(prob, 1) + 0.5*x[t]
+                y[t] = random_state.normal(prob, 1) + 0.5*x[t]
 
         # # Continuous data
         # z = np.random.randn(T, dimz)
