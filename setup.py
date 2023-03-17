@@ -33,23 +33,24 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 # Define the minimal classes needed to install and run tigramite
-INSTALL_REQUIRES =  ["numpy<1.24,>=1.18", "scipy", "numba==0.56.4", "six"]
+INSTALL_REQUIRES =  ["numpy<1.24,>=1.18", "scipy>=1.10.0", "numba==0.56.4", "six"]
 # Define all the possible extras needed
 EXTRAS_REQUIRE = {
     "all": [
-        "scikit-learn>=0.21",  # Gaussian Process (GP) Regression
-        "matplotlib>=3.4.0",   # plotting
-        "seaborn>=0.12.2",     # plotting
-        "networkx>=2.4",       # plotting
-        "torch>=1.11.0",       # GPDC torch version
-        "gpytorch>=1.4",       # GPDC gpytorch version
-        "dcor>=0.5.3",         # GPDC distance correlation version
+        "scikit-learn>=1.2",  # Gaussian Process (GP) Regression
+        "matplotlib>=3.7.0",  # plotting
+        "seaborn>=0.12.2",    # plotting
+        "networkx>=3.0",      # plotting
+        "pytorch>=1.13.1",    # GPDC torch version
+        "gpytorch>=1.9.1",    # GPDC gpytorch version
+        "dcor>=0.6",          # GPDC distance correlation version
+        "joblib>=1.2.0",      # CMIsymb shuffle parallelization
     ]
 }
 
 # Define the packages needed for testing
-TESTS_REQUIRE = ["nose", "pytest", "networkx>=2.4", "scikit-learn>=0.21", 
-                 "torch>=1.11.0", "gpytorch>=1.4", "dcor>=0.5.3"]
+TESTS_REQUIRE = ["nose", "pytest", "networkx>=3.0", "scikit-learn>=1.2",
+                 "pytorch>=1.13.1", "gpytorch>=1.9.1", "dcor>=0.6"]
 EXTRAS_REQUIRE["test"] = TESTS_REQUIRE
 # Define the extras needed for development
 EXTRAS_REQUIRE["dev"] = EXTRAS_REQUIRE["all"]
@@ -63,7 +64,7 @@ setup(
     version="5.2.0.0",
     packages=["tigramite", "tigramite.independence_tests", "tigramite.toymodels"],
     license="GNU General Public License v3.0",
-    description="Tigramite causal discovery for time series",
+    description="Tigramite causal inference for time series",
     author="Jakob Runge",
     author_email="jakob@jakob-runge.com",
     url="https://github.com/jakobrunge/tigramite/",

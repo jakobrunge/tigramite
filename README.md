@@ -9,8 +9,6 @@ Version 5.2
 
 [Tutorials](https://github.com/jakobrunge/tigramite/tree/master/tutorials/)
 
-[GUI for causal discovery](https://github.com/jakobrunge/tigramite/tree/master/tutorials/gui/)
-
 ## Overview
 
 __Update:__ Tigramite now has a new CausalEffects class that allows to estimate (conditional) causal effects and mediation based on assuming a causal graph. Have a look at the tutorial.
@@ -64,7 +62,6 @@ Tigramite is a causal time series analysis python package. It allows to efficien
 - p-value correction and confidence interval estimation
 - causal effect class to  non-parametrically estimate (conditional) causal effects and also linear mediated causal effects
 - prediction class based on sklearn models including causal feature selection
-- GUI covering basic functionality in tutorials folder. Based on https://github.com/stbachinger/TigramiteGui
 
 
 ## Required python packages
@@ -75,13 +72,13 @@ Tigramite is a causal time series analysis python package. It allows to efficien
 - numba==0.56.4
 
 ## Optional packages depending on used functions
-- scikit-learn>=0.21  # Gaussian Process (GP) Regression
-- matplotlib>=3.4.0   # Plotting
+- scikit-learn>=1.2   # Gaussian Process (GP) Regression
+- matplotlib>=3.7.0   # Plotting
 - seaborn>=0.12.2     # Plotting
-- networkx>=2.4       # Plotting
-- torch>=1.11.0       # GPDC pytorch version (in conda install pytorch)
-- gpytorch>=1.4       # GPDC gpytorch version
-- dcor>=0.5.3         # GPDC distance correlation version
+- networkx>=3.0       # Plotting
+- torch>=1.13.1       # GPDC pytorch version (in conda install pytorch)
+- gpytorch>=1.9.1     # GPDC gpytorch version
+- dcor>=0.6           # GPDC distance correlation version
 - joblib>=1.2.0       # CMIsymb shuffle parallelization
 - ipywidgets>=8.0.4   # Interactive visualization (Needs mpi.h. For ubuntu - apt install libopenmpi-dev mpi)
 

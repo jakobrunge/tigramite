@@ -42,13 +42,13 @@ class AlphaLevelWidget(Widget):
         super().__init__(**kwargs)
         self.alpha_slider = widgets.FloatSlider(
             value=0.01,
-            min=0,
-            max=1,
+            min=0.,
+            max=1.,
             step=0.01,
             description='alpha_value:',
             disabled=False,
             continuous_update=False,
-            orientation='horizontal',
+            orientation='vertical',
             readout=True,
             readout_format='.01f',
         )

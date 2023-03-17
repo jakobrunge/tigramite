@@ -22,6 +22,7 @@ from copy import deepcopy
 import matplotlib.path as mpath
 import matplotlib.patheffects as PathEffects
 from mpl_toolkits.axisartist.axislines import Axes
+import csv
 # TODO: Add proper docstrings to internal functions...
 
 
@@ -4244,6 +4245,93 @@ def plot_tsg(links, X, Y, Z=None, anc_x=None, anc_y=None, anc_xy=None):
 
     return fig, ax
 
+def write_csv(
+    graph,
+    save_name,
+    val_matrix=None,
+    var_names=None,
+    link_width=None,
+    link_attribute=None,
+    digits=5,
+):
+    """Writes all links in a graph to a csv file.
+    
+    Format is each link in a row as 'Variable i', 'Variable j', 'Time lag of i', 'Link type i --- j',
+    with optional further columns for entries in [val_matrix link_attribute, link_width].
+
+    Parameters
+    ----------
+    graph : string or bool array-like, optional (default: None)
+        Either string matrix providing graph or bool array providing only adjacencies
+        Must be of same shape as val_matrix. 
+    save_name : str
+        Name of figure file to save figure. If None, figure is shown in window.
+    val_matrix : array_like
+        Matrix of shape (N, N, tau_max+1) containing test statistic values.
+    var_names : list, optional (default: None)
+        List of variable names. If None, range(N) is used.
+    link_width : array-like, optional (default: None)
+        Array of val_matrix.shape specifying relative link width with maximum
+        given by arrow_linewidth. If None, all links have same width.
+    link_attribute : array-like, optional (default: None)
+        String array of val_matrix.shape specifying link attributes.
+    digits : int
+        Number of significant digits for writing link value and width.
+    """
+
+    graph = np.copy(graph.squeeze())
+
+    N = len(graph)
+
+    if val_matrix is None:
+        val_matrix_exists = false
+    else:
+        val_matrix_exists = True
+
+    if graph.ndim == 4:
+        raise ValueError("Time series graph of shape (N,N,tau_max+1,tau_max+1) cannot be represented by plot_graph,"
+                         " use plot_time_series_graph instead.")
+
+    if graph.ndim == 2:
+        # If a non-time series (N,N)-graph is given, insert a dummy dimension
+        graph = np.expand_dims(graph, axis = 2)
+
+    (graph, val_matrix, link_width, link_attribute) = _check_matrices(
+        graph, val_matrix, link_width, link_attribute)
+
+    if var_names is None:
+        var_names = range(N)
+
+
+    header = ['Variable i', 'Variable j', 'Time lag of i', 'Link type i --- j']
+    if val_matrix_exists:
+        header.append('Link value')
+    if link_attribute is not None:
+        header.append('Link attribute')
+    if link_width is not None:
+        header.append('Link width')
+
+
+    with open(save_name, 'w', encoding='UTF8', newline='') as f:
+        writer = csv.writer(f)
+
+        # write the header
+        writer.writerow(header)
+
+        # write the link data
+        for (i, j, tau) in zip(*np.where(graph!='')):
+            # Only consider contemporaneous links once
+            if tau > 0 or i <= j:
+                row = [var_names[i], var_names[i], f"{tau}", graph[i,j,tau]]
+                if val_matrix_exists:
+                    row.append(f"{val_matrix[i,j,tau]:.{digits}}")
+                if link_attribute is not None:
+                    row.append(link_attribute[i,j,tau])
+                if link_width is not None:
+                    row.append(f"{link_width[i,j,tau]:.{digits}}")
+
+                writer.writerow(row)
+
 
 if __name__ == "__main__":
 
@@ -4363,11 +4451,21 @@ if __name__ == "__main__":
                 3: [((3, -1), 0., lin_f), ((2, 0), 0.6, lin_f),]
                 }
     graph = CausalEffects.get_graph_from_dict(links_coeffs, tau_max=None)
-    # print(graph)
-    X = [(0,-1)]
-    Y = [(1,0)]
-    causal_effects = CausalEffects(graph, graph_type='stationary_dag', X=X, Y=Y, S=None, 
-                                   hidden_variables=[(2, 0), (2, -1), (2, -2)], 
-                                   verbosity=0)
 
-    pyplot.show()
+    val_matrix = np.random.randn(*graph.shape)
+    val_matrix[:,:,0] = 0.
+    write_csv(graph=graph,
+        val_matrix=val_matrix,
+        var_names=['s %d' %i for i in range(graph.shape[0])],
+        link_width=np.ones(graph.shape),
+        link_attribute = np.ones(graph.shape, dtype='<U10'),
+        save_name='test.cv')
+
+    # # print(graph)
+    # X = [(0,-1)]
+    # Y = [(1,0)]
+    # causal_effects = CausalEffects(graph, graph_type='stationary_dag', X=X, Y=Y, S=None, 
+    #                                hidden_variables=[(2, 0), (2, -1), (2, -2)], 
+    #                                verbosity=0)
+
+    # pyplot.show()
