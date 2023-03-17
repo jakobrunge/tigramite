@@ -1,4 +1,4 @@
-# Tigramite – Causal inference and causal discovery for time series datasets
+# Tigramite – Causal inference for time series datasets
 Version 5.2
 
 (Python Package)
@@ -13,7 +13,7 @@ Version 5.2
 
 __Update:__ Tigramite now has a new CausalEffects class that allows to estimate (conditional) causal effects and mediation based on assuming a causal graph. Have a look at the tutorial.
 
-Further, Tigramite provides several causal discovery methods that can be used under different sets of assumptions. An application always consists of a method and a chosen conditional independence test, e.g. PCMCI together with ParCorr. The following two tables give an overview of the assumptions involved:
+Further, Tigramite provides several causal discovery methods that can be used under different sets of assumptions. An application always consists of a method and a chosen conditional independence test, e.g. PCMCIplus together with ParCorr. The following two tables give an overview of the assumptions involved:
 
 | Method | Assumptions         | Output |
 |--------|---------------------------------------------------------------------------|----|
@@ -38,7 +38,7 @@ Further, Tigramite provides several causal discovery methods that can be used un
 
 ## General Notes
 
-Tigramite is a causal time series analysis python package. It allows to efficiently estimate causal graphs from high-dimensional time series datasets (causal discovery) and to use graphs for robust forecasting and the estimation and prediction of direct, total, and mediated effects. Causal discovery is based on linear as well as non-parametric conditional independence tests applicable to discrete or continuously-valued time series. Also includes functions for high-quality plots of the results. Please cite the following papers depending on which method you use:
+Tigramite is a causal inference for time series python package. It allows to efficiently estimate causal graphs from high-dimensional time series datasets (causal discovery) and to use graphs for robust forecasting and the estimation and prediction of direct, total, and mediated effects. Causal discovery is based on linear as well as non-parametric conditional independence tests applicable to discrete or continuously-valued time series. Also includes functions for high-quality plots of the results. Please cite the following papers depending on which method you use:
 
 - PCMCI: J. Runge, P. Nowack, M. Kretschmer, S. Flaxman, D. Sejdinovic, Detecting and quantifying causal associations in large nonlinear time series datasets. Sci. Adv. 5, eaau4996 (2019). https://advances.sciencemag.org/content/5/11/eaau4996
 - PCMCI+: J. Runge (2020): Discovering contemporaneous and lagged causal relations in autocorrelated nonlinear time series datasets. Proceedings of the 36th Conference on Uncertainty in Artificial Intelligence, UAI 2020,Toronto, Canada, 2019, AUAI Press, 2020. http://auai.org/uai2020/proceedings/579_main_paper.pdf
@@ -48,21 +48,17 @@ Tigramite is a causal time series analysis python package. It allows to efficien
 - Mediation class: J. Runge et al. (2015): Identifying causal gateways and mediators in complex spatio-temporal systems. Nature Communications, 6, 8502. http://doi.org/10.1038/ncomms9502
 - Mediation class: J. Runge (2015): Quantifying information transfer and mediation along causal pathways in complex systems. Phys. Rev. E, 92(6), 62829. http://doi.org/10.1103/PhysRevE.92.062829
 - CMIknn: J. Runge (2018): Conditional Independence Testing Based on a Nearest-Neighbor Estimator of Conditional Mutual Information. In Proceedings of the 21st International Conference on Artificial Intelligence and Statistics. http://proceedings.mlr.press/v84/runge18a.html
-- J. Runge, Necessary and sufficient graphical conditions for optimal adjustment sets in causal graphical models with hidden variables, Advances in Neural Information Processing Systems, 2021, 34. https://proceedings.neurips.cc/paper/2021/hash/8485ae387a981d783f8764e508151cd9-Abstract.html
+- CausalEffects: J. Runge, Necessary and sufficient graphical conditions for optimal adjustment sets in causal graphical models with hidden variables, Advances in Neural Information Processing Systems, 2021, 34. https://proceedings.neurips.cc/paper/2021/hash/8485ae387a981d783f8764e508151cd9-Abstract.html
 
 ## Features
 
-- high detection power even for large-scale time series datasets
 - flexible conditional independence test statistics adapted to
   continuously-valued, discrete and mixed data, and different assumptions about
   linear or nonlinear dependencies
-- automatic hyperparameter optimization for most tests
-- parallel computing script based on mpi4py
 - handling of missing values and masks
-- p-value correction and confidence interval estimation
+- p-value correction and (bootstrap) confidence interval estimation
 - causal effect class to  non-parametrically estimate (conditional) causal effects and also linear mediated causal effects
 - prediction class based on sklearn models including causal feature selection
-
 
 ## Required python packages
 
@@ -80,7 +76,6 @@ Tigramite is a causal time series analysis python package. It allows to efficien
 - gpytorch>=1.9.1     # GPDC gpytorch version
 - dcor>=0.6           # GPDC distance correlation version
 - joblib>=1.2.0       # CMIsymb shuffle parallelization
-- ipywidgets>=8.0.4   # Interactive visualization (Needs mpi.h. For ubuntu - apt install libopenmpi-dev mpi)
 
 ## Installation
 
