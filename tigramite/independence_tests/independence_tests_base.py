@@ -263,7 +263,7 @@ class CondIndTest():
                    verbosity=0):
         """Convencience wrapper around construct_array."""
 
-        if self.measure in ['par_corr', 'gsquared', 'gp_dc', 'cmi_symb']:
+        if self.measure in ['par_corr', 'par_corr_wls', 'robust_par_corr', 'regressionCI', 'gsquared', 'gp_dc']:
             if len(X) > 1 or len(Y) > 1:
                 raise ValueError("X and Y for %s must be univariate." %
                                         self.measure)

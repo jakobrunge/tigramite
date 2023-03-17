@@ -32,7 +32,6 @@ Further, Tigramite provides several causal discovery methods that can be used un
 | CMIknn                        | multivariate, continuous variables with more general dependencies (permutation-based test)             |
 | Gsquared                      | univariate discrete/categorical variables                                                              |
 | CMIsymb                       | multivariate discrete/categorical variables (permutation-based test)                                   |
-| CMIknnmixed                   | mixed datasets with multivariate discrete/categorical and continuous variables                         |
 | RegressionCI                  | mixed datasets with univariate discrete/categorical and (linear) continuous variables                  |
 
 
