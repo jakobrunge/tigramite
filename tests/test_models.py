@@ -10,7 +10,7 @@ from tigramite.models import LinearMediation
 import tigramite.data_processing as pp
 from tigramite.toymodels import structural_causal_processes as toys
 from tigramite.models import Prediction
-from tigramite.independence_tests import ParCorr
+from tigramite.independence_tests.parcorr import ParCorr
 
 from test_pcmci_calculations import a_chain, gen_data_frame
 

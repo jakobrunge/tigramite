@@ -4,8 +4,19 @@ Tests for independence_tests.py.
 from __future__ import print_function
 import numpy as np
 import pytest
+from scipy import stats
 
-from tigramite.independence_tests import ParCorr, GPDC, GPDCtorch, CMIsymb, CMIknn
+from tigramite.independence_tests.parcorr import ParCorr
+from tigramite.independence_tests.robust_parcorr import RobustParCorr
+from tigramite.independence_tests.parcorr_wls import ParCorrWLS
+from tigramite.independence_tests.gpdc import GPDC
+from tigramite.independence_tests.gpdc_torch import GPDCtorch
+from tigramite.independence_tests.cmiknn import CMIknn
+from tigramite.independence_tests.cmiknnmixed import CMIknnMixed
+from tigramite.independence_tests.cmisymb import CMIsymb
+from tigramite.independence_tests.gsquared import Gsquared
+from tigramite.independence_tests.regressionCI import RegressionCI
+
 import tigramite.data_processing as pp
 from tigramite.toymodels import structural_causal_processes as toys
 
@@ -38,6 +49,40 @@ def gen_data_sample(seed, corr_val, T):
     # Return the array, the value, and the xyz array
     return array, val, corr_val, xyz, dim, T
 
+def generate_parent_dependent_stds(Z, T):
+    stds = np.ones(T) + 5*(1 + Z[:T])*(1+Z[:T]>0)
+    return stds
+
+def generate_time_dependent_stds(Z, T):
+    stds = np.array([1 + 0.018*t for t in range(T)])
+    return stds
+def gen_heteroskedastic_data_sample(seed, corr_val, T, dependence_type):
+    random_state = np.random.RandomState(seed)
+    # Generate the data
+    dim = 3
+    array = np.zeros((T, dim))
+    Z = random_state.standard_normal(T + 1)
+    E = random_state.standard_normal(T)
+    array[:, 2] = Z[1:]
+    stds_matrix = np.ones((T, dim))
+    if dependence_type == "parent":
+        stds = generate_parent_dependent_stds(Z, T)
+    else:
+        stds = generate_time_dependent_stds(Z, T)
+
+    stds_matrix[:, 0] = stds
+    stds_matrix[:, 1] = stds
+    noise_X = random_state.normal(0, stds, T)
+    noise_Y = random_state.normal(0, stds, T)
+    array[:, 0] = corr_val[0] * Z[:T] + corr_val[2] * E + noise_X
+    array[:, 1] = corr_val[1] * Z[:T] + corr_val[2] * E + noise_Y
+    # Get the correlation coefficient
+    val = np.corrcoef(array)[0, 1]
+    # Get a value from the array
+    xyz = np.array([0, 1])
+    # Return the array, the value, and the xyz array
+    return array, val, corr_val[2], xyz, dim, T, stds_matrix
+
 # INDEPENDENCE TEST COMMON TESTS ###############################################
 def check_get_array(ind_test, sample):
     # Get the data sample values
@@ -50,10 +95,10 @@ def check_get_array(ind_test, sample):
     z_nds = true_parents[1]
     tau_max = 3
     # Get the array using the wrapper function
-    a_array, a_xyz, a_xyz_nodes = \
+    a_array, a_xyz, a_xyz_nodes, _ = \
             ind_test._get_array(x_nds, y_nds, z_nds, tau_max)
     # Get the array directly from the dataframe
-    b_array, b_xyz, b_xyz_nodes = \
+    b_array, b_xyz, b_xyz_nodes, _ = \
             dataframe.construct_array(x_nds, y_nds, z_nds,
                                       tau_max=tau_max,
                                       mask_type=ind_test.mask_type,
@@ -78,7 +123,7 @@ def check_run_test(ind_test, sample):
     # Run the test
     val, pval = ind_test.run_test(x_nds, y_nds, z_nds, tau_max)
     # Get the array the test is running on
-    array, xyz, _ = ind_test._get_array(x_nds, y_nds, z_nds, tau_max)
+    array, xyz, _, _ = ind_test._get_array(x_nds, y_nds, z_nds, tau_max)
     dim, T = array.shape
     # Get the correct dependence measure
     val_expt = ind_test.get_dependence_measure(array, xyz)
@@ -100,7 +145,7 @@ def check_get_measure(ind_test, sample):
     # Run the test
     val = ind_test.get_measure(x_nds, y_nds, z_nds, tau_max)
     # Get the array the test is running on
-    array, xyz, _ = ind_test._get_array(x_nds, y_nds, z_nds, tau_max)
+    array, xyz, _, _ = ind_test._get_array(x_nds, y_nds, z_nds, tau_max)
     # Get the correct dependence measure
     val_expt = ind_test.get_dependence_measure(array, xyz)
     # Check the values are close
@@ -126,7 +171,7 @@ def check_get_confidence(ind_test, sample):
     # Get the confidence interval
     conf_a = ind_test.get_confidence(x_nds, y_nds, z_nds, tau_max)
     # Get the array the test is running on
-    array, xyz, _ = ind_test._get_array(x_nds, y_nds, z_nds, tau_max)
+    array, xyz, _, _ = ind_test._get_array(x_nds, y_nds, z_nds, tau_max)
     # Test current confidence interval against bootstrapped interval
     conf_b = ind_test.get_bootstrap_confidence(
         array,
@@ -138,15 +183,56 @@ def check_get_confidence(ind_test, sample):
     # Check the values are close
     np.testing.assert_allclose(np.array(conf_a), np.array(conf_b), atol=1e-2)
 
+def check_parcorr_wls_on_heteroskedastic_data(ind_test, sample):
+    # Get the data sample values
+    array, _, corr_val, xyz, dim, T, true_stds = sample
+    array = array[:, :-1].transpose()
+    ind_test.data = array
+    # compare to calculations on pre-transformed version of the data (which is now homoskedastic)
+    ind_test.stds = np.ones((dim, T))
+    homoskedastic_array = np.multiply(array, 1/true_stds[:,:-1].transpose())
+    homoskedastic_val = ind_test.get_dependence_measure(homoskedastic_array, xyz)
+    # prepare the weights
+    ind_test.stds = true_stds.transpose()
+    # Get the estimated value
+    val_est = ind_test.get_dependence_measure(array, xyz)
+    # Compare to value obtained for homoskedastic version of the data
+    np.testing.assert_allclose(np.array(homoskedastic_val), np.array(val_est), atol=0.03)
+
+
+def check_std_approximation(ind_test, sample, xlag, ylag):
+    # Get the data sample values
+    data, _, corr_val, xyz, dim, T, true_stds = sample
+    data = data.transpose()
+    ind_test.data = data
+    X = [(0, xlag)]
+    Y = [(1, ylag)]
+    tau_max = 3
+    # shift the true weights to align with the lagged versions of X and Y
+    min_lag = min(xlag, ylag)
+    true_stds_shifted = np.zeros((T + min_lag, 2))
+    true_stds_shifted[:, 0] = true_stds[np.abs(min_lag)+xlag:xlag or None, 0]
+    true_stds_shifted[:, 1] = true_stds[np.abs(min_lag)+ylag:ylag or None, 1]
+    # also shift the data
+    array = np.zeros((3, T + min_lag))
+    array[0, :] = data[0, np.abs(min_lag) + xlag:xlag or None]
+    array[1, :] = data[1, np.abs(min_lag) + ylag:ylag or None]
+    array[2, :] = data[2, np.abs(min_lag):]
+    # Get the estimated value
+    val_est = ind_test._get_std_estimation(array, X, Y)
+    # Compare to the true value
+    np.testing.assert_allclose(true_stds_shifted[2 * tau_max:-2 * tau_max, :].transpose(),
+                               np.array(val_est[:, 2 * tau_max:-2 * tau_max]), rtol=2.)
+
 # PARTIAL CORRELATION TESTING ##################################################
 @pytest.fixture(params=[
     # Generate par_corr test instances
-    #sig,            recycle, confidence
-    ('analytic',     True,    'analytic'),
-    ('analytic',     False,   'analytic'),
-    ('analytic',     False,   'bootstrap'),
-    ('shuffle_test', False,   'analytic'),
-    ('fixed_thres',  False,   'analytic')])
+    # sig,            recycle, confidence
+    ('analytic', True, 'analytic'),
+    ('analytic', False, 'analytic'),
+    ('analytic', False, 'bootstrap'),
+    ('shuffle_test', False, 'analytic'),
+    ('fixed_thres', False, 'analytic')])
 def par_corr(request):
     # Unpack the parameters
     sig, recycle, conf = request.param
@@ -242,14 +328,242 @@ def test_parcorr(par_corr, data_sample_a):
     array = np.random.randn(dim, T)
     array[:2, :] = small_array
     # Generate some confounding
-    array[0] += 0.5* array[2:].sum(axis=0)
-    array[1] += 0.7* array[2:].sum(axis=0)
+    array[0] += 0.5 * array[2:].sum(axis=0)
+    array[1] += 0.7 * array[2:].sum(axis=0)
     # Reset the dimension
     xyz = np.array([0, 1, 2, 2, 2])
     # Get the estimated value
     val_est = par_corr.get_dependence_measure(array, xyz)
     # Compare to the true value
     np.testing.assert_allclose(np.array(corr_val), np.array(val_est), atol=0.02)
+
+# WLS PARTIAL CORRELATION TESTING ##################################################
+@pytest.fixture(params=[
+    # Generate par_corr_wls test instances
+    # test ParCorr-WLS on homoskedastic data
+    # sig,      recycle, confidence, std_matrix, expert_knowledge
+    # ('analytic', True, 'bootstrap', None, "homoskedasticity", False),
+    # ('analytic', True, 'bootstrap', np.ones((1000, 2)), "homoskedasticity", False),
+    ('analytic', False, 'bootstrap', None, "homoskedasticity", False),
+    ('shuffle_test', False, 'bootstrap', None, "homoskedasticity", False),
+    ('fixed_thres', False, 'bootstrap', None, "homoskedasticity", False),
+    # ('analytic', True, 'bootstrap', None, "homoskedasticity", True),
+])
+
+def par_corr_wls(request):
+    # Unpack the parameters
+    sig, recycle, conf, std_matrix, expert_knowledge, robustify = request.param
+    # Generate the par_corr_wls independence test
+    return ParCorrWLS(gt_std_matrix=std_matrix,
+                      expert_knowledge=expert_knowledge,
+                      window_size=100,
+                      mask_type=None,
+                      significance=sig,
+                      fixed_thres=0.1,
+                      sig_samples=10000,
+                      sig_blocklength=3,
+                      confidence=conf,
+                      conf_lev=0.9,
+                      conf_samples=10000,
+                      conf_blocklength=1,
+                      verbosity=0,
+                      robustify=robustify)
+
+@pytest.fixture(params=[
+    # Generate par_corr test instances
+    # basically test ParCorr-WLS on homoskedastic data
+    # sig,      recycle, confidence, expert_knowledge, robustify
+    ('analytic', False, 'bootstrap', None, {0: [(2, -1)], 1: [(2, -1)]}, False),
+    ('analytic', False, 'bootstrap', None, {0: [(2, -1)], 1: [(2, -1)]}, True),
+])
+
+def par_corr_wls_expert(request):
+    # Unpack the parameters
+    sig, recycle, conf, std_matrix, expert_knowledge, robustify = request.param
+    # Generate the par_corr independence test
+    return ParCorrWLS(expert_knowledge=expert_knowledge,
+                      window_size=50,
+                      mask_type=None,
+                      significance=sig,
+                      fixed_thres=0.1,
+                      sig_samples=10000,
+                      sig_blocklength=3,
+                      confidence=conf,
+                      conf_lev=0.9,
+                      conf_samples=10000,
+                      conf_blocklength=1,
+                      # recycle_residuals=recycle,
+                      verbosity=0,
+                      robustify=robustify)
+
+@pytest.fixture(params=[
+    # Generate par_corr test instances
+    # basically test ParCorr-WLS on homoskedastic data
+    # sig,      recycle, confidence, expert_knowledge, robustify
+    ('analytic', True, 'bootstrap', None, {0: ["time-dependent heteroskedasticity"],
+                                           1: ["time-dependent heteroskedasticity"]}, False),
+    ('analytic', True, 'bootstrap', None, {0: ["time-dependent heteroskedasticity"],
+                                           1: ["time-dependent heteroskedasticity"]}, True),
+])
+
+def par_corr_wls_expert_time(request):
+    # Unpack the parameters
+    sig, recycle, conf, std_matrix, expert_knowledge, robustify = request.param
+    # Generate the par_corr independence test
+    return ParCorrWLS(expert_knowledge=expert_knowledge,
+                      window_size=50,
+                      mask_type=None,
+                      significance=sig,
+                      fixed_thres=0.1,
+                      sig_samples=10000,
+                      sig_blocklength=3,
+                      confidence=conf,
+                      conf_lev=0.9,
+                      conf_samples=10000,
+                      conf_blocklength=1,
+                      # recycle_residuals=recycle,
+                      verbosity=0,
+                      robustify=robustify)
+
+@pytest.fixture(params=[
+    # Generate the sample to be used for confidence interval comparison
+    # seed, corr_val, T
+    (5, 0.3, 1000),  # Default
+    (6, 0.3, 1000),  # New Seed
+    (1, 0.9, 1000)])  # Strong Correlation
+def data_sample_a2(request):
+    # Unpack the parameters
+    seed, corr_val, T = request.param
+    # Return the data sample
+    return gen_data_sample(seed, corr_val, T)
+
+
+@pytest.fixture(params=[
+    # Generate the sample to be used for variance estimation
+    # seed, corr_val, T
+    (5, [0.3, 0.3, 0.5], 1000),  # Default
+    (6, [0.3, 0.3, 0], 1000),  # New Seed
+    (1, [0.9, 0.9, 0], 1000),  # Strong Correlation
+    (5, [0.3, 0.3, 0.9], 1000),   # Strong Correlation between X and Y
+])
+def data_sample_hs_parent(request):
+    # Unpack the parameters
+    seed, corr_val, T = request.param
+    # Return the data sample
+    return gen_heteroskedastic_data_sample(seed, corr_val, T, "parent")
+
+@pytest.fixture(params=[
+    # Generate the sample to be used for variance estimation
+    # seed, corr_val, T
+    (5, [0.3, 0.3, 0], 1000),  # Default
+    (6, [0.3, 0.6, 0], 1000),  # New Seed
+    (1, [0.9, 0.9, 0], 1000)   # Strong Correlation
+])
+def data_sample_hs_time(request):
+    # Unpack the parameters
+    seed, corr_val, T = request.param
+    # Return the data sample
+    return gen_heteroskedastic_data_sample(seed, corr_val, T, "time")
+
+@pytest.fixture(params=[
+    # Generate a test data sample
+    # Parameterize the sample by setting the autocorrelation value, coefficient
+    # value, total time length, and random seed to different numbers
+    # links_coeffs,               time, seed_val
+    (a_chain(0.1, 0.9), 1000, 2),
+    (a_chain(0.5, 0.6), 1000, 11),
+    (a_chain(0.5, 0.6, length=5), 1000, 42)])
+def data_frame_a2(request):
+    # Set the parameters
+    links_coeffs, time, seed_val = request.param
+    # Generate the dataframe
+    return gen_data_frame(links_coeffs, time, seed_val)
+
+def test_get_array_parcorr_wls(par_corr_wls, data_frame_a2):
+    # Check the get_array function
+    check_get_array(par_corr_wls, data_frame_a2)
+
+
+def test_run_test_parcorr_wls(par_corr_wls, data_frame_a2):
+    # Check the run_test function
+    check_run_test(par_corr_wls, data_frame_a2)
+
+
+def test_get_measure_parcorr_wls(par_corr_wls, data_frame_a2):
+    # Check the get_measure function
+    check_get_measure(par_corr_wls, data_frame_a2)
+
+def test_get_confidence_parcorr_wls(par_corr_wls, data_frame_a2):
+    # Check the get_confidence function
+    check_get_confidence(par_corr_wls, data_frame_a2)
+
+
+def test_shuffle_sig_parcorr_wls(par_corr_wls, data_sample_a2):
+    # Get the data sample values
+    array, val, _, xyz, dim, T = data_sample_a2
+    # Get the analytic significance
+    pval_a = par_corr_wls.get_analytic_significance(value=val, T=T, dim=dim, xyz=xyz)
+    # Get the shuffle significance
+    pval_s = par_corr_wls.get_shuffle_significance(array, xyz, val)
+    # Adjust p-value for two-sided measures
+    np.testing.assert_allclose(np.array(pval_a), np.array(pval_s), atol=0.01)
+
+
+#@pytest.mark.parametrize("seed", [5, 29, 135, 170, 174, 284, 342, 363, 425])
+@pytest.mark.parametrize("seed", [5, 29, 425])
+def test_parcorr_wls_residuals(par_corr_wls, seed):
+    # Set the random seed
+    np.random.seed(seed)
+    # Set the target value and the true residuals
+    target_var = 0
+    true_res = np.random.randn(4, 1000)
+    # Copy the true residuals to a new array
+    array = np.copy(true_res)
+    # Manipulate the array
+    array[0] += 0.5 * array[2:].sum(axis=0)
+    # Estimate the residuals
+    est_res = par_corr_wls._get_single_residuals(array, target_var,
+                                                 standardize=False,
+                                                 return_means=False)
+    np.testing.assert_allclose(est_res, true_res[0], rtol=1e-5, atol=0.02)
+
+
+def test_parcorr_wls(par_corr_wls, data_sample_a2):
+    # Get the data sample values
+    small_array, _, corr_val, xyz, dim, T = data_sample_a2
+    # Generate the full array
+    dim = 5
+    array = np.random.randn(dim, T)
+    array[:2, :] = small_array
+    # Generate some confounding
+    array[0] += 0.5 * array[2:].sum(axis=0)
+    array[1] += 0.7 * array[2:].sum(axis=0)
+    # Reset the dimension
+    xyz = np.array([0, 1, 2, 2, 2])
+    # Get the estimated value
+    val_est = par_corr_wls.get_dependence_measure(array, xyz)
+    # Compare to the true value
+    np.testing.assert_allclose(np.array(corr_val), np.array(val_est), atol=0.03)
+
+def test_parcorr_wls_on_heteroskedastic_data(par_corr_wls_expert, data_sample_hs_parent):
+    # Get the data sample values
+    check_parcorr_wls_on_heteroskedastic_data(par_corr_wls_expert, data_sample_hs_parent)
+
+def test_parcorr_wls_on_heteroskedastic_data(par_corr_wls_expert_time, data_sample_hs_time):
+    # Get the data sample values
+    check_parcorr_wls_on_heteroskedastic_data(par_corr_wls_expert_time, data_sample_hs_time)
+
+@pytest.mark.parametrize("x_lag", [0, -1])
+@pytest.mark.parametrize("y_lag", [0, -1])
+def test_std_approximation(par_corr_wls_expert, data_sample_hs_parent, x_lag, y_lag):
+    # Get the data sample values
+    check_std_approximation(par_corr_wls_expert, data_sample_hs_parent, x_lag, y_lag)
+
+@pytest.mark.parametrize("x_lag", [0, -1])
+@pytest.mark.parametrize("y_lag", [0, -1])
+def test_std_approximation(par_corr_wls_expert_time, data_sample_hs_time, x_lag, y_lag):
+    # Get the data sample values
+    check_std_approximation(par_corr_wls_expert_time, data_sample_hs_time, x_lag, y_lag)
 
 # GPDC TESTING #################################################################
 @pytest.fixture()
@@ -336,7 +650,7 @@ def test_shuffle_sig_gpdc(gpdc, data_sample_b):
     # Get the data sample
     array, _, _, xyz, dim, T = data_sample_b
     # Trim the data sample down, time goes as T^2
-    T = int(T/4.)
+    T = int(T / 4.)
     array = array[:, :T]
     # Get the value of the dependence measurement
     val = gpdc.get_dependence_measure(array, xyz)
@@ -353,24 +667,24 @@ def test_trafo2uniform(gpdc, data_sample_a):
     bins = 10
     for i in range(array.shape[0]):
         hist, _ = np.histogram(uniform[i], bins=bins, density=True)
-        np.testing.assert_allclose(np.ones(bins)/float(bins),
-                                   hist/float(bins),
+        np.testing.assert_allclose(np.ones(bins) / float(bins),
+                                   hist / float(bins),
                                    atol=0.01)
 
 # GPDCtorch TESTING #################################################################
 @pytest.fixture()
 def gpdc_torch(request):
     return GPDCtorch(mask_type=None,
-                significance='analytic',
-                fixed_thres=0.1,
-                sig_samples=1000,
-                sig_blocklength=1,
-                confidence='bootstrap',
-                conf_lev=0.9,
-                conf_samples=100,
-                conf_blocklength=None,
-                recycle_residuals=False,
-                verbosity=0)
+                     significance='analytic',
+                     fixed_thres=0.1,
+                     sig_samples=1000,
+                     sig_blocklength=1,
+                     confidence='bootstrap',
+                     conf_lev=0.9,
+                     conf_samples=100,
+                     conf_blocklength=None,
+                     recycle_residuals=False,
+                     verbosity=0)
 
 # RE-USING SETUP FROM GPDC
 
@@ -422,7 +736,8 @@ def test_gpdc_torch_residuals(gpdc_torch, seed):
     T = 1000
     # Define the function to check against
     def func(x_arr, c_val=1.):
-        return c_val*x_arr*(1. - 4.*np.exp(-x_arr*x_arr/2.))
+        return c_val * x_arr * (1. - 4. * np.exp(-x_arr * x_arr / 2.))
+
     # Generate the array
     array = np.random.randn(3, T)
     # Manipulate the array
@@ -444,7 +759,7 @@ def test_shuffle_sig_gpdc_torch(gpdc_torch, data_sample_b):
     # Get the data sample
     array, _, _, xyz, dim, T = data_sample_b
     # Trim the data sample down, time goes as T^2
-    T = int(T/4.)
+    T = int(T / 4.)
     array = array[:, :T]
     # Get the value of the dependence measurement
     val = gpdc_torch.get_dependence_measure(array, xyz)
@@ -461,8 +776,8 @@ def test_trafo2uniform_torch(gpdc_torch, data_sample_a):
     bins = 10
     for i in range(array.shape[0]):
         hist, _ = np.histogram(uniform[i], bins=bins, density=True)
-        np.testing.assert_allclose(np.ones(bins)/float(bins),
-                                   hist/float(bins),
+        np.testing.assert_allclose(np.ones(bins) / float(bins),
+                                   hist / float(bins),
                                    atol=0.01)
 
 # CMIknn TESTING ###############################################################
@@ -532,8 +847,8 @@ def test_cmi_knn(cmi_knn, data_sample_c):
     array = np.random.randn(dim, T)
     array[:2, :] = small_array
     # Generate some confounding
-    array[0] += 0.5* array[2:].sum(axis=0)
-    array[1] += 0.7* array[2:].sum(axis=0)
+    array[0] += 0.5 * array[2:].sum(axis=0)
+    array[1] += 0.7 * array[2:].sum(axis=0)
     # Reset the dimension
     xyz = np.array([0, 1, 2, 2, 2])
     # Get the estimated value
@@ -583,7 +898,7 @@ def data_frame_d(request):
     return gen_data_frame(links_coeffs, time, seed_val)
 
 # TODO does not work
-#def test_run_test_cmi_symb(cmi_symb, data_frame_d):
+# def test_run_test_cmi_symb(cmi_symb, data_frame_d):
 #    # Make the data frame integer values
 #    df, parents = data_frame_d
 #    df.values = (df.values * 1000).astype(int)
@@ -591,7 +906,7 @@ def data_frame_d(request):
 #    check_run_test(cmi_symb, (df, parents))
 
 # TODO does not work
-#def test_run_test_cmi_symb(cmi_symb, data_frame_d):
+# def test_run_test_cmi_symb(cmi_symb, data_frame_d):
 #    # Make the data frame integer values
 #    df, parents = data_frame_d
 #    df.values = (df.values * 1000).astype(int)
@@ -606,12 +921,12 @@ def test_cmi_symb(cmi_symb, data_sample_d):
     array = np.random.randn(dim, T)
     array[:2, :] = small_array
     # Generate some confounding
-    array[0] += 0.5* array[2:].sum(axis=0)
-    array[1] += 0.7* array[2:].sum(axis=0)
+    array[0] += 0.5 * array[2:].sum(axis=0)
+    array[1] += 0.7 * array[2:].sum(axis=0)
     # Transform to symbolic data
     array = pp.quantile_bin_array(array.T, bins=16).T
     # Reset the dimension
-    xyz = np.array([0, 1, 2, 2, 2])
+    xyz = np.array([0, 1, 2])  #, 2, 2])
     # Get the estimated value
     val_est = cmi_symb.get_dependence_measure(array, xyz)
     np.testing.assert_allclose(np.array(_par_corr_to_cmi(corr_val)),

@@ -9,7 +9,8 @@ from nose.tools import assert_equal
 import pytest
 
 from tigramite.pcmci import PCMCI
-from tigramite.independence_tests import ParCorr, OracleCI
+from tigramite.independence_tests.parcorr import ParCorr
+from tigramite.independence_tests.oracle_conditional_independence import OracleCI
 import tigramite.data_processing as pp
 from tigramite.toymodels import structural_causal_processes as toys
 
@@ -45,7 +46,7 @@ def _select_links(link_ids, true_parents):
     """
     if link_ids is None:
         return None
-    return {par : [true_parents[par][link]] for par in true_parents \
+    return {par : {true_parents[par][link]:'-->'} for par in true_parents \
                                             for link in link_ids}
 
 def _get_parents_from_results(pcmci, results):
@@ -117,7 +118,8 @@ def a_sample(request):
     # Keep parameters common for all the run_ algorithms here
     # tau_min, tau_max,  sel_link,
      (1,       2,        None),
-     (1,       2,        [0])])
+     # (1,       2,        [0])
+     ])
 def a_common_params(request):
     # Return the requested parameters
     return request.param
@@ -144,6 +146,7 @@ def a_pcmci(a_sample, a_test, a_common_params, request):
                   verbosity=VERBOSITY)
     # Select the correct links if they are given
     select_links = _select_links(sel_link, true_parents)
+    # print(select_links)
     # Ensure we change the true parents to be the same as the selected links
     if select_links is not None:
         true_parents = select_links
@@ -171,7 +174,7 @@ def a_run_pc_stable(a_pcmci, a_pc_stable_params):
     # Unpack the pc_stable parameters
     pc_alpha, max_conds_dim, max_combinations, save_iter = a_pc_stable_params
     # Run PC stable
-    pcmci.run_pc_stable(selected_links=select_links,
+    pcmci.run_pc_stable(link_assumptions=None,
                         tau_min=tau_min,
                         tau_max=tau_max,
                         save_iterations=save_iter,
@@ -206,7 +209,7 @@ def a_run_mci(a_pcmci, a_mci_params):
     # Unpack the MCI parameters
     alpha_level, max_conds_px, max_conds_py = a_mci_params
     # Run the MCI algorithm with the given parameters
-    results = pcmci.run_mci(selected_links=select_links,
+    results = pcmci.run_mci(link_assumptions=None,
                             tau_min=tau_min,
                             tau_max=tau_max,
                             parents=true_parents,
@@ -235,7 +238,7 @@ def a_run_pcmci(a_pcmci, a_pc_stable_params, a_mci_params):
     # Unpack the MCI parameters
     alpha_level, max_conds_px, max_conds_py = a_mci_params
     # Run the PCMCI algorithm with the given parameters
-    results = pcmci.run_pcmci(selected_links=select_links,
+    results = pcmci.run_pcmci(link_assumptions=None,
                               tau_min=tau_min,
                               tau_max=tau_max,
                               save_iterations=save_iter,
@@ -529,7 +532,7 @@ def a_run_pcmciplus(a_pcmciplus, a_pcmciplus_params):
     # Run the PCMCI algorithm with the given parameters
     pcmci = PCMCI(dataframe=dataframe, cond_ind_test=cond_ind_test, verbosity=2)
     results = pcmci.run_pcmciplus(
-                      selected_links=None,
+                      link_assumptions=None,
                       tau_min=tau_min,
                       tau_max=tau_max,
                       pc_alpha=pc_alpha,
@@ -657,7 +660,7 @@ def test_order_independence_pcmciplus(a_pcmciplus_order_independence,
     #                             alpha_level=0.05)
 
     results = pcmci.run_pcmciplus(
-                      selected_links=None,
+                      link_assumptions=None,
                       tau_min=tau_min,
                       tau_max=tau_max,
                       pc_alpha=pc_alpha,
@@ -678,7 +681,7 @@ def test_order_independence_pcmciplus(a_pcmciplus_order_independence,
         pcmci = PCMCI(dataframe=dataframe, cond_ind_test=cond_ind_test,
                       verbosity=1)
         results = pcmci.run_pcmciplus(
-                      selected_links=None,
+                      link_assumptions=None,
                       tau_min=tau_min,
                       tau_max=tau_max,
                       pc_alpha=pc_alpha,

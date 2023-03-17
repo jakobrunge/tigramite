@@ -8,29 +8,10 @@ from __future__ import print_function
 import json, warnings, os, pathlib
 import numpy as np
 import gc
-try:
-    from importlib import metadata
-except ImportError:
-    import importlib_metadata as metadata  # python<=3.7
-try:
-    import dcor
-    import torch
-    import gpytorch
-    from .LBFGS import FullBatchLBFGS
-    with open(pathlib.Path(os.path.dirname(__file__)) / '../../versions.py', 'r') as vfile:
-        packages = json.loads(vfile.read())['all']
-        packages = dict(map(lambda s: s.split('>='), packages))
-        if metadata.version('dcor') < packages['dcor']:
-            raise Exception('Version mismatch. Installed version of dcor', metadata.version('dcor'),
-                            'Please install dcor>=', packages['dcor'])
-        if metadata.version('torch') < packages['torch']:
-            raise Exception('Version mismatch. Installed version of torch', metadata.version('torch'),
-                            'Please install torch>=', packages['torch'])
-        if metadata.version('gpytorch') < packages['gpytorch']:
-            raise Exception('Version mismatch. Installed version of gpytorch', metadata.version('gpytorch'),
-                          'Please install gpytorch>=', packages['gpytorch'])
-except Exception as e:
-    warnings.warn(str(e))
+import dcor
+import torch
+import gpytorch
+from .LBFGS import FullBatchLBFGS
 from .independence_tests_base import CondIndTest
 
 class GaussProcRegTorch():
@@ -65,6 +46,7 @@ class GaussProcRegTorch():
                  null_samples,
                  cond_ind_test,
                  null_dist_filename=None,
+                 checkpoint_size=None,
                  verbosity=0):
         # Set the dependence measure function
         self.cond_ind_test = cond_ind_test
@@ -79,7 +61,7 @@ class GaussProcRegTorch():
             self.null_dists, self.null_samples = \
                 self._load_nulldist(self.null_dist_filename)
         # Size for batching
-        self.checkpoint_size = None
+        self.checkpoint_size = checkpoint_size
 
     def _load_nulldist(self, filename):
         r"""
@@ -469,7 +451,7 @@ class GaussProcRegTorch():
         Y = [(j, 0)]
         X = [(j, 0)]   # dummy variable here
         Z = parents
-        array, xyz = \
+        array, xyz, _ = \
             self.cond_ind_test.dataframe.construct_array(
                 X=X, Y=Y, Z=Z,
                 tau_max=tau_max,

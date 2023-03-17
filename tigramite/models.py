@@ -8,31 +8,11 @@ from __future__ import print_function
 from copy import deepcopy
 import json, warnings, os, pathlib
 import numpy as np
-try:
-    from importlib import metadata
-except ImportError:
-    import importlib_metadata as metadata  # python<=3.7
-try:
-    import sklearn
-    import sklearn.linear_model
-    import networkx
-    with open(pathlib.Path(os.path.dirname(__file__)) / '../versions.py', 'r') as vfile:
-        packages = json.loads(vfile.read())['all']
-        packages = dict(map(lambda s: s.split('>='), packages))
-        if metadata.version('scikit-learn') < packages['scikit-learn']:
-            raise Exception('Version mismatch. Installed version of scikit-learn', metadata.version('scikit-learn'),
-                          'Please install scikit-learn>=', packages['scikit-learn'])
-        if metadata.version('networkx') < packages['networkx']:
-            raise Exception('Version mismatch. Installed version of networkx', metadata.version('networkx'),
-                          'Please install networkx>=', packages['networkx'])
-except Exception as e:
-    warnings.warn(str(e))
+import sklearn
+import sklearn.linear_model
+import networkx
 from tigramite.data_processing import DataFrame
 from tigramite.pcmci import PCMCI
-
-### remove!!!
-from matplotlib import pyplot as plt
-from scipy.stats import kde
 
 class Models():
     """Base class for time series models.
@@ -165,7 +145,7 @@ class Models():
         for y in self.Y:
 
             # Construct array of shape (var, time)
-            array, xyz = \
+            array, xyz, _ = \
                 self.dataframe.construct_array(X=self.X, Y=[y],  
                                                Z=self.conditions,
                                                extraZ=self.Z,
@@ -230,7 +210,9 @@ class Models():
                 intervention_data,
                 conditions_data=None,
                 pred_params=None,
+                transform_interventions_and_prediction=False,
                 return_further_pred_results=False,
+                aggregation_func=np.mean,
                 ):
         r"""Predict effect of intervention with fitted model.
 
@@ -244,9 +226,14 @@ class Models():
             Numpy array of shape (time, len(S)) that contains the S=s values.
         pred_params : dict, optional
             Optional parameters passed on to sklearn prediction function.
+        transform_interventions_and_prediction : bool (default: False)
+            Whether to perform the inverse data_transform on prediction results.
         return_further_pred_results : bool, optional (default: False)
             In case the predictor class returns more than just the expected value,
             the entire results can be returned.
+        aggregation_func : callable
+            Callable applied to output of 'predict'. Default is 'np.mean'.
+
         Returns
         -------
         Results from prediction.
@@ -266,7 +253,7 @@ class Models():
         lenS = len(self.conditions)
         lenY = len(self.Y)
 
-        predicted_array = np.zeros((intervention_T, lenY))
+        # predicted_array = np.zeros((intervention_T, lenY))
         pred_dict = {}
         for iy, y in enumerate(self.Y):
             pred_dict[iy] = {}
@@ -285,7 +272,7 @@ class Models():
 
             # Transform the data if needed
             fitted_data_transform = self.fit_results[y]['fitted_data_transform']
-            if fitted_data_transform is not None:
+            if transform_interventions_and_prediction and fitted_data_transform is not None:
                 intervention_data = fitted_data_transform['X'].transform(X=intervention_data)
                 if self.conditions is not None and conditions_data is not None:
                     conditions_data = fitted_data_transform['S'].transform(X=conditions_data)
@@ -312,6 +299,7 @@ class Models():
                 predicted_vals = self.fit_results[y]['model'].predict(
                 X=predictor_array, **pred_params)
 
+                # print(predicted_vals)
                 if self.conditions is not None and conditions_data is not None:
  
                     a_conditional_model = deepcopy(self.conditional_model)
@@ -327,15 +315,26 @@ class Models():
                     predicted_vals = a_conditional_model.predict(
                         X=conditions_array, **pred_params)
 
-                if type(predicted_vals) is tuple:
-                    predicted_array[index, iy] = predicted_vals[0].mean()
-                    pred_dict[iy][index] = predicted_vals
-                else:
-                    predicted_array[index, iy] = predicted_vals.mean()
+                if transform_interventions_and_prediction and fitted_data_transform is not None:
+                    predicted_vals = fitted_data_transform['Y'].inverse_transform(X=predicted_vals.reshape(-1, 1)).squeeze()
 
-                if fitted_data_transform is not None:
-                    rescaled = fitted_data_transform['Y'].inverse_transform(X=predicted_array[index, iy].reshape(-1, 1))
-                    predicted_array[index, iy] = rescaled.squeeze()
+                pred_dict[iy][index] = predicted_vals
+
+                # Apply aggregation function
+                if type(predicted_vals) is tuple:
+                    aggregated_pred = aggregation_func(predicted_vals[0])
+                else:
+                    aggregated_pred = aggregation_func(predicted_vals)
+
+                if iy == 0 and index == 0:
+                    predicted_array = np.empty((intervention_T, lenY,) + aggregated_pred.shape, 
+                                            dtype=aggregated_pred.dtype)
+
+                predicted_array[index, iy] = aggregated_pred
+
+                # if fitted_data_transform is not None:
+                #     rescaled = fitted_data_transform['Y'].inverse_transform(X=predicted_array[index, iy].reshape(-1, 1))
+                #     predicted_array[index, iy] = rescaled.squeeze()
 
         if return_further_pred_results:
             return predicted_array, pred_dict
@@ -343,7 +342,7 @@ class Models():
             return predicted_array
 
 
-    def get_fit(self, all_parents,
+    def fit_full_model(self, all_parents,
                 selected_variables=None,
                 tau_max=None,
                 cut_off='max_lag_or_tau_max',
@@ -407,7 +406,7 @@ class Models():
             Y = [(j, 0)]
             X = [(j, 0)]  # dummy
             Z = self.all_parents[j]
-            array, xyz = \
+            array, xyz, _ = \
                 self.dataframe.construct_array(X, Y, Z,
                                                tau_max=self.tau_max,
                                                mask_type=self.mask_type,
@@ -420,22 +419,22 @@ class Models():
             # Transform the data if needed
             if self.data_transform is not None:
                 array = self.data_transform.fit_transform(X=array.T).T
+            # Cache the results
+            fit_results[j] = {}
+            # Cache the data transform
+            fit_results[j]['data_transform'] = deepcopy(self.data_transform)
+
+            if return_data:
+                # Cache the data if needed
+                fit_results[j]['data'] = array
+                fit_results[j]['used_indices'] = self.dataframe.use_indices_dataset_dict
             # Fit the model if there are any parents for this variable to fit
             if dim_z > 0:
                 # Copy and fit the model
                 a_model = deepcopy(self.model)
                 a_model.fit(X=array[2:].T, y=array[1])
-                # Cache the results
-                fit_results[j] = {}
+
                 fit_results[j]['model'] = a_model
-                # Cache the data transform
-                fit_results[j]['data_transform'] = deepcopy(self.data_transform)
-                # Cache the data if needed
-                if return_data:
-                    fit_results[j]['data'] = array
-            # If there are no parents, skip this variable
-            else:
-                fit_results[j] = None
 
         # Cache and return the fit results
         self.fit_results = fit_results
@@ -486,10 +485,10 @@ class LinearMediation(Models):
 
     Fits linear model to parents and provides functions to return measures such
     as causal effect, mediated causal effect, average causal effect, etc. as
-    described in [4]_.
+    described in [4]_. Also allows for contemporaneous links.
 
-    For general nonlinear, lagged and contemporaneous causal effect analysis, 
-    use the CausalEffects class.
+    For general linear and nonlinear causal effect analysis including latent
+    variables and further functionality use the CausalEffects class.
 
     Notes
     -----
@@ -515,9 +514,8 @@ class LinearMediation(Models):
 
     Examples
     --------
-    >>> numpy.random.seed(42)
     >>> links_coeffs = {0: [], 1: [((0, -1), 0.5)], 2: [((1, -1), 0.5)]}
-    >>> data, true_parents = toys.var_process(links_coeffs, T=1000)
+    >>> data, true_parents = toys.var_process(links_coeffs, T=1000, seed=42)
     >>> dataframe = pp.DataFrame(data)
     >>> med = LinearMediation(dataframe=dataframe)
     >>> med.fit_model(all_parents=true_parents, tau_max=3)
@@ -550,7 +548,7 @@ class LinearMediation(Models):
         optionally a mask of the same shape and a missing values flag.
     model_params : dictionary, optional (default: None)
         Optional parameters passed on to sklearn model
-    data_transform : sklearn preprocessing object, optional (default: None)
+    data_transform : sklearn preprocessing object, optional (default: StandardScaler)
         Used to transform data prior to fitting. For example,
         sklearn.preprocessing.StandardScaler for simple standardization. The
         fitted parameters are stored.
@@ -572,6 +570,15 @@ class LinearMediation(Models):
         self.phi = None
         self.psi = None
         self.all_psi_k = None
+        self.dataframe = dataframe
+        self.mask_type = mask_type
+        self.data_transform = data_transform
+        if model_params is None:
+            self.model_params = {}
+        else:
+            self.model_params = model_params
+
+        self.bootstrap_available = False
 
         # Build the model using the parameters
         if model_params is None:
@@ -589,28 +596,19 @@ class LinearMediation(Models):
 
         Fits a sklearn.linear_model.LinearRegression model to the parents of
         each variable and computes the coefficient matrices :math:`\Phi` and
-        :math:`\Psi` as described in [4]_. Does not accepted
-        contemporaneous links.
+        :math:`\Psi` as described in [4]_. Does accept contemporaneous links.
 
         Parameters
         ----------
         all_parents : dictionary
-            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing
+            Dictionary of form {0:[(0, -1), (3, 0), ...], 1:[], ...} containing
             the parents estimated with PCMCI.
         tau_max : int, optional (default: None)
             Maximum time lag. If None, the maximum lag in all_parents is used.
         """
-        for j in all_parents.keys():
-            for parent in all_parents[j]:
-                var, lag = parent
-                if lag == 0:
-                    raise ValueError("all_parents cannot contain "
-                                     "contemporaneous links for the LinearMediation"
-                                     " class. Use the optimal causal effects "
-                                     "class.")
 
         # Fit the model using the base class
-        self.fit_results = self.get_fit(all_parents=all_parents,
+        self.fit_results = self.fit_full_model(all_parents=all_parents,
                                         selected_variables=None,
                                         tau_max=tau_max)
         # Cache the results in the member variables
@@ -618,6 +616,145 @@ class LinearMediation(Models):
         self.phi = self._get_phi(coeffs)
         self.psi = self._get_psi(self.phi)
         self.all_psi_k = self._get_all_psi_k(self.phi)
+
+        self.all_parents = all_parents
+        self.tau_max = tau_max
+
+    def fit_model_bootstrap(self, 
+            boot_blocklength=1,
+            seed=None,
+            boot_samples=100):
+        """Fits boostrap-versions of Phi, Psi, etc.
+
+        Random draws are generated
+
+        Parameters
+        ----------
+        boot_blocklength : int, or in {'cube_root', 'from_autocorrelation'}
+            Block length for block-bootstrap, which only applies to
+            generate_noise_from='residuals'. If 'from_autocorrelation', the block
+            length is determined from the decay of the autocovariance and
+            if 'cube_root' it is the cube root of the time series length.
+        seed : int, optional(default = None)
+            Seed for RandomState (default_rng)
+        boot_samples : int
+            Number of bootstrap samples.
+        """
+
+        self.phi_boots = np.empty((boot_samples,) + self.phi.shape)
+        self.psi_boots = np.empty((boot_samples,) + self.psi.shape)
+        self.all_psi_k_boots = np.empty((boot_samples,) + self.all_psi_k.shape)
+
+        if self.verbosity > 0:
+            print("\n##\n## Generating bootstrap samples of Phi, Psi, etc "  +
+                  "\n##\n" +
+                  "\nboot_samples = %s \n" % boot_samples +
+                  "\nboot_blocklength = %s \n" % boot_blocklength
+                  )
+
+
+        for b in range(boot_samples):
+            # # Replace dataframe in method args by bootstrapped dataframe
+            # method_args_bootstrap['dataframe'].bootstrap = boot_draw
+            if seed is None:
+                random_state = np.random.default_rng(None)
+            else:
+                random_state = np.random.default_rng(seed+b)
+
+            dataframe_here = deepcopy(self.dataframe)
+
+            dataframe_here.bootstrap = {'boot_blocklength':boot_blocklength,
+                                        'random_state':random_state}
+
+            model = Models(dataframe=dataframe_here,
+                           model=sklearn.linear_model.LinearRegression(**self.model_params),
+                           data_transform=self.data_transform,
+                           mask_type=self.mask_type,
+                           verbosity=0)
+
+            model.fit_full_model(all_parents=self.all_parents,
+                           tau_max=self.tau_max)
+
+            # Cache the results in the member variables
+            coeffs = model.get_coefs()
+            phi = self._get_phi(coeffs)
+            self.phi_boots[b] = phi
+            self.psi_boots[b] = self._get_psi(phi)
+            self.all_psi_k_boots[b] = self._get_all_psi_k(phi)
+
+        self.bootstrap_available = True
+
+        return self
+
+    def get_bootstrap_of(self, function, function_args, conf_lev=0.9):
+        """Applies bootstrap-versions of Phi, Psi, etc. to any function in 
+        this class.
+
+        Parameters
+        ----------
+        function : string
+            Valid function from LinearMediation class
+        function_args : dict
+            Optional function arguments.
+        conf_lev : float
+            Confidence interval.
+
+        Returns
+        -------
+        Upper/Lower confidence interval of function.
+        """
+
+        valid_functions = [
+            'get_coeff',
+            'get_ce',
+            'get_ce_max',
+            'get_joint_ce',
+            'get_joint_ce_matrix',
+            'get_mce',
+            'get_conditional_mce',
+            'get_joint_mce',
+            'get_ace',
+            'get_all_ace',
+            'get_acs',
+            'get_all_acs',
+            'get_amce',
+            'get_all_amce',
+            'get_val_matrix',
+            ]
+
+        if function not in valid_functions:
+            raise ValueError("function must be in %s" %valid_functions)
+
+        realizations = self.phi_boots.shape[0]
+
+        original_phi = deepcopy(self.phi)
+        original_psi = deepcopy(self.psi)
+        original_all_psi_k = deepcopy(self.all_psi_k)
+
+        for r in range(realizations):
+            self.phi = self.phi_boots[r]
+            self.psi = self.psi_boots[r]
+            self.all_psi_k = self.all_psi_k_boots[r]
+
+            boot_effect = getattr(self, function)(**function_args)
+
+            if r == 0:
+                bootstrap_result = np.empty((realizations, ) + boot_effect.shape)
+
+            bootstrap_result[r] = boot_effect
+
+        # Confidence intervals for val_matrix; interval is two-sided
+        c_int = (1. - (1. - conf_lev)/2.)
+        confidence_interval = np.percentile(
+                bootstrap_result, axis=0,
+                q = [100*(1. - c_int), 100*c_int])
+
+        self.phi = original_phi
+        self.psi = original_psi 
+        self.all_psi_k = original_all_psi_k 
+
+        return confidence_interval
+
 
     def _check_sanity(self, X, Y, k=None):
         """Checks validity of some parameters."""
@@ -650,8 +787,9 @@ class LinearMediation(Models):
         """
 
         phi = np.zeros((self.tau_max + 1, self.N, self.N))
-        phi[0] = np.identity(self.N)
+        # phi[0] = np.identity(self.N)
 
+        # Also includes contemporaneous lags
         for j in list(coeffs):
             for par in list(coeffs[j]):
                 i, tau = par
@@ -660,7 +798,8 @@ class LinearMediation(Models):
         return phi
 
     def _get_psi(self, phi):
-        """Returns the linear causal effect matrices for different lags.
+        """Returns the linear causal effect matrices for different lags incl
+        lag zero.
 
         Parameters
         ----------
@@ -670,28 +809,41 @@ class LinearMediation(Models):
         Returns
         -------
         psi : array-like, shape (tau_max + 1, N, N)
-            Matrices of causal effects for each time lag.
+            Matrices of causal effects for each time lag incl contemporaneous links.
         """
 
         psi = np.zeros((self.tau_max + 1, self.N, self.N))
 
-        psi[0] = np.identity(self.N)
-        for n in range(1, self.tau_max + 1):
-            psi[n] = np.zeros((self.N, self.N))
-            for s in range(1, n + 1):
-                psi[n] += np.dot(phi[s], psi[n - s])
+        psi[0] = np.linalg.pinv(np.identity(self.N) - phi[0])
+
+        for tau in range(1, self.tau_max + 1):
+            # psi[tau] = np.matmul(psi[0], np.matmul(phi[tau], psi[0]))
+            for s in range(1, tau + 1):
+                psi[tau] += np.matmul(psi[0], np.matmul(phi[s], psi[tau - s]) ) 
+
+        # Lagged-only effects:
+        # psi = np.zeros((self.tau_max + 1, self.N, self.N))
+
+        # psi[0] = np.identity(self.N)
+        # for n in range(1, self.tau_max + 1):
+        #     psi[n] = np.zeros((self.N, self.N))
+        #     for s in range(1, n + 1):
+        #         psi[n] += np.dot(phi[s], psi[n - s])
 
         return psi
 
     def _get_psi_k(self, phi, k):
         """Returns the linear causal effect matrices excluding variable k.
 
+        Essentially, this blocks all path through parents of variable k
+        at any lag.
+
         Parameters
         ----------
         phi : array-like
             Coefficient matrices at different lags.
-        k : int
-            Variable index to exclude causal effects through.
+        k : int or list of ints
+            Variable indices to exclude causal effects through.
 
         Returns
         -------
@@ -700,14 +852,29 @@ class LinearMediation(Models):
         """
 
         psi_k = np.zeros((self.tau_max + 1, self.N, self.N))
-
-        psi_k[0] = np.identity(self.N)
+        
         phi_k = np.copy(phi)
-        phi_k[1:, k, :] = 0.
-        for n in range(1, self.tau_max + 1):
-            psi_k[n] = np.zeros((self.N, self.N))
-            for s in range(1, n + 1):
-                psi_k[n] += np.dot(phi_k[s], psi_k[n - s])
+        if isinstance(k, int):
+            phi_k[:, k, :] = 0.
+        else:
+            for k_here in k:
+                phi_k[:, k_here, :] = 0.
+
+
+        psi_k[0] = np.linalg.pinv(np.identity(self.N) - phi_k[0])
+        for tau in range(1, self.tau_max + 1):
+            # psi_k[tau] = np.matmul(psi_k[0], np.matmul(phi_k[tau], psi_k[0]))
+            for s in range(1, tau + 1):
+                psi_k[tau] += np.matmul(psi_k[0], np.matmul(phi_k[s], psi_k[tau - s])) 
+
+
+        # psi_k[0] = np.identity(self.N)
+        # phi_k = np.copy(phi)
+        # phi_k[:, k, :] = 0.
+        # for n in range(1, self.tau_max + 1):
+        #     psi_k[n] = np.zeros((self.N, self.N))
+        #     for s in range(1, n + 1):
+        #         psi_k[n] += np.dot(phi_k[s], psi_k[n - s])
 
         return psi_k
 
@@ -733,7 +900,431 @@ class LinearMediation(Models):
 
         return all_psi_k
 
-    def get_val_matrix(self, ):
+    def get_coeff(self, i, tau, j):
+        """Returns link coefficient.
+
+        This is the direct causal effect for a particular link (i, -tau) --> j.
+
+        Parameters
+        ----------
+        i : int
+            Index of cause variable.
+        tau : int
+            Lag of cause variable (incl lag zero).
+        j : int
+            Index of effect variable.
+
+        Returns
+        -------
+        coeff : float
+        """
+        return self.phi[abs(tau), j, i]
+
+    def get_ce(self, i, tau, j):
+        """Returns the causal effect.
+
+        This is the causal effect for  (i, -tau) -- --> j.
+
+        Parameters
+        ----------
+        i : int
+            Index of cause variable.
+        tau : int
+            Lag of cause variable (incl lag zero).
+        j : int
+            Index of effect variable.
+
+        Returns
+        -------
+        ce : float
+        """
+        return self.psi[abs(tau), j, i]
+
+    def get_ce_max(self, i, j):
+        """Returns the causal effect.
+
+        This is the maximum absolute causal effect for  i --> j across all
+        lags (incl lag zero).
+
+        Parameters
+        ----------
+        i : int
+            Index of cause variable.
+        j : int
+            Index of effect variable.
+
+        Returns
+        -------
+        ce : float
+        """
+        argmax = np.abs(self.psi[:, j, i]).argmax()
+        return self.psi[:, j, i][argmax]
+
+    def get_joint_ce(self, i, j):
+        """Returns the joint causal effect.
+
+        This is the causal effect from all lags [t, ..., t-tau_max]
+        of i on j at time t. Note that the joint effect does not
+        count links passing through parents of i itself.
+
+        Parameters
+        ----------
+        i : int
+            Index of cause variable.
+        j : int
+            Index of effect variable.
+
+        Returns
+        -------
+        joint_ce : array of shape (tau_max + 1)
+            Causal effect from each lag [t, ..., t-tau_max] of i on j.
+        """
+        joint_ce = self.all_psi_k[i, :, j, i]
+        return joint_ce
+
+    def get_joint_ce_matrix(self, i, j):
+        """Returns the joint causal effect matrix of i on j.
+
+        This is the causal effect from all lags [t, ..., t-tau_max]
+        of i on j at times [t, ..., t-tau_max]. Note that the joint effect does not
+        count links passing through parents of i itself.
+
+        An entry (taui, tauj) stands for the effect of i at t-taui on j at t-tauj.
+
+        Parameters
+        ----------
+        i : int
+            Index of cause variable.
+        j : int
+            Index of effect variable.
+
+        Returns
+        -------
+        joint_ce_matrix : 2d array of shape (tau_max + 1, tau_max + 1)
+            Causal effect matrix from each lag of i on each lag of j.
+        """
+        joint_ce_matrix = np.zeros((self.tau_max + 1, self.tau_max + 1))
+        for tauj in range(self.tau_max + 1):
+            joint_ce_matrix[tauj:, tauj] = self.all_psi_k[i, tauj:, j, i][::-1]
+
+        return joint_ce_matrix
+
+    def get_mce(self, i, tau, j, k):
+        """Returns the mediated causal effect.
+
+        This is the causal effect for  i --> j minus the causal effect not going
+        through k.
+
+        Parameters
+        ----------
+        i : int
+            Index of cause variable.
+        tau : int
+            Lag of cause variable.
+        j : int
+            Index of effect variable.
+        k : int or list of ints
+            Indices of mediator variables.
+
+        Returns
+        -------
+        mce : float
+        """
+        if isinstance(k, int):
+            effect_without_k = self.all_psi_k[k, abs(tau), j, i]
+        else:
+            effect_without_k = self._get_psi_k(self.phi, k=k)[abs(tau), j, i]
+
+        mce = self.psi[abs(tau), j, i] - effect_without_k
+        return mce
+
+    def get_conditional_mce(self, i, tau, j, k, notk):
+        """Returns the conditional mediated causal effect.
+
+        This is the causal effect for  i --> j for all paths going through k, but not through notk.
+
+        Parameters
+        ----------
+        i : int
+            Index of cause variable.
+        tau : int
+            Lag of cause variable.
+        j : int
+            Index of effect variable.
+        k : int or list of ints
+            Indices of mediator variables.
+        notk : int or list of ints
+            Indices of mediator variables to exclude.
+
+        Returns
+        -------
+        mce : float
+        """
+        if isinstance(k, int):
+            k = set([k])
+        else:
+            k = set(k)
+        if isinstance(notk, int):
+            notk = set([notk])
+        else:
+            notk = set(notk)
+
+        bothk = list(k.union(notk))
+        notk = list(notk)
+  
+        effect_without_bothk = self._get_psi_k(self.phi, k=bothk)[abs(tau), j, i]
+        effect_without_notk = self._get_psi_k(self.phi, k=notk)[abs(tau), j, i]
+
+        # mce = self.psi[abs(tau), j, i] - effect_without_k
+        mce = effect_without_notk - effect_without_bothk
+
+        return mce
+
+
+    def get_joint_mce(self, i, j, k):
+        """Returns the joint causal effect mediated through k.
+
+        This is the mediated causal effect from all lags [t, ..., t-tau_max]
+        of i on j at time t for paths through k. Note that the joint effect
+        does not count links passing through parents of i itself.
+
+        Parameters
+        ----------
+        i : int
+            Index of cause variable.
+        j : int
+            Index of effect variable.
+        k : int or list of ints
+            Indices of mediator variables.
+
+        Returns
+        -------
+        joint_mce : array of shape (tau_max + 1)
+            Mediated causal effect from each lag [t, ..., t-tau_max] of i on j through k.
+        """
+        if isinstance(k, int):
+            k_here = [k]
+
+        effect_without_k = self._get_psi_k(self.phi, k=[i] + k_here)
+
+        joint_mce = self.all_psi_k[i, :, j, i] - effect_without_k[:, j, i]
+        return joint_mce
+
+    def get_ace(self, i, lag_mode='absmax', exclude_i=True):
+        """Returns the average causal effect.
+
+        This is the average causal effect (ACE) emanating from variable i to any
+        other variable. With lag_mode='absmax' this is based on the lag of
+        maximum CE for each pair.
+
+        Parameters
+        ----------
+        i : int
+            Index of cause variable.
+        lag_mode : {'absmax', 'all_lags'}
+            Lag mode. Either average across all lags between each pair or only
+            at the lag of maximum absolute causal effect.
+        exclude_i : bool, optional (default: True)
+            Whether to exclude causal effects on the variable itself at later
+            lags.
+
+        Returns
+        -------
+        ace :float
+            Average Causal Effect.
+        """
+
+        all_but_i = np.ones(self.N, dtype='bool')
+        if exclude_i:
+            all_but_i[i] = False
+
+        if lag_mode == 'absmax':
+            return np.abs(self.psi[:, all_but_i, i]).max(axis=0).mean()
+        elif lag_mode == 'all_lags':
+            return np.abs(self.psi[:, all_but_i, i]).mean()
+        else:
+            raise ValueError("lag_mode = %s not implemented" % lag_mode)
+
+    def get_all_ace(self, lag_mode='absmax', exclude_i=True):
+        """Returns the average causal effect for all variables.
+
+        This is the average causal effect (ACE) emanating from variable i to any
+        other variable. With lag_mode='absmax' this is based on the lag of
+        maximum CE for each pair.
+
+        Parameters
+        ----------
+        lag_mode : {'absmax', 'all_lags'}
+            Lag mode. Either average across all lags between each pair or only
+            at the lag of maximum absolute causal effect.
+        exclude_i : bool, optional (default: True)
+            Whether to exclude causal effects on the variable itself at later
+            lags.
+
+        Returns
+        -------
+        ace : array of shape (N,)
+            Average Causal Effect for each variable.
+        """
+
+        ace = np.zeros(self.N)
+        for i in range(self.N):
+            ace[i] = self.get_ace(i, lag_mode=lag_mode, exclude_i=exclude_i)
+
+        return ace
+
+    def get_acs(self, j, lag_mode='absmax', exclude_j=True):
+        """Returns the average causal susceptibility.
+
+        This is the Average Causal Susceptibility (ACS) affecting a variable j
+        from any other variable. With lag_mode='absmax' this is based on the lag
+        of maximum CE for each pair.
+
+        Parameters
+        ----------
+        j : int
+            Index of variable.
+        lag_mode : {'absmax', 'all_lags'}
+            Lag mode. Either average across all lags between each pair or only
+            at the lag of maximum absolute causal effect.
+        exclude_j : bool, optional (default: True)
+            Whether to exclude causal effects on the variable itself at previous
+            lags.
+
+        Returns
+        -------
+        acs : float
+            Average Causal Susceptibility.
+        """
+
+        all_but_j = np.ones(self.N, dtype='bool')
+        if exclude_j:
+            all_but_j[j] = False
+
+        if lag_mode == 'absmax':
+            return np.abs(self.psi[:, j, all_but_j]).max(axis=0).mean()
+        elif lag_mode == 'all_lags':
+            return np.abs(self.psi[:, j, all_but_j]).mean()
+        else:
+            raise ValueError("lag_mode = %s not implemented" % lag_mode)
+
+    def get_all_acs(self, lag_mode='absmax', exclude_j=True):
+        """Returns the average causal susceptibility.
+
+        This is the Average Causal Susceptibility (ACS) for each variable from
+        any other variable. With lag_mode='absmax' this is based on the lag of
+        maximum CE for each pair.
+
+        Parameters
+        ----------
+        lag_mode : {'absmax', 'all_lags'}
+            Lag mode. Either average across all lags between each pair or only
+            at the lag of maximum absolute causal effect.
+        exclude_j : bool, optional (default: True)
+            Whether to exclude causal effects on the variable itself at previous
+            lags.
+
+        Returns
+        -------
+        acs : array of shape (N,)
+            Average Causal Susceptibility.
+        """
+
+        acs = np.zeros(self.N)
+        for j in range(self.N):
+            acs[j] = self.get_acs(j, lag_mode=lag_mode, exclude_j=exclude_j)
+
+        return acs
+
+    def get_amce(self, k, lag_mode='absmax',
+                 exclude_k=True, exclude_self_effects=True):
+        """Returns the average mediated causal effect.
+
+        This is the Average Mediated Causal Effect (AMCE) through a variable k
+        With lag_mode='absmax' this is based on the lag of maximum CE for each
+        pair.
+
+        Parameters
+        ----------
+        k : int
+            Index of variable.
+        lag_mode : {'absmax', 'all_lags'}
+            Lag mode. Either average across all lags between each pair or only
+            at the lag of maximum absolute causal effect.
+        exclude_k : bool, optional (default: True)
+            Whether to exclude causal effects through the variable itself at
+            previous lags.
+        exclude_self_effects : bool, optional (default: True)
+            Whether to exclude causal self effects of variables on themselves.
+
+        Returns
+        -------
+        amce : float
+            Average Mediated Causal Effect.
+        """
+
+        all_but_k = np.ones(self.N, dtype='bool')
+        if exclude_k:
+            all_but_k[k] = False
+            N_new = self.N - 1
+        else:
+            N_new = self.N
+
+        if exclude_self_effects:
+            weights = np.identity(N_new) == False
+        else:
+            weights = np.ones((N_new, N_new), dtype='bool')
+
+        # if self.tau_max < 2:
+        #     raise ValueError("Mediation only nonzero for tau_max >= 2")
+
+        all_mce = self.psi[:, :, :] - self.all_psi_k[k, :, :, :]
+        # all_mce[:, range(self.N), range(self.N)] = 0.
+
+        if lag_mode == 'absmax':
+            return np.average(np.abs(all_mce[:, all_but_k, :]
+                                     [:, :, all_but_k]
+                                     ).max(axis=0), weights=weights)
+        elif lag_mode == 'all_lags':
+            return np.abs(all_mce[:, all_but_k, :][:, :, all_but_k]).mean()
+        else:
+            raise ValueError("lag_mode = %s not implemented" % lag_mode)
+
+    def get_all_amce(self, lag_mode='absmax',
+                     exclude_k=True, exclude_self_effects=True):
+        """Returns the average mediated causal effect.
+
+        This is the Average Mediated Causal Effect (AMCE) through all variables
+        With lag_mode='absmax' this is based on the lag of maximum CE for each
+        pair.
+
+        Parameters
+        ----------
+        lag_mode : {'absmax', 'all_lags'}
+            Lag mode. Either average across all lags between each pair or only
+            at the lag of maximum absolute causal effect.
+        exclude_k : bool, optional (default: True)
+            Whether to exclude causal effects through the variable itself at
+            previous lags.
+        exclude_self_effects : bool, optional (default: True)
+            Whether to exclude causal self effects of variables on themselves.
+
+        Returns
+        -------
+        amce : array of shape (N,)
+            Average Mediated Causal Effect.
+        """
+        amce = np.zeros(self.N)
+        for k in range(self.N):
+            amce[k] = self.get_amce(k,
+                                    lag_mode=lag_mode,
+                                    exclude_k=exclude_k,
+                                    exclude_self_effects=exclude_self_effects)
+
+        return amce
+
+
+    def get_val_matrix(self, symmetrize=False):
         """Returns the matrix of linear coefficients.
 
         Requires fit_model() before. An entry val_matrix[i,j,tau] gives the
@@ -741,12 +1332,29 @@ class LinearMediation(Models):
         to zero for LinearMediation, use Models class for contemporaneous 
         models.
 
+        Parameters
+        ----------
+        symmetrize : bool
+            If True, the lag-zero entries will be symmetrized such that
+            no zeros appear. Useful since other parts of tigramite 
+            through an error for non-symmetric val_matrix, eg plotting.
+
         Returns
         -------
         val_matrix : array
             Matrix of linear coefficients, shape (N, N, tau_max + 1).
         """
-        return self.phi.transpose()
+        val_matrix = np.copy(self.phi.transpose())
+        N = val_matrix.shape[0]
+
+        if symmetrize:
+            # Symmetrize since otherwise other parts of tigramite through an error
+            for i in range(N):
+                for j in range(N):
+                    if val_matrix[i,j, 0] == 0.:
+                        val_matrix[i,j, 0] = val_matrix[j,i, 0]
+
+        return val_matrix
 
     def net_to_tsg(self, row, lag, max_lag):
         """Helper function to translate from network to time series graph."""
@@ -787,7 +1395,7 @@ class LinearMediation(Models):
         # Create TSG
         tsg = np.zeros((N * max_lag, N * max_lag))
         for i, j, tau in np.column_stack(np.where(link_matrix)):
-            if tau > 0 or include_neighbors:
+            # if tau > 0 or include_neighbors:
                 for t in range(max_lag):
                     link_start = self.net_to_tsg(i, t - tau, max_lag)
                     link_end = self.net_to_tsg(j, t, max_lag)
@@ -885,302 +1493,6 @@ class LinearMediation(Models):
 
         return graph_data
 
-    def get_coeff(self, i, tau, j):
-        """Returns link coefficient.
-
-        This is the direct causal effect for a particular link (i, tau) --> j.
-
-        Parameters
-        ----------
-        i : int
-            Index of cause variable.
-        tau : int
-            Lag of cause variable.
-        j : int
-            Index of effect variable.
-
-        Returns
-        -------
-        coeff : float
-        """
-        return self.phi[abs(tau), j, i]
-
-    def get_ce(self, i, tau, j):
-        """Returns the causal effect.
-
-        This is the causal effect for  (i, tau) -- --> j.
-
-        Parameters
-        ----------
-        i : int
-            Index of cause variable.
-        tau : int
-            Lag of cause variable.
-        j : int
-            Index of effect variable.
-
-        Returns
-        -------
-        ce : float
-        """
-        return self.psi[abs(tau), j, i]
-
-    def get_ce_max(self, i, j):
-        """Returns the causal effect.
-
-        This is the maximum absolute causal effect for  i --> j across all lags.
-
-        Parameters
-        ----------
-        i : int
-            Index of cause variable.
-        j : int
-            Index of effect variable.
-
-        Returns
-        -------
-        ce : float
-        """
-        argmax = np.abs(self.psi[1:, j, i]).argmax()
-        return self.psi[1:, j, i][argmax]
-
-    def get_mce(self, i, tau, j, k):
-        """Returns the mediated causal effect.
-
-        This is the causal effect for  i --> j minus the causal effect not going
-        through k.
-
-        Parameters
-        ----------
-        i : int
-            Index of cause variable.
-        tau : int
-            Lag of cause variable.
-        j : int
-            Index of effect variable.
-        k : int
-            Index of mediator variable.
-
-        Returns
-        -------
-        mce : float
-        """
-        mce = self.psi[abs(tau), j, i] - self.all_psi_k[k, abs(tau), j, i]
-        return mce
-
-    def get_ace(self, i, lag_mode='absmax', exclude_i=True):
-        """Returns the average causal effect.
-
-        This is the average causal effect (ACE) emanating from variable i to any
-        other variable. With lag_mode='absmax' this is based on the lag of
-        maximum CE for each pair.
-
-        Parameters
-        ----------
-        i : int
-            Index of cause variable.
-        lag_mode : {'absmax', 'all_lags'}
-            Lag mode. Either average across all lags between each pair or only
-            at the lag of maximum absolute causal effect.
-        exclude_i : bool, optional (default: True)
-            Whether to exclude causal effects on the variable itself at later
-            lags.
-
-        Returns
-        -------
-        ace :float
-            Average Causal Effect.
-        """
-
-        all_but_i = np.ones(self.N, dtype='bool')
-        if exclude_i:
-            all_but_i[i] = False
-
-        if lag_mode == 'absmax':
-            return np.abs(self.psi[1:, all_but_i, i]).max(axis=0).mean()
-        elif lag_mode == 'all_lags':
-            return np.abs(self.psi[1:, all_but_i, i]).mean()
-        else:
-            raise ValueError("lag_mode = %s not implemented" % lag_mode)
-
-    def get_all_ace(self, lag_mode='absmax', exclude_i=True):
-        """Returns the average causal effect for all variables.
-
-        This is the average causal effect (ACE) emanating from variable i to any
-        other variable. With lag_mode='absmax' this is based on the lag of
-        maximum CE for each pair.
-
-        Parameters
-        ----------
-        lag_mode : {'absmax', 'all_lags'}
-            Lag mode. Either average across all lags between each pair or only
-            at the lag of maximum absolute causal effect.
-        exclude_i : bool, optional (default: True)
-            Whether to exclude causal effects on the variable itself at later
-            lags.
-
-        Returns
-        -------
-        ace : array of shape (N,)
-            Average Causal Effect for each variable.
-        """
-
-        ace = np.zeros(self.N)
-        for i in range(self.N):
-            ace[i] = self.get_ace(i, lag_mode=lag_mode, exclude_i=exclude_i)
-
-        return ace
-
-    def get_acs(self, j, lag_mode='absmax', exclude_j=True):
-        """Returns the average causal susceptibility.
-
-        This is the Average Causal Susceptibility (ACS) affecting a variable j
-        from any other variable. With lag_mode='absmax' this is based on the lag
-        of maximum CE for each pair.
-
-        Parameters
-        ----------
-        j : int
-            Index of variable.
-        lag_mode : {'absmax', 'all_lags'}
-            Lag mode. Either average across all lags between each pair or only
-            at the lag of maximum absolute causal effect.
-        exclude_j : bool, optional (default: True)
-            Whether to exclude causal effects on the variable itself at previous
-            lags.
-
-        Returns
-        -------
-        acs : float
-            Average Causal Susceptibility.
-        """
-
-        all_but_j = np.ones(self.N, dtype='bool')
-        if exclude_j:
-            all_but_j[j] = False
-
-        if lag_mode == 'absmax':
-            return np.abs(self.psi[1:, j, all_but_j]).max(axis=0).mean()
-        elif lag_mode == 'all_lags':
-            return np.abs(self.psi[1:, j, all_but_j]).mean()
-        else:
-            raise ValueError("lag_mode = %s not implemented" % lag_mode)
-
-    def get_all_acs(self, lag_mode='absmax', exclude_j=True):
-        """Returns the average causal susceptibility.
-
-        This is the Average Causal Susceptibility (ACS) for each variable from
-        any other variable. With lag_mode='absmax' this is based on the lag of
-        maximum CE for each pair.
-
-        Parameters
-        ----------
-        lag_mode : {'absmax', 'all_lags'}
-            Lag mode. Either average across all lags between each pair or only
-            at the lag of maximum absolute causal effect.
-        exclude_j : bool, optional (default: True)
-            Whether to exclude causal effects on the variable itself at previous
-            lags.
-
-        Returns
-        -------
-        acs : array of shape (N,)
-            Average Causal Susceptibility.
-        """
-
-        acs = np.zeros(self.N)
-        for j in range(self.N):
-            acs[j] = self.get_acs(j, lag_mode=lag_mode, exclude_j=exclude_j)
-
-        return acs
-
-    def get_amce(self, k, lag_mode='absmax',
-                 exclude_k=True, exclude_self_effects=True):
-        """Returns the average mediated causal effect.
-
-        This is the Average Mediated Causal Effect (AMCE) through a variable k
-        With lag_mode='absmax' this is based on the lag of maximum CE for each
-        pair.
-
-        Parameters
-        ----------
-        k : int
-            Index of variable.
-        lag_mode : {'absmax', 'all_lags'}
-            Lag mode. Either average across all lags between each pair or only
-            at the lag of maximum absolute causal effect.
-        exclude_k : bool, optional (default: True)
-            Whether to exclude causal effects through the variable itself at
-            previous lags.
-        exclude_self_effects : bool, optional (default: True)
-            Whether to exclude causal self effects of variables on themselves.
-
-        Returns
-        -------
-        amce : float
-            Average Mediated Causal Effect.
-        """
-
-        all_but_k = np.ones(self.N, dtype='bool')
-        if exclude_k:
-            all_but_k[k] = False
-            N_new = self.N - 1
-        else:
-            N_new = self.N
-
-        if exclude_self_effects:
-            weights = np.identity(N_new) == False
-        else:
-            weights = np.ones((N_new, N_new), dtype='bool')
-
-        if self.tau_max < 2:
-            raise ValueError("Mediation only nonzero for tau_max >= 2")
-
-        all_mce = self.psi[2:, :, :] - self.all_psi_k[k, 2:, :, :]
-        # all_mce[:, range(self.N), range(self.N)] = 0.
-
-        if lag_mode == 'absmax':
-            return np.average(np.abs(all_mce[:, all_but_k, :]
-                                     [:, :, all_but_k]
-                                     ).max(axis=0), weights=weights)
-        elif lag_mode == 'all_lags':
-            return np.abs(all_mce[:, all_but_k, :][:, :, all_but_k]).mean()
-        else:
-            raise ValueError("lag_mode = %s not implemented" % lag_mode)
-
-    def get_all_amce(self, lag_mode='absmax',
-                     exclude_k=True, exclude_self_effects=True):
-        """Returns the average mediated causal effect.
-
-        This is the Average Mediated Causal Effect (AMCE) through all variables
-        With lag_mode='absmax' this is based on the lag of maximum CE for each
-        pair.
-
-        Parameters
-        ----------
-        lag_mode : {'absmax', 'all_lags'}
-            Lag mode. Either average across all lags between each pair or only
-            at the lag of maximum absolute causal effect.
-        exclude_k : bool, optional (default: True)
-            Whether to exclude causal effects through the variable itself at
-            previous lags.
-        exclude_self_effects : bool, optional (default: True)
-            Whether to exclude causal self effects of variables on themselves.
-
-        Returns
-        -------
-        amce : array of shape (N,)
-            Average Mediated Causal Effect.
-        """
-        amce = np.zeros(self.N)
-        for k in range(self.N):
-            amce[k] = self.get_amce(k,
-                                    lag_mode=lag_mode,
-                                    exclude_k=exclude_k,
-                                    exclude_self_effects=exclude_self_effects)
-
-        return amce
-
 
 class Prediction(Models, PCMCI):
     r"""Prediction class for time series models.
@@ -1234,11 +1546,11 @@ class Prediction(Models, PCMCI):
         else:
             mask = {0: np.zeros(dataframe.values[0].shape, dtype='bool')}
         # Get the dataframe shape
-        T = len(dataframe.values)
+        T = dataframe.T[0]
         # Have the default dataframe be the training data frame
-        train_mask = mask.copy()
+        train_mask = deepcopy(mask)
         train_mask[0][[t for t in range(T) if t not in train_indices]] = True
-        self.dataframe = dataframe
+        self.dataframe = deepcopy(dataframe)
         self.dataframe.mask = train_mask
         self.dataframe._initialized_from = 'dict'
                  # = DataFrame(dataframe.values[0],
@@ -1253,8 +1565,11 @@ class Prediction(Models, PCMCI):
                         verbosity=verbosity)
 
         # Build the testing dataframe as well
-        self.test_mask = mask.copy()
+        self.test_mask = deepcopy(mask)
         self.test_mask[0][[t for t in range(T) if t not in test_indices]] = True
+
+        self.train_indices = train_indices
+        self.test_indices = test_indices
 
         # Setup the PCMCI instance
         if cond_ind_test is not None:
@@ -1264,7 +1579,6 @@ class Prediction(Models, PCMCI):
             PCMCI.__init__(self,
                            dataframe=self.dataframe,
                            cond_ind_test=cond_ind_test,
-                           selected_variables=None,
                            verbosity=verbosity)
 
         # Set the member variables
@@ -1340,7 +1654,7 @@ class Prediction(Models, PCMCI):
             selected_targets=None, tau_max=None, return_data=False):
         r"""Fit time series model.
 
-        Wrapper around ``Models.get_fit()``. To each variable in
+        Wrapper around ``Models.fit_full_model()``. To each variable in
         ``selected_targets``, the sklearn model is fitted with :math:`y` given
         by the target variable, and :math:`X` given by its predictors. The
         fitted model class is returned for later use.
@@ -1364,6 +1678,22 @@ class Prediction(Models, PCMCI):
         self : instance of self
         """
 
+        if tau_max is None:
+            # Find the maximal parents lag
+            max_parents_lag = 0
+            for j in self.selected_targets:
+                if target_predictors[j]:
+                    this_parent_lag = np.abs(np.array(target_predictors[j])[:, 1]).max()
+                    max_parents_lag = max(max_parents_lag, this_parent_lag)
+        else:
+            max_parents_lag = tau_max
+
+        if len(set(np.array(self.test_indices) - max_parents_lag)
+                .intersection(self.train_indices)) > 0:
+            warnings.warn("test_indices - maxlag(predictors) [or tau_max] "
+                "overlaps with train_indices: Choose test_indices "
+                "such that there is a gap of max_lag to train_indices!")
+
         self.target_predictors = target_predictors
 
         if selected_targets is None:
@@ -1376,7 +1706,7 @@ class Prediction(Models, PCMCI):
                 raise ValueError("No predictors given for target %s" % target)
 
         self.fitted_model = \
-            self.get_fit(all_parents=self.target_predictors,
+            self.fit_full_model(all_parents=self.target_predictors,
                          selected_variables=self.selected_targets,
                          tau_max=tau_max,
                          return_data=return_data)
@@ -1400,7 +1730,9 @@ class Prediction(Models, PCMCI):
         target : int or list of integers
             Index or indices of target variable(s).
         new_data : data object, optional
-            New Tigramite dataframe object with optional new mask.
+            New Tigramite dataframe object with optional new mask. Note that
+            the data will be cut off according to cut_off, see parameter
+            `cut_off` below.
         pred_params : dict, optional
             Optional parameters passed on to sklearn prediction function.
         cut_off : {'2xtau_max', 'max_lag', 'max_lag_or_tau_max'}
@@ -1458,7 +1790,7 @@ class Prediction(Models, PCMCI):
                 #     new_data_mask = self.test_mask
                 # else:
                 new_data_mask = new_data.mask
-                test_array, _ = new_data.construct_array(X, Y, Z,
+                test_array, _, _ = new_data.construct_array(X, Y, Z,
                                                          tau_max=self.tau_max,
                                                          mask=new_data_mask,
                                                          mask_type=self.mask_type,
@@ -1467,7 +1799,7 @@ class Prediction(Models, PCMCI):
                                                          verbosity=self.verbosity)
             # Otherwise use the default values
             else:
-                test_array, _ = \
+                test_array, _, _ = \
                     self.dataframe.construct_array(X, Y, Z,
                                                    tau_max=self.tau_max,
                                                    mask=self.test_mask,
@@ -1506,20 +1838,72 @@ if __name__ == '__main__':
     import tigramite.data_processing as pp
     from tigramite.toymodels import structural_causal_processes as toys
     from tigramite.independence_tests import ParCorr
-
-    np.random.seed(6)
+    import tigramite.plotting as tp
 
     def lin_f(x): return x
  
-    T = 10000
-    links = {0: [((0, -1), 0.8, lin_f)],
-             1: [((1, -1), 0.8, lin_f), ((0, -1), 0.5, lin_f)],
-             2: [((2, -1), 0.8, lin_f), ((1, 0), -0.6, lin_f)]}
+    T = 1000
+    
+    links = {0: [((0, -1), 0.9, lin_f)],
+             1: [((1, -1), 0.9, lin_f), ((0, 0), -0.8, lin_f)],
+             2: [((2, -1), 0.9, lin_f), ((0, 0), 0.9, lin_f),  ((1, 0), 0.8, lin_f)],
+             3: [((3, -1), 0.9, lin_f), ((1, 0), 0.8, lin_f),  ((2, 0), -0.9, lin_f)]
+             }
     # noises = [np.random.randn for j in links.keys()]
-    data, nonstat = toys.structural_causal_process(links, T=T)
-    true_parents = toys._get_true_parent_neighbor_dict(links)
-    dataframe = pp.DataFrame(data)
+    data, nonstat = toys.structural_causal_process(links, T=T, noises=None, seed=7)
 
+    missing_flag = 999
+    for i in range(0, 20):
+        data[i::100] = missing_flag
+
+    parents = toys._get_true_parent_neighbor_dict(links)
+    dataframe = pp.DataFrame(data, missing_flag = missing_flag)
+
+    med = LinearMediation(dataframe=dataframe, 
+        data_transform=None)
+    med.fit_model(all_parents=parents, tau_max=10)
+    med.fit_model_bootstrap( 
+                boot_blocklength='cube_root',
+                seed = 42,
+                )
+
+    # print(med.get_val_matrix())
+
+    print (med.get_ce(i=0, tau=0,  j=3))
+    print(med.get_bootstrap_of(function='get_ce', 
+        function_args={'i':0, 'tau':0,   'j':3}, conf_lev=0.9))
+
+    print (med.get_coeff(i=0, tau=-2, j=1))
+
+    print (med.get_ce_max(i=0, j=2))
+    print (med.get_ce(i=0, tau=0, j=3))
+    print (med.get_mce(i=0, tau=0, k=[2], j=3))
+    print (med.get_mce(i=0, tau=0, k=[1,2], j=3) - med.get_mce(i=0, tau=0, k=[1], j=3))
+    print (med.get_conditional_mce(i=0, tau=0, k=[2], notk=[1], j=3))
+    print (med.get_bootstrap_of('get_conditional_mce', {'i':0, 'tau':0, 'k':[2], 'notk':[1], 'j':3}))
+
+    # print(med.get_joint_ce(i=0, j=2))
+    # print(med.get_joint_mce(i=0, j=2, k=1))
+
+    # print(med.get_joint_ce_matrix(i=0, j=2))
+
+    # i=0; tau=4; j=2
+    # graph_data = med.get_mediation_graph_data(i=i, tau=tau, j=j)
+    # tp.plot_mediation_time_series_graph(
+    #     # var_names=var_names,
+    #     path_node_array=graph_data['path_node_array'],
+    #     tsg_path_val_matrix=graph_data['tsg_path_val_matrix']
+    #     )
+    # tp.plot_mediation_graph(
+    #                     # var_names=var_names,
+    #                     path_val_matrix=graph_data['path_val_matrix'], 
+    #                     path_node_array=graph_data['path_node_array'],
+    #                     ); 
+    # plt.show()
+
+    # print ("Average Causal Effect X=%.2f, Y=%.2f, Z=%.2f " % tuple(med.get_all_ace()))
+    # print ("Average Causal Susceptibility X=%.2f, Y=%.2f, Z=%.2f " % tuple(med.get_all_acs()))
+    # print ("Average Mediated Causal Effect X=%.2f, Y=%.2f, Z=%.2f " % tuple(med.get_all_amce()))
     # med = Models(dataframe=dataframe, model=sklearn.linear_model.LinearRegression(), data_transform=None)
     # # Fit the model
     # med.get_fit(all_parents=true_parents, tau_max=3)
@@ -1534,14 +1918,37 @@ if __name__ == '__main__':
     #     print(causal_coeff)
 
 
-    pred = Prediction(dataframe=dataframe,
-            cond_ind_test=ParCorr(),   #CMIknn ParCorr
-            prediction_model = sklearn.linear_model.LinearRegression(),
-    #         prediction_model = sklearn.gaussian_process.GaussianProcessRegressor(),
-            # prediction_model = sklearn.neighbors.KNeighborsRegressor(),
-        data_transform=sklearn.preprocessing.StandardScaler(),
-        train_indices= range(int(0.8*T)),
-        test_indices= range(int(0.8*T), T),
-        verbosity=1
-        )
+    # pred = Prediction(dataframe=dataframe,
+    #         cond_ind_test=ParCorr(),   #CMIknn ParCorr
+    #         prediction_model = sklearn.linear_model.LinearRegression(),
+    # #         prediction_model = sklearn.gaussian_process.GaussianProcessRegressor(),
+    #         # prediction_model = sklearn.neighbors.KNeighborsRegressor(),
+    #     data_transform=sklearn.preprocessing.StandardScaler(),
+    #     train_indices= list(range(int(0.8*T))),
+    #     test_indices= list(range(int(0.8*T), T)),
+    #     verbosity=0
+    #     )
+
+    # # predictors = pred.get_predictors(
+    # #                        selected_targets=[2],
+    # #                        selected_links=None,
+    # #                        steps_ahead=1,
+    # #                        tau_max=1,
+    # #                        pc_alpha=0.2,
+    # #                        max_conds_dim=None,
+    # #                        max_combinations=1)
+    # predictors = {0: [(0, -1)],
+    #              1: [(1, -1), (0, -1)],
+    #              2: [(2, -1), (1, 0)]}
+    # pred.fit(target_predictors=predictors,
+    #         selected_targets=None, tau_max=None, return_data=False)
+
+    # res = pred.predict(target=2,
+    #             new_data=None,
+    #             pred_params=None,
+    #             cut_off='max_lag_or_tau_max')
+
+    # print(data[:,2])
+    # print(res)
+
 

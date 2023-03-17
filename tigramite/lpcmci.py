@@ -2,19 +2,16 @@ import numpy as np
 from itertools import product, combinations
 from copy import deepcopy
 
-class LPCMCI():
-    r"""
-    LPCMCI is an algorithm for causal discovery in large-scale times series that allows for latent confounders and learns lag-specific
-    causal relationships.
+from .pcmci_base import PCMCIbase
 
-    The algorithm is introduced and explained in:
-    [1] Gerhardus, A. & Runge, J. High-recall causal discovery for autocorrelated time series with latent confounders Advances in Neural
-    Information Processing Systems, 2020, 33. https://proceedings.neurips.cc/paper/2020/hash/94e70705efae423efda1088614128d0b-Abstract.html
-
-    NOTE:
-    This method is still EXPERIMENTAL since the default settings of hyperparameters are still being fine-tuned. We actually invite
-    feedback on which work best in applications and numerical experiments.
-
+class LPCMCI(PCMCIbase):
+    """ LPCMCI is an algorithm for causal discovery in large-scale times series that allows for latent confounders and
+    learns lag-specific causal relationships. The algorithm is introduced and explained in:
+    [1] Gerhardus, A. & Runge, J. High-recall causal discovery for autocorrelated time series with latent confounders.
+    Advances in Neural Information Processing Systems, 2020, 33.
+    https://proceedings.neurips.cc/paper/2020/hash/94e70705efae423efda1088614128d0b-Abstract.html
+    NOTE: This method is still EXPERIMENTAL since the default settings of hyperparameters are still being fine-tuned.
+    We actually invite feedback on which work best in applications and numerical experiments.
     The main function, which applies the algorithm, is 'run_lpcmci'.
 
     Parameters passed to the constructor:
@@ -27,9 +24,29 @@ class LPCMCI():
 
     Parameters passed to self.run_lpcmci():
     Note: The default values are still being tuned and some parameters might be removed in the future.
-    - selected_links: dict or None
-        Dictionary of the form {0: [(3, 0), (0, -1), ...], 1:[], ...} that specifys which links are potentially present. All other links
-        are assumed to be absent. If None is passed all links are potentially present.
+    - link_assumptions: dict or None
+        Two-level nested dictionary such that link_assumptions[j][(i, lag_i)], where 0 <= j, i <= N-1 (with N the number of component
+        time series) and -tau_max <= lag_i <= -tau_min, is a string which specifies background knowledge about the link from X^i_{t+lag_i} to
+        X^j_t. These are the possibilities for this string and the corresponding claim:
+            '-?>'   : X^i_{t+lag_i} is an ancestor of X^j_t.
+            '-->'   : X^i_{t+lag_i} is an ancestor of X^j_t, and there is a link between X^i_{t+lag_i} and X^j_t
+            '<?-'   : Only allowed for lag_i = 0. X^j_t is an ancestor of X^i_t.
+            '<--'   : Only allowed for lag_i = 0. X^j_t is an ancestor of X^i_t, and there is a link between X^i_t and X^j_t
+            '<?>'   : Neither X^i_{t+lag_i} is an ancestor of X^j_t nor the other way around
+            '<->'   : Neither X^i_{t+lag_i} is an ancestor of X^j_t nor the other way around, and there is a link between X^i_{t+lag_i}
+                      and X^j_t
+            'o?>'   : X^j_t is not an ancestor of X^i_{t+lag_i} (for lag_i < 0 this background knowledge is (for the default settings of
+                      self.run_lpcmci()) imposed automatically)
+            'o->'   : X^j_t is not an ancestor of X^i_{t+lag_i}, and there is a link between X^i_{t+lag_i} and X^j_t
+            '<?o'   : Only allowed for lag_i = 0. X^i_t is not an ancestor of X^j_t
+            '<-o'   : Only allowed for lag_i = 0. X^i_t is not an ancestor of X^j_t, and there is a link between X^i_t and X^j_t
+            'o-o'   : Only allowed for lag_i = 0. There is a link between X^i_t and X^j_t
+            'o?o'   : Only allowed for lag_i = 0. No claim is made
+            ''      : There is no link between X^i_{t+lag_i} and X^j_t.
+
+        Another way to specify the absent link is if the form of the link between (i, lag_i) and (j, 0) is not specified by the dictionary, that is, if either
+        link_assumptions[j] does not exist or link_assumptions[j] does exist but link_assumptions[j][(i, lag_i)] does
+        not exist, then the link between (i, lag_i) and (j, 0) is assumed to be absent.
     - tau_min:
         The assumed minimum time lag, i.e., links with a lag smaller than tau_min are assumed to be absent.
     - tau_max:
@@ -125,22 +142,13 @@ class LPCMCI():
                 ii)     conditional independence test object
                 iii)    some instance attributes"""
 
-        # Save the time series data that the algorithm operates on
-        self.dataframe = dataframe
-
-        # Set the conditional independence test to be used
-        self.cond_ind_test = cond_ind_test
-        self.cond_ind_test.set_dataframe(self.dataframe)
-
-        # Store the shape of the data in the T and N variables
-        self.T, self.N = self.dataframe.T, self.dataframe.N
-
-        # Save verbosity
-        self.verbosity = verbosity
-
+        # Init base class
+        PCMCIbase.__init__(self, dataframe=dataframe, 
+                        cond_ind_test=cond_ind_test,
+                        verbosity=verbosity)
 
     def run_lpcmci(self,
-                    selected_links = None,
+                    link_assumptions = None,
                     tau_min = 0,
                     tau_max = 1, 
                     pc_alpha = 0.05,
@@ -169,7 +177,7 @@ class LPCMCI():
         #######################################################################################################################
         #######################################################################################################################
         # Step 0: Initializations
-        self._initialize(selected_links, tau_min, tau_max, pc_alpha, n_preliminary_iterations, max_cond_px, max_p_global,
+        self._initialize(link_assumptions, tau_min, tau_max, pc_alpha, n_preliminary_iterations, max_cond_px, max_p_global,
             max_p_non_ancestral, max_q_global, max_pds_set, prelim_with_collider_rules, parents_of_lagged, prelim_only,
             break_once_separated, no_non_ancestral_phase, use_a_pds_t_for_majority, orient_contemp, update_middle_marks,
             prelim_rules, fix_all_edges_before_final_orientation, auto_first, remember_only_parents, no_apr)
@@ -297,7 +305,7 @@ class LPCMCI():
         return return_dict
 
 
-    def _initialize(self, selected_links, tau_min, tau_max, pc_alpha, n_preliminary_iterations, max_cond_px, max_p_global,
+    def _initialize(self, link_assumptions, tau_min, tau_max, pc_alpha, n_preliminary_iterations, max_cond_px, max_p_global,
         max_p_non_ancestral, max_q_global, max_pds_set, prelim_with_collider_rules, parents_of_lagged, prelim_only,
         break_once_separated, no_non_ancestral_phase, use_a_pds_t_for_majority, orient_contemp, update_middle_marks, prelim_rules,
         fix_all_edges_before_final_orientation, auto_first, remember_only_parents, no_apr):
@@ -307,7 +315,7 @@ class LPCMCI():
             """
 
         # Save the arguments passed to self.run_lpcmci()
-        self.selected_links = selected_links
+        self.link_assumptions = link_assumptions
         self.tau_min = tau_min
         self.tau_max = tau_max
         self.pc_alpha = pc_alpha
@@ -331,11 +339,15 @@ class LPCMCI():
         self.remember_only_parents = remember_only_parents
         self.no_apr = no_apr
 
+        if pc_alpha < 0. or pc_alpha > 1:
+            raise ValueError("Choose 0 <= pc_alpha <= 1")
+            
         # Check that validity of tau_min and tau_max
         self._check_tau_min_tau_max()
 
-        # Check the validity of 'selected_links'
-        self._check_and_set_selected_links()
+        # Check the validity of 'link_assumptions'
+        if self.link_assumptions is not None:
+            self._check_link_assumptions()
 
         # Rules to be executed at the end of a preliminary phase
         self._rules_prelim_final= [["APR"], ["ER-08"], ["ER-02"], ["ER-01"], ["ER-09"], ["ER-10"]]
@@ -360,40 +372,210 @@ class LPCMCI():
                              "tau_max = {}, ".format(self.tau_max) + \
                              "but 0 <= tau_min <= tau_max required.")
 
-    def _check_and_set_selected_links(self):
-        """If 'selected_links' is given check its validity, else set all links as selected."""
+    def _check_link_assumptions(self):
+        """Check the validity of user-specified 'link_assumptions'.
 
-        if self.selected_links is not None:
+        The checks assert:
+        - Valid dictionary keys
+        - Valid edge types
+        - That no causal cycle is specified
+        - That no almost causal cycle is specified
 
-            # Check validity of keys
-            if set(self.selected_links.keys()) == set(range(self.N)):
+        The checks do not assert that maximality is not violated."""
 
-                # Check validity of entries
-                var_allowed = set(range(self.N))
-                var_entries = set(var for parents in self.selected_links.values() for var, _ in parents)
+        # Ancestorship matrices
+        ancs_mat_contemp = np.zeros((self.N, self.N), dtype = "int32")
+        ancs_mat = np.zeros((self.N*(self.tau_max + 1),
+            self.N*(self.tau_max + 1)), dtype = "int32")
 
-                lag_allowed = set (range(-self.tau_max, -self.tau_min + 1))
-                lag_entries = set(lag for parents in self.selected_links.values() for _, lag in parents)
-                
-                if var_entries.issubset(var_allowed) and lag_entries.issubset(lag_allowed):
+        # Run through the outer dictionary
+        for j, links_j in self.link_assumptions.items():
 
-                    # Check symmetry of lag-zero links
-                    lag_zero = set((i, j) for j in range(self.N) for (i, lag) in self.selected_links[j] if lag == 0)
+            # Check validity of keys of outer dictionary
+            if not 0 <= j <= self.N - 1:
+                raise ValueError("The argument 'link_assumption' must be a "\
+                    "dictionary whose keys are in {0, 1, ..., N-1}, where N "\
+                    "is the number of component time series. Here, "\
+                    f"N = {self.N}.")
 
-                    check_symmetry = np.zeros((self.N, self.N))
-                    for (i, j) in lag_zero:
-                        check_symmetry[i, j] = 1
+            # Run through the inner dictionary
+            for (i, lag_i), link_ij in links_j.items():
 
-                    if np.sum(np.transpose(check_symmetry) == check_symmetry) != self.N**2:
-                        raise ValueError("Invalid 'selected_links': Zero-lag links must be symmetric.")
+                # Check validity of keys of inner dictionary
+                if i == j and lag_i == 0:
+                    raise ValueError(f"The dictionary 'link_assumptions[{j}] "\
+                        f"must not have the key ({j}, 0), because this refers "\
+                        "to a self-link.")
+
+                if (not (0 <= i <= self.N - 1)
+                    or not (-self.tau_max <= lag_i <= -self.tau_min)):
+                    raise ValueError("All values of 'link_assumptions' must "\
+                        "be dictionaries whose keys are of the form (i, "\
+                        "lag_i), where i in {0, 1, ..., N-1} with N the "\
+                        "number of component time series and lag_i in "\
+                        "{-tau_max, ..., -tau_min} with tau_max the maximum "\
+                        "considered time lag and tau_min the minimum assumed "\
+                        f"time lag. Here, N = {self.N} and tau_max = "\
+                        f"{self.tau_max} and tau_min = {self.tau_min}.")
+
+                # Check for validity of entries. At the same time mark the
+                # ancestorships in ancs_mat_contemp and ancs_mat
+
+                if link_ij == "":
+
+                    # Check for symmetry of lag zero links
+                    if lag_i == 0:
+
+                        if (self.link_assumptions.get(i) is None
+                            or self.link_assumptions[i].get((j, 0)) is None
+                            or self.link_assumptions[i][(j, 0)] != ""):
+                            raise ValueError("The lag zero links specified by "\
+                                "'link_assumptions' must be symmetric: Because"\
+                                f"'link_assumptions'[{j}][({i}, {0})] = '', "\
+                                " there must also be "\
+                                f"'link_assumptions'[{i}][({j}, {0})] = ''.")
+                    continue
+
+                if len(link_ij) != 3:
+                    if lag_i < 0:
+                        raise ValueError("Invalid link: "\
+                            f"'link_assumptions'[{j}][({i}, {lag_i})] = "\
+                            f"{link_ij}. Allowed are: '-?>', '-->', '<?>', "\
+                            "'<->', 'o?>', 'o->'.")
+                    else:
+                        raise ValueError("Invalid link: "\
+                            f"'link_assumptions'[{j}][({i}, {lag_i})] = "\
+                            f"{link_ij}. Allowed are: '-?>', '-->', '<?>', "\
+                            "'<->', 'o?>', 'o->', '<?-', '<--', '<?o', '<--', "\
+                            "'o-o', 'o?o'.")
+
+                if link_ij[0] == "-":
+
+                    if link_ij[2] != ">":
+                        raise ValueError("Invalid link: "\
+                            f"'link_assumptions'[{j}][({i}, {lag_i})] = "\
+                            f"{link_ij}. The first character '-', which says "\
+                            f"that ({i}, {lag_i}) is an ancestor (cause) of "\
+                            f"({j}, 0). Hence, ({j}, 0) is a non-ancestor "\
+                            f"(non-cause) of ({i}, {lag_i}) and the third "\
+                            "character must be '>'.")
+
+                    # Mark the ancestorship
+                    if lag_i == 0:
+                        ancs_mat_contemp[i, j] = 1
+                    for Delta_t in range(0, self.tau_max + 1 - abs(lag_i)):
+                        ancs_mat[self.N*(abs(lag_i) + Delta_t) + i,
+                            self.N*Delta_t + j] = 1
+
+                elif link_ij[0] in ["<", "o"]:
+
+                    if lag_i < 0:
+
+                        if link_ij[2] != ">":
+                            raise ValueError("Invalid link: "\
+                                f"'link_assumptions'[{j}][({i}, {lag_i})] = "\
+                                f"{link_ij}. Since {lag_i} < 0, ({j}, 0) "\
+                                f"cannot be an ancestor (cause) of "\
+                                f"({i}, {lag_i}). Hence, the third character "\
+                                f"must be '>'.")
+
+                    else:
+
+                        if link_ij[2] not in ["-", ">", "o"]:
+                            raise ValueError("Invalid link: "\
+                                f"'link_assumptions'[{j}][({i}, {0})] = "\
+                                f"{link_ij}. The third character must be one "\
+                                "of the following: 1) '-', which says that "\
+                                f"({j}, 0) is an ancestor (cause) of "\
+                                f"({i}, {0}). 2) '>', which says that "\
+                                f"({j}, 0) is a non-ancestor (non-cause) of "\
+                                f"({i}, {0}). 3) 'o', which says that it is "\
+                                f"unknown whether or not ({j}, {0}) is an "\
+                                f"ancestor (cause) of ({i}, {0}).")
+
+                        if link_ij[2] == "-":
+
+                            if link_ij[0] != "<":
+                                raise ValueError("Invalid link: "\
+                                    f"'link_assumptions'[{j}][({i}, {0})] = "\
+                                    f"{link_ij}. The third character is '-', "\
+                                    f"which says that ({j}, {0}) is an "\
+                                    f"ancestor (cause) of ({i}, 0). Hence, "\
+                                    f"({i}, 0) is a non-ancestor (non-cause) "\
+                                    f"of ({j}, {0}) and the first character "\
+                                    "must be '<'.")
+
+                            # Mark the ancestorship
+                            ancs_mat_contemp[j, i] = 1
+                            for Delta_t in range(0, self.tau_max + 1):
+                                ancs_mat[self.N*Delta_t + j,
+                                    self.N*Delta_t + i] = 1
 
                 else:
-                    raise ValueError("Invalid link in at least one entry of 'selected_links'. Must be of the form (i, lag_i), where i in {0, 1, ..., N-1} and lag_i in {-tau_max, ..., -tau_min}.")
-            else:
-                raise ValueError("'selected_links' must be dictionary whose keys are exactly 0, 1, ..., N-1, where N is the number of component time series.")
+                    raise ValueError(f"Invalid link: "\
+                        f"'link_assumptions'[{j}][({i}, {lag_i})] = "\
+                        f"{link_ij}. The first character must be one of the "\
+                        f"following: 1) '-', which says that ({i}, {lag_i}) "\
+                        f"is an ancestor (cause) of ({j}, 0). 2) '<', which "\
+                        f"says that ({i}, {lag_i}) is a non-ancestor "\
+                        f"(non-cause) of ({j}, 0). 3) 'o', which says that it"\
+                        f"is unknown whether or not ({i}, {lag_i}) is an "\
+                        f"ancestor (cause) of ({j}, {0}).")
 
-        else:
-            self.selected_links = {j: [(i, -tau) for i in range(self.N) for tau in range(self.tau_min, self.tau_max + 1) if (tau > 0 or j != i)] for j in range(self.N)}
+                if link_ij[1] not in ["-", "?"]:
+                    raise ValueError("Invalid link: "\
+                        f"'link_assumptions'[{j}][({i}, {lag_i})] = "\
+                        f"{link_ij}. The second character must be one of the "\
+                        "following: 1) '-', which says that the link "\
+                        f"({i}, {lag_i}) {link_ij} ({j}, 0) is definitely "\
+                        "part of the graph. 2) '?', which says that link "\
+                        "might be but does not need to be part of the graph.")
+
+                # Check for symmetry of lag zero links
+                if lag_i == 0:
+
+                    if (self.link_assumptions.get(i) is None
+                        or self.link_assumptions[i].get((j, 0)) is None
+                        or self.link_assumptions[i][(j, 0)] != self._reverse_link(link_ij)):
+                        raise ValueError(f"The lag zero links specified by "\
+                            "'link_assumptions' must be symmetric: Because "\
+                            f"'link_assumptions'[{j}][({i}, {0})] = "\
+                            f"'{link_ij}' there must also be "\
+                            f"'link_assumptions'[{i}][({j}, {0})] = "\
+                            f"'{self._reverse_link(link_ij)}'.")
+
+        # Check for contemporaneous cycles
+        ancs_mat_contemp_to_N = np.linalg.matrix_power(ancs_mat_contemp, self.N)
+        if np.sum(ancs_mat_contemp_to_N) != 0:
+            raise ValueError("According to 'link_assumptions', there is a "\
+                "contemporaneous causal cycle. Causal cycles are not allowed.")
+
+        # Check for almost directed cycles
+        ancs_mat_summed = np.linalg.inv(np.eye(ancs_mat.shape[0], dtype = "int32") - ancs_mat)
+        for j, links_j in self.link_assumptions.items():
+            for (i, lag_i), link_ij in links_j.items():
+                if (link_ij != ""
+                    and link_ij[0] == "<"
+                    and ancs_mat_summed[self.N*abs(lag_i) + i, j] != 0):
+                    raise ValueError(f"Inconsistency in 'link_assumptions': "\
+                        f"Since 'link_assumptions'[{j}][({i}, {lag_i})] "\
+                        f"= {link_ij}, variable ({i}, {lag_i}) is a "\
+                        f"non-ancestor (non-cause) of ({j}, 0). At the same "\
+                        "time, however, 'link_assumptions' specifies a "\
+                        f"directed path (causal path) from ({i}, {lag_i}) to "\
+                        f"({j}, 0).")
+
+        # Replace absent entries by ''
+        for j in range(self.N):
+            if self.link_assumptions.get(j) is None:
+                self.link_assumptions[j] = {(i, -tau_i): ""
+                    for (i, tau_i) in product(range(self.N), range(self.tau_min, self.tau_max+1))
+                    if (tau_i > 0 or i != j)}
+            else:
+                for (i, tau_i) in product(range(self.N), range(self.tau_min, self.tau_max+1)):
+                    if (tau_i > 0 or i != j):
+                        if self.link_assumptions[j].get((i, -tau_i)) is None:
+                            self.link_assumptions[j][(i, -tau_i)] = ""
 
     def _initialize_run_memory(self):
         """Function for initializing various memory variables for storing the current graph, sepsets etc."""
@@ -438,8 +620,9 @@ class LPCMCI():
         # Apply the restriction imposed by tau_min
         self._apply_tau_min_restriction()
 
-        # Apply the restriction imposed by selected_links
-        self._apply_selected_links_restriction()
+        # Apply the background knowledge given by background_knowledge
+        if self.link_assumptions is not None:
+            self._apply_link_assumptions()
 
         # Return
         return True
@@ -459,20 +642,28 @@ class LPCMCI():
                 self.pval_max_val[j][(i, -tau)] = -np.inf
                 self.pval_max_card[j][(i, -tau)] = np.inf
 
-    def _apply_selected_links_restriction(self):
-        """Apply the restrictions imposed by selected_links:
-        - Remove all links that have not been selected
-        - Set the corresponding entries in self.pval_max, self.pval_max_val, and self.pval_max_card to to np.inf, -np.inf, np.inf 
+    def _apply_link_assumptions(self):
+        """Apply the background knowledge specified by 'link_assumptions':
+        - Write the specified edge types to self.graph_dict
+        - Set the corresponding entries in self.pval_max to np.inf, in self.pval_max_val to -np.inf, and in
+        - to self.pval_max_card to np.inf
         """
 
-        for (i, j, tau) in product(range(self.N), range(self.N), range(self.tau_min, self.tau_max + 1)):
-            if (tau > 0 or j != i) and (i, -tau) not in self.selected_links[j]:
-                self.graph_dict[j][(i, -tau)] = ""
+        for j, links_j in self.link_assumptions.items():
+            for (i, lag_i), link in self.link_assumptions[j].items():
 
-            if (tau > 0 or i < j) and (i, -tau) not in self.selected_links[j]:
-                self.pval_max[j][(i, -tau)] = np.inf
-                self.pval_max_val[j][(i, -tau)] = -np.inf
-                self.pval_max_card[j][(i, -tau)] = np.inf
+                # Apply background knowledge
+                if link != "" and link[1] == "?" and lag_i < 0 and self.max_cond_px == 0 and self.update_middle_marks:
+                    self.graph_dict[j][(i, lag_i)] = link[0] + "L" + link[2]
+                else:
+                    self.graph_dict[j][(i, lag_i)] = link
+
+                # If background knowledge amounts to absence of link, set the corresponding entries in
+                # self.pval_max to 2, in self.pval_max_val to -np.inf, and in self.pval_max_card to None to np.inf
+                if link == "" and (lag_i < 0 or i < j):
+                    self.pval_max[j][(i, lag_i)] = np.inf
+                    self.pval_max_val[j][(i, lag_i)] = -np.inf
+                    self.pval_max_card[j][(i, lag_i)] = np.inf
 
     def _run_ancestral_removal_phase(self, prelim = False):
         """Run an ancestral edge removal phase, this is Algorithm S2"""
@@ -3356,21 +3547,6 @@ class LPCMCI():
         else:
             self.sepsets[i][Y] = set()
 
-    def _dict_to_matrix(self, val_dict, tau_max, n_vars, default=1):
-        """Convert a dictionary to matrix format"""
-
-        matrix = np.ones((n_vars, n_vars, tau_max + 1))
-        matrix *= default
-
-        for j in val_dict.keys():
-            for link in val_dict[j].keys():
-                k, tau = link
-                if tau == 0:
-                    matrix[k, j, 0] = matrix[j, k, 0] = val_dict[j][link]
-                else:
-                    matrix[k, j, abs(tau)] = val_dict[j][link]
-        return matrix
-
 
 if __name__ == '__main__':
 
@@ -3402,11 +3578,14 @@ if __name__ == '__main__':
     print(data.shape)
     dataframe = pp.DataFrame(data)
     cond_ind_test = ParCorr()
-    pcmci = LPCMCI(dataframe=dataframe, cond_ind_test=cond_ind_test)
-    results = pcmci.run_lpcmci(tau_max=2, pc_alpha=0.01)
+    lpcmci = LPCMCI(dataframe=dataframe, cond_ind_test=cond_ind_test)
+    # results = pcmci.run_lpcmci(tau_max=2, pc_alpha=0.01)
 
-    # For a proper causal interpretation of the graph see the paper!
-    print(results['graph'])
-    tp.plot_graph(graph=results['graph'], val_matrix=results['val_matrix'])
-    plt.show()
+    # # For a proper causal interpretation of the graph see the paper!
+    # print(results['graph'])
+    # tp.plot_graph(graph=results['graph'], val_matrix=results['val_matrix'])
+    # plt.show()
 
+    results = lpcmci.run_sliding_window_of(
+        window_step=499, window_length=500,
+        method='run_lpcmci', method_args={'tau_max':1})

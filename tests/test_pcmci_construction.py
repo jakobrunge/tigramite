@@ -9,7 +9,7 @@ import pytest
 from scipy.special import comb
 
 from tigramite.pcmci import PCMCI
-from tigramite.independence_tests import ParCorr
+from tigramite.independence_tests.parcorr import ParCorr
 import tigramite.data_processing as pp
 from tigramite.toymodels import structural_causal_processes as toys
 
@@ -39,7 +39,7 @@ def _select_links(link_ids, true_parents):
     """
     if link_ids is None:
         return None
-    return {par : [true_parents[par][link]] for par in true_parents \
+    return {par : {true_parents[par][link]:'-->'} for par in true_parents \
                                             for link in link_ids}
 
 # TEST LINK GENERATION #########################################################
@@ -91,7 +91,7 @@ def get_expected_links(a_range, b_range, t_range):
     """
     Helper function to generate the expected links
     """
-    return {a_var : [(b_var, -lag) for b_var in b_range for lag in t_range]
+    return {a_var : {(b_var, -lag):'-?>' for b_var in b_range for lag in t_range}
             for a_var in a_range}
 
 def test_select_links_default(a_pcmci):
@@ -101,8 +101,8 @@ def test_select_links_default(a_pcmci):
     # Unpack the pcmci instance
     pcmci, _ = a_pcmci
     # Test the default selected variables are correct
-    sel_links = pcmci._set_sel_links(None, TAU_MIN, TAU_MAX)
-    err_msg = "Default option for _set_sel_links should return all possible "+\
+    sel_links = pcmci._set_link_assumptions(None, TAU_MIN, TAU_MAX)
+    err_msg = "Default option for _set_link_assumptions should return all possible "+\
               "combinations"
     good_links = get_expected_links(range(pcmci.N),
                                     range(pcmci.N),
@@ -131,7 +131,7 @@ def test_condition_iterator(a_pcmci, a_iter_cond_param):
     # Unpack the iterator conditions parameters
     max_cond_dim, tau_min, tau_max = a_iter_cond_param
     # Get all possible links
-    sel_links = pcmci._set_sel_links(None, tau_min, tau_max)
+    sel_links = pcmci._set_link_assumptions(None, tau_min, tau_max)
     # Loop over all possible condition dimentions
     max_cond_dim = pcmci._set_max_condition_dim(max_cond_dim, tau_min, tau_max)
     # Loop over all nodes
@@ -210,8 +210,8 @@ def test_iter_indep_conds(a_pcmci, a_iter_indep_cond_param):
     pcmci, parents = a_pcmci
     # Unpack the parameters
     max_cx, max_cy, tau_min, tau_max = a_iter_indep_cond_param
-    # Set the selected links
-    _int_sel_links = pcmci._set_sel_links(None, tau_min, tau_max)
+    # Set the link assumptions
+    _int_set_link_assumptions = pcmci._set_link_assumptions(None, tau_min, tau_max)
     # Set the maximum condition dimension for Y and Z
     max_conds_py = pcmci._set_max_condition_dim(max_cx, tau_min, tau_max)
     max_conds_px = pcmci._set_max_condition_dim(max_cy, tau_min, tau_max)
@@ -223,7 +223,7 @@ def test_iter_indep_conds(a_pcmci, a_iter_indep_cond_param):
     expect_links = 0
     # Since a link is never checked as a parent of itself, remove all
     # (i, tau) == (j, 0) entries from expected testing
-    for j, node_list in _int_sel_links.items():
+    for j, node_list in _int_set_link_assumptions.items():
         for i, tau in node_list:
             if not (i == j and  tau == 0):
                 expect_links += 1
@@ -231,7 +231,7 @@ def test_iter_indep_conds(a_pcmci, a_iter_indep_cond_param):
     ## of x lagged.
     # Iterate over all the returned conditions
     for j, i, tau, Z in pcmci._iter_indep_conds(_int_parents,
-                                                _int_sel_links,
+                                                _int_set_link_assumptions,
                                                 max_conds_py,
                                                 max_conds_px):
         # Incriment the link count

@@ -100,7 +100,7 @@ def test_construct_array(cstrct_array_params):
 
     # Construct the array
     data_f = pp.DataFrame(data, data_mask, missing_flag)
-    array, xyz = data_f.construct_array(x_nds, y_nds, z_nds,
+    array, xyz, _ = data_f.construct_array(x_nds, y_nds, z_nds,
                                         tau_max=tau_max,
                                         mask_type=mask_type,
                                         verbosity=VERBOSITY)

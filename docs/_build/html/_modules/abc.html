@@ -1,51 +1,34 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>abc &#8212; Tigramite 5.0 documentation</title>
-    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>abc &#8212; Tigramite 5.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
-    <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" /> 
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">Tigramite 5.0 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li> 
-      </ul>
-    </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script>$('#searchbox').show(0);</script>
-        </div>
-      </div>
+  
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   <h1>Source code for abc</h1><div class="highlight"><pre>
@@ -62,7 +45,8 @@
 <span class="sd">    class that has a metaclass derived from ABCMeta cannot be</span>
 <span class="sd">    instantiated unless all of its abstract methods are overridden.</span>
 <span class="sd">    The abstract methods can be called using any of the normal</span>
-<span class="sd">    &#39;super&#39; call mechanisms.</span>
+<span class="sd">    &#39;super&#39; call mechanisms.  abstractmethod() may be used to declare</span>
+<span class="sd">    abstract methods for properties and descriptors.</span>
 
 <span class="sd">    Usage:</span>
 
@@ -78,17 +62,14 @@
 <span class="k">class</span> <span class="nc">abstractclassmethod</span><span class="p">(</span><span class="nb">classmethod</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A decorator indicating abstract classmethods.</span>
 
-<span class="sd">    Similar to abstractmethod.</span>
+<span class="sd">    Deprecated, use &#39;classmethod&#39; with &#39;abstractmethod&#39; instead:</span>
 
-<span class="sd">    Usage:</span>
-
-<span class="sd">        class C(metaclass=ABCMeta):</span>
-<span class="sd">            @abstractclassmethod</span>
+<span class="sd">        class C(ABC):</span>
+<span class="sd">            @classmethod</span>
+<span class="sd">            @abstractmethod</span>
 <span class="sd">            def my_abstract_classmethod(cls, ...):</span>
 <span class="sd">                ...</span>
 
-<span class="sd">    &#39;abstractclassmethod&#39; is deprecated. Use &#39;classmethod&#39; with</span>
-<span class="sd">    &#39;abstractmethod&#39; instead.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">__isabstractmethod__</span> <span class="o">=</span> <span class="kc">True</span>
@@ -101,17 +82,14 @@
 <span class="k">class</span> <span class="nc">abstractstaticmethod</span><span class="p">(</span><span class="nb">staticmethod</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A decorator indicating abstract staticmethods.</span>
 
-<span class="sd">    Similar to abstractmethod.</span>
+<span class="sd">    Deprecated, use &#39;staticmethod&#39; with &#39;abstractmethod&#39; instead:</span>
 
-<span class="sd">    Usage:</span>
-
-<span class="sd">        class C(metaclass=ABCMeta):</span>
-<span class="sd">            @abstractstaticmethod</span>
+<span class="sd">        class C(ABC):</span>
+<span class="sd">            @staticmethod</span>
+<span class="sd">            @abstractmethod</span>
 <span class="sd">            def my_abstract_staticmethod(...):</span>
 <span class="sd">                ...</span>
 
-<span class="sd">    &#39;abstractstaticmethod&#39; is deprecated. Use &#39;staticmethod&#39; with</span>
-<span class="sd">    &#39;abstractmethod&#39; instead.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">__isabstractmethod__</span> <span class="o">=</span> <span class="kc">True</span>
@@ -124,29 +102,14 @@
 <span class="k">class</span> <span class="nc">abstractproperty</span><span class="p">(</span><span class="nb">property</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A decorator indicating abstract properties.</span>
 
-<span class="sd">    Requires that the metaclass is ABCMeta or derived from it.  A</span>
-<span class="sd">    class that has a metaclass derived from ABCMeta cannot be</span>
-<span class="sd">    instantiated unless all of its abstract properties are overridden.</span>
-<span class="sd">    The abstract properties can be called using any of the normal</span>
-<span class="sd">    &#39;super&#39; call mechanisms.</span>
+<span class="sd">    Deprecated, use &#39;property&#39; with &#39;abstractmethod&#39; instead:</span>
 
-<span class="sd">    Usage:</span>
-
-<span class="sd">        class C(metaclass=ABCMeta):</span>
-<span class="sd">            @abstractproperty</span>
+<span class="sd">        class C(ABC):</span>
+<span class="sd">            @property</span>
+<span class="sd">            @abstractmethod</span>
 <span class="sd">            def my_abstract_property(self):</span>
 <span class="sd">                ...</span>
 
-<span class="sd">    This defines a read-only property; you can also define a read-write</span>
-<span class="sd">    abstract property using the &#39;long&#39; form of property declaration:</span>
-
-<span class="sd">        class C(metaclass=ABCMeta):</span>
-<span class="sd">            def getx(self): ...</span>
-<span class="sd">            def setx(self, value): ...</span>
-<span class="sd">            x = abstractproperty(getx, setx)</span>
-
-<span class="sd">    &#39;abstractproperty&#39; is deprecated. Use &#39;property&#39; with &#39;abstractmethod&#39;</span>
-<span class="sd">    instead.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">__isabstractmethod__</span> <span class="o">=</span> <span class="kc">True</span>
@@ -195,14 +158,14 @@
 
         <span class="k">def</span> <span class="nf">_dump_registry</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
             <span class="sd">&quot;&quot;&quot;Debug helper to print the ABC registry.&quot;&quot;&quot;</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Class: </span><span class="si">{cls.__module__}</span><span class="s2">.</span><span class="si">{cls.__qualname__}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Inv. counter: {get_cache_token()}&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Class: </span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__module__</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__qualname__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Inv. counter: </span><span class="si">{</span><span class="n">get_cache_token</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">)</span>
             <span class="p">(</span><span class="n">_abc_registry</span><span class="p">,</span> <span class="n">_abc_cache</span><span class="p">,</span> <span class="n">_abc_negative_cache</span><span class="p">,</span>
              <span class="n">_abc_negative_cache_version</span><span class="p">)</span> <span class="o">=</span> <span class="n">_get_dump</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;_abc_registry: </span><span class="si">{_abc_registry!r}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;_abc_cache: </span><span class="si">{_abc_cache!r}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;_abc_negative_cache: </span><span class="si">{_abc_negative_cache!r}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;_abc_negative_cache_version: </span><span class="si">{_abc_negative_cache_version!r}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;_abc_registry: </span><span class="si">{</span><span class="n">_abc_registry</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;_abc_cache: </span><span class="si">{</span><span class="n">_abc_cache</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;_abc_negative_cache: </span><span class="si">{</span><span class="n">_abc_negative_cache</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;_abc_negative_cache_version: </span><span class="si">{</span><span class="n">_abc_negative_cache_version</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">,</span>
                   <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">)</span>
 
         <span class="k">def</span> <span class="nf">_abc_registry_clear</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
@@ -222,26 +185,64 @@
 </pre></div>
 
           </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Tigramite</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">Tigramite 5.0 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li> 
-      </ul>
+    <div class="footer">
+      &copy;2022, Jakob Runge.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
     </div>
-    <div class="footer" role="contentinfo">
-        &#169; Copyright 2021, Jakob Runge.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
-    </div>
+
+    
+
+    
   </body>
 </html>

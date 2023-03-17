@@ -8,11 +8,12 @@ from __future__ import print_function
 from collections import defaultdict, OrderedDict
 import sys
 import warnings
-import copy
+from copy import deepcopy
 import math
 import numpy as np
 import scipy.sparse
 import scipy.sparse.linalg
+from scipy import stats
 from numba import jit
 
 class DataFrame():
@@ -37,13 +38,25 @@ class DataFrame():
             N is fixed. 
     mask : array-like, optional (default: None)
         Optional mask array, must be of same format and shape as data.
+   type_mask : array-like
+        Binary data array of same shape as array which describes whether 
+        individual samples in a variable (or all samples) are continuous 
+        or discrete: 0s for continuous variables and 1s for discrete variables.
     missing_flag : number, optional (default: None)
         Flag for missing values in dataframe. Dismisses all time slices of
-        samples where missing values occur in any variable. For 
-        remove_missing_upto_maxlag=True also flags samples for all lags up 
-        to 2*tau_max (more precisely, this depends on
-        the cut_off argument in self.construct_array(), see further below). 
-        This avoids biases, see section on masking in Supplement of [1]_.
+        samples where missing values occur in any variable. For
+        remove_missing_upto_maxlag=True also flags samples for all lags up to
+        2*tau_max (more precisely, this depends on the cut_off argument in
+        self.construct_array(), see further below). This avoids biases, see
+        section on masking in Supplement of [1]_.
+    vector_vars : dict
+        Dictionary of vector variables of the form,
+        Eg. {0: [(0, 0), (1, 0)], 1: [(2, 0)], 2: [(3, 0)], 3: [(4, 0)]}
+        The keys are the new vectorized variables and respective tuple values
+        are the individual components of the vector variables. In the method of
+        construct_array(), the individual components are parsed from vector_vars
+        and added (accounting for lags) to the list that creates X, Y and Z for
+        conditional independence test.
     var_names : list of strings, optional (default: range(N))
         Names of variables, must match the number of variables. If None is
         passed, variables are enumerated as [0, 1, ...]
@@ -76,7 +89,7 @@ class DataFrame():
         if analysis_mode == 'multiple' and data is dictionary:
             Must be dictionary of the form {key(m): time_offset(m), ...} whose
             set of keys agrees with the set of keys of data and whose values are
-            non-negative integers, at least of one which is 0. The value
+            non-negative integers, at least one of which is 0. The value
             time_offset(m) defines the time offset of dataset m with
             respect to a shared time axis.
 
@@ -104,6 +117,10 @@ class DataFrame():
     self.mask : dictionary
         Mask internally mapped to a dictionary representation in the same way as
         data is mapped to self.values
+    self.type_mask : array-like
+        Binary data array of same shape as array which describes whether 
+        individual samples in a variable (or all samples) are continuous 
+        or discrete: 0s for continuous variables and 1s for discrete variables.
     self.missing_flag:
         Is missing_flag
     self.var_names:
@@ -143,7 +160,7 @@ class DataFrame():
     """
 
     def __init__(self, data, mask=None, missing_flag=None, vector_vars=None, var_names=None,
-        datatime=None, analysis_mode ='single', reference_points=None,
+        type_mask=None, datatime=None, analysis_mode ='single', reference_points=None,
         time_offsets=None, remove_missing_upto_maxlag=False):
 
         # Check that a valid analysis mode, specified by the argument
@@ -171,10 +188,10 @@ class DataFrame():
             if isinstance(data, np.ndarray):
                 _data_shape = data.shape
                 if len(_data_shape) == 2:
-                    self.values = {0: data}
+                    self.values = {0: np.copy(data)}
                     self._initialized_from = "2d numpy array"
                 elif len(_data_shape) == 3 and _data_shape[0] == 1:
-                    self.values = {0: data[0, :, :]}
+                    self.values = {0: np.copy(data[0, :, :])}
                     self._initialized_from = "3d numpy array"
                 else:
                     raise TypeError("In analysis mode 'single', 'data' given "\
@@ -186,7 +203,7 @@ class DataFrame():
                     _data = next(iter(data.values()))
                     if isinstance(_data, np.ndarray):
                         if len(_data.shape) == 2:
-                            self.values = data
+                            self.values = data.copy()
                             self._initialized_from = "dict"
                         else:
                             raise TypeError("In analysis mode 'single', "\
@@ -216,7 +233,7 @@ class DataFrame():
             if isinstance(data, np.ndarray):
                 _data_shape = data.shape
                 if len(_data_shape) == 3:
-                    self.values = {i: data[i, :, :] for i in range(_data_shape[0])}
+                    self.values = {i: np.copy(data[i, :, :]) for i in range(_data_shape[0])}
                     self._initialized_from = "3d numpy array"
                 else:
                     raise TypeError("In analysis mode 'multiple', 'data' "\
@@ -231,25 +248,25 @@ class DataFrame():
 
             elif isinstance(data, dict):
                 _N_list = set()
-                for ens_member_key, ens_member_data in data.items():
-                    if isinstance(ens_member_data, np.ndarray):
-                        _ens_member_data_shape = ens_member_data.shape
-                        if len(_ens_member_data_shape) == 2:
-                            _N_list.add(_ens_member_data_shape[1])
+                for dataset_key, dataset_data in data.items():
+                    if isinstance(dataset_data, np.ndarray):
+                        _dataset_data_shape = dataset_data.shape
+                        if len(_dataset_data_shape) == 2:
+                            _N_list.add(_dataset_data_shape[1])
                         else:
                             raise TypeError("In analysis mode 'multiple', "\
                                 "'data' given as dictionary. 'data'[{}] is of "\
                                 "shape {}, must be of shape (T_i, N).".format(
-                                    ens_member_key, _ens_member_data_shape))
+                                    dataset_key, _dataset_data_shape))
 
                     else:
                         raise TypeError("In analysis mode 'multiple', 'data' "\
                             "given as dictionary. 'data'[{}] is of type {}, "\
-                            "must be np.ndarray.".format(ens_member_key,
-                                type(ens_member_data)))
+                            "must be np.ndarray.".format(dataset_key,
+                                type(dataset_data)))
 
                 if len(_N_list) == 1:
-                    self.values = data
+                    self.values = data.copy()
                     self._initialized_from = "dict"
                 else:
                     raise ValueError("In analysis mode 'multiple', 'data' "\
@@ -269,13 +286,13 @@ class DataFrame():
         self.M = len(self.values) # (Number of datasets)
 
         self.T = dict() # (Time lengths of the individual datasets)
-        for ens_member_key, ens_member_data in self.values.items():
-            if np.isnan(ens_member_data).sum() != 0:
+        for dataset_key, dataset_data in self.values.items():
+            if np.isnan(dataset_data).sum() != 0:
                 raise ValueError("NaNs in the data.")
 
-            _ens_member_data_shape = ens_member_data.shape
-            self.T[ens_member_key] = _ens_member_data_shape[0]
-            self.Ndata = _ens_member_data_shape[1] # (Number of variables) 
+            _dataset_data_shape = dataset_data.shape
+            self.T[dataset_key] = _dataset_data_shape[0]
+            self.Ndata = _dataset_data_shape[1] # (Number of variables) 
             # N does not vary across the datasets
 
         # Setup dictionary of variables for vector mode
@@ -306,9 +323,14 @@ class DataFrame():
         self.mask = None
         if mask is not None:
             self.mask = self._check_mask(mask = mask)
+            
+        self.type_mask = None
+        if type_mask is not None:
+            self.type_mask = self._check_mask(mask = type_mask, check_type_mask=True)
 
         # Check and prepare the time offsets
         self._check_and_set_time_offsets(time_offsets)
+        self.time_offsets_is_none = time_offsets is None
 
         # Set the default datatime if unspecified
         if datatime is None:
@@ -320,41 +342,35 @@ class DataFrame():
             else:
                 self.datatime = datatime
 
-        # Save the largest relevant time step
+        # Save the largest/smallest relevant time step
         self.largest_time_step = np.add(np.asarray(list(self.T.values())), np.asarray(list(self.time_offsets.values()))).max()
+        self.smallest_time_step = np.add(np.asarray(list(self.T.values())), np.asarray(list(self.time_offsets.values()))).min()
 
         # Check and prepare the reference points
         self._check_and_set_reference_points(reference_points)
+        self.reference_points_is_none = reference_points is None
 
         # Save the 'missing_flag' value
         self.missing_flag = missing_flag
         if self.missing_flag is not None:
-            for ens_member_key in self.values:
-                self.values[ens_member_key][self.values[ens_member_key] == self.missing_flag] = np.nan
+            for dataset_key in self.values:
+                self.values[dataset_key][self.values[dataset_key] == self.missing_flag] = np.nan
         self.remove_missing_upto_maxlag = remove_missing_upto_maxlag
 
         # If PCMCI.run_bootstrap_of is called, then the
         # bootstrap random draw can be set here
         self.bootstrap = None
 
-    # def _create_bootstrap(self)
 
-    def _check_mask(self, mask=None, require_mask=False):
+    def _check_mask(self, mask, check_type_mask=False):
         """Checks that the mask is:
             * The same shape as the data
             * Is an numpy ndarray (or subtype)
-            * Does not contain any NaN entrie
+            * Does not contain any NaN entries
 
-        Parameters
-        ----------
-        require_mask : bool (default : False)
         """
         # Check that there is a mask if required
         _use_mask = mask
-        if _use_mask is None:
-            _use_mask = self.mask
-        if require_mask and _use_mask is None:
-            raise ValueError("Expected a mask, but got nothing!")
 
         # If we have a mask, check it
         if _use_mask is not None:
@@ -378,12 +394,12 @@ class DataFrame():
 
             elif isinstance(_use_mask, dict):
                 if len(_use_mask) == self.M:
-                    for ens_member_key in self.values.keys():
-                        if _use_mask.get(ens_member_key) is None:
+                    for dataset_key in self.values.keys():
+                        if _use_mask.get(dataset_key) is None:
                             raise ValueError("'data' has key {} (type {}) "\
                                 "but 'mask' does not, keys must be "\
-                                "identical.".format(ens_member_key,
-                                    type(ens_member_key)))
+                                "identical.".format(dataset_key,
+                                    type(dataset_key)))
 
                     _use_mask_dict = _use_mask
 
@@ -396,23 +412,25 @@ class DataFrame():
                     "{}, must be dict or array.".format(type(_use_mask)))
 
             # Check for consistency with shape of 'self.values' and for NaNs
-            for ens_member_key, ens_member_data in self.values.items():
-                _use_mask_dict_data = _use_mask_dict[ens_member_key] 
-                if _use_mask_dict_data.shape == ens_member_data.shape:
+            for dataset_key, dataset_data in self.values.items():
+                _use_mask_dict_data = _use_mask_dict[dataset_key] 
+                if _use_mask_dict_data.shape == dataset_data.shape:
                     if np.sum(np.isnan(_use_mask_dict_data)) != 0:
                         raise ValueError("NaNs in the data mask")
-
+                    if check_type_mask:
+                        if not set(np.unique(_use_mask_dict_data)).issubset(set([0, 1])):
+                            raise ValueError("Type mask contains other values than 0 and 1")
                 else:
                     if self.analysis_mode == 'single':
                         raise ValueError("Shape mismatch: 'data' is of shape "\
                             "{}, 'mask' is of shape {}. Must be "\
-                            "identical.".format(ens_member_data.shape,
+                            "identical.".format(dataset_data.shape,
                                 _use_mask_dict_data.shape))
                     elif self.analysis_mode == 'multiple':
                         raise ValueError("Shape mismatch: dataset {} "\
                             "is of shape {} in 'data' and of shape {} in "\
-                            "'mask'. Must be identical.".format(ens_member_key,
-                                ens_member_data.shape,
+                            "'mask'. Must be identical.".format(dataset_key,
+                                dataset_data.shape,
                                 _use_mask_dict_data.shape))
 
             # Return the mask in dictionary format
@@ -431,12 +449,12 @@ class DataFrame():
             # dictionary representation
             if isinstance(time_offsets, dict):
                 if len(time_offsets) == self.M:
-                    for ens_member_key in self.values.keys():
-                        if time_offsets.get(ens_member_key) is None:
+                    for dataset_key in self.values.keys():
+                        if time_offsets.get(dataset_key) is None:
                             raise ValueError("'data' has key {} (type {}) but "\
                                 "'time_offsets' does not, keys must be "\
-                                "identical.".format(ens_member_key,
-                                    type(ens_member_key)))
+                                "identical.".format(dataset_key,
+                                    type(dataset_key)))
 
                     self.time_offsets = time_offsets
 
@@ -466,11 +484,11 @@ class DataFrame():
                         "be int.".format(type(time_offset)))
 
             if not found_zero_time_offset:
-                raise ValueError("At least time offset must be 0.")
+                raise ValueError("At least one time offset must be 0.")
 
         else:
             # If no time offsets are specified, all of them are zero
-            self.time_offsets = {ens_member_key: 0 for ens_member_key in self.values.keys()}
+            self.time_offsets = {dataset_key: 0 for dataset_key in self.values.keys()}
 
     def _check_and_set_reference_points(self, reference_points):
         """Check the argument 'reference_point' for consistency and bring into
@@ -531,6 +549,7 @@ class DataFrame():
                         extraZ=None,
                         mask=None,
                         mask_type=None,
+                        type_mask=None,
                         return_cleaned_xyz=False,
                         do_checks=True,
                         remove_overlaps=True,
@@ -558,6 +577,11 @@ class DataFrame():
             Masking mode: Indicators for which variables in the dependence
             measure I(X; Y | Z) the samples should be masked. If None, the mask
             is not used. Explained in tutorial on masking and missing values.
+        type_mask : array-like
+            Binary data array of same shape as array which describes whether 
+            individual samples in a variable (or all samples) are continuous 
+            or discrete: 0s for continuous variables and 1s for discrete variables.
+            If it is set, then it overrides the self.type_mask assigned to the dataframe.
         return_cleaned_xyz : bool, optional (default: False)
             Whether to return cleaned X,Y,Z, where possible duplicates are
             removed.
@@ -618,9 +642,10 @@ class DataFrame():
 
         Returns
         -------
-        array, xyz [,XYZ] : Tuple of data array of shape (dim, n_samples) and
+        array, xyz [,XYZ], type_mask : Tuple of data array of shape (dim, n_samples),
             xyz identifier array of shape (dim,) identifying which row in array
-            corresponds to X, Y, and Z. For example:: X = [(0, -1)],
+            corresponds to X, Y, and Z, and the type mask that indicates which samples
+            are continuous or discrete. For example:: X = [(0, -1)],
             Y = [(1, 0)], Z = [(1, -1), (0, -2)] yields an array of shape
             (4, n_samples) and xyz is xyz = numpy.array([0,1,2,2]). If
             return_cleaned_xyz is True, also outputs the cleaned XYZ lists.
@@ -674,6 +699,12 @@ class DataFrame():
             _mask = self.mask
         else:
             _mask = self._check_mask(mask = _mask)
+            
+        _type_mask = type_mask
+        if _type_mask is None:
+            _type_mask = self.type_mask
+        else:
+            _type_mask = self._check_mask(mask = _type_mask, check_type_mask=True)
 
         # Figure out what cut off we will be using
         if cut_off == '2xtau_max':
@@ -702,53 +733,26 @@ class DataFrame():
 
         # Run through all datasets and fill a dictionary holding the
         # samples taken from the individual datasets
-        samples_ens_members = dict()
-        for ens_member_key, ens_member_data in self.values.items():
+        samples_datasets = dict()
+        type_masks = dict()
+        self.use_indices_dataset_dict = dict()
+
+        for dataset_key, dataset_data in self.values.items():
 
             # Apply time offset to the reference points
-            ref_points_here = self.reference_points - self.time_offsets[ens_member_key]
+            ref_points_here = self.reference_points - self.time_offsets[dataset_key]
 
             # Remove reference points that are out of bounds or are to be
             # excluded given the choice of 'cut_off'
             ref_points_here = ref_points_here[ref_points_here >= max_lag]
-            ref_points_here = ref_points_here[ref_points_here < self.T[ens_member_key]]
+            ref_points_here = ref_points_here[ref_points_here < self.T[dataset_key]]
 
             # Keep track of which reference points would have remained for
             # max_lag == 2*tau_max
             if cut_off == '2xtau_max_future':
-                ref_points_here_2_tau_max = self.reference_points - self.time_offsets[ens_member_key]
+                ref_points_here_2_tau_max = self.reference_points - self.time_offsets[dataset_key]
                 ref_points_here_2_tau_max = ref_points_here_2_tau_max[ref_points_here_2_tau_max  >= 2*tau_max]
-                ref_points_here_2_tau_max = ref_points_here_2_tau_max[ref_points_here_2_tau_max  < self.T[ens_member_key]]
-
-            # # Take care of missing values by removing reference points for which
-            # #  there is a missing value
-            # # - at the time point specified by the reference point
-            # # - at a time point 1, ..., max_lag time steps after (temporally,
-            # # i.e., later in time) that time point
-            # if self.missing_flag is not None:
-            #     # Determine the time steps where at least one data value is
-            #     # missing
-            #     # missing_anywhere = np.any(ens_member_data == self.missing_flag, axis=1)
-            #     # missing_anywhere_idx = np.nonzero(missing_anywhere)[0]
-            #     missing_anywhere_idx = np.array(np.where(np.any(np.isnan(ens_member_data), axis=1))[0])
-
-            #     # Determine the time steps that need to be removed
-            #     if self.remove_missing_upto_maxlag:
-            #         idx_to_remove = set(idx + tau for idx in missing_anywhere_idx for tau in range(max_lag + 1))
-            #     else:
-            #         idx_to_remove = set(idx for idx in missing_anywhere_idx)
-            #     print(idx_to_remove)
-            #     # Determine the valid reference points
-            #     ref_points_here = set(ref_points_here).difference(idx_to_remove)
-            #     ref_points_here = np.array(list(ref_points_here))
-
-            #     # Keep track of which reference points would have remained for
-            #     # max_lag == 2*tau_max
-            #     if cut_off == '2xtau_max_future':
-            #         # TODO: Check this one regarding self.remove_missing_upto_maxlag=False
-            #         idx_to_remove_2_tau_max = set(idx + tau for idx in missing_anywhere_idx for tau in range(2*tau_max + 1))
-            #         ref_points_here_2_tau_max = set(ref_points_here_2_tau_max).difference(idx_to_remove_2_tau_max)
-            #         ref_points_here_2_tau_max = np.array(list(ref_points_here_2_tau_max))
+                ref_points_here_2_tau_max = ref_points_here_2_tau_max[ref_points_here_2_tau_max  < self.T[dataset_key]]
 
             # Sort the valid reference points (not needed, but might be useful
             # for detailed debugging)
@@ -772,12 +776,23 @@ class DataFrame():
 
                 boot_blocklength = self.bootstrap['boot_blocklength']
 
+                if boot_blocklength == 'cube_root':
+                    boot_blocklength = max(1, int(len(ref_points_here)**(1/3)))
+                # elif boot_blocklength == 'from_autocorrelation':
+                #     boot_blocklength = \
+                #         get_block_length(overlapping_residuals.T, xyz=np.zeros(N), mode='confidence')
+                elif type(boot_blocklength) is int and boot_blocklength > 0:
+                    pass
+                else:
+                    raise ValueError("boot_blocklength must be integer > 0, 'cube_root', or 'from_autocorrelation'")
+
                 # Chooses THE SAME random seed for every dataset, maybe that's what we want...
                 # If the reference points are all the same, this will give the same bootstrap
                 # draw. However, if they are NOT the same, they will differ. 
                 # TODO: Decide whether bootstrap draws should be the same for each dataset and
                 # how to achieve that if the reference points differ...
-                random_state = self.bootstrap['random_state']
+                # random_state = self.bootstrap['random_state']
+                random_state = deepcopy(self.bootstrap['random_state'])
 
                 # Determine the number of blocks total, rounding up for non-integer
                 # amounts
@@ -789,7 +804,6 @@ class DataFrame():
 
                 # Get the starting indices for the blocks
                 blk_strt = random_state.choice(np.arange(len(ref_points_here) - boot_blocklength), size=n_blks, replace=True)
-
                 # Get the empty array of block resampled values
                 boot_draw = np.zeros(n_blks*boot_blocklength, dtype='int')
                 # Fill the array of block resamples
@@ -800,38 +814,37 @@ class DataFrame():
 
             # Construct the data array holding the samples taken from the
             # current dataset
-            samples_ens_members[ens_member_key] = np.zeros((dim, len(ref_points_here)), dtype = ens_member_data.dtype)
+            samples_datasets[dataset_key] = np.zeros((dim, len(ref_points_here)), dtype = dataset_data.dtype)
             for i, (var, lag) in enumerate(XYZ):
-                samples_ens_members[ens_member_key][i, :] = ens_member_data[ref_points_here + lag, var]
+                samples_datasets[dataset_key][i, :] = dataset_data[ref_points_here + lag, var]
 
             # Build the mask array corresponding to this dataset
             if _mask is not None:
-                mask_ens_member = np.zeros((dim, len(ref_points_here)), dtype = ens_member_data.dtype)
+                mask_dataset = np.zeros((dim, len(ref_points_here)), dtype = 'bool')
                 for i, (var, lag) in enumerate(XYZ):
-                    mask_ens_member[i, :] = _mask[ens_member_key][ref_points_here + lag, var]
+                    mask_dataset[i, :] = _mask[dataset_key][ref_points_here + lag, var]
 
             # Take care of masking
-            use_indices_ens_member = np.ones(len(ref_points_here), dtype = 'int')
+            use_indices_dataset = np.ones(len(ref_points_here), dtype = 'int')
 
+            # Build the type mask array corresponding to this dataset
+            if _type_mask is not None:
+                type_mask_dataset = np.zeros((dim, len(ref_points_here)), dtype = 'bool')
+                for i, (var, lag) in enumerate(XYZ):
+                    type_mask_dataset[i, :] = _type_mask[dataset_key][ref_points_here + lag, var]
+                type_masks[dataset_key] = type_mask_dataset
+            
             # Remove all values that have missing value flag, and optionally as well the time
             # slices that occur up to max_lag after
             if self.missing_flag is not None:
-                missing_anywhere = np.array(np.where(np.any(np.isnan(samples_ens_members[ens_member_key]), axis=0))[0])
-                # if self.remove_missing_upto_maxlag:
-
-                #     for tau in range(max_lag+1):
-                #         delete = missing_anywhere + tau 
-                #         delete = delete[delete < len(ref_points_here)]
-                #         use_indices_ens_member[delete] = 0
-                # else:
-                #     use_indices_ens_member[missing_anywhere] = 0
+                missing_anywhere = np.array(np.where(np.any(np.isnan(samples_datasets[dataset_key]), axis=0))[0])
 
                 if self.remove_missing_upto_maxlag:
                     idx_to_remove = set(idx + tau for idx in missing_anywhere for tau in range(max_lag + 1))
                 else:
                     idx_to_remove = set(idx for idx in missing_anywhere)
                 
-                use_indices_ens_member[np.array(list(idx_to_remove), dtype='int')] = 0
+                use_indices_dataset[np.array(list(idx_to_remove), dtype='int')] = 0
             
             if _mask is not None:
                 # Remove samples with mask == 1 conditional on which mask_type
@@ -846,16 +859,27 @@ class DataFrame():
                         # letter index is masked by taking the product along the
                         # node-data to return a time slice selection, where 0
                         # means the time slice will not be used
-                        slice_select = np.prod(mask_ens_member[xyz == cde, :] == False, axis=0)
-                        use_indices_ens_member *= slice_select
+                        slice_select = np.prod(mask_dataset[xyz == cde, :] == False, axis=0)
+                        use_indices_dataset *= slice_select
 
             # Accordingly update the data array
-            samples_ens_members[ens_member_key] = samples_ens_members[ens_member_key][:, use_indices_ens_member == 1]
+            samples_datasets[dataset_key] = samples_datasets[dataset_key][:, use_indices_dataset == 1]
 
-        ## end for ens_member_key, ens_member_data in self.values.items()
+        ## end for dataset_key, dataset_data in self.values.items()
+
+        # Save used indices as attribute
+        if len(ref_points_here) > 0:
+            self.use_indices_dataset_dict[dataset_key] = ref_points_here[use_indices_dataset==1]
+        else:
+            self.use_indices_dataset_dict[dataset_key] = []
 
         # Concatenate the arrays of all datasets
-        array = np.concatenate(tuple(samples_ens_members.values()), axis = 1)
+        array = np.concatenate(tuple(samples_datasets.values()), axis = 1)
+        if _type_mask is not None:
+            type_array = np.concatenate(tuple(type_masks.values()), axis = 1)
+        else:
+            type_array = None
+        
         # print(np.where(np.isnan(array)))
         # print(array.shape)
 
@@ -865,13 +889,13 @@ class DataFrame():
 
         # Print information about the constructed array
         if verbosity > 2:
-            self.print_array_info(array, X, Y, Z, self.missing_flag, mask_type, extraZ)
+            self.print_array_info(array, X, Y, Z, self.missing_flag, mask_type, type_array, extraZ)
 
         # Return the array and xyz and optionally (X, Y, Z)
         if return_cleaned_xyz:
-            return array, xyz, (X, Y, Z)
+            return array, xyz, (X, Y, Z), type_array
 
-        return array, xyz
+        return array, xyz, type_array
 
     def _check_nodes(self, Y, XYZ, N, dim):
         """
@@ -907,7 +931,7 @@ class DataFrame():
         #     raise ValueError("Y-nodes are %s, " % str(Y) +
         #                      "but one of the Y-nodes must have zero lag")
 
-    def print_array_info(self, array, X, Y, Z, missing_flag, mask_type, extraZ=None):
+    def print_array_info(self, array, X, Y, Z, missing_flag, mask_type, type_mask=None, extraZ=None):
         """
         Print info about the constructed array
 
@@ -929,6 +953,10 @@ class DataFrame():
             Masking mode: Indicators for which variables in the dependence
             measure I(X; Y | Z) the samples should be masked. If None, the mask
             is not used. Explained in tutorial on masking and missing values.
+        type_mask : array-like
+            Binary data array of same shape as array which describes whether 
+            individual samples in a variable (or all samples) are continuous 
+            or discrete: 0s for continuous variables and 1s for discrete variables.
         """
         if extraZ is None:
             extraZ = []
@@ -941,9 +969,116 @@ class DataFrame():
             print(indt + "extraZ = %s" % str(extraZ))
         if self.mask is not None and mask_type is not None:
             print(indt+"with masked samples in %s removed" % mask_type)
+        if self.type_mask is not None:
+            print(indt+"with %s % discrete values" % np.sum(type_mask)/type_mask.size)
         if self.missing_flag is not None:
             print(indt+"with missing values = %s removed" % self.missing_flag)
 
+
+def get_acf(series, max_lag=None):
+    """Returns autocorrelation function.
+
+    Parameters
+    ----------
+    series : 1D-array
+        data series to compute autocorrelation from
+
+    max_lag : int, optional (default: None)
+        maximum lag for autocorrelation function. If None is passed, 10% of
+        the data series length are used.
+
+    Returns
+    -------
+    autocorr : array of shape (max_lag + 1,)
+        Autocorrelation function.
+    """
+    # Set the default max lag
+    if max_lag is None:
+        max_lag = int(max(5, 0.1*len(series)))
+    # Initialize the result
+    autocorr = np.ones(max_lag + 1)
+    # Iterate over possible lags
+    for lag in range(1, max_lag + 1):
+        # Set the values
+        y1_vals = series[lag:]
+        y2_vals = series[:len(series) - lag]
+        # Calculate the autocorrelation
+        autocorr[lag] = np.corrcoef(y1_vals, y2_vals, ddof=0)[0, 1]
+    return autocorr
+
+def get_block_length(array, xyz, mode):
+    """Returns optimal block length for significance and confidence tests.
+
+    Determine block length using approach in Mader (2013) [Eq. (6)] which
+    improves the method of Pfeifer (2005) with non-overlapping blocks In
+    case of multidimensional X, the max is used. Further details in [1]_.
+    Two modes are available. For mode='significance', only the indices
+    corresponding to X are shuffled in array. For mode='confidence' all
+    variables are jointly shuffled. If the autocorrelation curve fit fails,
+    a block length of 5% of T is used. The block length is limited to a
+    maximum of 10% of T.
+
+    Mader et al., Journal of Neuroscience Methods,
+    Volume 219, Issue 2, 15 October 2013, Pages 285-291
+
+    Parameters
+    ----------
+    array : array-like
+        data array with X, Y, Z in rows and observations in columns
+
+    xyz : array of ints
+        XYZ identifier array of shape (dim,).
+
+    mode : str
+        Which mode to use.
+
+    Returns
+    -------
+    block_len : int
+        Optimal block length.
+    """
+    # Inject a dependency on siganal, optimize
+    from scipy import signal, optimize
+    # Get the shape of the array
+    dim, T = array.shape
+    # Initiailize the indices
+    indices = range(dim)
+    if mode == 'significance':
+        indices = np.where(xyz == 0)[0]
+
+    # Maximum lag for autocov estimation
+    max_lag = int(0.1*T)
+    # Define the function to optimize against
+    def func(x_vals, a_const, decay):
+        return a_const * decay**x_vals
+
+    # Calculate the block length
+    block_len = 1
+    for i in indices:
+        # Get decay rate of envelope of autocorrelation functions
+        # via hilbert trafo
+        autocov = get_acf(series=array[i], max_lag=max_lag)
+        autocov[0] = 1.
+        hilbert = np.abs(signal.hilbert(autocov))
+        # Try to fit the curve
+        try:
+            popt, _ = optimize.curve_fit(
+                f=func,
+                xdata=np.arange(0, max_lag+1),
+                ydata=hilbert,
+            )
+            phi = popt[1]
+            # Formula of Pfeifer (2005) assuming non-overlapping blocks
+            l_opt = (4. * T * (phi / (1. - phi) + phi**2 / (1. - phi)**2)**2
+                     / (1. + 2. * phi / (1. - phi))**2)**(1. / 3.)
+            block_len = max(block_len, int(l_opt))
+        except RuntimeError:
+            warnings.warn("Error - curve_fit failed for estimating block_shuffle length, using"
+                  " block_len = %d" % (int(.05 * T)))
+            # block_len = max(int(.05 * T), block_len)
+    # Limit block length to a maximum of 10% of T
+    block_len = min(block_len, int(0.1 * T))
+    return block_len
 
 
 def lowhighpass_filter(data, cutperiod, pass_periods='low'):
@@ -985,7 +1120,7 @@ def lowhighpass_filter(data, cutperiod, pass_periods='low'):
 
 
 def smooth(data, smooth_width, kernel='gaussian',
-           mask=None, residuals=False):
+           mask=None, residuals=False, verbosity=0):
     """Returns either smoothed time series or its residuals.
 
     the difference between the original and the smoothed time series
@@ -1008,6 +1143,8 @@ def smooth(data, smooth_width, kernel='gaussian',
         Data mask where True labels masked samples.
     residuals : bool, optional (default: False)
         True if residuals should be returned instead of smoothed data.
+    verbosity : int, optional (default: 0)
+        Level of verbosity.
 
     Returns
     -------
@@ -1015,9 +1152,10 @@ def smooth(data, smooth_width, kernel='gaussian',
         Smoothed/residual data.
     """
 
-    print("%s %s smoothing with " % ({True: "Take residuals of a ",
+    if verbosity > 0:
+        print("%s %s smoothing with " % ({True: "Take residuals of a ",
                                       False: ""}[residuals], kernel) +
-          "window width %.2f (2*sigma for a gaussian!)" % (smooth_width))
+          "window width %.2f (=2*sigma for a gaussian!)" % (smooth_width))
 
     totaltime = len(data)
     if kernel == 'gaussian':
@@ -1027,7 +1165,7 @@ def smooth(data, smooth_width, kernel='gaussian',
     elif kernel == 'heaviside':
         import scipy.linalg
         wtmp = np.zeros(totaltime)
-        wtmp[:np.ceil(smooth_width / 2.)] = 1
+        wtmp[:int(np.ceil(smooth_width / 2.))] = 1
         window = scipy.linalg.toeplitz(wtmp)
 
     if mask is None:
@@ -1112,7 +1250,10 @@ def time_bin_with_mask(data, time_bin_length, mask=None):
 
     if np.ndim(data) == 1.:
         data.shape = (T, 1)
-        mask.shape = (T, 1)
+        if mask is not None:
+            mask.shape = (T, 1)
+        else:
+            sample_selector = np.ones(data.shape)
 
     bindata = np.zeros(
         (T // time_bin_length,) + data.shape[1:], dtype="float32")
@@ -1128,6 +1269,61 @@ def time_bin_with_mask(data, time_bin_length, mask=None):
     T, grid_size = bindata.shape
 
     return (bindata.squeeze(), T)
+
+def trafo2normal(data, mask=None, thres=0.001):
+    """Transforms input data to standard normal marginals.
+
+    Assumes data.shape = (T, dim)
+
+    Parameters
+    ----------
+    data : array
+        Data array of shape (time, variables).
+    thres : float
+        Set outer points in CDF to this value.
+    mask : bool array, optional (default: None)
+        Data mask where True labels masked samples.
+
+    Returns
+    -------
+    normal_data : array-like
+        data with standard normal marginals.
+    """
+
+    def trafo(xi):
+        xisorted = np.sort(xi)
+        yi = np.linspace(1. / len(xi), 1, len(xi))
+        return np.interp(xi, xisorted, yi)
+
+    normal_data = np.copy(data)
+
+    if np.ndim(data) == 1:
+        if mask is None:
+            nonmasked = np.where(np.isnan(data) == False)[0]
+        else:
+            nonmasked = np.where((mask==0)*(np.isnan(data) == False))
+
+        u = trafo(data[nonmasked])
+        u[u==0.] = thres
+        u[u==1.] = 1. - thres
+        normal_data[nonmasked] = stats.norm.ppf(u)
+    else:
+        for i in range(data.shape[1]):
+            if mask is None:
+                nonmasked = np.where(np.isnan(data[:,i]) == False)[0]
+            else:
+                nonmasked = np.where((mask[:, i]==0)*(np.isnan(data[:, i]) == False))
+                # nonmasked = np.where(mask[:, i]==0)
+            # print(data[:, i].shape, nonmasked.shape)
+            uniform = trafo(data[:, i][nonmasked])
+            
+            # print(data[-3:, i][nonmasked])
+
+            uniform[uniform==0.] = thres
+            uniform[uniform==1.] = 1. - thres
+            normal_data[:, i][nonmasked] = stats.norm.ppf(uniform)
+
+    return normal_data
 
 @jit
 def _get_patterns(array, array_mask, patt, patt_mask, weights, dim, step, fac, N, T):
@@ -1213,8 +1409,7 @@ def ordinal_patt_array(array, array_mask=None, dim=2, step=1,
 
     # Add noise to destroy ties...
     array += (1E-6 * array.std(axis=0)
-              * np.random.rand(array.shape[0], array.shape[1]).astype('float64'))
-
+              * random_state.random((array.shape[0], array.shape[1])).astype('float64'))
 
     patt_time = int(array.shape[0] - step * (dim - 1))
     T, N = array.shape
@@ -1280,6 +1475,7 @@ def quantile_bin_array(data, bins=6):
 
     return symb_array.astype('int32')
 
+
 def var_process(parents_neighbors_coeffs, T=1000, use='inv_inno_cov',
                 verbosity=0, initial_values=None):
     """Returns a vector-autoregressive process with correlated innovations.
@@ -1316,7 +1512,12 @@ if __name__ == '__main__':
              1: [((1, -1), 0.8, lin_f), ((0, -1), 0.3, nonlin_f)],
              2: [((2, -1), 0.7, lin_f), ((1, 0), -0.2, lin_f)],
              }
-    noises = [np.random.randn, np.random.randn, np.random.randn]
+
+    random_state_1 = np.random.default_rng(seed=1)
+    random_state_2 = np.random.default_rng(seed=2)
+    random_state_3 = np.random.default_rng(seed=3)
+
+    noises = [random_state_1.standard_normal, random_state_2.standard_normal, random_state_3.standard_normal]
 
     ens = 3
     data_ens = {}

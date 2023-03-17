@@ -375,7 +375,7 @@ class CMIknn(CondIndTest):
 
         # Add noise to destroy ties...
         array += (1E-6 * array.std(axis=1).reshape(dim, 1)
-                  * np.random.rand(array.shape[0], array.shape[1]))
+                  * self.random_state.random((array.shape[0], array.shape[1])))
 
         if self.transform == 'standardize':
             # Standardize
@@ -451,3 +451,34 @@ class CMIknn(CondIndTest):
             used = np.append(used, use)
 
         return restricted_permutation
+
+
+if __name__ == '__main__':
+    
+    import tigramite
+    from tigramite.data_processing import DataFrame
+    import tigramite.data_processing as pp
+    import numpy as np
+
+    random_state = np.random.default_rng(seed=42)
+    cmi = CMIknn(mask_type=None,
+                   significance='shuffle_test',
+                   fixed_thres=None,
+                   sig_samples=1000,
+                   sig_blocklength=1,
+                   transform='none',
+                   knn=0.1,
+                   verbosity=0)
+
+    T = 1000
+    dimz = 1
+
+    # Continuous data
+    z = random_state.standard_normal((T, dimz))
+    x = (0.8*z[:,0] + random_state.standard_normal(T)).reshape(T, 1)
+    y = (0.8*z[:,0] + random_state.standard_normal).reshape(T, 1)
+
+    print('X _|_ Y')
+    print(cmi.run_test_raw(x, y, z=None))
+    print('X _|_ Y | Z')
+    print(cmi.run_test_raw(x, y, z=z))
