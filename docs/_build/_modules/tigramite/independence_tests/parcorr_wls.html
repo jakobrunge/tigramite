@@ -1,0 +1,511 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tigramite.independence_tests.parcorr_wls &#8212; Tigramite 5.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for tigramite.independence_tests.parcorr_wls</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">from</span> <span class="nn">tigramite.independence_tests.parcorr</span> <span class="kn">import</span> <span class="n">ParCorr</span>
+<span class="kn">from</span> <span class="nn">tigramite.independence_tests.robust_parcorr</span> <span class="kn">import</span> <span class="n">RobustParCorr</span>
+<span class="kn">from</span> <span class="nn">tigramite</span> <span class="kn">import</span> <span class="n">data_processing</span> <span class="k">as</span> <span class="n">pp</span>
+
+
+<div class="viewcode-block" id="ParCorrWLS"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.parcorr_wls.ParCorrWLS">[docs]</a><span class="k">class</span> <span class="nc">ParCorrWLS</span><span class="p">(</span><span class="n">ParCorr</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Weighted partial correlation test.</span>
+
+<span class="sd">    Partial correlation is estimated through linear weighted least squares (WLS)</span>
+<span class="sd">    regression and a test for non-zero linear Pearson correlation on the</span>
+<span class="sd">    residuals.</span>
+<span class="sd">    Either the variances, i.e. weights, are known, or they can be estimated using non-parametric regression</span>
+<span class="sd">    (using k nearest neighbour).</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    To test :math:`X \perp Y | Z`, first :math:`Z` is regressed out from</span>
+<span class="sd">    :math:`X` and :math:`Y` assuming the  model</span>
+
+<span class="sd">    .. math::  X &amp; =  Z \beta_X + \epsilon_{X} \\</span>
+<span class="sd">        Y &amp; =  Z \beta_Y + \epsilon_{Y}</span>
+
+<span class="sd">    using WLS regression. Here, we do not assume homoskedasticity of the error terms.</span>
+<span class="sd">    Then the dependency of the residuals is tested with</span>
+<span class="sd">    the Pearson correlation test.</span>
+
+<span class="sd">    .. math::  \rho\left(r_X, r_Y\right)</span>
+
+<span class="sd">    For the ``significance=&#39;analytic&#39;`` Student&#39;s-*t* distribution with</span>
+<span class="sd">    :math:`T-D_Z-2` degrees of freedom is implemented.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    gt_std_matrix: array-like, optional (default: None)</span>
+<span class="sd">        Standard deviations of the noise of shape (T, nb_nodes)</span>
+<span class="sd">    expert_knowledge: string or dict (default: time-dependent heteroskedasticity)</span>
+<span class="sd">        Either string &quot;time-dependent heteroskedasticity&quot; meaning that every variable only has time-dependent</span>
+<span class="sd">        heteroskedasticity, or string &quot;homoskedasticity&quot; where we assume homoskedasticity for all variables, or</span>
+<span class="sd">        dictionary containing expert knowledge about heteroskedastic relationships as list of tuples or strings.</span>
+<span class="sd">    window_size: int (default: 10)</span>
+<span class="sd">        Number of nearest neighbours that we are using for estimating the variance function.</span>
+<span class="sd">    robustify: bool (default: False)</span>
+<span class="sd">        Indicates whether the robust partial correlation test should be used, i.e. whether the data should be</span>
+<span class="sd">        transformed to normal marginals before testing</span>
+<span class="sd">    **kwargs :</span>
+<span class="sd">        Arguments passed on to Parent class ParCorr.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># documentation</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gt_std_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">expert_knowledge</span><span class="o">=</span><span class="s2">&quot;time-dependent heteroskedasticity&quot;</span><span class="p">,</span>
+                 <span class="n">window_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">robustify</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">gt_std_matrix</span> <span class="o">=</span> <span class="n">gt_std_matrix</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">expert_knowledge</span> <span class="o">=</span> <span class="n">expert_knowledge</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">window_size</span> <span class="o">=</span> <span class="n">window_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">robustify</span> <span class="o">=</span> <span class="n">robustify</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">stds</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">ParCorr</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+        <span class="n">recycle_residuals</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>   <span class="c1"># Doesn&#39;t work with ParCorrWLS</span>
+         <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_measure</span> <span class="o">=</span> <span class="s1">&#39;par_corr_wls&#39;</span>
+
+    <span class="k">def</span> <span class="nf">_get_stds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;2xtau_max&#39;</span><span class="p">,</span>
+                  <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Estimate standard deviations of X and Y, or use ground truth standard deviations depending on</span>
+<span class="sd">        user-supplied background knowledge.&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gt_std_matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">stds_dataframe</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_std_matrix</span><span class="p">,</span>
+                                          <span class="n">datatime</span><span class="o">=</span><span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_std_matrix</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]))})</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stds</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">stds_dataframe</span><span class="o">.</span><span class="n">construct_array</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="n">Z</span><span class="p">,</span>
+                                                                <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
+                                                                <span class="n">mask_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span><span class="p">,</span>
+                                                                <span class="n">return_cleaned_xyz</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                                                <span class="n">do_checks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                                                <span class="n">remove_overlaps</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                                                <span class="n">cut_off</span><span class="o">=</span><span class="n">cut_off</span><span class="p">,</span>
+                                                                <span class="n">verbosity</span><span class="o">=</span><span class="n">verbosity</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">expert_knowledge</span> <span class="o">==</span> <span class="s2">&quot;time-dependent heteroskedasticity&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">expert_knowledge</span> <span class="o">=</span> <span class="p">{</span><span class="n">variable</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;time-dependent heteroskedasticity&quot;</span><span class="p">]</span>
+                                         <span class="k">for</span> <span class="n">variable</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">N</span><span class="p">)}</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">expert_knowledge</span> <span class="o">==</span> <span class="s2">&quot;homoskedasticity&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">expert_knowledge</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">([</span><span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="o">==</span> <span class="nb">tuple</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">expert_knowledge</span><span class="o">.</span><span class="n">items</span><span class="p">()]):</span>
+                <span class="c1"># if there is parent-dependent heteroskedasticity specified in the expert knowledge,</span>
+                <span class="c1"># prepare data for all nodes in the same way as X, Y and Z such that we can later obtain data</span>
+                <span class="c1"># for the heteroskedasticity-inducing parent</span>
+
+                <span class="n">nodes</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">XYZ</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">construct_array</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">N</span><span class="p">)],</span>
+                                                                  <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
+                                                                  <span class="n">mask_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span><span class="p">,</span>
+                                                                  <span class="n">return_cleaned_xyz</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                                                  <span class="n">do_checks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                                                  <span class="n">remove_overlaps</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                                                  <span class="n">cut_off</span><span class="o">=</span><span class="n">cut_off</span><span class="p">,</span>
+                                                                  <span class="n">verbosity</span><span class="o">=</span><span class="n">verbosity</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">nodes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+                <span class="n">node_indices</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="c1"># print(XYZ)</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">XYZ</span><span class="p">:</span>
+                    <span class="n">node_indices</span> <span class="o">+=</span> <span class="n">i</span>
+                <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">node_indices</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">j</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="c1"># collect prepped array-data of all nodes at lag zero</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">j</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">nodes</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+            <span class="c1"># estimate the weights based on expert knowledge on heteroskedastic relationships</span>
+            <span class="n">stds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_std_estimation</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stds</span> <span class="o">=</span> <span class="n">stds</span>
+            <span class="k">return</span> <span class="n">stds</span>
+
+    <span class="k">def</span> <span class="nf">_get_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;2xtau_max&#39;</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">return_cleaned_xyz</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convenience wrapper around construct_array. Simultaneously, construct self.stds which needs to correspond</span>
+<span class="sd">        to the variables in the array.&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;par_corr_wls&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;X and Y for </span><span class="si">%s</span><span class="s2"> must be univariate.&quot;</span> <span class="o">%</span>
+                                 <span class="bp">self</span><span class="o">.</span><span class="n">measure</span><span class="p">)</span>
+
+        <span class="c1"># Call the wrapped function</span>
+        <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">XYZ</span><span class="p">,</span> <span class="n">type_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">construct_array</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="n">Z</span><span class="p">,</span>
+                                                            <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
+                                                            <span class="n">mask_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span><span class="p">,</span>
+                                                            <span class="n">return_cleaned_xyz</span><span class="o">=</span><span class="n">return_cleaned_xyz</span><span class="p">,</span>
+                                                            <span class="n">do_checks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                                            <span class="n">remove_overlaps</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                                            <span class="n">cut_off</span><span class="o">=</span><span class="n">cut_off</span><span class="p">,</span>
+                                                            <span class="n">verbosity</span><span class="o">=</span><span class="n">verbosity</span><span class="p">)</span>
+        <span class="n">array_copy</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_get_stds</span><span class="p">(</span><span class="n">array_copy</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span> <span class="n">cut_off</span><span class="p">,</span> <span class="n">verbosity</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">XYZ</span><span class="p">,</span> <span class="n">type_mask</span>
+
+    <span class="k">def</span> <span class="nf">_estimate_std_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arr</span><span class="p">,</span> <span class="n">target_var</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Estimate the standard deviations of the error terms using the squared-residuals approach. First calculate</span>
+<span class="sd">        the absolute value of the residuals using OLS, then smooth them using a sliding window while keeping the time</span>
+<span class="sd">        order of the residuals.</span>
+<span class="sd">        In this way we can approximate variances that are time-dependent.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        arr: array</span>
+<span class="sd">            Data array of shape (dim, T)</span>
+<span class="sd">        target_var: {0, 1}</span>
+<span class="sd">            Variable to regress out conditions from.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        std_est: array</span>
+<span class="sd">            Standard deviation array of shape (T,)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">dim_z</span> <span class="o">=</span> <span class="n">dim</span> <span class="o">-</span> <span class="mi">2</span>
+        <span class="c1"># Standardization not necessary for variance estimation</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="n">target_var</span><span class="p">,</span> <span class="p">:])</span>
+
+        <span class="k">if</span> <span class="n">dim_z</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fastCopyAndTranspose</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="mi">2</span><span class="p">:,</span> <span class="p">:])</span>
+            <span class="n">beta_hat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="kc">None</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">beta_hat</span><span class="p">)</span>
+            <span class="n">resid</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">resid</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+        <span class="c1"># average variance within window</span>
+        <span class="n">std_est</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">window_size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">resid</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">window_size</span><span class="p">),</span> <span class="s1">&#39;valid&#39;</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">window_size</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">std_est</span>
+
+    <span class="k">def</span> <span class="nf">_estimate_std_parent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arr</span><span class="p">,</span> <span class="n">target_var</span><span class="p">,</span> <span class="n">target_lag</span><span class="p">,</span> <span class="n">H</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Estimate the standard deviations of the error terms using a residual-based approach.</span>
+<span class="sd">        First calculate the absolute value of the residuals using OLS, then smooth them by averaging over the k ones</span>
+<span class="sd">        that are closest in H-value. In this way we are able to deal with parent-dependent heteroskedasticity.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        arr: array</span>
+<span class="sd">            Data array of shape (dim, T)</span>
+<span class="sd">        target_var: {0, 1}</span>
+<span class="sd">            Variable to obtain noise variance approximation for.</span>
+<span class="sd">        target_lag: -int</span>
+<span class="sd">            Lag of the variable to obtain noise variance approximation for.</span>
+<span class="sd">        H: of the form [(var, -tau)], where var specifies the variable index and tau the time lag</span>
+<span class="sd">            Variable to use for the sorting of the residuals, i.e. variable that the heteroskedasticity depends on.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        std_est: array</span>
+<span class="sd">            Standard deviation array of shape (T,)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span>
+        <span class="c1"># print(dim, T)</span>
+        <span class="n">dim_z</span> <span class="o">=</span> <span class="n">dim</span> <span class="o">-</span> <span class="mi">2</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="n">target_var</span><span class="p">,</span> <span class="p">:])</span>
+
+        <span class="k">if</span> <span class="n">dim_z</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fastCopyAndTranspose</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="mi">2</span><span class="p">:,</span> <span class="p">:])</span>
+            <span class="n">beta_hat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="kc">None</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">beta_hat</span><span class="p">)</span>
+            <span class="n">resid</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span>
+            <span class="n">lag</span> <span class="o">=</span> <span class="n">H</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">target_lag</span>
+
+            <span class="c1"># order the residuals w.r.t. the heteroskedasticity-inducing parent corresponding to sample h</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">H</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">T</span><span class="p">):</span> <span class="n">lag</span><span class="p">])</span>
+            <span class="c1"># print(h.shape,H[0], np.abs(self.data.shape[1] - T))</span>
+            <span class="n">ordered_z_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+            <span class="n">ordered_z_ind</span> <span class="o">=</span> <span class="n">ordered_z_ind</span> <span class="o">*</span> <span class="p">(</span><span class="n">ordered_z_ind</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">revert_argsort</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">ordered_z_ind</span><span class="p">)</span>
+
+            <span class="n">truncate_resid</span> <span class="o">=</span> <span class="n">resid</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">lag</span><span class="p">):]</span>
+            <span class="n">sorted_resid</span> <span class="o">=</span> <span class="n">truncate_resid</span><span class="p">[</span><span class="n">ordered_z_ind</span><span class="p">]</span>
+
+            <span class="c1"># smooth the nearest neighbour residuals</span>
+            <span class="n">variance_est_sorted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">window_size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span>
+                 <span class="n">np</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">sorted_resid</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">window_size</span><span class="p">),</span> <span class="s1">&#39;valid&#39;</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">window_size</span><span class="p">,))</span>
+            <span class="n">std_est</span> <span class="o">=</span> <span class="n">variance_est_sorted</span><span class="p">[</span><span class="n">revert_argsort</span><span class="p">]</span>
+            <span class="n">std_est</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">std_est</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">lag</span><span class="p">))))</span>
+            <span class="n">std_est</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">std_est</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">lag</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">resid</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+            <span class="n">std_est</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">window_size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span>
+                 <span class="n">np</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">resid</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">window_size</span><span class="p">),</span> <span class="s1">&#39;valid&#39;</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">window_size</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">std_est</span>
+
+    <span class="k">def</span> <span class="nf">_get_std_estimation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Use expert knowledge on the heteroskedastic relationships contained in self.expert_knowledge to estimate the</span>
+<span class="sd">        standard deviations of the error terms.</span>
+<span class="sd">        The expert knowledge can specify whether there is sampling index / time dependent heteroskedasticity,</span>
+<span class="sd">        heteroskedasticity with respect to a specified parent, or homoskedasticity.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        array : array</span>
+<span class="sd">            Data array of shape (dim, T)</span>
+<span class="sd">            </span>
+<span class="sd">        X, Y : list of tuples</span>
+<span class="sd">            X,Y are of the form [(var, -tau)], where var specifies the</span>
+<span class="sd">            variable index and tau the time lag.</span>
+
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        stds: array-like</span>
+<span class="sd">            Array of standard deviations of error terms for X and Y of shape (2, T).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">stds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="n">T</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">count</span><span class="p">,</span> <span class="n">variable</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">([</span><span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Y</span><span class="p">[</span><span class="mi">0</span><span class="p">]]):</span>
+            <span class="c1"># Here we assume that it is known what the heteroskedasticity function depends on for every variable</span>
+            <span class="k">if</span> <span class="n">variable</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">expert_knowledge</span><span class="p">:</span>
+                <span class="n">hs_source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expert_knowledge</span><span class="p">[</span><span class="n">variable</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">hs_source</span> <span class="o">==</span> <span class="s2">&quot;time-dependent heteroskedasticity&quot;</span><span class="p">:</span>
+                    <span class="n">stds</span><span class="p">[</span><span class="n">count</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_estimate_std_time</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">hs_source</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">tuple</span><span class="p">:</span>
+                    <span class="n">stds</span><span class="p">[</span><span class="n">count</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_estimate_std_parent</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">count</span><span class="p">,</span> <span class="n">variable</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                                            <span class="n">hs_source</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">stds</span>
+
+    <span class="k">def</span> <span class="nf">_get_single_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="p">,</span>
+                              <span class="n">standardize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                              <span class="n">return_means</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns residuals of weighted linear multiple regression.</span>
+
+<span class="sd">        Performs a WLS regression of the variable indexed by target_var on the</span>
+<span class="sd">        conditions Z. Here array is assumed to contain X and Y as the first two</span>
+<span class="sd">        rows with the remaining rows (if present) containing the conditions Z.</span>
+<span class="sd">        Optionally returns the estimated regression line.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        array : array-like</span>
+<span class="sd">            data array with X, Y, Z in rows and observations in columns.</span>
+
+<span class="sd">        target_var : {0, 1}</span>
+<span class="sd">            Variable to regress out conditions from.</span>
+
+<span class="sd">        standardize : bool, optional (default: True)</span>
+<span class="sd">            Whether to standardize the array beforehand. Must be used for</span>
+<span class="sd">            partial correlation.</span>
+
+<span class="sd">        return_means : bool, optional (default: False)</span>
+<span class="sd">            Whether to return the estimated regression line.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        resid [, mean] : array-like</span>
+<span class="sd">            The residual of the regression and optionally the estimated line.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">dim_z</span> <span class="o">=</span> <span class="n">dim</span> <span class="o">-</span> <span class="mi">2</span>
+
+        <span class="n">x_vals_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+        <span class="n">x_vals_has_nan</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">x_vals_sum</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">x_vals_has_nan</span><span class="p">:</span> 
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;array has nans&quot;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">stds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stds</span><span class="p">[</span><span class="n">target_var</span><span class="p">]</span>
+
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;No estimated or ground truth standard deviations supplied for weights. &quot;</span>
+                          <span class="s2">&quot;Assume homoskedasticity, i.e. all weights are 1.&quot;</span><span class="p">)</span>
+            <span class="n">stds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
+
+        <span class="c1"># Standardize</span>
+        <span class="k">if</span> <span class="n">standardize</span><span class="p">:</span>
+            <span class="n">array</span> <span class="o">-=</span> <span class="n">array</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">std</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dim</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">std</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">:</span>
+                    <span class="n">array</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">/=</span> <span class="n">std</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">std</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">):</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Possibly constant array!&quot;</span><span class="p">)</span>
+            <span class="n">x_vals_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+            <span class="n">x_vals_has_nan</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">x_vals_sum</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">x_vals_has_nan</span><span class="p">:</span> 
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;array has nans&quot;</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">array</span><span class="p">[</span><span class="n">target_var</span><span class="p">,</span> <span class="p">:])</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reciprocal</span><span class="p">(</span><span class="n">stds</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">dim_z</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fastCopyAndTranspose</span><span class="p">(</span><span class="n">array</span><span class="p">[</span><span class="mi">2</span><span class="p">:,</span> <span class="p">:])</span>
+            <span class="c1"># include weights in z and y</span>
+            <span class="n">zw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+            <span class="n">yw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">weights</span><span class="p">)</span>
+            <span class="n">beta_hat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">zw</span><span class="p">,</span> <span class="n">yw</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="kc">None</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">beta_hat</span><span class="p">)</span>
+            <span class="n">resid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">mean</span><span class="p">,</span> <span class="n">weights</span><span class="p">)</span>
+            <span class="n">resid_vals_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">resid</span><span class="p">)</span>
+            <span class="n">resid_vals_has_nan</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">resid_vals_sum</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">resid_vals_has_nan</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;resid has nans&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># resid = y</span>
+            <span class="n">resid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">weights</span><span class="p">)</span>
+            <span class="n">mean</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">return_means</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">resid</span><span class="p">,</span> <span class="n">mean</span>
+        <span class="k">return</span> <span class="n">resid</span>
+
+<div class="viewcode-block" id="ParCorrWLS.get_dependence_measure"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.parcorr_wls.ParCorrWLS.get_dependence_measure">[docs]</a>    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">robustify</span><span class="p">:</span>
+            <span class="n">array</span> <span class="o">=</span> <span class="n">RobustParCorr</span><span class="o">.</span><span class="n">trafo2normal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ParCorr</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ParCorrWLS.get_shuffle_significance"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.parcorr_wls.ParCorrWLS.get_shuffle_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_shuffle_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span>
+                                 <span class="n">return_null_dist</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">robustify</span><span class="p">:</span>
+            <span class="n">array</span> <span class="o">=</span> <span class="n">RobustParCorr</span><span class="o">.</span><span class="n">trafo2normal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ParCorr</span><span class="o">.</span><span class="n">get_shuffle_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span>
+                                 <span class="n">return_null_dist</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ParCorrWLS.get_model_selection_criterion"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.parcorr_wls.ParCorrWLS.get_model_selection_criterion">[docs]</a>    <span class="k">def</span> <span class="nf">get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">corrected_aic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns Akaike&#39;s Information criterion modulo constants.</span>
+
+<span class="sd">        Fits a linear model of the parents to variable j and returns the</span>
+<span class="sd">        score. Leave-one-out cross-validation is asymptotically equivalent to</span>
+<span class="sd">        AIC for ordinary linear regression models. Here used to determine</span>
+<span class="sd">        optimal hyperparameters in PCMCI, in particular the pc_alpha value.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        j : int</span>
+<span class="sd">            Index of target variable in data array.</span>
+
+<span class="sd">        parents : list</span>
+<span class="sd">            List of form [(0, -1), (3, -2), ...] containing parents.</span>
+
+<span class="sd">        tau_max : int, optional (default: 0)</span>
+<span class="sd">            Maximum time lag. This may be used to make sure that estimates for</span>
+<span class="sd">            different lags in X, Z, all have the same sample size.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">        score : float</span>
+<span class="sd">            Model score.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">Y</span> <span class="o">=</span> <span class="p">[(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="p">[(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>   <span class="c1"># dummy variable here</span>
+        <span class="n">Z</span> <span class="o">=</span> <span class="n">parents</span>
+        <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_array</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">,</span>
+                                           <span class="n">return_cleaned_xyz</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="c1"># Transform to normal marginals</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">robustify</span><span class="p">:</span>
+            <span class="n">array</span> <span class="o">=</span> <span class="n">RobustParCorr</span><span class="o">.</span><span class="n">trafo2normal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">)</span>
+
+        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_residuals</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">return_means</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="c1"># Get RSS</span>
+        <span class="n">rss</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="c1"># Number of parameters</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">dim</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="c1"># Get AIC</span>
+        <span class="k">if</span> <span class="n">corrected_aic</span><span class="p">:</span>
+            <span class="n">score</span> <span class="o">=</span> <span class="n">T</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">rss</span><span class="p">)</span> <span class="o">+</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">p</span> <span class="o">+</span> <span class="p">(</span><span class="mf">2.</span><span class="o">*</span><span class="n">p</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">2.</span><span class="o">*</span><span class="n">p</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">T</span> <span class="o">-</span> <span class="n">p</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">score</span> <span class="o">=</span> <span class="n">T</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">rss</span><span class="p">)</span> <span class="o">+</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">p</span>
+        <span class="k">return</span> <span class="n">score</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">Tigramite</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, Jakob Runge.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.1.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

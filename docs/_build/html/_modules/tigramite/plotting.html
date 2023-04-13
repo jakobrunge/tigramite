@@ -375,7 +375,7 @@
 
             <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">time</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">time</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
 
-            <span class="n">trans</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">blended_transform_factory</span><span class="p">(</span><span class="n">fig</span><span class="o">.</span><span class="n">transFigure</span><span class="p">,</span> <span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">)</span>
+            <span class="c1"># trans = transforms.blended_transform_factory(fig.transFigure, ax.transAxes)</span>
             <span class="k">if</span> <span class="n">var_units</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> [</span><span class="si">%s</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">var_units</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -2196,15 +2196,24 @@
             <span class="n">width</span> <span class="o">=</span> <span class="n">bbox_ax</span><span class="o">.</span><span class="n">xmax</span><span class="o">-</span><span class="n">bbox_ax</span><span class="o">.</span><span class="n">xmin</span>
             <span class="n">height</span> <span class="o">=</span> <span class="n">bbox_ax</span><span class="o">.</span><span class="n">ymax</span><span class="o">-</span><span class="n">bbox_ax</span><span class="o">.</span><span class="n">ymin</span>
             <span class="c1"># print(bbox_ax.xmin, bbox_ax.xmax, bbox_ax.ymin, bbox_ax.ymax) </span>
-            <span class="n">cax_e</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">(</span>
-                <span class="p">[</span>
-                    <span class="n">bbox_ax</span><span class="o">.</span><span class="n">xmax</span> <span class="o">-</span> <span class="n">width</span><span class="o">*</span><span class="mf">0.45</span><span class="p">,</span>
-                    <span class="n">bbox_ax</span><span class="o">.</span><span class="n">ymin</span><span class="o">-</span><span class="mf">0.075</span><span class="o">*</span><span class="n">height</span><span class="o">+</span><span class="n">network_lower_bound</span><span class="o">-</span><span class="mf">0.15</span><span class="p">,</span>
-                    <span class="n">width</span><span class="o">*</span><span class="mf">0.4</span><span class="p">,</span>
-                    <span class="mf">0.075</span><span class="o">*</span><span class="n">height</span><span class="p">,</span>   <span class="c1">#0.025 + (len(all_links_edge_weights) == 0) * 0.035,</span>
+            <span class="c1"># cax_e = fig.add_axes(</span>
+            <span class="c1">#     [</span>
+            <span class="c1">#         bbox_ax.xmax - width*0.45,</span>
+            <span class="c1">#         bbox_ax.ymin-0.075*height+network_lower_bound-0.15,</span>
+            <span class="c1">#         width*0.4,</span>
+            <span class="c1">#         0.075*height,   #0.025 + (len(all_links_edge_weights) == 0) * 0.035,</span>
+            <span class="c1">#     ],</span>
+            <span class="c1">#     frameon=False,</span>
+            <span class="c1"># )</span>
+            <span class="n">cax_e</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">inset_axes</span><span class="p">(</span> 
+                          <span class="p">[</span>
+                          <span class="mf">0.55</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.07</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.07</span>
+                    <span class="c1"># bbox_ax.xmax - width*0.45,</span>
+                    <span class="c1"># bbox_ax.ymin-0.075*height+network_lower_bound-0.15,</span>
+                    <span class="c1"># width*0.4,</span>
+                    <span class="c1"># 0.075*height,   #0.025 + (len(all_links_edge_weights) == 0) * 0.035,</span>
                 <span class="p">],</span>
-                <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="p">)</span>
+                <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,)</span>
             <span class="c1"># divider = make_axes_locatable(ax)</span>
 
             <span class="c1"># cax_e = divider.append_axes(&#39;bottom&#39;, size=&#39;5%&#39;, pad=0.05, frameon=False,)</span>
@@ -2224,7 +2233,7 @@
 
             <span class="n">cb_e</span><span class="o">.</span><span class="n">outline</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
             <span class="n">cax_e</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span>
-                <span class="n">link_colorbar_label</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=-</span><span class="mi">10</span>
+                <span class="n">link_colorbar_label</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">10</span>
             <span class="p">)</span>
             <span class="n">cax_e</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s1">&#39;major&#39;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="n">tick_label_size</span><span class="p">)</span>
 
@@ -2295,12 +2304,13 @@
                 <span class="c1"># setup colorbar axes.</span>
                 <span class="n">bbox_ax</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_position</span><span class="p">()</span>
                 <span class="c1"># print(bbox_ax.xmin, bbox_ax.xmax, bbox_ax.ymin, bbox_ax.ymax) </span>
-                <span class="n">cax_n</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">(</span>
+                <span class="n">cax_n</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">inset_axes</span><span class="p">(</span>
                     <span class="p">[</span>
-                        <span class="n">bbox_ax</span><span class="o">.</span><span class="n">xmin</span> <span class="o">+</span> <span class="n">width</span><span class="o">*</span><span class="mf">0.05</span><span class="p">,</span>
-                        <span class="n">bbox_ax</span><span class="o">.</span><span class="n">ymin</span><span class="o">-</span><span class="mf">0.075</span><span class="o">*</span><span class="n">height</span><span class="o">+</span><span class="n">network_lower_bound</span><span class="o">-</span><span class="mf">0.15</span><span class="p">,</span>
-                        <span class="n">width</span><span class="o">*</span><span class="mf">0.4</span><span class="p">,</span>
-                        <span class="mf">0.075</span><span class="o">*</span><span class="n">height</span><span class="p">,</span>   <span class="c1">#0.025 + (len(all_links_edge_weights) == 0) * 0.035,</span>
+                    <span class="mf">0.05</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.07</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.07</span>
+                        <span class="c1"># bbox_ax.xmin + width*0.05,</span>
+                        <span class="c1"># bbox_ax.ymin-0.075*height+network_lower_bound-0.15,</span>
+                        <span class="c1"># width*0.4,</span>
+                        <span class="c1"># 0.075*height,   #0.025 + (len(all_links_edge_weights) == 0) * 0.035,</span>
                     <span class="p">],</span>
                     <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                 <span class="p">)</span>
@@ -2413,11 +2423,11 @@
             <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;inner_edge&quot;</span><span class="p">]:</span>
                 <span class="n">seen</span><span class="p">[(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)]</span> <span class="o">=</span> <span class="n">draw_edge</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">seen</span><span class="p">,</span> <span class="n">outer_edge</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">network_left_bound</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">network_right_bound</span> <span class="o">=</span> <span class="mf">0.98</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">network_right_bound</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">bottom</span><span class="o">=</span><span class="n">network_lower_bound</span><span class="p">,</span> <span class="n">left</span><span class="o">=</span><span class="n">network_left_bound</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="n">network_right_bound</span><span class="p">)</span> <span class="c1">#, right=0.97)</span>
+    <span class="c1"># if network_left_bound is not None:</span>
+    <span class="c1">#     network_right_bound = 0.98</span>
+    <span class="c1"># else:</span>
+    <span class="c1">#     network_right_bound = None</span>
+    <span class="c1"># fig.subplots_adjust(bottom=network_lower_bound, left=network_left_bound, right=network_right_bound) #, right=0.97)</span>
 
 
 <div class="viewcode-block" id="plot_graph"><a class="viewcode-back" href="../../index.html#tigramite.plotting.plot_graph">[docs]</a><span class="k">def</span> <span class="nf">plot_graph</span><span class="p">(</span>
@@ -3336,40 +3346,43 @@
     <span class="p">)</span>
 
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
-        <span class="n">trans</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">blended_transform_factory</span><span class="p">(</span><span class="n">fig</span><span class="o">.</span><span class="n">transFigure</span><span class="p">,</span> <span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="p">)</span>
+        <span class="n">trans</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">blended_transform_factory</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span> <span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="p">)</span>
+        <span class="c1"># trans = transforms.blended_transform_factory(fig.transFigure, ax.transData)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
             <span class="mf">0.</span><span class="p">,</span>
             <span class="n">pos</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">max_lag</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
             <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">var_names</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">,</span>
-            <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span>
+            <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">,</span>
             <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
             <span class="n">transform</span><span class="o">=</span><span class="n">trans</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">for</span> <span class="n">tau</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">max_lag</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
-        <span class="n">trans</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">blended_transform_factory</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="p">,</span> <span class="n">fig</span><span class="o">.</span><span class="n">transFigure</span><span class="p">)</span>
+        <span class="n">trans</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">blended_transform_factory</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="p">,</span> <span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">)</span>
+        <span class="c1"># trans = transforms.blended_transform_factory(ax.transData, fig.transFigure)</span>
         <span class="k">if</span> <span class="n">tau</span> <span class="o">==</span> <span class="n">max_lag</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
                 <span class="n">pos</span><span class="p">[</span><span class="n">tau</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
-                <span class="mf">1.0</span> <span class="o">-</span> <span class="n">label_space_top</span><span class="p">,</span>
+                <span class="mf">1.0</span><span class="p">,</span> <span class="c1"># - label_space_top,</span>
                 <span class="sa">r</span><span class="s2">&quot;$t$&quot;</span><span class="p">,</span>
                 <span class="n">fontsize</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">label_fontsize</span> <span class="o">*</span> <span class="mf">0.8</span><span class="p">),</span>
                 <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
-                <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">,</span>
+                <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;bottom&quot;</span><span class="p">,</span>
                 <span class="n">transform</span><span class="o">=</span><span class="n">trans</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
                 <span class="n">pos</span><span class="p">[</span><span class="n">tau</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
-                <span class="mf">1.0</span> <span class="o">-</span> <span class="n">label_space_top</span><span class="p">,</span>
+                <span class="mf">1.0</span><span class="p">,</span> <span class="c1"># - label_space_top,</span>
                 <span class="sa">r</span><span class="s2">&quot;$t-</span><span class="si">%s</span><span class="s2">$&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">max_lag</span> <span class="o">-</span> <span class="n">tau</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span>
                 <span class="n">fontsize</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">label_fontsize</span> <span class="o">*</span> <span class="mf">0.8</span><span class="p">),</span>
                 <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
-                <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">,</span>
+                <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;bottom&quot;</span><span class="p">,</span>
                 <span class="n">transform</span><span class="o">=</span><span class="n">trans</span><span class="p">,</span>
             <span class="p">)</span>
 
+    <span class="c1"># pyplot.tight_layout()</span>
     <span class="k">if</span> <span class="n">save_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">pyplot</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_name</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -3650,19 +3663,21 @@
     <span class="p">)</span>
 
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
-        <span class="n">trans</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">blended_transform_factory</span><span class="p">(</span><span class="n">fig</span><span class="o">.</span><span class="n">transFigure</span><span class="p">,</span> <span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="p">)</span>
+        <span class="n">trans</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">blended_transform_factory</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span> <span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="p">)</span>
+        <span class="c1"># trans = transforms.blended_transform_factory(fig.transFigure, ax.transData)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
             <span class="n">label_space_left</span><span class="p">,</span>
             <span class="n">pos</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">max_lag</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
             <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">var_names</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="n">i</span><span class="p">]]),</span>
             <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">,</span>
-            <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span>
+            <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">,</span>
             <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
             <span class="n">transform</span><span class="o">=</span><span class="n">trans</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">for</span> <span class="n">tau</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">max_lag</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
-        <span class="n">trans</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">blended_transform_factory</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="p">,</span> <span class="n">fig</span><span class="o">.</span><span class="n">transFigure</span><span class="p">)</span>
+        <span class="n">trans</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">blended_transform_factory</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="p">,</span> <span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">)</span>
+        <span class="c1"># trans = transforms.blended_transform_factory(ax.transData, fig.transFigure)</span>
         <span class="k">if</span> <span class="n">tau</span> <span class="o">==</span> <span class="n">max_lag</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
                 <span class="n">pos</span><span class="p">[</span><span class="n">tau</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
@@ -3670,7 +3685,7 @@
                 <span class="sa">r</span><span class="s2">&quot;$t$&quot;</span><span class="p">,</span>
                 <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">,</span>
                 <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
-                <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">,</span>
+                <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;bottom&quot;</span><span class="p">,</span>
                 <span class="n">transform</span><span class="o">=</span><span class="n">trans</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -3680,7 +3695,7 @@
                 <span class="sa">r</span><span class="s2">&quot;$t-</span><span class="si">%s</span><span class="s2">$&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">max_lag</span> <span class="o">-</span> <span class="n">tau</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span>
                 <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">,</span>
                 <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
-                <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">,</span>
+                <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;bottom&quot;</span><span class="p">,</span>
                 <span class="n">transform</span><span class="o">=</span><span class="n">trans</span><span class="p">,</span>
             <span class="p">)</span>
 
@@ -4241,19 +4256,19 @@
     <span class="p">)</span>
 
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
-        <span class="n">trans</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">blended_transform_factory</span><span class="p">(</span><span class="n">fig</span><span class="o">.</span><span class="n">transFigure</span><span class="p">,</span> <span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="p">)</span>
+        <span class="n">trans</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">blended_transform_factory</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span> <span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
             <span class="n">label_space_left</span><span class="p">,</span>
             <span class="n">pos</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">max_lag</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
             <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">var_names</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="n">i</span><span class="p">]]),</span>
             <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">,</span>
-            <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span>
+            <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">,</span>
             <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
             <span class="n">transform</span><span class="o">=</span><span class="n">trans</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">for</span> <span class="n">tau</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">max_lag</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
-        <span class="n">trans</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">blended_transform_factory</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="p">,</span> <span class="n">fig</span><span class="o">.</span><span class="n">transFigure</span><span class="p">)</span>
+        <span class="n">trans</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">blended_transform_factory</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="p">,</span> <span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">tau</span> <span class="o">==</span> <span class="n">max_lag</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
                 <span class="n">pos</span><span class="p">[</span><span class="n">tau</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
@@ -4261,7 +4276,7 @@
                 <span class="sa">r</span><span class="s2">&quot;$t$&quot;</span><span class="p">,</span>
                 <span class="n">fontsize</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">label_fontsize</span> <span class="o">*</span> <span class="mf">0.7</span><span class="p">),</span>
                 <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
-                <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">,</span>
+                <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;bottom&quot;</span><span class="p">,</span>
                 <span class="n">transform</span><span class="o">=</span><span class="n">trans</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -4271,7 +4286,7 @@
                 <span class="sa">r</span><span class="s2">&quot;$t-</span><span class="si">%s</span><span class="s2">$&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">max_lag</span> <span class="o">-</span> <span class="n">tau</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span>
                 <span class="n">fontsize</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">label_fontsize</span> <span class="o">*</span> <span class="mf">0.7</span><span class="p">),</span>
                 <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
-                <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">,</span>
+                <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;bottom&quot;</span><span class="p">,</span>
                 <span class="n">transform</span><span class="o">=</span><span class="n">trans</span><span class="p">,</span>
             <span class="p">)</span>
 
@@ -4450,48 +4465,105 @@
 
     <span class="c1"># val_matrix = np.zeros((4, 4, 3))</span>
 
-    <span class="c1"># # Complete test case</span>
-    <span class="c1"># graph = np.zeros((3,3,2), dtype=&#39;&lt;U3&#39;)</span>
-    <span class="c1"># graph[:] = &quot;&quot;</span>
-    <span class="c1"># graph[0, 1, 0] = &quot;&lt;-+&quot;</span>
-    <span class="c1"># graph[1, 0, 0] = &quot;+-&gt;&quot;</span>
+    <span class="c1"># Complete test case</span>
+    <span class="n">graph</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;&lt;U3&#39;</span><span class="p">)</span>
+    <span class="n">val_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="o">*</span><span class="n">graph</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">val_matrix</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.2</span>
+    <span class="n">graph</span><span class="p">[:]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">graph</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&lt;-+&quot;</span>
+    <span class="n">graph</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;+-&gt;&quot;</span>
+    <span class="n">graph</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;--&gt;&quot;</span>
+    <span class="n">graph</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;--&gt;&quot;</span>
 
-    <span class="c1"># graph[0, 1, 1] = &quot;+-&gt;&quot;</span>
-    <span class="c1"># graph[1, 0, 1] = &quot;o-o&quot;</span>
+    <span class="n">graph</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;+-&gt;&quot;</span>
+    <span class="n">graph</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;o-o&quot;</span>
 
-    <span class="c1"># graph[1, 2, 0] = &quot;&lt;-&gt;&quot;</span>
-    <span class="c1"># graph[2, 1, 0] = &quot;&lt;-&gt;&quot;</span>
+    <span class="n">graph</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&lt;-&gt;&quot;</span>
+    <span class="n">graph</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&lt;-&gt;&quot;</span>
 
-    <span class="c1"># graph[0, 2, 0] = &quot;x-x&quot;</span>
-    <span class="c1"># graph[2, 0, 0] = &quot;x-x&quot;</span>
-    <span class="c1"># nolinks = np.zeros(graph.shape)</span>
-    <span class="c1"># # nolinks[range(4), range(4), 1] = 1</span>
+    <span class="n">graph</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;x-x&quot;</span>
+    <span class="n">graph</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;x-x&quot;</span>
+    <span class="n">nolinks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="c1"># nolinks[range(4), range(4), 1] = 1</span>
 
-    <span class="c1"># # plot_time_series_graph(graph=nolinks)</span>
-    <span class="c1"># plot_graph(graph=graph, </span>
-    <span class="c1">#     figsize=(5, 5),</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="n">label_space_left</span> <span class="o">=</span> <span class="mf">0.2</span>
+    <span class="n">label_space_top</span> <span class="o">=</span> <span class="mf">0.</span>
+    <span class="n">network_lower_bound</span> <span class="o">=</span> <span class="mf">0.</span>
+    <span class="n">show_colorbar</span><span class="o">=</span><span class="kc">True</span>
+    <span class="n">plot_graph</span><span class="p">(</span><span class="n">graph</span><span class="o">=</span><span class="n">graph</span><span class="p">,</span>
+        <span class="c1"># fig_ax = (fig, axes),</span>
+        <span class="n">val_matrix</span><span class="o">=</span><span class="n">val_matrix</span><span class="p">,</span>
+        <span class="c1"># figsize=(5, 5),</span>
+        <span class="n">var_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Var </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">graph</span><span class="p">))],</span>
+        <span class="c1"># arrow_linewidth=6,</span>
+        <span class="c1"># label_space_left = label_space_left,</span>
+        <span class="c1"># label_space_top = label_space_top,</span>
+        <span class="c1"># # network_lower_bound=network_lower_bound,</span>
+        <span class="c1"># save_name=&quot;tsg_test.pdf&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># axes[0,0].scatter(np.random.randn(100), np.random.randn(100))</span>
+
+    <span class="c1"># plot_graph(graph=graph,</span>
+    <span class="c1">#     fig_ax = (fig, axes[0,0]),</span>
+    <span class="c1">#     val_matrix=val_matrix,</span>
+    <span class="c1">#     # figsize=(5, 5),</span>
+    <span class="c1">#     var_names = [&#39;Variable %s&#39; %i for i in range(len(graph))],</span>
     <span class="c1">#     arrow_linewidth=6,</span>
-    <span class="c1">#     save_name=&quot;tsg_test.pdf&quot;)</span>
-
-    <span class="c1"># pyplot.show()</span>
+    <span class="c1">#     label_space_left = label_space_left,</span>
+    <span class="c1">#     label_space_top = label_space_top,</span>
+    <span class="c1">#     network_lower_bound=network_lower_bound,</span>
+    <span class="c1">#     # save_name=&quot;tsg_test.pdf&quot;</span>
+    <span class="c1">#     )</span>
+    <span class="c1"># plot_graph(graph=graph,</span>
+    <span class="c1">#     fig_ax = (fig, axes[0,1]),</span>
+    <span class="c1">#     val_matrix=val_matrix,</span>
+    <span class="c1">#     var_names = [&#39;Var %s&#39; %i for i in range(len(graph))],</span>
+    <span class="c1">#     arrow_linewidth=6,</span>
+    <span class="c1">#     label_space_left = label_space_left,</span>
+    <span class="c1">#     label_space_top = label_space_top,</span>
+    <span class="c1">#     network_lower_bound=network_lower_bound,</span>
+    <span class="c1">#     )</span>
+    <span class="c1"># plot_graph(graph=graph,</span>
+    <span class="c1">#     fig_ax = (fig, axes[1,0]),</span>
+    <span class="c1">#     val_matrix=val_matrix,</span>
+    <span class="c1">#     var_names = [&#39;Var %s&#39; %i for i in range(len(graph))],</span>
+    <span class="c1">#     arrow_linewidth=6,</span>
+    <span class="c1">#     label_space_left = label_space_left,</span>
+    <span class="c1">#     label_space_top = label_space_top,</span>
+    <span class="c1">#     network_lower_bound=network_lower_bound,</span>
+    <span class="c1">#     )</span>
+    <span class="c1"># plot_graph(graph=graph,</span>
+    <span class="c1">#     fig_ax = (fig, axes[1,1]),</span>
+    <span class="c1">#     val_matrix=val_matrix,</span>
+    <span class="c1">#     var_names = [&#39;Var %s&#39; %i for i in range(len(graph))],</span>
+    <span class="c1">#     arrow_linewidth=6,</span>
+    <span class="c1">#     label_space_left = label_space_left,</span>
+    <span class="c1">#     label_space_top = label_space_top,</span>
+    <span class="c1">#     network_lower_bound=network_lower_bound,</span>
+    <span class="c1">#     )</span>
+    <span class="c1"># pyplot.subplots_adjust(wspace=0.3, hspace=0.2)</span>
+    <span class="n">pyplot</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="n">pyplot</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;test.pdf&quot;</span><span class="p">)</span>
 
     <span class="c1"># def lin_f(x): return x</span>
 
-    <span class="n">links_coeffs</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">[((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span> <span class="c1">#, ((1, -1), 0.5, lin_f)],</span>
-                <span class="mi">1</span><span class="p">:</span> <span class="p">[((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mf">0.7</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
-                <span class="mi">2</span><span class="p">:</span> <span class="p">[],</span>
-                <span class="mi">3</span><span class="p">:</span> <span class="p">[((</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mf">0.6</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),]</span>
-                <span class="p">}</span>
-    <span class="n">graph</span> <span class="o">=</span> <span class="n">CausalEffects</span><span class="o">.</span><span class="n">get_graph_from_dict</span><span class="p">(</span><span class="n">links_coeffs</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="c1"># links_coeffs = {0: [((0, -1), 0.3, lin_f)], #, ((1, -1), 0.5, lin_f)],</span>
+    <span class="c1">#             1: [((1, -1), 0.3, lin_f), ((0, 0), 0.7, lin_f), ((2, -1), 0.5, lin_f)],</span>
+    <span class="c1">#             2: [],</span>
+    <span class="c1">#             3: [((3, -1), 0., lin_f), ((2, 0), 0.6, lin_f),]</span>
+    <span class="c1">#             }</span>
+    <span class="c1"># graph = CausalEffects.get_graph_from_dict(links_coeffs, tau_max=None)</span>
 
-    <span class="n">val_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="o">*</span><span class="n">graph</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-    <span class="n">val_matrix</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.</span>
-    <span class="n">write_csv</span><span class="p">(</span><span class="n">graph</span><span class="o">=</span><span class="n">graph</span><span class="p">,</span>
-        <span class="n">val_matrix</span><span class="o">=</span><span class="n">val_matrix</span><span class="p">,</span>
-        <span class="n">var_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;s </span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])],</span>
-        <span class="n">link_width</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span>
-        <span class="n">link_attribute</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;&lt;U10&#39;</span><span class="p">),</span>
-        <span class="n">save_name</span><span class="o">=</span><span class="s1">&#39;test.cv&#39;</span><span class="p">)</span>
+    <span class="c1"># val_matrix = np.random.randn(*graph.shape)</span>
+    <span class="c1"># val_matrix[:,:,0] = 0.</span>
+    <span class="c1"># write_csv(graph=graph,</span>
+    <span class="c1">#     val_matrix=val_matrix,</span>
+    <span class="c1">#     var_names=[&#39;s %d&#39; %i for i in range(graph.shape[0])],</span>
+    <span class="c1">#     link_width=np.ones(graph.shape),</span>
+    <span class="c1">#     link_attribute = np.ones(graph.shape, dtype=&#39;&lt;U10&#39;),</span>
+    <span class="c1">#     save_name=&#39;test.cv&#39;)</span>
 
     <span class="c1"># # print(graph)</span>
     <span class="c1"># X = [(0,-1)]</span>
