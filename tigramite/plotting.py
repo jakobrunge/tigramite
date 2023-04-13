@@ -343,7 +343,7 @@ def plot_timeseries(
 
             ax.set_xlim(time[0], time[-1])
 
-            trans = transforms.blended_transform_factory(fig.transFigure, ax.transAxes)
+            # trans = transforms.blended_transform_factory(fig.transFigure, ax.transAxes)
             if var_units[i]:
                 ax.set_ylabel(r"%s [%s]" % (var_names[i], var_units[i]), fontsize=label_fontsize)
             else:
@@ -1511,7 +1511,7 @@ def _draw_network_with_curved_edges(
     # link_edge_colorbar_label='link_edge',
     inner_edge_curved=False,
     inner_edge_style="solid",
-    network_lower_bound=0.2,
+    # network_lower_bound=0.2,
     network_left_bound=None,
     show_colorbar=True,
     special_nodes=None,
@@ -2164,15 +2164,24 @@ def _draw_network_with_curved_edges(
             width = bbox_ax.xmax-bbox_ax.xmin
             height = bbox_ax.ymax-bbox_ax.ymin
             # print(bbox_ax.xmin, bbox_ax.xmax, bbox_ax.ymin, bbox_ax.ymax) 
-            cax_e = fig.add_axes(
-                [
-                    bbox_ax.xmax - width*0.45,
-                    bbox_ax.ymin-0.075*height+network_lower_bound-0.15,
-                    width*0.4,
-                    0.075*height,   #0.025 + (len(all_links_edge_weights) == 0) * 0.035,
+            # cax_e = fig.add_axes(
+            #     [
+            #         bbox_ax.xmax - width*0.45,
+            #         bbox_ax.ymin-0.075*height+network_lower_bound-0.15,
+            #         width*0.4,
+            #         0.075*height,   #0.025 + (len(all_links_edge_weights) == 0) * 0.035,
+            #     ],
+            #     frameon=False,
+            # )
+            cax_e = ax.inset_axes( 
+                          [
+                          0.55, -0.07, 0.4, 0.07
+                    # bbox_ax.xmax - width*0.45,
+                    # bbox_ax.ymin-0.075*height+network_lower_bound-0.15,
+                    # width*0.4,
+                    # 0.075*height,   #0.025 + (len(all_links_edge_weights) == 0) * 0.035,
                 ],
-                frameon=False,
-            )
+                frameon=False,)
             # divider = make_axes_locatable(ax)
 
             # cax_e = divider.append_axes('bottom', size='5%', pad=0.05, frameon=False,)
@@ -2192,7 +2201,7 @@ def _draw_network_with_curved_edges(
 
             cb_e.outline.clear()
             cax_e.set_xlabel(
-                link_colorbar_label, labelpad=1, fontsize=label_fontsize, zorder=-10
+                link_colorbar_label, labelpad=1, fontsize=label_fontsize, zorder=10
             )
             cax_e.tick_params(axis='both', which='major', labelsize=tick_label_size)
 
@@ -2263,12 +2272,13 @@ def _draw_network_with_curved_edges(
                 # setup colorbar axes.
                 bbox_ax = ax.get_position()
                 # print(bbox_ax.xmin, bbox_ax.xmax, bbox_ax.ymin, bbox_ax.ymax) 
-                cax_n = fig.add_axes(
+                cax_n = ax.inset_axes(
                     [
-                        bbox_ax.xmin + width*0.05,
-                        bbox_ax.ymin-0.075*height+network_lower_bound-0.15,
-                        width*0.4,
-                        0.075*height,   #0.025 + (len(all_links_edge_weights) == 0) * 0.035,
+                    0.05, -0.07, 0.4, 0.07
+                        # bbox_ax.xmin + width*0.05,
+                        # bbox_ax.ymin-0.075*height+network_lower_bound-0.15,
+                        # width*0.4,
+                        # 0.075*height,   #0.025 + (len(all_links_edge_weights) == 0) * 0.035,
                     ],
                     frameon=False,
                 )
@@ -2381,11 +2391,11 @@ def _draw_network_with_curved_edges(
             if d["inner_edge"]:
                 seen[(u, v)] = draw_edge(ax, u, v, d, seen, outer_edge=False)
 
-    if network_left_bound is not None:
-        network_right_bound = 0.98
-    else:
-        network_right_bound = None
-    fig.subplots_adjust(bottom=network_lower_bound, left=network_left_bound, right=network_right_bound) #, right=0.97)
+    # if network_left_bound is not None:
+    #     network_right_bound = 0.98
+    # else:
+    #     network_right_bound = None
+    # fig.subplots_adjust(bottom=network_lower_bound, left=network_left_bound, right=network_right_bound) #, right=0.97)
 
 
 def plot_graph(
@@ -2419,7 +2429,7 @@ def plot_graph(
     node_label_size=10,
     link_label_fontsize=10,
     lag_array=None,
-    network_lower_bound=0.2,
+    # network_lower_bound=0.2,
     show_colorbar=True,
     inner_edge_style="dashed",
     link_matrix=None,
@@ -2503,8 +2513,6 @@ def plot_graph(
         Fontsize of tick labels.
     lag_array : array, optional (default: None)
         Optional specification of lags overwriting np.arange(0, tau_max+1)
-    network_lower_bound : float, optional (default: 0.2)
-        Fraction of vertical space below graph plot.
     show_colorbar : bool
         Whether to show colorbars for links and nodes.
     show_autodependency_lags : bool (default: False)
@@ -2783,7 +2791,7 @@ def plot_graph(
         label_fontsize=label_fontsize,
         link_label_fontsize=link_label_fontsize,
         link_colorbar_label=link_colorbar_label,
-        network_lower_bound=network_lower_bound,
+        # network_lower_bound=network_lower_bound,
         show_colorbar=show_colorbar,
         # label_fraction=label_fraction,
         special_nodes=special_nodes,
@@ -2979,9 +2987,6 @@ def plot_time_series_graph(
     label_fontsize=10,
     tick_label_size=6,
     alpha=1.0,
-    label_space_left=0.1,
-    label_space_top=0.0,
-    network_lower_bound=0.2,
     inner_edge_style="dashed",
     link_matrix=None,
     special_nodes=None,
@@ -3046,12 +3051,6 @@ def plot_time_series_graph(
         Fontsize of link labels.
     tick_label_size : int, optional (default: 6)
         Fontsize of tick labels.
-    label_space_left : float, optional (default: 0.1)
-        Fraction of horizontal figure space to allocate left of plot for labels.
-    label_space_top : float, optional (default: 0.)
-        Fraction of vertical figure space to allocate top of plot for labels.
-    network_lower_bound : float, optional (default: 0.2)
-        Fraction of vertical space below graph plot.
     inner_edge_style : string, optional (default: 'dashed')
         Style of inner_edge contemporaneous links.
     special_nodes : dict
@@ -3296,48 +3295,51 @@ def plot_time_series_graph(
         label_fraction=0.5,
         link_colorbar_label=link_colorbar_label,
         inner_edge_curved=False,
-        network_lower_bound=network_lower_bound,
-        network_left_bound=label_space_left,
+        # network_lower_bound=network_lower_bound,
+        # network_left_bound=label_space_left,
         inner_edge_style=inner_edge_style,
         special_nodes=special_nodes,
         show_colorbar=show_colorbar,
     )
 
     for i in range(N):
-        trans = transforms.blended_transform_factory(fig.transFigure, ax.transData)
+        trans = transforms.blended_transform_factory(ax.transAxes, ax.transData)
+        # trans = transforms.blended_transform_factory(fig.transFigure, ax.transData)
         ax.text(
             0.,
             pos[order[i] * max_lag][1],
             f"{var_names[order[i]]}",
             fontsize=label_fontsize,
-            horizontalalignment="left",
+            horizontalalignment="right",
             verticalalignment="center",
             transform=trans,
         )
 
     for tau in np.arange(max_lag - 1, -1, -1):
-        trans = transforms.blended_transform_factory(ax.transData, fig.transFigure)
+        trans = transforms.blended_transform_factory(ax.transData, ax.transAxes)
+        # trans = transforms.blended_transform_factory(ax.transData, fig.transFigure)
         if tau == max_lag - 1:
             ax.text(
                 pos[tau][0],
-                1.0 - label_space_top,
+                1.0, # - label_space_top,
                 r"$t$",
                 fontsize=int(label_fontsize * 0.8),
                 horizontalalignment="center",
-                verticalalignment="top",
+                verticalalignment="bottom",
                 transform=trans,
             )
         else:
             ax.text(
                 pos[tau][0],
-                1.0 - label_space_top,
+                1.0, # - label_space_top,
                 r"$t-%s$" % str(max_lag - tau - 1),
                 fontsize=int(label_fontsize * 0.8),
                 horizontalalignment="center",
-                verticalalignment="top",
+                verticalalignment="bottom",
                 transform=trans,
             )
 
+    # pyplot.tight_layout()
     if save_name is not None:
         pyplot.savefig(save_name, dpi=300)
     else:
@@ -3372,9 +3374,6 @@ def plot_mediation_time_series_graph(
     alpha=1.0,
     node_label_size=12,
     tick_label_size=6,
-    label_space_left=0.1,
-    label_space_top=0.0,
-    network_lower_bound=0.2,
     standard_color_links='black',
     standard_color_nodes='lightgrey',
 ):
@@ -3439,12 +3438,6 @@ def plot_mediation_time_series_graph(
         Fontsize of node labels.
     link_label_fontsize : int, optional (default: 6)
         Fontsize of link labels.
-    label_space_left : float, optional (default: 0.1)
-        Fraction of horizontal figure space to allocate left of plot for labels.
-    label_space_top : float, optional (default: 0.)
-        Fraction of vertical figure space to allocate top of plot for labels.
-    network_lower_bound : float, optional (default: 0.2)
-        Fraction of vertical space below graph plot.
     """
     N = len(path_node_array)
     Nmaxlag = tsg_path_val_matrix.shape[0]
@@ -3613,42 +3606,44 @@ def plot_mediation_time_series_graph(
         label_fraction=0.5,
         link_colorbar_label=link_colorbar_label,
         inner_edge_curved=True,
-        network_lower_bound=network_lower_bound
+        # network_lower_bound=network_lower_bound
         # inner_edge_style=inner_edge_style
     )
 
     for i in range(N):
-        trans = transforms.blended_transform_factory(fig.transFigure, ax.transData)
+        trans = transforms.blended_transform_factory(ax.transAxes, ax.transData)
+        # trans = transforms.blended_transform_factory(fig.transFigure, ax.transData)
         ax.text(
             label_space_left,
             pos[order[i] * max_lag][1],
             "%s" % str(var_names[order[i]]),
             fontsize=label_fontsize,
-            horizontalalignment="left",
+            horizontalalignment="right",
             verticalalignment="center",
             transform=trans,
         )
 
     for tau in np.arange(max_lag - 1, -1, -1):
-        trans = transforms.blended_transform_factory(ax.transData, fig.transFigure)
+        trans = transforms.blended_transform_factory(ax.transData, ax.transAxes)
+        # trans = transforms.blended_transform_factory(ax.transData, fig.transFigure)
         if tau == max_lag - 1:
             ax.text(
                 pos[tau][0],
-                1.0 - label_space_top,
+                1.0, # - label_space_top,
                 r"$t$",
                 fontsize=label_fontsize,
                 horizontalalignment="center",
-                verticalalignment="top",
+                verticalalignment="bottom",
                 transform=trans,
             )
         else:
             ax.text(
                 pos[tau][0],
-                1.0 - label_space_top,
+                1.0, # - label_space_top,
                 r"$t-%s$" % str(max_lag - tau - 1),
                 fontsize=label_fontsize,
                 horizontalalignment="center",
-                verticalalignment="top",
+                verticalalignment="bottom",
                 transform=trans,
             )
 
@@ -3690,7 +3685,7 @@ def plot_mediation_graph(
     alpha=1.0,
     node_label_size=10,
     link_label_fontsize=10,
-    network_lower_bound=0.2,
+    # network_lower_bound=0.2,
     standard_color_links='black',
     standard_color_nodes='lightgrey',
 ):
@@ -3763,8 +3758,6 @@ def plot_mediation_graph(
         Fontsize of node labels.
     link_label_fontsize : int, optional (default: 6)
         Fontsize of link labels.
-    network_lower_bound : float, optional (default: 0.2)
-        Fraction of vertical space below graph plot.
     lag_array : array, optional (default: None)
         Optional specification of lags overwriting np.arange(0, tau_max+1)
     """
@@ -3946,7 +3939,7 @@ def plot_mediation_graph(
         label_fontsize=label_fontsize,
         link_label_fontsize=link_label_fontsize,
         link_colorbar_label=link_colorbar_label,
-        network_lower_bound=network_lower_bound,
+        # network_lower_bound=network_lower_bound,
         # label_fraction=label_fraction,
         # inner_edge_style=inner_edge_style
     )
@@ -4082,7 +4075,7 @@ def plot_tsg(links, X, Y, Z=None, anc_x=None, anc_y=None, anc_xy=None):
     node_label_size = 10
     label_space_left = 0.1
     label_space_top = 0.0
-    network_lower_bound = 0.2
+    # network_lower_bound = 0.2
     inner_edge_style = "dashed"
 
     node_color = np.ones(N * max_lag)  # , dtype = 'object')
@@ -4204,24 +4197,24 @@ def plot_tsg(links, X, Y, Z=None, anc_x=None, anc_y=None, anc_xy=None):
         label_fraction=0.5,
         link_colorbar_label=link_colorbar_label,
         inner_edge_curved=True,
-        network_lower_bound=network_lower_bound,
+        # network_lower_bound=network_lower_bound,
         inner_edge_style=inner_edge_style,
     )
 
     for i in range(N):
-        trans = transforms.blended_transform_factory(fig.transFigure, ax.transData)
+        trans = transforms.blended_transform_factory(ax.transAxes, ax.transData)
         ax.text(
             label_space_left,
             pos[order[i] * max_lag][1],
             "%s" % str(var_names[order[i]]),
             fontsize=label_fontsize,
-            horizontalalignment="left",
+            horizontalalignment="right",
             verticalalignment="center",
             transform=trans,
         )
 
     for tau in np.arange(max_lag - 1, -1, -1):
-        trans = transforms.blended_transform_factory(ax.transData, fig.transFigure)
+        trans = transforms.blended_transform_factory(ax.transData, ax.transAxes)
         if tau == max_lag - 1:
             ax.text(
                 pos[tau][0],
@@ -4229,7 +4222,7 @@ def plot_tsg(links, X, Y, Z=None, anc_x=None, anc_y=None, anc_xy=None):
                 r"$t$",
                 fontsize=int(label_fontsize * 0.7),
                 horizontalalignment="center",
-                verticalalignment="top",
+                verticalalignment="bottom",
                 transform=trans,
             )
         else:
@@ -4239,7 +4232,7 @@ def plot_tsg(links, X, Y, Z=None, anc_x=None, anc_y=None, anc_xy=None):
                 r"$t-%s$" % str(max_lag - tau - 1),
                 fontsize=int(label_fontsize * 0.7),
                 horizontalalignment="center",
-                verticalalignment="top",
+                verticalalignment="bottom",
                 transform=trans,
             )
 
@@ -4322,7 +4315,7 @@ def write_csv(
         for (i, j, tau) in zip(*np.where(graph!='')):
             # Only consider contemporaneous links once
             if tau > 0 or i <= j:
-                row = [var_names[i], var_names[i], f"{tau}", graph[i,j,tau]]
+                row = [str(var_names[i]), str(var_names[i]), f"{tau}", graph[i,j,tau]]
                 if val_matrix_exists:
                     row.append(f"{val_matrix[i,j,tau]:.{digits}}")
                 if link_attribute is not None:
@@ -4418,48 +4411,101 @@ if __name__ == "__main__":
 
     # val_matrix = np.zeros((4, 4, 3))
 
-    # # Complete test case
-    # graph = np.zeros((3,3,2), dtype='<U3')
-    # graph[:] = ""
-    # graph[0, 1, 0] = "<-+"
-    # graph[1, 0, 0] = "+->"
+    # Complete test case
+    graph = np.zeros((3,3,2), dtype='<U3')
+    val_matrix = np.random.rand(*graph.shape)
+    val_matrix[:,:,0] = 0.2
+    graph[:] = ""
+    graph[0, 1, 0] = "<-+"
+    graph[1, 0, 0] = "+->"
+    graph[0, 0, 1] = "-->"
+    graph[1, 1, 1] = "-->"
 
-    # graph[0, 1, 1] = "+->"
-    # graph[1, 0, 1] = "o-o"
+    graph[0, 1, 1] = "+->"
+    graph[1, 0, 1] = "o-o"
 
-    # graph[1, 2, 0] = "<->"
-    # graph[2, 1, 0] = "<->"
+    graph[1, 2, 0] = "<->"
+    graph[2, 1, 0] = "<->"
 
-    # graph[0, 2, 0] = "x-x"
-    # graph[2, 0, 0] = "x-x"
-    # nolinks = np.zeros(graph.shape)
-    # # nolinks[range(4), range(4), 1] = 1
+    graph[0, 2, 0] = "x-x"
+    graph[2, 0, 0] = "x-x"
+    nolinks = np.zeros(graph.shape)
+    # nolinks[range(4), range(4), 1] = 1
 
-    # # plot_time_series_graph(graph=nolinks)
-    # plot_graph(graph=graph, 
-    #     figsize=(5, 5),
-    #     arrow_linewidth=6,
-    #     save_name="tsg_test.pdf")
+    fig, axes = pyplot.subplots(nrows=2, ncols=2, figsize=(6, 5))
+    label_space_left = 0.2
+    label_space_top = 0.
+    # network_lower_bound = 0.
+    show_colorbar=True
+    # plot_graph(graph=graph,
+    #     # fig_ax = (fig, axes),
+    #     val_matrix=val_matrix,
+    #     # figsize=(5, 5),
+    #     var_names = ['Var %s' %i for i in range(len(graph))],
+    #     # arrow_linewidth=6,
+    #     # label_space_left = label_space_left,
+    #     # label_space_top = label_space_top,
+    #     # # network_lower_bound=network_lower_bound,
+    #     # save_name="tsg_test.pdf"
+    #     )
 
-    # pyplot.show()
+    # axes[0,0].scatter(np.random.rand(100), np.random.rand(100))
+
+    plot_graph(graph=graph,
+        fig_ax = (fig, axes[0,0]),
+        val_matrix=val_matrix,
+        # figsize=(5, 5),
+        var_names = ['Variable %s' %i for i in range(len(graph))],
+        arrow_linewidth=6,
+        # label_space_left = label_space_left,
+        # label_space_top = label_space_top,
+        # save_name="tsg_test.pdf"
+        )
+    plot_graph(graph=graph,
+        fig_ax = (fig, axes[0,1]),
+        val_matrix=val_matrix,
+        var_names = ['Var %s' %i for i in range(len(graph))],
+        arrow_linewidth=6,
+        # label_space_left = label_space_left,
+        # label_space_top = label_space_top,
+        )
+    plot_graph(graph=graph,
+        fig_ax = (fig, axes[1,0]),
+        val_matrix=val_matrix,
+        var_names = ['Var %s' %i for i in range(len(graph))],
+        arrow_linewidth=6,
+        # label_space_left = label_space_left,
+        # label_space_top = label_space_top,
+        )
+    plot_graph(graph=graph,
+        fig_ax = (fig, axes[1,1]),
+        val_matrix=val_matrix,
+        var_names = ['Var %s' %i for i in range(len(graph))],
+        arrow_linewidth=6,
+        # label_space_left = label_space_left,
+        # label_space_top = label_space_top,
+        )
+    # pyplot.subplots_adjust(wspace=0.3, hspace=0.2)
+    pyplot.tight_layout()
+    pyplot.savefig("test.pdf")
 
     # def lin_f(x): return x
 
-    links_coeffs = {0: [((0, -1), 0.3, lin_f)], #, ((1, -1), 0.5, lin_f)],
-                1: [((1, -1), 0.3, lin_f), ((0, 0), 0.7, lin_f), ((2, -1), 0.5, lin_f)],
-                2: [],
-                3: [((3, -1), 0., lin_f), ((2, 0), 0.6, lin_f),]
-                }
-    graph = CausalEffects.get_graph_from_dict(links_coeffs, tau_max=None)
+    # links_coeffs = {0: [((0, -1), 0.3, lin_f)], #, ((1, -1), 0.5, lin_f)],
+    #             1: [((1, -1), 0.3, lin_f), ((0, 0), 0.7, lin_f), ((2, -1), 0.5, lin_f)],
+    #             2: [],
+    #             3: [((3, -1), 0., lin_f), ((2, 0), 0.6, lin_f),]
+    #             }
+    # graph = CausalEffects.get_graph_from_dict(links_coeffs, tau_max=None)
 
-    val_matrix = np.random.randn(*graph.shape)
-    val_matrix[:,:,0] = 0.
-    write_csv(graph=graph,
-        val_matrix=val_matrix,
-        var_names=['s %d' %i for i in range(graph.shape[0])],
-        link_width=np.ones(graph.shape),
-        link_attribute = np.ones(graph.shape, dtype='<U10'),
-        save_name='test.cv')
+    # val_matrix = np.random.randn(*graph.shape)
+    # val_matrix[:,:,0] = 0.
+    # write_csv(graph=graph,
+    #     val_matrix=val_matrix,
+    #     var_names=[r'$X^{%d}$' %i for i in range(graph.shape[0])],
+    #     link_width=np.ones(graph.shape),
+    #     link_attribute = np.ones(graph.shape, dtype='<U10'),
+    #     save_name='test.csv')
 
     # # print(graph)
     # X = [(0,-1)]
