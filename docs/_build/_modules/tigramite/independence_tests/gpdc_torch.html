@@ -1,0 +1,911 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tigramite.independence_tests.gpdc_torch &#8212; Tigramite 5.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for tigramite.independence_tests.gpdc_torch</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Tigramite causal discovery for time series.&quot;&quot;&quot;</span>
+
+<span class="c1"># Author: Jakob Runge &lt;jakob@jakob-runge.com&gt;</span>
+<span class="c1">#</span>
+<span class="c1"># License: GNU General Public License v3.0</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">json</span><span class="o">,</span> <span class="nn">warnings</span><span class="o">,</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">pathlib</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">gc</span>
+<span class="kn">import</span> <span class="nn">dcor</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">gpytorch</span>
+<span class="kn">from</span> <span class="nn">.LBFGS</span> <span class="kn">import</span> <span class="n">FullBatchLBFGS</span>
+<span class="kn">from</span> <span class="nn">.independence_tests_base</span> <span class="kn">import</span> <span class="n">CondIndTest</span>
+
+<span class="k">class</span> <span class="nc">GaussProcRegTorch</span><span class="p">():</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Gaussian processes abstract base class.</span>
+
+<span class="sd">    GP is estimated with gpytorch. Note that the kernel&#39;s hyperparameters are</span>
+<span class="sd">    optimized during fitting.</span>
+
+<span class="sd">    When the null distribution is not analytically available, but can be</span>
+<span class="sd">    precomputed with the function generate_and_save_nulldists(...) which saves</span>
+<span class="sd">    a \*.npz file containing the null distribution for different sample sizes.</span>
+<span class="sd">    This file can then be supplied as null_dist_filename.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    null_samples : int</span>
+<span class="sd">        Number of null samples to use</span>
+
+<span class="sd">    cond_ind_test : CondIndTest</span>
+<span class="sd">        Conditional independence test that this Gaussian Proccess Regressor will</span>
+<span class="sd">        calculate the null distribution for.  This is used to grab the</span>
+<span class="sd">        get_dependence_measure function.</span>
+
+<span class="sd">    null_dist_filename : str, otional (default: None)</span>
+<span class="sd">        Path to file containing null distribution.</span>
+
+<span class="sd">    verbosity : int, optional (default: 0)</span>
+<span class="sd">        Level of verbosity.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">null_samples</span><span class="p">,</span>
+                 <span class="n">cond_ind_test</span><span class="p">,</span>
+                 <span class="n">null_dist_filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">checkpoint_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="c1"># Set the dependence measure function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span> <span class="o">=</span> <span class="n">cond_ind_test</span>
+        <span class="c1"># Set member variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">=</span> <span class="n">verbosity</span>
+        <span class="c1"># Set the null distribution defaults</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">null_samples</span> <span class="o">=</span> <span class="n">null_samples</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">null_dists</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">null_dist_filename</span> <span class="o">=</span> <span class="n">null_dist_filename</span>
+        <span class="c1"># Check if we are loading a null distrubtion from a cached file</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">null_dist_filename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">null_dists</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">null_samples</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">_load_nulldist</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">null_dist_filename</span><span class="p">)</span>
+        <span class="c1"># Size for batching</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">checkpoint_size</span> <span class="o">=</span> <span class="n">checkpoint_size</span>
+
+    <span class="k">def</span> <span class="nf">_load_nulldist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load a precomputed null distribution from a \*.npz file.  This</span>
+<span class="sd">        distribution can be calculated using generate_and_save_nulldists(...).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        filename : strng</span>
+<span class="sd">            Path to the \*.npz file</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        null_dists, null_samples : dict, int</span>
+<span class="sd">            The null distirbution as a dictionary of distributions keyed by</span>
+<span class="sd">            sample size, the number of null samples in total.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">null_dist_file</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">null_dists</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">null_dist_file</span><span class="p">[</span><span class="s1">&#39;T&#39;</span><span class="p">],</span>
+                              <span class="n">null_dist_file</span><span class="p">[</span><span class="s1">&#39;exact_dist&#39;</span><span class="p">]))</span>
+        <span class="n">null_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">null_dist_file</span><span class="p">[</span><span class="s1">&#39;exact_dist&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">null_dists</span><span class="p">,</span> <span class="n">null_samples</span>
+
+    <span class="k">def</span> <span class="nf">_generate_nulldist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span>
+                           <span class="n">add_to_null_dists</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generates null distribution for pairwise independence tests.</span>
+
+<span class="sd">        Generates the null distribution for sample size df. Assumes pairwise</span>
+<span class="sd">        samples transformed to uniform marginals. Uses get_dependence_measure</span>
+<span class="sd">        available in class and generates self.sig_samples random samples. Adds</span>
+<span class="sd">        the null distributions to self.null_dists.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        df : int</span>
+<span class="sd">            Degrees of freedom / sample size to generate null distribution for.</span>
+<span class="sd">        add_to_null_dists : bool, optional (default: True)</span>
+<span class="sd">            Whether to add the null dist to the dictionary of null dists or</span>
+<span class="sd">            just return it.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        null_dist : array of shape [df,]</span>
+<span class="sd">            Only returned,if add_to_null_dists is False.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Generating null distribution for df = </span><span class="si">%d</span><span class="s2">. &quot;</span> <span class="o">%</span> <span class="n">df</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">add_to_null_dists</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;For faster computations, run function &quot;</span>
+                      <span class="s2">&quot;generate_and_save_nulldists(...) to &quot;</span>
+                      <span class="s2">&quot;precompute null distribution and load *.npz file with &quot;</span>
+                      <span class="s2">&quot;argument null_dist_filename&quot;</span><span class="p">)</span>
+
+        <span class="n">xyz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">null_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">null_samples</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">null_samples</span><span class="p">):</span>
+            <span class="n">array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span><span class="o">.</span><span class="n">random_state</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="n">df</span><span class="p">))</span>
+            <span class="n">null_dist</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span>
+                <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">)</span>
+
+        <span class="n">null_dist</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">add_to_null_dists</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">null_dists</span><span class="p">[</span><span class="n">df</span><span class="p">]</span> <span class="o">=</span> <span class="n">null_dist</span>
+        <span class="k">return</span> <span class="n">null_dist</span>
+
+    <span class="k">def</span> <span class="nf">_generate_and_save_nulldists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample_sizes</span><span class="p">,</span> <span class="n">null_dist_filename</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generates and saves null distribution for pairwise independence</span>
+<span class="sd">        tests.</span>
+
+<span class="sd">        Generates the null distribution for different sample sizes. Calls</span>
+<span class="sd">        generate_nulldist. Null dists are saved to disk as</span>
+<span class="sd">        self.null_dist_filename.npz. Also adds the null distributions to</span>
+<span class="sd">        self.null_dists.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sample_sizes : list</span>
+<span class="sd">            List of sample sizes.</span>
+
+<span class="sd">        null_dist_filename : str</span>
+<span class="sd">            Name to save file containing null distributions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">null_dist_filename</span> <span class="o">=</span> <span class="n">null_dist_filename</span>
+
+        <span class="n">null_dists</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">sample_sizes</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">null_samples</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">iT</span><span class="p">,</span> <span class="n">T</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sample_sizes</span><span class="p">):</span>
+            <span class="n">null_dists</span><span class="p">[</span><span class="n">iT</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_nulldist</span><span class="p">(</span>
+                <span class="n">T</span><span class="p">,</span> <span class="n">add_to_null_dists</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">null_dists</span><span class="p">[</span><span class="n">T</span><span class="p">]</span> <span class="o">=</span> <span class="n">null_dists</span><span class="p">[</span><span class="n">iT</span><span class="p">]</span>
+
+        <span class="n">np</span><span class="o">.</span><span class="n">savez</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">null_dist_filename</span><span class="p">,</span>
+                 <span class="n">exact_dist</span><span class="o">=</span><span class="n">null_dists</span><span class="p">,</span>
+                 <span class="n">T</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sample_sizes</span><span class="p">))</span>
+
+
+    <span class="k">def</span> <span class="nf">_get_single_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="p">,</span>
+                                    <span class="n">return_means</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                    <span class="n">standardize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                    <span class="n">return_likelihood</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                    <span class="n">training_iter</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+                                    <span class="n">lr</span><span class="o">=</span><span class="mf">0.1</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns residuals of Gaussian process regression.</span>
+
+<span class="sd">        Performs a GP regression of the variable indexed by target_var on the</span>
+<span class="sd">        conditions Z. Here array is assumed to contain X and Y as the first two</span>
+<span class="sd">        rows with the remaining rows (if present) containing the conditions Z.</span>
+<span class="sd">        Optionally returns the estimated mean and the likelihood.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        array : array-like</span>
+<span class="sd">            data array with X, Y, Z in rows and observations in columns</span>
+
+<span class="sd">        target_var : {0, 1}</span>
+<span class="sd">            Variable to regress out conditions from.</span>
+
+<span class="sd">        standardize : bool, optional (default: True)</span>
+<span class="sd">            Whether to standardize the array beforehand.</span>
+
+<span class="sd">        return_means : bool, optional (default: False)</span>
+<span class="sd">            Whether to return the estimated regression line.</span>
+
+<span class="sd">        return_likelihood : bool, optional (default: False)</span>
+<span class="sd">            Whether to return the log_marginal_likelihood of the fitted GP.</span>
+
+<span class="sd">        training_iter : int, optional (default: 50)</span>
+<span class="sd">            Number of training iterations.</span>
+
+<span class="sd">        lr : float, optional (default: 0.1)</span>
+<span class="sd">            Learning rate (default: 0.1).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        resid [, mean, likelihood] : array-like</span>
+<span class="sd">            The residual of the regression and optionally the estimated mean</span>
+<span class="sd">            and/or the likelihood.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="k">if</span> <span class="n">dim</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">return_likelihood</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">array</span><span class="p">[</span><span class="n">target_var</span><span class="p">,</span> <span class="p">:],</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+            <span class="k">return</span> <span class="n">array</span><span class="p">[</span><span class="n">target_var</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="c1"># Implement using PyTorch</span>
+        <span class="c1"># Standardize</span>
+        <span class="k">if</span> <span class="n">standardize</span><span class="p">:</span>
+            <span class="n">array</span> <span class="o">-=</span> <span class="n">array</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">std</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dim</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">std</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">:</span>
+                    <span class="n">array</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">/=</span> <span class="n">std</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">std</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">):</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Possibly constant array!&quot;</span><span class="p">)</span>
+            <span class="c1"># array /= array.std(axis=1).reshape(dim, 1)</span>
+            <span class="c1"># if np.isnan(array).any():</span>
+            <span class="c1">#     raise ValueError(&quot;Nans after standardizing, &quot;</span>
+            <span class="c1">#                      &quot;possibly constant array!&quot;)</span>
+
+        <span class="n">target_series</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">target_var</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fastCopyAndTranspose</span><span class="p">(</span><span class="n">array</span><span class="p">[</span><span class="mi">2</span><span class="p">:])</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">train_x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+        <span class="n">train_y</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">target_series</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+
+        <span class="n">device_type</span> <span class="o">=</span> <span class="s1">&#39;cuda&#39;</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s1">&#39;cpu&#39;</span>
+        <span class="n">output_device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">device_type</span><span class="p">)</span>
+        <span class="n">train_x</span><span class="p">,</span> <span class="n">train_y</span> <span class="o">=</span> <span class="n">train_x</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">output_device</span><span class="p">),</span> <span class="n">train_y</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">output_device</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">device_type</span> <span class="o">==</span> <span class="s1">&#39;cuda&#39;</span><span class="p">:</span>
+            <span class="c1"># If GPU is available, use MultiGPU with Kernel Partitioning</span>
+            <span class="n">n_devices</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">device_count</span><span class="p">()</span>
+            <span class="k">class</span> <span class="nc">mExactGPModel</span><span class="p">(</span><span class="n">gpytorch</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">ExactGP</span><span class="p">):</span>
+                <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_x</span><span class="p">,</span> <span class="n">train_y</span><span class="p">,</span> <span class="n">likelihood</span><span class="p">,</span> <span class="n">n_devices</span><span class="p">):</span>
+                    <span class="nb">super</span><span class="p">(</span><span class="n">mExactGPModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">train_x</span><span class="p">,</span> <span class="n">train_y</span><span class="p">,</span> <span class="n">likelihood</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">mean_module</span> <span class="o">=</span> <span class="n">gpytorch</span><span class="o">.</span><span class="n">means</span><span class="o">.</span><span class="n">ConstantMean</span><span class="p">()</span>
+                    <span class="n">base_covar_module</span> <span class="o">=</span> <span class="n">gpytorch</span><span class="o">.</span><span class="n">kernels</span><span class="o">.</span><span class="n">ScaleKernel</span><span class="p">(</span><span class="n">gpytorch</span><span class="o">.</span><span class="n">kernels</span><span class="o">.</span><span class="n">RBFKernel</span><span class="p">())</span>
+
+                    <span class="bp">self</span><span class="o">.</span><span class="n">covar_module</span> <span class="o">=</span> <span class="n">gpytorch</span><span class="o">.</span><span class="n">kernels</span><span class="o">.</span><span class="n">MultiDeviceKernel</span><span class="p">(</span>
+                        <span class="n">base_covar_module</span><span class="p">,</span> <span class="n">device_ids</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="n">n_devices</span><span class="p">),</span>
+                        <span class="n">output_device</span><span class="o">=</span><span class="n">output_device</span>
+                    <span class="p">)</span>
+
+                <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+                    <span class="n">mean_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_module</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                    <span class="n">covar_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_module</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">gpytorch</span><span class="o">.</span><span class="n">distributions</span><span class="o">.</span><span class="n">MultivariateNormal</span><span class="p">(</span><span class="n">mean_x</span><span class="p">,</span> <span class="n">covar_x</span><span class="p">)</span>
+
+            <span class="k">def</span> <span class="nf">mtrain</span><span class="p">(</span><span class="n">train_x</span><span class="p">,</span>
+                      <span class="n">train_y</span><span class="p">,</span>
+                      <span class="n">n_devices</span><span class="p">,</span>
+                      <span class="n">output_device</span><span class="p">,</span>
+                      <span class="n">checkpoint_size</span><span class="p">,</span>
+                      <span class="n">preconditioner_size</span><span class="p">,</span>
+                      <span class="n">n_training_iter</span><span class="p">,</span>
+                      <span class="p">):</span>
+                <span class="n">likelihood</span> <span class="o">=</span> <span class="n">gpytorch</span><span class="o">.</span><span class="n">likelihoods</span><span class="o">.</span><span class="n">GaussianLikelihood</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">output_device</span><span class="p">)</span>
+                <span class="n">model</span> <span class="o">=</span> <span class="n">mExactGPModel</span><span class="p">(</span><span class="n">train_x</span><span class="p">,</span> <span class="n">train_y</span><span class="p">,</span> <span class="n">likelihood</span><span class="p">,</span> <span class="n">n_devices</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">output_device</span><span class="p">)</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+                <span class="n">likelihood</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+
+                <span class="n">optimizer</span> <span class="o">=</span> <span class="n">FullBatchLBFGS</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="n">lr</span><span class="p">)</span>
+                <span class="c1"># &quot;Loss&quot; for GPs - the marginal log likelihood</span>
+                <span class="n">mll</span> <span class="o">=</span> <span class="n">gpytorch</span><span class="o">.</span><span class="n">mlls</span><span class="o">.</span><span class="n">ExactMarginalLogLikelihood</span><span class="p">(</span><span class="n">likelihood</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+
+                <span class="k">with</span> <span class="n">gpytorch</span><span class="o">.</span><span class="n">beta_features</span><span class="o">.</span><span class="n">checkpoint_kernel</span><span class="p">(</span><span class="n">checkpoint_size</span><span class="p">),</span> \
+                        <span class="n">gpytorch</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">max_preconditioner_size</span><span class="p">(</span><span class="n">preconditioner_size</span><span class="p">):</span>
+
+                    <span class="k">def</span> <span class="nf">closure</span><span class="p">():</span>
+                        <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+                        <span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">train_x</span><span class="p">)</span>
+                        <span class="n">loss</span> <span class="o">=</span> <span class="o">-</span><span class="n">mll</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">train_y</span><span class="p">)</span>
+                        <span class="k">return</span> <span class="n">loss</span>
+
+                    <span class="n">loss</span> <span class="o">=</span> <span class="n">closure</span><span class="p">()</span>
+                    <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_training_iter</span><span class="p">):</span>
+                        <span class="n">options</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;closure&#39;</span><span class="p">:</span> <span class="n">closure</span><span class="p">,</span> <span class="s1">&#39;current_loss&#39;</span><span class="p">:</span> <span class="n">loss</span><span class="p">,</span> <span class="s1">&#39;max_ls&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">}</span>
+                        <span class="n">loss</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">fail</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+
+<span class="w">                        </span><span class="sd">&#39;&#39;&#39;print(&#39;Iter %d/%d - Loss: %.3f   lengthscale: %.3f   noise: %.3f&#39; % (</span>
+<span class="sd">                            i + 1, n_training_iter, loss.item(),</span>
+<span class="sd">                            model.covar_module.module.base_kernel.lengthscale.item(),</span>
+<span class="sd">                            model.likelihood.noise.item()</span>
+<span class="sd">                        ))&#39;&#39;&#39;</span>
+
+                        <span class="k">if</span> <span class="n">fail</span><span class="p">:</span>
+                            <span class="c1"># print(&#39;Convergence reached!&#39;)</span>
+                            <span class="k">break</span>
+
+                <span class="k">return</span> <span class="n">model</span><span class="p">,</span> <span class="n">likelihood</span><span class="p">,</span> <span class="n">mll</span>
+
+            <span class="k">def</span> <span class="nf">find_best_gpu_setting</span><span class="p">(</span><span class="n">train_x</span><span class="p">,</span>
+                                      <span class="n">train_y</span><span class="p">,</span>
+                                      <span class="n">n_devices</span><span class="p">,</span>
+                                      <span class="n">output_device</span><span class="p">,</span>
+                                      <span class="n">preconditioner_size</span>
+                                      <span class="p">):</span>
+                <span class="n">N</span> <span class="o">=</span> <span class="n">train_x</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+                <span class="c1"># Find the optimum partition/checkpoint size by decreasing in powers of 2</span>
+                <span class="c1"># Start with no partitioning (size = 0)</span>
+                <span class="n">settings</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">N</span><span class="p">))))]</span>
+
+                <span class="k">for</span> <span class="n">checkpoint_size</span> <span class="ow">in</span> <span class="n">settings</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Number of devices: </span><span class="si">{}</span><span class="s1"> -- Kernel partition size: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_devices</span><span class="p">,</span> <span class="n">checkpoint_size</span><span class="p">))</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="c1"># Try a full forward and backward pass with this setting to check memory usage</span>
+                        <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">mtrain</span><span class="p">(</span><span class="n">train_x</span><span class="p">,</span> <span class="n">train_y</span><span class="p">,</span>
+                                     <span class="n">n_devices</span><span class="o">=</span><span class="n">n_devices</span><span class="p">,</span> <span class="n">output_device</span><span class="o">=</span><span class="n">output_device</span><span class="p">,</span>
+                                     <span class="n">checkpoint_size</span><span class="o">=</span><span class="n">checkpoint_size</span><span class="p">,</span>
+                                     <span class="n">preconditioner_size</span><span class="o">=</span><span class="n">preconditioner_size</span><span class="p">,</span> <span class="n">n_training_iter</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+                        <span class="c1"># when successful, break out of for-loop and jump to finally block</span>
+                        <span class="k">break</span>
+                    <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="k">pass</span>
+                    <span class="k">except</span> <span class="ne">AttributeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="k">pass</span>
+                    <span class="k">finally</span><span class="p">:</span>
+                        <span class="c1"># handle CUDA OOM error</span>
+                        <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+                        <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">empty_cache</span><span class="p">()</span>
+                <span class="k">return</span> <span class="n">checkpoint_size</span>
+
+            <span class="c1"># Set a large enough preconditioner size to reduce the number of CG iterations run</span>
+            <span class="n">preconditioner_size</span> <span class="o">=</span> <span class="mi">100</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkpoint_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">checkpoint_size</span> <span class="o">=</span> <span class="n">find_best_gpu_setting</span><span class="p">(</span><span class="n">train_x</span><span class="p">,</span> <span class="n">train_y</span><span class="p">,</span>
+                                                        <span class="n">n_devices</span><span class="o">=</span><span class="n">n_devices</span><span class="p">,</span>
+                                                        <span class="n">output_device</span><span class="o">=</span><span class="n">output_device</span><span class="p">,</span>
+                                                        <span class="n">preconditioner_size</span><span class="o">=</span><span class="n">preconditioner_size</span><span class="p">)</span>
+
+            <span class="n">model</span><span class="p">,</span> <span class="n">likelihood</span><span class="p">,</span> <span class="n">mll</span> <span class="o">=</span> <span class="n">mtrain</span><span class="p">(</span><span class="n">train_x</span><span class="p">,</span> <span class="n">train_y</span><span class="p">,</span>
+                                      <span class="n">n_devices</span><span class="o">=</span><span class="n">n_devices</span><span class="p">,</span> <span class="n">output_device</span><span class="o">=</span><span class="n">output_device</span><span class="p">,</span>
+                                      <span class="n">checkpoint_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">checkpoint_size</span><span class="p">,</span>
+                                      <span class="n">preconditioner_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                                      <span class="n">n_training_iter</span><span class="o">=</span><span class="n">training_iter</span><span class="p">)</span>
+
+            <span class="c1"># Get into evaluation (predictive posterior) mode</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+            <span class="n">likelihood</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+
+            <span class="c1"># Make predictions by feeding model through likelihood</span>
+            <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">(),</span> <span class="n">gpytorch</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">fast_pred_var</span><span class="p">(),</span> <span class="n">gpytorch</span><span class="o">.</span><span class="n">beta_features</span><span class="o">.</span><span class="n">checkpoint_kernel</span><span class="p">(</span><span class="mi">1000</span><span class="p">):</span>
+                <span class="n">mean</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">train_x</span><span class="p">)</span><span class="o">.</span><span class="n">loc</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+                <span class="n">loglik</span> <span class="o">=</span> <span class="n">mll</span><span class="p">(</span><span class="n">model</span><span class="p">(</span><span class="n">train_x</span><span class="p">),</span> <span class="n">train_y</span><span class="p">)</span><span class="o">*</span><span class="n">T</span>
+
+            <span class="n">resid</span> <span class="o">=</span> <span class="p">(</span><span class="n">train_y</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+            <span class="n">mean</span> <span class="o">=</span> <span class="n">mean</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># If only CPU is available, we will use the simplest form of GP model, exact inference</span>
+            <span class="k">class</span> <span class="nc">ExactGPModel</span><span class="p">(</span><span class="n">gpytorch</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">ExactGP</span><span class="p">):</span>
+                <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_x</span><span class="p">,</span> <span class="n">train_y</span><span class="p">,</span> <span class="n">likelihood</span><span class="p">):</span>
+                    <span class="nb">super</span><span class="p">(</span><span class="n">ExactGPModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+                        <span class="n">train_x</span><span class="p">,</span> <span class="n">train_y</span><span class="p">,</span> <span class="n">likelihood</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">mean_module</span> <span class="o">=</span> <span class="n">gpytorch</span><span class="o">.</span><span class="n">means</span><span class="o">.</span><span class="n">ConstantMean</span><span class="p">()</span>
+
+                    <span class="c1"># We only use the RBF kernel here, the WhiteNoiseKernel is deprecated</span>
+                    <span class="c1"># and its featured integrated into the Likelihood-Module.</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">covar_module</span> <span class="o">=</span> <span class="n">gpytorch</span><span class="o">.</span><span class="n">kernels</span><span class="o">.</span><span class="n">ScaleKernel</span><span class="p">(</span><span class="n">gpytorch</span><span class="o">.</span><span class="n">kernels</span><span class="o">.</span><span class="n">RBFKernel</span><span class="p">())</span>
+
+                <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+                    <span class="n">mean_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_module</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                    <span class="n">covar_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_module</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">gpytorch</span><span class="o">.</span><span class="n">distributions</span><span class="o">.</span><span class="n">MultivariateNormal</span><span class="p">(</span><span class="n">mean_x</span><span class="p">,</span> <span class="n">covar_x</span><span class="p">)</span>
+
+            <span class="c1"># initialize likelihood and model</span>
+            <span class="n">likelihood</span> <span class="o">=</span> <span class="n">gpytorch</span><span class="o">.</span><span class="n">likelihoods</span><span class="o">.</span><span class="n">GaussianLikelihood</span><span class="p">()</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">ExactGPModel</span><span class="p">(</span><span class="n">train_x</span><span class="p">,</span> <span class="n">train_y</span><span class="p">,</span> <span class="n">likelihood</span><span class="p">)</span>
+
+            <span class="c1"># Find optimal model hyperparameters</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+            <span class="n">likelihood</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+
+            <span class="c1"># Use the adam optimizer</span>
+            <span class="c1"># Includes GaussianLikelihood parameters</span>
+            <span class="n">optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="n">lr</span><span class="p">)</span>
+
+            <span class="c1"># &quot;Loss&quot; for GPs - the marginal log likelihood</span>
+            <span class="n">mll</span> <span class="o">=</span> <span class="n">gpytorch</span><span class="o">.</span><span class="n">mlls</span><span class="o">.</span><span class="n">ExactMarginalLogLikelihood</span><span class="p">(</span><span class="n">likelihood</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">training_iter</span><span class="p">):</span>
+                <span class="c1"># Zero gradients from previous iteration</span>
+                <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+                <span class="c1"># Output from model</span>
+                <span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">train_x</span><span class="p">)</span>
+
+                <span class="c1"># Calc loss and backprop gradients</span>
+                <span class="n">loss</span> <span class="o">=</span> <span class="o">-</span><span class="n">mll</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">train_y</span><span class="p">)</span>
+                <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+                <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+
+            <span class="c1"># Get into evaluation (predictive posterior) mode</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+            <span class="n">likelihood</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+
+            <span class="c1"># Make predictions by feeding model through likelihood</span>
+            <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">(),</span> <span class="n">gpytorch</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">fast_pred_var</span><span class="p">():</span>
+                <span class="n">mean</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">train_x</span><span class="p">)</span><span class="o">.</span><span class="n">loc</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+                <span class="n">loglik</span> <span class="o">=</span> <span class="n">mll</span><span class="p">(</span><span class="n">model</span><span class="p">(</span><span class="n">train_x</span><span class="p">),</span> <span class="n">train_y</span><span class="p">)</span> <span class="o">*</span> <span class="n">T</span>
+
+            <span class="n">resid</span> <span class="o">=</span> <span class="p">(</span><span class="n">train_y</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+            <span class="n">mean</span> <span class="o">=</span> <span class="n">mean</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">return_means</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">return_likelihood</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">resid</span><span class="p">,</span> <span class="n">mean</span>
+        <span class="k">elif</span> <span class="n">return_likelihood</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">return_means</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">resid</span><span class="p">,</span> <span class="n">loglik</span>
+        <span class="k">elif</span> <span class="n">return_means</span> <span class="ow">and</span> <span class="n">return_likelihood</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">resid</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">loglik</span>
+        <span class="k">return</span> <span class="n">resid</span>
+
+    <span class="k">def</span> <span class="nf">_get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns log marginal likelihood for GP regression.</span>
+
+<span class="sd">        Fits a GP model of the parents to variable j and returns the negative</span>
+<span class="sd">        log marginal likelihood as a model selection score. Is used to determine</span>
+<span class="sd">        optimal hyperparameters in PCMCI, in particular the pc_alpha value.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        j : int</span>
+<span class="sd">            Index of target variable in data array.</span>
+
+<span class="sd">        parents : list</span>
+<span class="sd">            List of form [(0, -1), (3, -2), ...] containing parents.</span>
+
+<span class="sd">        tau_max : int, optional (default: 0)</span>
+<span class="sd">            Maximum time lag. This may be used to make sure that estimates for</span>
+<span class="sd">            different lags in X, Z, all have the same sample size.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">        score : float</span>
+<span class="sd">            Model score.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">Y</span> <span class="o">=</span> <span class="p">[(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="p">[(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>   <span class="c1"># dummy variable here</span>
+        <span class="n">Z</span> <span class="o">=</span> <span class="n">parents</span>
+        <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">construct_array</span><span class="p">(</span>
+                <span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="n">Z</span><span class="p">,</span>
+                <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
+                <span class="n">mask_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span><span class="o">.</span><span class="n">mask_type</span><span class="p">,</span>
+                <span class="n">return_cleaned_xyz</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">do_checks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">verbosity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
+
+        <span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="n">_</span><span class="p">,</span> <span class="n">logli</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_residuals</span><span class="p">(</span><span class="n">array</span><span class="p">,</span>
+                                              <span class="n">target_var</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                              <span class="n">return_likelihood</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">score</span> <span class="o">=</span> <span class="o">-</span><span class="n">logli</span>
+        <span class="k">return</span> <span class="n">score</span>
+
+
+<div class="viewcode-block" id="GPDCtorch"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.gpdc_torch.GPDCtorch">[docs]</a><span class="k">class</span> <span class="nc">GPDCtorch</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;GPDC conditional independence test based on Gaussian processes and distance correlation. Here with gpytorch implementation.</span>
+
+<span class="sd">    GPDC is based on a Gaussian process (GP) regression and a distance</span>
+<span class="sd">    correlation test on the residuals [2]_. GP is estimated with gpytorch.</span>
+<span class="sd">    The distance correlation test is implemented with the dcor package available</span>
+<span class="sd">    from pip. Here the null distribution is not analytically available, but can be</span>
+<span class="sd">    precomputed with the function generate_and_save_nulldists(...) which saves a</span>
+<span class="sd">    \*.npz file containing the null distribution for different sample sizes.</span>
+<span class="sd">    This file can then be supplied as null_dist_filename.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    GPDC is based on a Gaussian process (GP) regression and a distance</span>
+<span class="sd">    correlation test on the residuals. Distance correlation is described in</span>
+<span class="sd">    [2]_. To test :math:`X \perp Y | Z`, first :math:`Z` is regressed out from</span>
+<span class="sd">    :math:`X` and :math:`Y` assuming the  model</span>
+
+<span class="sd">    .. math::  X &amp; =  f_X(Z) + \epsilon_{X} \\</span>
+<span class="sd">        Y &amp; =  f_Y(Z) + \epsilon_{Y}  \\</span>
+<span class="sd">        \epsilon_{X,Y} &amp;\sim \mathcal{N}(0, \sigma^2)</span>
+
+<span class="sd">    using GP regression. Here :math:`\sigma^2` and the kernel bandwidth are</span>
+<span class="sd">    optimzed using ``gpytorch``. Then the residuals  are transformed to uniform</span>
+<span class="sd">    marginals yielding :math:`r_X,r_Y` and their dependency is tested with</span>
+
+<span class="sd">    .. math::  \mathcal{R}\left(r_X, r_Y\right)</span>
+
+<span class="sd">    The null distribution of the distance correlation should be pre-computed.</span>
+<span class="sd">    Otherwise it is computed during runtime.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    null_dist_filename : str, otional (default: None)</span>
+<span class="sd">        Path to file containing null distribution.</span>
+
+<span class="sd">    **kwargs :</span>
+<span class="sd">        Arguments passed on to parent class GaussProcRegTorch.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">measure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Concrete property to return the measure of the independence test</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_measure</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">null_dist_filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_measure</span> <span class="o">=</span> <span class="s1">&#39;gp_dc&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">two_sided</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">residual_based</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="c1"># Call the parent constructor</span>
+        <span class="n">CondIndTest</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c1"># Build the regressor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gauss_pr</span> <span class="o">=</span> <span class="n">GaussProcRegTorch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sig_samples</span><span class="p">,</span>
+                                     <span class="bp">self</span><span class="p">,</span>
+                                     <span class="n">null_dist_filename</span><span class="o">=</span><span class="n">null_dist_filename</span><span class="p">,</span>
+                                     <span class="n">verbosity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;null_dist_filename = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">gauss_pr</span><span class="o">.</span><span class="n">null_dist_filename</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_load_nulldist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load a precomputed null distribution from a \*.npz file.  This</span>
+<span class="sd">        distribution can be calculated using generate_and_save_nulldists(...).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        filename : strng</span>
+<span class="sd">            Path to the \*.npz file</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        null_dists, null_samples : dict, int</span>
+<span class="sd">            The null distirbution as a dictionary of distributions keyed by</span>
+<span class="sd">            sample size, the number of null samples in total.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">gauss_pr</span><span class="o">.</span><span class="n">_load_nulldist</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+
+<div class="viewcode-block" id="GPDCtorch.generate_nulldist"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.gpdc_torch.GPDCtorch.generate_nulldist">[docs]</a>    <span class="k">def</span> <span class="nf">generate_nulldist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">add_to_null_dists</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generates null distribution for pairwise independence tests.</span>
+
+<span class="sd">        Generates the null distribution for sample size df. Assumes pairwise</span>
+<span class="sd">        samples transformed to uniform marginals. Uses get_dependence_measure</span>
+<span class="sd">        available in class and generates self.sig_samples random samples. Adds</span>
+<span class="sd">        the null distributions to self.gauss_pr.null_dists.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        df : int</span>
+<span class="sd">            Degrees of freedom / sample size to generate null distribution for.</span>
+
+<span class="sd">        add_to_null_dists : bool, optional (default: True)</span>
+<span class="sd">            Whether to add the null dist to the dictionary of null dists or</span>
+<span class="sd">            just return it.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        null_dist : array of shape [df,]</span>
+<span class="sd">            Only returned,if add_to_null_dists is False.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">gauss_pr</span><span class="o">.</span><span class="n">_generate_nulldist</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">add_to_null_dists</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GPDCtorch.generate_and_save_nulldists"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.gpdc_torch.GPDCtorch.generate_and_save_nulldists">[docs]</a>    <span class="k">def</span> <span class="nf">generate_and_save_nulldists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample_sizes</span><span class="p">,</span> <span class="n">null_dist_filename</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generates and saves null distribution for pairwise independence</span>
+<span class="sd">        tests.</span>
+
+<span class="sd">        Generates the null distribution for different sample sizes. Calls</span>
+<span class="sd">        generate_nulldist. Null dists are saved to disk as</span>
+<span class="sd">        self.null_dist_filename.npz. Also adds the null distributions to</span>
+<span class="sd">        self.gauss_pr.null_dists.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sample_sizes : list</span>
+<span class="sd">            List of sample sizes.</span>
+
+<span class="sd">        null_dist_filename : str</span>
+<span class="sd">            Name to save file containing null distributions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gauss_pr</span><span class="o">.</span><span class="n">_generate_and_save_nulldists</span><span class="p">(</span><span class="n">sample_sizes</span><span class="p">,</span>
+                                                   <span class="n">null_dist_filename</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_get_single_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="p">,</span>
+                                    <span class="n">return_means</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                    <span class="n">standardize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                    <span class="n">return_likelihood</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                    <span class="n">training_iter</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+                                    <span class="n">lr</span><span class="o">=</span><span class="mf">0.1</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns residuals of Gaussian process regression.</span>
+
+<span class="sd">        Performs a GP regression of the variable indexed by target_var on the</span>
+<span class="sd">        conditions Z. Here array is assumed to contain X and Y as the first two</span>
+<span class="sd">        rows with the remaining rows (if present) containing the conditions Z.</span>
+<span class="sd">        Optionally returns the estimated mean and the likelihood.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        array : array-like</span>
+<span class="sd">            data array with X, Y, Z in rows and observations in columns</span>
+
+<span class="sd">        target_var : {0, 1}</span>
+<span class="sd">            Variable to regress out conditions from.</span>
+
+<span class="sd">        standardize : bool, optional (default: True)</span>
+<span class="sd">            Whether to standardize the array beforehand.</span>
+
+<span class="sd">        return_means : bool, optional (default: False)</span>
+<span class="sd">            Whether to return the estimated regression line.</span>
+
+<span class="sd">        return_likelihood : bool, optional (default: False)</span>
+<span class="sd">            Whether to return the log_marginal_likelihood of the fitted GP</span>
+
+<span class="sd">        training_iter : int, optional (default: 50)</span>
+<span class="sd">            Number of training iterations.</span>
+
+<span class="sd">        lr : float, optional (default: 0.1)</span>
+<span class="sd">            Learning rate (default: 0.1).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        resid [, mean, likelihood] : array-like</span>
+<span class="sd">            The residual of the regression and optionally the estimated mean</span>
+<span class="sd">            and/or the likelihood.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">gauss_pr</span><span class="o">.</span><span class="n">_get_single_residuals</span><span class="p">(</span>
+            <span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="p">,</span>
+            <span class="n">return_means</span><span class="p">,</span>
+            <span class="n">standardize</span><span class="p">,</span>
+            <span class="n">return_likelihood</span><span class="p">,</span>
+            <span class="n">training_iter</span><span class="p">,</span>
+            <span class="n">lr</span><span class="p">)</span>
+
+<div class="viewcode-block" id="GPDCtorch.get_model_selection_criterion"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.gpdc_torch.GPDCtorch.get_model_selection_criterion">[docs]</a>    <span class="k">def</span> <span class="nf">get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns log marginal likelihood for GP regression.</span>
+
+<span class="sd">        Fits a GP model of the parents to variable j and returns the negative</span>
+<span class="sd">        log marginal likelihood as a model selection score. Is used to determine</span>
+<span class="sd">        optimal hyperparameters in PCMCI, in particular the pc_alpha value.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        j : int</span>
+<span class="sd">            Index of target variable in data array.</span>
+
+<span class="sd">        parents : list</span>
+<span class="sd">            List of form [(0, -1), (3, -2), ...] containing parents.</span>
+
+<span class="sd">        tau_max : int, optional (default: 0)</span>
+<span class="sd">            Maximum time lag. This may be used to make sure that estimates for</span>
+<span class="sd">            different lags in X, Z, all have the same sample size.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">        score : float</span>
+<span class="sd">            Model score.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">gauss_pr</span><span class="o">.</span><span class="n">_get_model_selection_criterion</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GPDCtorch.get_dependence_measure"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.gpdc_torch.GPDCtorch.get_dependence_measure">[docs]</a>    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return GPDC measure.</span>
+
+<span class="sd">        Estimated as the distance correlation of the residuals of a GP</span>
+<span class="sd">        regression.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        array : array-like</span>
+<span class="sd">            data array with X, Y, Z in rows and observations in columns</span>
+
+<span class="sd">        xyz : array of ints</span>
+<span class="sd">            XYZ identifier array of shape (dim,).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        val : float</span>
+<span class="sd">            GPDC test statistic.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">x_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_residuals</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">y_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_residuals</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dcorr</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x_vals</span><span class="p">,</span> <span class="n">y_vals</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="n">val</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_dcorr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_resid</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return distance correlation coefficient.</span>
+
+<span class="sd">        The variables are transformed to uniform marginals using the empirical</span>
+<span class="sd">        cumulative distribution function beforehand. Here the null distribution</span>
+<span class="sd">        is not analytically available, but can be precomputed with the function</span>
+<span class="sd">        generate_and_save_nulldists(...) which saves a \*.npz file containing</span>
+<span class="sd">        the null distribution for different sample sizes. This file can then be</span>
+<span class="sd">        supplied as null_dist_filename.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        array_resid : array-like</span>
+<span class="sd">            data array must be of shape (2, T)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        val : float</span>
+<span class="sd">            Distance correlation coefficient.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Remove ties before applying transformation to uniform marginals</span>
+        <span class="c1"># array_resid = self._remove_ties(array_resid, verbosity=4)</span>
+        <span class="n">x_vals</span><span class="p">,</span> <span class="n">y_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trafo2uniform</span><span class="p">(</span><span class="n">array_resid</span><span class="p">)</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">dcor</span><span class="o">.</span><span class="n">distance_correlation</span><span class="p">(</span><span class="n">x_vals</span><span class="p">,</span> <span class="n">y_vals</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;AVL&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">val</span>
+
+<div class="viewcode-block" id="GPDCtorch.get_shuffle_significance"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.gpdc_torch.GPDCtorch.get_shuffle_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_shuffle_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span>
+                                 <span class="n">return_null_dist</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns p-value for shuffle significance test.</span>
+
+<span class="sd">        For residual-based test statistics only the residuals are shuffled.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        array : array-like</span>
+<span class="sd">            data array with X, Y, Z in rows and observations in columns</span>
+
+<span class="sd">        xyz : array of ints</span>
+<span class="sd">            XYZ identifier array of shape (dim,).</span>
+
+<span class="sd">        value : number</span>
+<span class="sd">            Value of test statistic for unshuffled estimate.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pval : float</span>
+<span class="sd">            p-value</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">x_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_residuals</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">y_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_residuals</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">array_resid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x_vals</span><span class="p">,</span> <span class="n">y_vals</span><span class="p">])</span>
+        <span class="n">xyz_resid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">null_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_shuffle_dist</span><span class="p">(</span><span class="n">array_resid</span><span class="p">,</span> <span class="n">xyz_resid</span><span class="p">,</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">,</span>
+                                           <span class="n">sig_samples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sig_samples</span><span class="p">,</span>
+                                           <span class="n">sig_blocklength</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sig_blocklength</span><span class="p">,</span>
+                                           <span class="n">verbosity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
+
+        <span class="n">pval</span> <span class="o">=</span> <span class="p">(</span><span class="n">null_dist</span> <span class="o">&gt;=</span> <span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">return_null_dist</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pval</span><span class="p">,</span> <span class="n">null_dist</span>
+        <span class="k">return</span> <span class="n">pval</span></div>
+
+<div class="viewcode-block" id="GPDCtorch.get_analytic_significance"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.gpdc_torch.GPDCtorch.get_analytic_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">xyz</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns p-value for the distance correlation coefficient.</span>
+
+<span class="sd">        The null distribution for necessary degrees of freedom (df) is loaded.</span>
+<span class="sd">        If not available, the null distribution is generated with the function</span>
+<span class="sd">        generate_nulldist(). It is recommended to generate the nulldists for a</span>
+<span class="sd">        wide range of sample sizes beforehand with the function</span>
+<span class="sd">        generate_and_save_nulldists(...). The distance correlation coefficient</span>
+<span class="sd">        is one-sided. If the degrees of freedom are less than 1, numpy.nan is</span>
+<span class="sd">        returned.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        value : float</span>
+<span class="sd">            Test statistic value.</span>
+
+<span class="sd">        T : int</span>
+<span class="sd">            Sample length</span>
+
+<span class="sd">        dim : int</span>
+<span class="sd">            Dimensionality, ie, number of features.</span>
+
+<span class="sd">        xyz : array of ints</span>
+<span class="sd">            XYZ identifier array of shape (dim,).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pval : float or numpy.nan</span>
+<span class="sd">            p-value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># GP regression approximately doesn&#39;t cost degrees of freedom</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">T</span>
+
+        <span class="k">if</span> <span class="n">df</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">pval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># idx_near = (np.abs(self.sample_sizes - df)).argmin()</span>
+            <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">df</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gauss_pr</span><span class="o">.</span><span class="n">null_dists</span><span class="p">):</span>
+                <span class="c1"># if np.abs(self.sample_sizes[idx_near] - df) / float(df) &gt; 0.01:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Null distribution for GPDC not available &quot;</span>
+                          <span class="s2">&quot;for deg. of freed. = </span><span class="si">%d</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="n">df</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">generate_nulldist</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+            <span class="n">null_dist_here</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gauss_pr</span><span class="o">.</span><span class="n">null_dists</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">df</span><span class="p">)]</span>
+            <span class="n">pval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">null_dist_here</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">pval</span></div></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">Tigramite</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, Jakob Runge.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.1.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

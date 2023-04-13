@@ -1,0 +1,494 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tigramite.independence_tests.robust_parcorr &#8212; Tigramite 5.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for tigramite.independence_tests.robust_parcorr</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Tigramite causal discovery for time series.&quot;&quot;&quot;</span>
+
+<span class="c1"># Author: Jakob Runge &lt;jakob@jakob-runge.com&gt;</span>
+<span class="c1">#</span>
+<span class="c1"># License: GNU General Public License v3.0</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">from</span> <span class="nn">.independence_tests_base</span> <span class="kn">import</span> <span class="n">CondIndTest</span>
+
+<div class="viewcode-block" id="RobustParCorr"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.robust_parcorr.RobustParCorr">[docs]</a><span class="k">class</span> <span class="nc">RobustParCorr</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Robust partial correlation test based on non-paranormal models.</span>
+
+<span class="sd">    Partial correlation is estimated through transformation to standard</span>
+<span class="sd">    normal marginals, ordinary least squares (OLS) regression, and a test for</span>
+<span class="sd">    non-zero linear Pearson correlation on the residuals.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    To test :math:`X \perp Y | Z`, firstly, each marginal is transformed to be</span>
+<span class="sd">    standard normally distributed. For that, the transform</span>
+<span class="sd">    :math:`\Phi^{-1}\circ\hat{F}` is used. Here, :math:`\Phi^{-1}` is the</span>
+<span class="sd">     quantile function of a standard normal distribution and </span>
+<span class="sd">     :math:`\hat{F}` is the empirical distribution function for the respective</span>
+<span class="sd">     marginal.</span>
+
+
+<span class="sd">    This idea stems from the literature on nonparanormal models, see:</span>
+
+<span class="sd">    - Han Liu, John Lafferty, and Larry Wasserman. The nonparanormal:</span>
+<span class="sd">      semiparametric estimation of high dimensional undirected graphs. J.</span>
+<span class="sd">      Mach. Learn. Res., 10:2295–2328, 2009.</span>
+
+<span class="sd">    - Han Liu, Fang Han, Ming Yuan, John Lafferty, and Larry Wasserman.</span>
+<span class="sd">      High-dimensional semiparametric Gaussian copula graphical models. Ann.</span>
+<span class="sd">      Statist., 40(4):2293–2326, 2012a.</span>
+
+<span class="sd">    - Naftali Harris, Mathias Drton. PC Algorithm for Nonparanormal Graphical</span>
+<span class="sd">      Models. Journal of Machine Learning Research, 14: 3365-3383, 2013.</span>
+
+<span class="sd">    Afterwards (where Z, X, and Y are now assumed to be transformed to the</span>
+<span class="sd">    standard normal scale):</span>
+
+<span class="sd">    :math:`Z` is regressed out from</span>
+<span class="sd">    :math:`X` and :math:`Y` assuming the  model</span>
+
+<span class="sd">    .. math::  X &amp; =  Z \beta_X + \epsilon_{X} \\</span>
+<span class="sd">        Y &amp; =  Z \beta_Y + \epsilon_{Y}</span>
+
+<span class="sd">    using OLS regression. Then the dependency of the residuals is tested with</span>
+<span class="sd">    the Pearson correlation test.</span>
+
+<span class="sd">    .. math::  \rho\left(r_X, r_Y\right)</span>
+
+<span class="sd">    For the ``significance=&#39;analytic&#39;`` Student&#39;s-*t* distribution with</span>
+<span class="sd">    :math:`T-D_Z-2` degrees of freedom is implemented.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    **kwargs :</span>
+<span class="sd">        Arguments passed on to Parent class CondIndTest.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># documentation</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">measure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Concrete property to return the measure of the independence test</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_measure</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_measure</span> <span class="o">=</span> <span class="s1">&#39;robust_par_corr&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">two_sided</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">residual_based</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">CondIndTest</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RobustParCorr.trafo2normal"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.robust_parcorr.RobustParCorr.trafo2normal">[docs]</a>    <span class="k">def</span> <span class="nf">trafo2normal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">thres</span><span class="o">=</span><span class="mf">0.00001</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Transforms input array to standard normal marginals.</span>
+<span class="sd">        </span>
+<span class="sd">        For that, the code first transforms to uniform :math:`[0,1]` marginals</span>
+<span class="sd">        using the empirical distribution function, and then transforms to</span>
+<span class="sd">        normal marginals by applying the quantile function of a standard</span>
+<span class="sd">        normal. Assumes x.shape = (dim, T)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : array-like</span>
+<span class="sd">            Input array.</span>
+
+<span class="sd">        thres : float</span>
+<span class="sd">            Small number between 0 and 1; after transformation to the uniform</span>
+<span class="sd">            scale, all values that are too close to zero are replaced by thres,</span>
+<span class="sd">            similarly, all values that are too close to one, are replaced by</span>
+<span class="sd">            1-thres. This avoids NaNs.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        normal : array-like</span>
+<span class="sd">            array with normal marginals.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">trafo</span><span class="p">(</span><span class="n">xi</span><span class="p">):</span>
+            <span class="n">xisorted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span>
+            <span class="n">yi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">xi</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">xi</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">xi</span><span class="p">,</span> <span class="n">xisorted</span><span class="p">,</span> <span class="n">yi</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="n">trafo</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">u</span><span class="p">[</span><span class="n">u</span><span class="o">==</span><span class="mf">0.</span><span class="p">]</span> <span class="o">=</span> <span class="n">thres</span>
+            <span class="n">u</span><span class="p">[</span><span class="n">u</span><span class="o">==</span><span class="mf">1.</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">-</span> <span class="n">thres</span>
+            <span class="n">normal</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">normal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">uniform</span> <span class="o">=</span> <span class="n">trafo</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        
+                <span class="n">uniform</span><span class="p">[</span><span class="n">uniform</span><span class="o">==</span><span class="mf">0.</span><span class="p">]</span> <span class="o">=</span> <span class="n">thres</span>
+                <span class="n">uniform</span><span class="p">[</span><span class="n">uniform</span><span class="o">==</span><span class="mf">1.</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">-</span> <span class="n">thres</span>
+                <span class="n">normal</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="n">uniform</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">normal</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_single_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="p">,</span>
+                              <span class="n">standardize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                              <span class="n">return_means</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns residuals of linear multiple regression.</span>
+
+<span class="sd">        Performs a OLS regression of the variable indexed by target_var on the</span>
+<span class="sd">        conditions Z. Here array is assumed to contain X and Y as the first two</span>
+<span class="sd">        rows with the remaining rows (if present) containing the conditions Z.</span>
+<span class="sd">        Optionally returns the estimated regression line.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        array : array-like</span>
+<span class="sd">            data array with X, Y, Z in rows and observations in columns</span>
+
+<span class="sd">        target_var : {0, 1}</span>
+<span class="sd">            Variable to regress out conditions from.</span>
+
+<span class="sd">        standardize : bool, optional (default: True)</span>
+<span class="sd">            Whether to standardize the array beforehand. Must be used for</span>
+<span class="sd">            partial correlation.</span>
+
+<span class="sd">        return_means : bool, optional (default: False)</span>
+<span class="sd">            Whether to return the estimated regression line.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        resid [, mean] : array-like</span>
+<span class="sd">            The residual of the regression and optionally the estimated line.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">dim_z</span> <span class="o">=</span> <span class="n">dim</span> <span class="o">-</span> <span class="mi">2</span>
+
+        <span class="c1"># Standardize</span>
+        <span class="k">if</span> <span class="n">standardize</span><span class="p">:</span>
+            <span class="n">array</span> <span class="o">-=</span> <span class="n">array</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">std</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dim</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">std</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">:</span>
+                    <span class="n">array</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">/=</span> <span class="n">std</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">std</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">):</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Possibly constant array!&quot;</span><span class="p">)</span>
+            <span class="c1"># array /= array.std(axis=1).reshape(dim, 1)</span>
+            <span class="c1"># if np.isnan(array).sum() != 0:</span>
+            <span class="c1">#     raise ValueError(&quot;nans after standardizing, &quot;</span>
+            <span class="c1">#                      &quot;possibly constant array!&quot;)</span>
+
+        <span class="n">y</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">target_var</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="k">if</span> <span class="n">dim_z</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fastCopyAndTranspose</span><span class="p">(</span><span class="n">array</span><span class="p">[</span><span class="mi">2</span><span class="p">:,</span> <span class="p">:])</span>
+            <span class="n">beta_hat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="kc">None</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">beta_hat</span><span class="p">)</span>
+            <span class="n">resid</span> <span class="o">=</span> <span class="n">y</span> <span class="o">-</span> <span class="n">mean</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">resid</span> <span class="o">=</span> <span class="n">y</span>
+            <span class="n">mean</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">return_means</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">resid</span><span class="p">,</span> <span class="n">mean</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">resid</span>
+
+<div class="viewcode-block" id="RobustParCorr.get_dependence_measure"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.robust_parcorr.RobustParCorr.get_dependence_measure">[docs]</a>    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">type_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return partial correlation.</span>
+
+<span class="sd">        Marginals are firstly transformed to standard normal scale. Dependence</span>
+<span class="sd">        Measure is then estimated as the Pearson correlation of the residuals</span>
+<span class="sd">        of a linear OLS regression.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        array : array-like</span>
+<span class="sd">            data array with X, Y, Z in rows and observations in columns</span>
+
+<span class="sd">        xyz : array of ints</span>
+<span class="sd">            XYZ identifier array of shape (dim,).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        val : float</span>
+<span class="sd">            Partial correlation coefficient.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Transform to normal marginals</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trafo2normal</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+
+        <span class="n">x_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_residuals</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">y_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_residuals</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">val</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">pearsonr</span><span class="p">(</span><span class="n">x_vals</span><span class="p">,</span> <span class="n">y_vals</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">val</span></div>
+
+<div class="viewcode-block" id="RobustParCorr.get_shuffle_significance"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.robust_parcorr.RobustParCorr.get_shuffle_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_shuffle_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span>
+                                 <span class="n">return_null_dist</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns p-value for shuffle significance test.</span>
+
+<span class="sd">        Firstly, each marginal is transformed to the standard normal scale.</span>
+<span class="sd">        For residual-based test statistics only the residuals are shuffled.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        array : array-like</span>
+<span class="sd">            data array with X, Y, Z in rows and observations in columns</span>
+
+<span class="sd">        xyz : array of ints</span>
+<span class="sd">            XYZ identifier array of shape (dim,).</span>
+
+<span class="sd">        value : number</span>
+<span class="sd">            Value of test statistic for unshuffled estimate.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pval : float</span>
+<span class="sd">            p-value</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Transform to normal marginals</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trafo2normal</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+
+        <span class="n">x_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_residuals</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">y_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_residuals</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">array_resid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x_vals</span><span class="p">,</span> <span class="n">y_vals</span><span class="p">])</span>
+        <span class="n">xyz_resid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">null_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_shuffle_dist</span><span class="p">(</span><span class="n">array_resid</span><span class="p">,</span> <span class="n">xyz_resid</span><span class="p">,</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">,</span>
+                                           <span class="n">sig_samples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sig_samples</span><span class="p">,</span>
+                                           <span class="n">sig_blocklength</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sig_blocklength</span><span class="p">,</span>
+                                           <span class="n">verbosity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
+
+        <span class="n">pval</span> <span class="o">=</span> <span class="p">(</span><span class="n">null_dist</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">value</span><span class="p">))</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+        <span class="c1"># Adjust p-value for two-sided measures</span>
+        <span class="k">if</span> <span class="n">pval</span> <span class="o">&lt;</span> <span class="mf">1.</span><span class="p">:</span>
+            <span class="n">pval</span> <span class="o">*=</span> <span class="mf">2.</span>
+
+        <span class="k">if</span> <span class="n">return_null_dist</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pval</span><span class="p">,</span> <span class="n">null_dist</span>
+        <span class="k">return</span> <span class="n">pval</span></div>
+
+<div class="viewcode-block" id="RobustParCorr.get_analytic_significance"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.robust_parcorr.RobustParCorr.get_analytic_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">xyz</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns analytic p-value from Student&#39;s t-test for the Pearson</span>
+<span class="sd">        correlation coefficient.</span>
+
+<span class="sd">        Assumes two-sided correlation. If the degrees of freedom are less than</span>
+<span class="sd">        1, numpy.nan is returned.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        value : float</span>
+<span class="sd">            Test statistic value.</span>
+
+<span class="sd">        T : int</span>
+<span class="sd">            Sample length</span>
+
+<span class="sd">        dim : int</span>
+<span class="sd">            Dimensionality, ie, number of features.</span>
+
+<span class="sd">        xyz : array of ints</span>
+<span class="sd">            XYZ identifier array of shape (dim,).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pval : float or numpy.nan</span>
+<span class="sd">            P-value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Get the number of degrees of freedom</span>
+        <span class="n">deg_f</span> <span class="o">=</span> <span class="n">T</span> <span class="o">-</span> <span class="n">dim</span>
+
+        <span class="k">if</span> <span class="n">deg_f</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">pval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="k">elif</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">sys</span><span class="o">.</span><span class="n">float_info</span><span class="o">.</span><span class="n">min</span><span class="p">:</span>
+            <span class="n">pval</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">trafo_val</span> <span class="o">=</span> <span class="n">value</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">deg_f</span><span class="o">/</span><span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">value</span><span class="o">*</span><span class="n">value</span><span class="p">))</span>
+            <span class="c1"># Two sided significance level</span>
+            <span class="n">pval</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">trafo_val</span><span class="p">),</span> <span class="n">deg_f</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span>
+
+        <span class="k">return</span> <span class="n">pval</span></div>
+
+<div class="viewcode-block" id="RobustParCorr.get_analytic_confidence"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.robust_parcorr.RobustParCorr.get_analytic_confidence">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">conf_lev</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns analytic confidence interval for correlation coefficient.</span>
+
+<span class="sd">        Based on Student&#39;s t-distribution.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        value : float</span>
+<span class="sd">            Test statistic value.</span>
+
+<span class="sd">        df : int</span>
+<span class="sd">            degrees of freedom of the test</span>
+
+<span class="sd">        conf_lev : float</span>
+<span class="sd">            Confidence interval, eg, 0.9</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        (conf_lower, conf_upper) : Tuple of floats</span>
+<span class="sd">            Upper and lower confidence bound of confidence interval.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Confidence interval is two-sided</span>
+        <span class="n">c_int</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">conf_lev</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)</span>
+
+        <span class="n">value_tdist</span> <span class="o">=</span> <span class="n">value</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">df</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">value</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">conf_lower</span> <span class="o">=</span> <span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="n">q</span><span class="o">=</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">c_int</span><span class="p">,</span> <span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">value_tdist</span><span class="p">)</span>
+                      <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">df</span> <span class="o">+</span> <span class="n">stats</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="n">q</span><span class="o">=</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">c_int</span><span class="p">,</span> <span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
+                                                 <span class="n">loc</span><span class="o">=</span><span class="n">value_tdist</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+        <span class="n">conf_upper</span> <span class="o">=</span> <span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="n">q</span><span class="o">=</span><span class="n">c_int</span><span class="p">,</span> <span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">value_tdist</span><span class="p">)</span>
+                      <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">df</span> <span class="o">+</span> <span class="n">stats</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="n">q</span><span class="o">=</span><span class="n">c_int</span><span class="p">,</span> <span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
+                                                 <span class="n">loc</span><span class="o">=</span><span class="n">value_tdist</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">conf_lower</span><span class="p">,</span> <span class="n">conf_upper</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RobustParCorr.get_model_selection_criterion"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.robust_parcorr.RobustParCorr.get_model_selection_criterion">[docs]</a>    <span class="k">def</span> <span class="nf">get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">corrected_aic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns Akaike&#39;s Information criterion modulo constants.</span>
+
+<span class="sd">        First of all, each marginal is transformed to the standard normal</span>
+<span class="sd">        scale. For this, each marginal is transformed to the uniform scale</span>
+<span class="sd">        using the empirical distribution function and then, transformed to</span>
+<span class="sd">        the standard normal scale by applying the quantile function of a</span>
+<span class="sd">        standard normal. Afterwards, fits a linear model of the parents to</span>
+<span class="sd">        variable j and returns the score. Leave-one-out cross-validation is</span>
+<span class="sd">        asymptotically equivalent to AIC for ordinary linear regression</span>
+<span class="sd">        models. Here used to determine optimal hyperparameters in </span>
+<span class="sd">        PCMCI(plus), in particular the pc_alpha value.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        j : int</span>
+<span class="sd">            Index of target variable in data array.</span>
+
+<span class="sd">        parents : list</span>
+<span class="sd">            List of form [(0, -1), (3, -2), ...] containing parents.</span>
+
+<span class="sd">        tau_max : int, optional (default: 0)</span>
+<span class="sd">            Maximum time lag. This may be used to make sure that estimates for</span>
+<span class="sd">            different lags in X, Z, all have the same sample size.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">        score : float</span>
+<span class="sd">            Model score.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">Y</span> <span class="o">=</span> <span class="p">[(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="p">[(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>   <span class="c1"># dummy variable here</span>
+        <span class="n">Z</span> <span class="o">=</span> <span class="n">parents</span>
+        <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">construct_array</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="n">Z</span><span class="p">,</span>
+                                                    <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
+                                                    <span class="n">mask_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span><span class="p">,</span>
+                                                    <span class="n">return_cleaned_xyz</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                                    <span class="n">do_checks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                                    <span class="n">verbosity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
+
+        <span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="c1"># Transform to normal marginals</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trafo2normal</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+
+        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_residuals</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">return_means</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="c1"># Get RSS</span>
+        <span class="n">rss</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="c1"># Number of parameters</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">dim</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="c1"># Get AIC</span>
+        <span class="k">if</span> <span class="n">corrected_aic</span><span class="p">:</span>
+            <span class="n">score</span> <span class="o">=</span> <span class="n">T</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">rss</span><span class="p">)</span> <span class="o">+</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">p</span> <span class="o">+</span> <span class="p">(</span><span class="mf">2.</span><span class="o">*</span><span class="n">p</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">2.</span><span class="o">*</span><span class="n">p</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">T</span> <span class="o">-</span> <span class="n">p</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">score</span> <span class="o">=</span> <span class="n">T</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">rss</span><span class="p">)</span> <span class="o">+</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">p</span>
+        <span class="k">return</span> <span class="n">score</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">Tigramite</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, Jakob Runge.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.1.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1543,7 +1543,7 @@
     <span class="c1"># link_edge_colorbar_label=&#39;link_edge&#39;,</span>
     <span class="n">inner_edge_curved</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">inner_edge_style</span><span class="o">=</span><span class="s2">&quot;solid&quot;</span><span class="p">,</span>
-    <span class="n">network_lower_bound</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+    <span class="c1"># network_lower_bound=0.2,</span>
     <span class="n">network_left_bound</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">show_colorbar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">special_nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -2461,7 +2461,7 @@
     <span class="n">node_label_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
     <span class="n">link_label_fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
     <span class="n">lag_array</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">network_lower_bound</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+    <span class="c1"># network_lower_bound=0.2,</span>
     <span class="n">show_colorbar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">inner_edge_style</span><span class="o">=</span><span class="s2">&quot;dashed&quot;</span><span class="p">,</span>
     <span class="n">link_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -2545,8 +2545,6 @@
 <span class="sd">        Fontsize of tick labels.</span>
 <span class="sd">    lag_array : array, optional (default: None)</span>
 <span class="sd">        Optional specification of lags overwriting np.arange(0, tau_max+1)</span>
-<span class="sd">    network_lower_bound : float, optional (default: 0.2)</span>
-<span class="sd">        Fraction of vertical space below graph plot.</span>
 <span class="sd">    show_colorbar : bool</span>
 <span class="sd">        Whether to show colorbars for links and nodes.</span>
 <span class="sd">    show_autodependency_lags : bool (default: False)</span>
@@ -2825,7 +2823,7 @@
         <span class="n">label_fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">,</span>
         <span class="n">link_label_fontsize</span><span class="o">=</span><span class="n">link_label_fontsize</span><span class="p">,</span>
         <span class="n">link_colorbar_label</span><span class="o">=</span><span class="n">link_colorbar_label</span><span class="p">,</span>
-        <span class="n">network_lower_bound</span><span class="o">=</span><span class="n">network_lower_bound</span><span class="p">,</span>
+        <span class="c1"># network_lower_bound=network_lower_bound,</span>
         <span class="n">show_colorbar</span><span class="o">=</span><span class="n">show_colorbar</span><span class="p">,</span>
         <span class="c1"># label_fraction=label_fraction,</span>
         <span class="n">special_nodes</span><span class="o">=</span><span class="n">special_nodes</span><span class="p">,</span>
@@ -3021,9 +3019,6 @@
     <span class="n">label_fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
     <span class="n">tick_label_size</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
     <span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-    <span class="n">label_space_left</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
-    <span class="n">label_space_top</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-    <span class="n">network_lower_bound</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
     <span class="n">inner_edge_style</span><span class="o">=</span><span class="s2">&quot;dashed&quot;</span><span class="p">,</span>
     <span class="n">link_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">special_nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -3088,12 +3083,6 @@
 <span class="sd">        Fontsize of link labels.</span>
 <span class="sd">    tick_label_size : int, optional (default: 6)</span>
 <span class="sd">        Fontsize of tick labels.</span>
-<span class="sd">    label_space_left : float, optional (default: 0.1)</span>
-<span class="sd">        Fraction of horizontal figure space to allocate left of plot for labels.</span>
-<span class="sd">    label_space_top : float, optional (default: 0.)</span>
-<span class="sd">        Fraction of vertical figure space to allocate top of plot for labels.</span>
-<span class="sd">    network_lower_bound : float, optional (default: 0.2)</span>
-<span class="sd">        Fraction of vertical space below graph plot.</span>
 <span class="sd">    inner_edge_style : string, optional (default: &#39;dashed&#39;)</span>
 <span class="sd">        Style of inner_edge contemporaneous links.</span>
 <span class="sd">    special_nodes : dict</span>
@@ -3338,8 +3327,8 @@
         <span class="n">label_fraction</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
         <span class="n">link_colorbar_label</span><span class="o">=</span><span class="n">link_colorbar_label</span><span class="p">,</span>
         <span class="n">inner_edge_curved</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">network_lower_bound</span><span class="o">=</span><span class="n">network_lower_bound</span><span class="p">,</span>
-        <span class="n">network_left_bound</span><span class="o">=</span><span class="n">label_space_left</span><span class="p">,</span>
+        <span class="c1"># network_lower_bound=network_lower_bound,</span>
+        <span class="c1"># network_left_bound=label_space_left,</span>
         <span class="n">inner_edge_style</span><span class="o">=</span><span class="n">inner_edge_style</span><span class="p">,</span>
         <span class="n">special_nodes</span><span class="o">=</span><span class="n">special_nodes</span><span class="p">,</span>
         <span class="n">show_colorbar</span><span class="o">=</span><span class="n">show_colorbar</span><span class="p">,</span>
@@ -3417,9 +3406,6 @@
     <span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
     <span class="n">node_label_size</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
     <span class="n">tick_label_size</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
-    <span class="n">label_space_left</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
-    <span class="n">label_space_top</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-    <span class="n">network_lower_bound</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
     <span class="n">standard_color_links</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span>
     <span class="n">standard_color_nodes</span><span class="o">=</span><span class="s1">&#39;lightgrey&#39;</span><span class="p">,</span>
 <span class="p">):</span>
@@ -3484,12 +3470,6 @@
 <span class="sd">        Fontsize of node labels.</span>
 <span class="sd">    link_label_fontsize : int, optional (default: 6)</span>
 <span class="sd">        Fontsize of link labels.</span>
-<span class="sd">    label_space_left : float, optional (default: 0.1)</span>
-<span class="sd">        Fraction of horizontal figure space to allocate left of plot for labels.</span>
-<span class="sd">    label_space_top : float, optional (default: 0.)</span>
-<span class="sd">        Fraction of vertical figure space to allocate top of plot for labels.</span>
-<span class="sd">    network_lower_bound : float, optional (default: 0.2)</span>
-<span class="sd">        Fraction of vertical space below graph plot.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">path_node_array</span><span class="p">)</span>
     <span class="n">Nmaxlag</span> <span class="o">=</span> <span class="n">tsg_path_val_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -3658,7 +3638,7 @@
         <span class="n">label_fraction</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
         <span class="n">link_colorbar_label</span><span class="o">=</span><span class="n">link_colorbar_label</span><span class="p">,</span>
         <span class="n">inner_edge_curved</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">network_lower_bound</span><span class="o">=</span><span class="n">network_lower_bound</span>
+        <span class="c1"># network_lower_bound=network_lower_bound</span>
         <span class="c1"># inner_edge_style=inner_edge_style</span>
     <span class="p">)</span>
 
@@ -3681,7 +3661,7 @@
         <span class="k">if</span> <span class="n">tau</span> <span class="o">==</span> <span class="n">max_lag</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
                 <span class="n">pos</span><span class="p">[</span><span class="n">tau</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
-                <span class="mf">1.0</span> <span class="o">-</span> <span class="n">label_space_top</span><span class="p">,</span>
+                <span class="mf">1.0</span><span class="p">,</span> <span class="c1"># - label_space_top,</span>
                 <span class="sa">r</span><span class="s2">&quot;$t$&quot;</span><span class="p">,</span>
                 <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">,</span>
                 <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
@@ -3691,7 +3671,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
                 <span class="n">pos</span><span class="p">[</span><span class="n">tau</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
-                <span class="mf">1.0</span> <span class="o">-</span> <span class="n">label_space_top</span><span class="p">,</span>
+                <span class="mf">1.0</span><span class="p">,</span> <span class="c1"># - label_space_top,</span>
                 <span class="sa">r</span><span class="s2">&quot;$t-</span><span class="si">%s</span><span class="s2">$&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">max_lag</span> <span class="o">-</span> <span class="n">tau</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span>
                 <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">,</span>
                 <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
@@ -3737,7 +3717,7 @@
     <span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
     <span class="n">node_label_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
     <span class="n">link_label_fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-    <span class="n">network_lower_bound</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+    <span class="c1"># network_lower_bound=0.2,</span>
     <span class="n">standard_color_links</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span>
     <span class="n">standard_color_nodes</span><span class="o">=</span><span class="s1">&#39;lightgrey&#39;</span><span class="p">,</span>
 <span class="p">):</span>
@@ -3810,8 +3790,6 @@
 <span class="sd">        Fontsize of node labels.</span>
 <span class="sd">    link_label_fontsize : int, optional (default: 6)</span>
 <span class="sd">        Fontsize of link labels.</span>
-<span class="sd">    network_lower_bound : float, optional (default: 0.2)</span>
-<span class="sd">        Fraction of vertical space below graph plot.</span>
 <span class="sd">    lag_array : array, optional (default: None)</span>
 <span class="sd">        Optional specification of lags overwriting np.arange(0, tau_max+1)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -3993,7 +3971,7 @@
         <span class="n">label_fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">,</span>
         <span class="n">link_label_fontsize</span><span class="o">=</span><span class="n">link_label_fontsize</span><span class="p">,</span>
         <span class="n">link_colorbar_label</span><span class="o">=</span><span class="n">link_colorbar_label</span><span class="p">,</span>
-        <span class="n">network_lower_bound</span><span class="o">=</span><span class="n">network_lower_bound</span><span class="p">,</span>
+        <span class="c1"># network_lower_bound=network_lower_bound,</span>
         <span class="c1"># label_fraction=label_fraction,</span>
         <span class="c1"># inner_edge_style=inner_edge_style</span>
     <span class="p">)</span>
@@ -4129,7 +4107,7 @@
     <span class="n">node_label_size</span> <span class="o">=</span> <span class="mi">10</span>
     <span class="n">label_space_left</span> <span class="o">=</span> <span class="mf">0.1</span>
     <span class="n">label_space_top</span> <span class="o">=</span> <span class="mf">0.0</span>
-    <span class="n">network_lower_bound</span> <span class="o">=</span> <span class="mf">0.2</span>
+    <span class="c1"># network_lower_bound = 0.2</span>
     <span class="n">inner_edge_style</span> <span class="o">=</span> <span class="s2">&quot;dashed&quot;</span>
 
     <span class="n">node_color</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">N</span> <span class="o">*</span> <span class="n">max_lag</span><span class="p">)</span>  <span class="c1"># , dtype = &#39;object&#39;)</span>
@@ -4251,7 +4229,7 @@
         <span class="n">label_fraction</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
         <span class="n">link_colorbar_label</span><span class="o">=</span><span class="n">link_colorbar_label</span><span class="p">,</span>
         <span class="n">inner_edge_curved</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">network_lower_bound</span><span class="o">=</span><span class="n">network_lower_bound</span><span class="p">,</span>
+        <span class="c1"># network_lower_bound=network_lower_bound,</span>
         <span class="n">inner_edge_style</span><span class="o">=</span><span class="n">inner_edge_style</span><span class="p">,</span>
     <span class="p">)</span>
 
@@ -4369,7 +4347,7 @@
         <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">tau</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">graph</span><span class="o">!=</span><span class="s1">&#39;&#39;</span><span class="p">)):</span>
             <span class="c1"># Only consider contemporaneous links once</span>
             <span class="k">if</span> <span class="n">tau</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">j</span><span class="p">:</span>
-                <span class="n">row</span> <span class="o">=</span> <span class="p">[</span><span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tau</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">graph</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="n">tau</span><span class="p">]]</span>
+                <span class="n">row</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="nb">str</span><span class="p">(</span><span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tau</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">graph</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="n">tau</span><span class="p">]]</span>
                 <span class="k">if</span> <span class="n">val_matrix_exists</span><span class="p">:</span>
                     <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">val_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="n">tau</span><span class="p">]</span><span class="si">:</span><span class="s2">.</span><span class="si">{</span><span class="n">digits</span><span class="si">}}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">link_attribute</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -4486,63 +4464,59 @@
     <span class="n">nolinks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
     <span class="c1"># nolinks[range(4), range(4), 1] = 1</span>
 
-    <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
     <span class="n">label_space_left</span> <span class="o">=</span> <span class="mf">0.2</span>
     <span class="n">label_space_top</span> <span class="o">=</span> <span class="mf">0.</span>
-    <span class="n">network_lower_bound</span> <span class="o">=</span> <span class="mf">0.</span>
+    <span class="c1"># network_lower_bound = 0.</span>
     <span class="n">show_colorbar</span><span class="o">=</span><span class="kc">True</span>
-    <span class="n">plot_graph</span><span class="p">(</span><span class="n">graph</span><span class="o">=</span><span class="n">graph</span><span class="p">,</span>
-        <span class="c1"># fig_ax = (fig, axes),</span>
-        <span class="n">val_matrix</span><span class="o">=</span><span class="n">val_matrix</span><span class="p">,</span>
-        <span class="c1"># figsize=(5, 5),</span>
-        <span class="n">var_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Var </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">graph</span><span class="p">))],</span>
-        <span class="c1"># arrow_linewidth=6,</span>
-        <span class="c1"># label_space_left = label_space_left,</span>
-        <span class="c1"># label_space_top = label_space_top,</span>
-        <span class="c1"># # network_lower_bound=network_lower_bound,</span>
-        <span class="c1"># save_name=&quot;tsg_test.pdf&quot;</span>
-        <span class="p">)</span>
-
-    <span class="c1"># axes[0,0].scatter(np.random.randn(100), np.random.randn(100))</span>
-
     <span class="c1"># plot_graph(graph=graph,</span>
-    <span class="c1">#     fig_ax = (fig, axes[0,0]),</span>
+    <span class="c1">#     # fig_ax = (fig, axes),</span>
     <span class="c1">#     val_matrix=val_matrix,</span>
     <span class="c1">#     # figsize=(5, 5),</span>
-    <span class="c1">#     var_names = [&#39;Variable %s&#39; %i for i in range(len(graph))],</span>
-    <span class="c1">#     arrow_linewidth=6,</span>
-    <span class="c1">#     label_space_left = label_space_left,</span>
-    <span class="c1">#     label_space_top = label_space_top,</span>
-    <span class="c1">#     network_lower_bound=network_lower_bound,</span>
+    <span class="c1">#     var_names = [&#39;Var %s&#39; %i for i in range(len(graph))],</span>
+    <span class="c1">#     # arrow_linewidth=6,</span>
+    <span class="c1">#     # label_space_left = label_space_left,</span>
+    <span class="c1">#     # label_space_top = label_space_top,</span>
+    <span class="c1">#     # # network_lower_bound=network_lower_bound,</span>
     <span class="c1">#     # save_name=&quot;tsg_test.pdf&quot;</span>
     <span class="c1">#     )</span>
-    <span class="c1"># plot_graph(graph=graph,</span>
-    <span class="c1">#     fig_ax = (fig, axes[0,1]),</span>
-    <span class="c1">#     val_matrix=val_matrix,</span>
-    <span class="c1">#     var_names = [&#39;Var %s&#39; %i for i in range(len(graph))],</span>
-    <span class="c1">#     arrow_linewidth=6,</span>
-    <span class="c1">#     label_space_left = label_space_left,</span>
-    <span class="c1">#     label_space_top = label_space_top,</span>
-    <span class="c1">#     network_lower_bound=network_lower_bound,</span>
-    <span class="c1">#     )</span>
-    <span class="c1"># plot_graph(graph=graph,</span>
-    <span class="c1">#     fig_ax = (fig, axes[1,0]),</span>
-    <span class="c1">#     val_matrix=val_matrix,</span>
-    <span class="c1">#     var_names = [&#39;Var %s&#39; %i for i in range(len(graph))],</span>
-    <span class="c1">#     arrow_linewidth=6,</span>
-    <span class="c1">#     label_space_left = label_space_left,</span>
-    <span class="c1">#     label_space_top = label_space_top,</span>
-    <span class="c1">#     network_lower_bound=network_lower_bound,</span>
-    <span class="c1">#     )</span>
-    <span class="c1"># plot_graph(graph=graph,</span>
-    <span class="c1">#     fig_ax = (fig, axes[1,1]),</span>
-    <span class="c1">#     val_matrix=val_matrix,</span>
-    <span class="c1">#     var_names = [&#39;Var %s&#39; %i for i in range(len(graph))],</span>
-    <span class="c1">#     arrow_linewidth=6,</span>
-    <span class="c1">#     label_space_left = label_space_left,</span>
-    <span class="c1">#     label_space_top = label_space_top,</span>
-    <span class="c1">#     network_lower_bound=network_lower_bound,</span>
-    <span class="c1">#     )</span>
+
+    <span class="c1"># axes[0,0].scatter(np.random.rand(100), np.random.rand(100))</span>
+
+    <span class="n">plot_graph</span><span class="p">(</span><span class="n">graph</span><span class="o">=</span><span class="n">graph</span><span class="p">,</span>
+        <span class="n">fig_ax</span> <span class="o">=</span> <span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]),</span>
+        <span class="n">val_matrix</span><span class="o">=</span><span class="n">val_matrix</span><span class="p">,</span>
+        <span class="c1"># figsize=(5, 5),</span>
+        <span class="n">var_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Variable </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">graph</span><span class="p">))],</span>
+        <span class="n">arrow_linewidth</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+        <span class="c1"># label_space_left = label_space_left,</span>
+        <span class="c1"># label_space_top = label_space_top,</span>
+        <span class="c1"># save_name=&quot;tsg_test.pdf&quot;</span>
+        <span class="p">)</span>
+    <span class="n">plot_graph</span><span class="p">(</span><span class="n">graph</span><span class="o">=</span><span class="n">graph</span><span class="p">,</span>
+        <span class="n">fig_ax</span> <span class="o">=</span> <span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]),</span>
+        <span class="n">val_matrix</span><span class="o">=</span><span class="n">val_matrix</span><span class="p">,</span>
+        <span class="n">var_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Var </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">graph</span><span class="p">))],</span>
+        <span class="n">arrow_linewidth</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+        <span class="c1"># label_space_left = label_space_left,</span>
+        <span class="c1"># label_space_top = label_space_top,</span>
+        <span class="p">)</span>
+    <span class="n">plot_graph</span><span class="p">(</span><span class="n">graph</span><span class="o">=</span><span class="n">graph</span><span class="p">,</span>
+        <span class="n">fig_ax</span> <span class="o">=</span> <span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]),</span>
+        <span class="n">val_matrix</span><span class="o">=</span><span class="n">val_matrix</span><span class="p">,</span>
+        <span class="n">var_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Var </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">graph</span><span class="p">))],</span>
+        <span class="n">arrow_linewidth</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+        <span class="c1"># label_space_left = label_space_left,</span>
+        <span class="c1"># label_space_top = label_space_top,</span>
+        <span class="p">)</span>
+    <span class="n">plot_graph</span><span class="p">(</span><span class="n">graph</span><span class="o">=</span><span class="n">graph</span><span class="p">,</span>
+        <span class="n">fig_ax</span> <span class="o">=</span> <span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]),</span>
+        <span class="n">val_matrix</span><span class="o">=</span><span class="n">val_matrix</span><span class="p">,</span>
+        <span class="n">var_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Var </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">graph</span><span class="p">))],</span>
+        <span class="n">arrow_linewidth</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+        <span class="c1"># label_space_left = label_space_left,</span>
+        <span class="c1"># label_space_top = label_space_top,</span>
+        <span class="p">)</span>
     <span class="c1"># pyplot.subplots_adjust(wspace=0.3, hspace=0.2)</span>
     <span class="n">pyplot</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
     <span class="n">pyplot</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;test.pdf&quot;</span><span class="p">)</span>
@@ -4560,10 +4534,10 @@
     <span class="c1"># val_matrix[:,:,0] = 0.</span>
     <span class="c1"># write_csv(graph=graph,</span>
     <span class="c1">#     val_matrix=val_matrix,</span>
-    <span class="c1">#     var_names=[&#39;s %d&#39; %i for i in range(graph.shape[0])],</span>
+    <span class="c1">#     var_names=[r&#39;$X^{%d}$&#39; %i for i in range(graph.shape[0])],</span>
     <span class="c1">#     link_width=np.ones(graph.shape),</span>
     <span class="c1">#     link_attribute = np.ones(graph.shape, dtype=&#39;&lt;U10&#39;),</span>
-    <span class="c1">#     save_name=&#39;test.cv&#39;)</span>
+    <span class="c1">#     save_name=&#39;test.csv&#39;)</span>
 
     <span class="c1"># # print(graph)</span>
     <span class="c1"># X = [(0,-1)]</span>
