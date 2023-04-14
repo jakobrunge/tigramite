@@ -3614,7 +3614,7 @@ def plot_mediation_time_series_graph(
         trans = transforms.blended_transform_factory(ax.transAxes, ax.transData)
         # trans = transforms.blended_transform_factory(fig.transFigure, ax.transData)
         ax.text(
-            label_space_left,
+            0.,
             pos[order[i] * max_lag][1],
             "%s" % str(var_names[order[i]]),
             fontsize=label_fontsize,
@@ -4073,8 +4073,8 @@ def plot_tsg(links, X, Y, Z=None, anc_x=None, anc_y=None, anc_xy=None):
     label_fontsize = 10
     alpha = 1.0
     node_label_size = 10
-    label_space_left = 0.1
-    label_space_top = 0.0
+    # label_space_left = 0.1
+    # label_space_top = 0.0
     # network_lower_bound = 0.2
     inner_edge_style = "dashed"
 
@@ -4204,7 +4204,7 @@ def plot_tsg(links, X, Y, Z=None, anc_x=None, anc_y=None, anc_xy=None):
     for i in range(N):
         trans = transforms.blended_transform_factory(ax.transAxes, ax.transData)
         ax.text(
-            label_space_left,
+            0.,
             pos[order[i] * max_lag][1],
             "%s" % str(var_names[order[i]]),
             fontsize=label_fontsize,
@@ -4218,7 +4218,7 @@ def plot_tsg(links, X, Y, Z=None, anc_x=None, anc_y=None, anc_xy=None):
         if tau == max_lag - 1:
             ax.text(
                 pos[tau][0],
-                1.0 - label_space_top,
+                1.0, #- label_space_top,
                 r"$t$",
                 fontsize=int(label_fontsize * 0.7),
                 horizontalalignment="center",
@@ -4228,7 +4228,7 @@ def plot_tsg(links, X, Y, Z=None, anc_x=None, anc_y=None, anc_xy=None):
         else:
             ax.text(
                 pos[tau][0],
-                1.0 - label_space_top,
+                1.0, # - label_space_top,
                 r"$t-%s$" % str(max_lag - tau - 1),
                 fontsize=int(label_fontsize * 0.7),
                 horizontalalignment="center",
