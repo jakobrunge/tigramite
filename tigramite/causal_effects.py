@@ -2364,6 +2364,35 @@ class CausalEffects():
 
         return confidence_interval
 
+    @staticmethod
+    def get_dict_from_graph(graph, parents_only=False):
+        """Helper function to convert graph to dictionary of links.
+
+        Parameters
+        ---------
+        graph : array of shape (N, N, tau_max+1)
+            Matrix format of graph in string format.
+
+        parents_only : bool
+            Whether to only return parents ('-->' in graph)
+
+        Returns
+        -------
+        links : dict
+            Dictionary of form {0:{(0, -1): o-o, ...}, 1:{...}, ...}.
+        """
+        N = graph.shape[0]
+
+        links = dict([(j, {}) for j in range(N)])
+
+        if parents_only:
+            for (i, j, tau) in zip(*np.where(graph=='-->')):
+                links[j][(i, -tau)] = graph[i,j,tau]
+        else:
+            for (i, j, tau) in zip(*np.where(graph!='')):
+                links[j][(i, -tau)] = graph[i,j,tau]
+
+        return links
 
     @staticmethod
     def get_graph_from_dict(links, tau_max=None):

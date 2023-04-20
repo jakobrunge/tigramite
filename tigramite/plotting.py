@@ -2102,13 +2102,34 @@ def _draw_network_with_curved_edges(
                 )
                 ax.add_collection(circle_marker_end)
 
+
+
         if d["label"] is not None and outer_edge:
+            def closest_node(node, nodes):
+                nodes = np.asarray(nodes)
+                node = node.reshape(1, 2)
+                dist_2 = np.sum((nodes - node)**2, axis=1)
+                return np.argmin(dist_2)
+
             # Attach labels of lags
             trans = None  # patch.get_transform()
             path = e_p.get_path()
             verts = path.to_polygons(trans)[0]
+            # print(verts)
+            # print(verts.shape)
+            # for num, vert in enumerate(verts):
+            #     ax.text(vert[0], vert[1], str(num))
+            # ax.scatter(verts[:,0], verts[:,1])
+            mid_point = np.array([(start[1] + end[1])/2., (start[0] + end[0])/2.])
+            # print(mid_point)
+            # ax.scatter(mid_point[0], mid_point[1], marker='x')
+            closest_node = closest_node(mid_point, verts)
+            # print(closest_node, verts[closest_node])
+            # ax.scatter(verts[closest_node][0], verts[closest_node][1], marker='x')
+
             if len(verts) > 2:
-                label_vert = verts[1, :]
+                label_vert = verts[closest_node][0], verts[closest_node][1]
+                # label_vert = verts[1, :]
                 l = d["label"]
                 string = str(l)
                 txt = ax.text(
@@ -4413,81 +4434,89 @@ if __name__ == "__main__":
 
     # Complete test case
     graph = np.zeros((3,3,2), dtype='<U3')
-    val_matrix = np.random.rand(*graph.shape)
+    val_matrix = 0.*np.random.rand(*graph.shape)
     val_matrix[:,:,0] = 0.2
     graph[:] = ""
-    graph[0, 1, 0] = "<-+"
-    graph[1, 0, 0] = "+->"
+    # graph[0, 1, 0] = "<-+"
+    # graph[1, 0, 0] = "+->"
     graph[0, 0, 1] = "-->"
     graph[1, 1, 1] = "-->"
 
     graph[0, 1, 1] = "+->"
-    graph[1, 0, 1] = "o-o"
+    # graph[1, 0, 1] = "o-o"
 
-    graph[1, 2, 0] = "<->"
-    graph[2, 1, 0] = "<->"
+    # graph[1, 2, 0] = "<->"
+    # graph[2, 1, 0] = "<->"
 
-    graph[0, 2, 0] = "x-x"
-    graph[2, 0, 0] = "x-x"
+    # graph[0, 2, 0] = "x-x"
+    # graph[2, 0, 0] = "x-x"
     nolinks = np.zeros(graph.shape)
     # nolinks[range(4), range(4), 1] = 1
 
-    fig, axes = pyplot.subplots(nrows=2, ncols=2, figsize=(6, 5))
+    graph = graph[:2, :2, :]
+
+    fig, axes = pyplot.subplots(nrows=1, ncols=1, figsize=(6, 5))
     label_space_left = 0.2
     label_space_top = 0.
+
+    ymax = 1.
+    node_pos = {'x':np.linspace(0, ymax, graph.shape[0]), 'y':np.linspace(0, ymax, graph.shape[0]),}
+
     # network_lower_bound = 0.
     show_colorbar=True
-    # plot_graph(graph=graph,
-    #     # fig_ax = (fig, axes),
-    #     val_matrix=val_matrix,
-    #     # figsize=(5, 5),
-    #     var_names = ['Var %s' %i for i in range(len(graph))],
-    #     # arrow_linewidth=6,
-    #     # label_space_left = label_space_left,
-    #     # label_space_top = label_space_top,
-    #     # # network_lower_bound=network_lower_bound,
-    #     # save_name="tsg_test.pdf"
-    #     )
-
-    # axes[0,0].scatter(np.random.rand(100), np.random.rand(100))
-
     plot_graph(graph=graph,
-        fig_ax = (fig, axes[0,0]),
+        fig_ax = (fig, axes),
+        node_pos = node_pos,
         val_matrix=val_matrix,
         # figsize=(5, 5),
-        var_names = ['Variable %s' %i for i in range(len(graph))],
-        arrow_linewidth=6,
+        # var_names = ['Var %s' %i for i in range(len(graph))],
+        # arrow_linewidth=6,
         # label_space_left = label_space_left,
         # label_space_top = label_space_top,
-        # save_name="tsg_test.pdf"
+        # # network_lower_bound=network_lower_bound,
+        save_name="tsg_test.pdf"
         )
-    plot_graph(graph=graph,
-        fig_ax = (fig, axes[0,1]),
-        val_matrix=val_matrix,
-        var_names = ['Var %s' %i for i in range(len(graph))],
-        arrow_linewidth=6,
-        # label_space_left = label_space_left,
-        # label_space_top = label_space_top,
-        )
-    plot_graph(graph=graph,
-        fig_ax = (fig, axes[1,0]),
-        val_matrix=val_matrix,
-        var_names = ['Var %s' %i for i in range(len(graph))],
-        arrow_linewidth=6,
-        # label_space_left = label_space_left,
-        # label_space_top = label_space_top,
-        )
-    plot_graph(graph=graph,
-        fig_ax = (fig, axes[1,1]),
-        val_matrix=val_matrix,
-        var_names = ['Var %s' %i for i in range(len(graph))],
-        arrow_linewidth=6,
-        # label_space_left = label_space_left,
-        # label_space_top = label_space_top,
-        )
-    # pyplot.subplots_adjust(wspace=0.3, hspace=0.2)
     pyplot.tight_layout()
-    pyplot.savefig("test.pdf")
+    # axes[0,0].scatter(np.random.rand(100), np.random.rand(100))
+
+    # plot_graph(graph=graph,
+    #     fig_ax = (fig, axes[0,0]),
+    #     val_matrix=val_matrix,
+    #     # figsize=(5, 5),
+    #     var_names = ['Variable %s' %i for i in range(len(graph))],
+    #     arrow_linewidth=6,
+    #     # label_space_left = label_space_left,
+    #     # label_space_top = label_space_top,
+    #     # save_name="tsg_test.pdf"
+    #     )
+    # plot_graph(graph=graph,
+    #     fig_ax = (fig, axes[0,1]),
+    #     val_matrix=val_matrix,
+    #     var_names = ['Var %s' %i for i in range(len(graph))],
+    #     arrow_linewidth=6,
+    #     # label_space_left = label_space_left,
+    #     # label_space_top = label_space_top,
+    #     )
+    # plot_graph(graph=graph,
+    #     fig_ax = (fig, axes[1,0]),
+    #     val_matrix=val_matrix,
+    #     var_names = ['Var %s' %i for i in range(len(graph))],
+    #     arrow_linewidth=6,
+    #     # label_space_left = label_space_left,
+    #     # label_space_top = label_space_top,
+    #     )
+    # plot_graph(graph=graph,
+    #     fig_ax = (fig, axes[1,1]),
+    #     val_matrix=val_matrix,
+    #     var_names = ['Var %s' %i for i in range(len(graph))],
+    #     arrow_linewidth=6,
+    #     n
+    #     # label_space_left = label_space_left,
+    #     # label_space_top = label_space_top,
+    #     )
+    # # pyplot.subplots_adjust(wspace=0.3, hspace=0.2)
+    # pyplot.tight_layout()
+    # pyplot.savefig("test.pdf")
 
     # def lin_f(x): return x
 
