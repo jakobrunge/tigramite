@@ -997,9 +997,6 @@ class PCMCIbase():
 
         links = dict([(j, {}) for j in range(N)])
 
-        # if np.any(dag=='o-o') or np.any(dag=='x-x'):
-        #     raise ValueError("graph must be DAG.")
-
         for (i, j, tau) in zip(*np.where(graph!='')):
             links[j][(i, -tau)] = graph[i,j,tau]
 
