@@ -1516,7 +1516,8 @@ def _draw_network_with_curved_edges(
     show_colorbar=True,
     special_nodes=None,
     autodep_sig_lags=None,
-    show_autodependency_lags=False
+    show_autodependency_lags=False,
+    transform='data',
 ):
     """Function to draw a network from networkx graph instance.
     Various attributes are used to specify the graph's properties.
@@ -1683,6 +1684,7 @@ def _draw_network_with_curved_edges(
                 shrinkB=0,
                 zorder=-1,
                 capstyle="butt",
+                transform=transform,
             )
             ax.add_artist(e_p)
 
@@ -1704,6 +1706,7 @@ def _draw_network_with_curved_edges(
               shrinkB=0,
               zorder=-1,
               capstyle="butt",
+              transform=transform,
             )  
             ax.add_artist(e_p_back)
 
@@ -1748,8 +1751,9 @@ def _draw_network_with_curved_edges(
                 patchB=n2,
                 shrinkA=0,
                 shrinkB=0,
-                zorder=-1,
+                # zorder=-1,
                 capstyle="butt",
+                transform=transform,
             )
             ax.add_artist(e_p)
 
@@ -1758,24 +1762,28 @@ def _draw_network_with_curved_edges(
                 coor2,
                 arrowstyle='-',
                 connectionstyle=f"arc3,rad={rad}",
-                mutation_scale=1*width,
-                lw=0., #width / 2.,
-                aa=True,
-                alpha=0.,
-                linestyle=linestyle,
-                color=facecolor,
-                clip_on=False,
+                # mutation_scale=1*width,
+                # lw=0., #width / 2.,
+                # aa=True,
+                # alpha=0.,
+                # linestyle=linestyle,
+                # color=facecolor,
+                # clip_on=False,
                 patchA=n1,
                 patchB=n2,
                 shrinkA=0,
                 shrinkB=0,
-                zorder=-10,
-                capstyle="butt",
+                # zorder=-10,
+                # capstyle="butt",
+                transform=transform,
         )
         ax.add_artist(e_p_marker)
 
-        path = e_p_marker.get_path()
-        vertices = path.vertices.copy()
+        # marker_path = e_p_marker.get_path()
+        vertices = e_p_marker.get_path().vertices.copy()
+        # vertices = e_p_marker.get_verts()
+        # vertices = e_p_marker.get_path().to_polygons(transform=None)[0]
+        # print(vertices.shape)
         m, n = vertices.shape
 
         # print(vertices)
@@ -1784,7 +1792,7 @@ def _draw_network_with_curved_edges(
 
         # This must be added to avoid rescaling of the plot, when no 'o'
         # or 'x' is added to the graph.
-        ax.scatter(*start, zorder=-10, alpha=0)
+        ax.scatter(*start, zorder=-10, alpha=0, transform=transform,)
 
         if outer_edge:
             if d.get("outer_edge_type") in ["o->", "o--"]:
@@ -1795,6 +1803,7 @@ def _draw_network_with_curved_edges(
                     facecolor="w",
                     edgecolor=facecolor,
                     zorder=1,
+                    transform=transform,
                 )
                 ax.add_collection(circle_marker_start)
             elif d.get("outer_edge_type") == "<-o":
@@ -1805,6 +1814,7 @@ def _draw_network_with_curved_edges(
                     facecolor="w",
                     edgecolor=facecolor,
                     zorder=1,
+                    transform=transform,
                 )
                 ax.add_collection(circle_marker_end)
             elif d.get("outer_edge_type") == "--o":
@@ -1815,6 +1825,7 @@ def _draw_network_with_curved_edges(
                     facecolor="w",
                     edgecolor=facecolor,
                     zorder=1,
+                    transform=transform,
                 )
                 ax.add_collection(circle_marker_end)
             elif d.get("outer_edge_type") in ["x--", "x->"]:
@@ -1825,6 +1836,7 @@ def _draw_network_with_curved_edges(
                     facecolor="w",
                     edgecolor=facecolor,
                     zorder=1,
+                    transform=transform,
                 )
                 ax.add_collection(circle_marker_start)
             elif d.get("outer_edge_type") in ["+--", "+->"]:
@@ -1835,6 +1847,7 @@ def _draw_network_with_curved_edges(
                     facecolor="w",
                     edgecolor=facecolor,
                     zorder=1,
+                    transform=transform,
                 )
                 ax.add_collection(circle_marker_start)
             elif d.get("outer_edge_type") == "<-x":
@@ -1845,6 +1858,7 @@ def _draw_network_with_curved_edges(
                     facecolor="w",
                     edgecolor=facecolor,
                     zorder=1,
+                    transform=transform,
                 )
                 ax.add_collection(circle_marker_end)
             elif d.get("outer_edge_type") == "<-+":
@@ -1855,6 +1869,7 @@ def _draw_network_with_curved_edges(
                     facecolor="w",
                     edgecolor=facecolor,
                     zorder=1,
+                    transform=transform,
                 )
                 ax.add_collection(circle_marker_end)
             elif d.get("outer_edge_type") == "--x":
@@ -1865,6 +1880,7 @@ def _draw_network_with_curved_edges(
                     facecolor="w",
                     edgecolor=facecolor,
                     zorder=1,
+                    transform=transform,
                 )
                 ax.add_collection(circle_marker_end)
             elif d.get("outer_edge_type") == "o-o":
@@ -1875,6 +1891,7 @@ def _draw_network_with_curved_edges(
                     facecolor="w",
                     edgecolor=facecolor,
                     zorder=1,
+                    transform=transform,
                 )
                 ax.add_collection(circle_marker_start)
                 circle_marker_end = ax.scatter(
@@ -1884,6 +1901,7 @@ def _draw_network_with_curved_edges(
                     facecolor="w",
                     edgecolor=facecolor,
                     zorder=1,
+                    transform=transform,
                 )
                 ax.add_collection(circle_marker_end)
             elif d.get("outer_edge_type") == "x-x":
@@ -1894,6 +1912,7 @@ def _draw_network_with_curved_edges(
                     facecolor="w",
                     edgecolor=facecolor,
                     zorder=1,
+                    transform=transform,
                 )
                 ax.add_collection(circle_marker_start)
                 circle_marker_end = ax.scatter(
@@ -1903,6 +1922,7 @@ def _draw_network_with_curved_edges(
                     facecolor="w",
                     edgecolor=facecolor,
                     zorder=1,
+                    transform=transform,
                 )
                 ax.add_collection(circle_marker_end)
             elif d.get("outer_edge_type") == "o-x":
@@ -1913,6 +1933,7 @@ def _draw_network_with_curved_edges(
                     facecolor="w",
                     edgecolor=facecolor,
                     zorder=1,
+                    transform=transform,
                 )
                 ax.add_collection(circle_marker_start)
                 circle_marker_end = ax.scatter(
@@ -1922,6 +1943,7 @@ def _draw_network_with_curved_edges(
                     facecolor="w",
                     edgecolor=facecolor,
                     zorder=1,
+                    transform=transform,
                 )
                 ax.add_collection(circle_marker_end)
             elif d.get("outer_edge_type") == "x-o":
@@ -1932,6 +1954,7 @@ def _draw_network_with_curved_edges(
                     facecolor="w",
                     edgecolor=facecolor,
                     zorder=1,
+                    transform=transform,
                 )
                 ax.add_collection(circle_marker_start)
                 circle_marker_end = ax.scatter(
@@ -1941,6 +1964,7 @@ def _draw_network_with_curved_edges(
                     facecolor="w",
                     edgecolor=facecolor,
                     zorder=1,
+                    transform=transform,
                 )
                 ax.add_collection(circle_marker_end)
 
@@ -1953,6 +1977,7 @@ def _draw_network_with_curved_edges(
                     facecolor="w",
                     edgecolor=facecolor,
                     zorder=1,
+                    transform=transform,
                 )
                 ax.add_collection(circle_marker_start)
             elif d.get("inner_edge_type") == "<-o":
@@ -1963,6 +1988,7 @@ def _draw_network_with_curved_edges(
                     facecolor="w",
                     edgecolor=facecolor,
                     zorder=1,
+                    transform=transform,
                 )
                 ax.add_collection(circle_marker_end)
             elif d.get("inner_edge_type") == "--o":
@@ -1973,6 +1999,7 @@ def _draw_network_with_curved_edges(
                     facecolor="w",
                     edgecolor=facecolor,
                     zorder=1,
+                    transform=transform,
                 )
                 ax.add_collection(circle_marker_end)
             elif d.get("inner_edge_type") in ["x--", "x->"]:
@@ -1983,6 +2010,7 @@ def _draw_network_with_curved_edges(
                     facecolor="w",
                     edgecolor=facecolor,
                     zorder=1,
+                    transform=transform,
                 )
                 ax.add_collection(circle_marker_start)
             elif d.get("inner_edge_type") in ["+--", "+->"]:
@@ -1993,6 +2021,7 @@ def _draw_network_with_curved_edges(
                     facecolor="w",
                     edgecolor=facecolor,
                     zorder=1,
+                    transform=transform,
                 )
                 ax.add_collection(circle_marker_start)
             elif d.get("inner_edge_type") == "<-x":
@@ -2003,6 +2032,7 @@ def _draw_network_with_curved_edges(
                     facecolor="w",
                     edgecolor=facecolor,
                     zorder=1,
+                    transform=transform,
                 )
                 ax.add_collection(circle_marker_end)
             elif d.get("inner_edge_type") == "<-+":
@@ -2013,6 +2043,7 @@ def _draw_network_with_curved_edges(
                     facecolor="w",
                     edgecolor=facecolor,
                     zorder=1,
+                    transform=transform,
                 )
                 ax.add_collection(circle_marker_end)
             elif d.get("inner_edge_type") == "--x":
@@ -2023,6 +2054,7 @@ def _draw_network_with_curved_edges(
                     facecolor="w",
                     edgecolor=facecolor,
                     zorder=1,
+                    transform=transform,
                 )
                 ax.add_collection(circle_marker_end)
             elif d.get("inner_edge_type") == "o-o":
@@ -2033,6 +2065,7 @@ def _draw_network_with_curved_edges(
                     facecolor="w",
                     edgecolor=facecolor,
                     zorder=1,
+                    transform=transform,
                 )
                 ax.add_collection(circle_marker_start)
                 circle_marker_end = ax.scatter(
@@ -2042,6 +2075,7 @@ def _draw_network_with_curved_edges(
                     facecolor="w",
                     edgecolor=facecolor,
                     zorder=1,
+                    transform=transform,
                 )
                 ax.add_collection(circle_marker_end)
             elif d.get("inner_edge_type") == "x-x":
@@ -2052,6 +2086,7 @@ def _draw_network_with_curved_edges(
                     facecolor="w",
                     edgecolor=facecolor,
                     zorder=1,
+                    transform=transform,
                 )
                 ax.add_collection(circle_marker_start)
                 circle_marker_end = ax.scatter(
@@ -2061,6 +2096,7 @@ def _draw_network_with_curved_edges(
                     facecolor="w",
                     edgecolor=facecolor,
                     zorder=1,
+                    transform=transform,
                 )
                 ax.add_collection(circle_marker_end)
             elif d.get("inner_edge_type") == "o-x":
@@ -2071,6 +2107,7 @@ def _draw_network_with_curved_edges(
                     facecolor="w",
                     edgecolor=facecolor,
                     zorder=1,
+                    transform=transform,
                 )
                 ax.add_collection(circle_marker_start)
                 circle_marker_end = ax.scatter(
@@ -2080,6 +2117,7 @@ def _draw_network_with_curved_edges(
                     facecolor="w",
                     edgecolor=facecolor,
                     zorder=1,
+                    transform=transform,
                 )
                 ax.add_collection(circle_marker_end)
             elif d.get("inner_edge_type") == "x-o":
@@ -2090,6 +2128,7 @@ def _draw_network_with_curved_edges(
                     facecolor="w",
                     edgecolor=facecolor,
                     zorder=1,
+                    transform=transform,
                 )
                 ax.add_collection(circle_marker_start)
                 circle_marker_end = ax.scatter(
@@ -2099,6 +2138,7 @@ def _draw_network_with_curved_edges(
                     facecolor="w",
                     edgecolor=facecolor,
                     zorder=1,
+                    transform=transform,
                 )
                 ax.add_collection(circle_marker_end)
 
@@ -2112,24 +2152,28 @@ def _draw_network_with_curved_edges(
                 return np.argmin(dist_2)
 
             # Attach labels of lags
-            trans = None  # patch.get_transform()
-            path = e_p.get_path()
-            verts = path.to_polygons(trans)[0]
+            # trans = None  # patch.get_transform()
+            # path = e_p.get_path()
+            vertices = e_p_marker.get_path().vertices.copy()
+            verts = e_p.get_path().to_polygons(transform=None)[0]
             # print(verts)
             # print(verts.shape)
+            # print(vertices.shape)
             # for num, vert in enumerate(verts):
-            #     ax.text(vert[0], vert[1], str(num))
+            #     ax.text(vert[0], vert[1], str(num), 
+            #         transform=transform,)
             # ax.scatter(verts[:,0], verts[:,1])
-            mid_point = np.array([(start[1] + end[1])/2., (start[0] + end[0])/2.])
-            # print(mid_point)
-            # ax.scatter(mid_point[0], mid_point[1], marker='x')
-            closest_node = closest_node(mid_point, verts)
+            # mid_point = np.array([(start[0] + end[0])/2., (start[1] + end[1])/2.])
+            # print(start, end, mid_point)
+            # ax.scatter(mid_point[0], mid_point[1], marker='x', 
+            #     s=100, zorder=10, transform=transform,)
+            closest_node = closest_node(vertices[int(len(vertices)/2.),:], verts)
             # print(closest_node, verts[closest_node])
             # ax.scatter(verts[closest_node][0], verts[closest_node][1], marker='x')
 
-            if len(verts) > 2:
-                label_vert = verts[closest_node][0], verts[closest_node][1]
-                # label_vert = verts[1, :]
+            if len(vertices) > 2:
+                # label_vert = vertices[int(len(vertices)/2.),:] #verts[1, :]
+                label_vert = verts[closest_node] #verts[1, :]
                 l = d["label"]
                 string = str(l)
                 txt = ax.text(
@@ -2141,6 +2185,7 @@ def _draw_network_with_curved_edges(
                     horizontalalignment="center",
                     color="w",
                     zorder=1,
+                    transform=transform,
                 )
                 txt.set_path_effects(
                     [PathEffects.withStroke(linewidth=2, foreground="k")]
@@ -2350,6 +2395,7 @@ def _draw_network_with_curved_edges(
                 facecolor=color_here,
                 edgecolor=color_here,
                 zorder=-ring - 1 + 2,
+                transform=transform,
             )
 
             # else:
@@ -2386,7 +2432,8 @@ def _draw_network_with_curved_edges(
                     horizontalalignment="center",
                     verticalalignment="center",
                     alpha=1.0,
-                    zorder=5.
+                    zorder=5.,
+                    transform=transform,
                 )
                 if show_autodependency_lags:
                     ax.text(
@@ -2397,7 +2444,8 @@ def _draw_network_with_curved_edges(
                         horizontalalignment="center",
                         verticalalignment="center",
                         color="black",
-                        zorder=5.
+                        zorder=5.,
+                        transform=transform,
                     )
 
     # Draw edges
@@ -2765,6 +2813,10 @@ def plot_graph(
         for i in range(N):
             pos[i] = (node_pos["x"][i], node_pos["y"][i])
 
+    if node_pos is not None and 'transform' in node_pos: 
+        transform = node_pos['transform']
+    else: transform = ax.transData
+
     if cmap_nodes is None:
         node_color = None
 
@@ -2817,7 +2869,8 @@ def plot_graph(
         # label_fraction=label_fraction,
         special_nodes=special_nodes,
         autodep_sig_lags=autodep_sig_lags,
-        show_autodependency_lags=show_autodependency_lags
+        show_autodependency_lags=show_autodependency_lags,
+        transform=transform
     )
 
     if save_name is not None:
@@ -3917,6 +3970,10 @@ def plot_mediation_graph(
         for i in range(N):
             pos[i] = (node_pos["x"][i], node_pos["y"][i])
 
+    if node_pos is not None and 'transform' in node_pos: 
+        transform = node_pos['transform']
+    else: transform = ax.transData
+
     node_rings = {
         0: {
             "sizes": None,
@@ -3963,6 +4020,7 @@ def plot_mediation_graph(
         # network_lower_bound=network_lower_bound,
         # label_fraction=label_fraction,
         # inner_edge_style=inner_edge_style
+        transform=transform
     )
 
     # fig.subplots_adjust(left=0.1, right=.9, bottom=.25, top=.95)
@@ -4453,21 +4511,38 @@ if __name__ == "__main__":
     nolinks = np.zeros(graph.shape)
     # nolinks[range(4), range(4), 1] = 1
 
-    graph = graph[:2, :2, :]
+    # graph = graph[:2, :2, :]
 
-    fig, axes = pyplot.subplots(nrows=1, ncols=1, figsize=(6, 5))
-    label_space_left = 0.2
-    label_space_top = 0.
+    # fig, axes = pyplot.subplots(nrows=1, ncols=1, figsize=(6, 5))
 
-    ymax = 1.
-    node_pos = {'x':np.linspace(0, ymax, graph.shape[0]), 'y':np.linspace(0, ymax, graph.shape[0]),}
+
+    import cartopy.crs as ccrs
+    graph = np.ones((5, 5, 2), dtype='<U3')
+    graph[:] = ""
+    graph[3, :, 1] = '+->' 
+
+    # fig = pyplot.figure(figsize=(8, 6))
+    fig = pyplot.figure(figsize=(10, 5))
+    ax = fig.add_subplot(1, 1, 1) #, projection=ccrs.Mollweide())
+    # make the map global rather than have it zoom in to
+    # the extents of any plotted data
+    # ax.set_global()
+    # ax.stock_img()
+    # ax.coastlines()
+    # ymax = 1.
+    # node_pos = {'x':np.linspace(0, ymax, graph.shape[0]), 'y':np.linspace(0, ymax, graph.shape[0]),}
+    node_pos = {'x':np.array([10,-20,80,-50,80]),
+                'y':np.array([-10,70,60,-40,50]), 
+            # 'transform':ccrs.PlateCarree()
+            }
 
     # network_lower_bound = 0.
     show_colorbar=True
     plot_graph(graph=graph,
-        fig_ax = (fig, axes),
+        fig_ax = (fig, ax),
         node_pos = node_pos,
-        val_matrix=val_matrix,
+        node_size = 20,
+        # val_matrix=val_matrix,
         # figsize=(5, 5),
         # var_names = ['Var %s' %i for i in range(len(graph))],
         # arrow_linewidth=6,
