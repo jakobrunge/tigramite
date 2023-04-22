@@ -4523,17 +4523,17 @@ if __name__ == "__main__":
 
     # fig = pyplot.figure(figsize=(8, 6))
     fig = pyplot.figure(figsize=(10, 5))
-    ax = fig.add_subplot(1, 1, 1) #, projection=ccrs.Mollweide())
+    ax = fig.add_subplot(1, 1, 1, projection=ccrs.Mollweide())
     # make the map global rather than have it zoom in to
     # the extents of any plotted data
-    # ax.set_global()
-    # ax.stock_img()
-    # ax.coastlines()
+    ax.set_global()
+    ax.stock_img()
+    ax.coastlines()
     # ymax = 1.
     # node_pos = {'x':np.linspace(0, ymax, graph.shape[0]), 'y':np.linspace(0, ymax, graph.shape[0]),}
     node_pos = {'x':np.array([10,-20,80,-50,80]),
                 'y':np.array([-10,70,60,-40,50]), 
-            # 'transform':ccrs.PlateCarree()
+            'transform':ccrs.PlateCarree(), # t.PlateCarree()
             }
 
     # network_lower_bound = 0.
