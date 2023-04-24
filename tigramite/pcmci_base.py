@@ -12,8 +12,6 @@ from copy import deepcopy
 import numpy as np
 import scipy.stats
 import math
-from joblib import Parallel, delayed
-import multiprocessing
 
 class PCMCIbase():
     r"""PCMCI base class.
