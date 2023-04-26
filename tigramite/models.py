@@ -428,13 +428,11 @@ class Models():
                 # Cache the data if needed
                 fit_results[j]['data'] = array
                 fit_results[j]['used_indices'] = self.dataframe.use_indices_dataset_dict
-            # Fit the model if there are any parents for this variable to fit
+            # Copy and fit the model if there are any parents for this variable to fit
+            a_model = deepcopy(self.model)
             if dim_z > 0:
-                # Copy and fit the model
-                a_model = deepcopy(self.model)
                 a_model.fit(X=array[2:].T, y=array[1])
-
-                fit_results[j]['model'] = a_model
+            fit_results[j]['model'] = a_model
 
         # Cache and return the fit results
         self.fit_results = fit_results
