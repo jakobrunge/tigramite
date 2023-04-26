@@ -79,6 +79,7 @@ class Models():
                 conditions=None,
                 tau_max=None,
                 cut_off='max_lag_or_tau_max',
+                empty_predictors_function=np.mean,
                 return_data=False):
         """Fit time series model.
 
@@ -101,6 +102,8 @@ class Models():
             sample. Other options are '2xtau_max', which guarantees that MCI
             tests are all conducted on the same samples. Last, 'max_lag' uses
             as much samples as possible.
+        empty_predictors_function : function
+            Function to apply to y if no predictors are given.
         return_data : bool, optional (default: False)
             Whether to save the data array.
 
@@ -188,6 +191,15 @@ class Models():
             # Target is only first entry of Y, ie [y]
             target_array = array[np.where(xyz==1)[0][0], :]
 
+            if predictor_array.size == 0:
+                # Just fit default (eg, mean)
+                class EmptyPredictorModel:
+                    def fit(self, X, y):
+                        self.result = empty_predictors_function(y)
+                    def predict(self, X):
+                        return self.result
+                a_model = EmptyPredictorModel()
+            
             a_model.fit(X=predictor_array, y=target_array)
             
             # Cache the results
@@ -346,6 +358,7 @@ class Models():
                 selected_variables=None,
                 tau_max=None,
                 cut_off='max_lag_or_tau_max',
+                empty_predictors_function=np.mean,
                 return_data=False):
         """Fit time series model.
 
@@ -370,6 +383,8 @@ class Models():
             sample. Other options are '2xtau_max', which guarantees that MCI
             tests are all conducted on the same samples. Last, 'max_lag' uses
             as much samples as possible.
+        empty_predictors_function : function
+            Function to apply to y if no predictors are given.
         return_data : bool, optional (default: False)
             Whether to save the data array.
 
@@ -432,6 +447,17 @@ class Models():
             a_model = deepcopy(self.model)
             if dim_z > 0:
                 a_model.fit(X=array[2:].T, y=array[1])
+            else:
+                # Just fit default (eg, mean)
+                class EmptyPredictorModel:
+                    def fit(self, X, y):
+                        self.result = empty_predictors_function(y)
+                    def predict(self, X):
+                        return self.result
+                a_model = EmptyPredictorModel()
+                # a_model = empty_predictors_model(array[1])
+                a_model.fit(X=array[2:].T, y=array[1])
+
             fit_results[j]['model'] = a_model
 
         # Cache and return the fit results
@@ -1676,6 +1702,11 @@ class Prediction(Models, PCMCI):
         self : instance of self
         """
 
+        if selected_targets is None:
+            self.selected_targets = range(self.N)
+        else:
+            self.selected_targets = selected_targets
+
         if tau_max is None:
             # Find the maximal parents lag
             max_parents_lag = 0
@@ -1693,11 +1724,6 @@ class Prediction(Models, PCMCI):
                 "such that there is a gap of max_lag to train_indices!")
 
         self.target_predictors = target_predictors
-
-        if selected_targets is None:
-            self.selected_targets = range(self.N)
-        else:
-            self.selected_targets = selected_targets
 
         for target in self.selected_targets:
             if target not in list(self.target_predictors):
@@ -1835,8 +1861,10 @@ if __name__ == '__main__':
     import tigramite
     import tigramite.data_processing as pp
     from tigramite.toymodels import structural_causal_processes as toys
-    from tigramite.independence_tests import ParCorr
+    from tigramite.independence_tests.parcorr import ParCorr
     import tigramite.plotting as tp
+
+    from sklearn.linear_model import LinearRegression
 
     def lin_f(x): return x
  
@@ -1845,40 +1873,46 @@ if __name__ == '__main__':
     links = {0: [((0, -1), 0.9, lin_f)],
              1: [((1, -1), 0.9, lin_f), ((0, 0), -0.8, lin_f)],
              2: [((2, -1), 0.9, lin_f), ((0, 0), 0.9, lin_f),  ((1, 0), 0.8, lin_f)],
-             3: [((3, -1), 0.9, lin_f), ((1, 0), 0.8, lin_f),  ((2, 0), -0.9, lin_f)]
+             # 3: [((3, -1), 0.9, lin_f), ((1, 0), 0.8, lin_f),  ((2, 0), -0.9, lin_f)]
              }
     # noises = [np.random.randn for j in links.keys()]
     data, nonstat = toys.structural_causal_process(links, T=T, noises=None, seed=7)
 
     missing_flag = 999
-    for i in range(0, 20):
-        data[i::100] = missing_flag
+    # for i in range(0, 20):
+    #     data[i::100] = missing_flag
 
     parents = toys._get_true_parent_neighbor_dict(links)
     dataframe = pp.DataFrame(data, missing_flag = missing_flag)
 
-    med = LinearMediation(dataframe=dataframe, 
-        data_transform=None)
-    med.fit_model(all_parents=parents, tau_max=10)
-    med.fit_model_bootstrap( 
-                boot_blocklength='cube_root',
-                seed = 42,
-                )
 
-    # print(med.get_val_matrix())
+    # model = LinearRegression()
+    # model.fit(X=np.random.randn(10,2), y=np.random.randn(10))
+    # model.predict(X=np.random.randn(10,2)[:,2:])
+    # sys.exit(0)
 
-    print (med.get_ce(i=0, tau=0,  j=3))
-    print(med.get_bootstrap_of(function='get_ce', 
-        function_args={'i':0, 'tau':0,   'j':3}, conf_lev=0.9))
+    # med = LinearMediation(dataframe=dataframe, 
+    #     data_transform=None)
+    # med.fit_model(all_parents=parents, tau_max=10)
+    # med.fit_model_bootstrap( 
+    #             boot_blocklength='cube_root',
+    #             seed = 42,
+    #             )
 
-    print (med.get_coeff(i=0, tau=-2, j=1))
+    # # print(med.get_val_matrix())
 
-    print (med.get_ce_max(i=0, j=2))
-    print (med.get_ce(i=0, tau=0, j=3))
-    print (med.get_mce(i=0, tau=0, k=[2], j=3))
-    print (med.get_mce(i=0, tau=0, k=[1,2], j=3) - med.get_mce(i=0, tau=0, k=[1], j=3))
-    print (med.get_conditional_mce(i=0, tau=0, k=[2], notk=[1], j=3))
-    print (med.get_bootstrap_of('get_conditional_mce', {'i':0, 'tau':0, 'k':[2], 'notk':[1], 'j':3}))
+    # print (med.get_ce(i=0, tau=0,  j=3))
+    # print(med.get_bootstrap_of(function='get_ce', 
+    #     function_args={'i':0, 'tau':0,   'j':3}, conf_lev=0.9))
+
+    # print (med.get_coeff(i=0, tau=-2, j=1))
+
+    # print (med.get_ce_max(i=0, j=2))
+    # print (med.get_ce(i=0, tau=0, j=3))
+    # print (med.get_mce(i=0, tau=0, k=[2], j=3))
+    # print (med.get_mce(i=0, tau=0, k=[1,2], j=3) - med.get_mce(i=0, tau=0, k=[1], j=3))
+    # print (med.get_conditional_mce(i=0, tau=0, k=[2], notk=[1], j=3))
+    # print (med.get_bootstrap_of('get_conditional_mce', {'i':0, 'tau':0, 'k':[2], 'notk':[1], 'j':3}))
 
     # print(med.get_joint_ce(i=0, j=2))
     # print(med.get_joint_mce(i=0, j=2, k=1))
@@ -1916,16 +1950,16 @@ if __name__ == '__main__':
     #     print(causal_coeff)
 
 
-    # pred = Prediction(dataframe=dataframe,
-    #         cond_ind_test=ParCorr(),   #CMIknn ParCorr
-    #         prediction_model = sklearn.linear_model.LinearRegression(),
-    # #         prediction_model = sklearn.gaussian_process.GaussianProcessRegressor(),
-    #         # prediction_model = sklearn.neighbors.KNeighborsRegressor(),
-    #     data_transform=sklearn.preprocessing.StandardScaler(),
-    #     train_indices= list(range(int(0.8*T))),
-    #     test_indices= list(range(int(0.8*T), T)),
-    #     verbosity=0
-    #     )
+    pred = Prediction(dataframe=dataframe,
+            cond_ind_test=ParCorr(),   #CMIknn ParCorr
+            prediction_model = sklearn.linear_model.LinearRegression(),
+    #         prediction_model = sklearn.gaussian_process.GaussianProcessRegressor(),
+            # prediction_model = sklearn.neighbors.KNeighborsRegressor(),
+        data_transform=sklearn.preprocessing.StandardScaler(),
+        train_indices= list(range(int(0.8*T))),
+        test_indices= list(range(int(0.8*T), T)),
+        verbosity=0
+        )
 
     # # predictors = pred.get_predictors(
     # #                        selected_targets=[2],
@@ -1935,16 +1969,16 @@ if __name__ == '__main__':
     # #                        pc_alpha=0.2,
     # #                        max_conds_dim=None,
     # #                        max_combinations=1)
-    # predictors = {0: [(0, -1)],
-    #              1: [(1, -1), (0, -1)],
-    #              2: [(2, -1), (1, 0)]}
-    # pred.fit(target_predictors=predictors,
-    #         selected_targets=None, tau_max=None, return_data=False)
+    predictors = {0: [], # [(0, -1)],
+                 1: [(1, -1), (0, -1)],
+                 2: [(2, -1), (1, 0)]}
+    pred.fit(target_predictors=predictors,
+            selected_targets=None, tau_max=None, return_data=False)
 
-    # res = pred.predict(target=2,
-    #             new_data=None,
-    #             pred_params=None,
-    #             cut_off='max_lag_or_tau_max')
+    res = pred.predict(target=0,
+                new_data=None,
+                pred_params=None,
+                cut_off='max_lag_or_tau_max')
 
     # print(data[:,2])
     # print(res)
