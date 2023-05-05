@@ -8,8 +8,8 @@ from __future__ import print_function
 import warnings
 import numpy as np
 from scipy.stats.contingency import crosstab
-from joblib import Parallel, delayed
-import multiprocessing
+# from joblib import Parallel, delayed
+# import dask
 from numba import jit
 
 from .independence_tests_base import CondIndTest
@@ -188,11 +188,16 @@ class CMIsymb(CondIndTest):
                 neighbor_indices = np.where((z_array == z_comb[i]).all(axis=1))[0]
                 neighbors[i, :len(neighbor_indices)] = neighbor_indices
 
-            num_cores = multiprocessing.cpu_count()
             random_seeds = self.random_state.integers(np.iinfo(np.int32).max, size=self.sig_samples)
-            null_dist = Parallel(n_jobs=num_cores)(
-                delayed(self.parallelize_shuffles)(array, xyz, z_indices, x_indices, T, z_comb, neighbors, seed=seed) for seed in random_seeds)
-            null_dist = np.asarray(null_dist)
+            # null_dist = Parallel(n_jobs=-1)(
+            #     delayed(self.parallelize_shuffles)(array, xyz, z_indices, x_indices, T, z_comb, neighbors, seed=seed) for seed in random_seeds)
+            # dask_jobs = [dask.delayed(self.parallelize_shuffles)(array, xyz, z_indices, x_indices, T, z_comb, neighbors, seed=seed) for seed in random_seeds]
+            # null_dist = dask.compute(dask_jobs)
+            # null_dist = np.asarray(null_dist)
+
+            null_dist = np.zeros(self.sig_samples)
+            for i, seed in enumerate(random_seeds):
+                null_dist[i] = self.parallelize_shuffles(array, xyz, z_indices, x_indices, T, z_comb, neighbors, seed=seed)
 
         else:
             null_dist = \
@@ -251,13 +256,15 @@ if __name__ == '__main__':
     from tigramite.data_processing import DataFrame
     import tigramite.data_processing as pp
     import numpy as np
+    # from dask.distributed import Client
 
+    # client = dask.distributed.Client(processes=True)
     seed = 42
     random_state = np.random.default_rng(seed=seed)
-    cmi = CMIsymb(sig_samples=100, seed=seed)
+    cmi = CMIsymb(sig_samples=200, seed=seed)
 
     T = 1000
-    dimz = 10
+    dimz = 5
     z = random_state.binomial(n=1, p=0.5, size=(T, dimz)).reshape(T, dimz)
     x = np.empty(T).reshape(T, 1)
     y = np.empty(T).reshape(T, 1)
@@ -268,5 +275,10 @@ if __name__ == '__main__':
         y[t] = random_state.choice([0,1, 2], p=[prob, (1.-prob)/2., (1.-prob)/2.])
 
     print('start')
-    print(cmi.run_test_raw(x, y, z=None))
+    # print(client.dashboard_link)
+    # print(cmi.run_test_raw(x, y, z=None))
     print(cmi.run_test_raw(x, y, z=z))
+
+    # client.close()
+
+

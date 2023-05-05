@@ -11,6 +11,7 @@ from .independence_tests_base import CondIndTest
 from numba import jit
 import warnings
 
+
 class CMIknn(CondIndTest):
     r"""Conditional mutual information test based on nearest-neighbor estimator.
 
@@ -476,9 +477,9 @@ if __name__ == '__main__':
     # Continuous data
     z = random_state.standard_normal((T, dimz))
     x = (0.8*z[:,0] + random_state.standard_normal(T)).reshape(T, 1)
-    y = (0.8*z[:,0] + random_state.standard_normal).reshape(T, 1)
+    y = (0.8*z[:,0] + random_state.standard_normal(T)).reshape(T, 1)
 
-    print('X _|_ Y')
-    print(cmi.run_test_raw(x, y, z=None))
+    # print('X _|_ Y')
+    # print(cmi.run_test_raw(x, y, z=None))
     print('X _|_ Y | Z')
     print(cmi.run_test_raw(x, y, z=z))
