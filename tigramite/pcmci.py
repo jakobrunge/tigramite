@@ -3725,7 +3725,7 @@ class PCMCI(PCMCIbase):
 
 
 if __name__ == '__main__':
-    from tigramite.independence_tests import ParCorr, CMIknn, ParCorrMult
+    from tigramite.independence_tests.parcorr import ParCorr
     import tigramite.data_processing as pp
     from tigramite.toymodels import structural_causal_processes as toys
     import tigramite.plotting as tp
@@ -3738,10 +3738,10 @@ if __name__ == '__main__':
     def lin_f(x): return x
     def nonlin_f(x): return (x + 5. * x ** 2 * np.exp(-x ** 2 / 20.))
 
-    T = 2000
-    data = random_state.standar_normal((T, 4))
+    T = 20000
+    data = random_state.standard_normal((T, 4))
     # Simple sun
-    data[:,3] = np.sin(np.arange(T)*20/np.pi) + 0.1*random_state.standar_normal((T))
+    data[:,3] = np.sin(np.arange(T)*20/np.pi) + 0.1*random_state.standard_normal((T))
     c = 0.8
     for t in range(1, T):
         data[t, 0] += 0.4*data[t-1, 0] + 0.4*data[t-1, 1] + c*data[t-1,3]
@@ -3780,7 +3780,8 @@ if __name__ == '__main__':
         cond_ind_test=parcorr,
         verbosity=2)
     results = pcmci_parcorr.run_pcmciplus(tau_max=tau_max, pc_alpha=0.01, 
-                                      link_assumptions=link_assumptions) #, alpha_level = 0.01)
+                                      # link_assumptions=link_assumptions
+                                      ) #, alpha_level = 0.01)
     print(results['graph'].shape)
     print(results['graph'][:,3,:])
     # Plot time series graph

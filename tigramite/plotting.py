@@ -1525,6 +1525,9 @@ def _draw_network_with_curved_edges(
     customized.
     """
 
+    if transform == 'data':
+        transform = ax.transData
+
     from matplotlib.patches import FancyArrowPatch, Circle, Ellipse
 
     ax.spines["left"].set_color("none")
@@ -2543,7 +2546,9 @@ def plot_graph(
     node_pos : dictionary, optional (default: None)
         Dictionary of node positions in axis coordinates of form
         node_pos = {'x':array of shape (N,), 'y':array of shape(N)}. These
-        coordinates could have been transformed before for basemap plots.
+        coordinates could have been transformed before for basemap plots. You can
+        also add a key 'transform':ccrs.PlateCarree() in order to plot graphs on 
+        a map using cartopy.
     arrow_linewidth : float, optional (default: 30)
         Linewidth.
     vmin_edges : float, optional (default: -1)
@@ -3797,7 +3802,9 @@ def plot_mediation_graph(
     node_pos : dictionary, optional (default: None)
         Dictionary of node positions in axis coordinates of form
         node_pos = {'x':array of shape (N,), 'y':array of shape(N)}. These
-        coordinates could have been transformed before for basemap plots.
+        coordinates could have been transformed before for basemap plots. You can
+        also add a key 'transform':ccrs.PlateCarree() in order to plot graphs on 
+        a map using cartopy.
     arrow_linewidth : float, optional (default: 30)
         Linewidth.
     vmin_edges : float, optional (default: -1)
@@ -4516,32 +4523,28 @@ if __name__ == "__main__":
     # fig, axes = pyplot.subplots(nrows=1, ncols=1, figsize=(6, 5))
 
 
-    import cartopy.crs as ccrs
+    # import cartopy.crs as ccrs
     graph = np.ones((5, 5, 2), dtype='<U3')
     graph[:] = ""
     graph[3, :, 1] = '+->' 
 
     # fig = pyplot.figure(figsize=(8, 6))
-    fig = pyplot.figure(figsize=(10, 5))
-    ax = fig.add_subplot(1, 1, 1, projection=ccrs.Mollweide())
+    # fig = pyplot.figure(figsize=(10, 5))
+    # ax = fig.add_subplot(1, 1, 1, projection=ccrs.Mollweide())
     # make the map global rather than have it zoom in to
     # the extents of any plotted data
-    ax.set_global()
-    ax.stock_img()
-    ax.coastlines()
-    # ymax = 1.
+    # ax.set_global()
+    # ax.stock_img()
+    # ax.coastlines()
+    # # ymax = 1.
     # node_pos = {'x':np.linspace(0, ymax, graph.shape[0]), 'y':np.linspace(0, ymax, graph.shape[0]),}
-    node_pos = {'x':np.array([10,-20,80,-50,80]),
-                'y':np.array([-10,70,60,-40,50]), 
-            'transform':ccrs.PlateCarree(), # t.PlateCarree()
-            }
+    # node_pos = {'x':np.array([10,-20,80,-50,80]),
+    #             'y':np.array([-10,70,60,-40,50]), 
+    #         'transform':ccrs.PlateCarree(), # t.PlateCarree()
+    #         }
 
-    # network_lower_bound = 0.
-    show_colorbar=True
-    plot_graph(graph=graph,
-        fig_ax = (fig, ax),
-        node_pos = node_pos,
-        node_size = 20,
+    plot_time_series_graph(graph=graph,
+        # fig_ax = (fig, ax),
         # val_matrix=val_matrix,
         # figsize=(5, 5),
         # var_names = ['Var %s' %i for i in range(len(graph))],
@@ -4552,6 +4555,23 @@ if __name__ == "__main__":
         save_name="tsg_test.pdf"
         )
     pyplot.tight_layout()
+
+    # network_lower_bound = 0.
+    # show_colorbar=True
+    # plot_graph(graph=graph,
+    #     fig_ax = (fig, ax),
+    #     node_pos = node_pos,
+    #     node_size = 20,
+    #     # val_matrix=val_matrix,
+    #     # figsize=(5, 5),
+    #     # var_names = ['Var %s' %i for i in range(len(graph))],
+    #     # arrow_linewidth=6,
+    #     # label_space_left = label_space_left,
+    #     # label_space_top = label_space_top,
+    #     # # network_lower_bound=network_lower_bound,
+    #     save_name="tsg_test.pdf"
+    #     )
+    # pyplot.tight_layout()
     # axes[0,0].scatter(np.random.rand(100), np.random.rand(100))
 
     # plot_graph(graph=graph,

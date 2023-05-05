@@ -1719,7 +1719,8 @@ class Prediction(Models, PCMCI):
 
         if len(set(np.array(self.test_indices) - max_parents_lag)
                 .intersection(self.train_indices)) > 0:
-            warnings.warn("test_indices - maxlag(predictors) [or tau_max] "
+            if self.verbosity > 0:
+                warnings.warn("test_indices - maxlag(predictors) [or tau_max] "
                 "overlaps with train_indices: Choose test_indices "
                 "such that there is a gap of max_lag to train_indices!")
 
