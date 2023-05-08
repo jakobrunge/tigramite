@@ -616,7 +616,7 @@ class LinearMediation(Models):
                         verbosity=verbosity)
 
     def fit_model(self, all_parents, tau_max=None):
-        """Fit linear time series model.
+        r"""Fit linear time series model.
 
         Fits a sklearn.linear_model.LinearRegression model to the parents of
         each variable and computes the coefficient matrices :math:`\Phi` and

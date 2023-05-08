@@ -544,12 +544,12 @@ class GPDC(CondIndTest):
 
 
     def _get_dcorr(self, array_resid):
-        """Return distance correlation coefficient.
+        r"""Return distance correlation coefficient.
 
         The variables are transformed to uniform marginals using the empirical
         cumulative distribution function beforehand. Here the null distribution
         is not analytically available, but can be precomputed with the function
-        generate_and_save_nulldists(...) which saves a \*.npz file containing
+        generate_and_save_nulldists(...) which saves a *.npz file containing
         the null distribution for different sample sizes. This file can then be
         supplied as null_dist_filename.
 
