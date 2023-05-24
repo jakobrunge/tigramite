@@ -409,7 +409,7 @@ class Models():
                 max_parents_lag = max(max_parents_lag, this_parent_lag)
         # Set the default tau_max and check if it should be overwritten
         self.tau_max = max_parents_lag
-        if self.tau_max is not None:
+        if tau_max is not None:
             self.tau_max = tau_max
             if self.tau_max < max_parents_lag:
                 raise ValueError("tau_max = %d, but must be at least "
@@ -642,7 +642,7 @@ class LinearMediation(Models):
         self.all_psi_k = self._get_all_psi_k(self.phi)
 
         self.all_parents = all_parents
-        self.tau_max = tau_max
+        # self.tau_max = tau_max
 
     def fit_model_bootstrap(self, 
             boot_blocklength=1,
@@ -689,7 +689,6 @@ class LinearMediation(Models):
 
             dataframe_here.bootstrap = {'boot_blocklength':boot_blocklength,
                                         'random_state':random_state}
-
             model = Models(dataframe=dataframe_here,
                            model=sklearn.linear_model.LinearRegression(**self.model_params),
                            data_transform=self.data_transform,
@@ -698,7 +697,6 @@ class LinearMediation(Models):
 
             model.fit_full_model(all_parents=self.all_parents,
                            tau_max=self.tau_max)
-
             # Cache the results in the member variables
             coeffs = model.get_coefs()
             phi = self._get_phi(coeffs)
@@ -1892,13 +1890,13 @@ if __name__ == '__main__':
     # model.predict(X=np.random.randn(10,2)[:,2:])
     # sys.exit(0)
 
-    # med = LinearMediation(dataframe=dataframe, 
-    #     data_transform=None)
-    # med.fit_model(all_parents=parents, tau_max=10)
-    # med.fit_model_bootstrap( 
-    #             boot_blocklength='cube_root',
-    #             seed = 42,
-    #             )
+    med = LinearMediation(dataframe=dataframe, 
+        data_transform=None)
+    med.fit_model(all_parents=parents, tau_max=None)
+    med.fit_model_bootstrap( 
+                boot_blocklength='cube_root',
+                seed = 42,
+                )
 
     # # print(med.get_val_matrix())
 
@@ -1951,16 +1949,16 @@ if __name__ == '__main__':
     #     print(causal_coeff)
 
 
-    pred = Prediction(dataframe=dataframe,
-            cond_ind_test=ParCorr(),   #CMIknn ParCorr
-            prediction_model = sklearn.linear_model.LinearRegression(),
-    #         prediction_model = sklearn.gaussian_process.GaussianProcessRegressor(),
-            # prediction_model = sklearn.neighbors.KNeighborsRegressor(),
-        data_transform=sklearn.preprocessing.StandardScaler(),
-        train_indices= list(range(int(0.8*T))),
-        test_indices= list(range(int(0.8*T), T)),
-        verbosity=0
-        )
+    # pred = Prediction(dataframe=dataframe,
+    #         cond_ind_test=ParCorr(),   #CMIknn ParCorr
+    #         prediction_model = sklearn.linear_model.LinearRegression(),
+    # #         prediction_model = sklearn.gaussian_process.GaussianProcessRegressor(),
+    #         # prediction_model = sklearn.neighbors.KNeighborsRegressor(),
+    #     data_transform=sklearn.preprocessing.StandardScaler(),
+    #     train_indices= list(range(int(0.8*T))),
+    #     test_indices= list(range(int(0.8*T), T)),
+    #     verbosity=0
+    #     )
 
     # # predictors = pred.get_predictors(
     # #                        selected_targets=[2],
@@ -1970,16 +1968,16 @@ if __name__ == '__main__':
     # #                        pc_alpha=0.2,
     # #                        max_conds_dim=None,
     # #                        max_combinations=1)
-    predictors = {0: [], # [(0, -1)],
-                 1: [(1, -1), (0, -1)],
-                 2: [(2, -1), (1, 0)]}
-    pred.fit(target_predictors=predictors,
-            selected_targets=None, tau_max=None, return_data=False)
+    # predictors = {0: [], # [(0, -1)],
+    #              1: [(1, -1), (0, -1)],
+    #              2: [(2, -1), (1, 0)]}
+    # pred.fit(target_predictors=predictors,
+    #         selected_targets=None, tau_max=None, return_data=False)
 
-    res = pred.predict(target=0,
-                new_data=None,
-                pred_params=None,
-                cut_off='max_lag_or_tau_max')
+    # res = pred.predict(target=0,
+    #             new_data=None,
+    #             pred_params=None,
+    #             cut_off='max_lag_or_tau_max')
 
     # print(data[:,2])
     # print(res)
