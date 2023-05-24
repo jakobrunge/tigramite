@@ -409,7 +409,7 @@ class Models():
                 max_parents_lag = max(max_parents_lag, this_parent_lag)
         # Set the default tau_max and check if it should be overwritten
         self.tau_max = max_parents_lag
-        if tau_max is not None:
+        if self.tau_max is not None:
             self.tau_max = tau_max
             if self.tau_max < max_parents_lag:
                 raise ValueError("tau_max = %d, but must be at least "
