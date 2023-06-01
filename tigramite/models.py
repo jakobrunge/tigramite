@@ -1780,7 +1780,7 @@ class Prediction(Models, PCMCI):
                              "indicating the index of the variables to "
                              "predict.")
 
-        if target_list == range(self.N):
+        if target_list == list(range(self.N)):
             return_type = 'array'
         elif len(target_list) == 1:
             return_type = 'series'
@@ -1788,6 +1788,7 @@ class Prediction(Models, PCMCI):
             return_type = 'list'
 
         pred_list = []
+        self.stored_test_array = {}
         for target in target_list:
             # Print message
             if self.verbosity > 0:
@@ -1802,11 +1803,11 @@ class Prediction(Models, PCMCI):
             if target not in self.selected_targets:
                 raise ValueError("Target %s not yet fitted" % target)
             # Construct the array form of the data
-            Y = [(target, 0)]
+            Y = [(target, 0)]  # dummy
             X = [(target, 0)]  # dummy
             Z = self.target_predictors[target]
+
             # Check if we've passed a new dataframe object
-            test_array = None
             if new_data is not None:
                 # if new_data.mask is None:
                 #     # if no mask is supplied, use the same mask as for the fitted array
@@ -1835,10 +1836,18 @@ class Prediction(Models, PCMCI):
             if a_transform is not None:
                 test_array = a_transform.transform(X=test_array.T).T
             # Cache the test array
-            self.test_array = test_array
+            self.stored_test_array[target] = test_array
             # Run the predictor
-            pred_list.append(self.fitted_model[target]['model'].predict(
-                X=test_array[2:].T, **pred_params))
+            predicted = self.fitted_model[target]['model'].predict(
+                X=test_array[2:].T, **pred_params)
+
+            if test_array[2:].size == 0:
+                # If there are no predictors, return the value of 
+                # empty_predictors_function, which is np.mean 
+                # and expand to the test array length
+                predicted = predicted * np.ones(test_array.shape[1])
+
+            pred_list.append(predicted)
 
         if return_type == 'series':
             return pred_list[0]
@@ -1848,12 +1857,12 @@ class Prediction(Models, PCMCI):
             return np.array(pred_list).transpose()
 
     def get_train_array(self, j):
-        """Returns training array."""
+        """Returns training array for variable j."""
         return self.fitted_model[j]['data']
 
-    def get_test_array(self):
-        """Returns test array."""
-        return self.test_array
+    def get_test_array(self, j):
+        """Returns test array for variable j."""
+        return self.stored_test_array[j]
 
 if __name__ == '__main__':
    

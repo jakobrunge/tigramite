@@ -45,6 +45,7 @@ EXTRAS_REQUIRE = {
         "gpytorch>=1.9.1",    # GPDC gpytorch version
         "dcor>=0.6",          # GPDC distance correlation version
         "joblib>=1.2.0",      # CMIsymb shuffle parallelization
+        "ortools>=9.2",       # RPCMCI
     ]
 }
 
@@ -61,7 +62,7 @@ CMDCLASS = {"build_ext": UseNumpyHeadersBuildExt}
 # Run the setup
 setup(
     name="tigramite",
-    version="5.2.0.6",
+    version="5.2.1.2",
     packages=["tigramite", "tigramite.independence_tests", "tigramite.toymodels"],
     license="GNU General Public License v3.0",
     description="Tigramite causal inference for time series",
