@@ -48,7 +48,7 @@ class DataFrame():
         remove_missing_upto_maxlag=True also flags samples for all lags up to
         2*tau_max (more precisely, this depends on the cut_off argument in
         self.construct_array(), see further below). This avoids biases, see
-        section on masking in Supplement of [1]_.
+        section on masking in Supplement of Runge et al. SciAdv (2019).
     vector_vars : dict
         Dictionary of vector variables of the form,
         Eg. {0: [(0, 0), (1, 0)], 1: [(2, 0)], 2: [(3, 0)], 3: [(4, 0)]}

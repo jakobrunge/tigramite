@@ -1747,7 +1747,7 @@ class PCMCI(PCMCIbase):
                   max_conds_px=None,
                   alpha_level=0.05,
                   fdr_method='none'):
-        r"""Runs PCMCI time-lagged causal discovery for time series.
+        """Runs PCMCI time-lagged causal discovery for time series.
 
         Wrapper around PC-algorithm function and MCI function.
 
@@ -1954,7 +1954,7 @@ class PCMCI(PCMCIbase):
                       max_conds_px_lagged=None,
                       fdr_method='none',
                       ):
-        r"""Runs PCMCIplus time-lagged and contemporaneous causal discovery for
+        """Runs PCMCIplus time-lagged and contemporaneous causal discovery for
         time series.
 
         Method described in [5]_: 
@@ -1974,8 +1974,8 @@ class PCMCI(PCMCIbase):
         four-step procedure:
 
         1.  Condition-selection (same as for PCMCI): For each variable
-        :math:`j`, estimate a *superset* of lagged parents :math:`\\widehat{
-        \\mathcal{B}}_t^-( X^j_t)` with the iterative PC1 algorithm,
+        :math:`j`, estimate a *superset* of lagged parents :math:`\widehat{
+        \mathcal{B}}_t^-( X^j_t)` with the iterative PC1 algorithm,
         implemented as ``run_pc_stable``. The condition-selection step
         reduces the dimensionality and avoids conditioning on irrelevant
         variables.
@@ -2059,49 +2059,6 @@ class PCMCI(PCMCIbase):
         larger runtimes.
 
         Further optional parameters are discussed in [5]_.
-
-        Examples
-        --------
-        >>> import numpy as np
-        >>> from tigramite.pcmci import PCMCI
-        >>> from tigramite.independence_tests import ParCorr
-        >>> import tigramite.data_processing as pp
-        >>> from tigramite.toymodels import structural_causal_processes as toys
-        >>> # Example process to play around with
-        >>> # Each key refers to a variable and the incoming links are supplied
-        >>> # as a list of format [((var, -lag), coeff, function), ...]
-        >>> def lin_f(x): return x
-        >>> links = {0: [((0, -1), 0.9, lin_f)],
-                     1: [((1, -1), 0.8, lin_f), ((0, -1), 0.8, lin_f)],
-                     2: [((2, -1), 0.7, lin_f), ((1, 0), 0.6, lin_f)],
-                     3: [((3, -1), 0.7, lin_f), ((2, 0), -0.5, lin_f)],
-                     }
-        >>> data, nonstat = toys.structural_causal_process(links,
-                            T=1000, seed=7)
-        >>> # Data must be array of shape (time, variables)
-        >>> print (data.shape)
-        (1000, 4)
-        >>> dataframe = pp.DataFrame(data)
-        >>> cond_ind_test = ParCorr()
-        >>> pcmci = PCMCI(dataframe=dataframe, cond_ind_test=cond_ind_test)
-        >>> results = pcmci.run_pcmciplus(tau_min=0, tau_max=2, pc_alpha=0.01)
-        >>> pcmci.print_results(results, alpha_level=0.01)
-            ## Significant links at alpha = 0.01:
-
-            Variable 0 has 1 link(s):
-                (0 -1): pval = 0.00000 | val =  0.676
-
-            Variable 1 has 2 link(s):
-                (1 -1): pval = 0.00000 | val =  0.602
-                (0 -1): pval = 0.00000 | val =  0.599
-
-            Variable 2 has 2 link(s):
-                (1  0): pval = 0.00000 | val =  0.486
-                (2 -1): pval = 0.00000 | val =  0.466
-
-            Variable 3 has 2 link(s):
-                (3 -1): pval = 0.00000 | val =  0.524
-                (2  0): pval = 0.00000 | val = -0.449 
 
         Parameters
         ----------

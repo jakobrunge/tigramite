@@ -1548,13 +1548,17 @@
     <span class="n">show_colorbar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">special_nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">autodep_sig_lags</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">show_autodependency_lags</span><span class="o">=</span><span class="kc">False</span>
+    <span class="n">show_autodependency_lags</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">transform</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to draw a network from networkx graph instance.</span>
 <span class="sd">    Various attributes are used to specify the graph&#39;s properties.</span>
 <span class="sd">    This function is just a beta-template for now that can be further</span>
 <span class="sd">    customized.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">transform</span> <span class="o">==</span> <span class="s1">&#39;data&#39;</span><span class="p">:</span>
+        <span class="n">transform</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">transData</span>
 
     <span class="kn">from</span> <span class="nn">matplotlib.patches</span> <span class="kn">import</span> <span class="n">FancyArrowPatch</span><span class="p">,</span> <span class="n">Circle</span><span class="p">,</span> <span class="n">Ellipse</span>
 
@@ -1715,6 +1719,7 @@
                 <span class="n">shrinkB</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                 <span class="n">zorder</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
                 <span class="n">capstyle</span><span class="o">=</span><span class="s2">&quot;butt&quot;</span><span class="p">,</span>
+                <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">e_p</span><span class="p">)</span>
 
@@ -1736,6 +1741,7 @@
               <span class="n">shrinkB</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
               <span class="n">zorder</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
               <span class="n">capstyle</span><span class="o">=</span><span class="s2">&quot;butt&quot;</span><span class="p">,</span>
+              <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
             <span class="p">)</span>  
             <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">e_p_back</span><span class="p">)</span>
 
@@ -1780,8 +1786,9 @@
                 <span class="n">patchB</span><span class="o">=</span><span class="n">n2</span><span class="p">,</span>
                 <span class="n">shrinkA</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                 <span class="n">shrinkB</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                <span class="n">zorder</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+                <span class="c1"># zorder=-1,</span>
                 <span class="n">capstyle</span><span class="o">=</span><span class="s2">&quot;butt&quot;</span><span class="p">,</span>
+                <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">e_p</span><span class="p">)</span>
 
@@ -1803,11 +1810,15 @@
                 <span class="n">shrinkB</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                 <span class="n">zorder</span><span class="o">=-</span><span class="mi">10</span><span class="p">,</span>
                 <span class="n">capstyle</span><span class="o">=</span><span class="s2">&quot;butt&quot;</span><span class="p">,</span>
+                <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">e_p_marker</span><span class="p">)</span>
 
-        <span class="n">path</span> <span class="o">=</span> <span class="n">e_p_marker</span><span class="o">.</span><span class="n">get_path</span><span class="p">()</span>
-        <span class="n">vertices</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="c1"># marker_path = e_p_marker.get_path()</span>
+        <span class="n">vertices</span> <span class="o">=</span> <span class="n">e_p_marker</span><span class="o">.</span><span class="n">get_path</span><span class="p">()</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="c1"># vertices = e_p_marker.get_verts()</span>
+        <span class="c1"># vertices = e_p_marker.get_path().to_polygons(transform=None)[0]</span>
+        <span class="c1"># print(vertices.shape)</span>
         <span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">vertices</span><span class="o">.</span><span class="n">shape</span>
 
         <span class="c1"># print(vertices)</span>
@@ -1816,7 +1827,7 @@
 
         <span class="c1"># This must be added to avoid rescaling of the plot, when no &#39;o&#39;</span>
         <span class="c1"># or &#39;x&#39; is added to the graph.</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="o">*</span><span class="n">start</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=-</span><span class="mi">10</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="o">*</span><span class="n">start</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=-</span><span class="mi">10</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,)</span>
 
         <span class="k">if</span> <span class="n">outer_edge</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;outer_edge_type&quot;</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;o-&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;o--&quot;</span><span class="p">]:</span>
@@ -1827,6 +1838,7 @@
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">circle_marker_start</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;outer_edge_type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;&lt;-o&quot;</span><span class="p">:</span>
@@ -1837,6 +1849,7 @@
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">circle_marker_end</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;outer_edge_type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;--o&quot;</span><span class="p">:</span>
@@ -1847,6 +1860,7 @@
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">circle_marker_end</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;outer_edge_type&quot;</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;x--&quot;</span><span class="p">,</span> <span class="s2">&quot;x-&gt;&quot;</span><span class="p">]:</span>
@@ -1857,6 +1871,7 @@
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">circle_marker_start</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;outer_edge_type&quot;</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;+--&quot;</span><span class="p">,</span> <span class="s2">&quot;+-&gt;&quot;</span><span class="p">]:</span>
@@ -1867,6 +1882,7 @@
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">circle_marker_start</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;outer_edge_type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;&lt;-x&quot;</span><span class="p">:</span>
@@ -1877,6 +1893,7 @@
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">circle_marker_end</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;outer_edge_type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;&lt;-+&quot;</span><span class="p">:</span>
@@ -1887,6 +1904,7 @@
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">circle_marker_end</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;outer_edge_type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;--x&quot;</span><span class="p">:</span>
@@ -1897,6 +1915,7 @@
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">circle_marker_end</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;outer_edge_type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;o-o&quot;</span><span class="p">:</span>
@@ -1907,6 +1926,7 @@
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">circle_marker_start</span><span class="p">)</span>
                 <span class="n">circle_marker_end</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
@@ -1916,6 +1936,7 @@
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">circle_marker_end</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;outer_edge_type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;x-x&quot;</span><span class="p">:</span>
@@ -1926,6 +1947,7 @@
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">circle_marker_start</span><span class="p">)</span>
                 <span class="n">circle_marker_end</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
@@ -1935,6 +1957,7 @@
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">circle_marker_end</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;outer_edge_type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;o-x&quot;</span><span class="p">:</span>
@@ -1945,6 +1968,7 @@
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">circle_marker_start</span><span class="p">)</span>
                 <span class="n">circle_marker_end</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
@@ -1954,6 +1978,7 @@
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">circle_marker_end</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;outer_edge_type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;x-o&quot;</span><span class="p">:</span>
@@ -1964,6 +1989,7 @@
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">circle_marker_start</span><span class="p">)</span>
                 <span class="n">circle_marker_end</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
@@ -1973,6 +1999,7 @@
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">circle_marker_end</span><span class="p">)</span>
 
@@ -1985,6 +2012,7 @@
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">circle_marker_start</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;inner_edge_type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;&lt;-o&quot;</span><span class="p">:</span>
@@ -1995,6 +2023,7 @@
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">circle_marker_end</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;inner_edge_type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;--o&quot;</span><span class="p">:</span>
@@ -2005,6 +2034,7 @@
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">circle_marker_end</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;inner_edge_type&quot;</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;x--&quot;</span><span class="p">,</span> <span class="s2">&quot;x-&gt;&quot;</span><span class="p">]:</span>
@@ -2015,6 +2045,7 @@
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">circle_marker_start</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;inner_edge_type&quot;</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;+--&quot;</span><span class="p">,</span> <span class="s2">&quot;+-&gt;&quot;</span><span class="p">]:</span>
@@ -2025,6 +2056,7 @@
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">circle_marker_start</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;inner_edge_type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;&lt;-x&quot;</span><span class="p">:</span>
@@ -2035,6 +2067,7 @@
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">circle_marker_end</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;inner_edge_type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;&lt;-+&quot;</span><span class="p">:</span>
@@ -2045,6 +2078,7 @@
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">circle_marker_end</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;inner_edge_type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;--x&quot;</span><span class="p">:</span>
@@ -2055,6 +2089,7 @@
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">circle_marker_end</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;inner_edge_type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;o-o&quot;</span><span class="p">:</span>
@@ -2065,6 +2100,7 @@
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">circle_marker_start</span><span class="p">)</span>
                 <span class="n">circle_marker_end</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
@@ -2074,6 +2110,7 @@
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">circle_marker_end</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;inner_edge_type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;x-x&quot;</span><span class="p">:</span>
@@ -2084,6 +2121,7 @@
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">circle_marker_start</span><span class="p">)</span>
                 <span class="n">circle_marker_end</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
@@ -2093,6 +2131,7 @@
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">circle_marker_end</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;inner_edge_type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;o-x&quot;</span><span class="p">:</span>
@@ -2103,6 +2142,7 @@
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">circle_marker_start</span><span class="p">)</span>
                 <span class="n">circle_marker_end</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
@@ -2112,6 +2152,7 @@
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">circle_marker_end</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;inner_edge_type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;x-o&quot;</span><span class="p">:</span>
@@ -2122,6 +2163,7 @@
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">circle_marker_start</span><span class="p">)</span>
                 <span class="n">circle_marker_end</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
@@ -2131,16 +2173,42 @@
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">circle_marker_end</span><span class="p">)</span>
 
+
+
         <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">outer_edge</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">closest_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">nodes</span><span class="p">):</span>
+                <span class="n">nodes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+                <span class="n">node</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+                <span class="n">dist_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">nodes</span> <span class="o">-</span> <span class="n">node</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">dist_2</span><span class="p">)</span>
+
             <span class="c1"># Attach labels of lags</span>
-            <span class="n">trans</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># patch.get_transform()</span>
-            <span class="n">path</span> <span class="o">=</span> <span class="n">e_p</span><span class="o">.</span><span class="n">get_path</span><span class="p">()</span>
-            <span class="n">verts</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">to_polygons</span><span class="p">(</span><span class="n">trans</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">verts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
-                <span class="n">label_vert</span> <span class="o">=</span> <span class="n">verts</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="c1"># trans = None  # patch.get_transform()</span>
+            <span class="c1"># path = e_p.get_path()</span>
+            <span class="n">vertices</span> <span class="o">=</span> <span class="n">e_p_marker</span><span class="o">.</span><span class="n">get_path</span><span class="p">()</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">verts</span> <span class="o">=</span> <span class="n">e_p</span><span class="o">.</span><span class="n">get_path</span><span class="p">()</span><span class="o">.</span><span class="n">to_polygons</span><span class="p">(</span><span class="n">transform</span><span class="o">=</span><span class="kc">None</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="c1"># print(verts)</span>
+            <span class="c1"># print(verts.shape)</span>
+            <span class="c1"># print(vertices.shape)</span>
+            <span class="c1"># for num, vert in enumerate(verts):</span>
+            <span class="c1">#     ax.text(vert[0], vert[1], str(num), </span>
+            <span class="c1">#         transform=transform,)</span>
+            <span class="c1"># ax.scatter(verts[:,0], verts[:,1])</span>
+            <span class="c1"># mid_point = np.array([(start[0] + end[0])/2., (start[1] + end[1])/2.])</span>
+            <span class="c1"># print(start, end, mid_point)</span>
+            <span class="c1"># ax.scatter(mid_point[0], mid_point[1], marker=&#39;x&#39;, </span>
+            <span class="c1">#     s=100, zorder=10, transform=transform,)</span>
+            <span class="n">closest_node</span> <span class="o">=</span> <span class="n">closest_node</span><span class="p">(</span><span class="n">vertices</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">vertices</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span><span class="p">),:],</span> <span class="n">verts</span><span class="p">)</span>
+            <span class="c1"># print(closest_node, verts[closest_node])</span>
+            <span class="c1"># ax.scatter(verts[closest_node][0], verts[closest_node][1], marker=&#39;x&#39;)</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">vertices</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="c1"># label_vert = vertices[int(len(vertices)/2.),:] #verts[1, :]</span>
+                <span class="n">label_vert</span> <span class="o">=</span> <span class="n">verts</span><span class="p">[</span><span class="n">closest_node</span><span class="p">]</span> <span class="c1">#verts[1, :]</span>
                 <span class="n">l</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span>
                 <span class="n">string</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
                 <span class="n">txt</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
@@ -2152,6 +2220,7 @@
                     <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
                     <span class="n">color</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
                     <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">txt</span><span class="o">.</span><span class="n">set_path_effects</span><span class="p">(</span>
                     <span class="p">[</span><span class="n">PathEffects</span><span class="o">.</span><span class="n">withStroke</span><span class="p">(</span><span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">foreground</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">)]</span>
@@ -2361,6 +2430,7 @@
                 <span class="n">facecolor</span><span class="o">=</span><span class="n">color_here</span><span class="p">,</span>
                 <span class="n">edgecolor</span><span class="o">=</span><span class="n">color_here</span><span class="p">,</span>
                 <span class="n">zorder</span><span class="o">=-</span><span class="n">ring</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
             <span class="p">)</span>
 
             <span class="c1"># else:</span>
@@ -2397,7 +2467,8 @@
                     <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
                     <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
                     <span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-                    <span class="n">zorder</span><span class="o">=</span><span class="mf">5.</span>
+                    <span class="n">zorder</span><span class="o">=</span><span class="mf">5.</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="k">if</span> <span class="n">show_autodependency_lags</span><span class="p">:</span>
                     <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
@@ -2408,7 +2479,8 @@
                         <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
                         <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
                         <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
-                        <span class="n">zorder</span><span class="o">=</span><span class="mf">5.</span>
+                        <span class="n">zorder</span><span class="o">=</span><span class="mf">5.</span><span class="p">,</span>
+                        <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                     <span class="p">)</span>
 
     <span class="c1"># Draw edges</span>
@@ -2506,7 +2578,9 @@
 <span class="sd">    node_pos : dictionary, optional (default: None)</span>
 <span class="sd">        Dictionary of node positions in axis coordinates of form</span>
 <span class="sd">        node_pos = {&#39;x&#39;:array of shape (N,), &#39;y&#39;:array of shape(N)}. These</span>
-<span class="sd">        coordinates could have been transformed before for basemap plots.</span>
+<span class="sd">        coordinates could have been transformed before for basemap plots. You can</span>
+<span class="sd">        also add a key &#39;transform&#39;:ccrs.PlateCarree() in order to plot graphs on </span>
+<span class="sd">        a map using cartopy.</span>
 <span class="sd">    arrow_linewidth : float, optional (default: 30)</span>
 <span class="sd">        Linewidth.</span>
 <span class="sd">    vmin_edges : float, optional (default: -1)</span>
@@ -2776,6 +2850,10 @@
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
             <span class="n">pos</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">node_pos</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="n">node_pos</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">])</span>
 
+    <span class="k">if</span> <span class="n">node_pos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s1">&#39;transform&#39;</span> <span class="ow">in</span> <span class="n">node_pos</span><span class="p">:</span> 
+        <span class="n">transform</span> <span class="o">=</span> <span class="n">node_pos</span><span class="p">[</span><span class="s1">&#39;transform&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span> <span class="n">transform</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">transData</span>
+
     <span class="k">if</span> <span class="n">cmap_nodes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">node_color</span> <span class="o">=</span> <span class="kc">None</span>
 
@@ -2828,7 +2906,8 @@
         <span class="c1"># label_fraction=label_fraction,</span>
         <span class="n">special_nodes</span><span class="o">=</span><span class="n">special_nodes</span><span class="p">,</span>
         <span class="n">autodep_sig_lags</span><span class="o">=</span><span class="n">autodep_sig_lags</span><span class="p">,</span>
-        <span class="n">show_autodependency_lags</span><span class="o">=</span><span class="n">show_autodependency_lags</span>
+        <span class="n">show_autodependency_lags</span><span class="o">=</span><span class="n">show_autodependency_lags</span><span class="p">,</span>
+        <span class="n">transform</span><span class="o">=</span><span class="n">transform</span>
     <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">save_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -3646,7 +3725,7 @@
         <span class="n">trans</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">blended_transform_factory</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span> <span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="p">)</span>
         <span class="c1"># trans = transforms.blended_transform_factory(fig.transFigure, ax.transData)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
-            <span class="n">label_space_left</span><span class="p">,</span>
+            <span class="mf">0.</span><span class="p">,</span>
             <span class="n">pos</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">max_lag</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
             <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">var_names</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="n">i</span><span class="p">]]),</span>
             <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">,</span>
@@ -3755,7 +3834,9 @@
 <span class="sd">    node_pos : dictionary, optional (default: None)</span>
 <span class="sd">        Dictionary of node positions in axis coordinates of form</span>
 <span class="sd">        node_pos = {&#39;x&#39;:array of shape (N,), &#39;y&#39;:array of shape(N)}. These</span>
-<span class="sd">        coordinates could have been transformed before for basemap plots.</span>
+<span class="sd">        coordinates could have been transformed before for basemap plots. You can</span>
+<span class="sd">        also add a key &#39;transform&#39;:ccrs.PlateCarree() in order to plot graphs on </span>
+<span class="sd">        a map using cartopy.</span>
 <span class="sd">    arrow_linewidth : float, optional (default: 30)</span>
 <span class="sd">        Linewidth.</span>
 <span class="sd">    vmin_edges : float, optional (default: -1)</span>
@@ -3928,6 +4009,10 @@
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
             <span class="n">pos</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">node_pos</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="n">node_pos</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">])</span>
 
+    <span class="k">if</span> <span class="n">node_pos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s1">&#39;transform&#39;</span> <span class="ow">in</span> <span class="n">node_pos</span><span class="p">:</span> 
+        <span class="n">transform</span> <span class="o">=</span> <span class="n">node_pos</span><span class="p">[</span><span class="s1">&#39;transform&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span> <span class="n">transform</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">transData</span>
+
     <span class="n">node_rings</span> <span class="o">=</span> <span class="p">{</span>
         <span class="mi">0</span><span class="p">:</span> <span class="p">{</span>
             <span class="s2">&quot;sizes&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
@@ -3974,6 +4059,7 @@
         <span class="c1"># network_lower_bound=network_lower_bound,</span>
         <span class="c1"># label_fraction=label_fraction,</span>
         <span class="c1"># inner_edge_style=inner_edge_style</span>
+        <span class="n">transform</span><span class="o">=</span><span class="n">transform</span>
     <span class="p">)</span>
 
     <span class="c1"># fig.subplots_adjust(left=0.1, right=.9, bottom=.25, top=.95)</span>
@@ -4105,8 +4191,8 @@
     <span class="n">label_fontsize</span> <span class="o">=</span> <span class="mi">10</span>
     <span class="n">alpha</span> <span class="o">=</span> <span class="mf">1.0</span>
     <span class="n">node_label_size</span> <span class="o">=</span> <span class="mi">10</span>
-    <span class="n">label_space_left</span> <span class="o">=</span> <span class="mf">0.1</span>
-    <span class="n">label_space_top</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="c1"># label_space_left = 0.1</span>
+    <span class="c1"># label_space_top = 0.0</span>
     <span class="c1"># network_lower_bound = 0.2</span>
     <span class="n">inner_edge_style</span> <span class="o">=</span> <span class="s2">&quot;dashed&quot;</span>
 
@@ -4236,7 +4322,7 @@
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
         <span class="n">trans</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">blended_transform_factory</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span> <span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
-            <span class="n">label_space_left</span><span class="p">,</span>
+            <span class="mf">0.</span><span class="p">,</span>
             <span class="n">pos</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">max_lag</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
             <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">var_names</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="n">i</span><span class="p">]]),</span>
             <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">,</span>
@@ -4250,7 +4336,7 @@
         <span class="k">if</span> <span class="n">tau</span> <span class="o">==</span> <span class="n">max_lag</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
                 <span class="n">pos</span><span class="p">[</span><span class="n">tau</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
-                <span class="mf">1.0</span> <span class="o">-</span> <span class="n">label_space_top</span><span class="p">,</span>
+                <span class="mf">1.0</span><span class="p">,</span> <span class="c1">#- label_space_top,</span>
                 <span class="sa">r</span><span class="s2">&quot;$t$&quot;</span><span class="p">,</span>
                 <span class="n">fontsize</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">label_fontsize</span> <span class="o">*</span> <span class="mf">0.7</span><span class="p">),</span>
                 <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
@@ -4260,7 +4346,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
                 <span class="n">pos</span><span class="p">[</span><span class="n">tau</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
-                <span class="mf">1.0</span> <span class="o">-</span> <span class="n">label_space_top</span><span class="p">,</span>
+                <span class="mf">1.0</span><span class="p">,</span> <span class="c1"># - label_space_top,</span>
                 <span class="sa">r</span><span class="s2">&quot;$t-</span><span class="si">%s</span><span class="s2">$&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">max_lag</span> <span class="o">-</span> <span class="n">tau</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span>
                 <span class="n">fontsize</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">label_fontsize</span> <span class="o">*</span> <span class="mf">0.7</span><span class="p">),</span>
                 <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
@@ -4445,81 +4531,119 @@
 
     <span class="c1"># Complete test case</span>
     <span class="n">graph</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;&lt;U3&#39;</span><span class="p">)</span>
-    <span class="n">val_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="o">*</span><span class="n">graph</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">val_matrix</span> <span class="o">=</span> <span class="mf">0.</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="o">*</span><span class="n">graph</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
     <span class="n">val_matrix</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.2</span>
     <span class="n">graph</span><span class="p">[:]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-    <span class="n">graph</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&lt;-+&quot;</span>
-    <span class="n">graph</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;+-&gt;&quot;</span>
+    <span class="c1"># graph[0, 1, 0] = &quot;&lt;-+&quot;</span>
+    <span class="c1"># graph[1, 0, 0] = &quot;+-&gt;&quot;</span>
     <span class="n">graph</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;--&gt;&quot;</span>
     <span class="n">graph</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;--&gt;&quot;</span>
 
     <span class="n">graph</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;+-&gt;&quot;</span>
-    <span class="n">graph</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;o-o&quot;</span>
+    <span class="c1"># graph[1, 0, 1] = &quot;o-o&quot;</span>
 
-    <span class="n">graph</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&lt;-&gt;&quot;</span>
-    <span class="n">graph</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&lt;-&gt;&quot;</span>
+    <span class="c1"># graph[1, 2, 0] = &quot;&lt;-&gt;&quot;</span>
+    <span class="c1"># graph[2, 1, 0] = &quot;&lt;-&gt;&quot;</span>
 
-    <span class="n">graph</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;x-x&quot;</span>
-    <span class="n">graph</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;x-x&quot;</span>
+    <span class="c1"># graph[0, 2, 0] = &quot;x-x&quot;</span>
+    <span class="c1"># graph[2, 0, 0] = &quot;x-x&quot;</span>
     <span class="n">nolinks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
     <span class="c1"># nolinks[range(4), range(4), 1] = 1</span>
 
-    <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
-    <span class="n">label_space_left</span> <span class="o">=</span> <span class="mf">0.2</span>
-    <span class="n">label_space_top</span> <span class="o">=</span> <span class="mf">0.</span>
+    <span class="c1"># graph = graph[:2, :2, :]</span>
+
+    <span class="c1"># fig, axes = pyplot.subplots(nrows=1, ncols=1, figsize=(6, 5))</span>
+
+
+    <span class="c1"># import cartopy.crs as ccrs</span>
+    <span class="n">graph</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;&lt;U3&#39;</span><span class="p">)</span>
+    <span class="n">graph</span><span class="p">[:]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">graph</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;+-&gt;&#39;</span> 
+
+    <span class="c1"># fig = pyplot.figure(figsize=(8, 6))</span>
+    <span class="c1"># fig = pyplot.figure(figsize=(10, 5))</span>
+    <span class="c1"># ax = fig.add_subplot(1, 1, 1, projection=ccrs.Mollweide())</span>
+    <span class="c1"># make the map global rather than have it zoom in to</span>
+    <span class="c1"># the extents of any plotted data</span>
+    <span class="c1"># ax.set_global()</span>
+    <span class="c1"># ax.stock_img()</span>
+    <span class="c1"># ax.coastlines()</span>
+    <span class="c1"># # ymax = 1.</span>
+    <span class="c1"># node_pos = {&#39;x&#39;:np.linspace(0, ymax, graph.shape[0]), &#39;y&#39;:np.linspace(0, ymax, graph.shape[0]),}</span>
+    <span class="c1"># node_pos = {&#39;x&#39;:np.array([10,-20,80,-50,80]),</span>
+    <span class="c1">#             &#39;y&#39;:np.array([-10,70,60,-40,50]), </span>
+    <span class="c1">#         &#39;transform&#39;:ccrs.PlateCarree(), # t.PlateCarree()</span>
+    <span class="c1">#         }</span>
+
+    <span class="n">plot_time_series_graph</span><span class="p">(</span><span class="n">graph</span><span class="o">=</span><span class="n">graph</span><span class="p">,</span>
+        <span class="c1"># fig_ax = (fig, ax),</span>
+        <span class="c1"># val_matrix=val_matrix,</span>
+        <span class="c1"># figsize=(5, 5),</span>
+        <span class="c1"># var_names = [&#39;Var %s&#39; %i for i in range(len(graph))],</span>
+        <span class="c1"># arrow_linewidth=6,</span>
+        <span class="c1"># label_space_left = label_space_left,</span>
+        <span class="c1"># label_space_top = label_space_top,</span>
+        <span class="c1"># # network_lower_bound=network_lower_bound,</span>
+        <span class="n">save_name</span><span class="o">=</span><span class="s2">&quot;tsg_test.pdf&quot;</span>
+        <span class="p">)</span>
+    <span class="n">pyplot</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
     <span class="c1"># network_lower_bound = 0.</span>
-    <span class="n">show_colorbar</span><span class="o">=</span><span class="kc">True</span>
+    <span class="c1"># show_colorbar=True</span>
     <span class="c1"># plot_graph(graph=graph,</span>
-    <span class="c1">#     # fig_ax = (fig, axes),</span>
-    <span class="c1">#     val_matrix=val_matrix,</span>
+    <span class="c1">#     fig_ax = (fig, ax),</span>
+    <span class="c1">#     node_pos = node_pos,</span>
+    <span class="c1">#     node_size = 20,</span>
+    <span class="c1">#     # val_matrix=val_matrix,</span>
     <span class="c1">#     # figsize=(5, 5),</span>
-    <span class="c1">#     var_names = [&#39;Var %s&#39; %i for i in range(len(graph))],</span>
+    <span class="c1">#     # var_names = [&#39;Var %s&#39; %i for i in range(len(graph))],</span>
     <span class="c1">#     # arrow_linewidth=6,</span>
     <span class="c1">#     # label_space_left = label_space_left,</span>
     <span class="c1">#     # label_space_top = label_space_top,</span>
     <span class="c1">#     # # network_lower_bound=network_lower_bound,</span>
-    <span class="c1">#     # save_name=&quot;tsg_test.pdf&quot;</span>
+    <span class="c1">#     save_name=&quot;tsg_test.pdf&quot;</span>
     <span class="c1">#     )</span>
-
+    <span class="c1"># pyplot.tight_layout()</span>
     <span class="c1"># axes[0,0].scatter(np.random.rand(100), np.random.rand(100))</span>
 
-    <span class="n">plot_graph</span><span class="p">(</span><span class="n">graph</span><span class="o">=</span><span class="n">graph</span><span class="p">,</span>
-        <span class="n">fig_ax</span> <span class="o">=</span> <span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]),</span>
-        <span class="n">val_matrix</span><span class="o">=</span><span class="n">val_matrix</span><span class="p">,</span>
-        <span class="c1"># figsize=(5, 5),</span>
-        <span class="n">var_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Variable </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">graph</span><span class="p">))],</span>
-        <span class="n">arrow_linewidth</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
-        <span class="c1"># label_space_left = label_space_left,</span>
-        <span class="c1"># label_space_top = label_space_top,</span>
-        <span class="c1"># save_name=&quot;tsg_test.pdf&quot;</span>
-        <span class="p">)</span>
-    <span class="n">plot_graph</span><span class="p">(</span><span class="n">graph</span><span class="o">=</span><span class="n">graph</span><span class="p">,</span>
-        <span class="n">fig_ax</span> <span class="o">=</span> <span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]),</span>
-        <span class="n">val_matrix</span><span class="o">=</span><span class="n">val_matrix</span><span class="p">,</span>
-        <span class="n">var_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Var </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">graph</span><span class="p">))],</span>
-        <span class="n">arrow_linewidth</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
-        <span class="c1"># label_space_left = label_space_left,</span>
-        <span class="c1"># label_space_top = label_space_top,</span>
-        <span class="p">)</span>
-    <span class="n">plot_graph</span><span class="p">(</span><span class="n">graph</span><span class="o">=</span><span class="n">graph</span><span class="p">,</span>
-        <span class="n">fig_ax</span> <span class="o">=</span> <span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]),</span>
-        <span class="n">val_matrix</span><span class="o">=</span><span class="n">val_matrix</span><span class="p">,</span>
-        <span class="n">var_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Var </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">graph</span><span class="p">))],</span>
-        <span class="n">arrow_linewidth</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
-        <span class="c1"># label_space_left = label_space_left,</span>
-        <span class="c1"># label_space_top = label_space_top,</span>
-        <span class="p">)</span>
-    <span class="n">plot_graph</span><span class="p">(</span><span class="n">graph</span><span class="o">=</span><span class="n">graph</span><span class="p">,</span>
-        <span class="n">fig_ax</span> <span class="o">=</span> <span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]),</span>
-        <span class="n">val_matrix</span><span class="o">=</span><span class="n">val_matrix</span><span class="p">,</span>
-        <span class="n">var_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Var </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">graph</span><span class="p">))],</span>
-        <span class="n">arrow_linewidth</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
-        <span class="c1"># label_space_left = label_space_left,</span>
-        <span class="c1"># label_space_top = label_space_top,</span>
-        <span class="p">)</span>
-    <span class="c1"># pyplot.subplots_adjust(wspace=0.3, hspace=0.2)</span>
-    <span class="n">pyplot</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-    <span class="n">pyplot</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;test.pdf&quot;</span><span class="p">)</span>
+    <span class="c1"># plot_graph(graph=graph,</span>
+    <span class="c1">#     fig_ax = (fig, axes[0,0]),</span>
+    <span class="c1">#     val_matrix=val_matrix,</span>
+    <span class="c1">#     # figsize=(5, 5),</span>
+    <span class="c1">#     var_names = [&#39;Variable %s&#39; %i for i in range(len(graph))],</span>
+    <span class="c1">#     arrow_linewidth=6,</span>
+    <span class="c1">#     # label_space_left = label_space_left,</span>
+    <span class="c1">#     # label_space_top = label_space_top,</span>
+    <span class="c1">#     # save_name=&quot;tsg_test.pdf&quot;</span>
+    <span class="c1">#     )</span>
+    <span class="c1"># plot_graph(graph=graph,</span>
+    <span class="c1">#     fig_ax = (fig, axes[0,1]),</span>
+    <span class="c1">#     val_matrix=val_matrix,</span>
+    <span class="c1">#     var_names = [&#39;Var %s&#39; %i for i in range(len(graph))],</span>
+    <span class="c1">#     arrow_linewidth=6,</span>
+    <span class="c1">#     # label_space_left = label_space_left,</span>
+    <span class="c1">#     # label_space_top = label_space_top,</span>
+    <span class="c1">#     )</span>
+    <span class="c1"># plot_graph(graph=graph,</span>
+    <span class="c1">#     fig_ax = (fig, axes[1,0]),</span>
+    <span class="c1">#     val_matrix=val_matrix,</span>
+    <span class="c1">#     var_names = [&#39;Var %s&#39; %i for i in range(len(graph))],</span>
+    <span class="c1">#     arrow_linewidth=6,</span>
+    <span class="c1">#     # label_space_left = label_space_left,</span>
+    <span class="c1">#     # label_space_top = label_space_top,</span>
+    <span class="c1">#     )</span>
+    <span class="c1"># plot_graph(graph=graph,</span>
+    <span class="c1">#     fig_ax = (fig, axes[1,1]),</span>
+    <span class="c1">#     val_matrix=val_matrix,</span>
+    <span class="c1">#     var_names = [&#39;Var %s&#39; %i for i in range(len(graph))],</span>
+    <span class="c1">#     arrow_linewidth=6,</span>
+    <span class="c1">#     n</span>
+    <span class="c1">#     # label_space_left = label_space_left,</span>
+    <span class="c1">#     # label_space_top = label_space_top,</span>
+    <span class="c1">#     )</span>
+    <span class="c1"># # pyplot.subplots_adjust(wspace=0.3, hspace=0.2)</span>
+    <span class="c1"># pyplot.tight_layout()</span>
+    <span class="c1"># pyplot.savefig(&quot;test.pdf&quot;)</span>
 
     <span class="c1"># def lin_f(x): return x</span>
 
