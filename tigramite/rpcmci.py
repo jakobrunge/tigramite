@@ -1,6 +1,6 @@
 """Tigramite causal discovery for time series."""
 
-# Authors: Elena Saggioro, Matthias Bruhns, Jakob Runge <jakob@jakob-runge.com>
+# Authors: Elena Saggioro, Sagar Simha, Matthias Bruhns, Jakob Runge <jakob@jakob-runge.com>
 #
 # License: GNU General Public License v3.0
 
