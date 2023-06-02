@@ -935,7 +935,7 @@ class CondIndTest():
                     ydata=hilbert,
                 )
                 phi = popt[1]
-                # Formula of Peifer (2005) assuming non-overlapping blocks
+                # Formula assuming non-overlapping blocks
                 l_opt = (4. * T * (phi / (1. - phi) + phi**2 / (1. - phi)**2)**2
                          / (1. + 2. * phi / (1. - phi))**2)**(1. / 3.)
                 block_len = max(block_len, int(l_opt))
