@@ -70,7 +70,7 @@
 <span class="sd">            N is fixed. </span>
 <span class="sd">    mask : array-like, optional (default: None)</span>
 <span class="sd">        Optional mask array, must be of same format and shape as data.</span>
-<span class="sd">   type_mask : array-like</span>
+<span class="sd">   data_type : array-like</span>
 <span class="sd">        Binary data array of same shape as array which describes whether </span>
 <span class="sd">        individual samples in a variable (or all samples) are continuous </span>
 <span class="sd">        or discrete: 0s for continuous variables and 1s for discrete variables.</span>
@@ -149,7 +149,7 @@
 <span class="sd">    self.mask : dictionary</span>
 <span class="sd">        Mask internally mapped to a dictionary representation in the same way as</span>
 <span class="sd">        data is mapped to self.values</span>
-<span class="sd">    self.type_mask : array-like</span>
+<span class="sd">    self.data_type : array-like</span>
 <span class="sd">        Binary data array of same shape as array which describes whether </span>
 <span class="sd">        individual samples in a variable (or all samples) are continuous </span>
 <span class="sd">        or discrete: 0s for continuous variables and 1s for discrete variables.</span>
@@ -192,7 +192,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">missing_flag</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vector_vars</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">var_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">type_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">datatime</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">analysis_mode</span> <span class="o">=</span><span class="s1">&#39;single&#39;</span><span class="p">,</span> <span class="n">reference_points</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">datatime</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">analysis_mode</span> <span class="o">=</span><span class="s1">&#39;single&#39;</span><span class="p">,</span> <span class="n">reference_points</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">time_offsets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">remove_missing_upto_maxlag</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 
         <span class="c1"># Check that a valid analysis mode, specified by the argument</span>
@@ -356,9 +356,9 @@
         <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_mask</span><span class="p">(</span><span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span><span class="p">)</span>
             
-        <span class="bp">self</span><span class="o">.</span><span class="n">type_mask</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="n">type_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">type_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_mask</span><span class="p">(</span><span class="n">mask</span> <span class="o">=</span> <span class="n">type_mask</span><span class="p">,</span> <span class="n">check_type_mask</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_type</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">data_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_mask</span><span class="p">(</span><span class="n">mask</span> <span class="o">=</span> <span class="n">data_type</span><span class="p">,</span> <span class="n">check_data_type</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="c1"># Check and prepare the time offsets</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_and_set_time_offsets</span><span class="p">(</span><span class="n">time_offsets</span><span class="p">)</span>
@@ -394,7 +394,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">bootstrap</span> <span class="o">=</span> <span class="kc">None</span>
 
 
-    <span class="k">def</span> <span class="nf">_check_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">check_type_mask</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_check_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">check_data_type</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks that the mask is:</span>
 <span class="sd">            * The same shape as the data</span>
 <span class="sd">            * Is an numpy ndarray (or subtype)</span>
@@ -449,7 +449,7 @@
                 <span class="k">if</span> <span class="n">_use_mask_dict_data</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">dataset_data</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">_use_mask_dict_data</span><span class="p">))</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
                         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;NaNs in the data mask&quot;</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="n">check_type_mask</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">check_data_type</span><span class="p">:</span>
                         <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">_use_mask_dict_data</span><span class="p">))</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])):</span>
                             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Type mask contains other values than 0 and 1&quot;</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
@@ -581,7 +581,7 @@
                         <span class="n">extraZ</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                         <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                         <span class="n">mask_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                        <span class="n">type_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                         <span class="n">return_cleaned_xyz</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                         <span class="n">do_checks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                         <span class="n">remove_overlaps</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -609,11 +609,11 @@
 <span class="sd">            Masking mode: Indicators for which variables in the dependence</span>
 <span class="sd">            measure I(X; Y | Z) the samples should be masked. If None, the mask</span>
 <span class="sd">            is not used. Explained in tutorial on masking and missing values.</span>
-<span class="sd">        type_mask : array-like</span>
+<span class="sd">        data_type : array-like</span>
 <span class="sd">            Binary data array of same shape as array which describes whether </span>
 <span class="sd">            individual samples in a variable (or all samples) are continuous </span>
 <span class="sd">            or discrete: 0s for continuous variables and 1s for discrete variables.</span>
-<span class="sd">            If it is set, then it overrides the self.type_mask assigned to the dataframe.</span>
+<span class="sd">            If it is set, then it overrides the self.data_type assigned to the dataframe.</span>
 <span class="sd">        return_cleaned_xyz : bool, optional (default: False)</span>
 <span class="sd">            Whether to return cleaned X,Y,Z, where possible duplicates are</span>
 <span class="sd">            removed.</span>
@@ -674,7 +674,7 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        array, xyz [,XYZ], type_mask : Tuple of data array of shape (dim, n_samples),</span>
+<span class="sd">        array, xyz [,XYZ], data_type : Tuple of data array of shape (dim, n_samples),</span>
 <span class="sd">            xyz identifier array of shape (dim,) identifying which row in array</span>
 <span class="sd">            corresponds to X, Y, and Z, and the type mask that indicates which samples</span>
 <span class="sd">            are continuous or discrete. For example:: X = [(0, -1)],</span>
@@ -732,11 +732,11 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_mask</span><span class="p">(</span><span class="n">mask</span> <span class="o">=</span> <span class="n">_mask</span><span class="p">)</span>
             
-        <span class="n">_type_mask</span> <span class="o">=</span> <span class="n">type_mask</span>
-        <span class="k">if</span> <span class="n">_type_mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">_type_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">type_mask</span>
+        <span class="n">_data_type</span> <span class="o">=</span> <span class="n">data_type</span>
+        <span class="k">if</span> <span class="n">_data_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_data_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_type</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">_type_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_mask</span><span class="p">(</span><span class="n">mask</span> <span class="o">=</span> <span class="n">_type_mask</span><span class="p">,</span> <span class="n">check_type_mask</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">_data_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_mask</span><span class="p">(</span><span class="n">mask</span> <span class="o">=</span> <span class="n">_data_type</span><span class="p">,</span> <span class="n">check_data_type</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="c1"># Figure out what cut off we will be using</span>
         <span class="k">if</span> <span class="n">cut_off</span> <span class="o">==</span> <span class="s1">&#39;2xtau_max&#39;</span><span class="p">:</span>
@@ -766,7 +766,7 @@
         <span class="c1"># Run through all datasets and fill a dictionary holding the</span>
         <span class="c1"># samples taken from the individual datasets</span>
         <span class="n">samples_datasets</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
-        <span class="n">type_masks</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">data_types</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">use_indices_dataset_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
 
         <span class="k">for</span> <span class="n">dataset_key</span><span class="p">,</span> <span class="n">dataset_data</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -860,11 +860,11 @@
             <span class="n">use_indices_dataset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ref_points_here</span><span class="p">),</span> <span class="n">dtype</span> <span class="o">=</span> <span class="s1">&#39;int&#39;</span><span class="p">)</span>
 
             <span class="c1"># Build the type mask array corresponding to this dataset</span>
-            <span class="k">if</span> <span class="n">_type_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">type_mask_dataset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref_points_here</span><span class="p">)),</span> <span class="n">dtype</span> <span class="o">=</span> <span class="s1">&#39;bool&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">_data_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">data_type_dataset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref_points_here</span><span class="p">)),</span> <span class="n">dtype</span> <span class="o">=</span> <span class="s1">&#39;bool&#39;</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">lag</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">XYZ</span><span class="p">):</span>
-                    <span class="n">type_mask_dataset</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">_type_mask</span><span class="p">[</span><span class="n">dataset_key</span><span class="p">][</span><span class="n">ref_points_here</span> <span class="o">+</span> <span class="n">lag</span><span class="p">,</span> <span class="n">var</span><span class="p">]</span>
-                <span class="n">type_masks</span><span class="p">[</span><span class="n">dataset_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">type_mask_dataset</span>
+                    <span class="n">data_type_dataset</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">_data_type</span><span class="p">[</span><span class="n">dataset_key</span><span class="p">][</span><span class="n">ref_points_here</span> <span class="o">+</span> <span class="n">lag</span><span class="p">,</span> <span class="n">var</span><span class="p">]</span>
+                <span class="n">data_types</span><span class="p">[</span><span class="n">dataset_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_type_dataset</span>
             
             <span class="c1"># Remove all values that have missing value flag, and optionally as well the time</span>
             <span class="c1"># slices that occur up to max_lag after</span>
@@ -907,8 +907,8 @@
 
         <span class="c1"># Concatenate the arrays of all datasets</span>
         <span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">samples_datasets</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">_type_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">type_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">type_masks</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_data_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">type_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">data_types</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">type_array</span> <span class="o">=</span> <span class="kc">None</span>
         
@@ -963,7 +963,7 @@
         <span class="c1">#     raise ValueError(&quot;Y-nodes are %s, &quot; % str(Y) +</span>
         <span class="c1">#                      &quot;but one of the Y-nodes must have zero lag&quot;)</span>
 
-<div class="viewcode-block" id="DataFrame.print_array_info"><a class="viewcode-back" href="../../index.html#tigramite.data_processing.DataFrame.print_array_info">[docs]</a>    <span class="k">def</span> <span class="nf">print_array_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">missing_flag</span><span class="p">,</span> <span class="n">mask_type</span><span class="p">,</span> <span class="n">type_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">extraZ</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="DataFrame.print_array_info"><a class="viewcode-back" href="../../index.html#tigramite.data_processing.DataFrame.print_array_info">[docs]</a>    <span class="k">def</span> <span class="nf">print_array_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">missing_flag</span><span class="p">,</span> <span class="n">mask_type</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">extraZ</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Print info about the constructed array</span>
 
@@ -985,7 +985,7 @@
 <span class="sd">            Masking mode: Indicators for which variables in the dependence</span>
 <span class="sd">            measure I(X; Y | Z) the samples should be masked. If None, the mask</span>
 <span class="sd">            is not used. Explained in tutorial on masking and missing values.</span>
-<span class="sd">        type_mask : array-like</span>
+<span class="sd">        data_type : array-like</span>
 <span class="sd">            Binary data array of same shape as array which describes whether </span>
 <span class="sd">            individual samples in a variable (or all samples) are continuous </span>
 <span class="sd">            or discrete: 0s for continuous variables and 1s for discrete variables.</span>
@@ -1001,8 +1001,8 @@
             <span class="nb">print</span><span class="p">(</span><span class="n">indt</span> <span class="o">+</span> <span class="s2">&quot;extraZ = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">extraZ</span><span class="p">))</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">mask_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">indt</span><span class="o">+</span><span class="s2">&quot;with masked samples in </span><span class="si">%s</span><span class="s2"> removed&quot;</span> <span class="o">%</span> <span class="n">mask_type</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">indt</span><span class="o">+</span><span class="s2">&quot;with </span><span class="si">%s</span><span class="s2"> </span><span class="si">% d</span><span class="s2">iscrete values&quot;</span> <span class="o">%</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">type_mask</span><span class="p">)</span><span class="o">/</span><span class="n">type_mask</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">indt</span><span class="o">+</span><span class="s2">&quot;with </span><span class="si">%s</span><span class="s2"> </span><span class="si">% d</span><span class="s2">iscrete values&quot;</span> <span class="o">%</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">data_type</span><span class="p">)</span><span class="o">/</span><span class="n">data_type</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">indt</span><span class="o">+</span><span class="s2">&quot;with missing values = </span><span class="si">%s</span><span class="s2"> removed&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span><span class="p">)</span></div></div>
 

@@ -1,4 +1,4 @@
-"""Tigramite causal discovery for time series."""
+"""Tigramite causal inference for time series."""
 
 # Author: Jakob Runge <jakob@jakob-runge.com>
 #

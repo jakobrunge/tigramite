@@ -128,7 +128,7 @@ class ParCorrWLS(ParCorr):
                                  self.measure)
 
         # Call the wrapped function
-        array, xyz, XYZ, type_mask = self.dataframe.construct_array(X=X, Y=Y, Z=Z,
+        array, xyz, XYZ, data_type = self.dataframe.construct_array(X=X, Y=Y, Z=Z,
                                                             tau_max=tau_max,
                                                             mask_type=self.mask_type,
                                                             return_cleaned_xyz=return_cleaned_xyz,
@@ -138,7 +138,7 @@ class ParCorrWLS(ParCorr):
                                                             verbosity=verbosity)
         array_copy = array.copy()
         self._get_stds(array_copy, X, Y, Z, tau_max, cut_off, verbosity)
-        return array, xyz, XYZ, type_mask
+        return array, xyz, XYZ, data_type
 
     def _estimate_std_time(self, arr, target_var):
         """
