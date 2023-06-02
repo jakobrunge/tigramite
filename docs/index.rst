@@ -38,6 +38,9 @@ Tigramite is a causal time series analysis python package. It allows to efficien
 
 - LPCMCI: Gerhardus, A. & Runge, J. High-recall causal discovery for autocorrelated time series with latent confounders Advances in Neural Information Processing Systems, 2020, 33. https://proceedings.neurips.cc/paper/2020/hash/94e70705efae423efda1088614128d0b-Abstract.html
 
+- RPCMCI: Elena Saggioro, Jana de Wiljes, Marlene Kretschmer, Jakob Runge; Reconstructing regime-dependent causal relationships from observational time series. Chaos 1 November 2020; 30 (11): 113115. https://doi.org/10.1063/5.0020538
+
+
 - Generally: J. Runge (2018): Causal Network Reconstruction from Time Series: From Theoretical Assumptions to Practical Estimation. Chaos: An Interdisciplinary Journal of Nonlinear Science 28 (7): 075310. https://aip.scitation.org/doi/10.1063/1.5025050
 
 - Nature Communications Perspective paper: https://www.nature.com/articles/s41467-019-10105-3
@@ -60,6 +63,7 @@ Tigramite is a causal time series analysis python package. It allows to efficien
 
    tigramite.pcmci.PCMCI
    tigramite.lpcmci.LPCMCI
+   tigramite.rpcmci.RPCMCI
    tigramite.independence_tests.independence_tests_base.CondIndTest
    tigramite.independence_tests.parcorr.ParCorr
    tigramite.independence_tests.robust_parcorr.RobustParCorr
@@ -87,13 +91,17 @@ Tigramite is a causal time series analysis python package. It allows to efficien
 .. autoclass:: tigramite.pcmci.PCMCI
    :members:
 
-
 :mod:`tigramite.lpcmci`: LPCMCI
 ===========================================
 
 .. autoclass:: tigramite.lpcmci.LPCMCI
    :members:
 
+:mod:`tigramite.rpcmci`: RPCMCI
+===========================================
+
+.. autoclass:: tigramite.rpcmci.RPCMCI
+   :members:
 
 :mod:`tigramite.independence_tests`: Conditional independence tests
 =================================================================================

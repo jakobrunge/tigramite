@@ -251,7 +251,7 @@
                                   <span class="s2">&quot; implemented for </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="CondIndTest.get_shuffle_significance"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_shuffle_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_shuffle_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span>
-                                 <span class="n">type_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                 <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                                  <span class="n">return_null_dist</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Base class assumption that this is not implemented.  Concrete classes</span>
@@ -389,7 +389,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># Get the array to test on</span>
-        <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">XYZ</span><span class="p">,</span> <span class="n">type_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_array</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span> <span class="n">cut_off</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
+        <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">XYZ</span><span class="p">,</span> <span class="n">data_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_array</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span> <span class="n">cut_off</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
         <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span> <span class="o">=</span> <span class="n">XYZ</span>
         
         <span class="c1"># Record the dimensions</span>
@@ -406,7 +406,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">cached</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="c1"># Get the dependence measure, reycling residuals if need be</span>
-            <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dependence_measure_recycle</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">type_mask</span><span class="p">)</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dependence_measure_recycle</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">data_type</span><span class="p">)</span>
             <span class="c1"># Get the p-value</span>
             <span class="n">pval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_significance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">cached_ci_results</span><span class="p">[</span><span class="n">combined_hash</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">pval</span><span class="p">)</span>
@@ -450,21 +450,21 @@
                              <span class="s2">&quot; where dimension can be 1.&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">x_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">y_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">z_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">has_type_mask</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">has_data_type</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">has_type_mask</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">has_data_type</span> <span class="o">=</span> <span class="kc">False</span>
 
-        <span class="k">if</span> <span class="n">x_type</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">has_type_mask</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">x_type</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">has_data_type</span><span class="p">:</span>
             <span class="n">x_type</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">y_type</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">has_type_mask</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">y_type</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">has_data_type</span><span class="p">:</span>
             <span class="n">y_type</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">z</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Get the array to test on</span>
             <span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">x</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
-            <span class="k">if</span> <span class="n">has_type_mask</span><span class="p">:</span>
-                <span class="n">type_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">x_type</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">y_type</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">has_data_type</span><span class="p">:</span>
+                <span class="n">data_type</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">x_type</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">y_type</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
 
             <span class="c1"># xyz is the dimension indicator</span>
             <span class="n">xyz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span> <span class="o">+</span>
@@ -473,11 +473,11 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Get the array to test on</span>
             <span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">x</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">z</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
-            <span class="k">if</span> <span class="n">z_type</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">has_type_mask</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">z_type</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">has_data_type</span><span class="p">:</span>
                 <span class="n">z_type</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="n">has_type_mask</span><span class="p">:</span>
-                <span class="n">type_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">x_type</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">y_type</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">z_type</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">has_data_type</span><span class="p">:</span>
+                <span class="n">data_type</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">x_type</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">y_type</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">z_type</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
             <span class="c1"># xyz is the dimension indicator</span>
             <span class="n">xyz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span> <span class="o">+</span>
                            <span class="p">[</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span> <span class="o">+</span>
@@ -489,22 +489,22 @@
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;nans in the array!&quot;</span><span class="p">)</span>
         <span class="c1"># Get the dependence measure</span>
-        <span class="k">if</span> <span class="n">has_type_mask</span><span class="p">:</span>
-            <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">type_mask</span><span class="o">=</span><span class="n">type_mask</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">has_data_type</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="n">data_type</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">)</span>
 
         <span class="c1"># Get the p-value</span>
-        <span class="k">if</span> <span class="n">has_type_mask</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">has_data_type</span><span class="p">:</span>
             <span class="n">pval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_significance</span><span class="p">(</span><span class="n">val</span><span class="o">=</span><span class="n">val</span><span class="p">,</span> <span class="n">array</span><span class="o">=</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="o">=</span><span class="n">xyz</span><span class="p">,</span> 
-                    <span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span> <span class="n">type_mask</span><span class="o">=</span><span class="n">type_mask</span><span class="p">)</span>
+                    <span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="n">data_type</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">pval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_significance</span><span class="p">(</span><span class="n">val</span><span class="o">=</span><span class="n">val</span><span class="p">,</span> <span class="n">array</span><span class="o">=</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="o">=</span><span class="n">xyz</span><span class="p">,</span> 
                     <span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">)</span>            
         <span class="c1"># Return the value and the pvalue</span>
         <span class="k">return</span> <span class="n">val</span><span class="p">,</span> <span class="n">pval</span></div>
 
-    <span class="k">def</span> <span class="nf">_get_dependence_measure_recycle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">type_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_get_dependence_measure_recycle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the dependence_measure, optionally recycling residuals</span>
 
 <span class="sd">        If self.recycle_residuals is True, also _get_single_residuals must be</span>
@@ -522,7 +522,7 @@
 <span class="sd">        array : array</span>
 <span class="sd">            Data array of shape (dim, T)</span>
 
-<span class="sd">       type_mask : array-like</span>
+<span class="sd">       data_type : array-like</span>
 <span class="sd">            Binary data array of same shape as array which describes whether </span>
 <span class="sd">            individual samples in a variable (or all samples) are continuous </span>
 <span class="sd">            or discrete: 0s for continuous variables and 1s for discrete variables.</span>
@@ -545,9 +545,9 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span><span class="n">array_resid</span><span class="p">,</span> <span class="n">xyz_resid</span><span class="p">)</span>
 
         <span class="c1"># If not, return the dependence measure on the array and xyz</span>
-        <span class="k">if</span> <span class="n">type_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">data_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> 
-                                        <span class="n">type_mask</span><span class="o">=</span><span class="n">type_mask</span><span class="p">)</span>
+                                        <span class="n">data_type</span><span class="o">=</span><span class="n">data_type</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">)</span>
 
@@ -588,7 +588,7 @@
         <span class="k">return</span> <span class="n">x_resid</span>
 
 <div class="viewcode-block" id="CondIndTest.get_significance"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span>
-                         <span class="n">type_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                         <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                          <span class="n">sig_override</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the p-value from whichever significance function is specified</span>
@@ -612,7 +612,7 @@
 <span class="sd">        dim : int</span>
 <span class="sd">            Dimensionality, ie, number of features.</span>
 <span class="sd">            </span>
-<span class="sd">       type_mask : array-like</span>
+<span class="sd">       data_type : array-like</span>
 <span class="sd">            Binary data array of same shape as array which describes whether </span>
 <span class="sd">            individual samples in a variable (or all samples) are continuous </span>
 <span class="sd">            or discrete: 0s for continuous variables and 1s for discrete variables.</span>
@@ -648,7 +648,7 @@
         <span class="k">return</span> <span class="n">pval</span></div>
 
 <div class="viewcode-block" id="CondIndTest.get_measure"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_measure">[docs]</a>    <span class="k">def</span> <span class="nf">get_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> 
-                    <span class="n">type_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                    <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Estimate dependence measure.</span>
 
 <span class="sd">        Calls the dependence measure function. The child classes must specify</span>
@@ -664,7 +664,7 @@
 <span class="sd">            Maximum time lag. This may be used to make sure that estimates for</span>
 <span class="sd">            different lags in X, Z, all have the same sample size.</span>
 <span class="sd">        </span>
-<span class="sd">       type_mask : array-like</span>
+<span class="sd">       data_type : array-like</span>
 <span class="sd">            Binary data array of same shape as array which describes whether </span>
 <span class="sd">            individual samples in a variable (or all samples) are continuous </span>
 <span class="sd">            or discrete: 0s for continuous variables and 1s for discrete variables.</span>
@@ -686,7 +686,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dependence_measure_recycle</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">array</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="CondIndTest.get_confidence"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_confidence">[docs]</a>    <span class="k">def</span> <span class="nf">get_confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                       <span class="n">type_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                       <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform confidence interval estimation.</span>
 
 <span class="sd">        Calls the dependence measure and confidence test functions. The child</span>
@@ -704,7 +704,7 @@
 <span class="sd">            Maximum time lag. This may be used to make sure that estimates for</span>
 <span class="sd">            different lags in X, Z, all have the same sample size.</span>
 <span class="sd">            </span>
-<span class="sd">       type_mask : array-like</span>
+<span class="sd">       data_type : array-like</span>
 <span class="sd">            Binary data array of same shape as array which describes whether </span>
 <span class="sd">            individual samples in a variable (or all samples) are continuous </span>
 <span class="sd">            or discrete: 0s for continuous variables and 1s for discrete variables.</span>
@@ -727,7 +727,7 @@
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">confidence</span><span class="p">:</span>
             <span class="c1"># Make and check the array</span>
-            <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">type_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_array</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">data_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_array</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
             <span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
             <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;nans in the array!&quot;</span><span class="p">)</span>
@@ -786,7 +786,7 @@
 <div class="viewcode-block" id="CondIndTest.get_bootstrap_confidence"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_bootstrap_confidence">[docs]</a>    <span class="k">def</span> <span class="nf">get_bootstrap_confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">dependence_measure</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                                  <span class="n">conf_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">conf_blocklength</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                                  <span class="n">conf_lev</span><span class="o">=</span><span class="mf">.95</span><span class="p">,</span> 
-                                 <span class="n">type_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                 <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                                  <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform bootstrap confidence interval estimation.</span>
 
@@ -815,7 +815,7 @@
 <span class="sd">            determined from the decay of the autocovariance as explained in</span>
 <span class="sd">            [1]_.</span>
 
-<span class="sd">       type_mask : array-like</span>
+<span class="sd">       data_type : array-like</span>
 <span class="sd">            Binary data array of same shape as array which describes whether </span>
 <span class="sd">            individual samples in a variable (or all samples) are continuous </span>
 <span class="sd">            or discrete: 0s for continuous variables and 1s for discrete variables.</span>

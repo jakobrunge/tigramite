@@ -38,7 +38,7 @@ class DataFrame():
             N is fixed. 
     mask : array-like, optional (default: None)
         Optional mask array, must be of same format and shape as data.
-   type_mask : array-like
+   data_type : array-like
         Binary data array of same shape as array which describes whether 
         individual samples in a variable (or all samples) are continuous 
         or discrete: 0s for continuous variables and 1s for discrete variables.
@@ -48,7 +48,7 @@ class DataFrame():
         remove_missing_upto_maxlag=True also flags samples for all lags up to
         2*tau_max (more precisely, this depends on the cut_off argument in
         self.construct_array(), see further below). This avoids biases, see
-        section on masking in Supplement of [1]_.
+        section on masking in Supplement of Runge et al. SciAdv (2019).
     vector_vars : dict
         Dictionary of vector variables of the form,
         Eg. {0: [(0, 0), (1, 0)], 1: [(2, 0)], 2: [(3, 0)], 3: [(4, 0)]}
@@ -117,7 +117,7 @@ class DataFrame():
     self.mask : dictionary
         Mask internally mapped to a dictionary representation in the same way as
         data is mapped to self.values
-    self.type_mask : array-like
+    self.data_type : array-like
         Binary data array of same shape as array which describes whether 
         individual samples in a variable (or all samples) are continuous 
         or discrete: 0s for continuous variables and 1s for discrete variables.
@@ -160,7 +160,7 @@ class DataFrame():
     """
 
     def __init__(self, data, mask=None, missing_flag=None, vector_vars=None, var_names=None,
-        type_mask=None, datatime=None, analysis_mode ='single', reference_points=None,
+        data_type=None, datatime=None, analysis_mode ='single', reference_points=None,
         time_offsets=None, remove_missing_upto_maxlag=False):
 
         # Check that a valid analysis mode, specified by the argument
@@ -324,9 +324,9 @@ class DataFrame():
         if mask is not None:
             self.mask = self._check_mask(mask = mask)
             
-        self.type_mask = None
-        if type_mask is not None:
-            self.type_mask = self._check_mask(mask = type_mask, check_type_mask=True)
+        self.data_type = None
+        if data_type is not None:
+            self.data_type = self._check_mask(mask = data_type, check_data_type=True)
 
         # Check and prepare the time offsets
         self._check_and_set_time_offsets(time_offsets)
@@ -362,7 +362,7 @@ class DataFrame():
         self.bootstrap = None
 
 
-    def _check_mask(self, mask, check_type_mask=False):
+    def _check_mask(self, mask, check_data_type=False):
         """Checks that the mask is:
             * The same shape as the data
             * Is an numpy ndarray (or subtype)
@@ -417,7 +417,7 @@ class DataFrame():
                 if _use_mask_dict_data.shape == dataset_data.shape:
                     if np.sum(np.isnan(_use_mask_dict_data)) != 0:
                         raise ValueError("NaNs in the data mask")
-                    if check_type_mask:
+                    if check_data_type:
                         if not set(np.unique(_use_mask_dict_data)).issubset(set([0, 1])):
                             raise ValueError("Type mask contains other values than 0 and 1")
                 else:
@@ -549,7 +549,7 @@ class DataFrame():
                         extraZ=None,
                         mask=None,
                         mask_type=None,
-                        type_mask=None,
+                        data_type=None,
                         return_cleaned_xyz=False,
                         do_checks=True,
                         remove_overlaps=True,
@@ -577,11 +577,11 @@ class DataFrame():
             Masking mode: Indicators for which variables in the dependence
             measure I(X; Y | Z) the samples should be masked. If None, the mask
             is not used. Explained in tutorial on masking and missing values.
-        type_mask : array-like
+        data_type : array-like
             Binary data array of same shape as array which describes whether 
             individual samples in a variable (or all samples) are continuous 
             or discrete: 0s for continuous variables and 1s for discrete variables.
-            If it is set, then it overrides the self.type_mask assigned to the dataframe.
+            If it is set, then it overrides the self.data_type assigned to the dataframe.
         return_cleaned_xyz : bool, optional (default: False)
             Whether to return cleaned X,Y,Z, where possible duplicates are
             removed.
@@ -642,7 +642,7 @@ class DataFrame():
 
         Returns
         -------
-        array, xyz [,XYZ], type_mask : Tuple of data array of shape (dim, n_samples),
+        array, xyz [,XYZ], data_type : Tuple of data array of shape (dim, n_samples),
             xyz identifier array of shape (dim,) identifying which row in array
             corresponds to X, Y, and Z, and the type mask that indicates which samples
             are continuous or discrete. For example:: X = [(0, -1)],
@@ -700,11 +700,11 @@ class DataFrame():
         else:
             _mask = self._check_mask(mask = _mask)
             
-        _type_mask = type_mask
-        if _type_mask is None:
-            _type_mask = self.type_mask
+        _data_type = data_type
+        if _data_type is None:
+            _data_type = self.data_type
         else:
-            _type_mask = self._check_mask(mask = _type_mask, check_type_mask=True)
+            _data_type = self._check_mask(mask = _data_type, check_data_type=True)
 
         # Figure out what cut off we will be using
         if cut_off == '2xtau_max':
@@ -734,7 +734,7 @@ class DataFrame():
         # Run through all datasets and fill a dictionary holding the
         # samples taken from the individual datasets
         samples_datasets = dict()
-        type_masks = dict()
+        data_types = dict()
         self.use_indices_dataset_dict = dict()
 
         for dataset_key, dataset_data in self.values.items():
@@ -828,11 +828,11 @@ class DataFrame():
             use_indices_dataset = np.ones(len(ref_points_here), dtype = 'int')
 
             # Build the type mask array corresponding to this dataset
-            if _type_mask is not None:
-                type_mask_dataset = np.zeros((dim, len(ref_points_here)), dtype = 'bool')
+            if _data_type is not None:
+                data_type_dataset = np.zeros((dim, len(ref_points_here)), dtype = 'bool')
                 for i, (var, lag) in enumerate(XYZ):
-                    type_mask_dataset[i, :] = _type_mask[dataset_key][ref_points_here + lag, var]
-                type_masks[dataset_key] = type_mask_dataset
+                    data_type_dataset[i, :] = _data_type[dataset_key][ref_points_here + lag, var]
+                data_types[dataset_key] = data_type_dataset
             
             # Remove all values that have missing value flag, and optionally as well the time
             # slices that occur up to max_lag after
@@ -875,8 +875,8 @@ class DataFrame():
 
         # Concatenate the arrays of all datasets
         array = np.concatenate(tuple(samples_datasets.values()), axis = 1)
-        if _type_mask is not None:
-            type_array = np.concatenate(tuple(type_masks.values()), axis = 1)
+        if _data_type is not None:
+            type_array = np.concatenate(tuple(data_types.values()), axis = 1)
         else:
             type_array = None
         
@@ -931,7 +931,7 @@ class DataFrame():
         #     raise ValueError("Y-nodes are %s, " % str(Y) +
         #                      "but one of the Y-nodes must have zero lag")
 
-    def print_array_info(self, array, X, Y, Z, missing_flag, mask_type, type_mask=None, extraZ=None):
+    def print_array_info(self, array, X, Y, Z, missing_flag, mask_type, data_type=None, extraZ=None):
         """
         Print info about the constructed array
 
@@ -953,7 +953,7 @@ class DataFrame():
             Masking mode: Indicators for which variables in the dependence
             measure I(X; Y | Z) the samples should be masked. If None, the mask
             is not used. Explained in tutorial on masking and missing values.
-        type_mask : array-like
+        data_type : array-like
             Binary data array of same shape as array which describes whether 
             individual samples in a variable (or all samples) are continuous 
             or discrete: 0s for continuous variables and 1s for discrete variables.
@@ -969,8 +969,8 @@ class DataFrame():
             print(indt + "extraZ = %s" % str(extraZ))
         if self.mask is not None and mask_type is not None:
             print(indt+"with masked samples in %s removed" % mask_type)
-        if self.type_mask is not None:
-            print(indt+"with %s % discrete values" % np.sum(type_mask)/type_mask.size)
+        if self.data_type is not None:
+            print(indt+"with %s % discrete values" % np.sum(data_type)/data_type.size)
         if self.missing_flag is not None:
             print(indt+"with missing values = %s removed" % self.missing_flag)
 

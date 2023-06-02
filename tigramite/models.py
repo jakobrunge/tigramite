@@ -1,4 +1,4 @@
-"""Tigramite causal discovery for time series."""
+"""Tigramite causal inference for time series."""
 
 # Author: Jakob Runge <jakob@jakob-runge.com>
 #
@@ -642,7 +642,7 @@ class LinearMediation(Models):
         self.all_psi_k = self._get_all_psi_k(self.phi)
 
         self.all_parents = all_parents
-        self.tau_max = tau_max
+        # self.tau_max = tau_max
 
     def fit_model_bootstrap(self, 
             boot_blocklength=1,
@@ -689,7 +689,6 @@ class LinearMediation(Models):
 
             dataframe_here.bootstrap = {'boot_blocklength':boot_blocklength,
                                         'random_state':random_state}
-
             model = Models(dataframe=dataframe_here,
                            model=sklearn.linear_model.LinearRegression(**self.model_params),
                            data_transform=self.data_transform,
@@ -698,7 +697,6 @@ class LinearMediation(Models):
 
             model.fit_full_model(all_parents=self.all_parents,
                            tau_max=self.tau_max)
-
             # Cache the results in the member variables
             coeffs = model.get_coefs()
             phi = self._get_phi(coeffs)
@@ -1782,7 +1780,7 @@ class Prediction(Models, PCMCI):
                              "indicating the index of the variables to "
                              "predict.")
 
-        if target_list == range(self.N):
+        if target_list == list(range(self.N)):
             return_type = 'array'
         elif len(target_list) == 1:
             return_type = 'series'
@@ -1790,6 +1788,7 @@ class Prediction(Models, PCMCI):
             return_type = 'list'
 
         pred_list = []
+        self.stored_test_array = {}
         for target in target_list:
             # Print message
             if self.verbosity > 0:
@@ -1804,11 +1803,11 @@ class Prediction(Models, PCMCI):
             if target not in self.selected_targets:
                 raise ValueError("Target %s not yet fitted" % target)
             # Construct the array form of the data
-            Y = [(target, 0)]
+            Y = [(target, 0)]  # dummy
             X = [(target, 0)]  # dummy
             Z = self.target_predictors[target]
+
             # Check if we've passed a new dataframe object
-            test_array = None
             if new_data is not None:
                 # if new_data.mask is None:
                 #     # if no mask is supplied, use the same mask as for the fitted array
@@ -1837,10 +1836,18 @@ class Prediction(Models, PCMCI):
             if a_transform is not None:
                 test_array = a_transform.transform(X=test_array.T).T
             # Cache the test array
-            self.test_array = test_array
+            self.stored_test_array[target] = test_array
             # Run the predictor
-            pred_list.append(self.fitted_model[target]['model'].predict(
-                X=test_array[2:].T, **pred_params))
+            predicted = self.fitted_model[target]['model'].predict(
+                X=test_array[2:].T, **pred_params)
+
+            if test_array[2:].size == 0:
+                # If there are no predictors, return the value of 
+                # empty_predictors_function, which is np.mean 
+                # and expand to the test array length
+                predicted = predicted * np.ones(test_array.shape[1])
+
+            pred_list.append(predicted)
 
         if return_type == 'series':
             return pred_list[0]
@@ -1850,12 +1857,12 @@ class Prediction(Models, PCMCI):
             return np.array(pred_list).transpose()
 
     def get_train_array(self, j):
-        """Returns training array."""
+        """Returns training array for variable j."""
         return self.fitted_model[j]['data']
 
-    def get_test_array(self):
-        """Returns test array."""
-        return self.test_array
+    def get_test_array(self, j):
+        """Returns test array for variable j."""
+        return self.stored_test_array[j]
 
 if __name__ == '__main__':
    
@@ -1892,13 +1899,13 @@ if __name__ == '__main__':
     # model.predict(X=np.random.randn(10,2)[:,2:])
     # sys.exit(0)
 
-    # med = LinearMediation(dataframe=dataframe, 
-    #     data_transform=None)
-    # med.fit_model(all_parents=parents, tau_max=10)
-    # med.fit_model_bootstrap( 
-    #             boot_blocklength='cube_root',
-    #             seed = 42,
-    #             )
+    med = LinearMediation(dataframe=dataframe, 
+        data_transform=None)
+    med.fit_model(all_parents=parents, tau_max=None)
+    med.fit_model_bootstrap( 
+                boot_blocklength='cube_root',
+                seed = 42,
+                )
 
     # # print(med.get_val_matrix())
 
@@ -1951,16 +1958,16 @@ if __name__ == '__main__':
     #     print(causal_coeff)
 
 
-    pred = Prediction(dataframe=dataframe,
-            cond_ind_test=ParCorr(),   #CMIknn ParCorr
-            prediction_model = sklearn.linear_model.LinearRegression(),
-    #         prediction_model = sklearn.gaussian_process.GaussianProcessRegressor(),
-            # prediction_model = sklearn.neighbors.KNeighborsRegressor(),
-        data_transform=sklearn.preprocessing.StandardScaler(),
-        train_indices= list(range(int(0.8*T))),
-        test_indices= list(range(int(0.8*T), T)),
-        verbosity=0
-        )
+    # pred = Prediction(dataframe=dataframe,
+    #         cond_ind_test=ParCorr(),   #CMIknn ParCorr
+    #         prediction_model = sklearn.linear_model.LinearRegression(),
+    # #         prediction_model = sklearn.gaussian_process.GaussianProcessRegressor(),
+    #         # prediction_model = sklearn.neighbors.KNeighborsRegressor(),
+    #     data_transform=sklearn.preprocessing.StandardScaler(),
+    #     train_indices= list(range(int(0.8*T))),
+    #     test_indices= list(range(int(0.8*T), T)),
+    #     verbosity=0
+    #     )
 
     # # predictors = pred.get_predictors(
     # #                        selected_targets=[2],
@@ -1970,16 +1977,16 @@ if __name__ == '__main__':
     # #                        pc_alpha=0.2,
     # #                        max_conds_dim=None,
     # #                        max_combinations=1)
-    predictors = {0: [], # [(0, -1)],
-                 1: [(1, -1), (0, -1)],
-                 2: [(2, -1), (1, 0)]}
-    pred.fit(target_predictors=predictors,
-            selected_targets=None, tau_max=None, return_data=False)
+    # predictors = {0: [], # [(0, -1)],
+    #              1: [(1, -1), (0, -1)],
+    #              2: [(2, -1), (1, 0)]}
+    # pred.fit(target_predictors=predictors,
+    #         selected_targets=None, tau_max=None, return_data=False)
 
-    res = pred.predict(target=0,
-                new_data=None,
-                pred_params=None,
-                cut_off='max_lag_or_tau_max')
+    # res = pred.predict(target=0,
+    #             new_data=None,
+    #             pred_params=None,
+    #             cut_off='max_lag_or_tau_max')
 
     # print(data[:,2])
     # print(res)

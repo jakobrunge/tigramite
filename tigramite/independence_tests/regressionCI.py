@@ -76,12 +76,12 @@ class RegressionCI(CondIndTest):
                 raise ValueError("mask_type is not None, but no mask in dataframe.")
             dataframe._check_mask(dataframe.mask)
         
-        if dataframe.type_mask is None:
-            raise ValueError("type_mask cannot be None for RegressionCI.")
-        dataframe._check_mask(dataframe.type_mask, check_type_mask=True)
+        if dataframe.data_type is None:
+            raise ValueError("data_type cannot be None for RegressionCI.")
+        dataframe._check_mask(dataframe.data_type, check_data_type=True)
 
     # @jit(forceobj=True)
-    def get_dependence_measure(self, array, xyz, type_mask):
+    def get_dependence_measure(self, array, xyz, data_type):
         """Returns test statistic.
 
         Parameters
@@ -92,7 +92,7 @@ class RegressionCI(CondIndTest):
         xyz : array of ints
             XYZ identifier array of shape (dim,).
 
-        type_mask : array-like
+        data_type : array-like
             array of same shape as array which describes whether samples
             are continuous or discrete: 0s for continuous and
             1s for discrete
@@ -124,7 +124,7 @@ class RegressionCI(CondIndTest):
                 elif var_type[i] == 0:
                     X_new = np.hstack((X_new, X[:, i].reshape((T, 1))))
                 else:
-                    raise ValueError("type_mask only allows entries in {0, 1}")
+                    raise ValueError("data_type only allows entries in {0, 1}")
             return X_new
 
         def calc_deviance_logistic(X, y, var_type):
@@ -178,15 +178,15 @@ class RegressionCI(CondIndTest):
         x = array[x_indices].T
         y = array[y_indices].T
 
-        x_type = type_mask[x_indices]
-        y_type = type_mask[y_indices]
+        x_type = data_type[x_indices]
+        y_type = data_type[y_indices]
 
         if len(z_indices) == 0:
             z = np.ones((array.shape[1], 1))
             z_type = [0]
         else:
             z = array[z_indices].T
-            z_type = type_mask[z_indices]
+            z_type = data_type[z_indices]
             z_type = z_type.max(axis=1)
 
         # check, whether within X and within Y all datapoints have the same datatype
@@ -352,13 +352,13 @@ if __name__ == '__main__':
         rate[i] = pval
 
         # data = np.hstack((x, y, z))
-        # type_mask = np.zeros(data.shape)
-        # type_mask[:, 0] = x_example == "discrete"
-        # type_mask[:, 1] = y_example == "discrete"
-        # type_mask[:, 2] = z_example == "discrete"
-        # type_mask = type_mask.astype('int')
-        # # print(type_mask)
-        # dataframe = pp.DataFrame(data=data, type_mask=type_mask)
+        # data_type = np.zeros(data.shape)
+        # data_type[:, 0] = x_example == "discrete"
+        # data_type[:, 1] = y_example == "discrete"
+        # data_type[:, 2] = z_example == "discrete"
+        # data_type = data_type.astype('int')
+        # # print(data_type)
+        # dataframe = pp.DataFrame(data=data, data_type=data_type)
         # ci.set_dataframe(dataframe)
         
         # val, pval = ci.run_test(X=[(0, 0)], Y=[(1, 0)], Z=[(2, 0)])

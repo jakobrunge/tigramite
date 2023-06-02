@@ -1,0 +1,559 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tigramite.rpcmci &#8212; Tigramite 5.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for tigramite.rpcmci</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Tigramite causal discovery for time series.&quot;&quot;&quot;</span>
+
+<span class="c1"># Authors: Elena Saggioro, Matthias Bruhns, Jakob Runge &lt;jakob@jakob-runge.com&gt;</span>
+<span class="c1">#</span>
+<span class="c1"># License: GNU General Public License v3.0</span>
+
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">sklearn</span>
+<span class="kn">from</span> <span class="nn">joblib</span> <span class="kn">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span>
+<span class="kn">from</span> <span class="nn">ortools.linear_solver</span> <span class="kn">import</span> <span class="n">pywraplp</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+
+<span class="kn">from</span> <span class="nn">tigramite.independence_tests.parcorr</span> <span class="kn">import</span> <span class="n">ParCorr</span>
+<span class="kn">from</span> <span class="nn">tigramite.data_processing</span> <span class="kn">import</span> <span class="n">DataFrame</span>
+<span class="kn">from</span> <span class="nn">tigramite.models</span> <span class="kn">import</span> <span class="n">Prediction</span>
+<span class="kn">from</span> <span class="nn">tigramite.pcmci</span> <span class="kn">import</span> <span class="n">PCMCI</span>
+
+<div class="viewcode-block" id="RPCMCI"><a class="viewcode-back" href="../../index.html#tigramite.rpcmci.RPCMCI">[docs]</a><span class="k">class</span> <span class="nc">RPCMCI</span><span class="p">(</span><span class="n">PCMCI</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;RPCMCI class for extracting causal regimes and the associated graphs from</span>
+<span class="sd">    time series data.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    The Regime-PCMCI causal discovery method is described in: </span>
+
+<span class="sd">    Elena Saggioro, Jana de Wiljes, Marlene Kretschmer, Jakob Runge;</span>
+<span class="sd">    Reconstructing regime-dependent causal relationships from observational</span>
+<span class="sd">    time series. Chaos 1 November 2020; 30 (11): 113115.</span>
+<span class="sd">    https://doi.org/10.1063/5.0020538</span>
+
+<span class="sd">    The method iterates between two phases --a regime learning phase</span>
+<span class="sd">    (optimization-based) and a causal discovery phase (PCMCI)-- to identify</span>
+<span class="sd">    regime dependent causal relationships. A persistent discrete regime</span>
+<span class="sd">    variable is assumed that leads to a finite number of regimes within which</span>
+<span class="sd">    stationarity can be assumed.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dataframe : data object</span>
+<span class="sd">        This is the Tigramite dataframe object. It has the attributes</span>
+<span class="sd">        dataframe.values yielding a numpy array of shape ( observations T,</span>
+<span class="sd">        variables N). For RPCMCI the mask will be ignored. You may use the</span>
+<span class="sd">        missing_flag to indicate missing values.</span>
+<span class="sd">    cond_ind_test : conditional independence test object</span>
+<span class="sd">        This can be ParCorr or other classes from</span>
+<span class="sd">        ``tigramite.independence_tests`` or an external test passed as a</span>
+<span class="sd">        callable. This test can be based on the class</span>
+<span class="sd">        tigramite.independence_tests.CondIndTest.</span>
+<span class="sd">    prediction_model : sklearn model object</span>
+<span class="sd">        For example, sklearn.linear_model.LinearRegression() for a linear</span>
+<span class="sd">        regression model. This should be consistent with cond_ind_test, ie, </span>
+<span class="sd">        use ParCorr() with a linear model and, eg, GPDC() with a </span>
+<span class="sd">        GaussianProcessRegressor model, or CMIknn with NearestNeighbors model.</span>
+<span class="sd">    seed : int</span>
+<span class="sd">        Random seed for annealing step.</span>
+<span class="sd">    verbosity : int, optional (default: -1)</span>
+<span class="sd">        Verbose levels -1, 0, 1, ...</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">,</span> <span class="n">cond_ind_test</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                    <span class="n">prediction_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">=</span> <span class="n">verbosity</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="n">seed</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+
+        <span class="c1"># Set prediction model to be used in optimization</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prediction_model</span> <span class="o">=</span> <span class="n">prediction_model</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prediction_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prediction_model</span> <span class="o">=</span> <span class="n">sklearn</span><span class="o">.</span><span class="n">linear_model</span><span class="o">.</span><span class="n">LinearRegression</span><span class="p">()</span>
+
+        <span class="c1"># Set conditional independence test</span>
+        <span class="k">if</span> <span class="n">cond_ind_test</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cond_ind_test</span> <span class="o">=</span> <span class="n">ParCorr</span><span class="p">()</span>
+        <span class="n">cond_ind_test</span><span class="o">.</span><span class="n">set_mask_type</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">analysis_mode</span> <span class="o">!=</span> <span class="s1">&#39;single&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only single time series data allowed for RPCMCI.&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># Masking is not available in RPCMCI, but missing values can be specified</span>
+        <span class="n">dataframe</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">dataframe</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;bool&#39;</span><span class="p">)}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">missing_flag</span>
+
+        <span class="c1"># Init base class</span>
+        <span class="n">PCMCI</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span>
+                        <span class="n">cond_ind_test</span><span class="o">=</span><span class="n">cond_ind_test</span><span class="p">,</span>
+                        <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RPCMCI.run_rpcmci"><a class="viewcode-back" href="../../index.html#tigramite.rpcmci.RPCMCI.run_rpcmci">[docs]</a>    <span class="k">def</span> <span class="nf">run_rpcmci</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                   <span class="n">num_regimes</span><span class="p">,</span>
+                   <span class="n">max_transitions</span><span class="p">,</span>
+                   <span class="n">switch_thres</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+                   <span class="n">num_iterations</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+                   <span class="n">max_anneal</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                   <span class="n">tau_min</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                   <span class="n">tau_max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                   <span class="n">pc_alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+                   <span class="n">alpha_level</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+                   <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+                   <span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run RPCMCI method for extracting causal regimes and the associated graphs from</span>
+<span class="sd">            time series data.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        num_regimes : int</span>
+<span class="sd">            Number of assumed regimes.</span>
+<span class="sd">        max_transitions : int</span>
+<span class="sd">            Maximum number of transitions within a single regime (persistency parameter).</span>
+<span class="sd">        switch_thres : float</span>
+<span class="sd">            Switch threshold.</span>
+<span class="sd">        num_iterations : int</span>
+<span class="sd">            Optimization iterations.</span>
+<span class="sd">        max_anneal : int</span>
+<span class="sd">            Maximum annealing runs.</span>
+<span class="sd">        tau_min : int, optional (default: 0)</span>
+<span class="sd">            Minimum time lag to test.</span>
+<span class="sd">        tau_max : int, optional (default: 1)</span>
+<span class="sd">            Maximum time lag. Must be larger or equal to tau_min.</span>
+<span class="sd">        pc_alpha : float, optional (default: 0.2)</span>
+<span class="sd">            Significance level in PCMCI.</span>
+<span class="sd">        alpha_level : float, optional (default: 0.05)</span>
+<span class="sd">            Significance level in PCMCI at which the p_matrix is thresholded to</span>
+<span class="sd">            get graph.</span>
+<span class="sd">        n_jobs : int, optional (default: -1)</span>
+<span class="sd">            Number of CPUs to use in joblib parallization. Default n_jobs=-1</span>
+<span class="sd">            uses all available.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        regimes : array of shape (n_regimes, T)</span>
+<span class="sd">            One-hot encoded regime variable.</span>
+<span class="sd">        causal_results: dictionary</span>
+<span class="sd">            Contains result of run_pcmci() after convergence.</span>
+<span class="sd">        diff_g_f : tuple</span>
+<span class="sd">            Difference between two consecutive optimizations for all annealings and</span>
+<span class="sd">            the optimal one with minimum objective value (see paper).</span>
+<span class="sd">        error_free_annealings : int</span>
+<span class="sd">            Number of annealings that converged without error.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">count_saved_ann</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1"># initialize residuals (objective value) of MIP optimize</span>
+        <span class="n">objmip_ann</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">max_anneal</span>
+        <span class="n">parents_ann</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">max_anneal</span>
+        <span class="n">causal_prediction</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">max_anneal</span>
+        <span class="n">links_ann</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">max_anneal</span>
+        <span class="n">gamma_ann</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">max_anneal</span>
+        <span class="n">diff_g_ann</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">max_anneal</span>
+        <span class="n">q_break_cycle</span> <span class="o">=</span> <span class="mi">5</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">def</span> <span class="nf">_pcmci</span><span class="p">(</span><span class="n">tau_min</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span> <span class="n">pc_alpha</span><span class="p">,</span> <span class="n">alpha_level</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Wrapper around running PCMCI.&quot;&quot;&quot;</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_pcmci</span><span class="p">(</span><span class="n">tau_min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span> <span class="n">pc_alpha</span><span class="o">=</span><span class="n">pc_alpha</span><span class="p">,</span> <span class="n">alpha_level</span><span class="o">=</span><span class="n">alpha_level</span><span class="p">)</span>
+            <span class="n">graph</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;graph&#39;</span><span class="p">]</span> 
+            <span class="n">pcmci_parents</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_parents_dict</span><span class="p">(</span><span class="n">graph</span><span class="o">=</span><span class="n">graph</span><span class="p">,</span> <span class="n">val_matrix</span><span class="o">=</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;val_matrix&#39;</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">results</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">pcmci_parents</span>
+
+        <span class="k">def</span> <span class="nf">_optimize_gamma</span><span class="p">(</span><span class="n">resid_sq</span><span class="p">,</span> <span class="n">max_transitions</span><span class="p">):</span>
+<span class="w">            </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Solves the following optimization problem :</span>
+
+<span class="sd">                minimize       c * x</span>
+
+<span class="sd">            where c = resid_sq , flattened along num_regimes dimension</span>
+<span class="sd">                  x = Gamma , flattened along num_regimes dimension</span>
+
+<span class="sd">            with Constraints:</span>
+<span class="sd">                    (1) [\sum_{k=1,num_regimes}gamma^k(t) ]= 1</span>
+<span class="sd">                                            forall t    : uniqueness</span>
+<span class="sd">                    (2) [\sum_{t=1:T-1} | gamma^k(t+1) - gamma^k(t) | ] &lt;= max_transitions</span>
+<span class="sd">                                            forall k    : persistence</span>
+
+
+<span class="sd">            Inputs:</span>
+<span class="sd">             resid_sq ( np.shape = (num_regimes,T) )</span>
+<span class="sd">             max_transitions = max number of switchings allowed</span>
+
+<span class="sd">            Returns:</span>
+<span class="sd">            Gamma_updated ( np.shape = (num_regimes,T) ))</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+
+            <span class="n">num_regimes</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">resid_sq</span><span class="o">.</span><span class="n">shape</span>
+
+            <span class="c1"># Create the linear solver with the GLOP backend.</span>
+            <span class="n">solver</span> <span class="o">=</span> <span class="n">pywraplp</span><span class="o">.</span><span class="n">Solver</span><span class="o">.</span><span class="n">CreateSolver</span><span class="p">(</span><span class="s2">&quot;GLOP&quot;</span><span class="p">)</span>
+            <span class="n">infinity</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">infinity</span><span class="p">()</span>
+
+            <span class="c1"># Define vector of integer variables in the interval [0,1].</span>
+            <span class="n">G</span> <span class="o">=</span> <span class="p">[</span><span class="n">solver</span><span class="o">.</span><span class="n">NumVar</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;x_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_regimes</span> <span class="o">*</span> <span class="n">T</span><span class="p">)]</span>
+
+            <span class="c1"># Define eta, auxiliary vars for constr. (2).</span>
+            <span class="n">E</span> <span class="o">=</span> <span class="p">[</span><span class="n">solver</span><span class="o">.</span><span class="n">NumVar</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">infinity</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;eta_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_regimes</span> <span class="o">*</span> <span class="n">T</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="n">G</span> <span class="o">+</span> <span class="n">E</span>
+            <span class="n">solver</span><span class="o">.</span><span class="n">Minimize</span><span class="p">(</span>
+                <span class="nb">sum</span><span class="p">([</span><span class="n">resid_sq</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">t</span><span class="p">]</span> <span class="o">*</span> <span class="n">X</span><span class="p">[</span><span class="n">k</span> <span class="o">*</span> <span class="n">T</span> <span class="o">+</span> <span class="n">t</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_regimes</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">T</span><span class="p">)])</span>
+            <span class="p">)</span>
+
+            <span class="n">con_lst</span> <span class="o">=</span> <span class="p">[</span><span class="nb">sum</span><span class="p">([</span><span class="n">X</span><span class="p">[</span><span class="n">k</span> <span class="o">*</span> <span class="n">T</span> <span class="o">+</span> <span class="n">t</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_regimes</span><span class="p">)])</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">T</span><span class="p">)]</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">T</span><span class="p">):</span>
+                <span class="n">solver</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span><span class="n">con_lst</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_regimes</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">T</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="c1"># (2.1)</span>
+                    <span class="n">solver</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span>
+                        <span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">k</span> <span class="o">*</span> <span class="n">T</span> <span class="o">+</span> <span class="n">t</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">X</span><span class="p">[</span><span class="n">k</span> <span class="o">*</span> <span class="n">T</span> <span class="o">+</span> <span class="n">t</span><span class="p">]</span> <span class="o">-</span> <span class="n">X</span><span class="p">[</span><span class="n">k</span> <span class="o">*</span> <span class="n">T</span> <span class="o">+</span> <span class="n">t</span> <span class="o">+</span> <span class="n">num_regimes</span> <span class="o">*</span> <span class="n">T</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)</span>
+                    <span class="p">)</span>
+                    <span class="c1"># (2.2)</span>
+                    <span class="n">solver</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span>
+                        <span class="p">(</span>
+                            <span class="p">(</span>
+                                    <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">X</span><span class="p">[</span><span class="n">k</span> <span class="o">*</span> <span class="n">T</span> <span class="o">+</span> <span class="n">t</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+                                    <span class="o">+</span> <span class="n">X</span><span class="p">[</span><span class="n">k</span> <span class="o">*</span> <span class="n">T</span> <span class="o">+</span> <span class="n">t</span><span class="p">]</span>
+                                    <span class="o">-</span> <span class="n">X</span><span class="p">[</span><span class="n">k</span> <span class="o">*</span> <span class="n">T</span> <span class="o">+</span> <span class="n">t</span> <span class="o">+</span> <span class="n">num_regimes</span> <span class="o">*</span> <span class="n">T</span><span class="p">]</span>
+                                    <span class="o">&lt;=</span> <span class="mi">0</span>
+                            <span class="p">)</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+                    <span class="c1"># (2.3)</span>
+                    <span class="n">solver</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span>
+                        <span class="p">((</span><span class="nb">sum</span><span class="p">([</span><span class="n">X</span><span class="p">[</span><span class="n">k</span> <span class="o">*</span> <span class="n">T</span> <span class="o">+</span> <span class="n">t</span> <span class="o">+</span> <span class="n">num_regimes</span> <span class="o">*</span> <span class="n">T</span><span class="p">]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">T</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span> <span class="o">&lt;=</span> <span class="n">max_transitions</span><span class="p">))</span>
+                    <span class="p">)</span>
+
+            <span class="n">status</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">Solve</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="n">pywraplp</span><span class="o">.</span><span class="n">Solver</span><span class="o">.</span><span class="n">OPTIMAL</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Optimal objective: reached.&quot;</span><span class="p">)</span>
+                <span class="n">gamma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">g</span><span class="o">.</span><span class="n">solution_value</span><span class="p">()</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">G</span><span class="p">],</span> <span class="p">(</span><span class="n">num_regimes</span><span class="p">,</span> <span class="n">T</span><span class="p">))</span>
+                <span class="n">obj_value</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">Objective</span><span class="p">()</span><span class="o">.</span><span class="n">Value</span><span class="p">()</span>
+                <span class="k">return</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">obj_value</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The problem does not have an optimal solution. Please change hyperparameters.&quot;</span><span class="p">)</span>
+                <span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">one_annealing_step</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Executes one annealing step. The random seed is self.seed + a.&quot;&quot;&quot;</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">################# Annealing iteration a = </span><span class="si">{</span><span class="n">a</span><span class="si">}</span><span class="s2"> ####################</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="n">T</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="c1"># Initialise gamma_0 as random matrix of 1s and 0s</span>
+            <span class="n">random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">+</span> <span class="n">a</span><span class="p">)</span>
+            <span class="n">gamma_opt</span> <span class="o">=</span> <span class="n">random_state</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">num_regimes</span><span class="p">,</span> <span class="n">T</span><span class="p">))</span>  <span class="c1"># range is [0,1)!</span>
+
+            <span class="n">parents_opt</span> <span class="o">=</span> <span class="p">{}</span> <span class="c1"># [None] * num_regimes</span>
+            <span class="n">results_opt</span> <span class="o">=</span> <span class="p">{}</span> <span class="c1"># [None] * num_regimes</span>
+            <span class="n">links_opt</span> <span class="o">=</span> <span class="p">{}</span> <span class="c1"># [None] * num_regimes</span>
+            <span class="n">objective_opt</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="c1"># Difference between two consecutive optimizations</span>
+            <span class="n">diff_g</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="c1">#</span>
+            <span class="c1"># Iteration over 1. causal discovery and 2. constrained optimization</span>
+            <span class="c1">#</span>
+            <span class="n">error_flag</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_iterations</span><span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">###### Optimization step q = </span><span class="si">{</span><span class="n">q</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                <span class="c1"># Initialize to 0</span>
+                <span class="n">residuals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_regimes</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">))</span>
+
+                <span class="n">gamma_temp</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">gamma_opt</span><span class="p">)</span>
+
+                <span class="c1">#</span>
+                <span class="c1"># 1. Causal discovery and prediction</span>
+                <span class="c1"># </span>
+
+                <span class="c1"># Iterate over regimes</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_regimes</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="mi">16</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="s1">&#39;#&#39;</span><span class="si">}</span><span class="s2"> Regime k = </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                    <span class="c1"># Select sample according to gamma_opt, is a bool vector</span>
+                    <span class="n">selected_samples_k</span> <span class="o">=</span> <span class="p">(</span><span class="n">gamma_temp</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="p">:]</span> <span class="o">&gt;</span> <span class="n">switch_thres</span><span class="p">)</span>
+
+                    <span class="n">mask_of_k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;bool&quot;</span><span class="p">)</span>
+                    <span class="n">mask_of_k</span><span class="p">[</span><span class="n">selected_samples_k</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+                    <span class="c1"># df_of_k = pp.DataFrame(data, mask=mask_of_k, missing_flag=self.missing_flag,</span>
+                    <span class="c1">#              var_names=self.var_names)</span>
+
+                    <span class="c1"># Change mask in dataframe for this step</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">mask</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">mask_of_k</span>
+
+                    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">((</span><span class="n">mask_of_k</span> <span class="o">==</span> <span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">5</span><span class="p">):</span>
+                        <span class="n">error_flag</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;*****Regime with too few samples in annealing a = </span><span class="si">{</span><span class="n">a</span><span class="si">}</span><span class="s2"> at iteration q = </span><span class="si">{</span><span class="n">q</span><span class="si">}</span><span class="s2">.*****</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;***** Break k-loop of regimes *****</span><span class="se">\n</span><span class="s2"> &quot;</span><span class="p">)</span>
+                        <span class="k">break</span>  <span class="c1"># from k-loop         </span>
+
+                    <span class="k">try</span><span class="p">:</span> 
+                        <span class="c1"># cond_ind_test = getattr(self, method)(**method_args)</span>
+                        <span class="c1"># pcmci = PCMCI(dataframe=df_of_k, </span>
+                        <span class="c1">#     cond_ind_test=self.cond_ind_test, </span>
+                        <span class="c1">#     verbosity=0)</span>
+                        <span class="n">results_temp</span><span class="p">,</span> <span class="n">link_temp</span><span class="p">,</span> <span class="n">parents_temp</span> <span class="o">=</span> <span class="n">_pcmci</span><span class="p">(</span>
+                                        <span class="c1"># pcmci,</span>
+                                                                        <span class="n">tau_max</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">tau_max</span><span class="p">),</span>
+                                                                        <span class="n">pc_alpha</span><span class="o">=</span><span class="n">pc_alpha</span><span class="p">,</span>
+                                                                        <span class="n">alpha_level</span><span class="o">=</span><span class="n">alpha_level</span><span class="p">,</span>
+                                                                        <span class="n">tau_min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,)</span>
+                    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                        <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+                        <span class="n">error_flag</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;*****Value error in causal discovery for annealing a = </span><span class="si">{</span><span class="n">a</span><span class="si">}</span><span class="s2"> at iteration q = </span><span class="si">{</span><span class="n">q</span><span class="si">}</span><span class="s2">.*****</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;***** Break k-loop of regimes *****</span><span class="se">\n</span><span class="s2"> &quot;</span><span class="p">)</span>
+                        <span class="k">break</span>  <span class="c1"># from k-loop</span>
+
+                    <span class="n">parents_opt</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">parents_temp</span>
+                    <span class="n">results_opt</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">results_temp</span>
+                    <span class="n">links_opt</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">link_temp</span>
+
+                    <span class="k">try</span><span class="p">:</span> 
+                        <span class="c1"># Prediction with causal parents</span>
+                        <span class="n">pred</span> <span class="o">=</span> <span class="n">Prediction</span><span class="p">(</span>
+                            <span class="n">dataframe</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="p">,</span>
+                            <span class="n">prediction_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">prediction_model</span><span class="p">,</span>
+                            <span class="n">data_transform</span><span class="o">=</span><span class="n">sklearn</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">StandardScaler</span><span class="p">(),</span>
+                            <span class="n">train_indices</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="n">T</span><span class="p">),</span>
+                            <span class="n">test_indices</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="n">T</span><span class="p">),</span>
+                            <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                        <span class="p">)</span>
+
+                        <span class="n">pred</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+                            <span class="n">target_predictors</span><span class="o">=</span><span class="n">parents_temp</span><span class="p">,</span>
+                            <span class="n">selected_targets</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">),</span>
+                            <span class="n">tau_max</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">tau_max</span><span class="p">),</span>
+                        <span class="p">)</span> 
+                        <span class="c1"># print(parents_temp)</span>
+                        <span class="c1"># Compute the predicted residuals for each variable</span>
+                        <span class="n">predicted</span> <span class="o">=</span> <span class="n">pred</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+                            <span class="n">target</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)),</span> 
+                            <span class="n">new_data</span><span class="o">=</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">missing_flag</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">missing_flag</span><span class="p">)</span>
+                        <span class="p">)</span>
+
+                        <span class="n">original_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">predicted</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+                            <span class="c1"># print(data.shape, predicted.shape, original_data.shape, pred.get_test_array(target).shape, mask_of_k.sum(axis=0))</span>
+                            <span class="c1"># print(pred.get_test_array(target)[0].flatten().std())</span>
+                            <span class="n">original_data</span><span class="p">[:,</span> <span class="n">target</span><span class="p">]</span> <span class="o">=</span> <span class="n">pred</span><span class="o">.</span><span class="n">get_test_array</span><span class="p">(</span><span class="n">target</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+                    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                        <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+                        <span class="n">error_flag</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;*****Value error in prediction for annealing a = </span><span class="si">{</span><span class="n">a</span><span class="si">}</span><span class="s2"> at iteration q = </span><span class="si">{</span><span class="n">q</span><span class="si">}</span><span class="s2">.*****</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;***** Break k-loop of regimes *****</span><span class="se">\n</span><span class="s2"> &quot;</span><span class="p">)</span>
+                        <span class="k">break</span>  <span class="c1"># from k-loop</span>
+
+
+                    <span class="c1"># Get residuals</span>
+                    <span class="n">residuals</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">tau_max</span><span class="p">):,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">original_data</span> <span class="o">-</span> <span class="n">predicted</span>
+                    <span class="c1"># print(np.abs(residuals[k, int(tau_max):, :]).mean(axis=0))</span>
+
+                <span class="k">if</span> <span class="n">error_flag</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;***** Break q-loop of optimization iterations for Annealing a = </span><span class="si">{</span><span class="n">a</span><span class="si">}</span><span class="s2"> at iteration q = </span><span class="si">{</span><span class="n">q</span><span class="si">}</span><span class="s2">.&quot;</span> 
+                            <span class="s2">&quot; Go to next annealing step. *****</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">break</span>
+
+                <span class="c1">#</span>
+                <span class="c1"># 2. Regime optimization step with side constraints</span>
+                <span class="c1">#</span>
+
+                <span class="c1"># Comute the resid_sq</span>
+                <span class="n">res_sq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">residuals</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="c1"># print(res_sq.shape)</span>
+
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="c1"># Optimization</span>
+                    <span class="n">gamma_opt</span><span class="p">,</span> <span class="n">objective_opt</span> <span class="o">=</span> <span class="n">_optimize_gamma</span><span class="p">(</span><span class="n">res_sq</span><span class="p">,</span> <span class="n">max_transitions</span><span class="p">)</span>
+
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+                    <span class="n">error_flag</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;*****Value error in optimization for annealing a = </span><span class="si">{</span><span class="n">a</span><span class="si">}</span><span class="s2"> at iteration q = </span><span class="si">{</span><span class="n">q</span><span class="si">}</span><span class="s2">.*****</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">break</span>  
+
+                <span class="n">diff_g</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">gamma_opt</span> <span class="o">-</span> <span class="n">gamma_temp</span><span class="p">)))</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Difference in abs value between the previous and current gamma &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;(shape num_regimesxT) : </span><span class="si">{</span><span class="n">diff_g</span><span class="p">[</span><span class="n">q</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                <span class="c1"># Break conditions</span>
+                <span class="k">if</span> <span class="n">diff_g</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Two consecutive gammas are equal: (local) minimum reached. &quot;</span>
+                            <span class="s2">&quot;Go to next annealing.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">break</span>
+
+                <span class="k">if</span> <span class="p">(</span><span class="n">q</span> <span class="o">&gt;=</span> <span class="n">q_break_cycle</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">diff_g</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">num_regimes</span> <span class="o">*</span> <span class="n">T</span> <span class="o">//</span> <span class="mi">100</span><span class="p">)):</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Iteration larger than </span><span class="si">{</span><span class="n">q_break_cycle</span><span class="si">}</span><span class="s2"> and two consecutive gammas are too similar. &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;Go to next annealing.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">break</span>
+
+            <span class="k">if</span> <span class="n">error_flag</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;*****Annealing a = </span><span class="si">{</span><span class="n">a</span><span class="si">}</span><span class="s2"> failed****</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                <span class="k">return</span> <span class="kc">None</span>
+
+            <span class="k">return</span> <span class="n">a</span><span class="p">,</span> <span class="n">objective_opt</span><span class="p">,</span> <span class="n">parents_opt</span><span class="p">,</span> <span class="n">results_opt</span><span class="p">,</span> <span class="n">links_opt</span><span class="p">,</span> <span class="n">gamma_opt</span><span class="p">,</span> <span class="n">diff_g</span>
+
+        <span class="c1"># Parallelizing over annealing steps</span>
+        <span class="n">all_results</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">)(</span>
+            <span class="n">delayed</span><span class="p">(</span><span class="n">one_annealing_step</span><span class="p">)(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_anneal</span><span class="p">))</span>
+
+        <span class="c1"># all_results = []</span>
+        <span class="c1"># for a in range(max_anneal):</span>
+        <span class="c1">#     all_results.append(one_annealing_step(a))</span>
+
+        <span class="n">error_free_annealings</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">all_results</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">error_free_annealings</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">a</span><span class="p">,</span> <span class="n">objective_opt</span><span class="p">,</span> <span class="n">parents_opt</span><span class="p">,</span> <span class="n">results_opt</span><span class="p">,</span> <span class="n">links_opt</span><span class="p">,</span> <span class="n">gamma_opt</span><span class="p">,</span> <span class="n">diff_g</span> <span class="o">=</span> <span class="n">result</span>
+                
+                <span class="c1"># Save annealing results</span>
+                <span class="n">objmip_ann</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">=</span> <span class="n">objective_opt</span>  
+                <span class="n">parents_ann</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">=</span> <span class="n">parents_opt</span>  
+                <span class="n">causal_prediction</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">=</span> <span class="n">results_opt</span>
+                <span class="n">links_ann</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">=</span> <span class="n">links_opt</span>
+                <span class="n">gamma_ann</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">=</span> <span class="n">gamma_opt</span> 
+                <span class="n">diff_g_ann</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">=</span> <span class="n">diff_g</span> 
+
+        <span class="k">if</span> <span class="n">error_free_annealings</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No annealings have converged. Run failed.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="c1"># If annealing values are larger than the default. </span>
+        <span class="c1"># Can happen for long time series and high dimensionality</span>
+        <span class="n">min_obj_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">objmip_ann</span> <span class="k">if</span> <span class="n">a</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">])</span>
+        <span class="n">i_best</span> <span class="o">=</span> <span class="n">objmip_ann</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">min_obj_val</span><span class="p">)</span>
+
+        <span class="c1"># Final results based on best</span>
+        <span class="c1"># parents_f = parents_ann[i_best]</span>
+        <span class="n">results_f</span> <span class="o">=</span> <span class="n">causal_prediction</span><span class="p">[</span><span class="n">i_best</span><span class="p">]</span>
+        <span class="c1"># links_f = links_ann[i_best]</span>
+        <span class="n">gamma_f</span> <span class="o">=</span> <span class="n">gamma_ann</span><span class="p">[</span><span class="n">i_best</span><span class="p">]</span>
+        <span class="c1"># Convergence optimization</span>
+        <span class="n">diff_g_f</span> <span class="o">=</span> <span class="n">diff_g_ann</span><span class="p">,</span> <span class="n">diff_g_ann</span><span class="p">[</span><span class="n">i_best</span><span class="p">]</span>
+
+        <span class="n">final_results</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;regimes&#39;</span><span class="p">:</span> <span class="n">gamma_f</span><span class="p">,</span>
+                         <span class="s1">&#39;causal_results&#39;</span><span class="p">:</span><span class="n">results_f</span><span class="p">,</span>
+                         <span class="s1">&#39;diff_g_f&#39;</span><span class="p">:</span><span class="n">diff_g_f</span><span class="p">,</span>
+                         <span class="s1">&#39;error_free_annealings&#39;</span><span class="p">:</span><span class="n">error_free_annealings</span><span class="p">}</span>
+        
+        <span class="k">return</span> <span class="n">final_results</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Tigramite</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, Jakob Runge.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.1.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

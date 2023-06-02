@@ -30,7 +30,7 @@
           <div class="body" role="main">
             
   <h1>Source code for tigramite.causal_effects</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Tigramite causal discovery for time series.&quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot;Tigramite causal inference for time series.&quot;&quot;&quot;</span>
 
 <span class="c1"># Author: Jakob Runge &lt;jakob@jakob-runge.com&gt;</span>
 <span class="c1">#</span>
@@ -2396,6 +2396,35 @@
 
         <span class="k">return</span> <span class="n">confidence_interval</span></div>
 
+<div class="viewcode-block" id="CausalEffects.get_dict_from_graph"><a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.get_dict_from_graph">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_dict_from_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">parents_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function to convert graph to dictionary of links.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ---------</span>
+<span class="sd">        graph : array of shape (N, N, tau_max+1)</span>
+<span class="sd">            Matrix format of graph in string format.</span>
+
+<span class="sd">        parents_only : bool</span>
+<span class="sd">            Whether to only return parents (&#39;--&gt;&#39; in graph)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        links : dict</span>
+<span class="sd">            Dictionary of form {0:{(0, -1): o-o, ...}, 1:{...}, ...}.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">links</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">j</span><span class="p">,</span> <span class="p">{})</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)])</span>
+
+        <span class="k">if</span> <span class="n">parents_only</span><span class="p">:</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">tau</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">graph</span><span class="o">==</span><span class="s1">&#39;--&gt;&#39;</span><span class="p">)):</span>
+                <span class="n">links</span><span class="p">[</span><span class="n">j</span><span class="p">][(</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="n">tau</span><span class="p">)]</span> <span class="o">=</span> <span class="n">graph</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="n">tau</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">tau</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">graph</span><span class="o">!=</span><span class="s1">&#39;&#39;</span><span class="p">)):</span>
+                <span class="n">links</span><span class="p">[</span><span class="n">j</span><span class="p">][(</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="n">tau</span><span class="p">)]</span> <span class="o">=</span> <span class="n">graph</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="n">tau</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">links</span></div>
 
 <div class="viewcode-block" id="CausalEffects.get_graph_from_dict"><a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.get_graph_from_dict">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">get_graph_from_dict</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
