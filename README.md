@@ -9,6 +9,8 @@ Version 5.2
 
 [Tutorials](https://github.com/jakobrunge/tigramite/tree/master/tutorials/)
 
+[Overview/review paper: Causal inference for time series](https://github.com/jakobrunge/tigramite/blob/master/tutorials/Runge_Causal_Inference_for_Time_Series_NREE.pdf)
+
 ## Overview
 
 __Update:__ Tigramite now has a new CausalEffects class that allows to estimate (conditional) causal effects and mediation based on assuming a causal graph. Have a look at the tutorial.
