@@ -1569,6 +1569,7 @@ class Prediction(Models, PCMCI):
             mask = {0: np.zeros(dataframe.values[0].shape, dtype='bool')}
         # Get the dataframe shape
         T = dataframe.T[0]
+
         # Have the default dataframe be the training data frame
         train_mask = deepcopy(mask)
         train_mask[0][[t for t in range(T) if t not in train_indices]] = True
@@ -1656,6 +1657,14 @@ class Prediction(Models, PCMCI):
             Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}
             containing estimated predictors.
         """
+
+        if selected_links is not None:
+            link_assumptions = {}
+            for j in selected_links.keys():
+                link_assumptions[j] = {(i, -tau):"-?>" for i in range(self.N) for tau in range(1, tau_max+1)}
+        else:
+            link_assumptions = None
+
         # Ensure an independence model is given
         if self.cond_ind_test is None:
             raise ValueError("No cond_ind_test given!")
@@ -1663,7 +1672,7 @@ class Prediction(Models, PCMCI):
         self.selected_variables = range(self.N)
         if selected_targets is not None:
             self.selected_variables = selected_targets
-        predictors = self.run_pc_stable(selected_links=selected_links,
+        predictors = self.run_pc_stable(link_assumptions=link_assumptions,
                                         tau_min=steps_ahead,
                                         tau_max=tau_max,
                                         save_iterations=False,
