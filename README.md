@@ -23,6 +23,7 @@ Further, Tigramite provides several causal discovery methods that can be used un
 | PCMCI  | Causal stationarity, no contemporaneous causal links, no hidden variables |  Directed lagged links, undirected contemporaneous links (for tau_min=0)  |
 | PCMCIplus | Causal stationarity, no hidden variables    | Directed lagged links, directed and undirected contemp. links (Time series CPDAG) |
 | LPCMCI | Causal stationarity    | Time series PAG |
+| RPCMCI  | No contemporaneous causal links, no hidden variables |  Regime-variable and causal graphs for each regime with directed lagged links, undirected contemporaneous links (for tau_min=0)  |
 
 
 | Conditional independence test | Assumptions                                                                                            |
@@ -44,6 +45,7 @@ Tigramite is a causal inference for time series python package. It allows to eff
 - PCMCI: J. Runge, P. Nowack, M. Kretschmer, S. Flaxman, D. Sejdinovic, Detecting and quantifying causal associations in large nonlinear time series datasets. Sci. Adv. 5, eaau4996 (2019). https://advances.sciencemag.org/content/5/11/eaau4996
 - PCMCI+: J. Runge (2020): Discovering contemporaneous and lagged causal relations in autocorrelated nonlinear time series datasets. Proceedings of the 36th Conference on Uncertainty in Artificial Intelligence, UAI 2020,Toronto, Canada, 2019, AUAI Press, 2020. http://auai.org/uai2020/proceedings/579_main_paper.pdf
 - LPCMCI: Gerhardus, A. & Runge, J. High-recall causal discovery for autocorrelated time series with latent confounders Advances in Neural Information Processing Systems, 2020, 33. https://proceedings.neurips.cc/paper/2020/hash/94e70705efae423efda1088614128d0b-Abstract.html
+- RPCMCI: Elena Saggioro, Jana de Wiljes, Marlene Kretschmer, Jakob Runge; Reconstructing regime-dependent causal relationships from observational time series. Chaos 1 November 2020; 30 (11): 113115. https://doi.org/10.1063/5.0020538
 - Generally: J. Runge (2018): Causal Network Reconstruction from Time Series: From Theoretical Assumptions to Practical Estimation. Chaos: An Interdisciplinary Journal of Nonlinear Science 28 (7): 075310. https://aip.scitation.org/doi/10.1063/1.5025050
 - Nature Communications Perspective paper: https://www.nature.com/articles/s41467-019-10105-3
 - Mediation class: J. Runge et al. (2015): Identifying causal gateways and mediators in complex spatio-temporal systems. Nature Communications, 6, 8502. http://doi.org/10.1038/ncomms9502
@@ -77,6 +79,7 @@ Tigramite is a causal inference for time series python package. It allows to eff
 - gpytorch>=1.9.1     # GPDC gpytorch version
 - dcor>=0.6           # GPDC distance correlation version
 - joblib>=1.2.0       # CMIsymb shuffle parallelization
+- ortools>=9.2        # RPCMCI
 
 ## Installation
 
