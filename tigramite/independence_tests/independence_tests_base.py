@@ -107,6 +107,7 @@ class CondIndTest():
         self.fixed_thres = fixed_thres
         self.verbosity = verbosity
         self.cached_ci_results = {}
+        self.ci_results = {}
         # If we recycle residuals, then set up a residual cache
         self.recycle_residuals = recycle_residuals
         if self.recycle_residuals:
@@ -378,6 +379,7 @@ class CondIndTest():
             # Get the p-value
             pval = self.get_significance(val, array, xyz, T, dim)
             self.cached_ci_results[combined_hash] = (val, pval)
+            self.ci_results[(X, Y, Z)] = (val, pval)
 
         if self.verbosity > 1:
             self._print_cond_ind_results(val=val, pval=pval, cached=cached,
