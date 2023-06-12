@@ -1076,8 +1076,8 @@ class PCMCI(PCMCIbase):
 
             if val_only is False:
                 # Run the independence tests and record the results
-                if ((i, -tau) in _int_link_assumptions[j] 
-                     and _int_link_assumptions[j][(i, -tau)] in ['-->', 'o-o']):
+                if ((i, -abs(tau)) in _int_link_assumptions[j] 
+                     and _int_link_assumptions[j][(i, -abs(tau))] in ['-->', 'o-o']):
                     val = 1. 
                     pval = 0.
                 else:
