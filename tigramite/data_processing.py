@@ -137,7 +137,7 @@ class DataFrame():
             1D numpy array holding all specified reference_points, less those
             smaller than 0 and larger than self.largest_time_step-1
         If reference_points is None:
-            Is np.array(range(self.largest_time_step))
+            Is np.array(self.largest_time_step)
     self.time_offsets : dictionary
         If time_offsets is not None:
             Is time_offsets
@@ -300,6 +300,11 @@ class DataFrame():
         if self.vector_vars is None:
             self.vector_vars = dict(zip(range(self.Ndata), [[(i, 0)] 
                                 for i in range(self.Ndata)]))
+            self.has_vector_data = False
+        else:
+            self.has_vector_data = True
+
+
         # TODO: check vector_vars!
         self.N = len(self.vector_vars)
 
@@ -498,7 +503,7 @@ class DataFrame():
         if reference_points is None:
             # If no reference point is specified, use as many reference points
             # as possible
-            self.reference_points = np.array(range(self.largest_time_step))
+            self.reference_points = np.arange(self.largest_time_step)
 
         elif isinstance(reference_points, int):
             # If a single reference point is specified as an int, convert it to
@@ -645,7 +650,7 @@ class DataFrame():
         array, xyz [,XYZ], data_type : Tuple of data array of shape (dim, n_samples),
             xyz identifier array of shape (dim,) identifying which row in array
             corresponds to X, Y, and Z, and the type mask that indicates which samples
-            are continuous or discrete. For example:: X = [(0, -1)],
+            are continuous or discrete. For example: X = [(0, -1)],
             Y = [(1, 0)], Z = [(1, -1), (0, -2)] yields an array of shape
             (4, n_samples) and xyz is xyz = numpy.array([0,1,2,2]). If
             return_cleaned_xyz is True, also outputs the cleaned XYZ lists.
