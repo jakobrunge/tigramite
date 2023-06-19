@@ -2484,46 +2484,94 @@ if __name__ == '__main__':
     from sklearn.preprocessing import StandardScaler
 
 
-    def lin_f(x): return x
-    coeff = .5
+    # def lin_f(x): return x
+    # coeff = .5
  
-    links_coeffs = {0: [((0, -1), 0.5, lin_f)],
-             1: [((1, -1), 0.5, lin_f), ((0, -1), 0.5, lin_f)],
-             2: [((2, -1), 0.5, lin_f), ((1, 0), 0.5, lin_f)]
-             }
-    T = 1000
-    data, nonstat = toys.structural_causal_process(
-        links_coeffs, T=T, noises=None, seed=7)
-    dataframe = pp.DataFrame(data)
+    # links_coeffs = {0: [((0, -1), 0.5, lin_f)],
+    #          1: [((1, -1), 0.5, lin_f), ((0, -1), 0.5, lin_f)],
+    #          2: [((2, -1), 0.5, lin_f), ((1, 0), 0.5, lin_f)]
+    #          }
+    # T = 1000
+    # data, nonstat = toys.structural_causal_process(
+    #     links_coeffs, T=T, noises=None, seed=7)
+    # dataframe = pp.DataFrame(data)
 
-    graph = CausalEffects.get_graph_from_dict(links_coeffs)
+    # graph = CausalEffects.get_graph_from_dict(links_coeffs)
 
-    X = [(0, -2)]
-    Y = [(2, 0)]
+    original_graph = np.array([[['', ''],
+        ['-->', ''],
+        ['-->', ''],
+        ['', '']],
 
-    # Initialize class as `stationary_dag`
-    causal_effects = CausalEffects(graph, graph_type='stationary_dag', 
+       [['<--', ''],
+        ['', '-->'],
+        ['-->', ''],
+        ['-->', '']],
+
+       [['<--', ''],
+        ['<--', ''],
+        ['', '-->'],
+        ['-->', '']],
+
+       [['', ''],
+        ['<--', ''],
+        ['<--', ''],
+        ['', '-->']]], dtype='<U3')
+    graph = np.copy(original_graph)
+
+    # Add T <-> Reco and T 
+    graph[2,3,0] = '+->' ; graph[3,2,0] = '<-+'
+    graph[1,3,1] = '<->' #; graph[2,1,0] = '<--'
+
+    added = np.zeros((4, 4, 1), dtype='<U3')
+    added[:] = ""
+    graph = np.append(graph, added , axis=2)
+
+
+    X = [(1, 0)]
+    Y = [(3, 0)]
+
+    # # Initialize class as `stationary_dag`
+    causal_effects = CausalEffects(graph, graph_type='stationary_admg', 
                                 X=X, Y=Y, S=None, 
                                 hidden_variables=None, 
                                 verbosity=0)
 
-    causal_effects.fit_wright_effect(dataframe=dataframe, 
-                            # links_coeffs = links_coeffs,
-                            # mediation = [(1, 0), (1, -1), (1, -2)]
-                            )
+    print(causal_effects.get_optimal_set())
 
-    intervention_data = 1.*np.ones((1, 1))
-    y1 = causal_effects.predict_wright_effect( 
-            intervention_data=intervention_data,
-            )
+    tp.plot_time_series_graph(
+        graph = graph,
+        save_name='Example_graph_in.pdf',
+        # special_nodes=special_nodes,
+        # var_names=var_names,
+        figsize=(6, 4),
+        )
 
-    intervention_data = 0.*np.ones((1, 1))
-    y2 = causal_effects.predict_wright_effect( 
-            intervention_data=intervention_data,
-            )
+    tp.plot_time_series_graph(
+        graph = causal_effects.graph,
+        save_name='Example_graph_out.pdf',
+        # special_nodes=special_nodes,
+        # var_names=var_names,
+        figsize=(6, 4),
+        )
 
-    beta = (y1 - y2)
-    print("Causal effect is %.5f" %(beta))
+    # causal_effects.fit_wright_effect(dataframe=dataframe, 
+    #                         # links_coeffs = links_coeffs,
+    #                         # mediation = [(1, 0), (1, -1), (1, -2)]
+    #                         )
+
+    # intervention_data = 1.*np.ones((1, 1))
+    # y1 = causal_effects.predict_wright_effect( 
+    #         intervention_data=intervention_data,
+    #         )
+
+    # intervention_data = 0.*np.ones((1, 1))
+    # y2 = causal_effects.predict_wright_effect( 
+    #         intervention_data=intervention_data,
+    #         )
+
+    # beta = (y1 - y2)
+    # print("Causal effect is %.5f" %(beta))
 
     # tp.plot_time_series_graph(
     #     graph = causal_effects.graph,
