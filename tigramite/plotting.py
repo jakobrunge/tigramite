@@ -131,20 +131,19 @@ def _get_absmax(val_matrix):
 
 
 def _add_timeseries(
-    dataframe,
-    fig_axes,
-    grey_masked_samples=False,
-    show_meanline=False,
-    data_linewidth=1.0,
-    color="black",
-    alpha=1.,
-    grey_alpha=1.0,
-    selected_dataset=0,
+        dataframe,
+        fig_axes,
+        grey_masked_samples=False,
+        show_meanline=False,
+        data_linewidth=1.0,
+        color="black",
+        alpha=1.,
+        grey_alpha=1.0,
+        selected_dataset=0,
 ):
     """Adds a time series plot to an axis.
     Plot of dataseries is added to axis. Allows for proper visualization of
     masked data.
-
     Parameters
     ----------
     fig : figure instance
@@ -180,10 +179,14 @@ def _add_timeseries(
     time = dataframe.datatime[selected_dataset]
     T = len(time)
 
-    for j in range(dataframe.N):
-        
+    N = dataframe.N
+
+    N_all = sum([len(var_elems) for var_elems in dataframe.vector_vars.values()])
+
+    for j in range(N_all):
+
         ax = axes[j]
-        dataseries = data[:,j]
+        dataseries = data[:, j]
 
         if missing_flag is not None:
             dataseries_nomissing = np.ma.masked_where(
@@ -194,9 +197,8 @@ def _add_timeseries(
                 np.zeros(dataseries.shape), dataseries
             )
 
-
         if mask is not None:
-            maskseries = mask[:,j]
+            maskseries = mask[:, j]
 
             maskdata = np.ma.masked_where(maskseries, dataseries_nomissing)
 
@@ -223,7 +225,7 @@ def _add_timeseries(
                     alpha=grey_alpha,
                 )
             if show_meanline:
-                ax.plot(time, maskdata.mean()*np.ones(T), lw=data_linewidth/2., color=color)
+                ax.plot(time, maskdata.mean() * np.ones(T), lw=data_linewidth / 2., color=color)
 
             ax.plot(
                 time,
@@ -237,7 +239,7 @@ def _add_timeseries(
             )
         else:
             if show_meanline:
-                ax.plot(time, dataseries_nomissing.mean()*np.ones(T), lw=data_linewidth/2., color=color)
+                ax.plot(time, dataseries_nomissing.mean() * np.ones(T), lw=data_linewidth / 2., color=color)
 
             ax.plot(
                 time,
@@ -246,30 +248,29 @@ def _add_timeseries(
                 linewidth=data_linewidth,
                 clip_on=False,
                 alpha=alpha,
-                )
+            )
 
 
 def plot_timeseries(
-    dataframe=None,
-    save_name=None,
-    fig_axes=None,
-    figsize=None,
-    var_units=None,
-    time_label="",
-    grey_masked_samples=False,
-    show_meanline=False,
-    data_linewidth=1.0,
-    skip_ticks_data_x=1,
-    skip_ticks_data_y=1,
-    label_fontsize=10,
-    color='black',
-    alpha=1.,
-    tick_label_size=6,
-    selected_dataset=0,
-    adjust_plot=True,
+        dataframe=None,
+        save_name=None,
+        fig_axes=None,
+        figsize=None,
+        var_units=None,
+        time_label="",
+        grey_masked_samples=False,
+        show_meanline=False,
+        data_linewidth=1.0,
+        skip_ticks_data_x=1,
+        skip_ticks_data_y=1,
+        label_fontsize=10,
+        color='black',
+        alpha=1.,
+        tick_label_size=6,
+        selected_dataset=0,
+        adjust_plot=True,
 ):
     """Create and save figure of stacked panels with time series.
-
     Parameters
     ----------
     dataframe : data object, optional
@@ -316,20 +317,24 @@ def plot_timeseries(
 
     N = dataframe.N
 
+    N_elem = [len(var_elems) for var_elems in dataframe.vector_vars.values()]
+    N_index = [sum(N_elem[:i]) for i, el in enumerate(N_elem)]
+    N_all = sum(N_elem)
+
     if var_units is None:
         var_units = ["" for i in range(N)]
 
     if fig_axes is None:
-        fig, axes = pyplot.subplots(N, sharex=True, figsize=figsize)
+        fig, axes = pyplot.subplots(N_all, sharex=True, figsize=figsize)
     else:
         fig, axes = fig_axes
 
     if adjust_plot:
-        for i in range(N):
+        for i in range(N_all):
 
             ax = axes[i]
 
-            if (i == N - 1):
+            if (i == N_all - 1):
                 _make_nice_axes(
                     ax, where=["left", "bottom"], skip=(skip_ticks_data_x, skip_ticks_data_y)
                 )
@@ -344,24 +349,26 @@ def plot_timeseries(
             ax.set_xlim(time[0], time[-1])
 
             # trans = transforms.blended_transform_factory(fig.transFigure, ax.transAxes)
-            if var_units[i]:
-                ax.set_ylabel(r"%s [%s]" % (var_names[i], var_units[i]), fontsize=label_fontsize)
-            else:
-                ax.set_ylabel(r"%s" % (var_names[i]), fontsize=label_fontsize)
+            if i in N_index:
+                if var_units[N_index.index(i)]:
+                    ax.set_ylabel(r"%s [%s]" % (var_names[N_index.index(i)], var_units[N_index.index(i)]),
+                                  fontsize=label_fontsize)
+                else:
+                    ax.set_ylabel(r"%s" % (var_names[N_index.index(i)]), fontsize=label_fontsize)
 
             ax.tick_params(axis='both', which='major', labelsize=tick_label_size)
             # ax.tick_params(axis='both', which='minor', labelsize=tick_label_size)
 
     _add_timeseries(
         dataframe=dataframe,
-        fig_axes = (fig, axes),
+        fig_axes=(fig, axes),
         grey_masked_samples=grey_masked_samples,
         show_meanline=show_meanline,
         data_linewidth=data_linewidth,
         color=color,
         selected_dataset=selected_dataset,
         alpha=alpha,
-        )
+    )
 
     if adjust_plot:
         fig.subplots_adjust(bottom=0.15, top=0.9, left=0.15, right=0.95, hspace=0.3)
