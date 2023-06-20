@@ -99,7 +99,15 @@ class J_PCMCIplus(PCMCI):
                        link_assumptions=None,
                        tau_min=0,
                        tau_max=2,
-                       pc_alpha=0.05):
+                       pc_alpha=0.01,
+                       conflict_resolution=True,
+                       reset_lagged_links=False,
+                       max_conds_dim=None,
+                       max_combinations=1,
+                       max_conds_py=None,
+                       max_conds_px=None,
+                       max_conds_px_lagged=None,
+                       fdr_method='none'):
         """
         Runs J_PCMCIplus time-lagged and contemporaneous causal discovery for time series from multiple contexts.
         Method described in [10]_:
@@ -257,7 +265,15 @@ class J_PCMCIplus(PCMCI):
             _link_assumptions,
             tau_min=tau_min,
             tau_max=tau_max,
-            pc_alpha=pc_alpha
+            pc_alpha=pc_alpha,
+            conflict_resolution=conflict_resolution,
+            reset_lagged_links=reset_lagged_links,
+            max_conds_dim=max_conds_dim,
+            max_combinations=max_combinations,
+            max_conds_py=max_conds_py,
+            max_conds_px=max_conds_px,
+            max_conds_px_lagged=max_conds_px_lagged,
+            fdr_method=fdr_method
         )
         context_results = context_system_results
         self.observed_context_parents = context_results['parents']
@@ -272,7 +288,15 @@ class J_PCMCIplus(PCMCI):
                 context_system_results,
                 tau_min=tau_min,
                 tau_max=tau_max,
-                pc_alpha=pc_alpha
+                pc_alpha=pc_alpha,
+                conflict_resolution=conflict_resolution,
+                reset_lagged_links=reset_lagged_links,
+                max_conds_dim=max_conds_dim,
+                max_combinations=max_combinations,
+                max_conds_py=max_conds_py,
+                max_conds_px=max_conds_px,
+                max_conds_px_lagged=max_conds_px_lagged,
+                fdr_method=fdr_method
             )
             context_results = dummy_system_results
 
@@ -283,9 +307,22 @@ class J_PCMCIplus(PCMCI):
             print("Discovered contextual parents: ", self.context_parents)
 
         # step 3:
-        results = self.discover_system_system_links(_link_assumptions, context_results, dummy_vars,
-                                                    observed_context_nodes, tau_min, tau_max, pc_alpha,
-                                                    contemp_collider_rule)
+        results = self.discover_system_system_links(link_assumptions=_link_assumptions,
+                                                    context_results=context_results,
+                                                    dummy_vars=dummy_vars,
+                                                    observed_context_nodes=observed_context_nodes,
+                                                    contemp_collider_rule=contemp_collider_rule,
+                                                    tau_min=tau_min,
+                                                    tau_max=tau_max,
+                                                    pc_alpha=pc_alpha,
+                                                    conflict_resolution=conflict_resolution,
+                                                    reset_lagged_links=reset_lagged_links,
+                                                    max_conds_dim=max_conds_dim,
+                                                    max_combinations=max_combinations,
+                                                    max_conds_py=max_conds_py,
+                                                    max_conds_px=max_conds_px,
+                                                    max_conds_px_lagged=max_conds_px_lagged,
+                                                    fdr_method=fdr_method)
 
         # Return the dictionary
         return results
@@ -375,24 +412,35 @@ class J_PCMCIplus(PCMCI):
             system_links[C] = {}
         return system_links
 
-    def discover_lagged_and_context_system_links(self, link_assumptions, tau_min=0, tau_max=1, pc_alpha=0.01):
+    def discover_lagged_and_context_system_links(self, link_assumptions,
+                                                 tau_min=0,
+                                                 tau_max=1, pc_alpha=0.01,
+                                                 conflict_resolution=True,
+                                                 reset_lagged_links=False,
+                                                 max_conds_dim=None,
+                                                 max_combinations=1,
+                                                 max_conds_py=None,
+                                                 max_conds_px=None,
+                                                 max_conds_px_lagged=None,
+                                                 fdr_method='none'):
         """
-        TODO: add description
-        **bla**
-
-        Parameters
-        ----------
-        link_assumptions
-        tau_min
-        tau_max
-        pc_alpha
+        Step 0 and 1 of J_PCMCIplus, i.e. discovery of a superset of the lagged parents as well as discovery of links
+        between observed context nodes and system nodes through an application of the skeleton phase of PCMCIplus to
+        this subset of nodes (observed context nodes and system nodes).
+        See run_jpcmciplus for a description of the parameters.
 
         Returns
         -------
         lagged_context_parents : dictionary
-        values : dictionary
+            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing
+            the conditioning-parents estimated with PC algorithm, as well as the estimated observed context parents.
+        values : array of shape [N, N, tau_max+1]
+            Estimated matrix of test statistic values regarding adjacencies.
         parents : dictionary
+            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing
+            the estimated observed context parents.
         """
+
         # Initializing
         parents = {j: [] for j in range(self.nb_system_nodes + self.nb_context_nodes + self.nb_dummy_nodes)}
         lagged_context_parents = {j: [] for j in
@@ -407,13 +455,23 @@ class J_PCMCIplus(PCMCI):
         self.mode = "context_search"
         print("##### Discovering context-system links #####")
         # run PCMCI+ on subset of links to discover context-system links
-        # (we use simple v-structure orientation rules since the orientation phase is not important at this step)
+        # (we use simple v-structure orientation rules since the orientation phase is not
+        # important at this step)
         skeleton_results = self.run_pcmciplus(
             tau_min=tau_min,
             tau_max=tau_max,
             link_assumptions=_link_assumptions_wo_dummy,
-            contemp_collider_rule=None,
-            pc_alpha=pc_alpha)
+            contemp_collider_rule='none',
+            pc_alpha=pc_alpha,
+            conflict_resolution=conflict_resolution,
+            reset_lagged_links=reset_lagged_links,
+            max_conds_dim=max_conds_dim,
+            max_combinations=max_combinations,
+            max_conds_py=max_conds_py,
+            max_conds_px=max_conds_px,
+            max_conds_px_lagged=max_conds_px_lagged,
+            fdr_method=fdr_method
+        )
         skeleton_val = skeleton_results['val_matrix']
 
         self.mode = "system_search"
@@ -436,23 +494,42 @@ class J_PCMCIplus(PCMCI):
                 'parents': parents
                 }
 
-    def discover_dummy_system_links(self, link_assumptions, context_system_results, tau_min=0, tau_max=1,
-                                    pc_alpha=0.01):
+    def discover_dummy_system_links(self, link_assumptions,
+                                    context_system_results,
+                                    tau_min=0,
+                                    tau_max=1,
+                                    pc_alpha=0.01,
+                                    conflict_resolution=True,
+                                    reset_lagged_links=False,
+                                    max_conds_dim=None,
+                                    max_combinations=1,
+                                    max_conds_py=None,
+                                    max_conds_px=None,
+                                    max_conds_px_lagged=None,
+                                    fdr_method='none'):
         """
+        Step 2 of J_PCMCIplus, i.e. discovery of links between observed (time and space) dummy nodes and system nodes
+        through an application of the skeleton phase of PCMCIplus to this subset of nodes (dummy nodes and
+        system nodes).
+        See run_jpcmciplus for a description of the parameters.
 
         Parameters
         ----------
-        link_assumptions
-        context_system_results
-        tau_min
-        tau_max
-        pc_alpha
+        context_system_results : dictionary
+            Output of discover_lagged_and_context_system_links, i.e. lagged and context parents together with the
+            corresponding estimated test statistic values regarding adjacencies.
 
         Returns
         -------
         lagged_context_parents : dictionary
-        values : dictionary
+            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing
+            the conditioning-parents estimated with PC algorithm, as well as the estimated (dummy and observed)
+            context parents.
+        values : array of shape [N, N, tau_max+1]
+            Estimated matrix of test statistic values regarding adjacencies.
         parents : dictionary
+            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing
+            the estimated (dummy and observed) context parents.
         """
 
         lagged_context_parents = context_system_results['lagged_context_parents']
@@ -507,9 +584,18 @@ class J_PCMCIplus(PCMCI):
             lagged_parents=lagged_context_parents,
             tau_min=tau_min,
             tau_max=tau_max,
-            contemp_collider_rule=None,
+            contemp_collider_rule='none',
             link_assumptions=_link_assumptions_wo_obs_context,
-            pc_alpha=pc_alpha)
+            pc_alpha=pc_alpha,
+            conflict_resolution=conflict_resolution,
+            reset_lagged_links=reset_lagged_links,
+            max_conds_dim=max_conds_dim,
+            max_combinations=max_combinations,
+            max_conds_py=max_conds_py,
+            max_conds_px=max_conds_px,
+            max_conds_px_lagged=max_conds_px_lagged,
+            fdr_method=fdr_method
+        )
 
         skeleton_graph_dummy = skeleton_results_dummy['graph']
         skeleton_val_dummy = skeleton_results_dummy['val_matrix']
@@ -533,21 +619,27 @@ class J_PCMCIplus(PCMCI):
 
     def discover_system_system_links(self, link_assumptions, context_results, dummy_vars,
                                      observed_context_nodes, tau_min=0, tau_max=1, pc_alpha=0.01,
-                                     contemp_collider_rule="majority"):
+                                     contemp_collider_rule="majority",
+                                     conflict_resolution=True,
+                                     reset_lagged_links=False,
+                                     max_conds_dim=None,
+                                     max_combinations=1,
+                                     max_conds_py=None,
+                                     max_conds_px=None,
+                                     max_conds_px_lagged=None,
+                                     fdr_method='none'
+                                     ):
         """
-        Step 4 and orientation phase
-        TODO: add description
+        Step 4 of J_PCMCIplus and orientation phase, i.e. discovery of links between system nodes given the knowledge
+        about their context parents through an application of PCMCIplus to this subset of nodes (system nodes).
+        See run_jpcmciplus for a description of the other parameters.
+
 
         Parameters
         ----------
-        link_assumptions
-        context_results
-        dummy_vars
-        observed_context_nodes
-        tau_min
-        tau_max
-        pc_alpha
-        contemp_collider_rule
+        context_results : dictionary
+            Output of discover_lagged_and_context_system_links, i.e. lagged and (dummy and observed) context parents
+            together with the corresponding estimated test statistic values regarding adjacencies.
 
         Returns
         -------
@@ -563,6 +655,7 @@ class J_PCMCIplus(PCMCI):
             List of ambiguous triples, only relevant for 'majority' and
             'conservative' rules, see paper for details.
         """
+
         lagged_context_parents = context_results['lagged_context_parents']
         context_parents_values = context_results['values']
 
@@ -577,7 +670,16 @@ class J_PCMCIplus(PCMCI):
             tau_max=tau_max,
             contemp_collider_rule=contemp_collider_rule,
             link_assumptions=system_links,
-            pc_alpha=pc_alpha)
+            pc_alpha=pc_alpha,
+            conflict_resolution=conflict_resolution,
+            reset_lagged_links=reset_lagged_links,
+            max_conds_dim=max_conds_dim,
+            max_combinations=max_combinations,
+            max_conds_py=max_conds_py,
+            max_conds_px=max_conds_px,
+            max_conds_px_lagged=max_conds_px_lagged,
+            fdr_method=fdr_method
+        )
 
         for c in observed_context_nodes + dummy_vars:
             for j in list(range(self.nb_system_nodes)) + observed_context_nodes + dummy_vars:
@@ -747,6 +849,7 @@ class J_PCMCIplus(PCMCI):
                                max_conds_py=None,
                                max_conds_px=None,
                                max_conds_px_lagged=None,
+                               max_combinations=1,
                                fdr_method='none',
                                ):
         """Runs PCMCIplus time-lagged and contemporaneous causal discovery for
@@ -843,6 +946,7 @@ class J_PCMCIplus(PCMCI):
                 conflict_resolution=conflict_resolution,
                 reset_lagged_links=reset_lagged_links,
                 max_conds_dim=max_conds_dim,
+                max_combinations=max_combinations,
                 max_conds_py=max_conds_py,
                 max_conds_px=max_conds_px,
                 max_conds_px_lagged=max_conds_px_lagged,
@@ -854,9 +958,6 @@ class J_PCMCIplus(PCMCI):
 
         if pc_alpha < 0. or pc_alpha > 1:
             raise ValueError("Choose 0 <= pc_alpha <= 1")
-
-        # For the lagged PC algorithm only the strongest conditions are tested
-        max_combinations = 1
 
         # Check the limits on tau
         self._check_tau_limits(tau_min, tau_max)
@@ -921,7 +1022,7 @@ class J_PCMCIplus(PCMCI):
             tau_min=tau_min,
             tau_max=tau_max,
             max_conds_dim=max_conds_dim,
-            max_combinations=None,
+            max_combinations=max_combinations,
             lagged_parents=lagged_parents,
             max_conds_py=max_conds_py,
             max_conds_px=max_conds_px,
