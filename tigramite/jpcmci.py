@@ -1,6 +1,12 @@
+"""Tigramite causal discovery for time series."""
+
+# Authors: Wiebke Günther <wiebke.guenther@dlr.de>, Urmi Ninad, Jakob Runge <jakob@jakob-runge.com>
+#
+# License: GNU General Public License v3.0
+
 from __future__ import print_function
 import numpy as np
-from tigramite.pcmci import PCMCI, _nested_to_normal
+from tigramite.pcmci import PCMCI
 from tigramite.independence_tests.parcorr_mult import ParCorrMult
 from copy import deepcopy
 import itertools
