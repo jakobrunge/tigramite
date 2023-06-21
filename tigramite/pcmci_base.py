@@ -704,6 +704,7 @@ class PCMCIbase():
                           'run_pcmci',
                           'run_pcalg',
                           'run_lpcmci',
+                          'run_jpcmciplus',
                           # 'run_pcalg_non_timeseries_data',
                           'run_pcmciplus',]
 
