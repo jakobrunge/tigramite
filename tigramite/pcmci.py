@@ -2428,7 +2428,7 @@ class PCMCI(PCMCIbase):
         skeleton_graph = skeleton_results['graph']
         sepset = skeleton_results['sepset']
 
-        # Now change assumed links mark
+        # Now change assumed links marks
         skeleton_graph[skeleton_graph=='o?o'] = 'o-o'
         skeleton_graph[skeleton_graph=='-?>'] = '-->'
         skeleton_graph[skeleton_graph=='<?-'] = '<--'

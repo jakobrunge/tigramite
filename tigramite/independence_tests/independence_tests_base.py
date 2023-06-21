@@ -363,6 +363,7 @@ class CondIndTest():
         
         # Record the dimensions
         dim, T = array.shape
+        
         # Ensure it is a valid array
         if np.any(np.isnan(array)):
             raise ValueError("nans in the array!")
