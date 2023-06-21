@@ -1,6 +1,5 @@
 import numpy as np
 from numpy.random import MT19937
-import math
 
 from tigramite.toymodels import structural_causal_processes as toys
 
@@ -16,6 +15,65 @@ def shift_link_entries(links, const):
 
 
 class ContextModel:
+    """
+    TODO: adapt
+    Returns a time series generated from a structural causal process.
+
+        Allows lagged and contemporaneous dependencies and includes the option
+        to have intervened variables or particular samples.
+
+        The interventional data is in particular useful for generating ground
+        truth for the CausalEffects class.
+
+        In more detail, the method implements a generalized additive noise model process of the form
+
+        .. math:: X^j_t = \\eta^j_t + \\sum_{X^i_{t-\\tau}\\in \\mathcal{P}(X^j_t)}
+                  c^i_{\\tau} f^i_{\\tau}(X^i_{t-\\tau})
+
+        Links have the format ``{0:[((i, -tau), coeff, func),...], 1:[...],
+        ...}`` where ``func`` can be an arbitrary (nonlinear) function provided
+        as a python callable with one argument and coeff is the multiplication
+        factor. The noise distributions of :math:`\\eta^j` can be specified in
+        ``noises``.
+
+        Through the parameters ``intervention`` and ``intervention_type`` the model
+        can also be generated with intervened variables.
+
+        Parameters
+        ----------
+        links : dict
+            Dictionary of format: {0:[((i, -tau), coeff, func),...], 1:[...],
+            ...} for all variables where i must be in [0..N-1] and tau >= 0 with
+            number of variables N. coeff must be a float and func a python
+            callable of one argument.
+        T : int
+            Sample size.
+        noises : list of callables or array, optional (default: 'np.random.randn')
+            Random distribution function that is called with noises[j](T). If an array,
+            it must be of shape ((transient_fraction + 1)*T, N).
+        intervention : dict
+            Dictionary of format: {1:np.array, ...} containing only keys of intervened
+            variables with the value being the array of length T with interventional values.
+            Set values to np.nan to leave specific time points of a variable un-intervened.
+        intervention_type : str or dict
+            Dictionary of format: {1:'hard',  3:'soft', ...} to specify whether intervention is
+            hard (set value) or soft (add value) for variable j. If str, all interventions have
+            the same type.
+        transient_fraction : float
+            Added percentage of T used as a transient. In total a realization of length
+            (transient_fraction + 1)*T will be generated, but then transient_fraction*T will be
+            cut off.
+        seed : int, optional (default: None)
+            Random seed.
+
+        Returns
+        -------
+        data : array-like
+            Data generated from this process, shape (T, N).
+        nonvalid : bool
+            Indicates whether data has NaNs or infinities.
+
+        """
     def __init__(self, links_tc={}, links_sc={}, links_sys={}, noises=None, seed=None):
         self.N = len(links_sys.keys())
         self.links_tc = links_tc

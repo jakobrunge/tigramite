@@ -64,19 +64,24 @@ class J_PCMCIplus(PCMCI):
         observed_context_parents : dictionary or None
             Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing
             the dependence of the system nodes on the observed context nodes.
-        nb_system_nodes : int
-            Number of system nodes.
-        nb_context_nodes : int
-            Number of context nodes.
-        nb_dummy_nodes : int
-            Number of dummy nodes.
         dummy_ci_test : conditional independence test object
             Conditional independence test used to test dependence between system nodes and dummy nodes.
             Currently, ParCorr is used with one-hot encoded dummies.
+        mode : "system_search" or "context_search" or "dummy_search" (default: "system_search")
+        time_context_nodes : list
+            List with entries from {0, ..., N-1} where N is the number of nodes.
+            This is the list of the temporal context nodes which are assumed to be constant over the different datasets.
+        space_context_nodes :
+            List with entries from {0, ..., N-1} where N is the number of nodes.
+            This is the list of the spatial context nodes which are assumed to be constant over time.
+        time_dummy : int or None (default: None)
+            Node corresponding to the temporal dummy variable.
+        space_dummy : int or None (default: None)
+            Node corresponding to the spatial dummy variable.
+        system_nodes : list
+            List with entries from {0, ..., N-1} where N is the number of nodes.
+            This is the list of the system nodes.
         """
-
-    # TODO: test this assumption:
-    # assume context nodes are at the end
 
     def __init__(self, time_context_nodes, space_context_nodes, time_dummy=None, space_dummy=None, **kwargs):
         self.time_context_nodes = time_context_nodes
@@ -87,12 +92,12 @@ class J_PCMCIplus(PCMCI):
         self.context_parents = None
         self.observed_context_parents = None
         self.dummy_ci_test = ParCorrMult(significance='analytic')
-        self.nb_context_nodes = len(self.time_context_nodes) + len(self.space_context_nodes)
-        self.nb_dummy_nodes = sum([time_dummy is not None, space_dummy is not None])
         self.mode = "system_search"
 
         PCMCI.__init__(self, **kwargs)
-        self.nb_system_nodes = self.N - self.nb_context_nodes - self.nb_dummy_nodes
+        self.system_nodes = [el for el in range(self.N) if
+                             el not in self.time_context_nodes + self.space_context_nodes + [self.time_dummy] + [
+                                 self.space_dummy]]
 
     def run_jpcmciplus(self,
                        contemp_collider_rule='majority',
@@ -241,13 +246,6 @@ class J_PCMCIplus(PCMCI):
             List of ambiguous triples, only relevant for 'majority' and
             'conservative' rules, see paper for details.
         """
-        if self.time_dummy is None:
-            dummy_vars = []
-        else:
-            dummy_vars = [self.time_dummy]
-
-        if self.space_dummy is not None:
-            dummy_vars += [self.space_dummy]
         observed_context_nodes = self.time_context_nodes + self.space_context_nodes
 
         # initialize / clean link_assumptions
@@ -309,8 +307,6 @@ class J_PCMCIplus(PCMCI):
         # step 3:
         results = self.discover_system_system_links(link_assumptions=_link_assumptions,
                                                     context_results=context_results,
-                                                    dummy_vars=dummy_vars,
-                                                    observed_context_nodes=observed_context_nodes,
                                                     contemp_collider_rule=contemp_collider_rule,
                                                     tau_min=tau_min,
                                                     tau_max=tau_max,
@@ -331,7 +327,7 @@ class J_PCMCIplus(PCMCI):
         """Helper function to amend the link_assumptions to ensure that all context-system links are oriented
         such that the context variable is the parent."""
         for j in link_assumptions:
-            if j in range(self.nb_system_nodes):
+            if j in self.system_nodes:
                 for link in link_assumptions[j]:
                     i, lag = link
                     if i in observed_context_nodes + [self.time_dummy, self.space_dummy]:  # is context var
@@ -349,12 +345,12 @@ class J_PCMCIplus(PCMCI):
         if self.time_dummy is not None: link_assumptions[self.time_dummy] = {}
         if self.space_dummy is not None: link_assumptions[self.space_dummy] = {}
 
-        for j in range(self.nb_system_nodes + self.nb_context_nodes):
+        for j in self.system_nodes + self.time_context_nodes + self.space_context_nodes:
             for lag in range(1, tau_max + 1):
                 for c in [self.time_dummy, self.space_dummy] + self.space_context_nodes:
                     if (c, -lag) in link_assumptions[j]: link_assumptions[j].pop((c, -lag), None)
         for c in self.space_context_nodes + self.time_context_nodes:
-            for j in range(self.nb_system_nodes):
+            for j in self.system_nodes:
                 for lag in range(tau_max + 1):
                     if (j, -lag) in link_assumptions[c]: link_assumptions[c].pop((j, -lag), None)
             if (c, 0) in link_assumptions[c]: link_assumptions[c].pop((c, 0), None)  # remove self-links
@@ -372,7 +368,7 @@ class J_PCMCIplus(PCMCI):
     def remove_dummy_link_assumptions(self, link_assumptions):
         """Helper function to remove any links to dummy from link_assumptions."""
         link_assumptions_wo_dummy = deepcopy(link_assumptions)
-        for j in range(self.nb_system_nodes + self.nb_context_nodes):
+        for j in self.system_nodes + self.time_context_nodes + self.space_context_nodes:
             if (self.time_dummy, 0) in link_assumptions_wo_dummy[j]:
                 link_assumptions_wo_dummy[j].pop((self.time_dummy, 0), None)
             if (self.space_dummy, 0) in link_assumptions_wo_dummy[j]:
@@ -385,20 +381,22 @@ class J_PCMCIplus(PCMCI):
 
         for c in self.space_context_nodes + self.time_context_nodes:
             link_assumptions_wo_obs_context[c] = {}
-        for j in range(self.nb_system_nodes):
+        for j in self.system_nodes:
             for c in self.space_context_nodes + self.time_context_nodes:
                 for lag in range(tau_max + 1):
                     if (c, -lag) in link_assumptions_wo_obs_context[j]:
                         link_assumptions_wo_obs_context[j].pop((c, -lag), None)
         return link_assumptions_wo_obs_context
 
-    def clean_system_link_assumptions(self, link_assumptions, dummy_vars, observed_context_nodes, tau_max):
+    def clean_system_link_assumptions(self, link_assumptions, tau_max):
         """Helper function to remove any links to dummy and observed context nodes from link_assumptions.
             Add discovered links to contextual parents (from steps 1 and 2) to the link_assumptions.
         """
+        dummy_vars = [el for el in [self.time_dummy, self.space_dummy] if el is not None]
+        observed_context_nodes = self.time_context_nodes + self.space_context_nodes
         system_links = deepcopy(link_assumptions)
 
-        for j in range(self.nb_system_nodes):
+        for j in self.system_nodes:
             for C in dummy_vars + observed_context_nodes:
                 for lag in range(tau_max + 1):
                     if (C, -lag) in system_links[j]:
@@ -442,11 +440,9 @@ class J_PCMCIplus(PCMCI):
         """
 
         # Initializing
-        parents = {j: [] for j in range(self.nb_system_nodes + self.nb_context_nodes + self.nb_dummy_nodes)}
-        lagged_context_parents = {j: [] for j in
-                                  range(self.nb_system_nodes + self.nb_context_nodes + self.nb_dummy_nodes)}
-        values = np.zeros((self.nb_system_nodes + self.nb_context_nodes + 2,
-                           self.nb_system_nodes + self.nb_context_nodes + 2, tau_max + 1))
+        parents = {j: [] for j in range(self.N)}
+        lagged_context_parents = {j: [] for j in range(self.N)}
+        values = np.zeros((self.N, self.N, tau_max + 1))
 
         # find links in btw expressive context, and btw expressive context and sys_vars
         # here, we exclude any links to dummy
@@ -477,14 +473,14 @@ class J_PCMCIplus(PCMCI):
         self.mode = "system_search"
         skeleton_graph = skeleton_results['graph']
 
-        for j in range(self.nb_system_nodes + self.nb_context_nodes):
+        for j in self.system_nodes + self.time_context_nodes + self.space_context_nodes:
             for c in self.space_context_nodes + self.time_context_nodes:
                 for k in range(tau_max + 1):
                     if skeleton_graph[c, j, k] == 'o-o' or skeleton_graph[c, j, k] == '-->':
                         parents[j].append((c, -k))
                         lagged_context_parents[j].append((c, -k))
                         values[c, j, k] = skeleton_val[c, j, k]
-            for i in range(self.nb_system_nodes):
+            for i in self.system_nodes:
                 for k in range(tau_max + 1):
                     if skeleton_graph[i, j, k] == 'o-o' or skeleton_graph[i, j, k] == '-->':
                         lagged_context_parents[j].append((i, -k))
@@ -539,7 +535,7 @@ class J_PCMCIplus(PCMCI):
         # setup link assumptions without the observed context nodes
         _link_assumptions_wo_obs_context = self.remove_obs_context_link_assumptions(link_assumptions, tau_max)
 
-        self.mode = "dummy_context_search"
+        self.mode = "dummy_search"
         print("#### Discovering dummy-system links ####")
         # run PC algorithm to find links between dummies and system variables
         """
@@ -600,7 +596,7 @@ class J_PCMCIplus(PCMCI):
         skeleton_graph_dummy = skeleton_results_dummy['graph']
         skeleton_val_dummy = skeleton_results_dummy['val_matrix']
 
-        for j in range(self.nb_system_nodes):
+        for j in self.system_nodes:
             for k in range(tau_max + 1):
                 if skeleton_graph_dummy[self.time_dummy, j, k] == 'o-o' or \
                         skeleton_graph_dummy[self.time_dummy, j, k] == '-->':
@@ -617,8 +613,11 @@ class J_PCMCIplus(PCMCI):
                 'parents': parents
                 }
 
-    def discover_system_system_links(self, link_assumptions, context_results, dummy_vars,
-                                     observed_context_nodes, tau_min=0, tau_max=1, pc_alpha=0.01,
+    def discover_system_system_links(self, link_assumptions,
+                                     context_results,
+                                     tau_min=0,
+                                     tau_max=1,
+                                     pc_alpha=0.01,
                                      contemp_collider_rule="majority",
                                      conflict_resolution=True,
                                      reset_lagged_links=False,
@@ -655,12 +654,14 @@ class J_PCMCIplus(PCMCI):
             List of ambiguous triples, only relevant for 'majority' and
             'conservative' rules, see paper for details.
         """
+        dummy_vars = [el for el in [self.time_dummy, self.space_dummy] if el is not None]
+        observed_context_nodes = self.time_context_nodes + self.space_context_nodes
 
         lagged_context_parents = context_results['lagged_context_parents']
         context_parents_values = context_results['values']
 
         # Get the parents from run_pc_stable only on the system links
-        system_links = self.clean_system_link_assumptions(link_assumptions, dummy_vars, observed_context_nodes, tau_max)
+        system_links = self.clean_system_link_assumptions(link_assumptions, tau_max)
 
         print("#### Discovering system-system links ####")
         self.mode = "system_search"
@@ -682,7 +683,7 @@ class J_PCMCIplus(PCMCI):
         )
 
         for c in observed_context_nodes + dummy_vars:
-            for j in list(range(self.nb_system_nodes)) + observed_context_nodes + dummy_vars:
+            for j in range(self.N):
                 for lag in range(tau_max + 1):
                     # add context-system links to results
                     results['val_matrix'][c, j, lag] = context_parents_values[c, j, lag]
@@ -710,7 +711,7 @@ class J_PCMCIplus(PCMCI):
                             and i in all_context_nodes):
                         pairs.append((i, j, abstau))
             return pairs
-        elif self.mode == "dummy_context_search":
+        elif self.mode == "dummy_search":
             # during discovery of dummy-system links we are only
             # interested in dummy-system pairs
             N = graph.shape[0]
@@ -764,7 +765,7 @@ class J_PCMCIplus(PCMCI):
         Z : list
             List of conditions.
         """
-        if self.mode == 'dummy_context_search':
+        if self.mode == 'dummy_search':
             # during discovery of dummy-system links we are using the dummy_ci_test and condition on the found
             # contextual parents from step 1.
             if lagged_parents is None:
