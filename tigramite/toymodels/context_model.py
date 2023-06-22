@@ -87,17 +87,10 @@ class ContextModel:
         self.seed = seed
 
     def constant_over_space(self, data_tc, M):
-        data_tc_list = [data_tc for m in range(M)]
+        data_tc_list = [data_tc for _ in range(M)]
         return data_tc_list
 
     def constant_over_time(self, data_sc, T, M, shift):
-
-        #data_sc_m = {i: np.repeat(data_sc[m, i - self.N - K_time], T) for i in self.links_sc.keys()}
-
-        for i in self.links_sc.keys():
-            print(i, i-shift)
-
-        print(data_sc[10][0])
         data_sc_list = [{i: np.repeat(data_sc[m, i-shift], T) for i in self.links_sc.keys()} for m in
                         range(M)]
         return data_sc_list
@@ -133,10 +126,6 @@ class ContextModel:
             noises_sc = None
         data_sc, nonstat_sc = toys.structural_causal_process(shifted_links_sc, T=M, noises=noises_sc,
                                                              seed=MT19937(seed))
-
-
-        print(data_sc)
-        print(data_sc.shape)
 
         data_sc_list = self.constant_over_time(data_sc, T, M, shift)
         return data_sc_list, np.any(nonstat_sc)
