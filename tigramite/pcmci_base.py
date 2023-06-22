@@ -634,8 +634,8 @@ class PCMCIbase():
         # Symmetrize p_matrix and val_matrix and conf_matrix
         for i in range(self.N):
             for j in range(self.N):
-                # If both the links are present in selected_links, symmetrize using maximum p-value
-                # if ((i, 0) in selected_links[j] and (j, 0) in selected_links[i]):
+                # If both the links are present in link_assumptions, symmetrize using maximum p-value
+                # if ((i, 0) in link_assumptions[j] and (j, 0) in link_assumptions[i]):
                 if (i, 0) in link_assumptions[j]:
                     if link_assumptions[j][(i, 0)] in ["o-o", 'o?o']:
                         if (p_matrix[i, j, 0]
@@ -645,8 +645,8 @@ class PCMCIbase():
                             if conf_matrix is not None:
                                 conf_matrix[j, i, 0] = conf_matrix[i, j, 0]
 
-                    # If only one of the links is present in selected_links, symmetrize using the p-value of the link present
-                    # elif ((i, 0) in selected_links[j] and (j, 0) not in selected_links[i]):
+                    # If only one of the links is present in link_assumptions, symmetrize using the p-value of the link present
+                    # elif ((i, 0) in link_assumptions[j] and (j, 0) not in link_assumptions[i]):
                     elif link_assumptions[j][(i, 0)] in ["-->", '-?>']:
                         p_matrix[j, i, 0] = p_matrix[i, j, 0]
                         val_matrix[j, i, 0] = val_matrix[i, j, 0]
