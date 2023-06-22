@@ -140,6 +140,7 @@ def _add_timeseries(
         alpha=1.,
         grey_alpha=1.0,
         selected_dataset=0,
+        selected_variables=None,
 ):
     """Adds a time series plot to an axis.
     Plot of dataseries is added to axis. Allows for proper visualization of
@@ -165,6 +166,8 @@ def _add_timeseries(
         Opacity of fill_between.
     selected_dataset : int, optional (default: 0)
         In case of multiple datasets in dataframe, plot this one.
+    selected_variables : list, optional (default: None)
+        List of variables which to plot.
     """
     fig, axes = fig_axes
 
@@ -179,11 +182,12 @@ def _add_timeseries(
     time = dataframe.datatime[selected_dataset]
     T = len(time)
 
-    N = dataframe.N
+    if selected_variables is None:
+        selected_variables = list(range(dataframe.N))
 
-    N_all = sum([len(var_elems) for var_elems in dataframe.vector_vars.values()])
+    nb_components = sum([len(dataframe.vector_vars[var]) for var in selected_variables])
 
-    for j in range(N_all):
+    for j in range(nb_components):
 
         ax = axes[j]
         dataseries = data[:, j]
@@ -269,6 +273,7 @@ def plot_timeseries(
         tick_label_size=6,
         selected_dataset=0,
         adjust_plot=True,
+        selected_variables=None,
 ):
     """Create and save figure of stacked panels with time series.
     Parameters
@@ -310,6 +315,8 @@ def plot_timeseries(
         Alpha opacity.
     selected_dataset : int, optional (default: 0)
         In case of multiple datasets in dataframe, plot this one.
+    selected_variables : list, optional (default: None)
+        List of variables which to plot.
     """
 
     var_names = dataframe.var_names
@@ -317,24 +324,27 @@ def plot_timeseries(
 
     N = dataframe.N
 
-    N_elem = [len(var_elems) for var_elems in dataframe.vector_vars.values()]
-    N_index = [sum(N_elem[:i]) for i, el in enumerate(N_elem)]
-    N_all = sum(N_elem)
+    if selected_variables is None:
+        selected_variables = list(range(N))
+
+    nb_components_per_var = [len(dataframe.vector_vars[var]) for var in selected_variables]
+    N_index = [sum(nb_components_per_var[:i]) for i, el in enumerate(nb_components_per_var)]
+    nb_components = sum(nb_components_per_var)
 
     if var_units is None:
         var_units = ["" for i in range(N)]
 
     if fig_axes is None:
-        fig, axes = pyplot.subplots(N_all, sharex=True, figsize=figsize)
+        fig, axes = pyplot.subplots(nb_components, sharex=True, figsize=figsize)
     else:
         fig, axes = fig_axes
 
     if adjust_plot:
-        for i in range(N_all):
+        for i in range(nb_components):
 
             ax = axes[i]
 
-            if (i == N_all - 1):
+            if (i == nb_components - 1):
                 _make_nice_axes(
                     ax, where=["left", "bottom"], skip=(skip_ticks_data_x, skip_ticks_data_y)
                 )
@@ -368,6 +378,7 @@ def plot_timeseries(
         color=color,
         selected_dataset=selected_dataset,
         alpha=alpha,
+        selected_variables=selected_variables
     )
 
     if adjust_plot:
