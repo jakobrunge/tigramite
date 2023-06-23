@@ -12,7 +12,7 @@ from copy import deepcopy
 import numpy as np
 import scipy.stats
 
-from .pcmci_base import PCMCIbase
+from pcmci_base import PCMCIbase
 
 def _create_nested_dictionary(depth=0, lowest_type=dict):
     """Create a series of nested dictionaries to a maximum depth.  The first
@@ -2155,17 +2155,12 @@ class PCMCI(PCMCIbase):
                         max_conds_px_lagged=max_conds_px_lagged,
                         fdr_method=fdr_method)
 
-        # else:
-        #     raise ValueError("pc_alpha=None not supported in PCMCIplus, choose"
-        #                      " 0 < pc_alpha < 1 (e.g., 0.01)")
-
-        if pc_alpha < 0. or pc_alpha > 1:
+        elif pc_alpha < 0. or pc_alpha > 1:
             raise ValueError("Choose 0 <= pc_alpha <= 1")
 
         # Check the limits on tau
         self._check_tau_limits(tau_min, tau_max)
-        # Set the selected links
-        # _int_sel_links = self._set_sel_links(selected_links, tau_min, tau_max)
+        # Set the link assumption
         _int_link_assumptions = self._set_link_assumptions(link_assumptions, tau_min, tau_max)
 
         # Step 1: Get a superset of lagged parents from run_pc_stable
@@ -2200,6 +2195,147 @@ class PCMCI(PCMCIbase):
                   + "\nfdr_method = %s" % fdr_method
                   )
 
+        skeleton_results = self._pcmciplus_mci_skeleton_phase(
+                            lagged_parents, _int_link_assumptions, pc_alpha,
+                            tau_min, tau_max, max_conds_dim, max_combinations, 
+                            max_conds_py, max_conds_px, max_conds_px_lagged, 
+                            reset_lagged_links, fdr_method,
+                            p_matrix, val_matrix
+                            )
+
+        colliders_step_results = self._pcmciplus_collider_phase(
+            skeleton_results['graph'], skeleton_results['sepset'], 
+            lagged_parents, pc_alpha, 
+            tau_min, tau_max, max_conds_py, max_conds_px, max_conds_px_lagged,
+            conflict_resolution, contemp_collider_rule)
+        
+        final_graph = self._pcmciplus_rule_orientation_phase(colliders_step_results['graph'],
+         colliders_step_results['ambiguous_triples'], conflict_resolution)
+
+        # Store the parents in the pcmci member
+        self.all_lagged_parents = lagged_parents
+
+        return_dict = {
+            'graph': final_graph,
+            'p_matrix': skeleton_results['p_matrix'],
+            'val_matrix': skeleton_results['val_matrix'],
+            'sepset': colliders_step_results['sepset'],
+            'ambiguous_triples': colliders_step_results['ambiguous_triples'],
+        }
+
+        # No confidence interval estimation here
+        return_dict['conf_matrix'] = None
+
+        # Print the results
+        if self.verbosity > 0:
+            self.print_results(return_dict, alpha_level=pc_alpha)
+        
+        # Return the dictionary
+        self.results = return_dict
+        
+        return return_dict
+
+    
+        # # Set the maximum condition dimension for Y and X
+        # max_conds_py = self._set_max_condition_dim(max_conds_py,
+        #                                            tau_min, tau_max)
+        # max_conds_px = self._set_max_condition_dim(max_conds_px,
+        #                                            tau_min, tau_max)
+
+        # if reset_lagged_links:
+        #     # Run PCalg on full graph, ignoring that some lagged links
+        #     # were determined as non-significant in PC1 step
+        #     links_for_pc = deepcopy(_int_link_assumptions)
+        # else:
+        #     # Run PCalg only on lagged parents found with PC1 
+        #     # plus all contemporaneous links
+        #     links_for_pc = {}  #deepcopy(lagged_parents)
+        #     for j in range(self.N):
+        #         links_for_pc[j] = {}
+        #         for parent in lagged_parents[j]:
+        #             if _int_link_assumptions[j][parent] in ['-?>', '-->']:
+        #                 links_for_pc[j][parent] = _int_link_assumptions[j][parent]
+
+        #         # Add contemporaneous links
+        #         for link in _int_link_assumptions[j]:
+        #             i, tau = link
+        #             link_type = _int_link_assumptions[j][link]
+        #             if abs(tau) == 0:
+        #                 links_for_pc[j][(i, 0)] = link_type
+
+        # results = self.run_pcalg(
+        #     link_assumptions=links_for_pc,
+        #     pc_alpha=pc_alpha,
+        #     tau_min=tau_min,
+        #     tau_max=tau_max,
+        #     max_conds_dim=max_conds_dim,
+        #     max_combinations=max_combinations,
+        #     lagged_parents=lagged_parents,
+        #     max_conds_py=max_conds_py,
+        #     max_conds_px=max_conds_px,
+        #     max_conds_px_lagged=max_conds_px_lagged,
+        #     mode='contemp_conds',
+        #     contemp_collider_rule=contemp_collider_rule,
+        #     conflict_resolution=conflict_resolution)
+
+        # graph = results['graph']
+
+        # # Update p_matrix and val_matrix with values from links_for_pc
+        # for j in range(self.N):
+        #     for link in links_for_pc[j]:
+        #         i, tau = link
+        #         if links_for_pc[j][link] not in ['<--', '<?-']:
+        #             p_matrix[i, j, abs(tau)] = results['p_matrix'][i, j, abs(tau)]
+        #             val_matrix[i, j, abs(tau)] = results['val_matrix'][i, j, 
+        #                                                                abs(tau)]
+
+        # # Update p_matrix and val_matrix for indices of symmetrical links
+        # p_matrix[:, :, 0] = results['p_matrix'][:, :, 0]
+        # val_matrix[:, :, 0] = results['val_matrix'][:, :, 0]
+
+        # ambiguous = results['ambiguous_triples']
+
+        # conf_matrix = None
+        # TODO: implement confidence estimation, but how?
+        # if self.cond_ind_test.confidence is not False:
+        #     conf_matrix = results['conf_matrix']
+
+        # # Correct the p_matrix if there is a fdr_method
+        # if fdr_method != 'none':
+        #     p_matrix = self.get_corrected_pvalues(p_matrix=p_matrix, tau_min=tau_min, 
+        #                                           tau_max=tau_max, 
+        #                                           link_assumptions=_int_link_assumptions,
+        #                                           fdr_method=fdr_method)
+
+        # # Store the parents in the pcmci member
+        # self.all_lagged_parents = lagged_parents
+
+        # # p_matrix=results['p_matrix']
+        # # val_matrix=results['val_matrix']
+
+        # Cache the resulting values in the return dictionary
+        # return_dict = {'graph': graph,
+        #                'val_matrix': val_matrix,
+        #                'p_matrix': p_matrix,
+        #                'ambiguous_triples': ambiguous,
+        #                'conf_matrix': conf_matrix}
+
+        # # Print the results
+        # if self.verbosity > 0:
+        #     self.print_results(return_dict, alpha_level=pc_alpha)
+        # # Return the dictionary
+        # self.results = return_dict
+        # return return_dict
+
+    def _pcmciplus_mci_skeleton_phase(self,
+        lagged_parents, _int_link_assumptions, pc_alpha,
+        tau_min, tau_max, max_conds_dim, max_combinations, 
+        max_conds_py, max_conds_px, max_conds_px_lagged, reset_lagged_links,
+        fdr_method,
+        p_matrix, val_matrix,
+        ):
+        """MCI Skeleton phase."""
+
         # Set the maximum condition dimension for Y and X
         max_conds_py = self._set_max_condition_dim(max_conds_py,
                                                    tau_min, tau_max)
@@ -2227,65 +2363,112 @@ class PCMCI(PCMCIbase):
                     if abs(tau) == 0:
                         links_for_pc[j][(i, 0)] = link_type
 
-        results = self.run_pcalg(
-            link_assumptions=links_for_pc,
+
+        if max_conds_dim is None:
+            # if mode == 'standard':
+            #     max_conds_dim = self._set_max_condition_dim(max_conds_dim,
+            #                                                 tau_min, tau_max)
+            # elif mode == 'contemp_conds':
+            max_conds_dim = self.N
+
+        if max_combinations is None:
+            max_combinations = np.inf
+
+        initial_graph = self._dict_to_graph(links_for_pc, tau_max=tau_max)
+
+        skeleton_results = self._pcalg_skeleton(
+            initial_graph=initial_graph,
+            lagged_parents=lagged_parents,
+            mode='contemp_conds',
             pc_alpha=pc_alpha,
             tau_min=tau_min,
             tau_max=tau_max,
             max_conds_dim=max_conds_dim,
             max_combinations=max_combinations,
-            lagged_parents=lagged_parents,
             max_conds_py=max_conds_py,
             max_conds_px=max_conds_px,
             max_conds_px_lagged=max_conds_px_lagged,
-            mode='contemp_conds',
-            contemp_collider_rule=contemp_collider_rule,
-            conflict_resolution=conflict_resolution)
+        )
 
-        graph = results['graph']
+        # Symmetrize p_matrix and val_matrix coming from skeleton
+        symmetrized_results = self.symmetrize_p_and_val_matrix(
+                            p_matrix=skeleton_results['p_matrix'], 
+                            val_matrix=skeleton_results['val_matrix'], 
+                            link_assumptions=links_for_pc,
+                            conf_matrix=None)
 
-        # Update p_matrix and val_matrix with values from links_for_pc
+        # Update p_matrix and val_matrix with values from skeleton phase
+        # Contemporaneous entries (not filled in run_pc_stable lagged phase)
+        p_matrix[:, :, 0] = symmetrized_results['p_matrix'][:, :, 0]
+        val_matrix[:, :, 0] = symmetrized_results['val_matrix'][:, :, 0]
+
+        # Update all entries that are in links_for_pc
         for j in range(self.N):
             for link in links_for_pc[j]:
                 i, tau = link
                 if links_for_pc[j][link] not in ['<--', '<?-']:
-                    p_matrix[i, j, abs(tau)] = results['p_matrix'][i, j, abs(tau)]
-                    val_matrix[i, j, abs(tau)] = results['val_matrix'][i, j, 
-                                                                       abs(tau)]
-
-        # Update p_matrix and val_matrix for indices of symmetrical links
-        p_matrix[:, :, 0] = results['p_matrix'][:, :, 0]
-        val_matrix[:, :, 0] = results['val_matrix'][:, :, 0]
-
-        ambiguous = results['ambiguous_triples']
-
-        conf_matrix = None
-        # TODO: implement confidence estimation, but how?
-        # if self.cond_ind_test.confidence is not False:
-        #     conf_matrix = results['conf_matrix']
+                    p_matrix[i, j, abs(tau)] = symmetrized_results['p_matrix'][i, j, abs(tau)]
+                    val_matrix[i, j, abs(tau)] = symmetrized_results['val_matrix'][i, j, 
+                                                                 abs(tau)]
 
         # Correct the p_matrix if there is a fdr_method
         if fdr_method != 'none':
             p_matrix = self.get_corrected_pvalues(p_matrix=p_matrix, tau_min=tau_min, 
                                                   tau_max=tau_max, 
-                                                  link_assumptions=_int_link_assumptions,
+                                                  link_assumptions=links_for_pc,
                                                   fdr_method=fdr_method)
 
-        # Store the parents in the pcmci member
-        self.all_lagged_parents = lagged_parents
+        # Update matrices
+        skeleton_results['p_matrix'] = p_matrix
+        skeleton_results['val_matrix'] = val_matrix
 
-        # Cache the resulting values in the return dictionary
-        return_dict = {'graph': graph,
-                       'val_matrix': val_matrix,
-                       'p_matrix': p_matrix,
-                       'ambiguous_triples': ambiguous,
-                       'conf_matrix': conf_matrix}
-        # Print the results
-        if self.verbosity > 0:
-            self.print_results(return_dict, alpha_level=pc_alpha)
-        # Return the dictionary
-        self.results = return_dict
-        return return_dict
+        return skeleton_results
+
+
+    def _pcmciplus_collider_phase(self, skeleton_graph, sepset, lagged_parents,
+        pc_alpha, tau_min, tau_max, max_conds_py, max_conds_px, max_conds_px_lagged,
+        conflict_resolution, contemp_collider_rule):
+        """MCI collider phase."""    
+
+        # Set the maximum condition dimension for Y and X
+        max_conds_py = self._set_max_condition_dim(max_conds_py,
+                                                   tau_min, tau_max)
+        max_conds_px = self._set_max_condition_dim(max_conds_px,
+                                                   tau_min, tau_max)
+
+        # Now change assumed links marks
+        skeleton_graph[skeleton_graph=='o?o'] = 'o-o'
+        skeleton_graph[skeleton_graph=='-?>'] = '-->'
+        skeleton_graph[skeleton_graph=='<?-'] = '<--'
+
+        colliders_step_results = self._pcalg_colliders(
+            graph=skeleton_graph,
+            sepset=sepset,
+            lagged_parents=lagged_parents,
+            mode='contemp_conds',
+            pc_alpha=pc_alpha,
+            tau_max=tau_max,
+            max_conds_py=max_conds_py,
+            max_conds_px=max_conds_px,
+            max_conds_px_lagged=max_conds_px_lagged,
+            conflict_resolution=conflict_resolution,
+            contemp_collider_rule=contemp_collider_rule,
+            )
+
+        return colliders_step_results
+
+    def _pcmciplus_rule_orientation_phase(self, collider_graph,
+         ambiguous_triples, conflict_resolution):
+        """MCI rule orientation phase."""  
+
+        final_graph = self._pcalg_rules_timeseries(
+            graph=collider_graph,
+            ambiguous_triples=ambiguous_triples,
+            conflict_resolution=conflict_resolution,
+        )
+
+        return final_graph
+
 
     def run_pcalg(self, 
                     selected_links=None, 
@@ -2428,7 +2611,7 @@ class PCMCI(PCMCIbase):
         skeleton_graph = skeleton_results['graph']
         sepset = skeleton_results['sepset']
 
-        # Now change assumed links mark
+        # Now change assumed links marks
         skeleton_graph[skeleton_graph=='o?o'] = 'o-o'
         skeleton_graph[skeleton_graph=='-?>'] = '-->'
         skeleton_graph[skeleton_graph=='<?-'] = '<--'
@@ -2759,14 +2942,16 @@ class PCMCI(PCMCIbase):
             adjt = self._get_adj_time_series(graph)
 
         val_matrix = np.zeros((N, N, tau_max + 1))
+        
         val_min = dict()
         for j in range(self.N):
             val_min[j] = {(p[0], -p[1]): np.inf
                           for p in zip(*np.where(graph[:, j, :] != ""))}
 
         # Initialize p-values. Set to 1 if there's no link in the initial graph
-        pvalues = np.zeros((N, N, tau_max + 1))
-        pvalues[graph == ""] = 1.
+        p_matrix = np.zeros((N, N, tau_max + 1))
+        p_matrix[graph == ""] = 1.
+
         pval_max = dict()
         for j in range(self.N):
             pval_max[j] = {(p[0], -p[1]): 0.
@@ -2840,8 +3025,8 @@ class PCMCI(PCMCIbase):
                                                             (i, -abstau)))
 
                         # Store max. p-value and corresponding value to return
-                        if pval >= pvalues[i, j, abstau]:
-                            pvalues[i, j, abstau] = pval
+                        if pval >= p_matrix[i, j, abstau]:
+                            p_matrix[i, j, abstau] = pval
                             val_matrix[i, j, abstau] = val
 
                         if self.verbosity > 1:
@@ -2856,6 +3041,8 @@ class PCMCI(PCMCIbase):
                                 graph[i, j, 0] = graph[j, i, 0] = ""
                                 sepset[((i, 0), j)] = sepset[
                                     ((j, 0), i)] = list(S)
+                                # Also store p-value in other contemp. entry
+                                p_matrix[j, i, 0] = p_matrix[i, j, 0]
                             else:
                                 graph[i, j, abstau] = ""
                                 sepset[((i, -abstau), j)] = list(S)
@@ -2898,7 +3085,7 @@ class PCMCI(PCMCIbase):
 
         return {'graph': graph,
                 'sepset': sepset,
-                'p_matrix': pvalues,
+                'p_matrix': p_matrix,
                 'val_matrix': val_matrix,
                 }
 
@@ -3702,8 +3889,8 @@ if __name__ == '__main__':
     c = 0.8
     for t in range(1, T):
         data[t, 0] += 0.4*data[t-1, 0] + 0.4*data[t-1, 1] + c*data[t-1,3]
-        data[t, 1] += 0.5*data[t-1, 1] + c*data[t-1,3]
-        data[t, 2] += 0.6*data[t-1, 2] + 0.3*data[t-2, 1] + c*data[t-1,3]
+        data[t, 1] += 0.5*data[t-1, 1] + c*data[t,3]
+        data[t, 2] += 0.6*data[t-1, 2] + 0.3*data[t-2, 1] #+ c*data[t-1,3]
     dataframe = pp.DataFrame(data, var_names=[r'$X^0$', r'$X^1$', r'$X^2$', 'Sun'])
     # tp.plot_timeseries(dataframe); plt.show()
 
@@ -3731,16 +3918,22 @@ if __name__ == '__main__':
         else:
             link_assumptions[j] = {}
 
-    print(link_assumptions)
+    for j in link_assumptions:
+        print(link_assumptions[j])
     pcmci_parcorr = PCMCI(
         dataframe=dataframe, 
         cond_ind_test=parcorr,
-        verbosity=2)
+        verbosity=0)
     results = pcmci_parcorr.run_pcmciplus(tau_max=tau_max, pc_alpha=0.01, 
-                                      # link_assumptions=link_assumptions
+        reset_lagged_links=True,
+                                      link_assumptions=link_assumptions
                                       ) #, alpha_level = 0.01)
     print(results['graph'].shape)
-    print(results['graph'][:,3,:])
+    # print(results['graph'][:,3,:])
+    print(np.round(results['p_matrix'][:,:,0], 2))
+    print(np.round(results['val_matrix'][:,:,0], 2))
+    print(results['graph'][:,:,0])
+
     # Plot time series graph
     # tp.plot_time_series_graph(
     #     val_matrix=results['val_matrix'],

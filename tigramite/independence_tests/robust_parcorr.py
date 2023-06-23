@@ -166,7 +166,7 @@ class RobustParCorr(CondIndTest):
             for i in range(dim):
                 if std[i] != 0.:
                     array[i] /= std[i]
-            if np.any(std == 0.):
+            if np.any(std == 0.) and self.verbosity > 0:
                 warnings.warn("Possibly constant array!")
             # array /= array.std(axis=1).reshape(dim, 1)
             # if np.isnan(array).sum() != 0:

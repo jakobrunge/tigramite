@@ -170,7 +170,7 @@ class CMIknn(CondIndTest):
             # array /= array.std(axis=1).reshape(dim, 1)
             # FIXME: If the time series is constant, return nan rather than
             # raising Exception
-            if np.any(std == 0.):
+            if np.any(std == 0.) and self.verbosity > 0:
                 warnings.warn("Possibly constant array!")
                 # raise ValueError("nans after standardizing, "
                 #                  "possibly constant array!")
@@ -389,7 +389,7 @@ class CMIknn(CondIndTest):
             # array /= array.std(axis=1).reshape(dim, 1)
             # FIXME: If the time series is constant, return nan rather than
             # raising Exception
-            if np.any(std == 0.):
+            if np.any(std == 0.) and self.verbosity > 0:
                 warnings.warn("Possibly constant array!")
             # if np.isnan(array).sum() != 0:
             #     raise ValueError("nans after standardizing, "

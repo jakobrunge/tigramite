@@ -324,7 +324,7 @@ class ParCorrWLS(ParCorr):
             for i in range(dim):
                 if std[i] != 0.:
                     array[i] /= std[i]
-            if np.any(std == 0.):
+            if np.any(std == 0.) and self.verbosity > 0:
                 warnings.warn("Possibly constant array!")
             x_vals_sum = np.sum(array)
             x_vals_has_nan = np.isnan(x_vals_sum)
