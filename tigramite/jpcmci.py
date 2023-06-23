@@ -54,9 +54,9 @@ class J_PCMCIplus(PCMCI):
             Number of variables.
         T : dict
             Time series sample length of dataset(s).
-        context_parents : dictionary or None
+        dummy_parents : dictionary or None
             Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing
-            the dependence of the system nodes on the observed context and dummy nodes.
+            the dependence of the system nodes on the dummy nodes.
         observed_context_parents : dictionary or None
             Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing
             the dependence of the system nodes on the observed context nodes.
@@ -88,11 +88,10 @@ class J_PCMCIplus(PCMCI):
         self.time_dummy = self.group_nodes(node_classification, "time_dummy")
         self.space_dummy = self.group_nodes(node_classification, "space_dummy")
 
-        self.context_parents = None
-        self.observed_context_parents = None
+        self.dummy_parents = {i: [] for i in range(self.N)}
+        self.observed_context_parents = {i: [] for i in range(self.N)}
         self.dummy_ci_test = ParCorrMult(significance='analytic')
         self.mode = "system_search"
-
 
     def group_nodes(self, node_types, node_type):
         nodes = range(self.N)
@@ -257,13 +256,36 @@ class J_PCMCIplus(PCMCI):
         _link_assumptions = self.assume_exogeneous_context(_link_assumptions, observed_context_nodes)
         _link_assumptions = self.clean_link_assumptions(_link_assumptions, tau_max)
 
-        # steps 0 and 1:
-        context_system_results = self.discover_lagged_and_context_system_links(
+        # Check if pc_alpha is chosen to optimize over a list
+        if pc_alpha is None or isinstance(pc_alpha, (list, tuple, np.ndarray)):
+            # Call optimizer wrapper around run_pcmciplus()
+            return self._optimize_pcmciplus_alpha(
+                link_assumptions=link_assumptions,
+                tau_min=tau_min,
+                tau_max=tau_max,
+                pc_alpha=pc_alpha,
+                contemp_collider_rule=contemp_collider_rule,
+                conflict_resolution=conflict_resolution,
+                reset_lagged_links=reset_lagged_links,
+                max_conds_dim=max_conds_dim,
+                max_combinations=max_combinations,
+                max_conds_py=max_conds_py,
+                max_conds_px=max_conds_px,
+                max_conds_px_lagged=max_conds_px_lagged,
+                fdr_method=fdr_method)
+
+        elif pc_alpha < 0. or pc_alpha > 1:
+            raise ValueError("Choose 0 <= pc_alpha <= 1")
+
+        # Check the limits on tau
+        self._check_tau_limits(tau_min, tau_max)
+
+        # Step 0 and 1:
+        context_results = self.discover_lagged_context_system_links(
             _link_assumptions,
             tau_min=tau_min,
             tau_max=tau_max,
             pc_alpha=pc_alpha,
-            conflict_resolution=conflict_resolution,
             reset_lagged_links=reset_lagged_links,
             max_conds_dim=max_conds_dim,
             max_combinations=max_combinations,
@@ -272,21 +294,23 @@ class J_PCMCIplus(PCMCI):
             max_conds_px_lagged=max_conds_px_lagged,
             fdr_method=fdr_method
         )
-        context_results = context_system_results
-        self.observed_context_parents = context_results['parents']
+        ctxt_res = deepcopy(context_results)
+        # Store the parents in the pcmci member
+        self.observed_context_parents = deepcopy(context_results['parents'])
+        self.all_lagged_parents = deepcopy(context_results['lagged_parents'])
 
         if self.verbosity > 0:
-            print("Found observed context parents and lagged parents: ", context_results['lagged_context_parents'])
+            print("Discovered observed context parents: ", context_results['parents'])
 
         if len(self.time_dummy) > 0 or len(self.space_dummy) > 0:
             # step 2:
             dummy_system_results = self.discover_dummy_system_links(
                 _link_assumptions,
-                context_system_results,
+                ctxt_res,
+                self.all_lagged_parents,
                 tau_min=tau_min,
                 tau_max=tau_max,
                 pc_alpha=pc_alpha,
-                conflict_resolution=conflict_resolution,
                 reset_lagged_links=reset_lagged_links,
                 max_conds_dim=max_conds_dim,
                 max_combinations=max_combinations,
@@ -295,17 +319,26 @@ class J_PCMCIplus(PCMCI):
                 max_conds_px_lagged=max_conds_px_lagged,
                 fdr_method=fdr_method
             )
-            context_results = dummy_system_results
+            #context_results = dummy_system_results
+            self.dummy_parents = dummy_system_results['parents']
+        else:
+            dummy_system_results = deepcopy(context_results)
 
-        self.mode = "system_search"
-
-        self.context_parents = context_results['parents']
         if self.verbosity > 0:
-            print("Discovered contextual parents: ", self.context_parents)
+            print("Discovered dummy parents: ", self.dummy_parents)
 
         # step 3:
-        results = self.discover_system_system_links(link_assumptions=_link_assumptions,
-                                                    context_results=context_results,
+        self.mode = "system_search"
+        lagged_context_dummy_parents = {
+            i: list(
+                dict.fromkeys(self.all_lagged_parents[i] + self.observed_context_parents[i] + self.dummy_parents[i]))
+            for i in range(self.N)}
+
+        dummy_system_results_copy = deepcopy(dummy_system_results)
+
+        system_skeleton_results = self.discover_system_system_links(link_assumptions=_link_assumptions,
+                                                    context_results=dummy_system_results,
+                                                    lagged_context_dummy_parents=lagged_context_dummy_parents,
                                                     contemp_collider_rule=contemp_collider_rule,
                                                     tau_min=tau_min,
                                                     tau_max=tau_max,
@@ -319,8 +352,42 @@ class J_PCMCIplus(PCMCI):
                                                     max_conds_px_lagged=max_conds_px_lagged,
                                                     fdr_method=fdr_method)
 
+        # orientation phase
+        colliders_step_results = self._pcmciplus_collider_phase(
+            system_skeleton_results['graph'], system_skeleton_results['sepset'],
+            lagged_context_dummy_parents, pc_alpha,
+            tau_min, tau_max, max_conds_py, max_conds_px, max_conds_px_lagged,
+            conflict_resolution, contemp_collider_rule)
+
+        final_graph = self._pcmciplus_rule_orientation_phase(colliders_step_results['graph'],
+                                                             colliders_step_results['ambiguous_triples'],
+                                                             conflict_resolution)
+
+        # add context-system and dummy-system values (lost because of link_assumption) back in
+        for c in observed_context_nodes + self.time_dummy + self.space_dummy:
+            for j in range(self.N):
+                for lag in range(tau_max + 1):
+                    # add context-system links to results
+                    system_skeleton_results['val_matrix'][c, j, lag] = dummy_system_results_copy['val_matrix'][c, j, lag]
+                    system_skeleton_results['val_matrix'][j, c, lag] = dummy_system_results_copy['val_matrix'][j, c, lag]
+
+                    system_skeleton_results['p_matrix'][c, j, lag] = dummy_system_results_copy['p_matrix'][c, j, lag]
+                    system_skeleton_results['p_matrix'][j, c, lag] = dummy_system_results_copy['p_matrix'][j, c, lag]
+
+        # No confidence interval estimation here
+        return_dict = {'graph': final_graph, 'p_matrix': system_skeleton_results['p_matrix'],
+                       'val_matrix': system_skeleton_results['val_matrix'], 'sepset': colliders_step_results['sepset'],
+                       'ambiguous_triples': colliders_step_results['ambiguous_triples'], 'conf_matrix': None}
+
+        # Print the results
+        if self.verbosity > 0:
+            self.print_results(return_dict, alpha_level=pc_alpha)
+
         # Return the dictionary
-        return results
+        self.results = return_dict
+
+        # Return the dictionary
+        return return_dict
 
     def assume_exogeneous_context(self, link_assumptions, observed_context_nodes):
         """Helper function to amend the link_assumptions to ensure that all context-system links are oriented
@@ -337,7 +404,7 @@ class J_PCMCIplus(PCMCI):
     def clean_link_assumptions(self, link_assumptions, tau_max):
         """Helper function to amend the link_assumptions in the following ways
             * remove any links where dummy is the child
-            * remove any lagged links to dummy, and space_context (not to expressive time context)
+            * remove any lagged links to dummy, and space_context (not to observed time context)
             * and system - context links where context is the child
             * and any links between spatial and temporal context
         """
@@ -373,18 +440,19 @@ class J_PCMCIplus(PCMCI):
                     link_assumptions_wo_dummy[j].pop((dummy_node, 0), None)
         return link_assumptions_wo_dummy
 
-    def remove_obs_context_link_assumptions(self, link_assumptions, tau_max):
-        """Helper function to remove any links to observed context nodes from link_assumptions."""
-        link_assumptions_wo_obs_context = deepcopy(link_assumptions)
+    def add_found_context_link_assumptions(self, link_assumptions, tau_max):
+        """Helper function to add all links between system and observed context nodes to link_assumptions."""
+        link_assumptions_dummy = deepcopy(link_assumptions)
 
         for c in self.space_context_nodes + self.time_context_nodes:
-            link_assumptions_wo_obs_context[c] = {}
+            link_assumptions_dummy[c] = {}
         for j in self.system_nodes:
             for c in self.space_context_nodes + self.time_context_nodes:
                 for lag in range(tau_max + 1):
-                    if (c, -lag) in link_assumptions_wo_obs_context[j]:
-                        link_assumptions_wo_obs_context[j].pop((c, -lag), None)
-        return link_assumptions_wo_obs_context
+                    if (c, -lag) in link_assumptions_dummy[j]:
+                        link_assumptions_dummy[j].pop((c, -lag), None)
+                    link_assumptions_dummy[j].update({parent: '-->' for parent in self.observed_context_parents[j]})
+        return link_assumptions_dummy
 
     def clean_system_link_assumptions(self, link_assumptions, tau_max):
         """Helper function to remove any links to dummy and observed context nodes from link_assumptions.
@@ -401,28 +469,28 @@ class J_PCMCIplus(PCMCI):
                         system_links[j].pop((C, -lag), None)
 
         for j in system_links:
-            system_links[j].update({parent: '-->' for parent in self.context_parents[j]})
+            system_links[j].update(
+                {parent: '-->' for parent in self.observed_context_parents[j] + self.dummy_parents[j]})
 
         for C in observed_context_nodes + dummy_vars:
             # we are not interested in links between context variables (thus system_links[C] = {})
             system_links[C] = {}
         return system_links
 
-    def discover_lagged_and_context_system_links(self, link_assumptions,
-                                                 tau_min=0,
-                                                 tau_max=1, pc_alpha=0.01,
-                                                 conflict_resolution=True,
-                                                 reset_lagged_links=False,
-                                                 max_conds_dim=None,
-                                                 max_combinations=1,
-                                                 max_conds_py=None,
-                                                 max_conds_px=None,
-                                                 max_conds_px_lagged=None,
-                                                 fdr_method='none'):
+    def discover_lagged_context_system_links(self, link_assumptions,
+                                      tau_min=0,
+                                      tau_max=1, pc_alpha=0.01,
+                                      reset_lagged_links=False,
+                                      max_conds_dim=None,
+                                      max_combinations=1,
+                                      max_conds_py=None,
+                                      max_conds_px=None,
+                                      max_conds_px_lagged=None,
+                                      fdr_method='none'):
         """
-        Step 0 and 1 of J_PCMCIplus, i.e. discovery of a superset of the lagged parents as well as discovery of links
-        between observed context nodes and system nodes through an application of the skeleton phase of PCMCIplus to
-        this subset of nodes (observed context nodes and system nodes).
+        Step 1 of J_PCMCIplus, i.e. discovery of links between observed context nodes and system nodes through an
+        application of the skeleton phase of PCMCIplus to this subset of nodes (observed context nodes and system
+        nodes).
         See run_jpcmciplus for a description of the parameters.
 
         Returns
@@ -438,62 +506,65 @@ class J_PCMCIplus(PCMCI):
         """
 
         # Initializing
-        parents = {j: [] for j in range(self.N)}
-        lagged_context_parents = {j: [] for j in range(self.N)}
-        values = np.zeros((self.N, self.N, tau_max + 1))
+        context_parents = {i: [] for i in range(self.N)}
 
         # find links in btw expressive context, and btw expressive context and sys_vars
         # here, we exclude any links to dummy
         _link_assumptions_wo_dummy = self.remove_dummy_link_assumptions(link_assumptions)
+        _int_link_assumptions = self._set_link_assumptions(_link_assumptions_wo_dummy, tau_min, tau_max)
+
+        # Step 1: Get a superset of lagged parents from run_pc_stable
+        lagged_parents = self.run_pc_stable(link_assumptions=link_assumptions,
+                                            tau_min=tau_min,
+                                            tau_max=tau_max,
+                                            pc_alpha=pc_alpha,
+                                            max_conds_dim=max_conds_dim,
+                                            max_combinations=max_combinations)
 
         self.mode = "context_search"
-        print("##### Discovering context-system links #####")
-        # run PCMCI+ on subset of links to discover context-system links
-        # (we use simple v-structure orientation rules since the orientation phase is not
-        # important at this step)
-        skeleton_results = self.run_pcmciplus(
-            tau_min=tau_min,
-            tau_max=tau_max,
-            link_assumptions=_link_assumptions_wo_dummy,
-            contemp_collider_rule='none',
-            pc_alpha=pc_alpha,
-            conflict_resolution=conflict_resolution,
-            reset_lagged_links=reset_lagged_links,
-            max_conds_dim=max_conds_dim,
-            max_combinations=max_combinations,
-            max_conds_py=max_conds_py,
-            max_conds_px=max_conds_px,
-            max_conds_px_lagged=max_conds_px_lagged,
-            fdr_method=fdr_method
-        )
-        skeleton_val = skeleton_results['val_matrix']
 
-        self.mode = "system_search"
+        p_matrix = self.p_matrix
+        val_matrix = self.val_matrix
+
+        # run PCMCI+ skeleton phase on subset of links to discover context-system links
+        if self.verbosity > 0:
+            print("\n##\n## J-PCMCI+ Step 1: Discovering context-system links\n##")
+            if link_assumptions is not None:
+                print("\nWith link_assumptions = %s" % str(_int_link_assumptions))
+
+        skeleton_results = self._pcmciplus_mci_skeleton_phase(
+            lagged_parents, _int_link_assumptions, pc_alpha,
+            tau_min, tau_max, max_conds_dim, max_combinations,
+            max_conds_py, max_conds_px, max_conds_px_lagged,
+            reset_lagged_links, fdr_method,
+            p_matrix, val_matrix
+        )
+
         skeleton_graph = skeleton_results['graph']
 
         for j in self.system_nodes + self.time_context_nodes + self.space_context_nodes:
             for c in self.space_context_nodes + self.time_context_nodes:
                 for k in range(tau_max + 1):
-                    if skeleton_graph[c, j, k] == 'o-o' or skeleton_graph[c, j, k] == '-->':
-                        parents[j].append((c, -k))
-                        lagged_context_parents[j].append((c, -k))
-                        values[c, j, k] = skeleton_val[c, j, k]
-            for i in self.system_nodes:
-                for k in range(tau_max + 1):
-                    if skeleton_graph[i, j, k] == 'o-o' or skeleton_graph[i, j, k] == '-->':
-                        lagged_context_parents[j].append((i, -k))
+                    if skeleton_graph[c, j, k] == 'o?o' or skeleton_graph[c, j, k] == '-?>' or skeleton_graph[
+                        c, j, k] == 'o-o' or skeleton_graph[c, j, k] == '-->':
+                        context_parents[j].append((c, -k))
 
-        return {'lagged_context_parents': lagged_context_parents,
-                'values': values,
-                'parents': parents
-                }
+        return_dict = {'graph': skeleton_results['graph'], 'p_matrix': skeleton_results['p_matrix'],
+                       'val_matrix': skeleton_results['val_matrix'],
+                       'parents': context_parents, 'lagged_parents': lagged_parents}
+
+        # Print the results
+        if self.verbosity > 0:
+            self.print_results(return_dict, alpha_level=pc_alpha)
+
+        return return_dict
 
     def discover_dummy_system_links(self, link_assumptions,
                                     context_system_results,
+                                    lagged_parents,
                                     tau_min=0,
                                     tau_max=1,
                                     pc_alpha=0.01,
-                                    conflict_resolution=True,
                                     reset_lagged_links=False,
                                     max_conds_dim=None,
                                     max_combinations=1,
@@ -512,6 +583,9 @@ class J_PCMCIplus(PCMCI):
         context_system_results : dictionary
             Output of discover_lagged_and_context_system_links, i.e. lagged and context parents together with the
             corresponding estimated test statistic values regarding adjacencies.
+        lagged_parents : dictionary
+            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing the conditioning-parents
+            estimated with PC algorithm.
 
         Returns
         -------
@@ -526,89 +600,62 @@ class J_PCMCIplus(PCMCI):
             the estimated (dummy and observed) context parents.
         """
 
-        lagged_context_parents = context_system_results['lagged_context_parents']
-        values = context_system_results['values']
-        parents = context_system_results['parents']
+        lagged_context_parents = {i: context_system_results['parents'][i] + lagged_parents[i] for i in
+                                  range(self.N)}
+        dummy_parents = {i: [] for i in range(self.N)}
+        val_matrix = context_system_results['val_matrix']
+        p_matrix = context_system_results['p_matrix']
 
         # setup link assumptions without the observed context nodes
-        _link_assumptions_wo_obs_context = self.remove_obs_context_link_assumptions(link_assumptions, tau_max)
+        _link_assumptions_dummy = self.add_found_context_link_assumptions(link_assumptions, tau_max)
+        _int_link_assumptions = self._set_link_assumptions(_link_assumptions_dummy, tau_min, tau_max)
 
         self.mode = "dummy_search"
-        print("#### Discovering dummy-system links ####")
-        # run PC algorithm to find links between dummies and system variables
-        """
-        _int_link_assumptions = self._set_link_assumptions(_link_assumptions_wo_obs_context, tau_min, tau_max)
-        links_for_pc = {}
-        for j in range(self.N):
-            links_for_pc[j] = {}
-            for parent in lagged_context_parents[j]:
-                if parent in _int_link_assumptions[j].keys() and _int_link_assumptions[j][parent] in ['-?>', '-->']:
-                    links_for_pc[j][parent] = _int_link_assumptions[j][parent]
+        # Step 2+3+4: PC algorithm with contemp. conditions and MCI tests
+        if self.verbosity > 0:
+            print("\n##\n## J-PCMCI+ Step 2: Discovering dummy-system links\n##")
+            if _link_assumptions_dummy is not None:
+                print("\nWith link_assumptions = %s" % str(_int_link_assumptions))
 
-            # Add contemporaneous links
-            for link in _int_link_assumptions[j]:
-                i, tau = link
-                link_type = _int_link_assumptions[j][link]
-                if abs(tau) == 0:
-                    links_for_pc[j][(i, 0)] = link_type
-
-        initial_graph = self._dict_to_graph(links_for_pc, tau_max)
-
-        print("links_for_pc", links_for_pc)
-        skeleton_results_dummy = self._pcalg_skeleton(
-            initial_graph=initial_graph,
-            lagged_parents=lagged_context_parents,
-            pc_alpha=pc_alpha,
-            mode='contemp_conds',
-            tau_min=tau_min,
-            tau_max=tau_max,
-            max_conds_dim=self.N,
-            max_combinations=np.inf,
-            max_conds_py=None,
-            max_conds_px=None,
-            max_conds_px_lagged=None,
-        )
-        skeleton_graph_dummy = skeleton_results_dummy['graph']
-        skeleton_graph_dummy[skeleton_graph_dummy=='o?o'] = 'o-o'
-        skeleton_graph_dummy[skeleton_graph_dummy=='-?>'] = '-->'
-        skeleton_graph_dummy[skeleton_graph_dummy=='<?-'] = '<--'
-        """
-
-        skeleton_results_dummy = self.run_pcmciplus_phase234(
-            lagged_parents=lagged_context_parents,
-            tau_min=tau_min,
-            tau_max=tau_max,
-            contemp_collider_rule='none',
-            link_assumptions=_link_assumptions_wo_obs_context,
-            pc_alpha=pc_alpha,
-            conflict_resolution=conflict_resolution,
-            reset_lagged_links=reset_lagged_links,
-            max_conds_dim=max_conds_dim,
-            max_combinations=max_combinations,
-            max_conds_py=max_conds_py,
-            max_conds_px=max_conds_px,
-            max_conds_px_lagged=max_conds_px_lagged,
-            fdr_method=fdr_method
+        skeleton_results_dummy = self._pcmciplus_mci_skeleton_phase(
+            lagged_context_parents, _int_link_assumptions, pc_alpha,  # or lagged_contxt_parents?
+            tau_min, tau_max, max_conds_dim, max_combinations,
+            max_conds_py, max_conds_px, max_conds_px_lagged,
+            reset_lagged_links, fdr_method,
+            self.p_matrix, self.val_matrix
         )
 
         skeleton_graph_dummy = skeleton_results_dummy['graph']
-        skeleton_val_dummy = skeleton_results_dummy['val_matrix']
+        # skeleton_val_dummy = skeleton_results_dummy['val_matrix']
 
         for j in self.system_nodes:
             for k in range(tau_max + 1):
                 for dummy_node in self.time_dummy + self.space_dummy:
-                    if skeleton_graph_dummy[dummy_node, j, k] == 'o-o' or \
+                    if skeleton_graph_dummy[dummy_node, j, k] == 'o?o' or \
+                            skeleton_graph_dummy[dummy_node, j, k] == '-?>' or \
+                            skeleton_graph_dummy[dummy_node, j, k] == 'o-o' or \
                             skeleton_graph_dummy[dummy_node, j, k] == '-->':
-                        parents[j].append((dummy_node, k))
-                        values[dummy_node, j, k] = skeleton_val_dummy[dummy_node, j, k]
-                        lagged_context_parents[j].append((dummy_node, k))
-        return {'lagged_context_parents': lagged_context_parents,
-                'values': values,
-                'parents': parents
-                }
+                        dummy_parents[j].append((dummy_node, k))
+                for context_node in self.time_context_nodes + self.space_context_nodes:
+                    skeleton_results_dummy['val_matrix'][context_node, j, k] = context_system_results['val_matrix'][context_node, j, k]
+                    skeleton_results_dummy['val_matrix'][j, context_node, k] = context_system_results['val_matrix'][j, context_node, k]
+
+                    skeleton_results_dummy['p_matrix'][context_node, j, k] = p_matrix[context_node, j, k]
+                    skeleton_results_dummy['p_matrix'][j, context_node, k] = p_matrix[j, context_node, k]
+
+        return_dict = {'graph': skeleton_results_dummy['graph'], 'p_matrix': skeleton_results_dummy['p_matrix'],
+                       'val_matrix': skeleton_results_dummy['val_matrix'], 'sepset': skeleton_results_dummy['sepset'],
+                       # 'ambiguous_triples': skeleton_results_dummy['ambiguous_triples'], 'conf_matrix': None,
+                       'parents': dummy_parents}
+
+        # Print the results
+        if self.verbosity > 0:
+            self.print_results(return_dict, alpha_level=pc_alpha)
+        return return_dict
 
     def discover_system_system_links(self, link_assumptions,
                                      context_results,
+                                     lagged_context_dummy_parents,
                                      tau_min=0,
                                      tau_max=1,
                                      pc_alpha=0.01,
@@ -651,40 +698,31 @@ class J_PCMCIplus(PCMCI):
         dummy_vars = self.time_dummy + self.space_dummy
         observed_context_nodes = self.time_context_nodes + self.space_context_nodes
 
-        lagged_context_parents = context_results['lagged_context_parents']
-        context_parents_values = context_results['values']
+        context_parents_val_matrix = context_results['val_matrix']
+        context_parents_p_matrix = context_results['p_matrix']
+
+        self.mode = "system_search"
 
         # Get the parents from run_pc_stable only on the system links
         system_links = self.clean_system_link_assumptions(link_assumptions, tau_max)
+        # Set the selected links
+        _int_link_assumptions = self._set_link_assumptions(system_links, tau_min, tau_max)
 
-        print("#### Discovering system-system links ####")
-        self.mode = "system_search"
-        results = self.run_pcmciplus_phase234(
-            lagged_parents=lagged_context_parents,
-            tau_min=tau_min,
-            tau_max=tau_max,
-            contemp_collider_rule=contemp_collider_rule,
-            link_assumptions=system_links,
-            pc_alpha=pc_alpha,
-            conflict_resolution=conflict_resolution,
-            reset_lagged_links=reset_lagged_links,
-            max_conds_dim=max_conds_dim,
-            max_combinations=max_combinations,
-            max_conds_py=max_conds_py,
-            max_conds_px=max_conds_px,
-            max_conds_px_lagged=max_conds_px_lagged,
-            fdr_method=fdr_method
+        # PCMCI+ Step 2+3+4: PC algorithm with contemp. conditions and MCI tests
+        if self.verbosity > 0:
+            print("\n##\n## J-PCMCI+ Step 3: Discovering system-system links \n##")
+            if system_links is not None:
+                print("\nWith link_assumptions = %s" % str(_int_link_assumptions))
+
+        skeleton_results = self._pcmciplus_mci_skeleton_phase(
+            lagged_context_dummy_parents, _int_link_assumptions, pc_alpha,
+            tau_min, tau_max, max_conds_dim, max_combinations,
+            max_conds_py, max_conds_px, max_conds_px_lagged,
+            reset_lagged_links, fdr_method,
+            self.p_matrix, self.val_matrix
         )
 
-        for c in observed_context_nodes + dummy_vars:
-            for j in range(self.N):
-                for lag in range(tau_max + 1):
-                    # add context-system links to results
-                    results['val_matrix'][c, j, lag] = context_parents_values[c, j, lag]
-                    results['val_matrix'][j, c, lag] = context_parents_values[c, j, lag]
-
-        # Return the dictionary
-        return results
+        return skeleton_results
 
     def _remaining_pairs(self, graph, adjt, tau_min, tau_max, p):
         """Helper function returning the remaining pairs that still need to be
@@ -760,28 +798,56 @@ class J_PCMCIplus(PCMCI):
             List of conditions.
         """
         if self.mode == 'dummy_search':
+            # Perform independence test adding lagged parents (here lagged_parents might also include
+            # (possibly contemp) context parents)
+            if lagged_parents is not None:
+                conds_y = lagged_parents[j][:max_conds_py]
+                # Get the conditions for node i
+                if abstau == 0:
+                    conds_x = lagged_parents[i][:max_conds_px]
+                else:
+                    if max_conds_px_lagged is None:
+                        conds_x = lagged_parents[i][:max_conds_px]
+                    else:
+                        conds_x = lagged_parents[i][:max_conds_px_lagged]
+
+            else:
+                conds_y = conds_x = []
+            # Shift the conditions for X by tau
+            conds_x_lagged = [(k, -abstau + k_tau) for k, k_tau in conds_x]
+
+            Z = [node for node in S]
+            Z += [node for node in conds_y if
+                  node != (i, -abstau) and node not in Z]
+            # Remove overlapping nodes between conds_x_lagged and conds_y
+            Z += [node for node in conds_x_lagged if node not in Z]
+
             # during discovery of dummy-system links we are using the dummy_ci_test and condition on the found
             # contextual parents from step 1.
-            if lagged_parents is None:
-                cond = list(S)
-            else:
-                cond = list(S) + lagged_parents[j]
             context_parents_j = self.observed_context_parents[j]
-            cond = cond + context_parents_j
-            cond = list(dict.fromkeys(cond))
+            Z = Z + context_parents_j
+            Z = list(dict.fromkeys(Z))  # remove overlapps
 
-            return self.run_test_dummy([(j, -abstau)], [(i, 0)], cond, tau_max)
+            # If middle mark is '-', then set pval=0
+            if graph[i, j, abstau] != "" and graph[i, j, abstau][1] == '-':
+                val = 1.
+                pval = 0.
+            else:
+                val, pval, Z = self.run_test_dummy([(j, -abstau)], [(i, 0)], Z, tau_max)
+
+            return val, pval, Z
+
         elif self.mode == 'system_search':
             # during discovery of system-system links we are conditioning on the found contextual parents
 
-            if lagged_parents is None:
-                cond = list(S)
-            else:
-                cond = list(S) + lagged_parents[j]
-            # always add self.obs_context_parents
-            context_parents_j = self.context_parents[j]
-            cond = cond + context_parents_j
-            cond = list(dict.fromkeys(cond))
+            # if lagged_parents is None:
+            #    cond = list(S)
+            # else:
+            #    cond = list(S) + lagged_parents[j]
+
+            context_parents_j = self.dummy_parents[j] + self.observed_context_parents[j]
+            cond = list(S) + context_parents_j
+            cond = list(dict.fromkeys(cond))  # remove overlapps
             return super()._run_pcalg_test(graph, i, abstau, j, cond, lagged_parents, max_conds_py,
                                            max_conds_px, max_conds_px_lagged, tau_max)
         else:
@@ -827,238 +893,3 @@ class J_PCMCIplus(PCMCI):
             self.dummy_ci_test._print_cond_ind_results(val=val, pval=pval, cached=cached, conf=None)
         # Return the value and the p-value
         return val, pval, Z
-
-    def run_pcmciplus_phase234(self, lagged_parents, selected_links=None, link_assumptions=None, tau_min=0, tau_max=1,
-                               pc_alpha=0.01,
-                               contemp_collider_rule='majority',
-                               conflict_resolution=True,
-                               reset_lagged_links=False,
-                               max_conds_dim=None,
-                               max_conds_py=None,
-                               max_conds_px=None,
-                               max_conds_px_lagged=None,
-                               max_combinations=1,
-                               fdr_method='none',
-                               ):
-        """Runs PCMCIplus time-lagged and contemporaneous causal discovery for
-                time series without its first phase.
-                Method described in [5]_:
-                http://www.auai.org/~w-auai/uai2020/proceedings/579_main_paper.pdf
-                Parameters
-                ----------
-                lagged_parents : dictionary of lists
-                    Dictionary of lagged parents for each node.
-                selected_links : dict or None
-                    Deprecated, replaced by link_assumptions
-                link_assumptions : dict
-                    Dictionary of form {j:{(i, -tau): link_type, ...}, ...} specifying
-                    assumptions about links. This initializes the graph with entries
-                    graph[i,j,tau] = link_type. For example, graph[i,j,0] = '-->'
-                    implies that a directed link from i to j at lag 0 must exist.
-                    Valid link types are 'o-o', '-->', '<--'. In addition, the middle
-                    mark can be '?' instead of '-'. Then '-?>' implies that this link
-                    may not exist, but if it exists, its orientation is '-->'. Link
-                    assumptions need to be consistent, i.e., graph[i,j,0] = '-->'
-                    requires graph[j,i,0] = '<--' and acyclicity must hold. If a link
-                    does not appear in the dictionary, it is assumed absent. That is,
-                    if link_assumptions is not None, then all links have to be specified
-                    or the links are assumed absent.
-                tau_min : int, optional (default: 0)
-                    Minimum time lag to test.
-                tau_max : int, optional (default: 1)
-                    Maximum time lag. Must be larger or equal to tau_min.
-                pc_alpha : float or list of floats, default: 0.01
-                    Significance level in algorithm. If a list or None is passed, the
-                    pc_alpha level is optimized for every graph across the given
-                    pc_alpha values ([0.001, 0.005, 0.01, 0.025, 0.05] for None) using
-                    the score computed in cond_ind_test.get_model_selection_criterion().
-                contemp_collider_rule : {'majority', 'conservative', 'none'}
-                    Rule for collider phase to use. See the paper for details. Only
-                    'majority' and 'conservative' lead to an order-independent
-                    algorithm.
-                conflict_resolution : bool, optional (default: True)
-                    Whether to mark conflicts in orientation rules. Only for True
-                    this leads to an order-independent algorithm.
-                reset_lagged_links : bool, optional (default: False)
-                    Restricts the detection of lagged causal links in Step 2 to the
-                    significant adjacencies found in the PC1 algorithm in Step 1. For
-                    True, *all* lagged links are considered again, which improves
-                    detection power for lagged links, but also leads to larger
-                    runtimes.
-                max_conds_dim : int, optional (default: None)
-                    Maximum number of conditions to test. If None is passed, this number
-                    is unrestricted.
-                max_combinations : int, optional (default: 1)
-                    Maximum number of combinations of conditions of current cardinality
-                    to test. Defaults to 1 for PC_1 algorithm. For original PC algorithm
-                    a larger number, such as 10, can be used.
-                max_conds_py : int, optional (default: None)
-                    Maximum number of lagged conditions of Y to use in MCI tests. If
-                    None is passed, this number is unrestricted.
-                max_conds_px : int, optional (default: None)
-                    Maximum number of lagged conditions of X to use in MCI tests. If
-                    None is passed, this number is unrestricted.
-                max_conds_px_lagged : int, optional (default: None)
-                    Maximum number of lagged conditions of X when X is lagged in MCI
-                    tests. If None is passed, this number is equal to max_conds_px.
-                fdr_method : str, optional (default: 'none')
-                    Correction method, default is Benjamini-Hochberg False Discovery
-                    Rate method.
-                Returns
-                -------
-                graph : array of shape [N, N, tau_max+1]
-                    Resulting causal graph, see description above for interpretation.
-                val_matrix : array of shape [N, N, tau_max+1]
-                    Estimated matrix of test statistic values regarding adjacencies.
-                p_matrix : array of shape [N, N, tau_max+1]
-                    Estimated matrix of p-values regarding adjacencies.
-                sepset : dictionary
-                    Separating sets. See paper for details.
-                ambiguous_triples : list
-                    List of ambiguous triples, only relevant for 'majority' and
-                    'conservative' rules, see paper for details.
-                """
-
-        if selected_links is not None:
-            raise ValueError("selected_links is DEPRECATED, use link_assumptions instead.")
-
-        # Check if pc_alpha is chosen to optimize over a list
-        if pc_alpha is None or isinstance(pc_alpha, (list, tuple, np.ndarray)):
-            # Call optimizer wrapper around run_pcmciplus()
-            return self._optimize_pcmciplus_alpha(
-                link_assumptions=link_assumptions,
-                tau_min=tau_min,
-                tau_max=tau_max,
-                pc_alpha=pc_alpha,
-                contemp_collider_rule=contemp_collider_rule,
-                conflict_resolution=conflict_resolution,
-                reset_lagged_links=reset_lagged_links,
-                max_conds_dim=max_conds_dim,
-                max_combinations=max_combinations,
-                max_conds_py=max_conds_py,
-                max_conds_px=max_conds_px,
-                max_conds_px_lagged=max_conds_px_lagged,
-                fdr_method=fdr_method)
-
-        # else:
-        #     raise ValueError("pc_alpha=None not supported in PCMCIplus, choose"
-        #                      " 0 < pc_alpha < 1 (e.g., 0.01)")
-
-        if pc_alpha < 0. or pc_alpha > 1:
-            raise ValueError("Choose 0 <= pc_alpha <= 1")
-
-        # Check the limits on tau
-        self._check_tau_limits(tau_min, tau_max)
-        # Set the selected links
-        # _int_sel_links = self._set_sel_links(selected_links, tau_min, tau_max)
-        _int_link_assumptions = self._set_link_assumptions(link_assumptions, tau_min, tau_max)
-
-        p_matrix = self.p_matrix
-        val_matrix = self.val_matrix
-
-        # Step 2+3+4: PC algorithm with contemp. conditions and MCI tests
-        if self.verbosity > 0:
-            print("\n##\n## Step 2: PC algorithm with contemp. conditions "
-                  "and MCI tests\n##"
-                  "\n\nParameters:")
-            if link_assumptions is not None:
-                print("\nlink_assumptions = %s" % str(_int_link_assumptions))
-            print("\nindependence test = %s" % self.cond_ind_test.measure
-                  + "\ntau_min = %d" % tau_min
-                  + "\ntau_max = %d" % tau_max
-                  + "\npc_alpha = %s" % pc_alpha
-                  + "\ncontemp_collider_rule = %s" % contemp_collider_rule
-                  + "\nconflict_resolution = %s" % conflict_resolution
-                  + "\nreset_lagged_links = %s" % reset_lagged_links
-                  + "\nmax_conds_dim = %s" % max_conds_dim
-                  + "\nmax_conds_py = %s" % max_conds_py
-                  + "\nmax_conds_px = %s" % max_conds_px
-                  + "\nmax_conds_px_lagged = %s" % max_conds_px_lagged
-                  + "\nfdr_method = %s" % fdr_method
-                  )
-
-        # Set the maximum condition dimension for Y and X
-        max_conds_py = self._set_max_condition_dim(max_conds_py,
-                                                   tau_min, tau_max)
-        max_conds_px = self._set_max_condition_dim(max_conds_px,
-                                                   tau_min, tau_max)
-
-        if reset_lagged_links:
-            # Run PCalg on full graph, ignoring that some lagged links
-            # were determined as non-significant in PC1 step
-            links_for_pc = deepcopy(_int_link_assumptions)
-        else:
-            # Run PCalg only on lagged parents found with PC1
-            # plus all contemporaneous links
-            links_for_pc = {}  # deepcopy(lagged_parents)
-            for j in range(self.N):
-                links_for_pc[j] = {}
-                for parent in lagged_parents[j]:
-                    if parent in _int_link_assumptions[j] and _int_link_assumptions[j][parent] in ['-?>', '-->']:
-                        links_for_pc[j][parent] = _int_link_assumptions[j][parent]
-                # Add Contemporaneous links
-                for link in _int_link_assumptions[j]:
-                    i, tau = link
-                    link_type = _int_link_assumptions[j][link]
-                    if abs(tau) == 0:
-                        links_for_pc[j][(i, 0)] = link_type
-
-        # self.mode = "standard"
-        results = self.run_pcalg(
-            link_assumptions=links_for_pc,
-            pc_alpha=pc_alpha,
-            tau_min=tau_min,
-            tau_max=tau_max,
-            max_conds_dim=max_conds_dim,
-            max_combinations=max_combinations,
-            lagged_parents=lagged_parents,
-            max_conds_py=max_conds_py,
-            max_conds_px=max_conds_px,
-            max_conds_px_lagged=max_conds_px_lagged,
-            mode='contemp_conds',
-            contemp_collider_rule=contemp_collider_rule,
-            conflict_resolution=conflict_resolution)
-
-        graph = results['graph']
-
-        # Update p_matrix and val_matrix with values from links_for_pc
-        for j in range(self.N):
-            for link in links_for_pc[j]:
-                i, tau = link
-                if links_for_pc[j][link] not in ['<--', '<?-']:
-                    p_matrix[i, j, abs(tau)] = results['p_matrix'][i, j, abs(tau)]
-                    val_matrix[i, j, abs(tau)] = results['val_matrix'][i, j,
-                    abs(tau)]
-
-        # Update p_matrix and val_matrix for indices of symmetrical links
-        p_matrix[:, :, 0] = results['p_matrix'][:, :, 0]
-        val_matrix[:, :, 0] = results['val_matrix'][:, :, 0]
-
-        ambiguous = results['ambiguous_triples']
-
-        conf_matrix = None
-        # TODO: implement confidence estimation, but how?
-        # if self.cond_ind_test.confidence is not False:
-        #     conf_matrix = results['conf_matrix']
-
-        # Correct the p_matrix if there is a fdr_method
-        if fdr_method != 'none':
-            p_matrix = self.get_corrected_pvalues(p_matrix=p_matrix, tau_min=tau_min,
-                                                  tau_max=tau_max,
-                                                  link_assumptions=_int_link_assumptions,
-                                                  fdr_method=fdr_method)
-
-        # Store the parents in the pcmci member
-        self.all_lagged_parents = lagged_parents
-
-        # Cache the resulting values in the return dictionary
-        return_dict = {'graph': graph,
-                       'val_matrix': val_matrix,
-                       'p_matrix': p_matrix,
-                       'ambiguous_triples': ambiguous,
-                       'conf_matrix': conf_matrix}
-        # Print the results
-        if self.verbosity > 0:
-            self.print_results(return_dict, alpha_level=pc_alpha)
-        # Return the dictionary
-        return return_dict

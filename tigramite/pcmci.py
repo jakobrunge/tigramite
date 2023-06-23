@@ -12,7 +12,7 @@ from copy import deepcopy
 import numpy as np
 import scipy.stats
 
-from pcmci_base import PCMCIbase
+from tigramite.pcmci_base import PCMCIbase
 
 def _create_nested_dictionary(depth=0, lowest_type=dict):
     """Create a series of nested dictionaries to a maximum depth.  The first
@@ -2353,7 +2353,7 @@ class PCMCI(PCMCIbase):
             for j in range(self.N):
                 links_for_pc[j] = {}
                 for parent in lagged_parents[j]:
-                    if _int_link_assumptions[j][parent] in ['-?>', '-->']:
+                    if parent in _int_link_assumptions[j] and _int_link_assumptions[j][parent] in ['-?>', '-->']:
                         links_for_pc[j][parent] = _int_link_assumptions[j][parent]
 
                 # Add contemporaneous links
