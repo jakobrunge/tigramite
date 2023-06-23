@@ -16,6 +16,9 @@ def shift_link_entries(links, const):
         shifted_links[shifted_key] = shifted_values
     return shifted_links
 
+def group_links(links, node_types, node_type):
+    return {i: links[i] for i in links.keys() if node_types[i] == node_type}
+
 
 class ContextModel:
     """Allows to sample from a joint structural causal model over different spatial
@@ -24,25 +27,17 @@ class ContextModel:
 
         Parameters
         ----------
-        links_tc : dict
+        links : dict
             Dictionary of format: {0:[((i, -tau), coeff, func),...], 1:[...],
-            ...} for all temporal context variables where i must be in [0..N-1] and tau >= 0 with
-            number of variables N. coeff must be a float and func a python
-            callable of one argument. The temporal context variables are assumed exogenous
-            to the system variables. They cannot interact with the spatial context variables due to the assumption
-            that they are constant across datasets.
-        links_sc : dict
-            Dictionary of format: {0:[((i, -tau), coeff, func),...], 1:[...],
-            ...} for all spatial context variables where i must be in [0..N-1] and tau >= 0 with
-            number of variables N. coeff must be a float and func a python
-            callable of one argument. The spatial context variables are assumed exogenous
-            to the system variables. They cannot interact with the temporal context variables due to the assumption
-            that they are time-independent, i.e. constant across time.
-        links_sys : dict
-            Dictionary of format: {0:[((i, -tau), coeff, func),...], 1:[...],
-            ...} for all system variables where i must be in [0..N-1] and tau >= 0 with
+            ...} for all variables where i must be in [0..N-1] and tau >= 0 with
             number of variables N. coeff must be a float and func a python
             callable of one argument.
+        node_classification : dictionary
+            Classification of nodes into system, or context nodes.
+            Keys of the dictionary are from {0, ..., N-1} where N is the number of nodes.
+            Options for the values are "system", "time_context", "space_context". The temporal context variables are
+            assumed exogenous to the system variables. They cannot interact with the spatial context variables due
+            to the assumption that they are constant across datasets.
         noises : list of callables or array, optional (default: None)
             Random distribution function that is called with noises[j](T). If an array,
             it must be of shape ((transient_fraction + 1)*T, N).
@@ -78,13 +73,16 @@ class ContextModel:
 
         """
 
-    def __init__(self, links_tc={}, links_sc={}, links_sys={}, noises=None, seed=None):
-        self.N = len(links_sys.keys())
-        self.links_tc = links_tc
-        self.links_sc = links_sc
-        self.links_sys = links_sys
+    def __init__(self, links={}, node_classification={}, noises=None, seed=None):
+        self.links_tc = group_links(links, node_classification, "time_context")
+        self.links_sc = group_links(links, node_classification, "space_context")
+        self.links_sys = group_links(links, node_classification, "system")
+
+        self.N = len(self.links_sys.keys())
         self.noises = noises
         self.seed = seed
+
+
 
     def constant_over_space(self, data_tc, M):
         data_tc_list = [data_tc for _ in range(M)]
