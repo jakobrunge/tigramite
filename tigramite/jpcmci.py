@@ -79,7 +79,7 @@ class J_PCMCIplus(PCMCI):
             This is the list of the system nodes.
         """
 
-    def __init__(self, node_classification, **kwargs):
+    def __init__(self, node_classification, dummy_ci_test=ParCorrMult(significance='analytic'), **kwargs):
         PCMCI.__init__(self, **kwargs)
 
         self.system_nodes = self.group_nodes(node_classification, "system")
@@ -90,7 +90,7 @@ class J_PCMCIplus(PCMCI):
 
         self.dummy_parents = {i: [] for i in range(self.N)}
         self.observed_context_parents = {i: [] for i in range(self.N)}
-        self.dummy_ci_test = ParCorrMult(significance='analytic')
+        self.dummy_ci_test = dummy_ci_test
         self.mode = "system_search"
 
     def group_nodes(self, node_types, node_type):
@@ -319,7 +319,7 @@ class J_PCMCIplus(PCMCI):
                 max_conds_px_lagged=max_conds_px_lagged,
                 fdr_method=fdr_method
             )
-            #context_results = dummy_system_results
+            # Store the parents in the pcmci member
             self.dummy_parents = dummy_system_results['parents']
         else:
             dummy_system_results = deepcopy(context_results)
@@ -337,20 +337,18 @@ class J_PCMCIplus(PCMCI):
         dummy_system_results_copy = deepcopy(dummy_system_results)
 
         system_skeleton_results = self.discover_system_system_links(link_assumptions=_link_assumptions,
-                                                    context_results=dummy_system_results,
-                                                    lagged_context_dummy_parents=lagged_context_dummy_parents,
-                                                    contemp_collider_rule=contemp_collider_rule,
-                                                    tau_min=tau_min,
-                                                    tau_max=tau_max,
-                                                    pc_alpha=pc_alpha,
-                                                    conflict_resolution=conflict_resolution,
-                                                    reset_lagged_links=reset_lagged_links,
-                                                    max_conds_dim=max_conds_dim,
-                                                    max_combinations=max_combinations,
-                                                    max_conds_py=max_conds_py,
-                                                    max_conds_px=max_conds_px,
-                                                    max_conds_px_lagged=max_conds_px_lagged,
-                                                    fdr_method=fdr_method)
+                                                                    context_results=dummy_system_results,
+                                                                    lagged_context_dummy_parents=lagged_context_dummy_parents,
+                                                                    tau_min=tau_min,
+                                                                    tau_max=tau_max,
+                                                                    pc_alpha=pc_alpha,
+                                                                    reset_lagged_links=reset_lagged_links,
+                                                                    max_conds_dim=max_conds_dim,
+                                                                    max_combinations=max_combinations,
+                                                                    max_conds_py=max_conds_py,
+                                                                    max_conds_px=max_conds_px,
+                                                                    max_conds_px_lagged=max_conds_px_lagged,
+                                                                    fdr_method=fdr_method)
 
         # orientation phase
         colliders_step_results = self._pcmciplus_collider_phase(
@@ -363,13 +361,15 @@ class J_PCMCIplus(PCMCI):
                                                              colliders_step_results['ambiguous_triples'],
                                                              conflict_resolution)
 
-        # add context-system and dummy-system values (lost because of link_assumption) back in
+        # add context-system and dummy-system values and pvalues back in (lost because of link_assumption)
         for c in observed_context_nodes + self.time_dummy + self.space_dummy:
             for j in range(self.N):
                 for lag in range(tau_max + 1):
                     # add context-system links to results
-                    system_skeleton_results['val_matrix'][c, j, lag] = dummy_system_results_copy['val_matrix'][c, j, lag]
-                    system_skeleton_results['val_matrix'][j, c, lag] = dummy_system_results_copy['val_matrix'][j, c, lag]
+                    system_skeleton_results['val_matrix'][c, j, lag] = dummy_system_results_copy['val_matrix'][
+                        c, j, lag]
+                    system_skeleton_results['val_matrix'][j, c, lag] = dummy_system_results_copy['val_matrix'][
+                        j, c, lag]
 
                     system_skeleton_results['p_matrix'][c, j, lag] = dummy_system_results_copy['p_matrix'][c, j, lag]
                     system_skeleton_results['p_matrix'][j, c, lag] = dummy_system_results_copy['p_matrix'][j, c, lag]
@@ -478,15 +478,15 @@ class J_PCMCIplus(PCMCI):
         return system_links
 
     def discover_lagged_context_system_links(self, link_assumptions,
-                                      tau_min=0,
-                                      tau_max=1, pc_alpha=0.01,
-                                      reset_lagged_links=False,
-                                      max_conds_dim=None,
-                                      max_combinations=1,
-                                      max_conds_py=None,
-                                      max_conds_px=None,
-                                      max_conds_px_lagged=None,
-                                      fdr_method='none'):
+                                             tau_min=0,
+                                             tau_max=1, pc_alpha=0.01,
+                                             reset_lagged_links=False,
+                                             max_conds_dim=None,
+                                             max_combinations=1,
+                                             max_conds_py=None,
+                                             max_conds_px=None,
+                                             max_conds_px_lagged=None,
+                                             fdr_method='none'):
         """
         Step 1 of J_PCMCIplus, i.e. discovery of links between observed context nodes and system nodes through an
         application of the skeleton phase of PCMCIplus to this subset of nodes (observed context nodes and system
@@ -626,7 +626,6 @@ class J_PCMCIplus(PCMCI):
         )
 
         skeleton_graph_dummy = skeleton_results_dummy['graph']
-        # skeleton_val_dummy = skeleton_results_dummy['val_matrix']
 
         for j in self.system_nodes:
             for k in range(tau_max + 1):
@@ -637,16 +636,16 @@ class J_PCMCIplus(PCMCI):
                             skeleton_graph_dummy[dummy_node, j, k] == '-->':
                         dummy_parents[j].append((dummy_node, k))
                 for context_node in self.time_context_nodes + self.space_context_nodes:
-                    skeleton_results_dummy['val_matrix'][context_node, j, k] = context_system_results['val_matrix'][context_node, j, k]
-                    skeleton_results_dummy['val_matrix'][j, context_node, k] = context_system_results['val_matrix'][j, context_node, k]
+                    skeleton_results_dummy['val_matrix'][context_node, j, k] = context_system_results['val_matrix'][
+                        context_node, j, k]
+                    skeleton_results_dummy['val_matrix'][j, context_node, k] = context_system_results['val_matrix'][
+                        j, context_node, k]
 
                     skeleton_results_dummy['p_matrix'][context_node, j, k] = p_matrix[context_node, j, k]
                     skeleton_results_dummy['p_matrix'][j, context_node, k] = p_matrix[j, context_node, k]
 
         return_dict = {'graph': skeleton_results_dummy['graph'], 'p_matrix': skeleton_results_dummy['p_matrix'],
-                       'val_matrix': skeleton_results_dummy['val_matrix'], 'sepset': skeleton_results_dummy['sepset'],
-                       # 'ambiguous_triples': skeleton_results_dummy['ambiguous_triples'], 'conf_matrix': None,
-                       'parents': dummy_parents}
+                       'val_matrix': skeleton_results_dummy['val_matrix'], 'parents': dummy_parents}
 
         # Print the results
         if self.verbosity > 0:
@@ -659,8 +658,6 @@ class J_PCMCIplus(PCMCI):
                                      tau_min=0,
                                      tau_max=1,
                                      pc_alpha=0.01,
-                                     contemp_collider_rule="majority",
-                                     conflict_resolution=True,
                                      reset_lagged_links=False,
                                      max_conds_dim=None,
                                      max_combinations=1,
@@ -858,38 +855,43 @@ class J_PCMCIplus(PCMCI):
         """Helper function to deal with difficulties in constructing the array for CI testing
         that arise due to the one-hot encoding of the dummy."""
         # Get the array to test on
-        array, xyz, XYZ, _ = self.dataframe.construct_array(X=X, Y=Y, Z=Z, tau_max=tau_max,
-                                                            mask_type=self.dummy_ci_test.mask_type,
-                                                            return_cleaned_xyz=True,
-                                                            do_checks=True,
-                                                            remove_overlaps=True,
-                                                            cut_off=cut_off,
-                                                            verbosity=0)
-        # remove the parts of the array within dummy that are constant zero (ones are cut off)
-        mask = np.all(array == 0., axis=1) | np.all(array == 1., axis=1)
-        xyz = xyz[~mask]
-        array = array[~mask]
+        if hasattr(self.dummy_ci_test, "_get_dependence_measure_recycle"):
+            array, xyz, XYZ, _ = self.dataframe.construct_array(X=X, Y=Y, Z=Z, tau_max=tau_max,
+                                                                mask_type=self.dummy_ci_test.mask_type,
+                                                                return_cleaned_xyz=True,
+                                                                do_checks=True,
+                                                                remove_overlaps=True,
+                                                                cut_off=cut_off,
+                                                                verbosity=0)
+            # remove the parts of the array within dummy that are constant zero (ones are cut off)
+            mask = np.all(array == 0., axis=1) | np.all(array == 1., axis=1)
+            xyz = xyz[~mask]
+            array = array[~mask]
 
-        # Record the dimensions
-        dim, T = array.shape
-        # Ensure it is a valid array
-        if np.any(np.isnan(array)):
-            raise ValueError("nans in the array!")
+            # Record the dimensions
+            dim, T = array.shape
+            # Ensure it is a valid array
+            if np.any(np.isnan(array)):
+                raise ValueError("nans in the array!")
 
-        # combined_hash = self.cond_ind_test._get_array_hash(array, xyz, XYZ)
+            combined_hash = self._get_array_hash(array, xyz, XYZ)
 
-        if False:  # combined_hash in self.cond_ind_test.cached_ci_results.keys():
-            cached = True
-            val, pval = self.cond_ind_test.cached_ci_results[combined_hash]
+            if combined_hash in self.cached_ci_results.keys():
+                cached = True
+                val, pval = self.cached_ci_results[combined_hash]
+            else:
+                cached = False
+                # Get the dependence measure, recycling residuals if need be
+                val = self.dummy_ci_test._get_dependence_measure_recycle(X, Y, Z, xyz, array)
+
+                # Get the p-value
+                pval = self.dummy_ci_test.get_significance(val, array, xyz, T, dim)
+
+            if self.verbosity > 1:
+                self.dummy_ci_test._print_cond_ind_results(val=val, pval=pval, cached=cached, conf=None)
+            # Return the value and the p-value
+            return val, pval, Z
+
         else:
-            cached = False
-            # Get the dependence measure, recycling residuals if need be
-            val = self.dummy_ci_test._get_dependence_measure_recycle(X, Y, Z, xyz, array)
-
-            # Get the p-value
-            pval = self.dummy_ci_test.get_significance(val, array, xyz, T, dim)
-
-        if self.verbosity > 1:
-            self.dummy_ci_test._print_cond_ind_results(val=val, pval=pval, cached=cached, conf=None)
-        # Return the value and the p-value
-        return val, pval, Z
+            val, pval = self.dummy_ci_test.run_test(X, Y, Z=Z, tau_max=tau_max, cut_off=cut_off)
+            return val, pval, Z
