@@ -9,7 +9,7 @@ from tigramite.toymodels import structural_causal_processes as toys
 from tigramite.independence_tests.parcorr_mult import ParCorrMult
 from tigramite.independence_tests.oracle_conditional_independence import OracleCI
 
-from tigramite.toymodels.context_model import shift_link_entries, ContextModel
+from tigramite.toymodels.context_model import shift_link_entries, ContextModel, do_dummy_projection, nb_latent_before
 import tigramite.data_processing as pp
 
 
@@ -87,11 +87,6 @@ def set_links(effect_candidates, L, cause_candidates, tau_max, dependency_funcs,
                            random_state)
 
     return links
-
-
-def nb_latent_before(node, observed_context_indices, node_classification):
-    return len(
-        [el for el in range(node) if not (el in observed_context_indices or node_classification[el] == "system")])
 
 
 # J-PCMCIplus TESTING for random context models
@@ -320,47 +315,7 @@ def a_jpcmciplus(request):
     return dataframe, augmented_true_graph, augmented_links, tau_min, tau_max, node_classification
 
 
-def do_dummy_projection(links, node_classification, observed_context_indices, time_dummy_index, space_dummy_index):
-    """
-    Helper function to augment the true_parents by remove context-context links and adding dummy
-    (i.e. perform dummy projection)
-    """
 
-    # remove latent links, shift remaining, add dummy
-    augmented_links = {}
-    for node in node_classification.keys():
-        if node_classification[node] == "system":
-            keep_parents = []
-            for parent in links[node]:
-                if node_classification[parent[0][0]] == "system":
-                    keep_parents.append(parent)
-                elif node_classification[parent[0][0]] == "time_context":
-                    if parent[0][0] in observed_context_indices:
-                        keep_parents.append(((parent[0][0] - nb_latent_before(parent[0][0], observed_context_indices,
-                                                                              node_classification),
-                                              parent[0][1]), parent[1], parent[2]))
-                    else:
-                        keep_parents.append(((time_dummy_index, 0), 0, "dummy"))
-                elif node_classification[parent[0][0]] == "space_context":
-                    if parent[0][0] in observed_context_indices:
-                        keep_parents.append(((parent[0][0] - nb_latent_before(parent[0][0], observed_context_indices,
-                                                                              node_classification), parent[0][1]),
-                                             parent[1], parent[2]))
-                    else:
-                        keep_parents.append(((space_dummy_index, 0), 0, "dummy"))
-                augmented_links[node] = list(dict.fromkeys(keep_parents))
-
-        # remove all parents of context nodes
-        elif node_classification[node] == "time_context":
-            if node in observed_context_indices:
-                augmented_links[node - nb_latent_before(node, observed_context_indices, node_classification)] = []
-        elif node_classification[node] == "space_context":
-            if node in observed_context_indices:
-                augmented_links[node - nb_latent_before(node, observed_context_indices, node_classification)] = []
-
-    augmented_links[time_dummy_index] = []
-    augmented_links[space_dummy_index] = []
-    return augmented_links
 
 
 @pytest.fixture(params=[
