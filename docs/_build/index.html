@@ -4,14 +4,16 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
     <title>Welcome to Tigramite’s documentation! &#8212; Tigramite 5.2 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
    
@@ -48,6 +50,7 @@
 <p><a class="reference external" href="https://github.com/jakobrunge/tigramite/">Github repo</a></p>
 <p>Tigramite is a causal time series analysis python package. It allows to efficiently estimate causal graphs from high-dimensional time series datasets (causal discovery) and to use these graphs for robust forecasting and the estimation and prediction of direct, total, and mediated effects. Causal discovery is based on linear as well as non-parametric conditional independence tests applicable to discrete or continuously-valued time series. Also includes functions for high-quality plots of the results. Please cite the following papers depending on which method you use:</p>
 <ul class="simple">
+<li><p>Overview: Runge, J., Gerhardus, A., Varando, G. et al. Causal inference for time series. Nat Rev Earth Environ (2023). <a class="reference external" href="https://doi.org/10.1038/s43017-023-00431-y">https://doi.org/10.1038/s43017-023-00431-y</a></p></li>
 <li><p>PCMCI: J. Runge, P. Nowack, M. Kretschmer, S. Flaxman, D. Sejdinovic, Detecting and quantifying causal associations in large nonlinear time series datasets. Sci. Adv. 5, eaau4996 (2019). <a class="reference external" href="https://advances.sciencemag.org/content/5/11/eaau4996">https://advances.sciencemag.org/content/5/11/eaau4996</a></p></li>
 <li><p>PCMCI+: J. Runge (2020): Discovering contemporaneous and lagged causal relations in autocorrelated nonlinear time series datasets. Proceedings of the 36th Conference on Uncertainty in Artificial Intelligence, UAI 2020,Toronto, Canada, 2019, AUAI Press, 2020. <a class="reference external" href="http://auai.org/uai2020/proceedings/579_main_paper.pdf">http://auai.org/uai2020/proceedings/579_main_paper.pdf</a></p></li>
 <li><p>LPCMCI: Gerhardus, A. &amp; Runge, J. High-recall causal discovery for autocorrelated time series with latent confounders Advances in Neural Information Processing Systems, 2020, 33. <a class="reference external" href="https://proceedings.neurips.cc/paper/2020/hash/94e70705efae423efda1088614128d0b-Abstract.html">https://proceedings.neurips.cc/paper/2020/hash/94e70705efae423efda1088614128d0b-Abstract.html</a></p></li>
@@ -176,7 +179,6 @@ interested in quantifying causal effects, i.e., the effect of
 hypothetical interventions, you may better look at the causal effect
 estimation functionality of Tigramite.</p>
 <p class="rubric">References</p>
-<aside class="footnote-list brackets">
 <aside class="footnote brackets" id="id3" role="note">
 <span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
 <span class="backrefs">(<a role="doc-backlink" href="#id1">1</a>,<a role="doc-backlink" href="#id5">2</a>,<a role="doc-backlink" href="#id6">3</a>,<a role="doc-backlink" href="#id7">4</a>,<a role="doc-backlink" href="#id9">5</a>,<a role="doc-backlink" href="#id15">6</a>,<a role="doc-backlink" href="#id16">7</a>,<a role="doc-backlink" href="#id17">8</a>,<a role="doc-backlink" href="#id33">9</a>,<a role="doc-backlink" href="#id34">10</a>)</span>
@@ -192,7 +194,6 @@ series datasets. Sci. Adv. 5, eaau4996 (2019)
 Discovering contemporaneous and lagged causal relations in
 autocorrelated nonlinear time series datasets
 <a class="reference external" href="http://www.auai.org/~w-auai/uai2020/proceedings/579_main_paper.pdf">http://www.auai.org/~w-auai/uai2020/proceedings/579_main_paper.pdf</a></p>
-</aside>
 </aside>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -286,7 +287,7 @@ p-value for each link estimated in the PC algorithm.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>p_matrix</strong> (<em>array</em><em> of </em><em>shape</em><em> [</em><em>N</em><em>, </em><em>N</em><em>, </em><em>tau_max+1</em><em>]</em>) – Estimated matrix of p-values, optionally adjusted if fdr_method is
+<li><p><strong>p_matrix</strong> (<em>array of shape</em><em> [</em><em>N</em><em>, </em><em>N</em><em>, </em><em>tau_max+1</em><em>]</em>) – Estimated matrix of p-values, optionally adjusted if fdr_method is
 not ‘none’.</p></li>
 <li><p><strong>alpha_level</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.05</em><em>)</em>) – Significance level at which the p_matrix is thresholded to
 get graph.</p></li>
@@ -414,7 +415,7 @@ then no parent is returned.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<em>array</em><em> of </em><em>shape</em><em> [</em><em>N</em><em>, </em><em>N</em><em>, </em><em>tau_max+1</em><em>]</em>) – Causal graph, see description above for interpretation.</p></li>
+<li><p><strong>graph</strong> (<em>array of shape</em><em> [</em><em>N</em><em>, </em><em>N</em><em>, </em><em>tau_max+1</em><em>]</em>) – Causal graph, see description above for interpretation.</p></li>
 <li><p><strong>val_matrix</strong> (<em>array-like</em>) – Matrix of test statistic values. Must be of shape (N, N, tau_max +
 1).</p></li>
 <li><p><strong>include_lagzero_parents</strong> (<em>bool</em><em> (</em><em>default: False</em><em>)</em>) – Whether the dictionary should also return parents at lag
@@ -614,7 +615,7 @@ or the links are assumed absent.</p></li>
 Must be greater zero.</p></li>
 <li><p><strong>tau_max</strong> (<em>int</em><em>, </em><em>default: 1</em>) – Maximum time lag. Must be larger or equal to tau_min.</p></li>
 <li><p><strong>save_iterations</strong> (<em>bool</em><em>, </em><em>default: False</em>) – Whether to save iteration step results such as conditions used.</p></li>
-<li><p><strong>pc_alpha</strong> (<em>float</em><em> or </em><em>list</em><em> of </em><em>floats</em><em>, </em><em>default:</em><em> [</em><em>0.05</em><em>, </em><em>0.1</em><em>, </em><em>0.2</em><em>, </em><em>...</em><em>, </em><em>0.5</em><em>]</em>) – Significance level in algorithm. If a list or None is passed, the
+<li><p><strong>pc_alpha</strong> (<em>float</em><em> or </em><em>list of floats</em><em>, </em><em>default:</em><em> [</em><em>0.05</em><em>, </em><em>0.1</em><em>, </em><em>0.2</em><em>, </em><em>...</em><em>, </em><em>0.5</em><em>]</em>) – Significance level in algorithm. If a list or None is passed, the
 pc_alpha level is optimized for every variable across the given
 pc_alpha values using the score computed in
 cond_ind_test.get_model_selection_criterion().</p></li>
@@ -691,7 +692,7 @@ tests. If None is passed, this number is equal to max_conds_px.</p></li>
 <li><p><strong>graph</strong> (<em>array of shape [N, N, tau_max+1]</em>) – Resulting causal graph, see description above for interpretation.</p></li>
 <li><p><strong>val_matrix</strong> (<em>array of shape [N, N, tau_max+1]</em>) – Estimated matrix of test statistic values regarding adjacencies.</p></li>
 <li><p><strong>p_matrix</strong> (<em>array of shape [N, N, tau_max+1]</em>) – Estimated matrix of p-values regarding adjacencies.</p></li>
-<li><p><strong>sepset</strong> (<em>dictionary</em>) – Separating sets. See paper for details.</p></li>
+<li><p><strong>sepsets</strong> (<em>dictionary</em>) – Separating sets. See paper for details.</p></li>
 <li><p><strong>ambiguous_triples</strong> (<em>list</em>) – List of ambiguous triples, only relevant for ‘majority’ and
 ‘conservative’ rules, see paper for details.</p></li>
 </ul>
@@ -726,7 +727,7 @@ to test.</p></li>
 <li><p><strong>graph</strong> (<em>array of shape [N, N, 1]</em>) – Resulting causal graph, see description above for interpretation.</p></li>
 <li><p><strong>val_matrix</strong> (<em>array of shape [N, N, 1]</em>) – Estimated matrix of test statistic values regarding adjacencies.</p></li>
 <li><p><strong>p_matrix</strong> (<em>array of shape [N, N, 1]</em>) – Estimated matrix of p-values regarding adjacencies.</p></li>
-<li><p><strong>sepset</strong> (<em>dictionary</em>) – Separating sets. See paper for details.</p></li>
+<li><p><strong>sepsets</strong> (<em>dictionary</em>) – Separating sets. See paper for details.</p></li>
 <li><p><strong>ambiguous_triples</strong> (<em>list</em>) – List of ambiguous triples, only relevant for ‘majority’ and
 ‘conservative’ rules, see paper for details.</p></li>
 </ul>
@@ -981,7 +982,7 @@ if link_assumptions is not None, then all links have to be specified
 or the links are assumed absent.</p></li>
 <li><p><strong>tau_min</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) – Minimum time lag to test.</p></li>
 <li><p><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) – Maximum time lag. Must be larger or equal to tau_min.</p></li>
-<li><p><strong>pc_alpha</strong> (<em>float</em><em> or </em><em>list</em><em> of </em><em>floats</em><em>, </em><em>default: 0.01</em>) – Significance level in algorithm. If a list or None is passed, the
+<li><p><strong>pc_alpha</strong> (<em>float</em><em> or </em><em>list of floats</em><em>, </em><em>default: 0.01</em>) – Significance level in algorithm. If a list or None is passed, the
 pc_alpha level is optimized for every graph across the given
 pc_alpha values ([0.001, 0.005, 0.01, 0.025, 0.05] for None) using
 the score computed in cond_ind_test.get_model_selection_criterion().</p></li>
@@ -1015,7 +1016,7 @@ Rate method.</p></li>
 <li><p><strong>graph</strong> (<em>array of shape [N, N, tau_max+1]</em>) – Resulting causal graph, see description above for interpretation.</p></li>
 <li><p><strong>val_matrix</strong> (<em>array of shape [N, N, tau_max+1]</em>) – Estimated matrix of test statistic values regarding adjacencies.</p></li>
 <li><p><strong>p_matrix</strong> (<em>array of shape [N, N, tau_max+1]</em>) – Estimated matrix of p-values regarding adjacencies.</p></li>
-<li><p><strong>sepset</strong> (<em>dictionary</em>) – Separating sets. See paper for details.</p></li>
+<li><p><strong>sepsets</strong> (<em>dictionary</em>) – Separating sets. See paper for details.</p></li>
 <li><p><strong>ambiguous_triples</strong> (<em>list</em>) – List of ambiguous triples, only relevant for ‘majority’ and
 ‘conservative’ rules, see paper for details.</p></li>
 </ul>
@@ -1033,11 +1034,11 @@ Rate method.</p></li>
 <dt class="sig sig-object py" id="tigramite.lpcmci.LPCMCI">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tigramite.lpcmci.</span></span><span class="sig-name descname"><span class="pre">LPCMCI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cond_ind_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbosity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/lpcmci.html#LPCMCI"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.lpcmci.LPCMCI" title="Permalink to this definition">¶</a></dt>
 <dd><p>LPCMCI is an algorithm for causal discovery in large-scale times series that allows for latent confounders and
-learns lag-specific causal relationships. The algorithm is introduced and explained in:
-[1] Gerhardus, A. &amp; Runge, J. High-recall causal discovery for autocorrelated time series with latent confounders.
+learns lag-specific causal relationships. The algorithm is introduced and explained in:</p>
+<p>[1] Gerhardus, A. &amp; Runge, J. High-recall causal discovery for autocorrelated time series with latent confounders.
 Advances in Neural Information Processing Systems, 2020, 33.
-<a class="reference external" href="https://proceedings.neurips.cc/paper/2020/hash/94e70705efae423efda1088614128d0b-Abstract.html">https://proceedings.neurips.cc/paper/2020/hash/94e70705efae423efda1088614128d0b-Abstract.html</a>
-NOTE: This method is still EXPERIMENTAL since the default settings of hyperparameters are still being fine-tuned.
+<a class="reference external" href="https://proceedings.neurips.cc/paper/2020/hash/94e70705efae423efda1088614128d0b-Abstract.html">https://proceedings.neurips.cc/paper/2020/hash/94e70705efae423efda1088614128d0b-Abstract.html</a></p>
+<p>NOTE: This method is still EXPERIMENTAL since the default settings of hyperparameters are still being fine-tuned.
 We actually invite feedback on which work best in applications and numerical experiments.
 The main function, which applies the algorithm, is ‘run_lpcmci’.</p>
 <p>Parameters passed to the constructor:
@@ -1259,7 +1260,7 @@ options passed to this function.</p>
 <h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">tigramite.rpcmci</span></code>: RPCMCI<a class="headerlink" href="#tigramite-rpcmci-rpcmci" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="tigramite.rpcmci.RPCMCI">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tigramite.rpcmci.</span></span><span class="sig-name descname"><span class="pre">RPCMCI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cond_ind_test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prediction_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbosity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/rpcmci.html#RPCMCI"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.rpcmci.RPCMCI" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tigramite.rpcmci.</span></span><span class="sig-name descname"><span class="pre">RPCMCI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cond_ind_test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prediction_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbosity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/rpcmci.html#RPCMCI"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.rpcmci.RPCMCI" title="Permalink to this definition">¶</a></dt>
 <dd><p>RPCMCI class for extracting causal regimes and the associated graphs from
 time series data.</p>
 <p class="rubric">Notes</p>
@@ -1295,7 +1296,7 @@ GaussianProcessRegressor model, or CMIknn with NearestNeighbors model.</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="tigramite.rpcmci.RPCMCI.run_rpcmci">
-<span class="sig-name descname"><span class="pre">run_rpcmci</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_regimes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_transitions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">switch_thres</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_iterations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_anneal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pc_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/rpcmci.html#RPCMCI.run_rpcmci"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.rpcmci.RPCMCI.run_rpcmci" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">run_rpcmci</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_regimes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_transitions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">switch_thres</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_iterations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_anneal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pc_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/rpcmci.html#RPCMCI.run_rpcmci"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.rpcmci.RPCMCI.run_rpcmci" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
 <dt>Run RPCMCI method for extracting causal regimes and the associated graphs from</dt><dd><p>time series data.</p>
 </dd>
@@ -1338,7 +1339,7 @@ the optimal one with minimum objective value (see paper).</p></li>
 <p>Base class:</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="tigramite.independence_tests.independence_tests_base.CondIndTest">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tigramite.independence_tests.independence_tests_base.</span></span><span class="sig-name descname"><span class="pre">CondIndTest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">42</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">significance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'analytic'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_thres</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig_blocklength</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confidence</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf_lev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf_blocklength</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recycle_residuals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbosity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/independence_tests_base.html#CondIndTest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.independence_tests.independence_tests_base.CondIndTest" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tigramite.independence_tests.independence_tests_base.</span></span><span class="sig-name descname"><span class="pre">CondIndTest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">42</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">significance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'analytic'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_thres</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig_blocklength</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confidence</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf_lev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf_blocklength</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recycle_residuals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbosity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/independence_tests_base.html#CondIndTest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.independence_tests.independence_tests_base.CondIndTest" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class of conditional independence tests.</p>
 <p>Provides useful general functions for different independence tests such as
 shuffle significance testing and bootstrap confidence estimation. Also
@@ -1353,8 +1354,7 @@ I(X; Y | Z) the samples should be masked. If None, the mask is not used.
 Explained in tutorial on masking and missing values.</p></li>
 <li><p><strong>significance</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'analytic'</em><em>)</em>) – Type of significance test to use. In this package ‘analytic’,
 ‘fixed_thres’ and ‘shuffle_test’ are available.</p></li>
-<li><p><strong>fixed_thres</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.1</em><em>)</em>) – If significance is ‘fixed_thres’, this specifies the threshold for the
-absolute value of the dependence measure.</p></li>
+<li><p><strong>fixed_thres</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.1</em><em>)</em>) – Deprecated.</p></li>
 <li><p><strong>sig_samples</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 500</em><em>)</em>) – Number of samples for shuffle significance test.</p></li>
 <li><p><strong>sig_blocklength</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Block length for block-shuffle significance test. If None, the
 block length is determined from the decay of the autocovariance as
@@ -1469,23 +1469,7 @@ or discrete: 0s for continuous variables and 1s for discrete variables.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="tigramite.independence_tests.independence_tests_base.CondIndTest.get_fixed_thres_significance">
 <span class="sig-name descname"><span class="pre">get_fixed_thres_significance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_thres</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/independence_tests_base.html#CondIndTest.get_fixed_thres_significance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.independence_tests.independence_tests_base.CondIndTest.get_fixed_thres_significance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns signficance for thresholding test.</p>
-<p>Returns 0 if numpy.abs(value) is smaller than fixed_thres and 1 else.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>value</strong> (<em>number</em>) – Value of test statistic for unshuffled estimate.</p></li>
-<li><p><strong>fixed_thres</strong> (<em>number</em>) – Fixed threshold, is made positive.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>pval</strong> – Returns 0 if numpy.abs(value) is smaller than fixed_thres and 1
-else.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>bool</p>
-</dd>
-</dl>
+<dd><p>DEPRECATED Returns signficance for thresholding test.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1532,44 +1516,6 @@ should override when possible.</p>
 should override when possible.</p>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="tigramite.independence_tests.independence_tests_base.CondIndTest.get_significance">
-<span class="sig-name descname"><span class="pre">get_significance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xyz</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig_override</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/independence_tests_base.html#CondIndTest.get_significance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.independence_tests.independence_tests_base.CondIndTest.get_significance" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div><p>Returns the p-value from whichever significance function is specified
-for this test.  If an override is used, then it will call a different
-function then specified by self.significance</p>
-<dl class="simple">
-<dt>val<span class="classifier">float</span></dt><dd><p>Test statistic value.</p>
-</dd>
-<dt>array<span class="classifier">array-like</span></dt><dd><p>data array with X, Y, Z in rows and observations in columns</p>
-</dd>
-<dt>xyz<span class="classifier">array of ints</span></dt><dd><p>XYZ identifier array of shape (dim,).</p>
-</dd>
-<dt>T<span class="classifier">int</span></dt><dd><p>Sample length</p>
-</dd>
-<dt>dim<span class="classifier">int</span></dt><dd><p>Dimensionality, ie, number of features.</p>
-</dd>
-</dl>
-</div></blockquote>
-<dl>
-<dt>data_type<span class="classifier">array-like</span></dt><dd><blockquote>
-<div><p>Binary data array of same shape as array which describes whether
-individual samples in a variable (or all samples) are continuous
-or discrete: 0s for continuous variables and 1s for discrete variables.</p>
-</div></blockquote>
-<dl class="simple">
-<dt>sig_override<span class="classifier">string</span></dt><dd><p>Must be in ‘analytic’, ‘shuffle_test’, ‘fixed_thres’</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>pval<span class="classifier">float or numpy.nan</span></dt><dd><p>P-value.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py property">
 <dt class="sig sig-object py" id="tigramite.independence_tests.independence_tests_base.CondIndTest.measure">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">measure</span></span><a class="headerlink" href="#tigramite.independence_tests.independence_tests_base.CondIndTest.measure" title="Permalink to this definition">¶</a></dt>
@@ -1584,7 +1530,7 @@ or discrete: 0s for continuous variables and 1s for discrete variables.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="tigramite.independence_tests.independence_tests_base.CondIndTest.run_test">
-<span class="sig-name descname"><span class="pre">run_test</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cut_off</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'2xtau_max'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/independence_tests_base.html#CondIndTest.run_test"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.independence_tests.independence_tests_base.CondIndTest.run_test" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">run_test</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cut_off</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'2xtau_max'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_or_thres</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/independence_tests_base.html#CondIndTest.run_test"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.independence_tests.independence_tests_base.CondIndTest.run_test" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform conditional independence test.</p>
 <p>Calls the dependence measure and signficicance test functions. The child
 classes must specify a function get_dependence_measure and either or
@@ -1594,11 +1540,11 @@ available.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>list</em><em> of </em><em>tuples</em>) – X,Y,Z are of the form [(var, -tau)], where var specifies the
+<li><p><strong>X</strong> (<em>list of tuples</em>) – X,Y,Z are of the form [(var, -tau)], where var specifies the
 variable index and tau the time lag.</p></li>
-<li><p><strong>Y</strong> (<em>list</em><em> of </em><em>tuples</em>) – X,Y,Z are of the form [(var, -tau)], where var specifies the
+<li><p><strong>Y</strong> (<em>list of tuples</em>) – X,Y,Z are of the form [(var, -tau)], where var specifies the
 variable index and tau the time lag.</p></li>
-<li><p><strong>Z</strong> (<em>list</em><em> of </em><em>tuples</em>) – X,Y,Z are of the form [(var, -tau)], where var specifies the
+<li><p><strong>Z</strong> (<em>list of tuples</em>) – X,Y,Z are of the form [(var, -tau)], where var specifies the
 variable index and tau the time lag.</p></li>
 <li><p><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) – Maximum time lag. This may be used to make sure that estimates for
 different lags in X, Z, all have the same sample size.</p></li>
@@ -1608,20 +1554,24 @@ the same samples. For modeling, ‘max_lag_or_tau_max’ can be used,
 which uses the maximum of tau_max and the conditions, which is
 useful to compare multiple models on the same sample.  Last,
 ‘max_lag’ uses as much samples as possible.</p></li>
+<li><p><strong>alpha_or_thres</strong> (<em>float</em><em> (</em><em>optional</em><em>)</em>) – Significance level (if significance=’analytic’ or ‘shuffle_test’) or
+threshold (if significance=’fixed_thres’). If given, run_test returns
+the test decision dependent=True/False.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>val, pval</strong> – The test statistic value and the p-value.</p>
+<dd class="field-even"><p><strong>val, pval, [dependent]</strong> – The test statistic value and the p-value. If alpha_or_thres is
+given, run_test also returns the test decision dependent=True/False.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Tuple of floats</p>
+<dd class="field-odd"><p>Tuple of floats and bool</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="tigramite.independence_tests.independence_tests_base.CondIndTest.run_test_raw">
-<span class="sig-name descname"><span class="pre">run_test_raw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/independence_tests_base.html#CondIndTest.run_test_raw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.independence_tests.independence_tests_base.CondIndTest.run_test_raw" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">run_test_raw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_or_thres</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/independence_tests_base.html#CondIndTest.run_test_raw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.independence_tests.independence_tests_base.CondIndTest.run_test_raw" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform conditional independence test directly on input arrays x, y, z.</p>
 <p>Calls the dependence measure and signficicance test functions. The child
 classes must specify a function get_dependence_measure and either or
@@ -1641,13 +1591,17 @@ are continuous or discrete: 0s for continuous variables and
 <li><p><strong>z_type</strong> (<em>array-like</em>) – data arrays of same shape as x, y and z respectively, which describes whether variables
 are continuous or discrete: 0s for continuous variables and
 1s for discrete variables</p></li>
+<li><p><strong>alpha_or_thres</strong> (<em>float</em><em> (</em><em>optional</em><em>)</em>) – Significance level (if significance=’analytic’ or ‘shuffle_test’) or
+threshold (if significance=’fixed_thres’). If given, run_test returns
+the test decision dependent=True/False.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>val, pval</strong> – The test statistic value and the p-value.</p>
+<dd class="field-even"><p><strong>val, pval, [dependent]</strong> – The test statistic value and the p-value. If alpha_or_thres is
+given, run_test also returns the test decision dependent=True/False.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Tuple of floats</p>
+<dd class="field-odd"><p>Tuple of floats and bool</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1743,7 +1697,7 @@ correlation coefficient.</p>
 <li><p><strong>value</strong> (<em>float</em>) – Test statistic value.</p></li>
 <li><p><strong>T</strong> (<em>int</em>) – Sample length</p></li>
 <li><p><strong>dim</strong> (<em>int</em>) – Dimensionality, ie, number of features.</p></li>
-<li><p><strong>xyz</strong> (<em>array</em><em> of </em><em>ints</em>) – XYZ identifier array of shape (dim,).</p></li>
+<li><p><strong>xyz</strong> (<em>array of ints</em>) – XYZ identifier array of shape (dim,).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1765,7 +1719,7 @@ OLS regression.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>array</strong> (<em>array-like</em>) – data array with X, Y, Z in rows and observations in columns</p></li>
-<li><p><strong>xyz</strong> (<em>array</em><em> of </em><em>ints</em>) – XYZ identifier array of shape (dim,).</p></li>
+<li><p><strong>xyz</strong> (<em>array of ints</em>) – XYZ identifier array of shape (dim,).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1808,7 +1762,7 @@ different lags in X, Z, all have the same sample size.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>array</strong> (<em>array-like</em>) – data array with X, Y, Z in rows and observations in columns</p></li>
-<li><p><strong>xyz</strong> (<em>array</em><em> of </em><em>ints</em>) – XYZ identifier array of shape (dim,).</p></li>
+<li><p><strong>xyz</strong> (<em>array of ints</em>) – XYZ identifier array of shape (dim,).</p></li>
 <li><p><strong>value</strong> (<em>number</em>) – Value of test statistic for unshuffled estimate.</p></li>
 </ul>
 </dd>
@@ -1909,7 +1863,7 @@ correlation coefficient.</p>
 <li><p><strong>value</strong> (<em>float</em>) – Test statistic value.</p></li>
 <li><p><strong>T</strong> (<em>int</em>) – Sample length</p></li>
 <li><p><strong>dim</strong> (<em>int</em>) – Dimensionality, ie, number of features.</p></li>
-<li><p><strong>xyz</strong> (<em>array</em><em> of </em><em>ints</em>) – XYZ identifier array of shape (dim,).</p></li>
+<li><p><strong>xyz</strong> (<em>array of ints</em>) – XYZ identifier array of shape (dim,).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1932,7 +1886,7 @@ of a linear OLS regression.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>array</strong> (<em>array-like</em>) – data array with X, Y, Z in rows and observations in columns</p></li>
-<li><p><strong>xyz</strong> (<em>array</em><em> of </em><em>ints</em>) – XYZ identifier array of shape (dim,).</p></li>
+<li><p><strong>xyz</strong> (<em>array of ints</em>) – XYZ identifier array of shape (dim,).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1981,7 +1935,7 @@ For residual-based test statistics only the residuals are shuffled.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>array</strong> (<em>array-like</em>) – data array with X, Y, Z in rows and observations in columns</p></li>
-<li><p><strong>xyz</strong> (<em>array</em><em> of </em><em>ints</em>) – XYZ identifier array of shape (dim,).</p></li>
+<li><p><strong>xyz</strong> (<em>array of ints</em>) – XYZ identifier array of shape (dim,).</p></li>
 <li><p><strong>value</strong> (<em>number</em>) – Value of test statistic for unshuffled estimate.</p></li>
 </ul>
 </dd>
@@ -2058,14 +2012,12 @@ marginals yielding <img class="math" src="_images/math/be07aa32325c7a6161c0cef04
 </div><p>The null distribution of the distance correlation should be pre-computed.
 Otherwise it is computed during runtime.</p>
 <p class="rubric">References</p>
-<aside class="footnote-list brackets">
 <aside class="footnote brackets" id="id20" role="note">
 <span class="label"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></span>
 <span class="backrefs">(<a role="doc-backlink" href="#id18">1</a>,<a role="doc-backlink" href="#id19">2</a>,<a role="doc-backlink" href="#id21">3</a>,<a role="doc-backlink" href="#id22">4</a>)</span>
 <p>Gabor J. Szekely, Maria L. Rizzo, and Nail K. Bakirov: Measuring and
 testing dependence by correlation of distances,
 <a class="reference external" href="https://arxiv.org/abs/0803.4101">https://arxiv.org/abs/0803.4101</a></p>
-</aside>
 </aside>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -2137,7 +2089,7 @@ returned.</p>
 <li><p><strong>value</strong> (<em>float</em>) – Test statistic value.</p></li>
 <li><p><strong>T</strong> (<em>int</em>) – Sample length</p></li>
 <li><p><strong>dim</strong> (<em>int</em>) – Dimensionality, ie, number of features.</p></li>
-<li><p><strong>xyz</strong> (<em>array</em><em> of </em><em>ints</em>) – XYZ identifier array of shape (dim,).</p></li>
+<li><p><strong>xyz</strong> (<em>array of ints</em>) – XYZ identifier array of shape (dim,).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -2159,7 +2111,7 @@ regression.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>array</strong> (<em>array-like</em>) – data array with X, Y, Z in rows and observations in columns</p></li>
-<li><p><strong>xyz</strong> (<em>array</em><em> of </em><em>ints</em>) – XYZ identifier array of shape (dim,).</p></li>
+<li><p><strong>xyz</strong> (<em>array of ints</em>) – XYZ identifier array of shape (dim,).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -2201,7 +2153,7 @@ different lags in X, Z, all have the same sample size.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>array</strong> (<em>array-like</em>) – data array with X, Y, Z in rows and observations in columns</p></li>
-<li><p><strong>xyz</strong> (<em>array</em><em> of </em><em>ints</em>) – XYZ identifier array of shape (dim,).</p></li>
+<li><p><strong>xyz</strong> (<em>array of ints</em>) – XYZ identifier array of shape (dim,).</p></li>
 <li><p><strong>value</strong> (<em>number</em>) – Value of test statistic for unshuffled estimate.</p></li>
 </ul>
 </dd>
@@ -2318,7 +2270,7 @@ returned.</p>
 <li><p><strong>value</strong> (<em>float</em>) – Test statistic value.</p></li>
 <li><p><strong>T</strong> (<em>int</em>) – Sample length</p></li>
 <li><p><strong>dim</strong> (<em>int</em>) – Dimensionality, ie, number of features.</p></li>
-<li><p><strong>xyz</strong> (<em>array</em><em> of </em><em>ints</em>) – XYZ identifier array of shape (dim,).</p></li>
+<li><p><strong>xyz</strong> (<em>array of ints</em>) – XYZ identifier array of shape (dim,).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -2340,7 +2292,7 @@ regression.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>array</strong> (<em>array-like</em>) – data array with X, Y, Z in rows and observations in columns</p></li>
-<li><p><strong>xyz</strong> (<em>array</em><em> of </em><em>ints</em>) – XYZ identifier array of shape (dim,).</p></li>
+<li><p><strong>xyz</strong> (<em>array of ints</em>) – XYZ identifier array of shape (dim,).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -2382,7 +2334,7 @@ different lags in X, Z, all have the same sample size.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>array</strong> (<em>array-like</em>) – data array with X, Y, Z in rows and observations in columns</p></li>
-<li><p><strong>xyz</strong> (<em>array</em><em> of </em><em>ints</em>) – XYZ identifier array of shape (dim,).</p></li>
+<li><p><strong>xyz</strong> (<em>array of ints</em>) – XYZ identifier array of shape (dim,).</p></li>
 <li><p><strong>value</strong> (<em>number</em>) – Value of test statistic for unshuffled estimate.</p></li>
 </ul>
 </dd>
@@ -2405,7 +2357,7 @@ different lags in X, Z, all have the same sample size.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="tigramite.independence_tests.cmiknn.CMIknn">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tigramite.independence_tests.cmiknn.</span></span><span class="sig-name descname"><span class="pre">CMIknn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">knn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shuffle_neighbors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">significance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'shuffle_test'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ranks'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/cmiknn.html#CMIknn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.independence_tests.cmiknn.CMIknn" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tigramite.independence_tests.cmiknn.</span></span><span class="sig-name descname"><span class="pre">CMIknn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">knn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shuffle_neighbors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">significance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'shuffle_test'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ranks'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_selection_folds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/cmiknn.html#CMIknn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.independence_tests.cmiknn.CMIknn" title="Permalink to this definition">¶</a></dt>
 <dd><p>Conditional mutual information test based on nearest-neighbor estimator.</p>
 <p>Conditional mutual information is the most general dependency measure coming
 from an information-theoretic framework. It makes no assumptions about the
@@ -2437,7 +2389,6 @@ that the estimated CMI values can be slightly negative while CMI is a non-
 negative quantity.</p>
 <p>This method requires the scipy.spatial.cKDTree package.</p>
 <p class="rubric">References</p>
-<aside class="footnote-list brackets">
 <aside class="footnote brackets" id="id24" role="note">
 <span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id23">3</a><span class="fn-bracket">]</span></span>
 <p>J. Runge (2018): Conditional Independence Testing Based on a
@@ -2445,7 +2396,6 @@ Nearest-Neighbor Estimator of Conditional Mutual Information.
 In Proceedings of the 21st International Conference on Artificial
 Intelligence and Statistics.
 <a class="reference external" href="http://proceedings.mlr.press/v84/runge18a.html">http://proceedings.mlr.press/v84/runge18a.html</a></p>
-</aside>
 </aside>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -2462,6 +2412,7 @@ Whether to transform the array beforehand by standardizing
 or transforming to uniform marginals.</p></li>
 <li><p><strong>workers</strong> (<em>int</em><em> (</em><em>optional</em><em>, </em><em>default = -1</em><em>)</em>) – Number of workers to use for parallel processing. If -1 is given
 all processors are used. Default: -1.</p></li>
+<li><p><strong>model_selection_folds</strong> (<em>int</em>) – Number of folds in cross-validation used in model selection.</p></li>
 <li><p><strong>significance</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'shuffle_test'</em><em>)</em>) – Type of significance test to use. For CMIknn only ‘fixed_thres’ and
 ‘shuffle_test’ are available.</p></li>
 <li><p><strong>**kwargs</strong> – Arguments passed on to parent class CondIndTest.</p></li>
@@ -2476,7 +2427,7 @@ all processors are used. Default: -1.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>array</strong> (<em>array-like</em>) – data array with X, Y in rows and observations in columns</p></li>
-<li><p><strong>xyz</strong> (<em>array</em><em> of </em><em>ints</em>) – XYZ identifier array of shape (dim,). Here only uses 0 for X and
+<li><p><strong>xyz</strong> (<em>array of ints</em>) – XYZ identifier array of shape (dim,). Here only uses 0 for X and
 1 for Y.</p></li>
 </ul>
 </dd>
@@ -2497,7 +2448,7 @@ all processors are used. Default: -1.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>array</strong> (<em>array-like</em>) – data array with X, Y, Z in rows and observations in columns</p></li>
-<li><p><strong>xyz</strong> (<em>array</em><em> of </em><em>ints</em>) – XYZ identifier array of shape (dim,).</p></li>
+<li><p><strong>xyz</strong> (<em>array of ints</em>) – XYZ identifier array of shape (dim,).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -2505,6 +2456,27 @@ all processors are used. Default: -1.</p></li>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tigramite.independence_tests.cmiknn.CMIknn.get_model_selection_criterion">
+<span class="sig-name descname"><span class="pre">get_model_selection_criterion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">j</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/cmiknn.html#CMIknn.get_model_selection_criterion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.independence_tests.cmiknn.CMIknn.get_model_selection_criterion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a cross-validation-based score for nearest-neighbor estimates.</p>
+<p>Fits a nearest-neighbor model of the parents to variable j and returns
+the score. The lower, the better the fit. Here used to determine
+optimal hyperparameters in PCMCI(pc_alpha or fixed thres).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>j</strong> (<em>int</em>) – Index of target variable in data array.</p></li>
+<li><p><strong>parents</strong> (<em>list</em>) – List of form [(0, -1), (3, -2), …] containing parents.</p></li>
+<li><p><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) – Maximum time lag. This may be used to make sure that estimates for
+different lags in X, Z, all have the same sample size.</p></li>
+<li><p><strong>Returns</strong> – </p></li>
+<li><p><strong>score</strong> (<em>float</em>) – Model score.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -2523,7 +2495,7 @@ empty, the block-shuffle test is used.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>array</strong> (<em>array-like</em>) – data array with X, Y, Z in rows and observations in columns</p></li>
-<li><p><strong>xyz</strong> (<em>array</em><em> of </em><em>ints</em>) – XYZ identifier array of shape (dim,).</p></li>
+<li><p><strong>xyz</strong> (<em>array of ints</em>) – XYZ identifier array of shape (dim,).</p></li>
 <li><p><strong>value</strong> (<em>number</em>) – Value of test statistic for unshuffled estimate.</p></li>
 </ul>
 </dd>
@@ -2585,7 +2557,7 @@ to approximate probability mass.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>array</strong> (<em>array-like</em>) – data array with X, Y, Z in rows and observations in columns</p></li>
-<li><p><strong>xyz</strong> (<em>array</em><em> of </em><em>ints</em>) – XYZ identifier array of shape (dim,).</p></li>
+<li><p><strong>xyz</strong> (<em>array of ints</em>) – XYZ identifier array of shape (dim,).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -2608,7 +2580,7 @@ as much as possible.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>array</strong> (<em>array-like</em>) – data array with X, Y, Z in rows and observations in columns.</p></li>
-<li><p><strong>xyz</strong> (<em>array</em><em> of </em><em>ints</em>) – XYZ identifier array of shape (dim,).</p></li>
+<li><p><strong>xyz</strong> (<em>array of ints</em>) – XYZ identifier array of shape (dim,).</p></li>
 <li><p><strong>value</strong> (<em>number</em>) – Value of test statistic for original (unshuffled) estimate.</p></li>
 </ul>
 </dd>
@@ -2640,7 +2612,7 @@ assessing whether X and Y are d-separated given Z in the graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<em>array</em><em> of </em><em>shape</em><em> [</em><em>N</em><em>, </em><em>N</em><em>, </em><em>tau_max+1</em><em>]</em>) – Causal graph.</p></li>
+<li><p><strong>graph</strong> (<em>array of shape</em><em> [</em><em>N</em><em>, </em><em>N</em><em>, </em><em>tau_max+1</em><em>]</em>) – Causal graph.</p></li>
 <li><p><strong>links</strong> (<em>dict</em>) – Dictionary of form {0:[(0, -1), …], 1:[…], …}.
 Alternatively can also digest {0: [((0, -1), coeff, func)], …}.</p></li>
 <li><p><strong>observed_vars</strong> (<em>None</em><em> or </em><em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Subset of keys in links definining which variables are
@@ -2674,9 +2646,9 @@ a very long time, however.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>list</em><em> of </em><em>tuples</em>) – List of variables chosen for testing paths.</p></li>
-<li><p><strong>Y</strong> (<em>list</em><em> of </em><em>tuples</em>) – List of variables chosen for testing paths.</p></li>
-<li><p><strong>Z</strong> (<em>list</em><em> of </em><em>tuples</em>) – List of variables chosen for testing paths.</p></li>
+<li><p><strong>X</strong> (<em>list of tuples</em>) – List of variables chosen for testing paths.</p></li>
+<li><p><strong>Y</strong> (<em>list of tuples</em>) – List of variables chosen for testing paths.</p></li>
+<li><p><strong>Z</strong> (<em>list of tuples</em>) – List of variables chosen for testing paths.</p></li>
 <li><p><strong>max_lag</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Used here to constrain the has_path function to the graph
 truncated at max_lag instead of identifying the max_lag from
 ancestral search.</p></li>
@@ -2735,11 +2707,11 @@ exist, which corresponds to having both “–&gt;” and “&lt;-&gt;”.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>list</em><em> of </em><em>tuples</em>) – X,Y,Z are of the form [(var, -tau)], where var specifies the
+<li><p><strong>X</strong> (<em>list of tuples</em>) – X,Y,Z are of the form [(var, -tau)], where var specifies the
 variable index in the observed_vars and tau the time lag.</p></li>
 <li><p><strong>[</strong> (<em>Y</em>) – X,Y,Z are of the form [(var, -tau)], where var specifies the
 variable index in the observed_vars and tau the time lag.</p></li>
-<li><p><strong>Z</strong><strong>]</strong> (<em>list</em><em> of </em><em>tuples</em>) – X,Y,Z are of the form [(var, -tau)], where var specifies the
+<li><p><strong>Z</strong><strong>]</strong> (<em>list of tuples</em>) – X,Y,Z are of the form [(var, -tau)], where var specifies the
 variable index in the observed_vars and tau the time lag.</p></li>
 <li><p><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) – Maximum time lag. This may be used to make sure that estimates for
 different lags in X, Z, all have the same sample size.</p></li>
@@ -2769,20 +2741,21 @@ should override when possible.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="tigramite.independence_tests.oracle_conditional_independence.OracleCI.run_test">
-<span class="sig-name descname"><span class="pre">run_test</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cut_off</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'2xtau_max'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbosity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/oracle_conditional_independence.html#OracleCI.run_test"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.independence_tests.oracle_conditional_independence.OracleCI.run_test" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">run_test</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cut_off</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'2xtau_max'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_or_thres</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbosity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/oracle_conditional_independence.html#OracleCI.run_test"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.independence_tests.oracle_conditional_independence.OracleCI.run_test" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform oracle conditional independence test.</p>
 <p>Calls the d-separation function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>list</em><em> of </em><em>tuples</em>) – X,Y,Z are of the form [(var, -tau)], where var specifies the
+<li><p><strong>X</strong> (<em>list of tuples</em>) – X,Y,Z are of the form [(var, -tau)], where var specifies the
 variable index in the observed_vars and tau the time lag.</p></li>
-<li><p><strong>Y</strong> (<em>list</em><em> of </em><em>tuples</em>) – X,Y,Z are of the form [(var, -tau)], where var specifies the
+<li><p><strong>Y</strong> (<em>list of tuples</em>) – X,Y,Z are of the form [(var, -tau)], where var specifies the
 variable index in the observed_vars and tau the time lag.</p></li>
-<li><p><strong>Z</strong> (<em>list</em><em> of </em><em>tuples</em>) – X,Y,Z are of the form [(var, -tau)], where var specifies the
+<li><p><strong>Z</strong> (<em>list of tuples</em>) – X,Y,Z are of the form [(var, -tau)], where var specifies the
 variable index in the observed_vars and tau the time lag.</p></li>
 <li><p><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) – Not used here.</p></li>
 <li><p><strong>cut_off</strong> (<em>{'2xtau_max'</em><em>, </em><em>'max_lag'</em><em>, </em><em>'max_lag_or_tau_max'}</em>) – Not used here.</p></li>
+<li><p><strong>alpha_or_thres</strong> (<em>float</em>) – Not used here.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -2844,7 +2817,7 @@ should override when possible.</p>
 <li><p><strong>value</strong> (<em>float</em>) – Test statistic value.</p></li>
 <li><p><strong>T</strong> (<em>int</em>) – Sample length</p></li>
 <li><p><strong>dim</strong> (<em>int</em>) – Dimensionality, ie, number of features.</p></li>
-<li><p><strong>xyz</strong> (<em>array</em><em> of </em><em>ints</em>) – XYZ identifier array of shape (dim,).</p></li>
+<li><p><strong>xyz</strong> (<em>array of ints</em>) – XYZ identifier array of shape (dim,).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -2866,7 +2839,7 @@ residuals of a linear OLS regression.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>array</strong> (<em>array-like</em>) – data array with X, Y, Z in rows and observations in columns</p></li>
-<li><p><strong>xyz</strong> (<em>array</em><em> of </em><em>ints</em>) – XYZ identifier array of shape (dim,).</p></li>
+<li><p><strong>xyz</strong> (<em>array of ints</em>) – XYZ identifier array of shape (dim,).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -2894,7 +2867,7 @@ should override when possible.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>array</strong> (<em>array-like</em>) – data array with X, Y, Z in rows and observations in columns</p></li>
-<li><p><strong>xyz</strong> (<em>array</em><em> of </em><em>ints</em>) – XYZ identifier array of shape (dim,).</p></li>
+<li><p><strong>xyz</strong> (<em>array of ints</em>) – XYZ identifier array of shape (dim,).</p></li>
 <li><p><strong>value</strong> (<em>number</em>) – Value of test statistic for unshuffled estimate.</p></li>
 </ul>
 </dd>
@@ -2921,7 +2894,7 @@ should override when possible.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>array</strong> (<em>array-like</em>) – data array with X, Y in rows and observations in columns</p></li>
-<li><p><strong>xyz</strong> (<em>array</em><em> of </em><em>ints</em>) – XYZ identifier array of shape (dim,).</p></li>
+<li><p><strong>xyz</strong> (<em>array of ints</em>) – XYZ identifier array of shape (dim,).</p></li>
 <li><p><strong>standardize</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – Whether to standardize the array beforehand. Must be used for
 partial correlation.</p></li>
 </ul>
@@ -2954,12 +2927,10 @@ CMIsymb class which includes a local permutation test.</p>
 \frac{ p(x,y |z)}{p(x|z)\cdot p(y |z)}"/></p>
 </div><p>where <img class="math" src="_images/math/5a939c5280da7202ca4531f175a7780ad5e1f80a.png" alt="n"/> is the sample size. This is simply <img class="math" src="_images/math/88da5b28f5e08d9d8ed693d334e710f4adadbcfd.png" alt="2 n CMI(X;Y|Z)"/>.</p>
 <p class="rubric">References</p>
-<aside class="footnote-list brackets">
 <aside class="footnote brackets" id="id26" role="note">
 <span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id25">7</a><span class="fn-bracket">]</span></span>
 <p>Bishop, Y.M.M., Fienberg, S.E. and Holland, P.W. (1975) Discrete
 Multivariate Analysis: Theory and Practice. MIT Press, Cambridge.</p>
-</aside>
 </aside>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -2985,7 +2956,7 @@ chi-square distribution with ‘dof’ degrees of freedom.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>array</strong> (<em>array-like</em>) – data array with X, Y, Z in rows and observations in columns.</p></li>
-<li><p><strong>xyz</strong> (<em>array</em><em> of </em><em>ints</em>) – XYZ identifier array of shape (dim,).</p></li>
+<li><p><strong>xyz</strong> (<em>array of ints</em>) – XYZ identifier array of shape (dim,).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -3051,7 +3022,7 @@ OLS regression.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>array</strong> (<em>array-like</em>) – data array with X, Y, Z in rows and observations in columns</p></li>
-<li><p><strong>xyz</strong> (<em>array</em><em> of </em><em>ints</em>) – XYZ identifier array of shape (dim,).</p></li>
+<li><p><strong>xyz</strong> (<em>array of ints</em>) – XYZ identifier array of shape (dim,).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -3094,7 +3065,7 @@ different lags in X, Z, all have the same sample size.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>array</strong> (<em>array-like</em>) – data array with X, Y, Z in rows and observations in columns</p></li>
-<li><p><strong>xyz</strong> (<em>array</em><em> of </em><em>ints</em>) – XYZ identifier array of shape (dim,).</p></li>
+<li><p><strong>xyz</strong> (<em>array of ints</em>) – XYZ identifier array of shape (dim,).</p></li>
 <li><p><strong>value</strong> (<em>number</em>) – Value of test statistic for unshuffled estimate.</p></li>
 </ul>
 </dd>
@@ -3146,7 +3117,7 @@ is employed.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>array</strong> (<em>array-like</em>) – data array with X, Y, Z in rows and observations in columns.</p></li>
-<li><p><strong>xyz</strong> (<em>array</em><em> of </em><em>ints</em>) – XYZ identifier array of shape (dim,).</p></li>
+<li><p><strong>xyz</strong> (<em>array of ints</em>) – XYZ identifier array of shape (dim,).</p></li>
 <li><p><strong>data_type</strong> (<em>array-like</em>) – array of same shape as array which describes whether samples
 are continuous or discrete: 0s for continuous and
 1s for discrete</p></li>
@@ -3201,7 +3172,6 @@ also allows to estimate mediation effects.</p>
 <p>See the corresponding paper <a class="footnote-reference brackets" href="#id28" id="id27" role="doc-noteref"><span class="fn-bracket">[</span>6<span class="fn-bracket">]</span></a> and tigramite tutorial for an
 in-depth introduction.</p>
 <p class="rubric">References</p>
-<aside class="footnote-list brackets">
 <aside class="footnote brackets" id="id28" role="note">
 <span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id27">6</a><span class="fn-bracket">]</span></span>
 <p>J. Runge, Necessary and sufficient graphical conditions for
@@ -3210,16 +3180,15 @@ hidden variables, Advances in Neural Information Processing
 Systems, 2021, 34
 <a class="reference external" href="https://proceedings.neurips.cc/paper/2021/hash/8485ae387a981d783f8764e508151cd9-Abstract.html">https://proceedings.neurips.cc/paper/2021/hash/8485ae387a981d783f8764e508151cd9-Abstract.html</a></p>
 </aside>
-</aside>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<em>array</em><em> of </em><em>either shape</em><em> [</em><em>N</em><em>, </em><em>N</em><em>]</em><em>, </em><em>[</em><em>N</em><em>, </em><em>N</em><em>, </em><em>tau_max+1</em><em>]</em><em>, or </em><em>[</em><em>N</em><em>, </em><em>N</em><em>, </em><em>tau_max+1</em><em>, </em><em>tau_max+1</em><em>]</em>) – Different graph types are supported, see tutorial.</p></li>
-<li><p><strong>X</strong> (<em>list</em><em> of </em><em>tuples</em>) – List of tuples [(i, -tau), …] containing cause variables.</p></li>
-<li><p><strong>Y</strong> (<em>list</em><em> of </em><em>tuples</em>) – List of tuples [(j, 0), …] containing effect variables.</p></li>
-<li><p><strong>S</strong> (<em>list</em><em> of </em><em>tuples</em>) – List of tuples [(i, -tau), …] containing conditioned variables.</p></li>
+<li><p><strong>graph</strong> (<em>array of either shape</em><em> [</em><em>N</em><em>, </em><em>N</em><em>]</em><em>, </em><em>[</em><em>N</em><em>, </em><em>N</em><em>, </em><em>tau_max+1</em><em>]</em><em>, or </em><em>[</em><em>N</em><em>, </em><em>N</em><em>, </em><em>tau_max+1</em><em>, </em><em>tau_max+1</em><em>]</em>) – Different graph types are supported, see tutorial.</p></li>
+<li><p><strong>X</strong> (<em>list of tuples</em>) – List of tuples [(i, -tau), …] containing cause variables.</p></li>
+<li><p><strong>Y</strong> (<em>list of tuples</em>) – List of tuples [(j, 0), …] containing effect variables.</p></li>
+<li><p><strong>S</strong> (<em>list of tuples</em>) – List of tuples [(i, -tau), …] containing conditioned variables.</p></li>
 <li><p><strong>graph_type</strong> (<em>str</em>) – Type of graph.</p></li>
-<li><p><strong>hidden_variables</strong> (<em>list</em><em> of </em><em>tuples</em>) – Hidden variables in format [(i, -tau), …]. The internal graph is
+<li><p><strong>hidden_variables</strong> (<em>list of tuples</em>) – Hidden variables in format [(i, -tau), …]. The internal graph is
 constructed by a latent projection.</p></li>
 <li><p><strong>check_SM_overlap</strong> (<em>bool</em>) – Whether to check whether S overlaps with M.</p></li>
 <li><p><strong>verbosity</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) – Level of verbosity.</p></li>
@@ -3292,7 +3261,7 @@ yielding a numpy array of shape (observations T, variables N) and
 optionally a mask of the same shape and a missing values flag.</p></li>
 <li><p><strong>estimator</strong> (<em>sklearn model object</em>) – For example, sklearn.linear_model.LinearRegression() for a linear
 regression model.</p></li>
-<li><p><strong>adjustment_set</strong> (<em>str</em><em> or </em><em>list</em><em> of </em><em>tuples</em>) – If ‘optimal’ the Oset is used, if ‘minimized_optimal’ the minimized Oset,
+<li><p><strong>adjustment_set</strong> (<em>str</em><em> or </em><em>list of tuples</em>) – If ‘optimal’ the Oset is used, if ‘minimized_optimal’ the minimized Oset,
 and if ‘colliders_minimized_optimal’, the colliders-minimized Oset.
 If a list of tuples is passed, this set is used.</p></li>
 <li><p><strong>conditional_estimator</strong> (<em>sklearn model object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Used to fit conditional causal effects in nested regression.
@@ -3323,7 +3292,7 @@ set leads to a non-identifiable effect.</p></li>
 <li><p><strong>dataframe</strong> (<em>data object</em>) – Tigramite dataframe object. It must have the attributes dataframe.values
 yielding a numpy array of shape (observations T, variables N) and
 optionally a mask of the same shape and a missing values flag.</p></li>
-<li><p><strong>mediation</strong> (<em>None</em><em>, </em><em>'direct'</em><em>, or </em><em>list</em><em> of </em><em>tuples</em>) – If None, total effect is estimated, if ‘direct’ then only the direct effect is estimated,
+<li><p><strong>mediation</strong> (<em>None</em><em>, </em><em>'direct'</em><em>, or </em><em>list of tuples</em>) – If None, total effect is estimated, if ‘direct’ then only the direct effect is estimated,
 else only those causal paths are considerd that pass at least through one of these mediator nodes.</p></li>
 <li><p><strong>method</strong> (<em>{'parents'</em><em>, </em><em>'links_coeffs'</em><em>, </em><em>'optimal'}</em>) – Method to use for estimating Wright’s path coefficients. If ‘optimal’,
 the Oset is used, if ‘links_coeffs’, the coefficients in links_coeffs are used,
@@ -3348,7 +3317,7 @@ is not used. Explained in tutorial on masking and missing values.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<em>array</em><em> of </em><em>shape</em><em> (</em><em>N</em><em>, </em><em>N</em><em>, </em><em>tau_max+1</em><em>)</em>) – Matrix format of graph in string format.</p></li>
+<li><p><strong>graph</strong> (<em>array of shape</em><em> (</em><em>N</em><em>, </em><em>N</em><em>, </em><em>tau_max+1</em><em>)</em>) – Matrix format of graph in string format.</p></li>
 <li><p><strong>parents_only</strong> (<em>bool</em>) – Whether to only return parents (’–&gt;’ in graph)</p></li>
 </ul>
 </dd>
@@ -3410,7 +3379,7 @@ Also format {0:[(0, -1), …], 1:[…], …} is allowed.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>alternative_conditions</strong> (<em>set</em><em> of </em><em>tuples</em>) – Used only internally in optimality theorem. If None, self.S is used.</p></li>
+<li><p><strong>alternative_conditions</strong> (<em>set of tuples</em>) – Used only internally in optimality theorem. If None, self.S is used.</p></li>
 <li><p><strong>minimize</strong> (<em>{False</em><em>, </em><em>True</em><em>, </em><em>'colliders_only'}</em>) – Minimize optimal set. If True, minimize such that no subset
 can be removed without making it invalid. If ‘colliders_only’,
 only colliders are minimized.</p></li>
@@ -3542,7 +3511,7 @@ parents. The fitted model class is returned for later use.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>all_parents</strong> (<em>dictionary</em>) – Dictionary of form {0:[(0, -1), (3, 0), …], 1:[], …} containing
 the parents estimated with PCMCI.</p></li>
-<li><p><strong>selected_variables</strong> (<em>list</em><em> of </em><em>integers</em><em>, </em><em>optional</em><em> (</em><em>default: range</em><em>(</em><em>N</em><em>)</em><em>)</em>) – Specify to estimate parents only for selected variables. If None is
+<li><p><strong>selected_variables</strong> (<em>list of integers</em><em>, </em><em>optional</em><em> (</em><em>default: range</em><em>(</em><em>N</em><em>)</em><em>)</em>) – Specify to estimate parents only for selected variables. If None is
 passed, parents are estimated for all variables.</p></li>
 <li><p><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Maximum time lag. If None, the maximum lag in all_parents is used.</p></li>
 <li><p><strong>cut_off</strong> (<em>{'max_lag_or_tau_max'</em><em>, </em><em>'2xtau_max'</em><em>, </em><em>'max_lag'}</em>) – How many samples to cutoff at the beginning. The default is
@@ -3591,10 +3560,10 @@ parents. The fitted model class is returned for later use.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>lists</em><em> of </em><em>tuples</em>) – List of variables for estimating model Y = f(X,Z)</p></li>
-<li><p><strong>Y</strong> (<em>lists</em><em> of </em><em>tuples</em>) – List of variables for estimating model Y = f(X,Z)</p></li>
-<li><p><strong>Z</strong> (<em>lists</em><em> of </em><em>tuples</em>) – List of variables for estimating model Y = f(X,Z)</p></li>
-<li><p><strong>conditions</strong> (<em>list</em><em> of </em><em>tuples.</em>) – Conditions for estimating conditional causal effects.</p></li>
+<li><p><strong>X</strong> (<em>lists of tuples</em>) – List of variables for estimating model Y = f(X,Z)</p></li>
+<li><p><strong>Y</strong> (<em>lists of tuples</em>) – List of variables for estimating model Y = f(X,Z)</p></li>
+<li><p><strong>Z</strong> (<em>lists of tuples</em>) – List of variables for estimating model Y = f(X,Z)</p></li>
+<li><p><strong>conditions</strong> (<em>list of tuples.</em>) – Conditions for estimating conditional causal effects.</p></li>
 <li><p><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Maximum time lag. If None, the maximum lag in all_parents is used.</p></li>
 <li><p><strong>cut_off</strong> (<em>{'max_lag_or_tau_max'</em><em>, </em><em>'2xtau_max'</em><em>, </em><em>'max_lag'}</em>) – How many samples to cutoff at the beginning. The default is
 ‘max_lag_or_tau_max’, which uses the maximum of tau_max and the
@@ -3711,14 +3680,12 @@ has CE 0.5 on <img class="math" src="_images/math/7daf0d4815e763eb90f0d5f1dc406f
 </pre></div>
 </div>
 <p class="rubric">References</p>
-<aside class="footnote-list brackets">
 <aside class="footnote brackets" id="id31" role="note">
 <span class="label"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></span>
 <span class="backrefs">(<a role="doc-backlink" href="#id29">1</a>,<a role="doc-backlink" href="#id30">2</a>,<a role="doc-backlink" href="#id32">3</a>)</span>
 <p>J. Runge et al. (2015): Identifying causal gateways and mediators in
 complex spatio-temporal systems.
 Nature Communications, 6, 8502. <a class="reference external" href="http://doi.org/10.1038/ncomms9502">http://doi.org/10.1038/ncomms9502</a></p>
-</aside>
 </aside>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -4025,8 +3992,8 @@ lags (incl lag zero).</p>
 <li><p><strong>i</strong> (<em>int</em>) – Index of cause variable.</p></li>
 <li><p><strong>tau</strong> (<em>int</em>) – Lag of cause variable.</p></li>
 <li><p><strong>j</strong> (<em>int</em>) – Index of effect variable.</p></li>
-<li><p><strong>k</strong> (<em>int</em><em> or </em><em>list</em><em> of </em><em>ints</em>) – Indices of mediator variables.</p></li>
-<li><p><strong>notk</strong> (<em>int</em><em> or </em><em>list</em><em> of </em><em>ints</em>) – Indices of mediator variables to exclude.</p></li>
+<li><p><strong>k</strong> (<em>int</em><em> or </em><em>list of ints</em>) – Indices of mediator variables.</p></li>
+<li><p><strong>notk</strong> (<em>int</em><em> or </em><em>list of ints</em>) – Indices of mediator variables to exclude.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -4097,7 +4064,7 @@ does not count links passing through parents of i itself.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>i</strong> (<em>int</em>) – Index of cause variable.</p></li>
 <li><p><strong>j</strong> (<em>int</em>) – Index of effect variable.</p></li>
-<li><p><strong>k</strong> (<em>int</em><em> or </em><em>list</em><em> of </em><em>ints</em>) – Indices of mediator variables.</p></li>
+<li><p><strong>k</strong> (<em>int</em><em> or </em><em>list of ints</em>) – Indices of mediator variables.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -4121,7 +4088,7 @@ through k.</p>
 <li><p><strong>i</strong> (<em>int</em>) – Index of cause variable.</p></li>
 <li><p><strong>tau</strong> (<em>int</em>) – Lag of cause variable.</p></li>
 <li><p><strong>j</strong> (<em>int</em>) – Index of effect variable.</p></li>
-<li><p><strong>k</strong> (<em>int</em><em> or </em><em>list</em><em> of </em><em>ints</em>) – Indices of mediator variables.</p></li>
+<li><p><strong>k</strong> (<em>int</em><em> or </em><em>list of ints</em>) – Indices of mediator variables.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -4261,7 +4228,7 @@ fitted model class is returned for later use.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>target_predictors</strong> (<em>dictionary</em>) – Dictionary of form {0:[(0, -1), (3, -2), …], 1:[], …} containing
 the predictors estimated with PCMCI.</p></li>
-<li><p><strong>selected_targets</strong> (<em>list</em><em> of </em><em>integers</em><em>, </em><em>optional</em><em> (</em><em>default: range</em><em>(</em><em>N</em><em>)</em><em>)</em>) – Specify to fit model only for selected targets. If None is
+<li><p><strong>selected_targets</strong> (<em>list of integers</em><em>, </em><em>optional</em><em> (</em><em>default: range</em><em>(</em><em>N</em><em>)</em><em>)</em>) – Specify to fit model only for selected targets. If None is
 passed, models are estimated for all variables.</p></li>
 <li><p><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Maximum time lag. If None, the maximum lag in target_predictors is
 used.</p></li>
@@ -4286,14 +4253,14 @@ The lead time can be specified by <code class="docutils literal notranslate"><sp
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>selected_targets</strong> (<em>list</em><em> of </em><em>ints</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – List of variables to estimate predictors of. If None, predictors of
+<li><p><strong>selected_targets</strong> (<em>list of ints</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – List of variables to estimate predictors of. If None, predictors of
 all variables are estimated.</p></li>
 <li><p><strong>selected_links</strong> (<em>dict</em><em> or </em><em>None</em>) – Dictionary of form {0:[(0, -1), (3, -2), …], 1:[], …}
 specifying whether only selected links should be tested. If None is
 passed, all links are tested</p></li>
 <li><p><strong>steps_ahead</strong> (<em>int</em><em>, </em><em>default: 1</em>) – Minimum time lag to test. Useful for multi-step ahead predictions.</p></li>
 <li><p><strong>tau_max</strong> (<em>int</em><em>, </em><em>default: 1</em>) – Maximum time lag. Must be larger or equal to tau_min.</p></li>
-<li><p><strong>pc_alpha</strong> (<em>float</em><em> or </em><em>list</em><em> of </em><em>floats</em><em>, </em><em>default: 0.2</em>) – Significance level in algorithm. If a list or None is passed, the
+<li><p><strong>pc_alpha</strong> (<em>float</em><em> or </em><em>list of floats</em><em>, </em><em>default: 0.2</em>) – Significance level in algorithm. If a list or None is passed, the
 pc_alpha level is optimized for every variable across the given
 pc_alpha values using the score computed in
 cond_ind_test.get_model_selection_criterion()</p></li>
@@ -4338,7 +4305,7 @@ of the predicted series is returned.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>target</strong> (<em>int</em><em> or </em><em>list</em><em> of </em><em>integers</em>) – Index or indices of target variable(s).</p></li>
+<li><p><strong>target</strong> (<em>int</em><em> or </em><em>list of integers</em>) – Index or indices of target variable(s).</p></li>
 <li><p><strong>new_data</strong> (<em>data object</em><em>, </em><em>optional</em>) – New Tigramite dataframe object with optional new mask. Note that
 the data will be cut off according to cut_off, see parameter
 <cite>cut_off</cite> below.</p></li>
@@ -4367,7 +4334,7 @@ useful to compare multiple models on the same sample. Last,
 <dt class="sig sig-object py" id="tigramite.data_processing.DataFrame">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tigramite.data_processing.</span></span><span class="sig-name descname"><span class="pre">DataFrame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">missing_flag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vector_vars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datatime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'single'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_offsets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_missing_upto_maxlag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/data_processing.html#DataFrame"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.data_processing.DataFrame" title="Permalink to this definition">¶</a></dt>
 <dd><dl>
-<dt>Data object containing single or multiple time series arrays and optional</dt><dd><p>mask.</p>
+<dt>Data object containing single or multiple time series arrays and optional</dt><dd><p>mask, as well as variable definitions.</p>
 <dl class="simple">
 <dt>data<span class="classifier">array-like</span></dt><dd><dl class="simple">
 <dt>if analysis_mode == ‘single’:</dt><dd><p>1) Numpy array of shape (observations T, variables N)
@@ -4500,7 +4467,7 @@ or discrete: 0s for continuous variables and 1s for discrete variables.</p>
 <dt>If reference_points is not None:</dt><dd><p>1D numpy array holding all specified reference_points, less those
 smaller than 0 and larger than self.largest_time_step-1</p>
 </dd>
-<dt>If reference_points is None:</dt><dd><p>Is np.array(range(self.largest_time_step))</p>
+<dt>If reference_points is None:</dt><dd><p>Is np.array(self.largest_time_step)</p>
 </dd>
 </dl>
 </dd>
@@ -4538,16 +4505,16 @@ if analysis_mode == ‘multiple’.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>list</em><em> of </em><em>tuples</em>) – For a dependence measure I(X;Y|Z), X, Y, Z can be multivariate of
+<li><p><strong>X</strong> (<em>list of tuples</em>) – For a dependence measure I(X;Y|Z), X, Y, Z can be multivariate of
 the form [(var1, -lag), (var2, -lag), …]. At least one varlag in Y
 has to be at lag zero. extraZ is only used in CausalEffects class.</p></li>
-<li><p><strong>Y</strong> (<em>list</em><em> of </em><em>tuples</em>) – For a dependence measure I(X;Y|Z), X, Y, Z can be multivariate of
+<li><p><strong>Y</strong> (<em>list of tuples</em>) – For a dependence measure I(X;Y|Z), X, Y, Z can be multivariate of
 the form [(var1, -lag), (var2, -lag), …]. At least one varlag in Y
 has to be at lag zero. extraZ is only used in CausalEffects class.</p></li>
-<li><p><strong>Z</strong> (<em>list</em><em> of </em><em>tuples</em>) – For a dependence measure I(X;Y|Z), X, Y, Z can be multivariate of
+<li><p><strong>Z</strong> (<em>list of tuples</em>) – For a dependence measure I(X;Y|Z), X, Y, Z can be multivariate of
 the form [(var1, -lag), (var2, -lag), …]. At least one varlag in Y
 has to be at lag zero. extraZ is only used in CausalEffects class.</p></li>
-<li><p><strong>extraZ</strong> (<em>list</em><em> of </em><em>tuples</em>) – For a dependence measure I(X;Y|Z), X, Y, Z can be multivariate of
+<li><p><strong>extraZ</strong> (<em>list of tuples</em>) – For a dependence measure I(X;Y|Z), X, Y, Z can be multivariate of
 the form [(var1, -lag), (var2, -lag), …]. At least one varlag in Y
 has to be at lag zero. extraZ is only used in CausalEffects class.</p></li>
 <li><p><strong>tau_max</strong> (<em>int</em>) – Maximum time lag. This may be used to make sure that estimates for
@@ -4632,7 +4599,7 @@ different.</p>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>array, xyz [,XYZ], data_type</strong> – xyz identifier array of shape (dim,) identifying which row in array
 corresponds to X, Y, and Z, and the type mask that indicates which samples
-are continuous or discrete. For example:: X = [(0, -1)],
+are continuous or discrete. For example: X = [(0, -1)],
 Y = [(1, 0)], Z = [(1, -1), (0, -2)] yields an array of shape
 (4, n_samples) and xyz is xyz = numpy.array([0,1,2,2]). If
 return_cleaned_xyz is True, also outputs the cleaned XYZ lists.</p>
@@ -4650,20 +4617,20 @@ return_cleaned_xyz is True, also outputs the cleaned XYZ lists.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>array</strong> (<em>Data array</em><em> of </em><em>shape</em><em> (</em><em>dim</em><em>, </em><em>T</em><em>)</em>) – Data array.</p></li>
-<li><p><strong>X</strong> (<em>list</em><em> of </em><em>tuples</em>) – For a dependence measure I(X;Y|Z), Y is of the form [(varY, 0)],
+<li><p><strong>array</strong> (<em>Data array of shape</em><em> (</em><em>dim</em><em>, </em><em>T</em><em>)</em>) – Data array.</p></li>
+<li><p><strong>X</strong> (<em>list of tuples</em>) – For a dependence measure I(X;Y|Z), Y is of the form [(varY, 0)],
 where var specifies the variable index. X typically is of the form
 [(varX, -tau)] with tau denoting the time lag and Z can be
 multivariate [(var1, -lag), (var2, -lag), …] .</p></li>
-<li><p><strong>Y</strong> (<em>list</em><em> of </em><em>tuples</em>) – For a dependence measure I(X;Y|Z), Y is of the form [(varY, 0)],
+<li><p><strong>Y</strong> (<em>list of tuples</em>) – For a dependence measure I(X;Y|Z), Y is of the form [(varY, 0)],
 where var specifies the variable index. X typically is of the form
 [(varX, -tau)] with tau denoting the time lag and Z can be
 multivariate [(var1, -lag), (var2, -lag), …] .</p></li>
-<li><p><strong>Z</strong> (<em>list</em><em> of </em><em>tuples</em>) – For a dependence measure I(X;Y|Z), Y is of the form [(varY, 0)],
+<li><p><strong>Z</strong> (<em>list of tuples</em>) – For a dependence measure I(X;Y|Z), Y is of the form [(varY, 0)],
 where var specifies the variable index. X typically is of the form
 [(varX, -tau)] with tau denoting the time lag and Z can be
 multivariate [(var1, -lag), (var2, -lag), …] .</p></li>
-<li><p><strong>extraZ</strong> (<em>list</em><em> of </em><em>tuples</em>) – For a dependence measure I(X;Y|Z), Y is of the form [(varY, 0)],
+<li><p><strong>extraZ</strong> (<em>list of tuples</em>) – For a dependence measure I(X;Y|Z), Y is of the form [(varY, 0)],
 where var specifies the variable index. X typically is of the form
 [(varX, -tau)] with tau denoting the time lag and Z can be
 multivariate [(var1, -lag), (var2, -lag), …] .</p></li>
@@ -4723,7 +4690,7 @@ Volume 219, Issue 2, 15 October 2013, Pages 285-291</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>array</strong> (<em>array-like</em>) – data array with X, Y, Z in rows and observations in columns</p></li>
-<li><p><strong>xyz</strong> (<em>array</em><em> of </em><em>ints</em>) – XYZ identifier array of shape (dim,).</p></li>
+<li><p><strong>xyz</strong> (<em>array of ints</em>) – XYZ identifier array of shape (dim,).</p></li>
 <li><p><strong>mode</strong> (<em>str</em>) – Which mode to use.</p></li>
 </ul>
 </dd>
@@ -4950,7 +4917,7 @@ Also format {0:[(0, -1), …], 1:[…], …} is allowed.</p>
 <dd><p>Helper function to convert DAG graph to dictionary of parents.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>dag</strong> (<em>array</em><em> of </em><em>shape</em><em> (</em><em>N</em><em>, </em><em>N</em><em>, </em><em>tau_max+1</em><em>)</em>) – Matrix format of graph in string format. Must be DAG.</p>
+<dd class="field-odd"><p><strong>dag</strong> (<em>array of shape</em><em> (</em><em>N</em><em>, </em><em>N</em><em>, </em><em>tau_max+1</em><em>)</em>) – Matrix format of graph in string format. Must be DAG.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>parents</strong> – Dictionary of form {0:[(0, -1), …], 1:[…], …}.</p>
@@ -4963,7 +4930,7 @@ Also format {0:[(0, -1), …], 1:[…], …} is allowed.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="tigramite.toymodels.structural_causal_processes.generate_structural_causal_process">
-<span class="sig-prename descclassname"><span class="pre">tigramite.toymodels.structural_causal_processes.</span></span><span class="sig-name descname"><span class="pre">generate_structural_causal_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">N</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">L</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dependency_funcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['linear']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dependency_coeffs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[-0.5,</span> <span class="pre">0.5]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto_coeffs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0.5,</span> <span class="pre">0.7]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contemp_fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_lag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_dists</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['gaussian']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_means</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0.0]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_sigmas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0.5,</span> <span class="pre">2.0]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/toymodels/structural_causal_processes.html#generate_structural_causal_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.toymodels.structural_causal_processes.generate_structural_causal_process" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">tigramite.toymodels.structural_causal_processes.</span></span><span class="sig-name descname"><span class="pre">generate_structural_causal_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">N</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">L</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dependency_funcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['linear']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dependency_coeffs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[-</span> <span class="pre">0.5,</span> <span class="pre">0.5]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto_coeffs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0.5,</span> <span class="pre">0.7]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contemp_fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_lag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_dists</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['gaussian']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_means</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0.0]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_sigmas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0.5,</span> <span class="pre">2.0]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/toymodels/structural_causal_processes.html#generate_structural_causal_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.toymodels.structural_causal_processes.generate_structural_causal_process" title="Permalink to this definition">¶</a></dt>
 <dd><p>“Randomly generates a structural causal process based on input characteristics.</p>
 <p>The process has the form</p>
 <div class="math">
@@ -5066,7 +5033,7 @@ can also be generated with intervened variables.</p>
 number of variables N. coeff must be a float and func a python
 callable of one argument.</p></li>
 <li><p><strong>T</strong> (<em>int</em>) – Sample size.</p></li>
-<li><p><strong>noises</strong> (<em>list</em><em> of </em><em>callables</em><em> or </em><em>array</em><em>, </em><em>optional</em><em> (</em><em>default: 'np.random.randn'</em><em>)</em>) – Random distribution function that is called with noises[j](T). If an array,
+<li><p><strong>noises</strong> (<em>list of callables</em><em> or </em><em>array</em><em>, </em><em>optional</em><em> (</em><em>default: 'np.random.randn'</em><em>)</em>) – Random distribution function that is called with noises[j](T). If an array,
 it must be of shape ((transient_fraction + 1)*T, N).</p></li>
 <li><p><strong>intervention</strong> (<em>dict</em>) – Dictionary of format: {1:np.array, …} containing only keys of intervened
 variables with the value being the array of length T with interventional values.
@@ -5161,7 +5128,7 @@ matrix.add_densityplot function.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="tigramite.plotting.plot_graph">
-<span class="sig-prename descclassname"><span class="pre">tigramite.plotting.</span></span><span class="sig-name descname"><span class="pre">plot_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig_ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_colorbar_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'MCI'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_colorbar_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto-MCI'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_attribute</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrow_linewidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_ticks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RdBu_r'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_ticks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RdBu_r'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_aspect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrowhead_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curved_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tick_label_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_label_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_label_fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lag_array</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_colorbar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inner_edge_style</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dashed'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">special_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_autodependency_lags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.plotting.plot_graph" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">tigramite.plotting.</span></span><span class="sig-name descname"><span class="pre">plot_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig_ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_colorbar_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'MCI'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_colorbar_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto-MCI'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_attribute</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrow_linewidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_ticks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RdBu_r'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_ticks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RdBu_r'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_aspect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrowhead_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curved_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tick_label_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_label_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_label_fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lag_array</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_colorbar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inner_edge_style</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dashed'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">special_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_autodependency_lags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.plotting.plot_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a network plot.</p>
 <p>This is still in beta. The network is defined from links in graph. Nodes
 denote variables, straight links contemporaneous dependencies and curved
@@ -5178,7 +5145,7 @@ can be supplied in appropriate axis coordinates via node_pos.</p>
 Must be of same shape as val_matrix.</p></li>
 <li><p><strong>val_matrix</strong> (<em>array_like</em>) – Matrix of shape (N, N, tau_max+1) containing test statistic values.</p></li>
 <li><p><strong>var_names</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – List of variable names. If None, range(N) is used.</p></li>
-<li><p><strong>fig_ax</strong> (<em>tuple</em><em> of </em><em>figure and axis object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Figure and axes instance. If None they are created.</p></li>
+<li><p><strong>fig_ax</strong> (<em>tuple of figure and axis object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Figure and axes instance. If None they are created.</p></li>
 <li><p><strong>figsize</strong> (<em>tuple</em>) – Size of figure.</p></li>
 <li><p><strong>save_name</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Name of figure file to save figure. If None, figure is shown in window.</p></li>
 <li><p><strong>link_colorbar_label</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'MCI'</em><em>)</em>) – Test statistic label.</p></li>
@@ -5247,7 +5214,7 @@ matrix.add_lagfuncs(val_matrix) function.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="tigramite.plotting.plot_mediation_graph">
-<span class="sig-prename descclassname"><span class="pre">tigramite.plotting.</span></span><span class="sig-name descname"><span class="pre">plot_mediation_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_val_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_node_array</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig_ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_colorbar_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'link</span> <span class="pre">coeff.</span> <span class="pre">(edge</span> <span class="pre">color)'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_colorbar_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'MCE</span> <span class="pre">(node</span> <span class="pre">color)'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrow_linewidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_ticks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RdBu_r'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_ticks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RdBu_r'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_aspect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrowhead_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curved_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tick_label_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lag_array</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_label_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_label_fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">standard_color_links</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'black'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">standard_color_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lightgrey'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_mediation_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.plotting.plot_mediation_graph" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">tigramite.plotting.</span></span><span class="sig-name descname"><span class="pre">plot_mediation_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_val_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_node_array</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig_ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_colorbar_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'link</span> <span class="pre">coeff.</span> <span class="pre">(edge</span> <span class="pre">color)'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_colorbar_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'MCE</span> <span class="pre">(node</span> <span class="pre">color)'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrow_linewidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_ticks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RdBu_r'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_ticks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RdBu_r'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_aspect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrowhead_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curved_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tick_label_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lag_array</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_label_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_label_fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">standard_color_links</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'black'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">standard_color_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lightgrey'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_mediation_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.plotting.plot_mediation_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a network plot visualizing the pathways of a mediation analysis.
 This is still in beta. The network is defined from non-zero entries in
 <code class="docutils literal notranslate"><span class="pre">path_val_matrix</span></code>.  Nodes denote variables, straight links contemporaneous
@@ -5263,7 +5230,7 @@ can be supplied in appropriate axis coordinates via node_pos.</p>
 <li><p><strong>path_val_matrix</strong> (<em>array_like</em>) – Matrix of shape (N, N, tau_max+1) containing link weight values.</p></li>
 <li><p><strong>path_node_array</strong> (<em>array_like</em>) – Array of shape (N,) containing node values.</p></li>
 <li><p><strong>var_names</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – List of variable names. If None, range(N) is used.</p></li>
-<li><p><strong>fig_ax</strong> (<em>tuple</em><em> of </em><em>figure and axis object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Figure and axes instance. If None they are created.</p></li>
+<li><p><strong>fig_ax</strong> (<em>tuple of figure and axis object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Figure and axes instance. If None they are created.</p></li>
 <li><p><strong>figsize</strong> (<em>tuple</em>) – Size of figure.</p></li>
 <li><p><strong>save_name</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Name of figure file to save figure. If None, figure is shown in window.</p></li>
 <li><p><strong>link_colorbar_label</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'link coeff.</em><em> (</em><em>edge color</em><em>)</em><em>'</em><em>)</em>) – Link colorbar label.</p></li>
@@ -5302,7 +5269,7 @@ a map using cartopy.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="tigramite.plotting.plot_mediation_time_series_graph">
-<span class="sig-prename descclassname"><span class="pre">tigramite.plotting.</span></span><span class="sig-name descname"><span class="pre">plot_mediation_time_series_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_node_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tsg_path_val_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig_ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_colorbar_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'link</span> <span class="pre">coeff.</span> <span class="pre">(edge</span> <span class="pre">color)'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_colorbar_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'MCE</span> <span class="pre">(node</span> <span class="pre">color)'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrow_linewidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_ticks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RdBu_r'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_ticks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RdBu_r'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_aspect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrowhead_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curved_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_label_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tick_label_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">standard_color_links</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'black'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">standard_color_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lightgrey'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_mediation_time_series_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.plotting.plot_mediation_time_series_graph" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">tigramite.plotting.</span></span><span class="sig-name descname"><span class="pre">plot_mediation_time_series_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_node_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tsg_path_val_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig_ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_colorbar_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'link</span> <span class="pre">coeff.</span> <span class="pre">(edge</span> <span class="pre">color)'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_colorbar_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'MCE</span> <span class="pre">(node</span> <span class="pre">color)'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrow_linewidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_ticks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RdBu_r'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_ticks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RdBu_r'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_aspect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrowhead_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curved_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_label_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tick_label_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">standard_color_links</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'black'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">standard_color_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lightgrey'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_mediation_time_series_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.plotting.plot_mediation_time_series_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a mediation time series graph plot.
 This is still in beta. The time series graph’s links are colored by
 val_matrix.</p>
@@ -5312,7 +5279,7 @@ val_matrix.</p>
 <li><p><strong>tsg_path_val_matrix</strong> (<em>array_like</em>) – Matrix of shape (N*tau_max, N*tau_max) containing link weight values.</p></li>
 <li><p><strong>path_node_array</strong> (<em>array_like</em>) – Array of shape (N,) containing node values.</p></li>
 <li><p><strong>var_names</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – List of variable names. If None, range(N) is used.</p></li>
-<li><p><strong>fig_ax</strong> (<em>tuple</em><em> of </em><em>figure and axis object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Figure and axes instance. If None they are created.</p></li>
+<li><p><strong>fig_ax</strong> (<em>tuple of figure and axis object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Figure and axes instance. If None they are created.</p></li>
 <li><p><strong>figsize</strong> (<em>tuple</em>) – Size of figure.</p></li>
 <li><p><strong>save_name</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Name of figure file to save figure. If None, figure is shown in window.</p></li>
 <li><p><strong>link_colorbar_label</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'link coeff.</em><em> (</em><em>edge color</em><em>)</em><em>'</em><em>)</em>) – Link colorbar label.</p></li>
@@ -5375,7 +5342,7 @@ matrix.add_scatterplot function.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="tigramite.plotting.plot_time_series_graph">
-<span class="sig-prename descclassname"><span class="pre">tigramite.plotting.</span></span><span class="sig-name descname"><span class="pre">plot_time_series_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig_ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_colorbar_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'MCI'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_attribute</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrow_linewidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_ticks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RdBu_r'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_aspect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrowhead_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curved_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tick_label_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inner_edge_style</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dashed'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">special_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">standard_color_links</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'black'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">standard_color_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lightgrey'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_time_series_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.plotting.plot_time_series_graph" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">tigramite.plotting.</span></span><span class="sig-name descname"><span class="pre">plot_time_series_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig_ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_colorbar_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'MCI'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_attribute</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrow_linewidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_ticks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RdBu_r'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_aspect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrowhead_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curved_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tick_label_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inner_edge_style</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dashed'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">special_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">standard_color_links</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'black'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">standard_color_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lightgrey'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_time_series_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.plotting.plot_time_series_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a time series graph.
 This is still in beta. The time series graph’s links are colored by
 val_matrix.</p>
@@ -5387,7 +5354,7 @@ Either of shape (N, N, tau_max + 1) or as auxiliary graph of dims
 (N, N, tau_max+1, tau_max+1) describing auxADMG.</p></li>
 <li><p><strong>val_matrix</strong> (<em>array_like</em>) – Matrix of same shape as graph containing test statistic values.</p></li>
 <li><p><strong>var_names</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – List of variable names. If None, range(N) is used.</p></li>
-<li><p><strong>fig_ax</strong> (<em>tuple</em><em> of </em><em>figure and axis object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Figure and axes instance. If None they are created.</p></li>
+<li><p><strong>fig_ax</strong> (<em>tuple of figure and axis object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Figure and axes instance. If None they are created.</p></li>
 <li><p><strong>figsize</strong> (<em>tuple</em>) – Size of figure.</p></li>
 <li><p><strong>save_name</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Name of figure file to save figure. If None, figure is shown in window.</p></li>
 <li><p><strong>link_colorbar_label</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'MCI'</em><em>)</em>) – Test statistic label.</p></li>
@@ -5431,9 +5398,9 @@ variables N) and optionally a mask of the same shape.</p></li>
 <li><p><strong>save_name</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Name of figure file to save figure. If None, figure is shown in window.</p></li>
 <li><p><strong>fig_axes</strong> (<em>subplots instance</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Figure and axes instance. If None they are created as
 fig, axes = pyplot.subplots(N,…)</p></li>
-<li><p><strong>figsize</strong> (<em>tuple</em><em> of </em><em>floats</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Figure size if new figure is created. If None, default pyplot figsize
+<li><p><strong>figsize</strong> (<em>tuple of floats</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Figure size if new figure is created. If None, default pyplot figsize
 is used.</p></li>
-<li><p><strong>var_units</strong> (<em>list</em><em> of </em><em>str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Units of variables.</p></li>
+<li><p><strong>var_units</strong> (<em>list of str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Units of variables.</p></li>
 <li><p><strong>time_label</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: ''</em><em>)</em>) – Label of time axis.</p></li>
 <li><p><strong>grey_masked_samples</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – Whether to mark masked samples by grey fills (‘fill’) or grey data
 (‘data’).</p></li>
@@ -5473,7 +5440,7 @@ function.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>N</strong> (<em>int</em>) – Number of variables</p></li>
 <li><p><strong>var_names</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – List of variable names. If None, range(N) is used.</p></li>
-<li><p><strong>figsize</strong> (<em>tuple</em><em> of </em><em>floats</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Figure size if new figure is created. If None, default pyplot figsize
+<li><p><strong>figsize</strong> (<em>tuple of floats</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Figure size if new figure is created. If None, default pyplot figsize
 is used.</p></li>
 <li><p><strong>label_space_left</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.1</em><em>)</em>) – Fraction of horizontal figure space to allocate left of plot for labels.</p></li>
 <li><p><strong>label_space_top</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.05</em><em>)</em>) – Fraction of vertical figure space to allocate top of plot for labels.</p></li>
@@ -5525,7 +5492,7 @@ tau = 1.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="tigramite.plotting.setup_matrix">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tigramite.plotting.</span></span><span class="sig-name descname"><span class="pre">setup_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">N</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minimum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maximum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_space_left</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_space_top</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legend_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legend_fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_base</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_base</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tick_label_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_gridlines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lag_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lag_array</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#setup_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.plotting.setup_matrix" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tigramite.plotting.</span></span><span class="sig-name descname"><span class="pre">setup_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">N</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minimum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maximum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_space_left</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_space_top</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legend_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legend_fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_base</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_base</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tick_label_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_gridlines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lag_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lag_array</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#setup_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.plotting.setup_matrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create matrix of lag function panels.
 Class to setup figure object. The function add_lagfuncs(…) allows to plot
 the val_matrix of shape (N, N, tau_max+1). Multiple lagfunctions can be
@@ -5536,7 +5503,7 @@ overlaid for comparison.</p>
 <li><p><strong>N</strong> (<em>int</em>) – Number of variables</p></li>
 <li><p><strong>tau_max</strong> (<em>int</em>) – Maximum time lag.</p></li>
 <li><p><strong>var_names</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – List of variable names. If None, range(N) is used.</p></li>
-<li><p><strong>figsize</strong> (<em>tuple</em><em> of </em><em>floats</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Figure size if new figure is created. If None, default pyplot figsize
+<li><p><strong>figsize</strong> (<em>tuple of floats</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Figure size if new figure is created. If None, default pyplot figsize
 is used.</p></li>
 <li><p><strong>minimum</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: -1</em><em>)</em>) – Lower y-axis limit.</p></li>
 <li><p><strong>maximum</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) – Upper y-axis limit.</p></li>
@@ -5601,7 +5568,7 @@ overlaid for comparison.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>N</strong> (<em>int</em>) – Number of variables</p></li>
 <li><p><strong>var_names</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – List of variable names. If None, range(N) is used.</p></li>
-<li><p><strong>figsize</strong> (<em>tuple</em><em> of </em><em>floats</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Figure size if new figure is created. If None, default pyplot figsize
+<li><p><strong>figsize</strong> (<em>tuple of floats</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Figure size if new figure is created. If None, default pyplot figsize
 is used.</p></li>
 <li><p><strong>label_space_left</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.1</em><em>)</em>) – Fraction of horizontal figure space to allocate left of plot for labels.</p></li>
 <li><p><strong>label_space_top</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.05</em><em>)</em>) – Fraction of vertical figure space to allocate top of plot for labels.</p></li>
@@ -5735,8 +5702,8 @@ given by arrow_linewidth. If None, all links have same width.</p></li>
       &copy;2023, Jakob Runge.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.1.3</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
       <a href="_sources/index.rst.txt"
