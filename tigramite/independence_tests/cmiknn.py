@@ -82,6 +82,9 @@ class CMIknn(CondIndTest):
         Number of workers to use for parallel processing. If -1 is given
         all processors are used. Default: -1.
 
+    model_selection_folds : int
+        Number of folds in cross-validation used in model selection.
+
     significance : str, optional (default: 'shuffle_test')
         Type of significance test to use. For CMIknn only 'fixed_thres' and
         'shuffle_test' are available.
@@ -102,6 +105,7 @@ class CMIknn(CondIndTest):
                  significance='shuffle_test',
                  transform='ranks',
                  workers=-1,
+                 model_selection_folds=3,
                  **kwargs):
         # Set the member variables
         self.knn = knn
@@ -112,6 +116,7 @@ class CMIknn(CondIndTest):
         self.residual_based = False
         self.recycle_residuals = False
         self.workers = workers
+        self.model_selection_folds = model_selection_folds
         # Call the parent constructor
         CondIndTest.__init__(self, significance=significance, **kwargs)
         # Print some information about construction
@@ -453,6 +458,78 @@ class CMIknn(CondIndTest):
 
         return restricted_permutation
 
+    def get_model_selection_criterion(self, j, parents, tau_max=0):
+        """Returns a cross-validation-based score for nearest-neighbor estimates.
+
+        Fits a nearest-neighbor model of the parents to variable j and returns
+        the score. The lower, the better the fit. Here used to determine
+        optimal hyperparameters in PCMCI(pc_alpha or fixed thres).
+
+        Parameters
+        ----------
+        j : int
+            Index of target variable in data array.
+
+        parents : list
+            List of form [(0, -1), (3, -2), ...] containing parents.
+
+        tau_max : int, optional (default: 0)
+            Maximum time lag. This may be used to make sure that estimates for
+            different lags in X, Z, all have the same sample size.
+
+        Returns:
+        score : float
+            Model score.
+        """
+
+        import sklearn
+        from sklearn.neighbors import KNeighborsRegressor
+        from sklearn.model_selection import cross_val_score
+
+        Y = [(j, 0)]
+        X = [(j, 0)]   # dummy variable here
+        Z = parents
+        array, xyz, _ = self.dataframe.construct_array(X=X, Y=Y, Z=Z,
+                                                    tau_max=tau_max,
+                                                    mask_type=self.mask_type,
+                                                    return_cleaned_xyz=False,
+                                                    do_checks=True,
+                                                    verbosity=self.verbosity)
+        dim, T = array.shape
+
+        # Standardize
+        array = array.astype(np.float64)
+        array -= array.mean(axis=1).reshape(dim, 1)
+        std = array.std(axis=1)
+        for i in range(dim):
+            if std[i] != 0.:
+                array[i] /= std[i]
+        if np.any(std == 0.) and self.verbosity > 0:
+            warnings.warn("Possibly constant array!")
+            # raise ValueError("nans after standardizing, "
+            #                  "possibly constant array!")
+
+        predictor_indices =  list(np.where(xyz==2)[0])
+        predictor_array = array[predictor_indices, :].T
+        # Target is only first entry of Y, ie [y]
+        target_array = array[np.where(xyz==1)[0][0], :]
+
+        if predictor_array.size == 0:
+            # Regressing on ones if empty parents
+            predictor_array = np.ones(T).reshape(T, 1)
+
+        if self.knn < 1:
+            knn_here = max(1, int(self.knn*T))
+        else:
+            knn_here = max(1, int(self.knn))
+
+        knn_model = KNeighborsRegressor(n_neighbors=knn_here)
+        
+        scores = cross_val_score(estimator=knn_model, 
+            X=predictor_array, y=target_array, cv=self.model_selection_folds, n_jobs=self.workers)
+        
+        # print(scores)
+        return -scores.mean()
 
 if __name__ == '__main__':
     
@@ -463,8 +540,8 @@ if __name__ == '__main__':
 
     random_state = np.random.default_rng(seed=42)
     cmi = CMIknn(mask_type=None,
-                   significance='shuffle_test',
-                   fixed_thres=None,
+                   significance='fixed_thres',
+                   fixed_thres=0.01,
                    sig_samples=1000,
                    sig_blocklength=1,
                    transform='none',
@@ -474,12 +551,25 @@ if __name__ == '__main__':
     T = 1000
     dimz = 1
 
-    # Continuous data
-    z = random_state.standard_normal((T, dimz))
-    x = (0.8*z[:,0] + random_state.standard_normal(T)).reshape(T, 1)
-    y = (0.8*z[:,0] + random_state.standard_normal(T)).reshape(T, 1)
+    # # Continuous data
+    # z = random_state.standard_normal((T, dimz))
+    # x = (1.*z[:,0] + random_state.standard_normal(T)).reshape(T, 1)
+    # y = (1.*z[:,0] + random_state.standard_normal(T)).reshape(T, 1)
 
     # print('X _|_ Y')
     # print(cmi.run_test_raw(x, y, z=None))
-    print('X _|_ Y | Z')
-    print(cmi.run_test_raw(x, y, z=z))
+    # print('X _|_ Y | Z')
+    # print(cmi.run_test_raw(x, y, z=z))
+
+    # Continuous data
+    z = random_state.standard_normal((T, dimz))
+    x = random_state.standard_normal(T).reshape(T, 1)
+    y = (0.*z[:,0] + 1.*x[:,0] + random_state.standard_normal(T)).reshape(T, 1)
+
+    data = np.hstack((x, y, z))
+    print (data.shape)
+    dataframe = DataFrame(data=data)
+    cmi.set_dataframe(dataframe)
+    print(cmi.get_model_selection_criterion(j=1, parents=[], tau_max=0, folds=5))
+    print(cmi.get_model_selection_criterion(j=1, parents=[(0, 0)], tau_max=0, folds=5))
+    print(cmi.get_model_selection_criterion(j=1, parents=[(0, 0), (2, 0)], tau_max=0, folds=5))

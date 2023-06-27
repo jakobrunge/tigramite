@@ -308,4 +308,5 @@ class ParCorr(CondIndTest):
             score = T * np.log(rss) + 2. * p + (2.*p**2 + 2.*p)/(T - p - 1)
         else:
             score = T * np.log(rss) + 2. * p
+
         return score

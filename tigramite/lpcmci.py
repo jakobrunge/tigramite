@@ -341,6 +341,8 @@ class LPCMCI(PCMCIbase):
         self.remember_only_parents = remember_only_parents
         self.no_apr = no_apr
 
+        if isinstance(pc_alpha, (list, tuple, np.ndarray)):
+                raise ValueError("pc_alpha must be single float in LPCMCI.")
         if pc_alpha < 0. or pc_alpha > 1:
             raise ValueError("Choose 0 <= pc_alpha <= 1")
             
@@ -828,7 +830,8 @@ class LPCMCI(PCMCIbase):
                             Z = Z.union(S_default_YX)
 
                             # Test conditional independence of X and Y given Z
-                            val, pval = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = list(Z), tau_max = self.tau_max)
+                            val, pval, dependent = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = list(Z), 
+                                tau_max = self.tau_max, alpha_or_thres=self.pc_alpha)
 
                             if self.verbosity >= 2:
                                 print("ANC(Y):    %s _|_ %s  |  S_def = %s, S_pc = %s: val = %.2f / pval = % .4f" %
@@ -839,7 +842,7 @@ class LPCMCI(PCMCIbase):
                             self._update_pval_val_card_dicts(X, Y, pval, val, len(Z))
 
                             # Check whether test result was significant
-                            if pval > self.pc_alpha:
+                            if not dependent: #pval > self.pc_alpha:
 
                                 # Mark the edge from X to Y for removal and save sepset
                                 to_remove[Y[0]][X] = True
@@ -867,7 +870,8 @@ class LPCMCI(PCMCIbase):
                             Z = Z.union(S_default_XY)
 
                             # Test conditional independence of X and Y given Z
-                            val, pval = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = list(Z), tau_max = self.tau_max)
+                            val, pval, dependent = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = list(Z), 
+                                tau_max = self.tau_max, alpha_or_thres=self.pc_alpha)
 
                             if self.verbosity >= 2:
                                 print("ANC(X):    %s _|_ %s  |  S_def = %s, S_pc = %s: val = %.2f / pval = % .4f" %
@@ -878,7 +882,7 @@ class LPCMCI(PCMCIbase):
                             self._update_pval_val_card_dicts(X, Y, pval, val, len(Z))
 
                             # Check whether test result was significant
-                            if pval > self.pc_alpha:
+                            if not dependent: # pval > self.pc_alpha:
 
                                 # Mark the edge from X to Y for removal and save sepset
                                 to_remove[Y[0]][X] = True
@@ -1154,7 +1158,9 @@ class LPCMCI(PCMCIbase):
                         Z = Z.union(S_default_YX)
 
                         # Test conditional independence of X and Y given Z
-                        val, pval = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = list(Z), tau_max = self.tau_max)
+                        # val, pval = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = list(Z), tau_max = self.tau_max)
+                        val, pval, dependent = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = list(Z), 
+                            tau_max = self.tau_max, alpha_or_thres=self.pc_alpha)
 
                         if self.verbosity >= 2:
                             print("Non-ANC(Y):    %s _|_ %s  |  S_def = %s, S_pc = %s: val = %.2f / pval = % .4f" %
@@ -1165,7 +1171,7 @@ class LPCMCI(PCMCIbase):
                         self._update_pval_val_card_dicts(X, Y, pval, val, len(Z))
 
                         # Check whether test result was significant
-                        if pval > self.pc_alpha:
+                        if not dependent: # pval > self.pc_alpha:
 
                             # Mark the edge from X to Y for removal and save sepset
                             to_remove[Y[0]][X] = True
@@ -1197,7 +1203,9 @@ class LPCMCI(PCMCIbase):
                             Z = Z.union(S_default_XY)
 
                             # Test conditional independence of X and Y given Z
-                            val, pval = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = list(Z), tau_max = self.tau_max)
+                            # val, pval = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = list(Z), tau_max = self.tau_max)
+                            val, pval, dependent = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = list(Z), 
+                                tau_max = self.tau_max, alpha_or_thres=self.pc_alpha)
 
                             if self.verbosity >= 2:
                                 print("Non-ANC(X):    %s _|_ %s  |  S_def = %s, S_pc = %s: val = %.2f / pval = % .4f" %
@@ -1208,7 +1216,7 @@ class LPCMCI(PCMCIbase):
                             self._update_pval_val_card_dicts(X, Y, pval, val, len(Z))
 
                             # Check whether test result was significant
-                            if pval > self.pc_alpha:
+                            if not dependent: # pval > self.pc_alpha:
 
                                 # Mark the edge from X to Y for removal and save sepset
                                 to_remove[Y[0]][X] = True
@@ -1876,7 +1884,9 @@ class LPCMCI(PCMCIbase):
                 Z_A = [node for node in Z if node != A]
 
                 # Run the conditional independence test
-                val, pval = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = Z_A, tau_max = self.tau_max)
+                # val, pval = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = Z_A, tau_max = self.tau_max)
+                val, pval, dependent = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = Z_A, 
+                    tau_max = self.tau_max, alpha_or_thres=self.pc_alpha)
 
                 if self.verbosity >= 2:
                     print("MakeMin:    %s _|_ %s  |  Z_A = %s: val = %.2f / pval = % .4f" %
@@ -1887,7 +1897,7 @@ class LPCMCI(PCMCIbase):
                 self._update_pval_val_card_dicts(X, Y, pval, val, len(Z_A))
 
                 # Check whether the test result was significant
-                if pval > self.pc_alpha:
+                if not dependent: # pval > self.pc_alpha:
                     new_sepsets.append(frozenset(Z_A))
                     val_values.append(val)
 
@@ -1972,7 +1982,9 @@ class LPCMCI(PCMCIbase):
                 Z = Z.union(Z_add)
 
                 # Test conditional independence of X and Y given Z
-                val, pval = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = list(Z), tau_max = self.tau_max)
+                # val, pval = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = list(Z), tau_max = self.tau_max)
+                val, pval, dependent = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = list(Z), 
+                    tau_max = self.tau_max, alpha_or_thres=self.pc_alpha)
 
                 if self.verbosity >= 2:
                     print("BnotinSepSetAC(A):    %s _|_ %s  |  Z_add = %s, Z = %s: val = %.2f / pval = % .4f" %
@@ -1983,7 +1995,7 @@ class LPCMCI(PCMCIbase):
                 self._update_pval_val_card_dicts(X, Y, pval, val, len(Z))
 
                 # Check whether test result was significant
-                if pval > self.pc_alpha:
+                if not dependent: # pval > self.pc_alpha:
                     all_sepsets.add(frozenset(Z))
 
         # Test for independence given all subsets of non-future adjacencies of C
@@ -2001,7 +2013,9 @@ class LPCMCI(PCMCIbase):
                 Z = Z.union(Z_add)
 
                 # Test conditional independence of X and Y given Z
-                val, pval = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = list(Z), tau_max = self.tau_max)
+                # val, pval = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = list(Z), tau_max = self.tau_max)
+                val, pval, dependent = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = list(Z), 
+                    tau_max = self.tau_max, alpha_or_thres=self.pc_alpha)
 
                 if self.verbosity >= 2:
                     # print("BnotinSepSetAC(C):    %s _|_ %s  |  Z = %s: val = %.2f / pval = % .4f" %
@@ -2014,7 +2028,7 @@ class LPCMCI(PCMCIbase):
                 self._update_pval_val_card_dicts(X, Y, pval, val, len(Z))
 
                 # Check whether test result was significant
-                if pval > self.pc_alpha:
+                if not dependent: # pval > self.pc_alpha:
                     all_sepsets.add(frozenset(Z))
 
         # Append the already known sepset
@@ -2098,8 +2112,10 @@ class LPCMCI(PCMCIbase):
                     Z = Z.union(Z_add)
 
                     # Test conditional independence of X and Y given Z
-                    val, pval = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = list(Z), tau_max = self.tau_max)
-
+                    # val, pval = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = list(Z), tau_max = self.tau_max)
+                    val, pval, dependent = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = list(Z), 
+                        tau_max = self.tau_max, alpha_or_thres=self.pc_alpha)
+                    
                     if self.verbosity >= 2:
                         # print("BinSepSetAC(A):    %s _|_ %s  |  Z = %s: val = %.2f / pval = % .4f" %
                         #     (X, Y, ' '.join([str(z) for z in list(Z)]), val, pval))
@@ -2111,7 +2127,7 @@ class LPCMCI(PCMCIbase):
                     self._update_pval_val_card_dicts(X, Y, pval, val, len(Z))
 
                     # Check whether test result was significant
-                    if pval > self.pc_alpha:
+                    if not dependent: # pval > self.pc_alpha:
                         all_sepsets.add(frozenset(Z))
 
             # Test for independence given all subsets of non-future adjacencies of C
@@ -2129,8 +2145,10 @@ class LPCMCI(PCMCIbase):
                     Z = Z.union(Z_add)
 
                     # Test conditional independence of X and Y given Z
-                    val, pval = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = list(Z), tau_max = self.tau_max)
-
+                    # val, pval = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = list(Z), tau_max = self.tau_max)
+                    val, pval, dependent = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = list(Z), 
+                        tau_max = self.tau_max, alpha_or_thres=self.pc_alpha)
+                    
                     if self.verbosity >= 2:
                         # print("BinSepSetAC(C):     %s _|_ %s  |  Z = %s: val = %.2f / pval = % .4f" %
                         #     (X, Y, ' '.join([str(z) for z in list(Z)]), val, pval))
@@ -2142,7 +2160,7 @@ class LPCMCI(PCMCIbase):
                     self._update_pval_val_card_dicts(X, Y, pval, val, len(Z))
 
                     # Check whether test result was significant
-                    if pval > self.pc_alpha:
+                    if not dependent: # pval > self.pc_alpha:
                         all_sepsets.add(frozenset(Z))
 
             # Append the already known sepset
@@ -2764,7 +2782,9 @@ class LPCMCI(PCMCIbase):
                     Z_add2 = {(var, lag - delta_lag) for (var, lag) in Z_add.difference({A, B}) if lag - delta_lag <= 0 and lag - delta_lag >= -self.tau_max}
 
                     # Test conditional independence of X and Y given Z
-                    val, pval = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = list(Z_test), tau_max = self.tau_max)
+                    # val, pval = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = list(Z_test), tau_max = self.tau_max)
+                    val, pval, dependent = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = list(Z_test), 
+                        tau_max = self.tau_max, alpha_or_thres=self.pc_alpha)
 
                     if self.verbosity >= 2:
                         # print("ER00a(part1):    %s _|_ %s  |  Z_test = %s: val = %.2f / pval = % .4f" %
@@ -2777,7 +2797,7 @@ class LPCMCI(PCMCIbase):
                     self._update_pval_val_card_dicts(X, Y, pval, val, len(Z_test))
 
                     # Check whether test result was significant
-                    if pval > self.pc_alpha:
+                    if not dependent: # pval > self.pc_alpha:
 
                         # Mark the edge from X to Y for removal and save sepset
                         remove_AB = True
@@ -2821,7 +2841,9 @@ class LPCMCI(PCMCIbase):
                     Z_add2 = {(var, lag - delta_lag) for (var, lag) in Z_add.difference({A, B}) if lag - delta_lag <= 0 and lag - delta_lag >= -self.tau_max}
 
                     # Test conditional independence of X and Y given Z
-                    val, pval = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = list(Z_test), tau_max = self.tau_max)
+                    # val, pval = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = list(Z_test), tau_max = self.tau_max)
+                    val, pval, dependent = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = list(Z_test), 
+                        tau_max = self.tau_max, alpha_or_thres=self.pc_alpha)
 
                     if self.verbosity >= 2:
                         # print("ER00a(part2):    %s _|_ %s  |  Z_test = %s: val = %.2f / pval = % .4f" %
@@ -2834,7 +2856,7 @@ class LPCMCI(PCMCIbase):
                     self._update_pval_val_card_dicts(X, Y, pval, val, len(Z_test))
 
                     # Check whether test result was significant
-                    if pval > self.pc_alpha:
+                    if not dependent: # pval > self.pc_alpha:
                         
                         # Mark the edge from X to Y for removal and save sepset
                         remove_CB = True
@@ -2929,7 +2951,9 @@ class LPCMCI(PCMCIbase):
                     Z_add2 = {(var, lag - delta_lag) for (var, lag) in Z_add.difference({A, B}) if lag - delta_lag <= 0 and lag - delta_lag >= -self.tau_max}
 
                     # Test conditional independence of X and Y given Z
-                    val, pval = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = list(Z_test), tau_max = self.tau_max)
+                    # val, pval = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = list(Z_test), tau_max = self.tau_max)
+                    val, pval, dependent = self.cond_ind_test.run_test(X = [X], Y = [Y], Z = list(Z_test), 
+                        tau_max = self.tau_max, alpha_or_thres=self.pc_alpha)
 
                     if self.verbosity >= 2:
                         # print("ER00b:    %s _|_ %s  |  Z_test = %s: val = %.2f / pval = % .4f" %
@@ -2942,7 +2966,7 @@ class LPCMCI(PCMCIbase):
                     self._update_pval_val_card_dicts(X, Y, pval, val, len(Z_test))
 
                     # Check whether test result was significant
-                    if pval > self.pc_alpha:
+                    if not dependent: # pval > self.pc_alpha:
 
                         # Mark the edge from X to Y for removal and save sepset
                         remove_AB = True
@@ -3552,7 +3576,7 @@ class LPCMCI(PCMCIbase):
 
 if __name__ == '__main__':
 
-    from tigramite.independence_tests import ParCorr
+    from tigramite.independence_tests.parcorr import ParCorr
     import tigramite.data_processing as pp
     from tigramite.toymodels import structural_causal_processes as toys
     import tigramite.plotting as tp
@@ -3579,15 +3603,15 @@ if __name__ == '__main__':
     # Data must be array of shape (time, variables)
     print(data.shape)
     dataframe = pp.DataFrame(data)
-    cond_ind_test = ParCorr()
+    cond_ind_test = ParCorr(significance='fixed_thres')
     lpcmci = LPCMCI(dataframe=dataframe, cond_ind_test=cond_ind_test)
-    # results = pcmci.run_lpcmci(tau_max=2, pc_alpha=0.01)
+    results = lpcmci.run_lpcmci(tau_max=2, pc_alpha=0.01)
 
     # # For a proper causal interpretation of the graph see the paper!
     # print(results['graph'])
     # tp.plot_graph(graph=results['graph'], val_matrix=results['val_matrix'])
     # plt.show()
 
-    results = lpcmci.run_sliding_window_of(
-        window_step=499, window_length=500,
-        method='run_lpcmci', method_args={'tau_max':1})
+    # results = lpcmci.run_sliding_window_of(
+    #     window_step=499, window_length=500,
+    #     method='run_lpcmci', method_args={'tau_max':1})

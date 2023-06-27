@@ -120,14 +120,20 @@ def check_run_test(ind_test, sample):
     x_nds = true_parents[0]
     z_nds = true_parents[1]
     tau_max = 3
+    alpha_or_thres = 0.1
     # Run the test
-    val, pval = ind_test.run_test(x_nds, y_nds, z_nds, tau_max)
+    val, pval, dependent = ind_test.run_test(X=x_nds, Y=y_nds, Z=z_nds, 
+        tau_max=tau_max, alpha_or_thres=alpha_or_thres)
+
     # Get the array the test is running on
     array, xyz, _, _ = ind_test._get_array(x_nds, y_nds, z_nds, tau_max)
     dim, T = array.shape
     # Get the correct dependence measure
     val_expt = ind_test.get_dependence_measure(array, xyz)
-    pval_expt = ind_test.get_significance(val, array, xyz, T, dim)
+    pval_expt = ind_test._get_p_value(val, array, xyz, T, dim)
+    if ind_test.significance == 'fixed_thres':
+        dependent = val_expt >= alpha_or_thres
+        pval_expt = 0. if dependent else 1.
     # Check the values are close
     np.testing.assert_allclose(np.array(val), np.array(val_expt), atol=1e-2)
     np.testing.assert_allclose(np.array(pval), np.array(pval_expt), atol=1e-2)
@@ -232,14 +238,14 @@ def check_std_approximation(ind_test, sample, xlag, ylag):
     ('analytic', False, 'analytic'),
     ('analytic', False, 'bootstrap'),
     ('shuffle_test', False, 'analytic'),
-    ('fixed_thres', False, 'analytic')])
+    ('fixed_thres', False, 'analytic'),
+    ])
 def par_corr(request):
     # Unpack the parameters
     sig, recycle, conf = request.param
     # Generate the par_corr independence test
     return ParCorr(mask_type=None,
                    significance=sig,
-                   fixed_thres=0.1,
                    sig_samples=10000,
                    sig_blocklength=3,
                    confidence=conf,
@@ -359,7 +365,6 @@ def par_corr_wls(request):
                       window_size=100,
                       mask_type=None,
                       significance=sig,
-                      fixed_thres=0.1,
                       sig_samples=10000,
                       sig_blocklength=3,
                       confidence=conf,
@@ -385,7 +390,6 @@ def par_corr_wls_expert(request):
                       window_size=50,
                       mask_type=None,
                       significance=sig,
-                      fixed_thres=0.1,
                       sig_samples=10000,
                       sig_blocklength=3,
                       confidence=conf,
@@ -414,7 +418,6 @@ def par_corr_wls_expert_time(request):
                       window_size=50,
                       mask_type=None,
                       significance=sig,
-                      fixed_thres=0.1,
                       sig_samples=10000,
                       sig_blocklength=3,
                       confidence=conf,
@@ -570,7 +573,6 @@ def test_std_approximation(par_corr_wls_expert_time, data_sample_hs_time, x_lag,
 def gpdc(request):
     return GPDC(mask_type=None,
                 significance='analytic',
-                fixed_thres=0.1,
                 sig_samples=1000,
                 sig_blocklength=1,
                 confidence='bootstrap',
@@ -676,7 +678,6 @@ def test_trafo2uniform(gpdc, data_sample_a):
 def gpdc_torch(request):
     return GPDCtorch(mask_type=None,
                      significance='analytic',
-                     fixed_thres=0.1,
                      sig_samples=1000,
                      sig_blocklength=1,
                      confidence='bootstrap',
@@ -785,7 +786,6 @@ def test_trafo2uniform_torch(gpdc_torch, data_sample_a):
 def cmi_knn(request):
     return CMIknn(mask_type=None,
                   significance='shuffle_test',
-                  fixed_thres=None,
                   sig_samples=10000,
                   sig_blocklength=3,
                   knn=10,
@@ -862,7 +862,6 @@ def test_cmi_knn(cmi_knn, data_sample_c):
 def cmi_symb(request):
     return CMIsymb(mask_type=None,
                    significance='shuffle_test',
-                   fixed_thres=0.1,
                    sig_samples=10000,
                    sig_blocklength=3,
                    confidence='bootstrap',
