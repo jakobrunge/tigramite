@@ -337,7 +337,6 @@ class J_PCMCIplus(PCMCI):
         dummy_system_results_copy = deepcopy(dummy_system_results)
 
         system_skeleton_results = self.discover_system_system_links(link_assumptions=_link_assumptions,
-                                                                    context_results=dummy_system_results,
                                                                     lagged_context_dummy_parents=lagged_context_dummy_parents,
                                                                     tau_min=tau_min,
                                                                     tau_max=tau_max,
@@ -653,7 +652,6 @@ class J_PCMCIplus(PCMCI):
         return return_dict
 
     def discover_system_system_links(self, link_assumptions,
-                                     context_results,
                                      lagged_context_dummy_parents,
                                      tau_min=0,
                                      tau_max=1,
@@ -692,12 +690,6 @@ class J_PCMCIplus(PCMCI):
             List of ambiguous triples, only relevant for 'majority' and
             'conservative' rules, see paper for details.
         """
-        dummy_vars = self.time_dummy + self.space_dummy
-        observed_context_nodes = self.time_context_nodes + self.space_context_nodes
-
-        context_parents_val_matrix = context_results['val_matrix']
-        context_parents_p_matrix = context_results['p_matrix']
-
         self.mode = "system_search"
 
         # Get the parents from run_pc_stable only on the system links
@@ -705,7 +697,6 @@ class J_PCMCIplus(PCMCI):
         # Set the selected links
         _int_link_assumptions = self._set_link_assumptions(system_links, tau_min, tau_max)
 
-        # PCMCI+ Step 2+3+4: PC algorithm with contemp. conditions and MCI tests
         if self.verbosity > 0:
             print("\n##\n## J-PCMCI+ Step 3: Discovering system-system links \n##")
             if system_links is not None:
