@@ -414,12 +414,13 @@ class PCMCI(PCMCIbase):
                     if link_assumptions_j[parent] == '-->':
                         val = 1.
                         pval = 0.
+                        dependent = True
                     else:
-                        val, pval = self.cond_ind_test.run_test(X=[parent],
+                        val, pval, dependent = self.cond_ind_test.run_test(X=[parent],
                                                     Y=[(j, 0)],
                                                     Z=Z,
                                                     tau_max=tau_max,
-                                                    # verbosity=self.verbosity
+                                                    alpha_or_thres=pc_alpha,
                                                     )
                     # Print some information if needed
                     if self.verbosity > 1:
@@ -441,7 +442,7 @@ class PCMCI(PCMCIbase):
                         a_iter[comb_index]['val'] = val
                         a_iter[comb_index]['pval'] = pval
                     # Delete link later and break while-loop if non-significant
-                    if pval > pc_alpha:
+                    if not dependent: #pval > pc_alpha:
                         nonsig_parents.append((j, parent))
                         nonsig = True
                         break
@@ -1081,10 +1082,9 @@ class PCMCI(PCMCIbase):
                     val = 1. 
                     pval = 0.
                 else:
-                    val, pval = self.cond_ind_test.run_test(X, Y, Z=Z,
+                    val, pval, _ = self.cond_ind_test.run_test(X, Y, Z=Z,
                                                         tau_max=tau_max,
-                                                        # verbosity=
-                                                        # self.verbosity
+                                                        alpha_or_thres=alpha_level,
                                                         )
                 val_matrix[i, j, abs(tau)] = val
                 p_matrix[i, j, abs(tau)] = pval
@@ -1107,13 +1107,21 @@ class PCMCI(PCMCIbase):
 
         # Correct the p_matrix if there is a fdr_method
         if fdr_method != 'none':
+            if self.cond_ind_test.significance == 'fixed_thres':
+                raise ValueError("FDR-correction not compatible with significance == 'fixed_thres'")
             p_matrix = self.get_corrected_pvalues(p_matrix=p_matrix, tau_min=tau_min, 
                                                   tau_max=tau_max, 
                                                   link_assumptions=_int_link_assumptions,
                                                   fdr_method=fdr_method)
 
-        # Threshold p_matrix to get graph
-        final_graph = p_matrix <= alpha_level
+        # Threshold p_matrix to get graph (or val_matrix for significance == 'fixed_thres')
+        if self.cond_ind_test.significance == 'fixed_thres':
+            if self.cond_ind_test.two_sided:
+                final_graph = np.abs(val_matrix) >= np.abs(alpha_level)
+            else:
+                final_graph = val_matrix >= alpha_level
+        else:
+            final_graph = p_matrix <= alpha_level
 
         # Convert to string graph representation
         graph = self.convert_to_string_graph(final_graph)
@@ -2438,7 +2446,7 @@ class PCMCI(PCMCIbase):
 
         # Update all entries computed in the MCI step 
         # (these are in links_for_pc); values for entries
-        # that were removed in the lagged-condition phase are kept
+        # that were removed in the lagged-condition phase are kept from before
         for j in range(self.N):
             for link in links_for_pc[j]:
                 i, tau = link
@@ -2770,7 +2778,7 @@ class PCMCI(PCMCIbase):
 
 
     def _run_pcalg_test(self, graph, i, abstau, j, S, lagged_parents, max_conds_py,
-                        max_conds_px, max_conds_px_lagged, tau_max):
+                        max_conds_px, max_conds_px_lagged, tau_max, alpha_or_thres=None):
         """MCI conditional independence tests within PCMCIplus or PC algorithm.
 
         Parameters
@@ -2796,15 +2804,16 @@ class PCMCI(PCMCIbase):
             tests. If None is passed, this number is equal to max_conds_px.
         tau_max : int
             Maximum time lag.
+        alpha_or_thres : float
+            Significance level (if significance='analytic' or 'shuffle_test') or
+            threshold (if significance='fixed_thres'). If given, run_test returns
+            the test decision dependent=True/False.
 
         Returns
         -------
-        val : float
-            Test statistic value.
-        pval : float
-            Test statistic p-value.
-        Z : list
-            List of conditions.
+        val, pval, Z, [dependent] : Tuple of floats, list, and bool
+            The test statistic value and the p-value and list of conditions. If alpha_or_thres is
+            given, run_test also returns the test decision dependent=True/False.             
         """
 
         # Perform independence test adding lagged parents
@@ -2834,13 +2843,15 @@ class PCMCI(PCMCIbase):
         if graph[i,j,abstau] != "" and graph[i,j,abstau][1] == '-':
             val = 1. 
             pval = 0.
+            dependent = True
         else:
-            val, pval = self.cond_ind_test.run_test(X=[(i, -abstau)], Y=[(j, 0)],
+            val, pval, dependent = self.cond_ind_test.run_test(X=[(i, -abstau)], Y=[(j, 0)],
                                                 Z=Z, tau_max=tau_max,
+                                                alpha_or_thres=alpha_or_thres,
                                                 # verbosity=self.verbosity
                                                 )
 
-        return val, pval, Z
+        return val, pval, Z, dependent
 
     def _print_triple_info(self, triple, index, n_triples):
         """Print info about the current triple being tested.
@@ -3043,9 +3054,11 @@ class PCMCI(PCMCIbase):
                             break
 
                         # Run MCI test
-                        val, pval, Z = self._run_pcalg_test(graph,
-                            i, abstau, j, S, lagged_parents, max_conds_py,
-                            max_conds_px, max_conds_px_lagged, tau_max)
+                        val, pval, Z, dependent = self._run_pcalg_test(graph=graph,
+                            i=i, abstau=abstau, j=j, S=S, lagged_parents=lagged_parents, 
+                            max_conds_py=max_conds_py,
+                            max_conds_px=max_conds_px, max_conds_px_lagged=max_conds_px_lagged,
+                            tau_max=tau_max, alpha_or_thres=pc_alpha)
 
                         # Store minimum test statistic value for sorting adjt
                         # (only internally used)
@@ -3068,7 +3081,7 @@ class PCMCI(PCMCIbase):
 
                         # If conditional independence is found, remove link
                         # from graph and store sepsets
-                        if pval > pc_alpha:
+                        if not dependent: # pval > pc_alpha:
                             nonsig = True
                             if abstau == 0:
                                 graph[i, j, 0] = graph[j, i, 0] = ""
@@ -3330,15 +3343,17 @@ class PCMCI(PCMCIbase):
                 # Test which neighbor subsets separate i and j
                 neighbor_sepsets = []
                 for iss, S in enumerate(neighbor_subsets):
-                    val, pval, Z = self._run_pcalg_test(graph,
-                        i, abs(tau), j, S, lagged_parents, max_conds_py,
-                        max_conds_px, max_conds_px_lagged, tau_max)
+                    val, pval, Z, dependent = self._run_pcalg_test(graph=graph,
+                            i=i, abstau=abs(tau), j=j, S=S, lagged_parents=lagged_parents, 
+                            max_conds_py=max_conds_py,
+                            max_conds_px=max_conds_px, max_conds_px_lagged=max_conds_px_lagged,
+                            tau_max=tau_max, alpha_or_thres=pc_alpha)
 
                     if self.verbosity > 1:
                         self._print_cond_info(Z=S, comb_index=iss, pval=pval,
                                               val=val)
 
-                    if pval > pc_alpha:
+                    if not dependent: #pval > pc_alpha:
                         neighbor_sepsets += [S]
 
                 if len(neighbor_sepsets) > 0:
@@ -3877,9 +3892,9 @@ class PCMCI(PCMCIbase):
                 parents = []
                 for i, tau in zip(*np.where(dag[:,j,:] == "-->")):
                     parents.append((i, -tau))
-                score[iscore] += \
-                    self.cond_ind_test.get_model_selection_criterion(
+                score_j = self.cond_ind_test.get_model_selection_criterion(
                         j, parents, tau_max)
+                score[iscore] += score_j
             score[iscore] /= float(self.N)
 
         # Record the optimal alpha value
@@ -3903,6 +3918,8 @@ class PCMCI(PCMCIbase):
 
 if __name__ == '__main__':
     from tigramite.independence_tests.parcorr import ParCorr
+    from tigramite.independence_tests.cmiknn import CMIknn
+
     import tigramite.data_processing as pp
     from tigramite.toymodels import structural_causal_processes as toys
     import tigramite.plotting as tp
@@ -3915,10 +3932,10 @@ if __name__ == '__main__':
     def lin_f(x): return x
     def nonlin_f(x): return (x + 5. * x ** 2 * np.exp(-x ** 2 / 20.))
 
-    T = 20000
+    T = 1000
     data = random_state.standard_normal((T, 4))
     # Simple sun
-    data[:,3] = np.sin(np.arange(T)*20/np.pi) + 0.1*random_state.standard_normal((T))
+    data[:,3] = random_state.standard_normal((T)) # np.sin(np.arange(T)*20/np.pi) + 0.1*random_state.standard_normal((T))
     c = 0.8
     for t in range(1, T):
         data[t, 0] += 0.4*data[t-1, 0] + 0.4*data[t-1, 1] + c*data[t-1,3]
@@ -3927,40 +3944,42 @@ if __name__ == '__main__':
     dataframe = pp.DataFrame(data, var_names=[r'$X^0$', r'$X^1$', r'$X^2$', 'Sun'])
     # tp.plot_timeseries(dataframe); plt.show()
 
-    parcorr = ParCorr()
+    ci_test = CMIknn(significance="fixed_thres", verbosity=3)   #
+    # ci_test = ParCorr() #significance="fixed_thres")   #
     # dataframe_nosun = pp.DataFrame(data[:,[0,1,2]], var_names=[r'$X^0$', r'$X^1$', r'$X^2$'])
     # pcmci_parcorr = PCMCI(
     #     dataframe=dataframe_nosun, 
     #     cond_ind_test=parcorr,
     #     verbosity=0)
-    tau_max = 2
+    tau_max = 1  #2
     # results = pcmci_parcorr.run_pcmci(tau_max=tau_max, pc_alpha=0.2, alpha_level = 0.01)
     # Remove parents of variable 3
     # Only estimate parents of variables 0, 1, 2
-    link_assumptions = {}
-    for j in range(4):
-        if j in [0, 1, 2]:
-            # Directed lagged links
-            link_assumptions[j] = {(var, -lag): '-?>' for var in [0, 1, 2]
-                             for lag in range(1, tau_max + 1)}
-            # Unoriented contemporaneous links
-            link_assumptions[j].update({(var, 0): 'o?o' for var in [0, 1, 2] if var != j})
-            # Directed lagged and contemporaneous links from the sun (3)
-            link_assumptions[j].update({(var, -lag): '-?>' for var in [3]
-                             for lag in range(0, tau_max + 1)})
-        else:
-            link_assumptions[j] = {}
+    link_assumptions = None #{}
+    # for j in range(4):
+    #     if j in [0, 1, 2]:
+    #         # Directed lagged links
+    #         link_assumptions[j] = {(var, -lag): '-?>' for var in [0, 1, 2]
+    #                          for lag in range(1, tau_max + 1)}
+    #         # Unoriented contemporaneous links
+    #         link_assumptions[j].update({(var, 0): 'o?o' for var in [0, 1, 2] if var != j})
+    #         # Directed lagged and contemporaneous links from the sun (3)
+    #         link_assumptions[j].update({(var, -lag): '-?>' for var in [3]
+    #                          for lag in range(0, tau_max + 1)})
+    #     else:
+    #         link_assumptions[j] = {}
 
-    for j in link_assumptions:
-        print(link_assumptions[j])
+    # for j in link_assumptions:
+    #     print(link_assumptions[j])
     pcmci_parcorr = PCMCI(
         dataframe=dataframe, 
-        cond_ind_test=parcorr,
-        verbosity=0)
-    results = pcmci_parcorr.run_pcmciplus(tau_max=tau_max, pc_alpha=0.01, 
-        reset_lagged_links=True,
-                                      link_assumptions=link_assumptions
-                                      ) #, alpha_level = 0.01)
+        cond_ind_test=ci_test,
+        verbosity=1)
+    results = pcmci_parcorr.run_pcmciplus(tau_max=tau_max, 
+                    pc_alpha=[0.001, 0.01, 0.05, 0.8], 
+                    reset_lagged_links=False,
+                    link_assumptions=link_assumptions
+                    ) #, alpha_level = 0.01)
     print(results['graph'].shape)
     # print(results['graph'][:,3,:])
     print(np.round(results['p_matrix'][:,:,0], 2))
@@ -3968,7 +3987,7 @@ if __name__ == '__main__':
     print(results['graph'][:,:,0])
 
     # Plot time series graph
-    # tp.plot_time_series_graph(
+    # tp.plot_graph(
     #     val_matrix=results['val_matrix'],
     #     graph=results['graph'],
     #     var_names=[r'$X^0$', r'$X^1$', r'$X^2$', 'Sun'],

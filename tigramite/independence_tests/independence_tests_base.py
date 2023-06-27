@@ -37,8 +37,7 @@ class CondIndTest():
         'fixed_thres' and 'shuffle_test' are available.
 
     fixed_thres : float, optional (default: 0.1)
-        If significance is 'fixed_thres', this specifies the threshold for the
-        absolute value of the dependence measure.
+        Deprecated.
 
     sig_samples : int, optional (default: 500)
         Number of samples for shuffle significance test.
@@ -88,7 +87,7 @@ class CondIndTest():
                  seed=42,
                  mask_type=None,
                  significance='analytic',
-                 fixed_thres=0.1,
+                 fixed_thres=None,
                  sig_samples=500,
                  sig_blocklength=None,
                  confidence=None,
@@ -104,7 +103,8 @@ class CondIndTest():
         self.significance = significance
         self.sig_samples = sig_samples
         self.sig_blocklength = sig_blocklength
-        self.fixed_thres = fixed_thres
+        if fixed_thres is not None:
+            raise ValueError("fixed_thres is replaced by providing alpha_or_thres in run_test")
         self.verbosity = verbosity
         self.cached_ci_results = {}
         self.ci_results = {}
@@ -159,9 +159,9 @@ class CondIndTest():
         if self.significance == 'shuffle_test':
             info_str += "\nsig_samples = %s" % self.sig_samples
             info_str += "\nsig_blocklength = %s" % self.sig_blocklength
-        # Check if we are using a fixed threshold
-        elif self.significance == 'fixed_thres':
-            info_str += "\nfixed_thres = %s" % self.fixed_thres
+        # # Check if we are using a fixed threshold
+        # elif self.significance == 'fixed_thres':
+        #     info_str += "\nfixed_thres = %s" % self.fixed_thres
         # Check if we have a confidence type
         if self.confidence:
             info_str += "\nconfidence = %s" % self.confidence
@@ -324,7 +324,7 @@ class CondIndTest():
         return combined_hash
 
 
-    def run_test(self, X, Y, Z=None, tau_max=0, cut_off='2xtau_max'):
+    def run_test(self, X, Y, Z=None, tau_max=0, cut_off='2xtau_max', alpha_or_thres=None):
         """Perform conditional independence test.
 
         Calls the dependence measure and signficicance test functions. The child
@@ -338,11 +338,9 @@ class CondIndTest():
         X, Y, Z : list of tuples
             X,Y,Z are of the form [(var, -tau)], where var specifies the
             variable index and tau the time lag.
-
         tau_max : int, optional (default: 0)
             Maximum time lag. This may be used to make sure that estimates for
             different lags in X, Z, all have the same sample size.
-
         cut_off : {'2xtau_max', 'max_lag', 'max_lag_or_tau_max'}
             How many samples to cutoff at the beginning. The default is
             '2xtau_max', which guarantees that MCI tests are all conducted on
@@ -350,11 +348,16 @@ class CondIndTest():
             which uses the maximum of tau_max and the conditions, which is
             useful to compare multiple models on the same sample.  Last,
             'max_lag' uses as much samples as possible.
+        alpha_or_thres : float (optional)
+            Significance level (if significance='analytic' or 'shuffle_test') or
+            threshold (if significance='fixed_thres'). If given, run_test returns
+            the test decision dependent=True/False.
 
         Returns
         -------
-        val, pval : Tuple of floats
-            The test statistic value and the p-value.
+        val, pval, [dependent] : Tuple of floats and bool
+            The test statistic value and the p-value. If alpha_or_thres is
+            given, run_test also returns the test decision dependent=True/False.      
         """
 
         # Get the array to test on
@@ -363,13 +366,14 @@ class CondIndTest():
         
         # Record the dimensions
         dim, T = array.shape
-        
+
         # Ensure it is a valid array
         if np.any(np.isnan(array)):
             raise ValueError("nans in the array!")
 
         combined_hash = self._get_array_hash(array, xyz, XYZ)
 
+        # Get test statistic value and p-value [cached if possible]
         if combined_hash in self.cached_ci_results.keys():
             cached = True
             val, pval = self.cached_ci_results[combined_hash]
@@ -377,18 +381,39 @@ class CondIndTest():
             cached = False
             # Get the dependence measure, reycling residuals if need be
             val = self._get_dependence_measure_recycle(X, Y, Z, xyz, array, data_type)
-            # Get the p-value
-            pval = self.get_significance(val, array, xyz, T, dim)
+            # Get the p-value (None if significance = 'fixed_thres')
+            pval = self._get_p_value(val=val, array=array, xyz=xyz, T=T, dim=dim)
             self.cached_ci_results[combined_hash] = (val, pval)
-            # self.ci_results[(X, Y, Z)] = (val, pval)
 
+        # Make test decision
+        if self.significance == 'fixed_thres':
+            if alpha_or_thres is None:
+                raise ValueError("significance == 'fixed_thres' requires setting alpha_or_thres")
+            if self.two_sided:
+                dependent = np.abs(val) >= np.abs(alpha_or_thres)
+            else:
+                dependent = val >= alpha_or_thres
+            pval = 0. if dependent else 1.
+        else:
+            if alpha_or_thres is None:
+                dependent = None
+            else:
+                dependent = pval <= alpha_or_thres
+                
+        self.ci_results[(tuple(X), tuple(Y),tuple(Z))] = (val, pval, dependent)
+
+        # Return the calculated value(s)
         if self.verbosity > 1:
-            self._print_cond_ind_results(val=val, pval=pval, cached=cached,
+            self._print_cond_ind_results(val=val, pval=pval, cached=cached, dependent=dependent,
                                          conf=None)
-        # Return the value and the pvalue
-        return val, pval
 
-    def run_test_raw(self, x, y, z=None, x_type=None, y_type=None, z_type=None):
+        if alpha_or_thres is None:
+            return val, pval
+        else:              
+            return val, pval, dependent
+
+
+    def run_test_raw(self, x, y, z=None, x_type=None, y_type=None, z_type=None, alpha_or_thres=None):
         """Perform conditional independence test directly on input arrays x, y, z.
 
         Calls the dependence measure and signficicance test functions. The child
@@ -405,11 +430,16 @@ class CondIndTest():
             are continuous or discrete: 0s for continuous variables and
             1s for discrete variables
 
+        alpha_or_thres : float (optional)
+            Significance level (if significance='analytic' or 'shuffle_test') or
+            threshold (if significance='fixed_thres'). If given, run_test returns
+            the test decision dependent=True/False.
+        
         Returns
         -------
-        val, pval : Tuple of floats
-
-            The test statistic value and the p-value.
+        val, pval, [dependent] : Tuple of floats and bool
+            The test statistic value and the p-value. If alpha_or_thres is
+            given, run_test also returns the test decision dependent=True/False.
         """
 
         if np.ndim(x) != 2 or np.ndim(y) != 2:
@@ -467,13 +497,30 @@ class CondIndTest():
 
         # Get the p-value
         if has_data_type:
-            pval = self.get_significance(val=val, array=array, xyz=xyz, 
+            pval = self._get_p_value(val=val, array=array, xyz=xyz, 
                     T=T, dim=dim, data_type=data_type)
         else:
-            pval = self.get_significance(val=val, array=array, xyz=xyz, 
-                    T=T, dim=dim)            
+            pval = self._get_p_value(val=val, array=array, xyz=xyz, 
+                    T=T, dim=dim)    
+
+        # Make test decision
+        if self.significance == 'fixed_thres':
+            if self.two_sided:
+                dependent = np.abs(val) >= np.abs(alpha_or_thres)
+            else:
+                dependent = val >= alpha_or_thres
+            pval = 0. if dependent else 1.
+        else:
+            if alpha_or_thres is None:
+                dependent = None
+            else:
+                dependent = pval <= alpha_or_thres
+
         # Return the value and the pvalue
-        return val, pval
+        if alpha_or_thres is None:
+            return val, pval
+        else:              
+            return val, pval, dependent
 
     def _get_dependence_measure_recycle(self, X, Y, Z, xyz, array, data_type=None):
         """Get the dependence_measure, optionally recycling residuals
@@ -558,12 +605,12 @@ class CondIndTest():
         # Return these residuals
         return x_resid
 
-    def get_significance(self, val, array, xyz, T, dim,
+    def _get_p_value(self, val, array, xyz, T, dim,
                          data_type=None,
                          sig_override=None):
         """
         Returns the p-value from whichever significance function is specified
-        for this test.  If an override is used, then it will call a different
+        for this test. If an override is used, then it will call a different
         function then specified by self.significance
 
         Parameters
@@ -610,12 +657,25 @@ class CondIndTest():
                                                  value=val)
         # Check if we are using the fixed_thres significance
         elif use_sig == 'fixed_thres':
-            pval = self.get_fixed_thres_significance(
-                    value=val,
-                    fixed_thres=self.fixed_thres)
+            # Determined outside then
+            pval = None
+            # if self.two_sided:
+            #     dependent = np.abs(val) >= np.abs(alpha_or_thres)
+            # else:
+            #     dependent = val >= alpha_or_thres
+            # pval = 0. if dependent else 1.
+            # # pval = self.get_fixed_thres_significance(
+            # #         value=val,
+            # #         fixed_thres=self.fixed_thres)
         else:
             raise ValueError("%s not known." % self.significance)
-        # Return the calculated value
+
+        # # Return the calculated value(s)
+        # if alpha_or_thres is not None:
+        #     if use_sig != 'fixed_thres': 
+        #         dependent = pval <= alpha_or_thres 
+        #     return pval, dependent 
+        # else:
         return pval
 
     def get_measure(self, X, Y, Z=None, tau_max=0, 
@@ -729,7 +789,7 @@ class CondIndTest():
         # Return the confidence interval
         return (conf_lower, conf_upper)
 
-    def _print_cond_ind_results(self, val, pval=None, cached=None, conf=None):
+    def _print_cond_ind_results(self, val, pval=None, cached=None, dependent=None, conf=None):
         """Print results from conditional independence test.
 
         Parameters
@@ -740,12 +800,17 @@ class CondIndTest():
         pval : float, optional (default: None)
             p-value
 
+        dependent : bool
+            Test decision.
+
         conf : tuple of floats, optional (default: None)
             Confidence bounds.
         """
         printstr = "        val = % .3f" % (val)      
         if pval is not None:
             printstr += " | pval = %.5f" % (pval)
+        if dependent is not None:
+            printstr += " | dependent = %s" % (dependent)
         if conf is not None:
             printstr += " | conf bounds = (%.3f, %.3f)" % (
                 conf[0], conf[1])
@@ -1038,31 +1103,15 @@ class CondIndTest():
         return null_dist
 
     def get_fixed_thres_significance(self, value, fixed_thres):
-        """Returns signficance for thresholding test.
-
-        Returns 0 if numpy.abs(value) is smaller than fixed_thres and 1 else.
-
-        Parameters
-        ----------
-        value : number
-            Value of test statistic for unshuffled estimate.
-
-        fixed_thres : number
-            Fixed threshold, is made positive.
-
-        Returns
-        -------
-        pval : bool
-            Returns 0 if numpy.abs(value) is smaller than fixed_thres and 1
-            else.
-
+        """DEPRECATED Returns signficance for thresholding test.
         """
-        if np.abs(value) < np.abs(fixed_thres):
-            pval = 1.
-        else:
-            pval = 0.
+        raise ValueError("fixed_thres is replaced by alpha_or_thres in run_test.")
+        # if np.abs(value) < np.abs(fixed_thres):
+        #     pval = 1.
+        # else:
+        #     pval = 0.
 
-        return pval
+        # return pval
 
     def _trafo2uniform(self, x):
         """Transforms input array to uniform marginals.

@@ -1049,7 +1049,7 @@ class OracleCI:
 
         return any_path_observed
 
-    def run_test(self, X, Y, Z=None, tau_max=0, cut_off='2xtau_max',
+    def run_test(self, X, Y, Z=None, tau_max=0, cut_off='2xtau_max', alpha_or_thres=None,
                  verbosity=0):
         """Perform oracle conditional independence test.
 
@@ -1063,6 +1063,8 @@ class OracleCI:
         tau_max : int, optional (default: 0)
             Not used here.
         cut_off : {'2xtau_max', 'max_lag', 'max_lag_or_tau_max'}
+            Not used here.
+        alpha_or_thres : float
             Not used here.
 
         Returns
@@ -1088,15 +1090,20 @@ class OracleCI:
         if self.dsepsets[str((X, Y, Z))]:
             val = 0.
             pval = 1.
+            dependent = False
         else:
             val = 1.
             pval = 0.
+            dependent = True
 
         if verbosity > 1:
             self._print_cond_ind_results(val=val, pval=pval, cached=False,
                                          conf=None)
         # Return the value and the pvalue
-        return val, pval
+        if alpha_or_thres is None:
+            return val, pval
+        else:
+            return val, pval, dependent
 
     def get_measure(self, X, Y, Z=None, tau_max=0):
         """Returns dependence measure.
