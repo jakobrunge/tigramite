@@ -338,8 +338,7 @@ class PCMCI(PCMCIbase):
             is unrestricted.
         max_combinations : int, optional (default: 1)
             Maximum number of combinations of conditions of current cardinality
-            to test. Defaults to 1 for PC_1 algorithm. For original PC algorithm
-            a larger number, such as 10, can be used.
+            to test in PC1 step.
 
         Returns
         -------
@@ -617,8 +616,7 @@ class PCMCI(PCMCIbase):
             is unrestricted.
         max_combinations : int, default: 1
             Maximum number of combinations of conditions of current cardinality
-            to test. Defaults to 1 for PC_1 algorithm. For original PC algorithm
-            a larger number, such as 10, can be used.
+            to test in PC1 step.
 
         Returns
         -------
@@ -1882,8 +1880,7 @@ class PCMCI(PCMCIbase):
             is unrestricted.
         max_combinations : int, optional (default: 1)
             Maximum number of combinations of conditions of current cardinality
-            to test. Defaults to 1 for PC_1 algorithm. For original PC algorithm
-            a larger number, such as 10, can be used.
+            to test in PC1 step.
         max_conds_py : int, optional (default: None)
             Maximum number of conditions of Y to use. If None is passed, this
             number is unrestricted.
@@ -2112,8 +2109,7 @@ class PCMCI(PCMCIbase):
             is unrestricted.
         max_combinations : int, optional (default: 1)
             Maximum number of combinations of conditions of current cardinality
-            to test. Defaults to 1 for PC_1 algorithm. For original PC algorithm
-            a larger number, such as 10, can be used.
+            to test in PC1 step.
         max_conds_py : int, optional (default: None)
             Maximum number of lagged conditions of Y to use in MCI tests. If
             None is passed, this number is unrestricted.
@@ -2215,7 +2211,7 @@ class PCMCI(PCMCIbase):
                             tau_min=tau_min, 
                             tau_max=tau_max, 
                             max_conds_dim=max_conds_dim, 
-                            max_combinations=max_combinations, 
+                            max_combinations=None, 
                             max_conds_py=max_conds_py,
                             max_conds_px=max_conds_px, 
                             max_conds_px_lagged=max_conds_px_lagged, 
@@ -2581,7 +2577,7 @@ class PCMCI(PCMCIbase):
             is unrestricted.
         max_combinations : int
             Maximum number of combinations of conditions of current cardinality
-            to test.
+            to test. Must be infinite (default for max_combinations=1) for consistency.
         max_conds_py : int, optional (default: None)
             Maximum number of lagged conditions of Y to use in MCI tests. If
             None is passed, this number is unrestricted.
@@ -2735,7 +2731,7 @@ class PCMCI(PCMCIbase):
             is unrestricted.
         max_combinations : int
             Maximum number of combinations of conditions of current cardinality
-            to test.
+            to test. Must be infinite (default for max_combinations=1) for consistency.
 
         Returns
         -------
@@ -2944,7 +2940,7 @@ class PCMCI(PCMCIbase):
             is unrestricted.
         max_combinations : int
             Maximum number of combinations of conditions of current cardinality
-            to test.
+            to test. Must be infinite (default for max_combinations=1) for consistency.
         max_conds_py : int, optional (default: None)
             Maximum number of lagged conditions of Y to use in MCI tests. If
             None is passed, this number is unrestricted.
