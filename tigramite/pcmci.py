@@ -2395,7 +2395,7 @@ class PCMCI(PCMCIbase):
             for j in range(self.N):
                 links_for_pc[j] = {}
                 for parent in lagged_parents[j]:
-                    if parent in link_assumptions[j] and link_assumptions[j][parent] in ['-?>', '-->']:
+                    if link_assumptions[j][parent] in ['-?>', '-->']:
                         links_for_pc[j][parent] = link_assumptions[j][parent]
 
                 # Add contemporaneous links

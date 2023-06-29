@@ -297,7 +297,10 @@ class J_PCMCIplus(PCMCI):
         ctxt_res = deepcopy(context_results)
         # Store the parents in the pcmci member
         self.observed_context_parents = deepcopy(context_results['parents'])
-        self.all_lagged_parents = deepcopy(context_results['lagged_parents'])
+        self.all_lagged_parents = deepcopy(context_results['lagged_parents'])# remove context nodes from lagged parents
+        self.all_lagged_parents = {i: [el for el in self.all_lagged_parents[i] if el[0] not in self.time_context_nodes] for i in
+                          range(self.N)}
+
 
         if self.verbosity > 0:
             print("Discovered observed context parents: ", context_results['parents'])
@@ -328,10 +331,13 @@ class J_PCMCIplus(PCMCI):
 
         # step 3:
         self.mode = "system_search"
+
         lagged_context_dummy_parents = {
             i: list(
                 dict.fromkeys(self.all_lagged_parents[i] + self.observed_context_parents[i] + self.dummy_parents[i]))
-            for i in range(self.N)}
+            for i in self.system_nodes}
+        # we only care about the parents of system nodes
+        lagged_context_dummy_parents.update({i: [] for i in observed_context_nodes+ self.time_dummy + self.space_dummy})
 
         dummy_system_results_copy = deepcopy(dummy_system_results)
 
@@ -444,12 +450,13 @@ class J_PCMCIplus(PCMCI):
 
         for c in self.space_context_nodes + self.time_context_nodes:
             link_assumptions_dummy[c] = {}
-        for j in self.system_nodes:
+        for j in self.system_nodes + self.time_context_nodes + self.space_context_nodes:
             for c in self.space_context_nodes + self.time_context_nodes:
                 for lag in range(tau_max + 1):
                     if (c, -lag) in link_assumptions_dummy[j]:
                         link_assumptions_dummy[j].pop((c, -lag), None)
-                    link_assumptions_dummy[j].update({parent: '-->' for parent in self.observed_context_parents[j]})
+            link_assumptions_dummy[j].update({parent: '-->' for parent in self.observed_context_parents[j]})
+
         return link_assumptions_dummy
 
     def clean_system_link_assumptions(self, link_assumptions, tau_max):
@@ -596,9 +603,8 @@ class J_PCMCIplus(PCMCI):
             Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing
             the estimated (dummy and observed) context parents.
         """
-
-        lagged_context_parents = {i: context_system_results['parents'][i] + lagged_parents[i] for i in
-                                  range(self.N)}
+        lagged_context_parents = {i: list(dict.fromkeys(context_system_results['parents'][i] + lagged_parents[i])) for
+                                  i in range(self.N)}
         dummy_parents = {i: [] for i in range(self.N)}
         val_matrix = context_system_results['val_matrix']
         p_matrix = context_system_results['p_matrix']
