@@ -9,8 +9,10 @@
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
    
@@ -30,7 +32,7 @@
           <div class="body" role="main">
             
   <h1>Source code for tigramite.models</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Tigramite causal discovery for time series.&quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot;Tigramite causal inference for time series.&quot;&quot;&quot;</span>
 
 <span class="c1"># Author: Jakob Runge &lt;jakob@jakob-runge.com&gt;</span>
 <span class="c1">#</span>
@@ -111,6 +113,7 @@
                 <span class="n">conditions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">tau_max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;max_lag_or_tau_max&#39;</span><span class="p">,</span>
+                <span class="n">empty_predictors_function</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span>
                 <span class="n">return_data</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Fit time series model.</span>
 
@@ -133,6 +136,8 @@
 <span class="sd">            sample. Other options are &#39;2xtau_max&#39;, which guarantees that MCI</span>
 <span class="sd">            tests are all conducted on the same samples. Last, &#39;max_lag&#39; uses</span>
 <span class="sd">            as much samples as possible.</span>
+<span class="sd">        empty_predictors_function : function</span>
+<span class="sd">            Function to apply to y if no predictors are given.</span>
 <span class="sd">        return_data : bool, optional (default: False)</span>
 <span class="sd">            Whether to save the data array.</span>
 
@@ -220,6 +225,15 @@
             <span class="c1"># Target is only first entry of Y, ie [y]</span>
             <span class="n">target_array</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span><span class="o">==</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="p">:]</span>
 
+            <span class="k">if</span> <span class="n">predictor_array</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># Just fit default (eg, mean)</span>
+                <span class="k">class</span> <span class="nc">EmptyPredictorModel</span><span class="p">:</span>
+                    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="n">empty_predictors_function</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+                    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+                        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span>
+                <span class="n">a_model</span> <span class="o">=</span> <span class="n">EmptyPredictorModel</span><span class="p">()</span>
+            
             <span class="n">a_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">predictor_array</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">target_array</span><span class="p">)</span>
             
             <span class="c1"># Cache the results</span>
@@ -378,6 +392,7 @@
                 <span class="n">selected_variables</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">tau_max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;max_lag_or_tau_max&#39;</span><span class="p">,</span>
+                <span class="n">empty_predictors_function</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span>
                 <span class="n">return_data</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Fit time series model.</span>
 
@@ -402,6 +417,8 @@
 <span class="sd">            sample. Other options are &#39;2xtau_max&#39;, which guarantees that MCI</span>
 <span class="sd">            tests are all conducted on the same samples. Last, &#39;max_lag&#39; uses</span>
 <span class="sd">            as much samples as possible.</span>
+<span class="sd">        empty_predictors_function : function</span>
+<span class="sd">            Function to apply to y if no predictors are given.</span>
 <span class="sd">        return_data : bool, optional (default: False)</span>
 <span class="sd">            Whether to save the data array.</span>
 
@@ -460,13 +477,22 @@
                 <span class="c1"># Cache the data if needed</span>
                 <span class="n">fit_results</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">array</span>
                 <span class="n">fit_results</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="s1">&#39;used_indices&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">use_indices_dataset_dict</span>
-            <span class="c1"># Fit the model if there are any parents for this variable to fit</span>
+            <span class="c1"># Copy and fit the model if there are any parents for this variable to fit</span>
+            <span class="n">a_model</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">dim_z</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="c1"># Copy and fit the model</span>
-                <span class="n">a_model</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+                <span class="n">a_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">array</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">array</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Just fit default (eg, mean)</span>
+                <span class="k">class</span> <span class="nc">EmptyPredictorModel</span><span class="p">:</span>
+                    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="n">empty_predictors_function</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+                    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+                        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span>
+                <span class="n">a_model</span> <span class="o">=</span> <span class="n">EmptyPredictorModel</span><span class="p">()</span>
+                <span class="c1"># a_model = empty_predictors_model(array[1])</span>
                 <span class="n">a_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">array</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">array</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 
-                <span class="n">fit_results</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="s1">&#39;model&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">a_model</span>
+            <span class="n">fit_results</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="s1">&#39;model&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">a_model</span>
 
         <span class="c1"># Cache and return the fit results</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fit_results</span> <span class="o">=</span> <span class="n">fit_results</span>
@@ -624,7 +650,7 @@
                         <span class="n">verbosity</span><span class="o">=</span><span class="n">verbosity</span><span class="p">)</span>
 
 <div class="viewcode-block" id="LinearMediation.fit_model"><a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.fit_model">[docs]</a>    <span class="k">def</span> <span class="nf">fit_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">all_parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fit linear time series model.</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Fit linear time series model.</span>
 
 <span class="sd">        Fits a sklearn.linear_model.LinearRegression model to the parents of</span>
 <span class="sd">        each variable and computes the coefficient matrices :math:`\Phi` and</span>
@@ -649,8 +675,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">psi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_psi</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">phi</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">all_psi_k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_all_psi_k</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">phi</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">all_parents</span> <span class="o">=</span> <span class="n">all_parents</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">=</span> <span class="n">tau_max</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">all_parents</span> <span class="o">=</span> <span class="n">all_parents</span></div>
+        <span class="c1"># self.tau_max = tau_max</span>
 
 <div class="viewcode-block" id="LinearMediation.fit_model_bootstrap"><a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.fit_model_bootstrap">[docs]</a>    <span class="k">def</span> <span class="nf">fit_model_bootstrap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
             <span class="n">boot_blocklength</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
@@ -697,7 +723,6 @@
 
             <span class="n">dataframe_here</span><span class="o">.</span><span class="n">bootstrap</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;boot_blocklength&#39;</span><span class="p">:</span><span class="n">boot_blocklength</span><span class="p">,</span>
                                         <span class="s1">&#39;random_state&#39;</span><span class="p">:</span><span class="n">random_state</span><span class="p">}</span>
-
             <span class="n">model</span> <span class="o">=</span> <span class="n">Models</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe_here</span><span class="p">,</span>
                            <span class="n">model</span><span class="o">=</span><span class="n">sklearn</span><span class="o">.</span><span class="n">linear_model</span><span class="o">.</span><span class="n">LinearRegression</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">model_params</span><span class="p">),</span>
                            <span class="n">data_transform</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_transform</span><span class="p">,</span>
@@ -706,7 +731,6 @@
 
             <span class="n">model</span><span class="o">.</span><span class="n">fit_full_model</span><span class="p">(</span><span class="n">all_parents</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">all_parents</span><span class="p">,</span>
                            <span class="n">tau_max</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span><span class="p">)</span>
-
             <span class="c1"># Cache the results in the member variables</span>
             <span class="n">coeffs</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_coefs</span><span class="p">()</span>
             <span class="n">phi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_phi</span><span class="p">(</span><span class="n">coeffs</span><span class="p">)</span>
@@ -847,9 +871,7 @@
         <span class="n">psi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">))</span>
 
         <span class="n">psi</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span> <span class="o">-</span> <span class="n">phi</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-
         <span class="k">for</span> <span class="n">tau</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
-            <span class="c1"># psi[tau] = np.matmul(psi[0], np.matmul(phi[tau], psi[0]))</span>
             <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">tau</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
                 <span class="n">psi</span><span class="p">[</span><span class="n">tau</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">psi</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">phi</span><span class="p">[</span><span class="n">s</span><span class="p">],</span> <span class="n">psi</span><span class="p">[</span><span class="n">tau</span> <span class="o">-</span> <span class="n">s</span><span class="p">])</span> <span class="p">)</span> 
 
@@ -1579,6 +1601,7 @@
             <span class="n">mask</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">dataframe</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;bool&#39;</span><span class="p">)}</span>
         <span class="c1"># Get the dataframe shape</span>
         <span class="n">T</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
         <span class="c1"># Have the default dataframe be the training data frame</span>
         <span class="n">train_mask</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
         <span class="n">train_mask</span><span class="p">[</span><span class="mi">0</span><span class="p">][[</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">T</span><span class="p">)</span> <span class="k">if</span> <span class="n">t</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">train_indices</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">True</span>
@@ -1666,6 +1689,14 @@
 <span class="sd">            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...}</span>
 <span class="sd">            containing estimated predictors.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">selected_links</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">link_assumptions</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">selected_links</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">link_assumptions</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="p">{(</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="n">tau</span><span class="p">):</span><span class="s2">&quot;-?&gt;&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span> <span class="k">for</span> <span class="n">tau</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">+</span><span class="mi">1</span><span class="p">)}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">link_assumptions</span> <span class="o">=</span> <span class="kc">None</span>
+
         <span class="c1"># Ensure an independence model is given</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No cond_ind_test given!&quot;</span><span class="p">)</span>
@@ -1673,7 +1704,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">selected_variables</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">selected_targets</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">selected_variables</span> <span class="o">=</span> <span class="n">selected_targets</span>
-        <span class="n">predictors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_pc_stable</span><span class="p">(</span><span class="n">selected_links</span><span class="o">=</span><span class="n">selected_links</span><span class="p">,</span>
+        <span class="n">predictors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_pc_stable</span><span class="p">(</span><span class="n">link_assumptions</span><span class="o">=</span><span class="n">link_assumptions</span><span class="p">,</span>
                                         <span class="n">tau_min</span><span class="o">=</span><span class="n">steps_ahead</span><span class="p">,</span>
                                         <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
                                         <span class="n">save_iterations</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -1710,6 +1741,11 @@
 <span class="sd">        self : instance of self</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
+        <span class="k">if</span> <span class="n">selected_targets</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">selected_targets</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">selected_targets</span> <span class="o">=</span> <span class="n">selected_targets</span>
+
         <span class="k">if</span> <span class="n">tau_max</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Find the maximal parents lag</span>
             <span class="n">max_parents_lag</span> <span class="o">=</span> <span class="mi">0</span>
@@ -1722,16 +1758,12 @@
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_indices</span><span class="p">)</span> <span class="o">-</span> <span class="n">max_parents_lag</span><span class="p">)</span>
                 <span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_indices</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;test_indices - maxlag(predictors) [or tau_max] &quot;</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;test_indices - maxlag(predictors) [or tau_max] &quot;</span>
                 <span class="s2">&quot;overlaps with train_indices: Choose test_indices &quot;</span>
                 <span class="s2">&quot;such that there is a gap of max_lag to train_indices!&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">target_predictors</span> <span class="o">=</span> <span class="n">target_predictors</span>
-
-        <span class="k">if</span> <span class="n">selected_targets</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">selected_targets</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">selected_targets</span> <span class="o">=</span> <span class="n">selected_targets</span>
 
         <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_targets</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">target</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_predictors</span><span class="p">):</span>
@@ -1789,7 +1821,7 @@
                              <span class="s2">&quot;indicating the index of the variables to &quot;</span>
                              <span class="s2">&quot;predict.&quot;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">target_list</span> <span class="o">==</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">target_list</span> <span class="o">==</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)):</span>
             <span class="n">return_type</span> <span class="o">=</span> <span class="s1">&#39;array&#39;</span>
         <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">target_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">return_type</span> <span class="o">=</span> <span class="s1">&#39;series&#39;</span>
@@ -1797,6 +1829,7 @@
             <span class="n">return_type</span> <span class="o">=</span> <span class="s1">&#39;list&#39;</span>
 
         <span class="n">pred_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stored_test_array</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">target_list</span><span class="p">:</span>
             <span class="c1"># Print message</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -1811,11 +1844,11 @@
             <span class="k">if</span> <span class="n">target</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_targets</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Target </span><span class="si">%s</span><span class="s2"> not yet fitted&quot;</span> <span class="o">%</span> <span class="n">target</span><span class="p">)</span>
             <span class="c1"># Construct the array form of the data</span>
-            <span class="n">Y</span> <span class="o">=</span> <span class="p">[(</span><span class="n">target</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
+            <span class="n">Y</span> <span class="o">=</span> <span class="p">[(</span><span class="n">target</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>  <span class="c1"># dummy</span>
             <span class="n">X</span> <span class="o">=</span> <span class="p">[(</span><span class="n">target</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>  <span class="c1"># dummy</span>
             <span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_predictors</span><span class="p">[</span><span class="n">target</span><span class="p">]</span>
+
             <span class="c1"># Check if we&#39;ve passed a new dataframe object</span>
-            <span class="n">test_array</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">if</span> <span class="n">new_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="c1"># if new_data.mask is None:</span>
                 <span class="c1">#     # if no mask is supplied, use the same mask as for the fitted array</span>
@@ -1844,10 +1877,18 @@
             <span class="k">if</span> <span class="n">a_transform</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">test_array</span> <span class="o">=</span> <span class="n">a_transform</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">test_array</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
             <span class="c1"># Cache the test array</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">test_array</span> <span class="o">=</span> <span class="n">test_array</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stored_test_array</span><span class="p">[</span><span class="n">target</span><span class="p">]</span> <span class="o">=</span> <span class="n">test_array</span>
             <span class="c1"># Run the predictor</span>
-            <span class="n">pred_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fitted_model</span><span class="p">[</span><span class="n">target</span><span class="p">][</span><span class="s1">&#39;model&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
-                <span class="n">X</span><span class="o">=</span><span class="n">test_array</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="o">**</span><span class="n">pred_params</span><span class="p">))</span>
+            <span class="n">predicted</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitted_model</span><span class="p">[</span><span class="n">target</span><span class="p">][</span><span class="s1">&#39;model&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+                <span class="n">X</span><span class="o">=</span><span class="n">test_array</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="o">**</span><span class="n">pred_params</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">test_array</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># If there are no predictors, return the value of </span>
+                <span class="c1"># empty_predictors_function, which is np.mean </span>
+                <span class="c1"># and expand to the test array length</span>
+                <span class="n">predicted</span> <span class="o">=</span> <span class="n">predicted</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">test_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+            <span class="n">pred_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">predicted</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">return_type</span> <span class="o">==</span> <span class="s1">&#39;series&#39;</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">pred_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -1857,20 +1898,22 @@
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pred_list</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Prediction.get_train_array"><a class="viewcode-back" href="../../index.html#tigramite.models.Prediction.get_train_array">[docs]</a>    <span class="k">def</span> <span class="nf">get_train_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns training array.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns training array for variable j.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitted_model</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="s1">&#39;data&#39;</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="Prediction.get_test_array"><a class="viewcode-back" href="../../index.html#tigramite.models.Prediction.get_test_array">[docs]</a>    <span class="k">def</span> <span class="nf">get_test_array</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns test array.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_array</span></div></div>
+<div class="viewcode-block" id="Prediction.get_test_array"><a class="viewcode-back" href="../../index.html#tigramite.models.Prediction.get_test_array">[docs]</a>    <span class="k">def</span> <span class="nf">get_test_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns test array for variable j.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">stored_test_array</span><span class="p">[</span><span class="n">j</span><span class="p">]</span></div></div>
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
    
     <span class="kn">import</span> <span class="nn">tigramite</span>
     <span class="kn">import</span> <span class="nn">tigramite.data_processing</span> <span class="k">as</span> <span class="nn">pp</span>
     <span class="kn">from</span> <span class="nn">tigramite.toymodels</span> <span class="kn">import</span> <span class="n">structural_causal_processes</span> <span class="k">as</span> <span class="n">toys</span>
-    <span class="kn">from</span> <span class="nn">tigramite.independence_tests</span> <span class="kn">import</span> <span class="n">ParCorr</span>
+    <span class="kn">from</span> <span class="nn">tigramite.independence_tests.parcorr</span> <span class="kn">import</span> <span class="n">ParCorr</span>
     <span class="kn">import</span> <span class="nn">tigramite.plotting</span> <span class="k">as</span> <span class="nn">tp</span>
+
+    <span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LinearRegression</span>
 
     <span class="k">def</span> <span class="nf">lin_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span>
  
@@ -1879,40 +1922,46 @@
     <span class="n">links</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">[((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.9</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
              <span class="mi">1</span><span class="p">:</span> <span class="p">[((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.9</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="o">-</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
              <span class="mi">2</span><span class="p">:</span> <span class="p">[((</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.9</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mf">0.9</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span>  <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
-             <span class="mi">3</span><span class="p">:</span> <span class="p">[((</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.9</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span>  <span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="o">-</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)]</span>
+             <span class="c1"># 3: [((3, -1), 0.9, lin_f), ((1, 0), 0.8, lin_f),  ((2, 0), -0.9, lin_f)]</span>
              <span class="p">}</span>
     <span class="c1"># noises = [np.random.randn for j in links.keys()]</span>
     <span class="n">data</span><span class="p">,</span> <span class="n">nonstat</span> <span class="o">=</span> <span class="n">toys</span><span class="o">.</span><span class="n">structural_causal_process</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">,</span> <span class="n">noises</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
 
     <span class="n">missing_flag</span> <span class="o">=</span> <span class="mi">999</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">):</span>
-        <span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">::</span><span class="mi">100</span><span class="p">]</span> <span class="o">=</span> <span class="n">missing_flag</span>
+    <span class="c1"># for i in range(0, 20):</span>
+    <span class="c1">#     data[i::100] = missing_flag</span>
 
     <span class="n">parents</span> <span class="o">=</span> <span class="n">toys</span><span class="o">.</span><span class="n">_get_true_parent_neighbor_dict</span><span class="p">(</span><span class="n">links</span><span class="p">)</span>
     <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">missing_flag</span> <span class="o">=</span> <span class="n">missing_flag</span><span class="p">)</span>
 
+
+    <span class="c1"># model = LinearRegression()</span>
+    <span class="c1"># model.fit(X=np.random.randn(10,2), y=np.random.randn(10))</span>
+    <span class="c1"># model.predict(X=np.random.randn(10,2)[:,2:])</span>
+    <span class="c1"># sys.exit(0)</span>
+
     <span class="n">med</span> <span class="o">=</span> <span class="n">LinearMediation</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span> 
         <span class="n">data_transform</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-    <span class="n">med</span><span class="o">.</span><span class="n">fit_model</span><span class="p">(</span><span class="n">all_parents</span><span class="o">=</span><span class="n">parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">med</span><span class="o">.</span><span class="n">fit_model</span><span class="p">(</span><span class="n">all_parents</span><span class="o">=</span><span class="n">parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">med</span><span class="o">.</span><span class="n">fit_model_bootstrap</span><span class="p">(</span> 
                 <span class="n">boot_blocklength</span><span class="o">=</span><span class="s1">&#39;cube_root&#39;</span><span class="p">,</span>
                 <span class="n">seed</span> <span class="o">=</span> <span class="mi">42</span><span class="p">,</span>
                 <span class="p">)</span>
 
-    <span class="c1"># print(med.get_val_matrix())</span>
+    <span class="c1"># # print(med.get_val_matrix())</span>
 
-    <span class="nb">print</span> <span class="p">(</span><span class="n">med</span><span class="o">.</span><span class="n">get_ce</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>  <span class="n">j</span><span class="o">=</span><span class="mi">3</span><span class="p">))</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">med</span><span class="o">.</span><span class="n">get_bootstrap_of</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="s1">&#39;get_ce&#39;</span><span class="p">,</span> 
-        <span class="n">function_args</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;i&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;tau&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>   <span class="s1">&#39;j&#39;</span><span class="p">:</span><span class="mi">3</span><span class="p">},</span> <span class="n">conf_lev</span><span class="o">=</span><span class="mf">0.9</span><span class="p">))</span>
+    <span class="c1"># print (med.get_ce(i=0, tau=0,  j=3))</span>
+    <span class="c1"># print(med.get_bootstrap_of(function=&#39;get_ce&#39;, </span>
+    <span class="c1">#     function_args={&#39;i&#39;:0, &#39;tau&#39;:0,   &#39;j&#39;:3}, conf_lev=0.9))</span>
 
-    <span class="nb">print</span> <span class="p">(</span><span class="n">med</span><span class="o">.</span><span class="n">get_coeff</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tau</span><span class="o">=-</span><span class="mi">2</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+    <span class="c1"># print (med.get_coeff(i=0, tau=-2, j=1))</span>
 
-    <span class="nb">print</span> <span class="p">(</span><span class="n">med</span><span class="o">.</span><span class="n">get_ce_max</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
-    <span class="nb">print</span> <span class="p">(</span><span class="n">med</span><span class="o">.</span><span class="n">get_ce</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">3</span><span class="p">))</span>
-    <span class="nb">print</span> <span class="p">(</span><span class="n">med</span><span class="o">.</span><span class="n">get_mce</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">j</span><span class="o">=</span><span class="mi">3</span><span class="p">))</span>
-    <span class="nb">print</span> <span class="p">(</span><span class="n">med</span><span class="o">.</span><span class="n">get_mce</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span> <span class="n">j</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span> <span class="o">-</span> <span class="n">med</span><span class="o">.</span><span class="n">get_mce</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">j</span><span class="o">=</span><span class="mi">3</span><span class="p">))</span>
-    <span class="nb">print</span> <span class="p">(</span><span class="n">med</span><span class="o">.</span><span class="n">get_conditional_mce</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">notk</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">j</span><span class="o">=</span><span class="mi">3</span><span class="p">))</span>
-    <span class="nb">print</span> <span class="p">(</span><span class="n">med</span><span class="o">.</span><span class="n">get_bootstrap_of</span><span class="p">(</span><span class="s1">&#39;get_conditional_mce&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;i&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;tau&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;k&#39;</span><span class="p">:[</span><span class="mi">2</span><span class="p">],</span> <span class="s1">&#39;notk&#39;</span><span class="p">:[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;j&#39;</span><span class="p">:</span><span class="mi">3</span><span class="p">}))</span>
+    <span class="c1"># print (med.get_ce_max(i=0, j=2))</span>
+    <span class="c1"># print (med.get_ce(i=0, tau=0, j=3))</span>
+    <span class="c1"># print (med.get_mce(i=0, tau=0, k=[2], j=3))</span>
+    <span class="c1"># print (med.get_mce(i=0, tau=0, k=[1,2], j=3) - med.get_mce(i=0, tau=0, k=[1], j=3))</span>
+    <span class="c1"># print (med.get_conditional_mce(i=0, tau=0, k=[2], notk=[1], j=3))</span>
+    <span class="c1"># print (med.get_bootstrap_of(&#39;get_conditional_mce&#39;, {&#39;i&#39;:0, &#39;tau&#39;:0, &#39;k&#39;:[2], &#39;notk&#39;:[1], &#39;j&#39;:3}))</span>
 
     <span class="c1"># print(med.get_joint_ce(i=0, j=2))</span>
     <span class="c1"># print(med.get_joint_mce(i=0, j=2, k=1))</span>
@@ -1969,13 +2018,13 @@
     <span class="c1"># #                        pc_alpha=0.2,</span>
     <span class="c1"># #                        max_conds_dim=None,</span>
     <span class="c1"># #                        max_combinations=1)</span>
-    <span class="c1"># predictors = {0: [(0, -1)],</span>
+    <span class="c1"># predictors = {0: [], # [(0, -1)],</span>
     <span class="c1">#              1: [(1, -1), (0, -1)],</span>
     <span class="c1">#              2: [(2, -1), (1, 0)]}</span>
     <span class="c1"># pred.fit(target_predictors=predictors,</span>
     <span class="c1">#         selected_targets=None, tau_max=None, return_data=False)</span>
 
-    <span class="c1"># res = pred.predict(target=2,</span>
+    <span class="c1"># res = pred.predict(target=0,</span>
     <span class="c1">#             new_data=None,</span>
     <span class="c1">#             pred_params=None,</span>
     <span class="c1">#             cut_off=&#39;max_lag_or_tau_max&#39;)</span>
@@ -2038,8 +2087,8 @@
       &copy;2023, Jakob Runge.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.1.3</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>
 

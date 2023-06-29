@@ -80,8 +80,8 @@ class RPCMCI(PCMCI):
         if dataframe.analysis_mode != 'single':
             raise ValueError("Only single time series data allowed for RPCMCI.")
    
-        if dataframe.vector_vars is not None:
-            raise ValueError("Only single time series data allowed for RPCMCI.")
+        if dataframe.has_vector_data:
+            raise ValueError("Only scalar data allowed for RPCMCI.")
         
                
         # Masking is not available in RPCMCI, but missing values can be specified

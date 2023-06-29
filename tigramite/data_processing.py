@@ -18,7 +18,7 @@ from numba import jit
 
 class DataFrame():
     """Data object containing single or multiple time series arrays and optional 
-    mask.
+    mask, as well as variable definitions.
 
     Parameters
     ----------

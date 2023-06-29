@@ -313,7 +313,6 @@ class J_PCMCIplus(PCMCI):
                 pc_alpha=pc_alpha,
                 reset_lagged_links=reset_lagged_links,
                 max_conds_dim=max_conds_dim,
-                max_combinations=max_combinations,
                 max_conds_py=max_conds_py,
                 max_conds_px=max_conds_px,
                 max_conds_px_lagged=max_conds_px_lagged,
@@ -343,7 +342,6 @@ class J_PCMCIplus(PCMCI):
                                                                     pc_alpha=pc_alpha,
                                                                     reset_lagged_links=reset_lagged_links,
                                                                     max_conds_dim=max_conds_dim,
-                                                                    max_combinations=max_combinations,
                                                                     max_conds_py=max_conds_py,
                                                                     max_conds_px=max_conds_px,
                                                                     max_conds_px_lagged=max_conds_px_lagged,
@@ -351,7 +349,7 @@ class J_PCMCIplus(PCMCI):
 
         # orientation phase
         colliders_step_results = self._pcmciplus_collider_phase(
-            system_skeleton_results['graph'], system_skeleton_results['sepset'],
+            system_skeleton_results['graph'], system_skeleton_results['sepsets'],
             lagged_context_dummy_parents, pc_alpha,
             tau_min, tau_max, max_conds_py, max_conds_px, max_conds_px_lagged,
             conflict_resolution, contemp_collider_rule)
@@ -375,7 +373,8 @@ class J_PCMCIplus(PCMCI):
 
         # No confidence interval estimation here
         return_dict = {'graph': final_graph, 'p_matrix': system_skeleton_results['p_matrix'],
-                       'val_matrix': system_skeleton_results['val_matrix'], 'sepset': colliders_step_results['sepset'],
+                       'val_matrix': system_skeleton_results['val_matrix'],
+                       'sepsets': colliders_step_results['sepsets'],
                        'ambiguous_triples': colliders_step_results['ambiguous_triples'], 'conf_matrix': None}
 
         # Print the results
@@ -440,7 +439,7 @@ class J_PCMCIplus(PCMCI):
         return link_assumptions_wo_dummy
 
     def add_found_context_link_assumptions(self, link_assumptions, tau_max):
-        """Helper function to add all links between system and observed context nodes to link_assumptions."""
+        """Helper function to add discovered links between system and observed context nodes to link_assumptions."""
         link_assumptions_dummy = deepcopy(link_assumptions)
 
         for c in self.space_context_nodes + self.time_context_nodes:
@@ -533,7 +532,7 @@ class J_PCMCIplus(PCMCI):
 
         skeleton_results = self._pcmciplus_mci_skeleton_phase(
             lagged_parents, _int_link_assumptions, pc_alpha,
-            tau_min, tau_max, max_conds_dim, max_combinations,
+            tau_min, tau_max, max_conds_dim, None,
             max_conds_py, max_conds_px, max_conds_px_lagged,
             reset_lagged_links, fdr_method,
             p_matrix, val_matrix
@@ -566,7 +565,6 @@ class J_PCMCIplus(PCMCI):
                                     pc_alpha=0.01,
                                     reset_lagged_links=False,
                                     max_conds_dim=None,
-                                    max_combinations=1,
                                     max_conds_py=None,
                                     max_conds_px=None,
                                     max_conds_px_lagged=None,
@@ -618,7 +616,7 @@ class J_PCMCIplus(PCMCI):
 
         skeleton_results_dummy = self._pcmciplus_mci_skeleton_phase(
             lagged_context_parents, _int_link_assumptions, pc_alpha,  # or lagged_contxt_parents?
-            tau_min, tau_max, max_conds_dim, max_combinations,
+            tau_min, tau_max, max_conds_dim, None,
             max_conds_py, max_conds_px, max_conds_px_lagged,
             reset_lagged_links, fdr_method,
             self.p_matrix, self.val_matrix
@@ -658,7 +656,6 @@ class J_PCMCIplus(PCMCI):
                                      pc_alpha=0.01,
                                      reset_lagged_links=False,
                                      max_conds_dim=None,
-                                     max_combinations=1,
                                      max_conds_py=None,
                                      max_conds_px=None,
                                      max_conds_px_lagged=None,
@@ -704,7 +701,7 @@ class J_PCMCIplus(PCMCI):
 
         skeleton_results = self._pcmciplus_mci_skeleton_phase(
             lagged_context_dummy_parents, _int_link_assumptions, pc_alpha,
-            tau_min, tau_max, max_conds_dim, max_combinations,
+            tau_min, tau_max, max_conds_dim, None,
             max_conds_py, max_conds_px, max_conds_px_lagged,
             reset_lagged_links, fdr_method,
             self.p_matrix, self.val_matrix
@@ -748,7 +745,7 @@ class J_PCMCIplus(PCMCI):
             return super()._remaining_pairs(graph, adjt, tau_min, tau_max, p)
 
     def _run_pcalg_test(self, graph, i, abstau, j, S, lagged_parents, max_conds_py,
-                        max_conds_px, max_conds_px_lagged, tau_max):
+                        max_conds_px, max_conds_px_lagged, tau_max, alpha_or_thres=None):
         """MCI conditional independence tests within PCMCIplus or PC algorithm. Depending on the J_PCMCIplus step
         the setup is adapted slightly. During the discovery of dummy-system links (step 2) we are using
         the dummy_ci_test and condition on the parents found during step 1; during the discovery of system-system links
@@ -814,75 +811,65 @@ class J_PCMCIplus(PCMCI):
             # contextual parents from step 1.
             context_parents_j = self.observed_context_parents[j]
             Z = Z + context_parents_j
-            Z = list(dict.fromkeys(Z))  # remove overlapps
+            Z = list(dict.fromkeys(Z))  # remove overlaps
 
             # If middle mark is '-', then set pval=0
             if graph[i, j, abstau] != "" and graph[i, j, abstau][1] == '-':
                 val = 1.
                 pval = 0.
+                dependent = True
+                return val, pval, Z, dependent
             else:
-                val, pval, Z = self.run_test_dummy([(j, -abstau)], [(i, 0)], Z, tau_max)
-
-            return val, pval, Z
+                try:
+                    val, pval, dependent = self.run_test_dummy([(j, -abstau)], [(i, 0)], Z, tau_max,
+                                                               alpha_or_thres=alpha_or_thres)
+                    return val, pval, Z, dependent
+                except ValueError:
+                    val, pval = self.run_test_dummy([(j, -abstau)], [(i, 0)], Z, tau_max, alpha_or_thres=alpha_or_thres)
+                    return val, pval, Z
 
         elif self.mode == 'system_search':
             # during discovery of system-system links we are conditioning on the found contextual parents
-
-            # if lagged_parents is None:
-            #    cond = list(S)
-            # else:
-            #    cond = list(S) + lagged_parents[j]
 
             context_parents_j = self.dummy_parents[j] + self.observed_context_parents[j]
             cond = list(S) + context_parents_j
             cond = list(dict.fromkeys(cond))  # remove overlapps
             return super()._run_pcalg_test(graph, i, abstau, j, cond, lagged_parents, max_conds_py,
-                                           max_conds_px, max_conds_px_lagged, tau_max)
+                                           max_conds_px, max_conds_px_lagged, tau_max, alpha_or_thres)
         else:
             return super()._run_pcalg_test(graph, i, abstau, j, S, lagged_parents, max_conds_py,
-                                           max_conds_px, max_conds_px_lagged, tau_max)
+                                           max_conds_px, max_conds_px_lagged, tau_max, alpha_or_thres)
 
-    def run_test_dummy(self, X, Y, Z=None, tau_max=0, cut_off='2xtau_max'):
+    def construct_array_without_zero_rows(self, X, Y, Z=None, tau_max=0, cut_off='2xtau_max', verbosity=0):
+
+        array, xyz, XYZ, data_type = self.dummy_ci_test.dataframe.construct_array(X=X, Y=Y, Z=Z,
+                                                                                  tau_max=tau_max,
+                                                                                  mask_type=self.dummy_ci_test.mask_type,
+                                                                                  return_cleaned_xyz=True,
+                                                                                  do_checks=True,
+                                                                                  remove_overlaps=True,
+                                                                                  cut_off=cut_off,
+                                                                                  verbosity=verbosity)
+        # remove the parts of the array within dummy that are constant zero (ones are cut off)
+        mask = np.all(array == 0., axis=1) | np.all(array == 1., axis=1)
+        xyz = xyz[~mask]
+        array = array[~mask]
+        X, Y, Z = XYZ
+        X = [el for i, el in enumerate(X) if ~mask[i]]
+        Y = [el for i, el in enumerate(Y) if ~mask[len(X) + i]]
+        Z = [el for i, el in enumerate(Z) if ~mask[len(X) + len(Y) + i]]
+        return array, xyz, (X, Y, Z), data_type
+
+    def run_test_dummy(self, X, Y, Z=None, tau_max=0, cut_off='2xtau_max', alpha_or_thres=None):
         """Helper function to deal with difficulties in constructing the array for CI testing
         that arise due to the one-hot encoding of the dummy."""
         # Get the array to test on
-        if hasattr(self.dummy_ci_test, "_get_dependence_measure_recycle"):
-            array, xyz, XYZ, _ = self.dataframe.construct_array(X=X, Y=Y, Z=Z, tau_max=tau_max,
-                                                                mask_type=self.dummy_ci_test.mask_type,
-                                                                return_cleaned_xyz=True,
-                                                                do_checks=True,
-                                                                remove_overlaps=True,
-                                                                cut_off=cut_off,
-                                                                verbosity=0)
-            # remove the parts of the array within dummy that are constant zero (ones are cut off)
-            mask = np.all(array == 0., axis=1) | np.all(array == 1., axis=1)
-            xyz = xyz[~mask]
-            array = array[~mask]
 
-            # Record the dimensions
-            dim, T = array.shape
-            # Ensure it is a valid array
-            if np.any(np.isnan(array)):
-                raise ValueError("nans in the array!")
-
-            combined_hash = self._get_array_hash(array, xyz, XYZ)
-
-            if combined_hash in self.cached_ci_results.keys():
-                cached = True
-                val, pval = self.cached_ci_results[combined_hash]
-            else:
-                cached = False
-                # Get the dependence measure, recycling residuals if need be
-                val = self.dummy_ci_test._get_dependence_measure_recycle(X, Y, Z, xyz, array)
-
-                # Get the p-value
-                pval = self.dummy_ci_test.get_significance(val, array, xyz, T, dim)
-
-            if self.verbosity > 1:
-                self.dummy_ci_test._print_cond_ind_results(val=val, pval=pval, cached=cached, conf=None)
-            # Return the value and the p-value
-            return val, pval, Z
-
+        if self.dummy_ci_test.measure == "oracle_ci":
+            return self.dummy_ci_test.run_test(X, Y, Z=Z, tau_max=tau_max, cut_off=cut_off,
+                                               alpha_or_thres=alpha_or_thres)
         else:
-            val, pval = self.dummy_ci_test.run_test(X, Y, Z=Z, tau_max=tau_max, cut_off=cut_off)
-            return val, pval, Z
+            self.dummy_ci_test.dataframe = self.dataframe
+            self.dummy_ci_test._get_array = self.construct_array_without_zero_rows
+            return self.dummy_ci_test.run_test(X, Y, Z=Z, tau_max=tau_max, cut_off=cut_off,
+                                               alpha_or_thres=alpha_or_thres)

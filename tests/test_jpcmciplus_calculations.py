@@ -356,7 +356,7 @@ def a_run_jpcmciplus(a_jpcmciplus, a_jpcmciplus_params):
         cond_ind_test = ParCorrMult()
 
     # Run the PCMCI algorithm with the given parameters
-    jpcmci = J_PCMCIplus(dataframe=dataframe, cond_ind_test=cond_ind_test, verbosity=2,
+    jpcmci = J_PCMCIplus(dataframe=dataframe, cond_ind_test=cond_ind_test, verbosity=0,
                          node_classification=node_classification, dummy_ci_test=cond_ind_test
                          )
     results = jpcmci.run_jpcmciplus(
@@ -370,7 +370,7 @@ def a_run_jpcmciplus(a_jpcmciplus, a_jpcmciplus_params):
         max_conds_dim=None,
         max_conds_py=None,
         max_conds_px=None,
-        max_combinations=10,
+        max_combinations=1,
     )
     # Print true links
     print("************************")
