@@ -440,6 +440,10 @@ class OracleCI:
         if self.verbosity > 0:
             print("Max. non-repeated ancestral time lag: ", max_lag)
 
+        # ATTENTION: this may not find correct common ancestors, therefore multiply by 10
+        # until the problem is solved
+        max_lag *= 10
+
         return max_lag
 
     def _get_descendants(self, W, children, max_lag, ignore_time_bounds=False):
