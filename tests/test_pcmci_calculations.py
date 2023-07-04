@@ -461,6 +461,24 @@ def a_random_process(
         coupling_funcs=[lin_f, lin_f], auto_coeffs=[0., 0.5],
         tau_max=5, contemp_fraction=0.2, num_trials=1,
         model_seed=4), 1000, 5),
+
+    (a_random_process(
+        N=10, L=20, coupling_coeffs=[0.7, -0.7],
+        coupling_funcs=[lin_f, lin_f], auto_coeffs=[0., 0.5],
+        tau_max=5, contemp_fraction=0.5, num_trials=1,
+        model_seed=4), 1000, 6),
+
+    (a_random_process(
+        N=8, L=20, coupling_coeffs=[0.7, -0.7],
+        coupling_funcs=[lin_f, lin_f], auto_coeffs=[0., 0.5],
+        tau_max=5, contemp_fraction=0.5, num_trials=1,
+        model_seed=4), 1000, 6),
+
+    (a_random_process(
+        N=8, L=20, coupling_coeffs=[0.7, -0.7],
+        coupling_funcs=[lin_f, lin_f], auto_coeffs=[0., 0.5],
+        tau_max=5, contemp_fraction=0.5, num_trials=1,
+        model_seed=5), 1000, 7),
 ])
 
 def a_pcmciplus(request):
