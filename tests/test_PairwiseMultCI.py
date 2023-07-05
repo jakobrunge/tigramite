@@ -15,8 +15,11 @@ from tigramite.independence_tests.regressionCI_v2 import RegressionCI
 @pytest.fixture(params=[
     # Generate PairwiseMultCI test instances
     # test PairwiseMultCI for different combinations of:
-    # sig,  alpha_pre, sbo, cond_ind_test, cond_ind_test_thres, cond_ind_test_thres_pre
+    # significance (of the univariate tests),  alpha_pre, sbo, cond_ind_test, cond_ind_test_thres, cond_ind_test_thres_pre
     ('fixed_thres', 0.5, 0.2, ParCorr, 1, 0.5),
+    ('fixed_thres', 0.5, 0.5, ParCorr, 1, 0.5),
+    ('fixed_thres', 0.8, 0.2, ParCorr, 1, 0.5),
+    ('fixed_thres', 0.8, 0.5, ParCorr, 1, 0.5),
     ('analytic', 0.5, 0.2, ParCorr, None, None),
     ('shuffle_test', 0.5, 0.2, ParCorr, None, None),
     ('analytic', 0.5, 0.5, ParCorr, None, None),
@@ -48,9 +51,11 @@ def pairwise_mult_ci(request):
                           alpha_pre = alpha_pre,
                           sbo = sbo)
     else:
-        return PairwiseMultCI(cond_ind_test = cond_ind_test(significance = sig, cond_ind_test_thres = cond_ind_test_thres, cond_ind_test_thres_pre = cond_ind_test_thres_pre),
+        return PairwiseMultCI(cond_ind_test = cond_ind_test(significance = sig),
                           alpha_pre = alpha_pre,
-                          sbo = sbo)
+                          sbo = sbo,
+                          cond_ind_test_thres = cond_ind_test_thres,
+                          cond_ind_test_thres_pre = cond_ind_test_thres_pre)
 
 @pytest.fixture(params=[
     # Generate PairwiseMultCI test instances

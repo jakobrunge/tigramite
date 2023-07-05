@@ -40,15 +40,26 @@ class PairwiseMultCI(CondIndTest):
     ----------
     alpha_pre: float
         Significance level for the first step of the algorithm.
+        If cond_ind_test is instantiated with significance = "fixed_thres",
+        then the value of alpha_pre is not used, and can, for example, be set to None
 
     sbo: float
         Relative size for the first part of the sample
+        (abbreviation for "size block one")
 
     cond_ind_test: conditional independence test object
         This can be ParCorr or other classes from
         ``tigramite.independence_tests`` or an external test passed as a
         callable. This test can be based on the class
         tigramite.independence_tests.CondIndTest.
+
+    cond_ind_test_thres: In case cond_ind_test is instantiated with significance
+        = "fixed_thres", the respective threshold for each application of cond_ind_test in the main step
+        of PairwiseMultCI needs to be specified
+
+    cond_ind_test_thres_pre: In case cond_ind_test is instantiated with significance
+        = "fixed_thres", the respective threshold for each application of cond_ind_test in the pre step
+        of PairwiseMultCI needs to be specified
 
     **kwargs :
         Arguments passed on to Parent class CondIndTest.
@@ -293,9 +304,9 @@ if __name__ == '__main__':
     import numpy as np
     from tigramite.independence_tests.robust_parcorr import RobustParCorr
     alpha = 0.05
-    #ci = PairwiseMultCI(cond_ind_test = ParCorr(significance = "fixed_thres"), cond_ind_test_thres_pre=1, cond_ind_test_thres=1)
+    ci = PairwiseMultCI(alpha_pre = None, cond_ind_test = ParCorr(significance = "fixed_thres"), cond_ind_test_thres_pre=1, cond_ind_test_thres=1)
     # ci = PairwiseMultCI(cond_ind_test=ParCorr(significance="fixed_thres"))
-    ci = PairwiseMultCI(cond_ind_test=ParCorr(significance="analytic"))
+    # ci = PairwiseMultCI(cond_ind_test=ParCorr(significance="analytic"))
     T = 100
     reals = 1
     rate = np.zeros(reals)
