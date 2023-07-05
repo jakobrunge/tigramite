@@ -17,7 +17,7 @@ from tigramite.independence_tests.regressionCI_v2 import RegressionCI
     # test PairwiseMultCI for different combinations of:
     # sig,  alpha_pre, sbo, cond_ind_test
     ('analytic', 0.5, 0.2, ParCorr),
-   """ ('shuffle_test', 0.5, 0.2, ParCorr),
+    ('shuffle_test', 0.5, 0.2, ParCorr),
     ('analytic', 0.5, 0.5, ParCorr),
     ('shuffle_test', 0.5, 0.5, ParCorr),
     ('analytic', 0.8, 0.2, ParCorr),
@@ -35,7 +35,7 @@ from tigramite.independence_tests.regressionCI_v2 import RegressionCI
     ('shuffle_test', 0.5, 0.2, CMIknn),
     ('shuffle_test', 0.5, 0.5, CMIknn),
     ('shuffle_test', 0.8, 0.2, CMIknn),
-    ('shuffle_test', 0.8, 0.5, CMIknn),"""
+    ('shuffle_test', 0.8, 0.5, CMIknn),
 ])
 
 def pairwise_mult_ci(request):
@@ -52,7 +52,7 @@ def pairwise_mult_ci(request):
     # test PairwiseMultCI for different combinations of:
     # seed,  true_dep, T (=sample size)
     (123, 0, 100),
-    """(123, 0, 1000),
+    (123, 0, 1000),
     (123, 0.2, 100),
     (123, 0.2, 1000),
     (123, 0.5, 100),
@@ -62,7 +62,7 @@ def pairwise_mult_ci(request):
     (46, 0.2, 100),
     (46, 0.2, 1000),
     (46, 0.5, 100),
-    (46, 0, 1000),"""
+    (46, 0, 1000),
 ])
 
 def data_sample_c_cc_c(request):

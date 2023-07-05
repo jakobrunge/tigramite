@@ -25,7 +25,7 @@ class PairwiseMultCI(CondIndTest):
       :math:`X_i \perp Y_j|(Z, S_{ij})` are tested, where the set :math:`S_{ij}` consists of components
       of :math:`X` that are independent of :math:`Y_j` given :math:`Z` (or components of :math:`Y` that
       are independent of :math:`X_i` given :math:`Z`). Using the Bonferroni method, the univariate tests
-      are then aggregatedtigramite/independence_tests/pairwise_CI.py
+      are then aggregated.
 
     The main reasoning behind this two-step procedure is that the conditional independence tests in the second step
     have larger effect sizes. One can show, that in cases where the within-:math:`X` or within-:math:`Y` dependence
@@ -62,16 +62,18 @@ class PairwiseMultCI(CondIndTest):
         """
         return self._measure
 
-    def __init__(self, cond_ind_test = ParCorr(), alpha_pre = 0.5, sbo = 0.2, **kwargs):
+    def __init__(self, cond_ind_test = ParCorr(), alpha_pre = 0.5, sbo = 0.2, cond_ind_test_thres = None, cond_ind_test_thres_pre = None, **kwargs):
         self._measure = 'pairwise_CI'
         self.cond_ind_test = cond_ind_test
         self.alpha_pre = alpha_pre
         self.sbo = sbo
+        self.cond_ind_test_thres = cond_ind_test_thres
+        self.cond_ind_test_thres_pre = cond_ind_test_thres_pre
         self.already_calculated = False
         CondIndTest.__init__(self, **kwargs)
 
 
-    def calculate_dep_measure_and_significance(self, array, xyz, data_type = None):
+    def calculate_dep_measure_and_significance(self, array, xyz, data_type = None, ci_test_thres = None):
         """Return aggregated p-value of all univariate independence tests.
 
         First, learns conditional independencies, uses these conditional independencies to have new conditional
@@ -96,6 +98,9 @@ class PairwiseMultCI(CondIndTest):
         pval : float
             an aggregated p-value of all univariate tests.
         """
+
+        if (self.cond_ind_test.significance == "fixed_thres") and ((self.cond_ind_test_thres_pre == None) or (self.cond_ind_test_thres == None)):
+            raise ValueError("If fixed_thres is used for significance of univariate tests, threshholds need to be provided.")
         x_indices = np.where(xyz == 0)[0]
         y_indices = np.where(xyz == 1)[0]
         z_indices = np.where(xyz == 2)[0]
@@ -147,20 +152,39 @@ class PairwiseMultCI(CondIndTest):
             z_type_s2 = None
 
         ## Step 1: estimate conditional independencies
-        p_vals_pre = np.zeros((dim_x, dim_y))
+        if self.cond_ind_test.significance != "fixed_thres":
+            p_vals_pre = np.zeros((dim_x, dim_y))
+        else:
+            dependent_pre = np.zeros((dim_x, dim_y))
         for j in np.arange(0, dim_x):
             for jj in np.arange(0, dim_y):
-                p_vals_pre[j, jj] = self.cond_ind_test.run_test_raw(x_s1[j].reshape(size_first_block, 1),
-                                                               y_s1[jj].reshape(size_first_block, 1),
-                                                               z_s1.reshape(size_first_block, dim_z),
-                                                               x_type = x_type_s1,
-                                                               y_type = y_type_s1,
-                                                               z_type = z_type_s1)[1]
-        indep_set = np.where(p_vals_pre > self.alpha_pre)
+                if self.cond_ind_test.significance != "fixed_thres":
+                    p_vals_pre[j, jj] = self.cond_ind_test.run_test_raw(x_s1[j].reshape(size_first_block, 1),
+                                                                   y_s1[jj].reshape(size_first_block, 1),
+                                                                   z_s1.reshape(size_first_block, dim_z),
+                                                                   x_type = x_type_s1,
+                                                                   y_type = y_type_s1,
+                                                                   z_type = z_type_s1)[1]
+                else:
+                    dependent_pre[j, jj] = self.cond_ind_test.run_test_raw(x_s1[j].reshape(size_first_block, 1),
+                                                                   y_s1[jj].reshape(size_first_block, 1),
+                                                                   z_s1.reshape(size_first_block, dim_z),
+                                                                   x_type = x_type_s1,
+                                                                   y_type = y_type_s1,
+                                                                   z_type = z_type_s1,
+                                                                   alpha_or_thres = self.cond_ind_test_thres_pre)[2].astype(int)
+        if self.cond_ind_test.significance != "fixed_thres":
+            indep_set = np.where(p_vals_pre > self.alpha_pre)
+        else:
+            indep_set = np.where(dependent_pre == 0)
 
         # Step 2: test conditional independencies with increased effect sizes
-        p_vals_main = np.zeros((dim_x, dim_y))
+        if self.cond_ind_test.significance != "fixed_thres":
+            p_vals_main = np.zeros((dim_x, dim_y))
+        else:
+            dependent_main = np.zeros((dim_x, dim_y))
         test_stats_main = np.zeros((dim_x, dim_y))
+
         for j in np.arange(0, dim_x):
             for jj in np.arange(0, dim_y):
                 indicesY = np.zeros(0)
@@ -178,45 +202,82 @@ class PairwiseMultCI(CondIndTest):
                     if (lix > liy):
                         if x_type_s2 is not None:
                             z_type = np.hstack((z_type_s2, x_type_s2[:, indicesX]))
-                        test_result = self.cond_ind_test.run_test_raw(x_s2[j].reshape(T - size_first_block, 1),
-                                                    y_s2[jj].reshape(T - size_first_block, 1),
-                                                    np.hstack((z_s2.reshape(T - size_first_block, dim_z),
-                                                                x_s2[indicesX].reshape(T - size_first_block, lix))),
-                                                    x_type = x_type_s2,
-                                                    y_type = y_type_s2,
-                                                    z_type = z_type_s2)
+                        if self.cond_ind_test.significance != "fixed_thres":
+                            test_result = self.cond_ind_test.run_test_raw(x_s2[j].reshape(T - size_first_block, 1),
+                                                        y_s2[jj].reshape(T - size_first_block, 1),
+                                                        np.hstack((z_s2.reshape(T - size_first_block, dim_z),
+                                                                    x_s2[indicesX].reshape(T - size_first_block, lix))),
+                                                        x_type = x_type_s2,
+                                                        y_type = y_type_s2,
+                                                        z_type = z_type_s2)
+                        else:
+                            test_result = self.cond_ind_test.run_test_raw(x_s2[j].reshape(T - size_first_block, 1),
+                                                        y_s2[jj].reshape(T - size_first_block, 1),
+                                                        np.hstack((z_s2.reshape(T - size_first_block, dim_z),
+                                                                    x_s2[indicesX].reshape(T - size_first_block, lix))),
+                                                        x_type = x_type_s2,
+                                                        y_type = y_type_s2,
+                                                        z_type = z_type_s2,
+                                                        alpha_or_thres = self.cond_ind_test_thres)
                     elif (lix <= liy):
                         if y_type_s2 is not None:
                             z_type_s2 = np.hstack((z_type_s2, y_type_s2[:, indicesY]))
-
-                        test_result = self.cond_ind_test.run_test_raw(x_s2[j].reshape(T - size_first_block, 1),
-                                                    y_s2[jj].reshape(T - size_first_block, 1),
-                                                    np.hstack((z_s2.reshape(T - size_first_block, dim_z),
-                                                                y_s2[indicesY].reshape(T - size_first_block, liy))),
-                                                    x_type = x_type_s2,
-                                                    y_type = y_type_s2,
-                                                    z_type = z_type_s2)
+                        if self.cond_ind_test.significance != "fixed_thres":
+                            test_result = self.cond_ind_test.run_test_raw(x_s2[j].reshape(T - size_first_block, 1),
+                                                        y_s2[jj].reshape(T - size_first_block, 1),
+                                                        np.hstack((z_s2.reshape(T - size_first_block, dim_z),
+                                                                    y_s2[indicesY].reshape(T - size_first_block, liy))),
+                                                        x_type = x_type_s2,
+                                                        y_type = y_type_s2,
+                                                        z_type = z_type_s2)
+                        else:
+                            test_result = self.cond_ind_test.run_test_raw(x_s2[j].reshape(T - size_first_block, 1),
+                                                        y_s2[jj].reshape(T - size_first_block, 1),
+                                                        np.hstack((z_s2.reshape(T - size_first_block, dim_z),
+                                                                    y_s2[indicesY].reshape(T - size_first_block, liy))),
+                                                        x_type = x_type_s2,
+                                                        y_type = y_type_s2,
+                                                        z_type = z_type_s2,
+                                                        alpha_or_thres = self.cond_ind_test_thres)
 
                 else:
-                    test_result = self.cond_ind_test.run_test_raw(x_s2[j].reshape(T - size_first_block, 1),
-                                                                  y_s2[jj].reshape(T - size_first_block, 1),
-                                                                  z_s2.reshape(T - size_first_block, dim_z),
-                                                                  x_type = x_type_s2,
-                                                                  y_type = y_type_s2,
-                                                                  z_type = z_type_s2)
+                    if self.cond_ind_test.significance != "fixed_thres":
+                        test_result = self.cond_ind_test.run_test_raw(x_s2[j].reshape(T - size_first_block, 1),
+                                                                      y_s2[jj].reshape(T - size_first_block, 1),
+                                                                      z_s2.reshape(T - size_first_block, dim_z),
+                                                                      x_type = x_type_s2,
+                                                                      y_type = y_type_s2,
+                                                                      z_type = z_type_s2)
+                    else:
+                        test_result = self.cond_ind_test.run_test_raw(x_s2[j].reshape(T - size_first_block, 1),
+                                                                      y_s2[jj].reshape(T - size_first_block, 1),
+                                                                      z_s2.reshape(T - size_first_block, dim_z),
+                                                                      x_type = x_type_s2,
+                                                                      y_type = y_type_s2,
+                                                                      z_type = z_type_s2,
+                                                                      alpha_or_thres = self.cond_ind_test_thres)
                 test_stats_main[j, jj] = test_result[0]
-                p_vals_main[j, jj] = test_result[1]
+                if self.cond_ind_test.significance != "fixed_thres":
+                    p_vals_main[j, jj] = test_result[1]
+                else:
+                    dependent_main[j, jj] = test_result[2]
 
         # aggregate p-values
             test_stats_aggregated = np.max(test_stats_main)
-            p_aggregated = np.min(np.array([np.min(p_vals_main) * dim_x * dim_y, 1]))
+            if self.cond_ind_test.significance != "fixed_thres":
+                p_aggregated = np.min(np.array([np.min(p_vals_main) * dim_x * dim_y, 1]))
+            else:
+                if np.max(dependent_main) == 1:
+                    p_aggregated = 0
+                else:
+                    p_aggregated = 1
 
         return test_stats_aggregated, p_aggregated
 
 
-    def get_dependence_measure(self, array, xyz, data_type=None):
+    def get_dependence_measure(self, array, xyz, data_type=None, ci_test_thres = None):
 
-        self.dep_measure, self.signif = self.calculate_dep_measure_and_significance(array = array, xyz = xyz, data_type = data_type)
+        self.dep_measure, self.signif = self.calculate_dep_measure_and_significance(array = array, xyz = xyz, data_type = data_type, ci_test_thres = ci_test_thres)
 
         return self.dep_measure
 
@@ -232,7 +293,9 @@ if __name__ == '__main__':
     import numpy as np
     from tigramite.independence_tests.robust_parcorr import RobustParCorr
     alpha = 0.05
-    ci = PairwiseMultCI(cond_ind_test = RobustParCorr())
+    #ci = PairwiseMultCI(cond_ind_test = ParCorr(significance = "fixed_thres"), cond_ind_test_thres_pre=1, cond_ind_test_thres=1)
+    # ci = PairwiseMultCI(cond_ind_test=ParCorr(significance="fixed_thres"))
+    ci = PairwiseMultCI(cond_ind_test=ParCorr(significance="analytic"))
     T = 100
     reals = 1
     rate = np.zeros(reals)
