@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 from numpy.random import MT19937, SeedSequence
 
-from tigramite.jpcmci import J_PCMCIplus
+from tigramite.jpcmciplus import J_PCMCIplus
 from tigramite.toymodels import structural_causal_processes as toys
 from tigramite.independence_tests.parcorr_mult import ParCorrMult
 from tigramite.independence_tests.oracle_conditional_independence import OracleCI
