@@ -655,10 +655,8 @@ class LinearMediation(Models):
         Parameters
         ----------
         boot_blocklength : int, or in {'cube_root', 'from_autocorrelation'}
-            Block length for block-bootstrap, which only applies to
-            generate_noise_from='residuals'. If 'from_autocorrelation', the block
-            length is determined from the decay of the autocovariance and
-            if 'cube_root' it is the cube root of the time series length.
+            Block length for block-bootstrap. If 'cube_root' it is the cube 
+            root of the time series length.
         seed : int, optional(default = None)
             Seed for RandomState (default_rng)
         boot_samples : int

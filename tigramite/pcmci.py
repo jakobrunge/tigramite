@@ -2211,7 +2211,7 @@ class PCMCI(PCMCIbase):
                             tau_min=tau_min, 
                             tau_max=tau_max, 
                             max_conds_dim=max_conds_dim, 
-                            max_combinations=None, 
+                            max_combinations=None,    # Otherwise MCI step is not consistent
                             max_conds_py=max_conds_py,
                             max_conds_px=max_conds_px, 
                             max_conds_px_lagged=max_conds_px_lagged, 

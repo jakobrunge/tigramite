@@ -4419,7 +4419,7 @@ def write_csv(
         for (i, j, tau) in zip(*np.where(graph!='')):
             # Only consider contemporaneous links once
             if tau > 0 or i <= j:
-                row = [str(var_names[i]), str(var_names[i]), f"{tau}", graph[i,j,tau]]
+                row = [str(var_names[i]), str(var_names[j]), f"{tau}", graph[i,j,tau]]
                 if val_matrix_exists:
                     row.append(f"{val_matrix[i,j,tau]:.{digits}}")
                 if link_attribute is not None:

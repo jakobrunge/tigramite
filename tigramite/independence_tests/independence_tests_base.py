@@ -261,15 +261,17 @@ class CondIndTest():
         return (tuple(set(x)), tuple(set(z)))
 
     def _get_array(self, X, Y, Z, tau_max=0, cut_off='2xtau_max',
+                   remove_constant_data=False,
                    verbosity=0):
         """Convencience wrapper around construct_array."""
 
-        if self.measure in ['par_corr', 'par_corr_wls', 'robust_par_corr', 'regressionCI', 'gsquared', 'gp_dc']:
+        if self.measure in ['par_corr', 'par_corr_wls', 'robust_par_corr', 'regressionCI', 
+                            'gsquared', 'gp_dc']:
             if len(X) > 1 or len(Y) > 1:
                 raise ValueError("X and Y for %s must be univariate." %
                                         self.measure)
         # Call the wrapped function
-        return self.dataframe.construct_array(X=X, Y=Y, Z=Z,
+        array, xyz, XYZ, type_array = self.dataframe.construct_array(X=X, Y=Y, Z=Z,
                                               tau_max=tau_max,
                                               mask_type=self.mask_type,
                                               return_cleaned_xyz=True,
@@ -277,6 +279,33 @@ class CondIndTest():
                                               remove_overlaps=True,
                                               cut_off=cut_off,
                                               verbosity=verbosity)
+        
+        if remove_constant_data:
+            zero_components = np.where(array.std(axis=1)==0.)[0]
+
+            X, Y, Z = XYZ
+            x_indices = np.where(xyz == 0)[0]
+            newX = [X[entry] for entry, ind in enumerate(x_indices) if ind not in zero_components]
+
+            y_indices = np.where(xyz == 1)[0]
+            newY = [Y[entry] for entry, ind in enumerate(y_indices) if ind not in zero_components]
+
+            z_indices = np.where(xyz == 2)[0]
+            newZ = [Z[entry] for entry, ind in enumerate(z_indices) if ind not in zero_components]
+
+            nonzero_XYZ = (newX, newY, newZ)
+
+            nonzero_array = np.delete(array, zero_components, axis=0)
+            nonzero_xyz = np.delete(xyz, zero_components, axis=0)
+            if type_array is not None:
+                nonzero_type_array = np.delete(type_array, zero_components, axis=0)
+            else:
+                nonzero_type_array = None
+
+            return array, xyz, XYZ, type_array, nonzero_array, nonzero_xyz, nonzero_XYZ, nonzero_type_array
+
+        return array, xyz, XYZ, type_array
+
     
     def _get_array_hash(self, array, xyz, XYZ):
         """Helper function to get hash of array.
@@ -360,12 +389,19 @@ class CondIndTest():
             given, run_test also returns the test decision dependent=True/False.      
         """
 
+        if self.significance == 'fixed_thres' and alpha_or_thres is None:
+            raise ValueError("significance == 'fixed_thres' requires setting alpha_or_thres")
+
         # Get the array to test on
-        array, xyz, XYZ, data_type = self._get_array(X, Y, Z, tau_max, cut_off, self.verbosity)
+        (array, xyz, XYZ, data_type, 
+         nonzero_array, nonzero_xyz, nonzero_XYZ, nonzero_data_type) = self._get_array(
+                                            X=X, Y=Y, Z=Z, tau_max=tau_max, cut_off=cut_off,
+                                            remove_constant_data=True, verbosity=self.verbosity)
         X, Y, Z = XYZ
-        
+        nonzero_X, nonzero_Y, nonzero_Z = nonzero_XYZ
+
         # Record the dimensions
-        dim, T = array.shape
+        # dim, T = array.shape
 
         # Ensure it is a valid array
         if np.any(np.isnan(array)):
@@ -379,26 +415,35 @@ class CondIndTest():
             val, pval = self.cached_ci_results[combined_hash]
         else:
             cached = False
-            # Get the dependence measure, reycling residuals if need be
-            val = self._get_dependence_measure_recycle(X, Y, Z, xyz, array, data_type)
-            # Get the p-value (None if significance = 'fixed_thres')
-            pval = self._get_p_value(val=val, array=array, xyz=xyz, T=T, dim=dim)
+
+            # If all X or all Y are zero, then return pval=1, val=0, dependent=False
+            if len(nonzero_X) == 0 or len(nonzero_Y) == 0:
+                val = 0.
+                pval = None if self.significance == 'fixed_thres' else 1.
+            else:
+                # Get the dependence measure, reycling residuals if need be
+                val = self._get_dependence_measure_recycle(nonzero_X, nonzero_Y, nonzero_Z, 
+                                            nonzero_xyz, nonzero_array, nonzero_data_type)
+                # Get the p-value (None if significance = 'fixed_thres')
+                dim, T = nonzero_array.shape
+                pval = self._get_p_value(val=val, array=nonzero_array, xyz=nonzero_xyz, T=T, dim=dim)
             self.cached_ci_results[combined_hash] = (val, pval)
 
         # Make test decision
-        if self.significance == 'fixed_thres':
-            if alpha_or_thres is None:
-                raise ValueError("significance == 'fixed_thres' requires setting alpha_or_thres")
-            if self.two_sided:
-                dependent = np.abs(val) >= np.abs(alpha_or_thres)
+        if len(nonzero_X) == 0 or len(nonzero_Y) == 0:
+            dependent = False
+        else: 
+            if self.significance == 'fixed_thres':
+                if self.two_sided:
+                    dependent = np.abs(val) >= np.abs(alpha_or_thres)
+                else:
+                    dependent = val >= alpha_or_thres
+                pval = 0. if dependent else 1.
             else:
-                dependent = val >= alpha_or_thres
-            pval = 0. if dependent else 1.
-        else:
-            if alpha_or_thres is None:
-                dependent = None
-            else:
-                dependent = pval <= alpha_or_thres
+                if alpha_or_thres is None:
+                    dependent = None
+                else:
+                    dependent = pval <= alpha_or_thres
                 
         self.ci_results[(tuple(X), tuple(Y),tuple(Z))] = (val, pval, dependent)
 
@@ -708,7 +753,8 @@ class CondIndTest():
 
         """
         # Make the array
-        array, xyz, (X, Y, Z), _ = self._get_array(X, Y, Z, tau_max)
+        array, xyz, (X, Y, Z), _ = self._get_array(X=X, Y=Y, Z=Z, tau_max=tau_max,
+                                            remove_constant_data=False)
         D, T = array.shape
         # Check it is valid
         if np.isnan(array).sum() != 0:
@@ -758,7 +804,8 @@ class CondIndTest():
 
         if self.confidence:
             # Make and check the array
-            array, xyz, _, data_type = self._get_array(X, Y, Z, tau_max, verbosity=0)
+            array, xyz, _, data_type = self._get_array(X=X, Y=Y, Z=Z, tau_max=tau_max,
+                                            remove_constant_data=False, verbosity=0)
             dim, T = array.shape
             if np.isnan(array).sum() != 0:
                 raise ValueError("nans in the array!")
