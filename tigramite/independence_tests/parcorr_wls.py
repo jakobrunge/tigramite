@@ -65,8 +65,8 @@ class ParCorrWLS(ParCorr):
         self.data = None
 
         ParCorr.__init__(self,
-        recycle_residuals=False,   # Doesn't work with ParCorrWLS
-         **kwargs)
+                         recycle_residuals=False,  # Doesn't work with ParCorrWLS
+                         **kwargs)
         self._measure = 'par_corr_wls'
 
     def _get_stds(self, array, X, Y, Z, tau_max=0, cut_off='2xtau_max',
@@ -118,7 +118,8 @@ class ParCorrWLS(ParCorr):
             self.stds = stds
             return stds
 
-    def _get_array(self, X, Y, Z, tau_max=0, cut_off='2xtau_max', verbosity=0, return_cleaned_xyz=True):
+    def _get_array(self, X, Y, Z, tau_max=0, cut_off='2xtau_max', verbosity=0, return_cleaned_xyz=True,
+                   remove_constant_data=False):
         """Convenience wrapper around construct_array. Simultaneously, construct self.stds which needs to correspond
         to the variables in the array."""
 
@@ -128,17 +129,33 @@ class ParCorrWLS(ParCorr):
                                  self.measure)
 
         # Call the wrapped function
-        array, xyz, XYZ, data_type = self.dataframe.construct_array(X=X, Y=Y, Z=Z,
-                                                            tau_max=tau_max,
-                                                            mask_type=self.mask_type,
-                                                            return_cleaned_xyz=return_cleaned_xyz,
-                                                            do_checks=True,
-                                                            remove_overlaps=True,
-                                                            cut_off=cut_off,
-                                                            verbosity=verbosity)
-        array_copy = array.copy()
-        self._get_stds(array_copy, X, Y, Z, tau_max, cut_off, verbosity)
-        return array, xyz, XYZ, data_type
+        if remove_constant_data:
+            array, xyz, XYZ, data_type, nonzero_array, nonzero_xyz, nonzero_XYZ, nonzero_data_type = super()._get_array(
+                X=X, Y=Y, Z=Z,
+                tau_max=tau_max,
+                cut_off=cut_off,
+                verbosity=verbosity,
+                remove_constant_data=remove_constant_data)
+
+            # stds have to correspond to array without the zero-rows
+            array_copy = nonzero_array.copy()
+            nonzero_X, nonzero_Y, nonzero_Z = nonzero_XYZ
+            self._get_stds(array_copy, nonzero_X, nonzero_Y, nonzero_Z, tau_max, cut_off, verbosity)
+
+            return array, xyz, XYZ, data_type, nonzero_array, nonzero_xyz, nonzero_XYZ, nonzero_data_type
+
+        else:
+            array, xyz, XYZ, data_type = super()._get_array(
+                X=X, Y=Y, Z=Z,
+                tau_max=tau_max,
+                cut_off=cut_off,
+                verbosity=verbosity,
+                remove_constant_data=remove_constant_data)
+
+            array_copy = array.copy()
+            self._get_stds(array_copy, X, Y, Z, tau_max, cut_off, verbosity)
+
+            return array, xyz, XYZ, data_type
 
     def _estimate_std_time(self, arr, target_var):
         """
@@ -306,7 +323,7 @@ class ParCorrWLS(ParCorr):
 
         x_vals_sum = np.sum(array)
         x_vals_has_nan = np.isnan(x_vals_sum)
-        if x_vals_has_nan: 
+        if x_vals_has_nan:
             raise ValueError("array has nans")
 
         try:
@@ -328,7 +345,7 @@ class ParCorrWLS(ParCorr):
                 warnings.warn("Possibly constant array!")
             x_vals_sum = np.sum(array)
             x_vals_has_nan = np.isnan(x_vals_sum)
-            if x_vals_has_nan: 
+            if x_vals_has_nan:
                 raise ValueError("array has nans")
         y = np.copy(array[target_var, :])
         weights = np.diag(np.reciprocal(stds))
@@ -364,7 +381,7 @@ class ParCorrWLS(ParCorr):
         if self.robustify:
             array = RobustParCorr.trafo2normal(self, array)
         return ParCorr.get_shuffle_significance(self, array, xyz, value,
-                                 return_null_dist=False)
+                                                return_null_dist=False)
 
     def get_model_selection_criterion(self, j, parents, tau_max=0, corrected_aic=False):
         """Returns Akaike's Information criterion modulo constants.
@@ -392,7 +409,7 @@ class ParCorrWLS(ParCorr):
         """
 
         Y = [(j, 0)]
-        X = [(j, 0)]   # dummy variable here
+        X = [(j, 0)]  # dummy variable here
         Z = parents
         array, xyz, _, _ = self._get_array(X, Y, Z, tau_max=tau_max, verbosity=self.verbosity,
                                            return_cleaned_xyz=False)
@@ -404,12 +421,13 @@ class ParCorrWLS(ParCorr):
 
         y = self._get_single_residuals(array, target_var=1, return_means=False)
         # Get RSS
-        rss = (y**2).sum()
+        rss = (y ** 2).sum()
         # Number of parameters
         p = dim - 1
         # Get AIC
         if corrected_aic:
-            score = T * np.log(rss) + 2. * p + (2.*p**2 + 2.*p)/(T - p - 1)
+            score = T * np.log(rss) + 2. * p + (2. * p ** 2 + 2. * p) / (T - p - 1)
         else:
             score = T * np.log(rss) + 2. * p
         return score
+
