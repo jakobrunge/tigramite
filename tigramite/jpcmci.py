@@ -79,7 +79,7 @@ class J_PCMCIplus(PCMCI):
             This is the list of the system nodes.
         """
 
-    def __init__(self, node_classification, dummy_ci_test=ParCorrMult(significance='analytic'), **kwargs):
+    def __init__(self, node_classification, **kwargs):
         PCMCI.__init__(self, **kwargs)
 
         self.system_nodes = self.group_nodes(node_classification, "system")
@@ -90,7 +90,6 @@ class J_PCMCIplus(PCMCI):
 
         self.dummy_parents = {i: [] for i in range(self.N)}
         self.observed_context_parents = {i: [] for i in range(self.N)}
-        self.dummy_ci_test = dummy_ci_test
         self.mode = "system_search"
 
     def group_nodes(self, node_types, node_type):
@@ -253,7 +252,7 @@ class J_PCMCIplus(PCMCI):
             _link_assumptions = {j: {(i, -tau): 'o?o' for i in range(self.N)
                                      for tau in range(tau_max + 1)} for j in range(self.N)}
 
-        _link_assumptions = self.assume_exogeneous_context(_link_assumptions, observed_context_nodes)
+        _link_assumptions = self.assume_exogenous_context(_link_assumptions, observed_context_nodes)
         _link_assumptions = self.clean_link_assumptions(_link_assumptions, tau_max)
 
         # Check if pc_alpha is chosen to optimize over a list
@@ -393,7 +392,7 @@ class J_PCMCIplus(PCMCI):
         # Return the dictionary
         return return_dict
 
-    def assume_exogeneous_context(self, link_assumptions, observed_context_nodes):
+    def assume_exogenous_context(self, link_assumptions, observed_context_nodes):
         """Helper function to amend the link_assumptions to ensure that all context-system links are oriented
         such that the context variable is the parent."""
         for j in link_assumptions:
@@ -621,7 +620,7 @@ class J_PCMCIplus(PCMCI):
                 print("\nWith link_assumptions = %s" % str(_int_link_assumptions))
 
         skeleton_results_dummy = self._pcmciplus_mci_skeleton_phase(
-            lagged_context_parents, _int_link_assumptions, pc_alpha,  # or lagged_contxt_parents?
+            lagged_context_parents, _int_link_assumptions, pc_alpha,
             tau_min, tau_max, max_conds_dim, None,
             max_conds_py, max_conds_px, max_conds_px_lagged,
             reset_lagged_links, fdr_method,
@@ -788,51 +787,14 @@ class J_PCMCIplus(PCMCI):
         Z : list
             List of conditions.
         """
+
         if self.mode == 'dummy_search':
-            # Perform independence test adding lagged parents (here lagged_parents might also include
-            # (possibly contemp) context parents)
-            if lagged_parents is not None:
-                conds_y = lagged_parents[j][:max_conds_py]
-                # Get the conditions for node i
-                if abstau == 0:
-                    conds_x = lagged_parents[i][:max_conds_px]
-                else:
-                    if max_conds_px_lagged is None:
-                        conds_x = lagged_parents[i][:max_conds_px]
-                    else:
-                        conds_x = lagged_parents[i][:max_conds_px_lagged]
-
-            else:
-                conds_y = conds_x = []
-            # Shift the conditions for X by tau
-            conds_x_lagged = [(k, -abstau + k_tau) for k, k_tau in conds_x]
-
-            Z = [node for node in S]
-            Z += [node for node in conds_y if
-                  node != (i, -abstau) and node not in Z]
-            # Remove overlapping nodes between conds_x_lagged and conds_y
-            Z += [node for node in conds_x_lagged if node not in Z]
-
-            # during discovery of dummy-system links we are using the dummy_ci_test and condition on the found
-            # contextual parents from step 1.
+            # during discovery of dummy-system links we condition on the found contextual parents from step 1.
             context_parents_j = self.observed_context_parents[j]
-            Z = Z + context_parents_j
-            Z = list(dict.fromkeys(Z))  # remove overlaps
-
-            # If middle mark is '-', then set pval=0
-            if graph[i, j, abstau] != "" and graph[i, j, abstau][1] == '-':
-                val = 1.
-                pval = 0.
-                dependent = True
-                return val, pval, Z, dependent
-            else:
-                try:
-                    val, pval, dependent = self.run_test_dummy([(j, -abstau)], [(i, 0)], Z, tau_max,
-                                                               alpha_or_thres=alpha_or_thres)
-                    return val, pval, Z, dependent
-                except ValueError:
-                    val, pval = self.run_test_dummy([(j, -abstau)], [(i, 0)], Z, tau_max, alpha_or_thres=alpha_or_thres)
-                    return val, pval, Z
+            cond = list(S) + context_parents_j
+            cond = list(dict.fromkeys(cond))  # remove overlapps
+            return super()._run_pcalg_test(graph, i, abstau, j, cond, lagged_parents, max_conds_py,
+                                           max_conds_px, max_conds_px_lagged, tau_max, alpha_or_thres)
 
         elif self.mode == 'system_search':
             # during discovery of system-system links we are conditioning on the found contextual parents
@@ -845,37 +807,3 @@ class J_PCMCIplus(PCMCI):
         else:
             return super()._run_pcalg_test(graph, i, abstau, j, S, lagged_parents, max_conds_py,
                                            max_conds_px, max_conds_px_lagged, tau_max, alpha_or_thres)
-
-    def construct_array_without_zero_rows(self, X, Y, Z=None, tau_max=0, cut_off='2xtau_max', verbosity=0):
-
-        array, xyz, XYZ, data_type = self.dummy_ci_test.dataframe.construct_array(X=X, Y=Y, Z=Z,
-                                                                                  tau_max=tau_max,
-                                                                                  mask_type=self.dummy_ci_test.mask_type,
-                                                                                  return_cleaned_xyz=True,
-                                                                                  do_checks=True,
-                                                                                  remove_overlaps=True,
-                                                                                  cut_off=cut_off,
-                                                                                  verbosity=verbosity)
-        # remove the parts of the array within dummy that are constant zero (ones are cut off)
-        mask = np.all(array == 0., axis=1) | np.all(array == 1., axis=1)
-        xyz = xyz[~mask]
-        array = array[~mask]
-        X, Y, Z = XYZ
-        X = [el for i, el in enumerate(X) if ~mask[i]]
-        Y = [el for i, el in enumerate(Y) if ~mask[len(X) + i]]
-        Z = [el for i, el in enumerate(Z) if ~mask[len(X) + len(Y) + i]]
-        return array, xyz, (X, Y, Z), data_type
-
-    def run_test_dummy(self, X, Y, Z=None, tau_max=0, cut_off='2xtau_max', alpha_or_thres=None):
-        """Helper function to deal with difficulties in constructing the array for CI testing
-        that arise due to the one-hot encoding of the dummy."""
-        # Get the array to test on
-
-        if self.dummy_ci_test.measure == "oracle_ci":
-            return self.dummy_ci_test.run_test(X, Y, Z=Z, tau_max=tau_max, cut_off=cut_off,
-                                               alpha_or_thres=alpha_or_thres)
-        else:
-            self.dummy_ci_test.dataframe = self.dataframe
-            self.dummy_ci_test._get_array = self.construct_array_without_zero_rows
-            return self.dummy_ci_test.run_test(X, Y, Z=Z, tau_max=tau_max, cut_off=cut_off,
-                                               alpha_or_thres=alpha_or_thres)

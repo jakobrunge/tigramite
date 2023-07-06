@@ -33,14 +33,14 @@ def do_dummy_projection(links, node_classification, observed_context_indices, ti
                                                                               node_classification),
                                               parent[0][1]), parent[1], parent[2]))
                     else:
-                        keep_parents.append(((time_dummy_index, 0), 0, "dummy"))
+                        keep_parents.append(((time_dummy_index, 0), 1., "dummy"))
                 elif node_classification[parent[0][0]] == "space_context":
                     if parent[0][0] in observed_context_indices:
                         keep_parents.append(((parent[0][0] - nb_latent_before(parent[0][0], observed_context_indices,
                                                                               node_classification), parent[0][1]),
                                              parent[1], parent[2]))
                     else:
-                        keep_parents.append(((space_dummy_index, 0), 0, "dummy"))
+                        keep_parents.append(((space_dummy_index, 0), 1., "dummy"))
                 augmented_links[node] = list(dict.fromkeys(keep_parents))
 
         # remove all parents of context nodes

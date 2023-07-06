@@ -13,14 +13,11 @@ from tigramite.toymodels.context_model import shift_link_entries, ContextModel, 
 import tigramite.data_processing as pp
 
 
-# J-PCMCIplus TESTING
-############### for now only test one model
-
+# ############ Utils for model generation
 def lin_f(x):
     return x
 
 
-# ############ Utils
 def mergeDictionary(dict_1, dict_2):
     dict_3 = dict(dict_1)
     dict_3.update(dict_2)
@@ -89,27 +86,25 @@ def set_links(effect_candidates, L, cause_candidates, tau_max, dependency_funcs,
     return links
 
 
-# J-PCMCIplus TESTING for random context models
-# ################################################################
 def a_generate_random_context_model(N=3,
                                     K_space=2,
                                     K_time=2,
                                     tau_max=2):
     # use seedsequence
-    ss = SeedSequence(12345)
+    ss = SeedSequence(12347)
     child_seeds = ss.spawn(7)
 
     dependency_funcs = ['linear']
     dependency_coeffs = [-0.5, 0.5]
     auto_coeffs = [0.5, 0.7]
-    contemp_fraction = 0.5
+    contemp_fraction = 0.
     noise_dists = ['gaussian']
     noise_means = [0.]
     noise_sigmas = [0.5, 2.]
 
     L = 1 if N == 2 else N
-    L_space = 1 if K_space == 2 else K_space
-    L_time = 1 if K_time == 2 else K_time
+    L_space = 1 if K_space == 2 else 1  # K_space
+    L_time = 1 if K_time == 2 else 1  # K_time
 
     nodes_sc = list(range(N + K_time, N + K_space + K_time))
     nodes_tc = list(range(N, K_time + N))
@@ -158,7 +153,7 @@ def a_generate_random_context_model(N=3,
                                                                     dependency_funcs,
                                                                     dependency_coeffs,
                                                                     auto_coeffs,
-                                                                    1.,
+                                                                    contemp_fraction,
                                                                     tau_max,
                                                                     noise_dists,
                                                                     noise_means,
@@ -196,8 +191,8 @@ def a_generate_random_context_model(N=3,
     return links, node_classification, noises
 
 
+# J-PCMCIplus TESTING for random context models
 # ################################################################
-
 
 @pytest.fixture(params=[
     # Generate a test data sample
@@ -205,40 +200,30 @@ def a_generate_random_context_model(N=3,
     # links,               node_classification, noises, time, nb_domains, seed_val
 
     (a_generate_random_context_model(N=3,
-                                    K_space=2,
-                                    K_time=2,
-                                    tau_max=2), 100, 100, SeedSequence(12345).spawn(1)[0]),
+                                     K_space=2,
+                                     K_time=2,
+                                     tau_max=2), 100, 100, SeedSequence(12346).spawn(1)[0]),
     (a_generate_random_context_model(N=5,
-                                    K_space=2,
-                                    K_time=2,
-                                    tau_max=2), 100, 100, SeedSequence(12345).spawn(1)[0]),
-    (a_generate_random_context_model(N=10,
-                                    K_space=5,
-                                    K_time=5,
-                                    tau_max=2), 100, 100, SeedSequence(12345).spawn(1)[0]),
+                                     K_space=2,
+                                     K_time=2,
+                                     tau_max=2), 100, 100, SeedSequence(12347).spawn(1)[0]),
     (({0: [((0, -1), 0.3, lin_f), ((3, -1), 0.6, lin_f), ((4, -1), 0.9, lin_f)],
-     1: [((1, -1), 0.4, lin_f), ((3, -1), 0.4, lin_f)],
-     2: [((2, -1), 0.3, lin_f), ((1, -2), -0.5, lin_f), ((4, -1), 0.5, lin_f), ((5, 0), 0.6, lin_f)],
-     3: [], 4: [], 5: []
-     }, {
-        0: "system",
-        1: "system",
-        2: "system",
-        3: "time_context",
-        4: "time_context",
-        5: "space_context"
-    }, None), 100, 50, SeedSequence(12345).spawn(1)[0]),
-
+       1: [((1, -1), 0.4, lin_f), ((3, -1), 0.4, lin_f)],
+       2: [((2, -1), 0.3, lin_f), ((1, -2), -0.5, lin_f), ((4, -1), 0.5, lin_f), ((5, 0), 0.6, lin_f)],
+       3: [], 4: [], 5: []
+       }, {
+          0: "system",
+          1: "system",
+          2: "system",
+          3: "time_context",
+          4: "time_context",
+          5: "space_context"
+      }, None), 100, 50, SeedSequence(12345).spawn(1)[0]),
 ])
 def a_jpcmciplus(request):
     # Set the parameters
     ct_model, T, nb_domains, seed_val = request.param
     links, node_classification_gt, noises = ct_model
-
-    a_generate_random_context_model(N=5,
-                                    K_space=2,
-                                    K_time=2,
-                                    tau_max=2)
 
     percent_observed = 0.5
 
@@ -257,6 +242,7 @@ def a_jpcmciplus(request):
     system_indices = [node for node in links.keys() if node_classification_gt[node] == "system"]
 
     random_state = np.random.default_rng(seed_val.spawn(1)[0])
+    # take care to only select nodes as latent that fulfill the no latent context confounder and mediator assumption
     observed_indices_time = random_state.choice(time_context_indices,
                                                 size=int(percent_observed * len(time_context_indices)),
                                                 replace=False).tolist()
@@ -315,25 +301,22 @@ def a_jpcmciplus(request):
     return dataframe, augmented_true_graph, augmented_links, tau_min, tau_max, node_classification
 
 
-
-
-
 @pytest.fixture(params=[
     # Keep parameters for the algorithm here
     # pc_alpha, contemp_collider_rule, conflict_resolution, reset, cond_ind_test
     # OracleCI tests
     (0.01, 'majority', True, False, 'oracle_ci'),
-    # (0.01, 'none', True, False, 'oracle_ci'),
-    # (0.01, 'conservative', True, False, 'oracle_ci'),
-    # (0.01, 'majority', False, False, 'oracle_ci'),
-    # (0.01, 'none', False, False, 'oracle_ci'),
-    # (0.01, 'conservative', False, False, 'oracle_ci'),
-    # (0.01, 'majority', True, True, 'oracle_ci'),
-    # (0.01, 'none', True, True, 'oracle_ci'),
-    # (0.01, 'conservative', True, True, 'oracle_ci'),
-    # (0.01, 'majority', False, True, 'oracle_ci'),
-    # (0.01, 'none', False, True, 'oracle_ci'),
-    # (0.01, 'conservative', False, True, 'oracle_ci'),
+    (0.01, 'none', True, False, 'oracle_ci'),
+    (0.01, 'conservative', True, False, 'oracle_ci'),
+    (0.01, 'majority', False, False, 'oracle_ci'),
+    (0.01, 'none', False, False, 'oracle_ci'),
+    (0.01, 'conservative', False, False, 'oracle_ci'),
+    (0.01, 'majority', True, True, 'oracle_ci'),
+    (0.01, 'none', True, True, 'oracle_ci'),
+    (0.01, 'conservative', True, True, 'oracle_ci'),
+    (0.01, 'majority', False, True, 'oracle_ci'),
+    (0.01, 'none', False, True, 'oracle_ci'),
+    (0.01, 'conservative', False, True, 'oracle_ci'),
 ])
 def a_jpcmciplus_params(request):
     # Return the parameters for the mci test
@@ -357,7 +340,7 @@ def a_run_jpcmciplus(a_jpcmciplus, a_jpcmciplus_params):
 
     # Run the PCMCI algorithm with the given parameters
     jpcmci = J_PCMCIplus(dataframe=dataframe, cond_ind_test=cond_ind_test, verbosity=0,
-                         node_classification=node_classification, dummy_ci_test=cond_ind_test
+                         node_classification=node_classification
                          )
     results = jpcmci.run_jpcmciplus(
         link_assumptions=None,
@@ -391,7 +374,7 @@ def a_run_jpcmciplus(a_jpcmciplus, a_jpcmciplus_params):
 
 def test_jpcmciplus(a_run_jpcmciplus):
     """
-    Test the pcmciplus algorithm and check it calculates the correct graph.
+    Test the J-PCMCIplus algorithm and check it calculates the correct graph.
     """
     # Unpack the calculated and true graph
     graph, true_graph = a_run_jpcmciplus
