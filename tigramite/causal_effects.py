@@ -2289,7 +2289,7 @@ class CausalEffects():
             if seed is None:
                 random_state = np.random.default_rng(None)
             else:
-                random_state = np.random.default_rng(seed+b)
+                random_state = np.random.default_rng(seed*boot_samples + b)
 
             method_args_bootstrap['dataframe'].bootstrap = {'boot_blocklength':boot_blocklength,
                                                             'random_state':random_state}
@@ -2498,62 +2498,62 @@ if __name__ == '__main__':
 
     # graph = CausalEffects.get_graph_from_dict(links_coeffs)
 
-    original_graph = np.array([[['', ''],
-        ['-->', ''],
-        ['-->', ''],
-        ['', '']],
+    # original_graph = np.array([[['', ''],
+    #     ['-->', ''],
+    #     ['-->', ''],
+    #     ['', '']],
 
-       [['<--', ''],
-        ['', '-->'],
-        ['-->', ''],
-        ['-->', '']],
+    #    [['<--', ''],
+    #     ['', '-->'],
+    #     ['-->', ''],
+    #     ['-->', '']],
 
-       [['<--', ''],
-        ['<--', ''],
-        ['', '-->'],
-        ['-->', '']],
+    #    [['<--', ''],
+    #     ['<--', ''],
+    #     ['', '-->'],
+    #     ['-->', '']],
 
-       [['', ''],
-        ['<--', ''],
-        ['<--', ''],
-        ['', '-->']]], dtype='<U3')
-    graph = np.copy(original_graph)
+    #    [['', ''],
+    #     ['<--', ''],
+    #     ['<--', ''],
+    #     ['', '-->']]], dtype='<U3')
+    # graph = np.copy(original_graph)
 
-    # Add T <-> Reco and T 
-    graph[2,3,0] = '+->' ; graph[3,2,0] = '<-+'
-    graph[1,3,1] = '<->' #; graph[2,1,0] = '<--'
+    # # Add T <-> Reco and T 
+    # graph[2,3,0] = '+->' ; graph[3,2,0] = '<-+'
+    # graph[1,3,1] = '<->' #; graph[2,1,0] = '<--'
 
-    added = np.zeros((4, 4, 1), dtype='<U3')
-    added[:] = ""
-    graph = np.append(graph, added , axis=2)
+    # added = np.zeros((4, 4, 1), dtype='<U3')
+    # added[:] = ""
+    # graph = np.append(graph, added , axis=2)
 
 
-    X = [(1, 0)]
-    Y = [(3, 0)]
+    # X = [(1, 0)]
+    # Y = [(3, 0)]
 
-    # # Initialize class as `stationary_dag`
-    causal_effects = CausalEffects(graph, graph_type='stationary_admg', 
-                                X=X, Y=Y, S=None, 
-                                hidden_variables=None, 
-                                verbosity=0)
+    # # # Initialize class as `stationary_dag`
+    # causal_effects = CausalEffects(graph, graph_type='stationary_admg', 
+    #                             X=X, Y=Y, S=None, 
+    #                             hidden_variables=None, 
+    #                             verbosity=0)
 
-    print(causal_effects.get_optimal_set())
+    # print(causal_effects.get_optimal_set())
 
-    tp.plot_time_series_graph(
-        graph = graph,
-        save_name='Example_graph_in.pdf',
-        # special_nodes=special_nodes,
-        # var_names=var_names,
-        figsize=(6, 4),
-        )
+    # tp.plot_time_series_graph(
+    #     graph = graph,
+    #     save_name='Example_graph_in.pdf',
+    #     # special_nodes=special_nodes,
+    #     # var_names=var_names,
+    #     figsize=(6, 4),
+    #     )
 
-    tp.plot_time_series_graph(
-        graph = causal_effects.graph,
-        save_name='Example_graph_out.pdf',
-        # special_nodes=special_nodes,
-        # var_names=var_names,
-        figsize=(6, 4),
-        )
+    # tp.plot_time_series_graph(
+    #     graph = causal_effects.graph,
+    #     save_name='Example_graph_out.pdf',
+    #     # special_nodes=special_nodes,
+    #     # var_names=var_names,
+    #     figsize=(6, 4),
+    #     )
 
     # causal_effects.fit_wright_effect(dataframe=dataframe, 
     #                         # links_coeffs = links_coeffs,
@@ -2593,11 +2593,16 @@ if __name__ == '__main__':
     # data, nonstat = toys.structural_causal_process(links, T=T, 
     #                             noises=None, seed=7)
 
+
+
     # # Create some missing values
     # data[-10:,:] = 999.
     # var_names = range(2)
-    # dataframe = pp.DataFrame(data, var_names=var_names,
-    #  missing_flag=999.) 
+
+    graph = np.array([['', '-->'],
+                      ['<--', '']], dtype='<U3')
+    data = np.random.randn(20, 2)
+    dataframe = pp.DataFrame(data) 
 
 
     # # Construct expert knowledge graph from links here 
@@ -2613,10 +2618,10 @@ if __name__ == '__main__':
     # Y = [(1, 0)]
 
     # # Initialize class as `stationary_dag`
-    # causal_effects = CausalEffects(graph, graph_type='stationary_dag', 
-    #                             X=X, Y=Y, S=None, 
-    #                             hidden_variables=None, 
-    #                             verbosity=0)
+    causal_effects = CausalEffects(graph, graph_type='dag', 
+                                X=[(0,0)], Y=[(1,0)], S=None, 
+                                hidden_variables=None, 
+                                verbosity=0)
 
     # # print(data)
     # # Optimal adjustment set (is used by default)
@@ -2630,15 +2635,17 @@ if __name__ == '__main__':
     #     )
 
 
-    # # # Fit causal effect model from observational data
-    # causal_effects.fit_bootstrap_of(
-    #     method='fit_total_effect',
-    #     method_args={'dataframe':dataframe,  
-    #     # mask_type='y',
-    #     'estimator':LinearRegression()
-    #     },
-    #     seed=4
-    #     )
+    # # Fit causal effect model from observational data
+    causal_effects.fit_bootstrap_of(
+        method='fit_total_effect',
+        method_args={'dataframe':dataframe,  
+        # mask_type='y',
+        'estimator':LinearRegression()
+        },
+        boot_samples=3,
+        boot_blocklength=1,
+        seed=5
+        )
 
 
     # # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go

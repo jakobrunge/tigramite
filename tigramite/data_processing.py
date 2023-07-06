@@ -805,7 +805,7 @@ class DataFrame():
 
                 if n_blks < 10:
                     raise ValueError("Only %d block(s) for block-sampling,"  %n_blks +
-                                     "choose smaller boot_blocklength!")
+                                     " choose smaller boot_blocklength!")
 
                 # Get the starting indices for the blocks
                 blk_strt = random_state.choice(np.arange(len(ref_points_here) - boot_blocklength), size=n_blks, replace=True)
