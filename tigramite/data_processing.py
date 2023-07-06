@@ -665,6 +665,9 @@ class DataFrame():
 
         if extraZ is None:
             extraZ = []
+        
+        if Z is None:
+            Z = []
 
         # If vector-valued variables exist, add them
         def vectorize(varlag):     
