@@ -10,7 +10,7 @@ from tigramite.independence_tests.parcorr import ParCorr
 from tigramite.independence_tests.robust_parcorr import RobustParCorr
 from tigramite.independence_tests.pairwise_CI import PairwiseMultCI
 from tigramite.independence_tests.cmiknn import CMIknn
-from tigramite.independence_tests.regressionCI_v2 import RegressionCI
+from tigramite.independence_tests.regressionCI import RegressionCI
 # PairwiseMultCI TESTING ##################################################
 @pytest.fixture(params=[
     # Generate PairwiseMultCI test instances
