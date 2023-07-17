@@ -81,6 +81,7 @@ class PairwiseMultCI(CondIndTest):
         self.cond_ind_test_thres = cond_ind_test_thres
         self.cond_ind_test_thres_pre = cond_ind_test_thres_pre
         self.already_calculated = False
+        self.two_sided = True
         CondIndTest.__init__(self, **kwargs)
 
 
