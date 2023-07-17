@@ -125,7 +125,7 @@ class J_PCMCIplus(PCMCI):
         variables and in between system variables by a four-step procedure:
 
         1.  **Discovery of supersets of the lagged parents of the system and observed temporal context nodes** by
-        running the :math:`PC_1` lagged phase on this subset of nodes.
+        running the :math:`PC_1` lagged phase on this subset of nodes to obtain :math:`\\hat{\\mathcal{B}}^-_t(X_t^j)`.
 
         2.  Next, the **MCI test is run on pairs of system and context nodes conditional on subsets of system
         and context**, i.e. perform MCI tests for pairs :math:`((C^j_{t-\\tau}, X^i_t))_{\\tau > 0}`,
@@ -135,8 +135,9 @@ class J_PCMCIplus(PCMCI):
                     \\setminus \\{ C_{t-\\tau}^i \\}, \\hat{\\mathcal{B}}^-_{t-\\tau}(C_{t-\\tau}^i)
 
         with :math:`\\mathbf{S}` being a subset of the contemporaneous adjacencies :math:`\\mathcal{A}_t(X_t^j)` and
-        :math:`\\hat{\\mathcal{B}}^-_t(X_t^j)` are the lagged adjacencies from step one. If :math:`C` is a spatial context variable,
-        we only have to test the contemporaneous pairs :math:`(C_t^j, X_t^i)`, :math:`(X_t^i, C_t^j)` for all :math:`i,j`.
+        :math:`\\hat{\\mathcal{B}}^-_t(X_t^j)` are the lagged adjacencies from step one. If :math:`C` is a
+        spatial context variable, we only have to test the contemporaneous pairs
+        :math:`(C_t^j, X_t^i)`, :math:`(X_t^i, C_t^j)` for all :math:`i,j`.
         If :math:`C_t^j` and :math:`X_t^i` are conditionally independent, all lagged links between :math:`C_t^j` and
         :math:`X^j_{t-\\tau}` are also removed for all :math:`\\tau`.
 
@@ -296,10 +297,11 @@ class J_PCMCIplus(PCMCI):
         ctxt_res = deepcopy(context_results)
         # Store the parents in the pcmci member
         self.observed_context_parents = deepcopy(context_results['parents'])
-        self.all_lagged_parents = deepcopy(context_results['lagged_parents'])# remove context nodes from lagged parents
-        self.all_lagged_parents = {i: [el for el in self.all_lagged_parents[i] if el[0] not in self.time_context_nodes] for i in
-                          range(self.N)}
-
+        self.all_lagged_parents = deepcopy(
+            context_results['lagged_parents'])  # remove context nodes from lagged parents
+        self.all_lagged_parents = {i: [el for el in self.all_lagged_parents[i] if el[0] not in self.time_context_nodes]
+                                   for i in
+                                   range(self.N)}
 
         if self.verbosity > 0:
             print("Discovered observed context parents: ", context_results['parents'])
@@ -336,7 +338,8 @@ class J_PCMCIplus(PCMCI):
                 dict.fromkeys(self.all_lagged_parents[i] + self.observed_context_parents[i] + self.dummy_parents[i]))
             for i in self.system_nodes}
         # we only care about the parents of system nodes
-        lagged_context_dummy_parents.update({i: [] for i in observed_context_nodes+ self.time_dummy + self.space_dummy})
+        lagged_context_dummy_parents.update(
+            {i: [] for i in observed_context_nodes + self.time_dummy + self.space_dummy})
 
         dummy_system_results_copy = deepcopy(dummy_system_results)
 
@@ -499,20 +502,24 @@ class J_PCMCIplus(PCMCI):
 
         Returns
         -------
-        lagged_context_parents : dictionary
-            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing
-            the conditioning-parents estimated with PC algorithm, as well as the estimated observed context parents.
-        values : array of shape [N, N, tau_max+1]
+        graph : array of shape [N, N, tau_max+1]
+            Resulting causal graph, see description above for interpretation.
+        val_matrix : array of shape [N, N, tau_max+1]
             Estimated matrix of test statistic values regarding adjacencies.
+        p_matrix : array of shape [N, N, tau_max+1]
+            Estimated matrix of p-values regarding adjacencies.
         parents : dictionary
             Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing
-            the estimated observed context parents.
+            the estimated context parents of the system nodes.
+        lagged_parents : dictionary
+            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing
+            the conditioning-parents estimated with PC algorithm.
         """
 
         # Initializing
         context_parents = {i: [] for i in range(self.N)}
 
-        # find links in btw expressive context, and btw expressive context and sys_vars
+        # find links between expressive context, and between expressive context and system nodes
         # here, we exclude any links to dummy
         _link_assumptions_wo_dummy = self.remove_dummy_link_assumptions(link_assumptions)
         _int_link_assumptions = self._set_link_assumptions(_link_assumptions_wo_dummy, tau_min, tau_max)
@@ -592,20 +599,19 @@ class J_PCMCIplus(PCMCI):
 
         Returns
         -------
-        lagged_context_parents : dictionary
-            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing
-            the conditioning-parents estimated with PC algorithm, as well as the estimated (dummy and observed)
-            context parents.
-        values : array of shape [N, N, tau_max+1]
+        graph : array of shape [N, N, tau_max+1]
+            Resulting causal graph, see description above for interpretation.
+        val_matrix : array of shape [N, N, tau_max+1]
             Estimated matrix of test statistic values regarding adjacencies.
+        p_matrix : array of shape [N, N, tau_max+1]
+            Estimated matrix of p-values regarding adjacencies.
         parents : dictionary
             Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing
-            the estimated (dummy and observed) context parents.
+            the estimated dummy parents of the system nodes.
         """
         lagged_context_parents = {i: list(dict.fromkeys(context_system_results['parents'][i] + lagged_parents[i])) for
                                   i in range(self.N)}
         dummy_parents = {i: [] for i in range(self.N)}
-        val_matrix = context_system_results['val_matrix']
         p_matrix = context_system_results['p_matrix']
 
         # setup link assumptions without the observed context nodes
@@ -613,7 +619,6 @@ class J_PCMCIplus(PCMCI):
         _int_link_assumptions = self._set_link_assumptions(_link_assumptions_dummy, tau_min, tau_max)
 
         self.mode = "dummy_search"
-        # Step 2+3+4: PC algorithm with contemp. conditions and MCI tests
         if self.verbosity > 0:
             print("\n##\n## J-PCMCI+ Step 2: Discovering dummy-system links\n##")
             if _link_assumptions_dummy is not None:
@@ -674,9 +679,9 @@ class J_PCMCIplus(PCMCI):
 
         Parameters
         ----------
-        context_results : dictionary
-            Output of discover_lagged_and_context_system_links, i.e. lagged and (dummy and observed) context parents
-            together with the corresponding estimated test statistic values regarding adjacencies.
+        lagged_context_dummy_parents : dictionary
+            Dictionary containing lagged and (dummy and observed) context parents of the system nodes estimated during
+            step 1 and step 2 of J-PCMCI+.
 
         Returns
         -------
@@ -790,17 +795,14 @@ class J_PCMCIplus(PCMCI):
 
         if self.mode == 'dummy_search':
             # during discovery of dummy-system links we condition on the found contextual parents from step 1.
-            context_parents_j = self.observed_context_parents[j]
-            cond = list(S) + context_parents_j
+            cond = list(S) + self.observed_context_parents[j]
             cond = list(dict.fromkeys(cond))  # remove overlapps
             return super()._run_pcalg_test(graph, i, abstau, j, cond, lagged_parents, max_conds_py,
                                            max_conds_px, max_conds_px_lagged, tau_max, alpha_or_thres)
 
         elif self.mode == 'system_search':
             # during discovery of system-system links we are conditioning on the found contextual parents
-
-            context_parents_j = self.dummy_parents[j] + self.observed_context_parents[j]
-            cond = list(S) + context_parents_j
+            cond = list(S) + self.dummy_parents[j] + self.observed_context_parents[j]
             cond = list(dict.fromkeys(cond))  # remove overlapps
             return super()._run_pcalg_test(graph, i, abstau, j, cond, lagged_parents, max_conds_py,
                                            max_conds_px, max_conds_px_lagged, tau_max, alpha_or_thres)
