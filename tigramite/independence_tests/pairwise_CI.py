@@ -275,14 +275,14 @@ class PairwiseMultCI(CondIndTest):
                     dependent_main[j, jj] = test_result[2]
 
         # aggregate p-values
-            test_stats_aggregated = np.max(test_stats_main)
-            if self.cond_ind_test.significance != "fixed_thres":
-                p_aggregated = np.min(np.array([np.min(p_vals_main) * dim_x * dim_y, 1]))
+        test_stats_aggregated = np.max(test_stats_main)
+        if self.cond_ind_test.significance != "fixed_thres":
+            p_aggregated = np.min(np.array([np.min(p_vals_main) * dim_x * dim_y, 1]))
+        else:
+            if np.max(dependent_main) == 1:
+                p_aggregated = 0
             else:
-                if np.max(dependent_main) == 1:
-                    p_aggregated = 0
-                else:
-                    p_aggregated = 1
+                p_aggregated = 1
 
         return test_stats_aggregated, p_aggregated
 

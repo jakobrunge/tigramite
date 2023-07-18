@@ -327,7 +327,7 @@ class CondIndTest():
     def run_test(self, X, Y, Z=None, tau_max=0, cut_off='2xtau_max', alpha_or_thres=None):
         """Perform conditional independence test.
 
-        Calls the dependence measure and signficicance test functions. The child
+        Calls the dependence measure and significance test functions. The child
         classes must specify a function get_dependence_measure and either or
         both functions get_analytic_significance and  get_shuffle_significance.
         If recycle_residuals is True, also _get_single_residuals must be
@@ -413,7 +413,7 @@ class CondIndTest():
             return val, pval, dependent
 
 
-    def run_test_raw(self, x, y, z=None, x_type=None, y_type=None, z_type=None, alpha_or_thres=None):
+    def run_test_raw(self, x, y, z=None, x_type=None, y_type=None, z_type=None, alpha_or_thres=None, calculate_pval = True):
         """Perform conditional independence test directly on input arrays x, y, z.
 
         Calls the dependence measure and signficicance test functions. The child
@@ -495,14 +495,16 @@ class CondIndTest():
         else:
             val = self.get_dependence_measure(array, xyz)
 
-        # Get the p-value
-        if has_data_type:
-            pval = self._get_p_value(val=val, array=array, xyz=xyz, 
-                    T=T, dim=dim, data_type=data_type)
+        if calculate_pval:
+            # Get the p-value
+            if has_data_type:
+                pval = self._get_p_value(val=val, array=array, xyz=xyz,
+                        T=T, dim=dim, data_type=data_type)
+            else:
+                pval = self._get_p_value(val=val, array=array, xyz=xyz,
+                        T=T, dim=dim)
         else:
-            pval = self._get_p_value(val=val, array=array, xyz=xyz, 
-                    T=T, dim=dim)    
-
+            pval = None
         # Make test decision
         if self.significance == 'fixed_thres':
             if self.two_sided:
