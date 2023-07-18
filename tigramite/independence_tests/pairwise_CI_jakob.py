@@ -113,12 +113,11 @@ class PairwiseMultCI(CondIndTest):
         fixed_thres_bool = False
         if self.significance == "fixed_thres":
             fixed_thres_bool = True
-            """if self.cond_ind_test.significance in ["analytic", "shuffle_test"]:
-                raise ValueError("Significances of cond_ind_test and PairwiseMultCI need to be fixed_thres at the same time")
-        if self.cond_ind_test.significance == "fixed_thres":
-            fixed_thres_bool = True
-            if self.significance in ["analytic", "shuffle_test"]:
-                raise ValueError("Significances of cond_ind_test and PairwiseMultCI need to be fixed_thres at the same time") """
+        else:
+            if self.cond_ind_test.significance == "fixed_thres":
+                raise ValueError("If cond_ind_test.significance is set to fixed_thres, PairwiseMultCI also needs to be "
+                                 "set to that value")
+
         if (fixed_thres_bool) and (self.fixed_thres_pre == None):
             raise ValueError("A fixed threshold for the pre-step needs to be defined.")
 
@@ -311,7 +310,7 @@ if __name__ == '__main__':
     from tigramite.independence_tests.robust_parcorr import RobustParCorr
     from tigramite.independence_tests.cmiknn import CMIknn
     alpha = 0.05
-    ci = PairwiseMultCI(alpha_pre = None, cond_ind_test = CMIknn(significance = "fixed_thres"), fixed_thres_pre = 2, significance= "fixed_thres")
+    ci = PairwiseMultCI(alpha_pre = 0.5, cond_ind_test = ParCorr(significance = "analytic"), significance= "analytic")
     # ci = PairwiseMultCI(cond_ind_test=ParCorr(significance="fixed_thres"))
     # ci = PairwiseMultCI(cond_ind_test=ParCorr(significance="analytic"))
     T = 100
