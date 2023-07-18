@@ -8,7 +8,7 @@ from scipy import stats
 
 from tigramite.independence_tests.parcorr import ParCorr
 from tigramite.independence_tests.robust_parcorr import RobustParCorr
-from tigramite.independence_tests.pairwise_CI import PairwiseMultCI
+from tigramite.independence_tests.pairwise_CI_jakob import PairwiseMultCI
 from tigramite.independence_tests.cmiknn import CMIknn
 from tigramite.independence_tests.regressionCI import RegressionCI
 # PairwiseMultCI TESTING ##################################################
@@ -92,5 +92,7 @@ def test_pairwise_mult_ci(pairwise_mult_ci, data_sample_c_cc_c):
     # Get the data sample values
     x, y, z = data_sample_c_cc_c
     # Get the analytic significance
-    val, pval = pairwise_mult_ci.run_test_raw(x = x, y = y, z = z)
+    test_result = pairwise_mult_ci.run_test_raw(x = x, y = y, z = z)
+    val = test_result[0]
+    pval = test_result[1]
     np.testing.assert_allclose(pval, 0.5, atol=0.5)
