@@ -15,7 +15,7 @@ from tigramite.independence_tests.regressionCI import RegressionCI
 @pytest.fixture(params=[
     # Generate PairwiseMultCI test instances
     # test PairwiseMultCI for different combinations of:
-    # significance (of the univariate tests),  alpha_pre, sbo, cond_ind_test, cond_ind_test_thres, cond_ind_test_thres_pre
+    # significance (of the univariate tests),  alpha_pre, pre_step_sample_fraction, cond_ind_test, cond_ind_test_thres, cond_ind_test_thres_pre
     ('fixed_thres', 0.5, 0.2, ParCorr, 1, 0.5),
     ('fixed_thres', 0.5, 0.5, ParCorr, 1, 0.5),
     ('fixed_thres', 0.8, 0.2, ParCorr, 1, 0.5),
@@ -44,18 +44,19 @@ from tigramite.independence_tests.regressionCI import RegressionCI
 
 def pairwise_mult_ci(request):
     # Unpack the parameters
-    sig, alpha_pre, sbo, cond_ind_test, cond_ind_test_thres, cond_ind_test_thres_pre = request.param
+    sig, alpha_pre, pre_step_sample_fraction, cond_ind_test, cond_ind_test_thres, cond_ind_test_thres_pre = request.param
     # Generate the par_corr_wls independence test
     if sig != "fixed_thres":
         return PairwiseMultCI(cond_ind_test = cond_ind_test(significance = sig),
                           alpha_pre = alpha_pre,
-                          sbo = sbo)
+                          pre_step_sample_fraction = pre_step_sample_fraction)
     else:
         return PairwiseMultCI(cond_ind_test = cond_ind_test(significance = sig),
-                          alpha_pre = alpha_pre,
-                          sbo = sbo,
-                          cond_ind_test_thres = cond_ind_test_thres,
-                          cond_ind_test_thres_pre = cond_ind_test_thres_pre)
+                          alpha_pre = None,
+                          pre_step_sample_fraction=pre_step_sample_fraction,
+                          significance= sig,
+                          fixed_thres_pre = 2
+                          )
 
 @pytest.fixture(params=[
     # Generate PairwiseMultCI test instances
