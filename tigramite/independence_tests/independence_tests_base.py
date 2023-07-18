@@ -503,21 +503,22 @@ class CondIndTest():
             else:
                 pval = self._get_p_value(val=val, array=array, xyz=xyz,
                         T=T, dim=dim)
+
+            # Make test decision
+            if self.significance == 'fixed_thres':
+                if self.two_sided:
+                    dependent = np.abs(val) >= np.abs(alpha_or_thres)
+                else:
+                    dependent = val >= alpha_or_thres
+                pval = 0. if dependent else 1.
+            else:
+                if alpha_or_thres is None:
+                    dependent = None
+                else:
+                    dependent = pval <= alpha_or_thres
         else:
             pval = None
-        # Make test decision
-        if self.significance == 'fixed_thres':
-            if self.two_sided:
-                dependent = np.abs(val) >= np.abs(alpha_or_thres)
-            else:
-                dependent = val >= alpha_or_thres
-            pval = 0. if dependent else 1.
-        else:
-            if alpha_or_thres is None:
-                dependent = None
-            else:
-                dependent = pval <= alpha_or_thres
-
+            dependent = None
         # Return the value and the pvalue
         if alpha_or_thres is None:
             return val, pval

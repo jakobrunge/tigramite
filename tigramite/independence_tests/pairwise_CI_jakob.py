@@ -119,7 +119,7 @@ class PairwiseMultCI(CondIndTest):
             fixed_thres_bool = True
             if self.significance in ["analytic", "shuffle_test"]:
                 raise ValueError("Significances of cond_ind_test and PairwiseMultCI need to be fixed_thres at the same time") """
-        if (fixed_thres_bool and (self.fixed_thres_pre == None):
+        if (fixed_thres_bool) and (self.fixed_thres_pre == None):
             raise ValueError("A fixed threshold for the pre-step needs to be defined.")
 
         x_indices = np.where(xyz == 0)[0]
@@ -173,7 +173,7 @@ class PairwiseMultCI(CondIndTest):
             z_type_s2 = None
 
         ## Step 1: estimate conditional independencies
-        if self.cond_ind_test.significance != "fixed_thres":
+        if fixed_thres_bool == False:
             p_vals_pre = np.zeros((dim_x, dim_y))
         else:
             vals_pre = np.zeros((dim_x, dim_y))
@@ -280,8 +280,7 @@ class PairwiseMultCI(CondIndTest):
                 test_stats_main[j, jj] = test_result[0]
                 if fixed_thres_bool == False:
                     p_vals_main[j, jj] = test_result[1]
-                else:
-                    dependent_main[j, jj] = test_result[2]
+
 
         # aggregate p-values
         test_stats_aggregated = np.max(np.abs(test_stats_main))
@@ -310,8 +309,9 @@ if __name__ == '__main__':
     import tigramite.data_processing as pp
     import numpy as np
     from tigramite.independence_tests.robust_parcorr import RobustParCorr
+    from tigramite.independence_tests.cmiknn import CMIknn
     alpha = 0.05
-    ci = PairwiseMultCI(alpha_pre = None, cond_ind_test = ParCorr(significance = "fixed_thres"), cond_ind_test_thres_pre=1, cond_ind_test_thres=1)
+    ci = PairwiseMultCI(alpha_pre = None, cond_ind_test = CMIknn(significance = "fixed_thres"), fixed_thres_pre = 2, significance= "fixed_thres")
     # ci = PairwiseMultCI(cond_ind_test=ParCorr(significance="fixed_thres"))
     # ci = PairwiseMultCI(cond_ind_test=ParCorr(significance="analytic"))
     T = 100
@@ -322,7 +322,7 @@ if __name__ == '__main__':
         # continuous example
         x = np.random.normal(0, 1, T).reshape(T, 1)
         y1 = np.random.normal(0, 1, T).reshape(T, 1)
-        y2 = 0.5 * x + y1 + 0.3 * np.random.normal(0, 1, T).reshape(T, 1)
+        y2 = 5 * x + y1 + 0.3 * np.random.normal(0, 1, T).reshape(T, 1)
         z = np.random.normal(0, 1, T).reshape(T, 1)
         # discrete example
         #x = np.random.binomial(n=10, p=0.5, size=T).reshape(T, 1)
@@ -330,7 +330,8 @@ if __name__ == '__main__':
         #y2 = np.random.binomial(n=10, p=0.5, size=T).reshape(T, 1) +  x + y1
         # z = np.random.binomial(n=10, p=0.5, size=T).reshape(T, 1)
 
-        test_stat, pval = ci.run_test_raw(x = x, y = np.hstack((y1,y2)), z = z)#, z = z, alpha_pre = 0.5, pre_step_sample_fraction = 0.2, cond_ind_test = base_ci)# , x_type = np.ones((T, 1)), y_type = np.ones((T, 2)) , z_type = np.zeros((T, 1)))
+        test_stat, pval, dependent = ci.run_test_raw(x = x, y = np.hstack((y1,y2)), z = z, alpha_or_thres=0.91)#, z = z, alpha_pre = 0.5, pre_step_sample_fraction = 0.2, cond_ind_test = base_ci)# , x_type = np.ones((T, 1)), y_type = np.ones((T, 2)) , z_type = np.zeros((T, 1)))
+        print(dependent)
         if (pval <= alpha):
             rate[t] = 1
         print("test_stat ", test_stat)
