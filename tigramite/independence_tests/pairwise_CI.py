@@ -43,7 +43,7 @@ class PairwiseMultCI(CondIndTest):
         If cond_ind_test is instantiated with significance = "fixed_thres",
         then the value of alpha_pre is not used, and can, for example, be set to None
 
-    sbo: float
+    pre_step_sample_fraction: float
         Relative size for the first part of the sample
         (abbreviation for "size block one")
 
@@ -73,15 +73,14 @@ class PairwiseMultCI(CondIndTest):
         """
         return self._measure
 
-    def __init__(self, cond_ind_test = ParCorr(), alpha_pre = 0.5, sbo = 0.2, cond_ind_test_thres = None, cond_ind_test_thres_pre = None, **kwargs):
+    def __init__(self, cond_ind_test = ParCorr(), alpha_pre = 0.5, pre_step_sample_fraction = 0.2, fixed_thres_pre = None, **kwargs):
         self._measure = 'pairwise_CI'
         self.cond_ind_test = cond_ind_test
         self.alpha_pre = alpha_pre
-        self.sbo = sbo
-        self.cond_ind_test_thres = cond_ind_test_thres
-        self.cond_ind_test_thres_pre = cond_ind_test_thres_pre
+        self.pre_step_sample_fraction = pre_step_sample_fraction
+        self.fixed_thres_pre = fixed_thres_pre
         self.already_calculated = False
-        self.two_sided = True
+        self.two_sided = False
         CondIndTest.__init__(self, **kwargs)
 
 
@@ -111,8 +110,21 @@ class PairwiseMultCI(CondIndTest):
             an aggregated p-value of all univariate tests.
         """
 
-        if (self.cond_ind_test.significance == "fixed_thres") and ((self.cond_ind_test_thres_pre == None) or (self.cond_ind_test_thres == None)):
-            raise ValueError("If fixed_thres is used for significance of univariate tests, threshholds need to be provided.")
+        fixed_thres_bool = False
+        if self.significance == "fixed_thres":
+            fixed_thres_bool = True
+        if self.cond_ind_test.significance == "fixed_thres":
+            fixed_thres_bool = True
+            self.significance = "fixed_thres"
+        """ else:
+            if self.cond_ind_test.significance == "fixed_thres":
+                raise ValueError("If cond_ind_test.significance is set to fixed_thres, PairwiseMultCI also needs to be "
+                                 "set to that value") 
+        """
+
+        if (fixed_thres_bool) and (self.fixed_thres_pre == None):
+            raise ValueError("A fixed threshold for the pre-step needs to be defined.")
+
         x_indices = np.where(xyz == 0)[0]
         y_indices = np.where(xyz == 1)[0]
         z_indices = np.where(xyz == 2)[0]
@@ -122,7 +134,7 @@ class PairwiseMultCI(CondIndTest):
         # what if unconditional test ...
         dim_z = z_indices.shape[0]
         T = array.shape[1]
-        size_first_block = np.floor(self.sbo * T)
+        size_first_block = np.floor(self.pre_step_sample_fraction * T)
         size_first_block = size_first_block.astype(int)
 
         # split the sample
@@ -164,13 +176,13 @@ class PairwiseMultCI(CondIndTest):
             z_type_s2 = None
 
         ## Step 1: estimate conditional independencies
-        if self.cond_ind_test.significance != "fixed_thres":
+        if fixed_thres_bool == False:
             p_vals_pre = np.zeros((dim_x, dim_y))
         else:
-            dependent_pre = np.zeros((dim_x, dim_y))
+            vals_pre = np.zeros((dim_x, dim_y))
         for j in np.arange(0, dim_x):
             for jj in np.arange(0, dim_y):
-                if self.cond_ind_test.significance != "fixed_thres":
+                if fixed_thres_bool == False:
                     p_vals_pre[j, jj] = self.cond_ind_test.run_test_raw(x_s1[j].reshape(size_first_block, 1),
                                                                    y_s1[jj].reshape(size_first_block, 1),
                                                                    z_s1.reshape(size_first_block, dim_z),
@@ -178,17 +190,17 @@ class PairwiseMultCI(CondIndTest):
                                                                    y_type = y_type_s1,
                                                                    z_type = z_type_s1)[1]
                 else:
-                    dependent_pre[j, jj] = self.cond_ind_test.run_test_raw(x_s1[j].reshape(size_first_block, 1),
+                    vals_pre[j, jj] = self.cond_ind_test.run_test_raw(x_s1[j].reshape(size_first_block, 1),
                                                                    y_s1[jj].reshape(size_first_block, 1),
                                                                    z_s1.reshape(size_first_block, dim_z),
                                                                    x_type = x_type_s1,
                                                                    y_type = y_type_s1,
                                                                    z_type = z_type_s1,
-                                                                   alpha_or_thres = self.cond_ind_test_thres_pre)[2].astype(int)
-        if self.cond_ind_test.significance != "fixed_thres":
+                                                                   calculate_pval = False)[0].astype(int)
+        if fixed_thres_bool == False:
             indep_set = np.where(p_vals_pre > self.alpha_pre)
         else:
-            indep_set = np.where(dependent_pre == 0)
+            indep_set = np.where(np.abs(vals_pre) >= self.fixed_thres_pre)
 
         # Step 2: test conditional independencies with increased effect sizes
         if self.cond_ind_test.significance != "fixed_thres":
@@ -214,7 +226,7 @@ class PairwiseMultCI(CondIndTest):
                     if (lix > liy):
                         if x_type_s2 is not None:
                             z_type = np.hstack((z_type_s2, x_type_s2[:, indicesX]))
-                        if self.cond_ind_test.significance != "fixed_thres":
+                        if fixed_thres_bool == False:
                             test_result = self.cond_ind_test.run_test_raw(x_s2[j].reshape(T - size_first_block, 1),
                                                         y_s2[jj].reshape(T - size_first_block, 1),
                                                         np.hstack((z_s2.reshape(T - size_first_block, dim_z),
@@ -230,11 +242,11 @@ class PairwiseMultCI(CondIndTest):
                                                         x_type = x_type_s2,
                                                         y_type = y_type_s2,
                                                         z_type = z_type_s2,
-                                                        alpha_or_thres = self.cond_ind_test_thres)
+                                                        calculate_pval = False)
                     elif (lix <= liy):
                         if y_type_s2 is not None:
                             z_type_s2 = np.hstack((z_type_s2, y_type_s2[:, indicesY]))
-                        if self.cond_ind_test.significance != "fixed_thres":
+                        if fixed_thres_bool == False:
                             test_result = self.cond_ind_test.run_test_raw(x_s2[j].reshape(T - size_first_block, 1),
                                                         y_s2[jj].reshape(T - size_first_block, 1),
                                                         np.hstack((z_s2.reshape(T - size_first_block, dim_z),
@@ -250,10 +262,10 @@ class PairwiseMultCI(CondIndTest):
                                                         x_type = x_type_s2,
                                                         y_type = y_type_s2,
                                                         z_type = z_type_s2,
-                                                        alpha_or_thres = self.cond_ind_test_thres)
+                                                        calculate_pval = False)
 
                 else:
-                    if self.cond_ind_test.significance != "fixed_thres":
+                    if fixed_thres_bool == False:
                         test_result = self.cond_ind_test.run_test_raw(x_s2[j].reshape(T - size_first_block, 1),
                                                                       y_s2[jj].reshape(T - size_first_block, 1),
                                                                       z_s2.reshape(T - size_first_block, dim_z),
@@ -267,22 +279,18 @@ class PairwiseMultCI(CondIndTest):
                                                                       x_type = x_type_s2,
                                                                       y_type = y_type_s2,
                                                                       z_type = z_type_s2,
-                                                                      alpha_or_thres = self.cond_ind_test_thres)
+                                                                      calculate_pval = False)
                 test_stats_main[j, jj] = test_result[0]
-                if self.cond_ind_test.significance != "fixed_thres":
+                if fixed_thres_bool == False:
                     p_vals_main[j, jj] = test_result[1]
-                else:
-                    dependent_main[j, jj] = test_result[2]
+
 
         # aggregate p-values
-        test_stats_aggregated = np.max(test_stats_main)
+        test_stats_aggregated = np.max(np.abs(test_stats_main))
         if self.cond_ind_test.significance != "fixed_thres":
             p_aggregated = np.min(np.array([np.min(p_vals_main) * dim_x * dim_y, 1]))
         else:
-            if np.max(dependent_main) == 1:
-                p_aggregated = 0
-            else:
-                p_aggregated = 1
+           p_aggregated = None
 
         return test_stats_aggregated, p_aggregated
 
@@ -304,8 +312,9 @@ if __name__ == '__main__':
     import tigramite.data_processing as pp
     import numpy as np
     from tigramite.independence_tests.robust_parcorr import RobustParCorr
+    from tigramite.independence_tests.cmiknn import CMIknn
     alpha = 0.05
-    ci = PairwiseMultCI(alpha_pre = None, cond_ind_test = ParCorr(significance = "fixed_thres"), cond_ind_test_thres_pre=1, cond_ind_test_thres=1)
+    ci = PairwiseMultCI(fixed_thres_pre = 0.5, cond_ind_test = ParCorr(significance = "fixed_thres"))
     # ci = PairwiseMultCI(cond_ind_test=ParCorr(significance="fixed_thres"))
     # ci = PairwiseMultCI(cond_ind_test=ParCorr(significance="analytic"))
     T = 100
@@ -316,7 +325,7 @@ if __name__ == '__main__':
         # continuous example
         x = np.random.normal(0, 1, T).reshape(T, 1)
         y1 = np.random.normal(0, 1, T).reshape(T, 1)
-        y2 = 0.5 * x + y1 + 0.3 * np.random.normal(0, 1, T).reshape(T, 1)
+        y2 = 5 * x + y1 + 0.3 * np.random.normal(0, 1, T).reshape(T, 1)
         z = np.random.normal(0, 1, T).reshape(T, 1)
         # discrete example
         #x = np.random.binomial(n=10, p=0.5, size=T).reshape(T, 1)
@@ -324,7 +333,8 @@ if __name__ == '__main__':
         #y2 = np.random.binomial(n=10, p=0.5, size=T).reshape(T, 1) +  x + y1
         # z = np.random.binomial(n=10, p=0.5, size=T).reshape(T, 1)
 
-        test_stat, pval = ci.run_test_raw(x = x, y = np.hstack((y1,y2)), z = z)#, z = z, alpha_pre = 0.5, sbo = 0.2, cond_ind_test = base_ci)# , x_type = np.ones((T, 1)), y_type = np.ones((T, 2)) , z_type = np.zeros((T, 1)))
+        test_stat, pval, dependent = ci.run_test_raw(x = x, y = np.hstack((y1,y2)), z = z, alpha_or_thres=0.91)#, z = z, alpha_pre = 0.5, pre_step_sample_fraction = 0.2, cond_ind_test = base_ci)# , x_type = np.ones((T, 1)), y_type = np.ones((T, 2)) , z_type = np.zeros((T, 1)))
+        print(dependent)
         if (pval <= alpha):
             rate[t] = 1
         print("test_stat ", test_stat)
