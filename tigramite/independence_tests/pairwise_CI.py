@@ -53,13 +53,10 @@ class PairwiseMultCI(CondIndTest):
         callable. This test can be based on the class
         tigramite.independence_tests.CondIndTest.
 
-    cond_ind_test_thres: In case cond_ind_test is instantiated with significance
-        = "fixed_thres", the respective threshold for each application of cond_ind_test in the main step
-        of PairwiseMultCI needs to be specified
+    fixed_thres_pre: In case cond_ind_test or self is instantiated with significance
+        = "fixed_thres" (at least one such setting suffices), the pre_step works with a threshold instead of significance
+        level
 
-    cond_ind_test_thres_pre: In case cond_ind_test is instantiated with significance
-        = "fixed_thres", the respective threshold for each application of cond_ind_test in the pre step
-        of PairwiseMultCI needs to be specified
 
     **kwargs :
         Arguments passed on to Parent class CondIndTest.

@@ -434,6 +434,10 @@ class CondIndTest():
             Significance level (if significance='analytic' or 'shuffle_test') or
             threshold (if significance='fixed_thres'). If given, run_test returns
             the test decision dependent=True/False.
+
+        calculate_pval = True: boolean
+            boolean value that indicates whether a pvalue should be calculated.
+            If it should not be calculated, pval = None and dependent = None is outputted.
         
         Returns
         -------
