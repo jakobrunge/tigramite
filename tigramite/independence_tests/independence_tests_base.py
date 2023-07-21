@@ -356,7 +356,7 @@ class CondIndTest():
     def run_test(self, X, Y, Z=None, tau_max=0, cut_off='2xtau_max', alpha_or_thres=None):
         """Perform conditional independence test.
 
-        Calls the dependence measure and signficicance test functions. The child
+        Calls the dependence measure and significance test functions. The child
         classes must specify a function get_dependence_measure and either or
         both functions get_analytic_significance and  get_shuffle_significance.
         If recycle_residuals is True, also _get_single_residuals must be
@@ -479,7 +479,7 @@ class CondIndTest():
             Significance level (if significance='analytic' or 'shuffle_test') or
             threshold (if significance='fixed_thres'). If given, run_test returns
             the test decision dependent=True/False.
-        
+
         Returns
         -------
         val, pval, [dependent] : Tuple of floats and bool
@@ -528,6 +528,9 @@ class CondIndTest():
             xyz = np.array([0 for i in range(x.shape[1])] +
                            [1 for i in range(y.shape[1])] +
                            [2 for i in range(z.shape[1])])
+        
+        if self.significance == 'fixed_thres' and alpha_or_thres is None:
+            raise ValueError("significance == 'fixed_thres' requires setting alpha_or_thres")
 
         # Record the dimensions
         dim, T = array.shape
@@ -540,13 +543,14 @@ class CondIndTest():
         else:
             val = self.get_dependence_measure(array, xyz)
 
-        # Get the p-value
+
+        # Get the p-value (returns None if significance='fixed_thres')
         if has_data_type:
-            pval = self._get_p_value(val=val, array=array, xyz=xyz, 
+            pval = self._get_p_value(val=val, array=array, xyz=xyz,
                     T=T, dim=dim, data_type=data_type)
         else:
-            pval = self._get_p_value(val=val, array=array, xyz=xyz, 
-                    T=T, dim=dim)    
+            pval = self._get_p_value(val=val, array=array, xyz=xyz,
+                    T=T, dim=dim)
 
         # Make test decision
         if self.significance == 'fixed_thres':

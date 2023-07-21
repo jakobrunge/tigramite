@@ -23,6 +23,8 @@ import matplotlib.path as mpath
 import matplotlib.patheffects as PathEffects
 from mpl_toolkits.axisartist.axislines import Axes
 import csv
+
+
 # TODO: Add proper docstrings to internal functions...
 
 
@@ -131,15 +133,16 @@ def _get_absmax(val_matrix):
 
 
 def _add_timeseries(
-    dataframe,
-    fig_axes,
-    grey_masked_samples=False,
-    show_meanline=False,
-    data_linewidth=1.0,
-    color="black",
-    alpha=1.,
-    grey_alpha=1.0,
-    selected_dataset=0,
+        dataframe,
+        fig_axes,
+        grey_masked_samples=False,
+        show_meanline=False,
+        data_linewidth=1.0,
+        color="black",
+        alpha=1.,
+        grey_alpha=1.0,
+        selected_dataset=0,
+        selected_variables=None,
 ):
     """Adds a time series plot to an axis.
     Plot of dataseries is added to axis. Allows for proper visualization of
@@ -166,6 +169,8 @@ def _add_timeseries(
         Opacity of fill_between.
     selected_dataset : int, optional (default: 0)
         In case of multiple datasets in dataframe, plot this one.
+    selected_variables : list, optional (default: None)
+        List of variables which to plot.
     """
     fig, axes = fig_axes
 
@@ -180,10 +185,15 @@ def _add_timeseries(
     time = dataframe.datatime[selected_dataset]
     T = len(time)
 
-    for j in range(dataframe.N):
-        
+    if selected_variables is None:
+        selected_variables = list(range(dataframe.N))
+
+    nb_components = sum([len(dataframe.vector_vars[var]) for var in selected_variables])
+
+    for j in range(nb_components):
+
         ax = axes[j]
-        dataseries = data[:,j]
+        dataseries = data[:, j]
 
         if missing_flag is not None:
             dataseries_nomissing = np.ma.masked_where(
@@ -196,7 +206,7 @@ def _add_timeseries(
 
 
         if mask is not None:
-            maskseries = mask[:,j]
+            maskseries = mask[:, j]
 
             maskdata = np.ma.masked_where(maskseries, dataseries_nomissing)
 
@@ -223,7 +233,7 @@ def _add_timeseries(
                     alpha=grey_alpha,
                 )
             if show_meanline:
-                ax.plot(time, maskdata.mean()*np.ones(T), lw=data_linewidth/2., color=color)
+                ax.plot(time, maskdata.mean() * np.ones(T), lw=data_linewidth / 2., color=color)
 
             ax.plot(
                 time,
@@ -237,7 +247,7 @@ def _add_timeseries(
             )
         else:
             if show_meanline:
-                ax.plot(time, dataseries_nomissing.mean()*np.ones(T), lw=data_linewidth/2., color=color)
+                ax.plot(time, dataseries_nomissing.mean() * np.ones(T), lw=data_linewidth / 2., color=color)
 
             ax.plot(
                 time,
@@ -246,27 +256,28 @@ def _add_timeseries(
                 linewidth=data_linewidth,
                 clip_on=False,
                 alpha=alpha,
-                )
+            )
 
 
 def plot_timeseries(
-    dataframe=None,
-    save_name=None,
-    fig_axes=None,
-    figsize=None,
-    var_units=None,
-    time_label="",
-    grey_masked_samples=False,
-    show_meanline=False,
-    data_linewidth=1.0,
-    skip_ticks_data_x=1,
-    skip_ticks_data_y=1,
-    label_fontsize=10,
-    color='black',
-    alpha=1.,
-    tick_label_size=6,
-    selected_dataset=0,
-    adjust_plot=True,
+        dataframe=None,
+        save_name=None,
+        fig_axes=None,
+        figsize=None,
+        var_units=None,
+        time_label="",
+        grey_masked_samples=False,
+        show_meanline=False,
+        data_linewidth=1.0,
+        skip_ticks_data_x=1,
+        skip_ticks_data_y=1,
+        label_fontsize=10,
+        color='black',
+        alpha=1.,
+        tick_label_size=6,
+        selected_dataset=0,
+        adjust_plot=True,
+        selected_variables=None,
 ):
     """Create and save figure of stacked panels with time series.
 
@@ -309,6 +320,8 @@ def plot_timeseries(
         Alpha opacity.
     selected_dataset : int, optional (default: 0)
         In case of multiple datasets in dataframe, plot this one.
+    selected_variables : list, optional (default: None)
+        List of variables which to plot.
     """
 
     var_names = dataframe.var_names
@@ -316,20 +329,27 @@ def plot_timeseries(
 
     N = dataframe.N
 
+    if selected_variables is None:
+        selected_variables = list(range(N))
+
+    nb_components_per_var = [len(dataframe.vector_vars[var]) for var in selected_variables]
+    N_index = [sum(nb_components_per_var[:i]) for i, el in enumerate(nb_components_per_var)]
+    nb_components = sum(nb_components_per_var)
+
     if var_units is None:
         var_units = ["" for i in range(N)]
 
     if fig_axes is None:
-        fig, axes = pyplot.subplots(N, sharex=True, figsize=figsize)
+        fig, axes = pyplot.subplots(nb_components, sharex=True, figsize=figsize)
     else:
         fig, axes = fig_axes
 
     if adjust_plot:
-        for i in range(N):
+        for i in range(nb_components):
 
             ax = axes[i]
 
-            if (i == N - 1):
+            if (i == nb_components - 1):
                 _make_nice_axes(
                     ax, where=["left", "bottom"], skip=(skip_ticks_data_x, skip_ticks_data_y)
                 )
@@ -344,24 +364,27 @@ def plot_timeseries(
             ax.set_xlim(time[0], time[-1])
 
             # trans = transforms.blended_transform_factory(fig.transFigure, ax.transAxes)
-            if var_units[i]:
-                ax.set_ylabel(r"%s [%s]" % (var_names[i], var_units[i]), fontsize=label_fontsize)
-            else:
-                ax.set_ylabel(r"%s" % (var_names[i]), fontsize=label_fontsize)
+            if i in N_index:
+                if var_units[N_index.index(i)]:
+                    ax.set_ylabel(r"%s [%s]" % (var_names[N_index.index(i)], var_units[N_index.index(i)]),
+                                  fontsize=label_fontsize)
+                else:
+                    ax.set_ylabel(r"%s" % (var_names[N_index.index(i)]), fontsize=label_fontsize)
 
             ax.tick_params(axis='both', which='major', labelsize=tick_label_size)
             # ax.tick_params(axis='both', which='minor', labelsize=tick_label_size)
 
     _add_timeseries(
         dataframe=dataframe,
-        fig_axes = (fig, axes),
+        fig_axes=(fig, axes),
         grey_masked_samples=grey_masked_samples,
         show_meanline=show_meanline,
         data_linewidth=data_linewidth,
         color=color,
         selected_dataset=selected_dataset,
         alpha=alpha,
-        )
+        selected_variables=selected_variables
+    )
 
     if adjust_plot:
         fig.subplots_adjust(bottom=0.15, top=0.9, left=0.15, right=0.95, hspace=0.3)
@@ -1478,46 +1501,48 @@ class setup_density_matrix:
             pyplot.show()
 
 def _draw_network_with_curved_edges(
-    fig,
-    ax,
-    G,
-    pos,
-    node_rings,
-    node_labels,
-    node_label_size=10,
-    node_alpha=1.0,
-    standard_size=100,
-    node_aspect=None,
-    standard_cmap="OrRd",
-    standard_color_links='black',
-    standard_color_nodes='lightgrey',
-    log_sizes=False,
-    cmap_links="YlOrRd",
-    # cmap_links_edges="YlOrRd",
-    links_vmin=0.0,
-    links_vmax=1.0,
-    links_edges_vmin=0.0,
-    links_edges_vmax=1.0,
-    links_ticks=0.2,
-    links_edges_ticks=0.2,
-    link_label_fontsize=8,
-    arrowstyle="->, head_width=0.4, head_length=1",
-    arrowhead_size=3.0,
-    curved_radius=0.2,
-    label_fontsize=4,
-    label_fraction=0.5,
-    link_colorbar_label="link",
-    tick_label_size=6,
-    # link_edge_colorbar_label='link_edge',
-    inner_edge_curved=False,
-    inner_edge_style="solid",
-    # network_lower_bound=0.2,
-    network_left_bound=None,
-    show_colorbar=True,
-    special_nodes=None,
-    autodep_sig_lags=None,
-    show_autodependency_lags=False,
-    transform='data',
+        fig,
+        ax,
+        G,
+        pos,
+        node_rings,
+        node_labels,
+        node_label_size=10,
+        node_alpha=1.0,
+        standard_size=100,
+        node_aspect=None,
+        standard_cmap="OrRd",
+        standard_color_links='black',
+        standard_color_nodes='lightgrey',
+        log_sizes=False,
+        cmap_links="YlOrRd",
+        # cmap_links_edges="YlOrRd",
+        links_vmin=0.0,
+        links_vmax=1.0,
+        links_edges_vmin=0.0,
+        links_edges_vmax=1.0,
+        links_ticks=0.2,
+        links_edges_ticks=0.2,
+        link_label_fontsize=8,
+        arrowstyle="->, head_width=0.4, head_length=1",
+        arrowhead_size=3.0,
+        curved_radius=0.2,
+        label_fontsize=4,
+        label_fraction=0.5,
+        link_colorbar_label="link",
+        tick_label_size=6,
+        # link_edge_colorbar_label='link_edge',
+        inner_edge_curved=False,
+        inner_edge_style="solid",
+        # network_lower_bound=0.2,
+        network_left_bound=None,
+        show_colorbar=True,
+        special_nodes=None,
+        autodep_sig_lags=None,
+        show_autodependency_lags=False,
+        transform='data',
+        node_classification=None,
+        max_lag=0,
 ):
     """Function to draw a network from networkx graph instance.
     Various attributes are used to specify the graph's properties.
@@ -2418,6 +2443,21 @@ def _draw_network_with_curved_edges(
 
             ax.add_patch(c)
 
+            if node_classification is not None and node_classification[n] in ["space_context_last", "space_dummy_last", "time_dummy_last"]:
+                node_height = node_sizes[: ring + 1].sum(axis=0)[n]
+                node_width_difference_to_height = node_height * (1 - node_aspect)
+
+                c_wide = mpatches.FancyBboxPatch((pos[n-max_lag+1][0] + node_width_difference_to_height / 2, pos[n-max_lag+1][1]),
+                                                 (pos[n][0] - pos[n-max_lag+1][0] - node_width_difference_to_height),
+                                                 0.,
+                                                 boxstyle=mpatches.BoxStyle.Round(pad=0.5 * node_height),
+                                                 facecolor=color_here,
+                                                 edgecolor=color_here,
+                                                 )
+
+                ax.add_patch(c_wide)
+
+
             # avoiding attribute error raised by changes in networkx
             if hasattr(G, "node"):
                 # works with networkx 1.10
@@ -3044,34 +3084,35 @@ def _check_matrices(graph, val_matrix, link_width, link_attribute):
 
 
 def plot_time_series_graph(
-    graph,
-    val_matrix=None,
-    var_names=None,
-    fig_ax=None,
-    figsize=None,
-    link_colorbar_label="MCI",
-    save_name=None,
-    link_width=None,
-    link_attribute=None,
-    arrow_linewidth=4,
-    vmin_edges=-1,
-    vmax_edges=1.0,
-    edge_ticks=0.4,
-    cmap_edges="RdBu_r",
-    order=None,
-    node_size=0.1,
-    node_aspect=None,
-    arrowhead_size=20,
-    curved_radius=0.2,
-    label_fontsize=10,
-    tick_label_size=6,
-    alpha=1.0,
-    inner_edge_style="dashed",
-    link_matrix=None,
-    special_nodes=None,
-    # aux_graph=None,
-    standard_color_links='black',
-    standard_color_nodes='lightgrey',
+        graph,
+        val_matrix=None,
+        var_names=None,
+        fig_ax=None,
+        figsize=None,
+        link_colorbar_label="MCI",
+        save_name=None,
+        link_width=None,
+        link_attribute=None,
+        arrow_linewidth=4,
+        vmin_edges=-1,
+        vmax_edges=1.0,
+        edge_ticks=0.4,
+        cmap_edges="RdBu_r",
+        order=None,
+        node_size=0.1,
+        node_aspect=None,
+        arrowhead_size=20,
+        curved_radius=0.2,
+        label_fontsize=10,
+        tick_label_size=6,
+        alpha=1.0,
+        inner_edge_style="dashed",
+        link_matrix=None,
+        special_nodes=None,
+        node_classification=None,
+        # aux_graph=None,
+        standard_color_links='black',
+        standard_color_nodes='lightgrey',
 ):
     """Creates a time series graph.
     This is still in beta. The time series graph's links are colored by
@@ -3134,6 +3175,12 @@ def plot_time_series_graph(
         Style of inner_edge contemporaneous links.
     special_nodes : dict
         Dictionary of format {(i, -tau): 'blue', ...} to color special nodes.
+    node_classification : dict or None (default: None)
+        Dictionary of format {i: 'space_context', ...} to classify nodes into system, context, or dummy nodes.
+        Keys of the dictionary are from {0, ..., N-1} where N is the number of nodes.
+        Options for the values are "system", "time_context", "space_context", "time_dummy", or "space_dummy".
+        Space_contexts and dummy nodes need to be represented as a single node in the time series graph.
+        In case no value is supplied all nodes are treated as system nodes, i.e. are plotted in a time-resolved manner.
     """
 
     if link_matrix is not None:
@@ -3259,6 +3306,19 @@ def plot_time_series_graph(
 
         special_nodes = special_nodes_tsg
 
+    if node_classification is None:
+        node_classification = {i: "system" for i in range(N)}
+    node_classification_tsg = {}
+    for node in node_classification:
+        for tau in range(max_lag):
+            if tau == 0:
+                suffix = "_first"
+            elif tau == max_lag-1:
+                suffix = "_last"
+            else:
+                suffix = "_middle"
+            node_classification_tsg[translate(node, tau)] = node_classification[node] + suffix
+
     # node_color = np.zeros(N)
     # list of all strengths for color map
     all_strengths = []
@@ -3379,6 +3439,8 @@ def plot_time_series_graph(
         inner_edge_style=inner_edge_style,
         special_nodes=special_nodes,
         show_colorbar=show_colorbar,
+        node_classification=node_classification_tsg,
+        max_lag=max_lag,
     )
 
     for i in range(N):
