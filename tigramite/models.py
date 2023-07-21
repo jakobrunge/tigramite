@@ -623,7 +623,7 @@ class Models():
         # Get overlapping samples
         used_indices = {}
         overlapping = set(list(range(0, T)))
-        for j in parents:
+        for j in self.all_parents:
             if self.fit_results[j] is not None:
                 if 'used_indices' not in self.fit_results[j]:
                     raise ValueError("Run ")
