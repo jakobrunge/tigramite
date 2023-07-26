@@ -38,7 +38,7 @@ class DataFrame():
             N is fixed. 
     mask : array-like, optional (default: None)
         Optional mask array, must be of same format and shape as data.
-   data_type : array-like
+    data_type : array-like
         Binary data array of same shape as array which describes whether 
         individual samples in a variable (or all samples) are continuous 
         or discrete: 0s for continuous variables and 1s for discrete variables.
