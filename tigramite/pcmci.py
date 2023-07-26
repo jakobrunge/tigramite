@@ -490,7 +490,7 @@ class PCMCI(PCMCIbase):
         max_combinations : int
             Maximum number of combinations of conditions to test.
         """
-        print("\n##\n## Step 1: PC1 algorithm with lagged conditions\n##"
+        print("\n##\n## Step 1: PC1 algorithm for selecting lagged conditions\n##"
               "\n\nParameters:")
         if link_assumptions is not None:
             print("link_assumptions = %s" % str(link_assumptions))

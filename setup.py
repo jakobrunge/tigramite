@@ -9,8 +9,6 @@ from setuptools.command.build_ext import build_ext
 import json
 
 # Handle building against numpy headers before installing numpy
-
-
 class UseNumpyHeadersBuildExt(build_ext):
     """
     Subclassed build_ext command.
@@ -62,7 +60,7 @@ CMDCLASS = {"build_ext": UseNumpyHeadersBuildExt}
 # Run the setup
 setup(
     name="tigramite",
-    version="5.2.1.31",
+    version="5.2.1.32",
     packages=["tigramite", "tigramite.independence_tests", "tigramite.toymodels"],
     license="GNU General Public License v3.0",
     description="Tigramite causal inference for time series",
