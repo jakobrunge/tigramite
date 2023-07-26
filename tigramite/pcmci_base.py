@@ -12,6 +12,7 @@ from copy import deepcopy
 import numpy as np
 import scipy.stats
 import math
+from joblib import Parallel, delayed
 
 class PCMCIbase():
     r"""PCMCI base class.
@@ -676,7 +677,7 @@ class PCMCIbase():
         containing the most frequent link outcome (either 0 or 1 or a specific
         link type) in each entry of graph, as well as 'link_frequency',
         containing the occurence frequency of the most frequent link outcome,
-        are returned. 
+        are returned.
 
         Parameters
         ----------
@@ -775,6 +776,139 @@ class PCMCIbase():
         return {'summary_results': summary_results, 
                 'window_results': window_results}
 
+    def run_bootstrap_of(self, method, method_args,
+                        boot_samples=100,
+                        boot_blocklength=1,
+                        conf_lev=0.9, seed=None):
+        """Runs chosen method on bootstrap samples drawn from DataFrame.
+
+        Bootstraps for tau=0 are drawn from [2xtau_max, ..., T] and all lagged
+        variables constructed in DataFrame.construct_array are consistently
+        shifted with respect to this bootstrap sample to ensure that lagged
+        relations in the bootstrap sample are preserved.
+
+        The function returns summary_results and all_results (containing the
+        individual bootstrap results). summary_results contains
+        val_matrix_mean and val_matrix_interval, the latter containing the
+        confidence bounds for conf_lev. If the method also returns a graph,
+        then 'most_frequent_links' containing the most frequent link outcome
+        (specific link type) in each entry of graph, as well
+        as 'link_frequency', containing the occurence frequency of the most
+        frequent link outcome, are returned.
+
+        Assumes that method uses cond_ind_test.run_test() function with cut_off
+        = '2xtau_max'.
+
+        Utilizes parallelization via joblib.
+
+        Parameters
+        ----------
+        method : str
+            Chosen method among valid functions in PCMCI.
+        method_args : dict
+            Arguments passed to method.
+        boot_samples : int
+            Number of bootstrap samples to draw.
+        boot_blocklength : int, optional (default: 1)
+            Block length for block-bootstrap.
+        conf_lev : float, optional (default: 0.9)
+            Two-sided confidence interval for summary results.
+        seed : int, optional(default = None)
+            Seed for RandomState (default_rng)
+
+        Returns
+        -------
+        Dictionary of summary results and results for every bootstrap sample.
+        """
+
+        valid_methods = ['run_pc_stable',
+                          'run_mci',
+                          'get_lagged_dependencies',
+                          'run_fullci',
+                          'run_bivci',
+                          'run_pcmci',
+                          'run_pcalg',
+                          'run_pcalg_non_timeseries_data',
+                          'run_pcmciplus',
+                          'run_lpcmci',
+                          'run_jpcmciplus',
+                          ]
+        if method not in valid_methods:
+            raise ValueError("method must be one of %s" % str(valid_methods))
+
+        T = self.dataframe.largest_time_step
+        seed_sequence = np.random.SeedSequence(seed)
+        #global_random_state = np.random.default_rng(seed)
+
+        # Extract tau_max to construct bootstrap draws
+        if 'tau_max' not in method_args:
+            raise ValueError("tau_max must be explicitely set in method_args.")
+        tau_max = method_args['tau_max']
+
+        if self.cond_ind_test.recycle_residuals:
+            # recycle_residuals clashes with bootstrap draws...
+            raise ValueError("cond_ind_test.recycle_residuals must be False.")
+
+        if self.verbosity > 0:
+            print("\n##\n## Running Bootstrap of %s " % method +
+                  "\n##\n" +
+                  "\nboot_samples = %s \n" % boot_samples +
+                  "\nboot_blocklength = %s \n" % boot_blocklength
+                  )
+
+        # Set bootstrap attribute to be passed to dataframe
+        self.dataframe.bootstrap = {}
+        self.dataframe.bootstrap['boot_blocklength'] = boot_blocklength
+
+        boot_results = {}
+        #for b in range(boot_samples):
+            # Generate random state for this boot and set it in dataframe
+            # which will generate a draw with replacement
+            #boot_seed = global_random_state.integers(0, boot_samples, 1)
+            #boot_random_state = np.random.default_rng(boot_seed)
+            #self.dataframe.bootstrap['random_state'] = boot_random_state
+
+        child_seeds = seed_sequence.spawn(boot_samples)
+
+        aggregated_results = Parallel(n_jobs=-1)(
+            delayed(self.parallelized_bootstraps)(method, method_args, boot_seed=child_seeds[b]) for
+            b in range(boot_samples))
+
+        for b in range(boot_samples):
+            # Aggregate val_matrix and other arrays to new arrays with
+            # boot_samples as first dimension. Lists and other objects
+            # are stored in dictionary
+            boot_res = aggregated_results[b]
+            for key in boot_res:
+                res_item = boot_res[key]
+                if type(res_item) is np.ndarray:
+                    if b == 0:
+                        boot_results[key] = np.empty((boot_samples,) 
+                                                     + res_item.shape,
+                                                     dtype=res_item.dtype) 
+                    boot_results[key][b] = res_item
+                else:
+                    if b == 0:
+                        boot_results[key] = {}
+                    boot_results[key][b] = res_item
+
+        # Generate summary results
+        summary_results = self.return_summary_results(results=boot_results, 
+                                                      conf_lev=conf_lev)
+
+        # Reset bootstrap to None
+        self.dataframe.bootstrap = None
+
+        return {'summary_results': summary_results, 
+                'boot_results': boot_results}
+
+    def parallelized_bootstraps(self, method, method_args, boot_seed):
+        # Pass seed sequence for this boot and set it in dataframe
+        # which will generate a draw with replacement
+        boot_random_state = np.random.default_rng(boot_seed)
+        self.dataframe.bootstrap['random_state'] = boot_random_state
+        boot_res = getattr(self, method)(**method_args)
+        return boot_res
 
     @staticmethod
     def return_summary_results(results, conf_lev=0.9):
