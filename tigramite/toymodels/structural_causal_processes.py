@@ -360,20 +360,12 @@ def _get_true_parent_neighbor_dict(parents_neighbors_coeffs):
     """
     # Initialize the returned dictionary of lists
     true_parents_neighbors = defaultdict(list)
-    try:
-        for j in parents_neighbors_coeffs:
-            for link_props in parents_neighbors_coeffs[j]:
-                i, tau = link_props[0]
-                coeff = link_props[1]
-                # Add parent node id and lag if non-zero coeff
-                if coeff != 0.:
-                    true_parents_neighbors[j].append((i, tau))
-    except TypeError:
-        for j in parents_neighbors_coeffs:
-            for link_props in parents_neighbors_coeffs[j]:
-                i = link_props[0]
-                tau = link_props[1]
-                # Add parent node id and lag
+    for j in parents_neighbors_coeffs:
+        for link_props in parents_neighbors_coeffs[j]:
+            i, tau = link_props[0]
+            coeff = link_props[1]
+            # Add parent node id and lag if non-zero coeff
+            if coeff != 0.:
                 true_parents_neighbors[j].append((i, tau))
     # Return the true relations
     return true_parents_neighbors
