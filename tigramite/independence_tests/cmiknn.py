@@ -541,8 +541,7 @@ if __name__ == '__main__':
     random_state = np.random.default_rng(seed=42)
     cmi = CMIknn(mask_type=None,
                    significance='fixed_thres',
-                   fixed_thres=0.01,
-                   sig_samples=1000,
+                   sig_samples=100,
                    sig_blocklength=1,
                    transform='none',
                    knn=0.1,
@@ -567,9 +566,11 @@ if __name__ == '__main__':
     y = (0.*z[:,0] + 1.*x[:,0] + random_state.standard_normal(T)).reshape(T, 1)
 
     data = np.hstack((x, y, z))
+    data[:,0] = 0.5
     print (data.shape)
     dataframe = DataFrame(data=data)
     cmi.set_dataframe(dataframe)
-    print(cmi.get_model_selection_criterion(j=1, parents=[], tau_max=0, folds=5))
-    print(cmi.get_model_selection_criterion(j=1, parents=[(0, 0)], tau_max=0, folds=5))
-    print(cmi.get_model_selection_criterion(j=1, parents=[(0, 0), (2, 0)], tau_max=0, folds=5))
+    print(cmi.run_test(X=[(0, 0)], Y=[(1, 0)], alpha_or_thres=0.5  ))
+    # print(cmi.get_model_selection_criterion(j=1, parents=[], tau_max=0))
+    # print(cmi.get_model_selection_criterion(j=1, parents=[(0, 0)], tau_max=0))
+    # print(cmi.get_model_selection_criterion(j=1, parents=[(0, 0), (2, 0)], tau_max=0))

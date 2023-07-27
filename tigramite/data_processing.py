@@ -38,7 +38,7 @@ class DataFrame():
             N is fixed. 
     mask : array-like, optional (default: None)
         Optional mask array, must be of same format and shape as data.
-   data_type : array-like
+    data_type : array-like
         Binary data array of same shape as array which describes whether 
         individual samples in a variable (or all samples) are continuous 
         or discrete: 0s for continuous variables and 1s for discrete variables.
@@ -665,6 +665,9 @@ class DataFrame():
 
         if extraZ is None:
             extraZ = []
+        
+        if Z is None:
+            Z = []
 
         # If vector-valued variables exist, add them
         def vectorize(varlag):     
@@ -805,7 +808,7 @@ class DataFrame():
 
                 if n_blks < 10:
                     raise ValueError("Only %d block(s) for block-sampling,"  %n_blks +
-                                     "choose smaller boot_blocklength!")
+                                     " choose smaller boot_blocklength!")
 
                 # Get the starting indices for the blocks
                 blk_strt = random_state.choice(np.arange(len(ref_points_here) - boot_blocklength), size=n_blks, replace=True)

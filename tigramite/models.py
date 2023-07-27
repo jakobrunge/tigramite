@@ -504,6 +504,159 @@ class Models():
 
         return val_matrix
 
+    def predict_full_model(self,
+                new_data=None,
+                pred_params=None,
+                cut_off='max_lag_or_tau_max'):
+        r"""Predict target variable with fitted model.
+
+        Uses the model.predict() function of the sklearn model.
+
+        A list of predicted time series for self.selected_variables is returned. 
+
+        Parameters
+        ----------
+        new_data : data object, optional
+            New Tigramite dataframe object with optional new mask. Note that
+            the data will be cut off according to cut_off, see parameter
+            `cut_off` below.
+        pred_params : dict, optional
+            Optional parameters passed on to sklearn prediction function.
+        cut_off : {'2xtau_max', 'max_lag', 'max_lag_or_tau_max'}
+            How many samples to cutoff at the beginning. The default is
+            '2xtau_max', which guarantees that MCI tests are all conducted on
+            the same samples.  For modeling, 'max_lag_or_tau_max' can be used,
+            which uses the maximum of tau_max and the conditions, which is
+            useful to compare multiple models on the same sample. Last,
+            'max_lag' uses as much samples as possible.
+
+        Returns
+        -------
+        Results from prediction.
+        """
+
+        if hasattr(self, 'selected_variables'):
+            target_list = self.selected_variables
+        else:
+            raise ValueError("Model not yet fitted.")
+
+        pred_list = []
+        self.stored_test_array = {}
+        for target in target_list:
+            # Default value for pred_params
+            if pred_params is None:
+                pred_params = {}
+
+            # Construct the array form of the data
+            Y = [(target, 0)]  # dummy
+            X = [(target, 0)]  # dummy
+            Z = self.all_parents[target]
+
+            # Check if we've passed a new dataframe object
+            if new_data is not None:
+                # if new_data.mask is None:
+                #     # if no mask is supplied, use the same mask as for the fitted array
+                #     new_data_mask = self.test_mask
+                # else:
+                new_data_mask = new_data.mask
+                test_array, _, _ = new_data.construct_array(X, Y, Z,
+                                                         tau_max=self.tau_max,
+                                                         mask=new_data_mask,
+                                                         mask_type=self.mask_type,
+                                                         cut_off=cut_off,
+                                                         remove_overlaps=True,
+                                                         verbosity=self.verbosity)
+            # Otherwise use the default values
+            else:
+                test_array, _, _ = \
+                    self.dataframe.construct_array(X, Y, Z,
+                                                   tau_max=self.tau_max,
+                                                   mask_type=self.mask_type,
+                                                   cut_off=cut_off,
+                                                   remove_overlaps=True,
+                                                   verbosity=self.verbosity)
+            # Transform the data if needed
+            a_transform = self.fit_results[target]['data_transform']
+            if a_transform is not None:
+                test_array = a_transform.transform(X=test_array.T).T
+            # Cache the test array
+            self.stored_test_array[target] = test_array
+            # Run the predictor
+            predicted = self.fit_results[target]['model'].predict(
+                X=test_array[2:].T, **pred_params)
+
+            if test_array[2:].size == 0:
+                # If there are no predictors, return the value of 
+                # empty_predictors_function, which is np.mean 
+                # and expand to the test array length
+                predicted = predicted * np.ones(test_array.shape[1])
+
+            pred_list.append(predicted)
+
+        return pred_list
+
+
+    def get_residuals_cov_mean(self, new_data=None, pred_params=None):
+        r"""Returns covariance and means of residuals from fitted model.
+
+        Residuals are available as self.residuals.
+
+        Parameters
+        ----------
+        new_data : data object, optional
+            New Tigramite dataframe object with optional new mask. Note that
+            the data will be cut off according to cut_off, see parameter
+            `cut_off` below.
+        pred_params : dict, optional
+            Optional parameters passed on to sklearn prediction function.
+
+        Returns
+        -------
+        Results from prediction.
+        """
+
+        assert self.dataframe.analysis_mode == 'single'
+
+        N = self.dataframe.N
+        T = self.dataframe.T[0]
+
+        # Get overlapping samples
+        used_indices = {}
+        overlapping = set(list(range(0, T)))
+        for j in self.all_parents:
+            if self.fit_results[j] is not None:
+                if 'used_indices' not in self.fit_results[j]:
+                    raise ValueError("Run ")
+                used_indices[j] = set(self.fit_results[j]['used_indices'][0])
+                overlapping = overlapping.intersection(used_indices[j])
+
+        overlapping = sorted(list(overlapping))
+
+        if len(overlapping) <= 10:
+            raise ValueError("Less than 10 overlapping samples due to masking and/or missing values,"
+                             " cannot compute residual covariance!")
+
+        predicted = self.predict_full_model(new_data=new_data,
+                                            pred_params=pred_params,
+                                            cut_off='max_lag_or_tau_max')
+
+        # Residuals only exist after tau_max
+        residuals = self.dataframe.values[0].copy()
+
+        for index, j in enumerate([j for j in self.all_parents]): # if len(parents[j]) > 0]):
+            residuals[list(used_indices[j]), j] -= predicted[index]
+        
+        overlapping_residuals = residuals[overlapping]
+
+        len_residuals = len(overlapping_residuals)
+
+        cov = np.cov(overlapping_residuals, rowvar=0)
+        mean = np.mean(overlapping_residuals, axis=0)   # residuals should have zero mean due to prediction including constant
+
+        self.residuals = overlapping_residuals
+
+        return cov, mean
+
 class LinearMediation(Models):
     r"""Linear mediation analysis for time series models.
 
@@ -615,7 +768,7 @@ class LinearMediation(Models):
                         mask_type=mask_type,
                         verbosity=verbosity)
 
-    def fit_model(self, all_parents, tau_max=None):
+    def fit_model(self, all_parents, tau_max=None, return_data=False):
         r"""Fit linear time series model.
 
         Fits a sklearn.linear_model.LinearRegression model to the parents of
@@ -629,11 +782,14 @@ class LinearMediation(Models):
             the parents estimated with PCMCI.
         tau_max : int, optional (default: None)
             Maximum time lag. If None, the maximum lag in all_parents is used.
+        return_data : bool, optional (default: False)
+            Whether to save the data array. Needed to get residuals.
         """
 
         # Fit the model using the base class
         self.fit_results = self.fit_full_model(all_parents=all_parents,
                                         selected_variables=None,
+                                        return_data=return_data,
                                         tau_max=tau_max)
         # Cache the results in the member variables
         coeffs = self.get_coefs()
@@ -759,7 +915,7 @@ class LinearMediation(Models):
             boot_effect = getattr(self, function)(**function_args)
 
             if r == 0:
-                bootstrap_result = np.empty((realizations, ) + boot_effect.shape)
+                bootstrap_result = np.empty((realizations,) + boot_effect.shape)
 
             bootstrap_result[r] = boot_effect
 
@@ -772,6 +928,7 @@ class LinearMediation(Models):
         self.phi = original_phi
         self.psi = original_psi 
         self.all_psi_k = original_all_psi_k 
+        self.bootstrap_result = bootstrap_result
 
         return confidence_interval
 
@@ -1892,11 +2049,13 @@ if __name__ == '__main__':
     data, nonstat = toys.structural_causal_process(links, T=T, noises=None, seed=7)
 
     missing_flag = 999
-    # for i in range(0, 20):
-    #     data[i::100] = missing_flag
+    for i in range(0, 20):
+        data[i::100] = missing_flag
+
+    # mask = data>0
 
     parents = toys._get_true_parent_neighbor_dict(links)
-    dataframe = pp.DataFrame(data, missing_flag = missing_flag)
+    dataframe = pp.DataFrame(data,  missing_flag = missing_flag)
 
 
     # model = LinearRegression()
@@ -1904,13 +2063,15 @@ if __name__ == '__main__':
     # model.predict(X=np.random.randn(10,2)[:,2:])
     # sys.exit(0)
 
-    med = LinearMediation(dataframe=dataframe, 
+    med = LinearMediation(dataframe=dataframe, #mask_type='y',
         data_transform=None)
-    med.fit_model(all_parents=parents, tau_max=None)
-    med.fit_model_bootstrap( 
-                boot_blocklength='cube_root',
-                seed = 42,
-                )
+    med.fit_model(all_parents=parents, tau_max=None,  return_data=True)
+
+    print(med.get_residuals_cov_mean())
+    # med.fit_model_bootstrap( 
+    #             boot_blocklength='cube_root',
+    #             seed = 42,
+    #             )
 
     # # print(med.get_val_matrix())
 

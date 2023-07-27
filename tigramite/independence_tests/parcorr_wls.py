@@ -2,8 +2,10 @@ from __future__ import print_function
 import numpy as np
 import warnings
 
-from tigramite.independence_tests.parcorr import ParCorr
-from tigramite.independence_tests.robust_parcorr import RobustParCorr
+from .parcorr import ParCorr
+from .robust_parcorr import RobustParCorr
+# from tigramite.independence_tests.parcorr import ParCorr
+# from tigramite.independence_tests.robust_parcorr import RobustParCorr
 from tigramite import data_processing as pp
 
 
@@ -62,83 +64,98 @@ class ParCorrWLS(ParCorr):
         self.robustify = robustify
 
         self.stds = None
-        self.data = None
 
         ParCorr.__init__(self,
-        recycle_residuals=False,   # Doesn't work with ParCorrWLS
-         **kwargs)
+                         recycle_residuals=False,  # Doesn't work with ParCorrWLS
+                         **kwargs)
         self._measure = 'par_corr_wls'
 
-    def _get_stds(self, array, X, Y, Z, tau_max=0, cut_off='2xtau_max',
-                  verbosity=0):
-        """Estimate standard deviations of X and Y, or use ground truth standard deviations depending on
-        user-supplied background knowledge."""
+    def _stds_preparation(self, X, Y, Z, tau_max=0, cut_off='2xtau_max', verbosity=0):
+        """Helper function to bring expert_knowledge into standard form."""
 
-        if self.gt_std_matrix is not None:
-            stds_dataframe = pp.DataFrame(self.gt_std_matrix,
-                                          datatime={0: np.arange(len(self.gt_std_matrix[:, 0]))})
-            self.stds, _, _, _ = stds_dataframe.construct_array(X=X, Y=Y, Z=Z,
-                                                                tau_max=tau_max,
-                                                                mask_type=self.mask_type,
-                                                                return_cleaned_xyz=True,
-                                                                do_checks=True,
-                                                                remove_overlaps=True,
-                                                                cut_off=cut_off,
-                                                                verbosity=verbosity)
-        else:
-            if self.expert_knowledge == "time-dependent heteroskedasticity":
-                self.expert_knowledge = {variable: ["time-dependent heteroskedasticity"]
-                                         for variable in range(self.dataframe.N)}
-            elif self.expert_knowledge == "homoskedasticity":
-                self.expert_knowledge = {}
-            if any([type(item) == tuple for item in self.expert_knowledge.items()]):
-                # if there is parent-dependent heteroskedasticity specified in the expert knowledge,
-                # prepare data for all nodes in the same way as X, Y and Z such that we can later obtain data
-                # for the heteroskedasticity-inducing parent
+        if self.expert_knowledge == "time-dependent heteroskedasticity":
+            self.expert_knowledge = {variable: ["time-dependent heteroskedasticity"]
+                                     for variable in range(self.dataframe.N)}
+        elif self.expert_knowledge == "homoskedasticity":
+            self.expert_knowledge = {}
 
-                nodes, _, XYZ, _ = self.dataframe.construct_array(X=X, Y=Y, Z=[(i, 0) for i in range(self.dataframe.N)],
-                                                                  tau_max=tau_max,
-                                                                  mask_type=self.mask_type,
-                                                                  return_cleaned_xyz=True,
-                                                                  do_checks=True,
-                                                                  remove_overlaps=True,
-                                                                  cut_off=cut_off,
-                                                                  verbosity=verbosity)
-                self.data = np.zeros((self.dataframe.N, nodes.shape[1]))
-                node_indices = []
-                # print(XYZ)
-                for i in XYZ:
-                    node_indices += i
-                for index, j in enumerate(node_indices):
-                    if j[1] == 0:
-                        # collect prepped array-data of all nodes at lag zero
-                        self.data[j[0]] = nodes[index]
-            # estimate the weights based on expert knowledge on heteroskedastic relationships
-            stds = self._get_std_estimation(array, X, Y)
-            self.stds = stds
-            return stds
-
-    def _get_array(self, X, Y, Z, tau_max=0, cut_off='2xtau_max', verbosity=0, return_cleaned_xyz=True):
+    def _get_array(self, X, Y, Z, tau_max=0, cut_off='2xtau_max', verbosity=0, return_cleaned_xyz=True,
+                   remove_constant_data=False):
         """Convenience wrapper around construct_array. Simultaneously, construct self.stds which needs to correspond
         to the variables in the array."""
 
         if self.measure in ['par_corr_wls']:
             if len(X) > 1 or len(Y) > 1:
-                raise ValueError("X and Y for %s must be univariate." %
-                                 self.measure)
+                raise ValueError("X and Y for %s must be univariate." % self.measure)
 
-        # Call the wrapped function
-        array, xyz, XYZ, data_type = self.dataframe.construct_array(X=X, Y=Y, Z=Z,
-                                                            tau_max=tau_max,
-                                                            mask_type=self.mask_type,
-                                                            return_cleaned_xyz=return_cleaned_xyz,
-                                                            do_checks=True,
-                                                            remove_overlaps=True,
-                                                            cut_off=cut_off,
-                                                            verbosity=verbosity)
-        array_copy = array.copy()
-        self._get_stds(array_copy, X, Y, Z, tau_max, cut_off, verbosity)
-        return array, xyz, XYZ, data_type
+        Z_orig = Z.copy()
+        expert_knowledge_XY = []
+        for var in [X[0][0], Y[0][0]]:
+            if type(self.expert_knowledge) != str and var in self.expert_knowledge:
+                expert_knowledge_XY += self.expert_knowledge[var]
+
+        # add heteroskedasticity-inducing parents to Z (later these are removed again)
+        # to obtain data cleaned the same as X and Y for weight estimation
+        for item in expert_knowledge_XY:
+            if type(item) == tuple:
+                Z += [item]
+
+        # Call the _get_array function of the parent class
+        if remove_constant_data:
+            array, xyz, XYZ, data_type, nonzero_array, nonzero_xyz, nonzero_XYZ, nonzero_data_type = super()._get_array(
+                X=X, Y=Y, Z=Z,
+                tau_max=tau_max,
+                cut_off=cut_off,
+                verbosity=verbosity,
+                remove_constant_data=remove_constant_data)
+
+            X, Y, Z = XYZ
+            flat_XYZ = X + Y + Z
+            counter = None if (len(Z) - len(Z_orig)) <= 0 else -1 * (len(Z) - len(Z_orig))
+            data_hs_parent = {}
+            for i, item in enumerate(expert_knowledge_XY):
+                if type(item) == tuple:
+                    data_hs_parent[item] = array[flat_XYZ.index(item), :]
+
+            # stds have to correspond to array without the zero-rows
+            nonzero_array_copy = nonzero_array.copy()
+            nonzero_X, nonzero_Y, nonzero_Z = nonzero_XYZ
+            self._get_std_estimation(nonzero_array_copy, nonzero_X, nonzero_Y, nonzero_Z, tau_max,
+                                     cut_off, verbosity, data_hs_parent)
+
+            if data_type:
+                data_type = data_type[:counter]
+                nonzero_data_type = nonzero_data_type[:counter]
+
+            return array[:counter], xyz[:counter], (X, Y, Z[:counter]), data_type, \
+                nonzero_array[:counter], nonzero_xyz[:counter], (nonzero_X, nonzero_Y, nonzero_Z[:counter]), \
+                nonzero_data_type
+
+        else:
+            array, xyz, XYZ, data_type = super()._get_array(
+                X=X, Y=Y, Z=Z,
+                tau_max=tau_max,
+                cut_off=cut_off,
+                verbosity=verbosity,
+                remove_constant_data=remove_constant_data)
+
+            X, Y, Z = XYZ
+            flat_XYZ = X + Y + Z
+            counter = None if (len(Z) - len(Z_orig)) <= 0 else -1 * (len(Z) - len(Z_orig))
+
+            dim, T = array.shape
+            # save the data of the heteroskedasticity inducing parents to use for weight estimation
+            data_hs_parent = np.zeros((len(expert_knowledge_XY), T))
+            for i, item in enumerate(expert_knowledge_XY):
+                if type(item) == tuple:
+                    data_hs_parent[i, :] = array[flat_XYZ.index(item), :]
+
+            array_copy = array.copy()
+            self._get_std_estimation(array_copy, X, Y, Z, tau_max, cut_off, verbosity, data_hs_parent)
+            if data_type:
+                data_type = data_type[:counter]
+
+            return array[:counter], xyz[:counter], (X, Y, Z[:counter]), data_type
 
     def _estimate_std_time(self, arr, target_var):
         """
@@ -178,7 +195,7 @@ class ParCorrWLS(ParCorr):
             (np.ones(self.window_size - 1), np.convolve(resid, np.ones(self.window_size), 'valid') / self.window_size))
         return std_est
 
-    def _estimate_std_parent(self, arr, target_var, target_lag, H):
+    def _estimate_std_parent(self, arr, target_var, target_lag, H, data_hs_parent):
         """
         Estimate the standard deviations of the error terms using a residual-based approach.
         First calculate the absolute value of the residuals using OLS, then smooth them by averaging over the k ones
@@ -202,7 +219,6 @@ class ParCorrWLS(ParCorr):
 
         """
         dim, T = arr.shape
-        # print(dim, T)
         dim_z = dim - 2
         y = np.copy(arr[target_var, :])
 
@@ -214,8 +230,8 @@ class ParCorrWLS(ParCorr):
             lag = H[1] + target_lag
 
             # order the residuals w.r.t. the heteroskedasticity-inducing parent corresponding to sample h
-            h = np.copy(self.data[H[0], np.abs(self.data.shape[1] - T): lag])
-            # print(h.shape,H[0], np.abs(self.data.shape[1] - T))
+            h = data_hs_parent[-1 * lag:]
+
             ordered_z_ind = np.argsort(h)
             ordered_z_ind = ordered_z_ind * (ordered_z_ind > 0)
             revert_argsort = np.argsort(ordered_z_ind)
@@ -238,7 +254,7 @@ class ParCorrWLS(ParCorr):
 
         return std_est
 
-    def _get_std_estimation(self, array, X, Y):
+    def _get_std_estimation(self, array, X, Y, Z=[], tau_max=0, cut_off='2xtau_max', verbosity=0, data_hs_parent=None):
         """Use expert knowledge on the heteroskedastic relationships contained in self.expert_knowledge to estimate the
         standard deviations of the error terms.
         The expert knowledge can specify whether there is sampling index / time dependent heteroskedasticity,
@@ -258,17 +274,35 @@ class ParCorrWLS(ParCorr):
         stds: array-like
             Array of standard deviations of error terms for X and Y of shape (2, T).
         """
+        self._stds_preparation(X, Y, Z, tau_max, cut_off, verbosity)
+
         dim, T = array.shape
-        stds = np.ones((2, T))
-        for count, variable in enumerate([X[0], Y[0]]):
-            # Here we assume that it is known what the heteroskedasticity function depends on for every variable
-            if variable[0] in self.expert_knowledge:
-                hs_source = self.expert_knowledge[variable[0]][0]
-                if hs_source == "time-dependent heteroskedasticity":
-                    stds[count] = self._estimate_std_time(array, count)
-                elif type(hs_source) is tuple:
-                    stds[count] = self._estimate_std_parent(array, count, variable[1],
-                                                            hs_source)
+        if self.gt_std_matrix is not None:
+            stds_dataframe = pp.DataFrame(self.gt_std_matrix,
+                                          mask=self.dataframe.mask,
+                                          missing_flag=self.dataframe.missing_flag,
+                                          datatime={0: np.arange(len(self.gt_std_matrix[:, 0]))})
+            stds, _, _, _ = stds_dataframe.construct_array(X=X, Y=Y, Z=Z,
+                                                           tau_max=tau_max,
+                                                           mask_type=self.mask_type,
+                                                           return_cleaned_xyz=True,
+                                                           do_checks=True,
+                                                           remove_overlaps=True,
+                                                           cut_off=cut_off,
+                                                           verbosity=verbosity)
+        else:
+            stds = np.ones((2, T))
+            for count, variable in enumerate([X[0], Y[0]]):
+                # Here we assume that it is known what the heteroskedasticity function depends on for every variable
+                if variable[0] in self.expert_knowledge:
+                    hs_source = self.expert_knowledge[variable[0]][0]
+                    if hs_source == "time-dependent heteroskedasticity":
+                        stds[count] = self._estimate_std_time(array, count)
+                    elif type(hs_source) is tuple:
+                        stds[count] = self._estimate_std_parent(array, count, variable[1],
+                                                                hs_source, data_hs_parent[hs_source])
+
+        self.stds = stds
         return stds
 
     def _get_single_residuals(self, array, target_var,
@@ -306,7 +340,7 @@ class ParCorrWLS(ParCorr):
 
         x_vals_sum = np.sum(array)
         x_vals_has_nan = np.isnan(x_vals_sum)
-        if x_vals_has_nan: 
+        if x_vals_has_nan:
             raise ValueError("array has nans")
 
         try:
@@ -328,7 +362,7 @@ class ParCorrWLS(ParCorr):
                 warnings.warn("Possibly constant array!")
             x_vals_sum = np.sum(array)
             x_vals_has_nan = np.isnan(x_vals_sum)
-            if x_vals_has_nan: 
+            if x_vals_has_nan:
                 raise ValueError("array has nans")
         y = np.copy(array[target_var, :])
         weights = np.diag(np.reciprocal(stds))
@@ -364,7 +398,7 @@ class ParCorrWLS(ParCorr):
         if self.robustify:
             array = RobustParCorr.trafo2normal(self, array)
         return ParCorr.get_shuffle_significance(self, array, xyz, value,
-                                 return_null_dist=False)
+                                                return_null_dist=False)
 
     def get_model_selection_criterion(self, j, parents, tau_max=0, corrected_aic=False):
         """Returns Akaike's Information criterion modulo constants.
@@ -392,7 +426,7 @@ class ParCorrWLS(ParCorr):
         """
 
         Y = [(j, 0)]
-        X = [(j, 0)]   # dummy variable here
+        X = [(j, 0)]  # dummy variable here
         Z = parents
         array, xyz, _, _ = self._get_array(X, Y, Z, tau_max=tau_max, verbosity=self.verbosity,
                                            return_cleaned_xyz=False)
@@ -404,12 +438,13 @@ class ParCorrWLS(ParCorr):
 
         y = self._get_single_residuals(array, target_var=1, return_means=False)
         # Get RSS
-        rss = (y**2).sum()
+        rss = (y ** 2).sum()
         # Number of parameters
         p = dim - 1
         # Get AIC
         if corrected_aic:
-            score = T * np.log(rss) + 2. * p + (2.*p**2 + 2.*p)/(T - p - 1)
+            score = T * np.log(rss) + 2. * p + (2. * p ** 2 + 2. * p) / (T - p - 1)
         else:
             score = T * np.log(rss) + 2. * p
         return score
+

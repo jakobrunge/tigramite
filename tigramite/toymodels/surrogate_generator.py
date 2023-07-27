@@ -42,12 +42,14 @@ def generate_linear_model_from_data(dataframe, parents, tau_max, realizations=10
         Seed for RandomState (default_rng)
     """
 
-    from tigramite.models import Models, Prediction
+    from tigramite.models import Models
     from sklearn.linear_model import LinearRegression
 
     assert dataframe.analysis_mode == 'single'
 
     random_state = np.random.default_rng(seed)
+
+    def lin_f(x): return x
 
     if model_params is None:
         model_params = {}
@@ -57,63 +59,44 @@ def generate_linear_model_from_data(dataframe, parents, tau_max, realizations=10
     if T_data is None:
         T_data = T
 
-    ## Fit linear structural causal model to causal parents taken from graph
-    def lin_f(x): return x
-
     ## Estimate noise covariance matrix of residuals
-    prediction = Prediction(dataframe=dataframe,
-                     train_indices=range(T),
-                     test_indices=range(T),
-                     prediction_model=LinearRegression(**model_params),
+    model = Models(dataframe=dataframe,
+                     model=LinearRegression(**model_params),
                      data_transform=data_transform,
-                     # mask_type=mask_type,
+                     mask_type='y',
                      verbosity=0)
 
-    prediction.fit(target_predictors=parents, tau_max=tau_max, return_data=True)
+    model.fit_full_model(all_parents=parents, tau_max=tau_max, return_data=True)
 
     links_coeffs = {}
     for j in range(N):
         links_coeffs[j] = []
         if len(parents[j]) > 0:
             for ipar, par in enumerate(parents[j]):
-                links_coeffs[j].append(((par[0], int(par[1])), prediction.fitted_model[j]['model'].coef_[ipar], lin_f))
+                links_coeffs[j].append(((par[0], int(par[1])), model.fit_results[j]['model'].coef_[ipar], lin_f))
                 if verbosity > 0:
-                    print(j, ((par[0], int(par[1])), np.round(prediction.fitted_model[j]['model'].coef_[ipar], 2),) )
+                    print(j, ((par[0], int(par[1])), np.round(model.fit_results[j]['model'].coef_[ipar], 2),) )
 
-    # Get overlapping samples
-    used_indices = {}
-    overlapping = set(list(range(0, T)))
-    for j in parents:
-        if prediction.fitted_model[j] is not None:
-            used_indices[j] = set(prediction.fitted_model[j]['used_indices'][0])
-            overlapping = overlapping.intersection(used_indices[j])
+    pred = model.predict_full_model(
+                new_data=None,
+                pred_params=None,
+                cut_off='max_lag_or_tau_max')
 
-    overlapping = sorted(list(overlapping))
-
-    if len(overlapping) <= 10:
-        raise ValueError("Less than 10 overlapping samples due to masking and/or missing values,"
-                         " cannot compute residual covariance!")
-
-    predicted = prediction.predict(target=[j for j in parents if len(parents[j]) > 0])
-
-    # Residuals only exist after tau_max
-    residuals = dataframe.values[0].copy()
-
-    for index, j in enumerate([j for j in parents if len(parents[j]) > 0]):
-        residuals[list(used_indices[j]), j] -= predicted[index]
-    
-    overlapping_residuals = residuals[overlapping]
-
-    len_residuals = len(overlapping_residuals)
+    # Computes cov and mean, but internally also the residuals needed here
+    cov, mean = model.get_residuals_cov_mean(new_data=None,
+                pred_params=None,)
 
     if generate_noise_from == 'covariance':
-        cov = np.cov(overlapping_residuals, rowvar=0)
-        mean = np.mean(overlapping_residuals, axis=0)   # residuals should have zero mean due to prediction including constant
+        # cov = np.cov(overlapping_residuals, rowvar=0)
+        # mean = np.mean(overlapping_residuals, axis=0)   # residuals should have zero mean due to prediction including constant
         if verbosity > 0:
             print('covariance')
             print(np.round(cov, 2))
             print('mean')
             print(np.round(mean, 2))
+
+    overlapping_residuals = model.residuals
+    len_residuals = len(overlapping_residuals)
 
     ## Construct linear Gaussian structural causal model with this noise structure and generate many realizations with same sample size as data
     transient_fraction = 0.2
@@ -325,8 +308,8 @@ if __name__ == '__main__':
     parents = {}
     for j in links_coeffs:
         parents[j] = []
-        # for par in links_coeffs[j]:
-        #     parents[j].append(par[0])
+        for par in links_coeffs[j]:
+            parents[j].append(par[0])
     print(parents)
     datasets = list(generate_linear_model_from_data(dataframe, parents=parents, 
                 tau_max=tau_max, realizations=100, 

@@ -490,7 +490,7 @@ class PCMCI(PCMCIbase):
         max_combinations : int
             Maximum number of combinations of conditions to test.
         """
-        print("\n##\n## Step 1: PC1 algorithm with lagged conditions\n##"
+        print("\n##\n## Step 1: PC1 algorithm for selecting lagged conditions\n##"
               "\n\nParameters:")
         if link_assumptions is not None:
             print("link_assumptions = %s" % str(link_assumptions))
@@ -2756,11 +2756,11 @@ class PCMCI(PCMCIbase):
         # Remove tau-dimension
         old_sepsets = results['sepsets'].copy()
         results['sepsets'] = {}
-        for old_sepsets in old_sepsets:
-           new_sepsets = (old_sepsets[0][0], old_sepsets[1])
-           conds = [cond[0] for cond in old_sepsets[old_sepsets]]
+        for old_sepset in old_sepsets:
+           new_sepset = (old_sepset[0][0], old_sepset[1])
+           conds = [cond[0] for cond in old_sepsets[old_sepset]]
 
-           results['sepsets'][new_sepsets] = conds
+           results['sepsets'][new_sepset] = conds
 
         ambiguous_triples = results['ambiguous_triples'].copy()
         results['ambiguous_triples'] = []

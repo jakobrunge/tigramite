@@ -324,21 +324,63 @@ class ParCorrMult(CondIndTest):
 
         return pval
 
-    def get_analytic_confidence(self, value, df, conf_lev):
-        """
-        Base class assumption that this is not implemented.  Concrete classes
-        should override when possible.
-        """
-        raise NotImplementedError("Analytic confidence not"+\
-                                  " implemented for %s" % self.measure)
+    def get_model_selection_criterion(self, j, parents, tau_max=0, corrected_aic=False):
+        """Returns Akaike's Information criterion modulo constants.
 
-    def get_model_selection_criterion(self, j, parents, tau_max=0):
+        Fits a linear model of the parents to each variable in j and returns
+        the average score. Leave-one-out cross-validation is asymptotically
+        equivalent to AIC for ordinary linear regression models. Here used to
+        determine optimal hyperparameters in PCMCI, in particular the
+        pc_alpha value.
+
+        Parameters
+        ----------
+        j : int
+            Index of target variable in data array.
+
+        parents : list
+            List of form [(0, -1), (3, -2), ...] containing parents.
+
+        tau_max : int, optional (default: 0)
+            Maximum time lag. This may be used to make sure that estimates for
+            different lags in X, Z, all have the same sample size.
+
+        Returns:
+        score : float
+            Model score.
         """
-        Base class assumption that this is not implemented.  Concrete classes
-        should override when possible.
-        """
-        raise NotImplementedError("Model selection not"+\
-                                  " implemented for %s" % self.measure)
+
+        Y = [(j, 0)]
+        X = [(j, 0)]   # dummy variable here
+        Z = parents
+        array, xyz, _ = self.dataframe.construct_array(X=X, Y=Y, Z=Z,
+                                                    tau_max=tau_max,
+                                                    mask_type=self.mask_type,
+                                                    return_cleaned_xyz=False,
+                                                    do_checks=True,
+                                                    verbosity=self.verbosity)
+
+        dim, T = array.shape
+
+        y = self._get_single_residuals(array, xyz, target_var=0)
+
+        n_comps = y.shape[0]
+        score = 0.
+        for y_component in y:
+            # Get RSS
+            rss = (y_component**2).sum()
+            # Number of parameters
+            p = dim - 1
+            # Get AIC
+            if corrected_aic:
+                comp_score = T * np.log(rss) + 2. * p + (2.*p**2 + 2.*p)/(T - p - 1)
+            else:
+                comp_score = T * np.log(rss) + 2. * p
+            score += comp_score
+
+        score /= float(n_comps)
+        return score
+
 
 if __name__ == '__main__':
     
@@ -354,23 +396,29 @@ if __name__ == '__main__':
             # sig_samples=1000,
         )
 
-    rate = np.zeros(100)
-    for i in range(100):
+    samples=1
+    rate = np.zeros(1)
+    for i in range(1):
         print(i)
         data = random_state.standard_normal((100, 6))
         data[:,2] += -0.5*data[:,0]
         # data[:,1] += data[:,2]
-        dataframe = DataFrame(data)
+        dataframe = DataFrame(data, 
+            # vector_vars={0:[(0,0), (1,0)], 1:[(2,0),(3,0)], 2:[(4,0),(5,0)]}
+            )
 
         cmi.set_dataframe(dataframe)
 
         pval = cmi.run_test(
-                X=[(0,0)], #, (1,0)], 
-                Y=[(2,0)], #, (3, 0)], 
+                X=[(0,0)], 
+                Y=[(1,0)], #, (3, 0)], 
                 # Z=[(5,0)]
-                Z = []
+                Z = [(2, 0)]
                 )[1]
         
         rate[i] = pval <= 0.1
+
+        cmi.get_model_selection_criterion(j=0, parents=[(1, 0), (2, 0)], tau_max=0, corrected_aic=False)
+
         # print(cmi.run_test(X=[(0,0),(1,0)], Y=[(2,0), (3, 0)], Z=[(5,0)]))
     print(rate.mean())
