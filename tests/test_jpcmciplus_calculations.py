@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 from numpy.random import MT19937, SeedSequence
 
-from tigramite.jpcmciplus import J_PCMCIplus
+from tigramite.jpcmciplus import JPCMCIplus
 from tigramite.toymodels import structural_causal_processes as toys
 from tigramite.independence_tests.parcorr_mult import ParCorrMult
 from tigramite.independence_tests.oracle_conditional_independence import OracleCI
@@ -339,7 +339,7 @@ def a_run_jpcmciplus(a_jpcmciplus, a_jpcmciplus_params):
         cond_ind_test = ParCorrMult()
 
     # Run the PCMCI algorithm with the given parameters
-    jpcmci = J_PCMCIplus(dataframe=dataframe, cond_ind_test=cond_ind_test, verbosity=0,
+    jpcmci = JPCMCIplus(dataframe=dataframe, cond_ind_test=cond_ind_test, verbosity=0,
                          node_classification=node_classification
                          )
     results = jpcmci.run_jpcmciplus(

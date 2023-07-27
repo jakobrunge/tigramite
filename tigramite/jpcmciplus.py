@@ -7,17 +7,16 @@
 from __future__ import print_function
 import numpy as np
 from tigramite.pcmci import PCMCI
-from tigramite.independence_tests.parcorr_mult import ParCorrMult
 from copy import deepcopy
 import itertools
 
 from tigramite.toymodels.context_model import group_links
 
 
-class J_PCMCIplus(PCMCI):
+class JPCMCIplus(PCMCI):
     r"""J-PCMCI+ causal discovery for time series datasets from multiple contexts.
         This class is based on the PCMCI framework as described in [1]_.
-        J_PCMCIplus enables causal discovery for time series data from different contexts,
+        JPCMCIplus enables causal discovery for time series data from different contexts,
         i.e. datasets, where some of the variables describing the context might be unobserved.
         The method is described in detail in [10]_.
         See the tutorial for guidance in applying the method.
@@ -80,6 +79,7 @@ class J_PCMCIplus(PCMCI):
         """
 
     def __init__(self, node_classification, **kwargs):
+        # Init base class
         PCMCI.__init__(self, **kwargs)
 
         self.system_nodes = self.group_nodes(node_classification, "system")
@@ -111,17 +111,17 @@ class J_PCMCIplus(PCMCI):
                        max_conds_px_lagged=None,
                        fdr_method='none'):
         """
-        Runs J_PCMCIplus time-lagged and contemporaneous causal discovery for time series from multiple contexts.
+        Runs JPCMCIplus time-lagged and contemporaneous causal discovery for time series from multiple contexts.
         Method described in [10]_:
             W. Günther, U. Ninad, J. Runge,
             Causal discovery for time series from multiple datasets with latent contexts. UAI 2023
         Notes
         -----
-        The J_PCMCIplus causal discovery method is described in [10]_, where
-        also analytical and numerical results are presented. J_PCMCIplus can identify the joint causal graph
+        The JPCMCIplus causal discovery method is described in [10]_, where
+        also analytical and numerical results are presented. JPCMCIplus can identify the joint causal graph
         over multiple datasets containing time series data from different contexts under the standard assumptions
         of Causal Sufficiency, Faithfulness and the Markov condition, as well as some background knowledge assumptions.
-        J_PCMCIplus estimates time-lagged and contemporaneous causal links from context to system
+        JPCMCIplus estimates time-lagged and contemporaneous causal links from context to system
         variables and in between system variables by a four-step procedure:
 
         1.  **Discovery of supersets of the lagged parents of the system and observed temporal context nodes** by
@@ -167,11 +167,11 @@ class J_PCMCIplus(PCMCI):
         making use of all triples involving one context or dummy variable and two system variables as in the non-time
         series case.
 
-        J_PCMCIplus can be flexibly combined with any kind of conditional
+        JPCMCIplus can be flexibly combined with any kind of conditional
         independence test statistic adapted to the kind of data (continuous
         or discrete) and its assumed dependency types. These are available in
         ``tigramite.independence_tests``.
-        See PCMCIplus for a description of the parameters of J_PCMCIplus. Also, guidance on best practices for
+        See PCMCIplus for a description of the parameters of JPCMCIplus. Also, guidance on best practices for
         setting these parameters is given there.
 
         Parameters
@@ -250,11 +250,18 @@ class J_PCMCIplus(PCMCI):
         if link_assumptions is not None:
             _link_assumptions = deepcopy(link_assumptions)
         else:
-            _link_assumptions = {j: {(i, -tau): 'o?o' for i in range(self.N)
-                                     for tau in range(tau_max + 1)} for j in range(self.N)}
+            _link_assumptions = self._set_link_assumptions(link_assumptions, tau_min, tau_max,
+                       remove_contemp=False)
+            # {j: {(i, -tau): ("-?>" if tau > 0 else "o?o") for i in range(self.N)
+            #                          for tau in range(tau_max + 1)} for j in range(self.N)}
 
         _link_assumptions = self.assume_exogenous_context(_link_assumptions, observed_context_nodes)
         _link_assumptions = self.clean_link_assumptions(_link_assumptions, tau_max)
+
+        # for j in _link_assumptions:
+        #     print(j, _link_assumptions[j])
+        # self._set_link_assumptions(_link_assumptions, tau_min, tau_max,
+        #                        remove_contemp=False)
 
         # Check if pc_alpha is chosen to optimize over a list
         if pc_alpha is None or isinstance(pc_alpha, (list, tuple, np.ndarray)):
@@ -303,8 +310,8 @@ class J_PCMCIplus(PCMCI):
                                    for i in
                                    range(self.N)}
 
-        if self.verbosity > 0:
-            print("Discovered observed context parents: ", context_results['parents'])
+        # if self.verbosity > 0:
+        #     print("\nDiscovered observed context parents: ", context_results['parents'])
 
         if len(self.time_dummy) > 0 or len(self.space_dummy) > 0:
             # step 2:
@@ -327,8 +334,8 @@ class J_PCMCIplus(PCMCI):
         else:
             dummy_system_results = deepcopy(context_results)
 
-        if self.verbosity > 0:
-            print("Discovered dummy parents: ", self.dummy_parents)
+        # if self.verbosity > 0:
+        #     print("Discovered dummy parents: ", self.dummy_parents)
 
         # step 3:
         self.mode = "system_search"
@@ -343,6 +350,7 @@ class J_PCMCIplus(PCMCI):
 
         dummy_system_results_copy = deepcopy(dummy_system_results)
 
+        # step 4:
         system_skeleton_results = self.discover_system_system_links(link_assumptions=_link_assumptions,
                                                                     lagged_context_dummy_parents=lagged_context_dummy_parents,
                                                                     tau_min=tau_min,
@@ -383,7 +391,8 @@ class J_PCMCIplus(PCMCI):
         return_dict = {'graph': final_graph, 'p_matrix': system_skeleton_results['p_matrix'],
                        'val_matrix': system_skeleton_results['val_matrix'],
                        'sepsets': colliders_step_results['sepsets'],
-                       'ambiguous_triples': colliders_step_results['ambiguous_triples'], 'conf_matrix': None}
+                       'ambiguous_triples': colliders_step_results['ambiguous_triples'], 
+                       'conf_matrix': None}
 
         # Print the results
         if self.verbosity > 0:
@@ -495,7 +504,7 @@ class J_PCMCIplus(PCMCI):
                                              max_conds_px_lagged=None,
                                              fdr_method='none'):
         """
-        Step 1 of J_PCMCIplus, i.e. discovery of links between observed context nodes and system nodes through an
+        Step 1 of JPCMCIplus, i.e. discovery of links between observed context nodes and system nodes through an
         application of the skeleton phase of PCMCIplus to this subset of nodes (observed context nodes and system
         nodes).
         See run_jpcmciplus for a description of the parameters.
@@ -525,6 +534,9 @@ class J_PCMCIplus(PCMCI):
         _int_link_assumptions = self._set_link_assumptions(_link_assumptions_wo_dummy, tau_min, tau_max)
 
         # Step 1: Get a superset of lagged parents from run_pc_stable
+        if self.verbosity > 0:
+            print("\n##\n## J-PCMCI+ Step 1: Selecting lagged conditioning sets\n##")
+
         lagged_parents = self.run_pc_stable(link_assumptions=link_assumptions,
                                             tau_min=tau_min,
                                             tau_max=tau_max,
@@ -539,7 +551,7 @@ class J_PCMCIplus(PCMCI):
 
         # run PCMCI+ skeleton phase on subset of links to discover context-system links
         if self.verbosity > 0:
-            print("\n##\n## J-PCMCI+ Step 1: Discovering context-system links\n##")
+            print("\n##\n## J-PCMCI+ Step 2: Discovering context-system links\n##")
             if link_assumptions is not None:
                 print("\nWith link_assumptions = %s" % str(_int_link_assumptions))
 
@@ -583,7 +595,7 @@ class J_PCMCIplus(PCMCI):
                                     max_conds_px_lagged=None,
                                     fdr_method='none'):
         """
-        Step 2 of J_PCMCIplus, i.e. discovery of links between observed (time and space) dummy nodes and system nodes
+        Step 2 of JPCMCIplus, i.e. discovery of links between observed (time and space) dummy nodes and system nodes
         through an application of the skeleton phase of PCMCIplus to this subset of nodes (dummy nodes and
         system nodes).
         See run_jpcmciplus for a description of the parameters.
@@ -620,7 +632,7 @@ class J_PCMCIplus(PCMCI):
 
         self.mode = "dummy_search"
         if self.verbosity > 0:
-            print("\n##\n## J-PCMCI+ Step 2: Discovering dummy-system links\n##")
+            print("\n##\n## J-PCMCI+ Step 3: Discovering dummy-system links\n##")
             if _link_assumptions_dummy is not None:
                 print("\nWith link_assumptions = %s" % str(_int_link_assumptions))
 
@@ -672,7 +684,7 @@ class J_PCMCIplus(PCMCI):
                                      fdr_method='none'
                                      ):
         """
-        Step 4 of J_PCMCIplus and orientation phase, i.e. discovery of links between system nodes given the knowledge
+        Step 4 of JPCMCIplus and orientation phase, i.e. discovery of links between system nodes given the knowledge
         about their context parents through an application of PCMCIplus to this subset of nodes (system nodes).
         See run_jpcmciplus for a description of the other parameters.
 
@@ -705,7 +717,7 @@ class J_PCMCIplus(PCMCI):
         _int_link_assumptions = self._set_link_assumptions(system_links, tau_min, tau_max)
 
         if self.verbosity > 0:
-            print("\n##\n## J-PCMCI+ Step 3: Discovering system-system links \n##")
+            print("\n##\n## J-PCMCI+ Step 4: Discovering system-system links \n##")
             if system_links is not None:
                 print("\nWith link_assumptions = %s" % str(_int_link_assumptions))
 
@@ -721,7 +733,7 @@ class J_PCMCIplus(PCMCI):
 
     def _remaining_pairs(self, graph, adjt, tau_min, tau_max, p):
         """Helper function returning the remaining pairs that still need to be
-        tested depending on the J_PCMCIplus step, i.e. discovery of context-system links (step 1),
+        tested depending on the JPCMCIplus step, i.e. discovery of context-system links (step 1),
         dummy-context links (step 2) or system-system links in which case the function of the parent class is called.
         """
         all_context_nodes = self.time_context_nodes + self.space_context_nodes
@@ -756,7 +768,7 @@ class J_PCMCIplus(PCMCI):
 
     def _run_pcalg_test(self, graph, i, abstau, j, S, lagged_parents, max_conds_py,
                         max_conds_px, max_conds_px_lagged, tau_max, alpha_or_thres=None):
-        """MCI conditional independence tests within PCMCIplus or PC algorithm. Depending on the J_PCMCIplus step
+        """MCI conditional independence tests within PCMCIplus or PC algorithm. Depending on the JPCMCIplus step
         the setup is adapted slightly. During the discovery of dummy-system links (step 2) we are using
         the dummy_ci_test and condition on the parents found during step 1; during the discovery of system-system links
         (step 3) we are conditioning on the found contextual parents.
@@ -809,3 +821,140 @@ class J_PCMCIplus(PCMCI):
         else:
             return super()._run_pcalg_test(graph, i, abstau, j, S, lagged_parents, max_conds_py,
                                            max_conds_px, max_conds_px_lagged, tau_max, alpha_or_thres)
+
+if __name__ == '__main__':
+    # Imports
+    from numpy.random import SeedSequence, default_rng
+
+    import tigramite
+    from tigramite.toymodels import structural_causal_processes as toys
+    from tigramite.toymodels.context_model import ContextModel
+    # from tigramite.jpcmciplus import JPCMCIplus
+    from tigramite.independence_tests.parcorr_mult import ParCorrMult
+    import tigramite.data_processing as pp
+    import tigramite.plotting as tp
+
+
+    # Set seeds for reproducibility
+    ss = SeedSequence(12345)
+    child_seeds = ss.spawn(2)
+
+    model_seed = child_seeds[0]
+    context_seed = child_seeds[1]
+
+    random_state = np.random.default_rng(model_seed)
+
+    # Choose the time series length and number of spatial contexts
+    T = 100
+    nb_domains = 50
+
+    transient_fraction=0.2
+    tau_max = 2
+    frac_observed = 0.5
+
+    # Specify the model
+    def lin(x): return x
+
+    links = {0: [((0, -1), 0.3, lin), ((3, -1), 0.7, lin), ((4, 0), 0.9, lin)],
+             1: [((1, -1), 0.4, lin), ((3, -1), 0.8, lin)],
+             2: [((2, -1), 0.3, lin), ((1, 0), -0.5, lin), ((4, 0), 0.5, lin), ((5, 0), 0.6, lin)] ,
+             3: [], 
+             4: [], 
+             5: []
+                }
+
+    # Specify which node is a context node via node_type (can be "system", "time_context", or "space_context")
+    node_classification = {
+        0: "system",
+        1: "system",
+        2: "system",
+        3: "time_context",
+        4: "time_context",
+        5: "space_context"
+    }
+
+    # Specify dynamical noise term distributions, here unit variance Gaussians
+    #random_state = np.random.RandomState(seed)
+    noises = [random_state.standard_normal for j in range(6)]
+
+    contextmodel = ContextModel(links=links, node_classification=node_classification,
+                                noises=noises, 
+                                seed=context_seed)
+
+    data_ens, nonstationary = contextmodel.generate_data(nb_domains, T)
+
+    assert not nonstationary
+
+    system_indices = [0,1,2]
+    # decide which context variables should be latent, and which are observed
+    observed_indices_time = [4]
+    latent_indices_time = [3]
+
+    observed_indices_space = [5]
+    latent_indices_space = []
+
+    # all system variables are also observed, thus we get the following observed data
+    observed_indices = system_indices + observed_indices_time + observed_indices_space
+    data_observed = {key: data_ens[key][:,observed_indices] for key in data_ens}
+
+
+    # Add one-hot-encoding of time-steps and dataset index to the observational data. 
+    # These are the values of the time and space dummy variables.
+    dummy_data_time = np.identity(T)
+
+    data_dict = {}
+    for i in range(nb_domains):
+        dummy_data_space = np.zeros((T, nb_domains))
+        dummy_data_space[:, i] = 1.
+        data_dict[i] = np.hstack((data_observed[i], dummy_data_time, dummy_data_space))
+
+    # Define vector-valued variables including dummy variables as well as observed (system and context) variables
+    nb_observed_context_nodes = len(observed_indices_time) + len(observed_indices_space)
+    N = len(system_indices)
+    process_vars = system_indices
+    observed_temporal_context_nodes = list(range(N, N + len(observed_indices_time)))
+    observed_spatial_context_nodes = list(range(N + len(observed_indices_time), 
+                                                N + len(observed_indices_time) + len(observed_indices_space)))
+    time_dummy_index = N + nb_observed_context_nodes
+    space_dummy_index = N + nb_observed_context_nodes + 1
+    time_dummy = list(range(time_dummy_index, time_dummy_index + T))
+    space_dummy = list(range(time_dummy_index + T, time_dummy_index + T + nb_domains))
+
+    vector_vars = {i: [(i, 0)] for i in process_vars + observed_temporal_context_nodes + observed_spatial_context_nodes}
+    vector_vars[time_dummy_index] = [(i, 0) for i in time_dummy]
+    vector_vars[space_dummy_index] = [(i, 0) for i in space_dummy]
+
+    # Name all the variables and initialize the dataframe object
+    # Be careful to use analysis_mode = 'multiple'
+    sys_var_names = ['X_' + str(i) for i in process_vars]
+    context_var_names = ['t-C_'+str(i) for i in observed_indices_time] + ['s-C_'+str(i) for i in observed_indices_space]
+    var_names = sys_var_names + context_var_names + ['t-dummy', 's-dummy']
+
+    dataframe = pp.DataFrame(
+        data=data_dict,
+        vector_vars = vector_vars,
+        analysis_mode = 'multiple',
+        var_names = var_names
+        )
+
+
+    # Classify all the nodes into system, context, or dummy
+    node_classification_jpcmci = {i: node_classification[var] for i, var in enumerate(observed_indices)}
+    node_classification_jpcmci.update({time_dummy_index : "time_dummy", space_dummy_index : "space_dummy"})
+
+    # Create a J-PCMCI+ object, passing the dataframe and (conditional)
+    # independence test objects, as well as the observed temporal and spatial context nodes 
+    # and the indices of the dummies.
+    JPCMCIplus = JPCMCIplus(dataframe=dataframe,
+                              cond_ind_test=ParCorrMult(significance='analytic'), 
+                              node_classification=node_classification_jpcmci,
+                              verbosity=1,)
+
+    # Define the analysis parameters.
+    tau_max = 2
+    pc_alpha = 0.01
+
+    # Run J-PCMCI+
+    results = JPCMCIplus.run_jpcmciplus(tau_min=0, 
+                                  tau_max=tau_max, 
+                                  pc_alpha=pc_alpha)
