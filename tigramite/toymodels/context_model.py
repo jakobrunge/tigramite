@@ -92,9 +92,11 @@ class ContextModel:
             Added percentage of T used as a transient. In total a realization of length
             (transient_fraction + 1)*T will be generated, but then transient_fraction*T will be
             cut off.
-        noises : list of callables or array, optional (default: None)
-            Random distribution function that is called with noises[j](T). If an array,
-            it must be of shape ((transient_fraction + 1)*T, N).
+        noises : list of callables or list of arrays, optional (default: None)
+            Random distribution function that is called with noises[j](T) for system and time-context nodes, or
+            noises[j](M) for space-context nodes where M is the number of datasets. If list of arrays,
+            for noises corresponding to time-context and system variables the array needs to be of
+            shape ((transient_fraction + 1)*T, ), for space-context variables it needs to be of shape (M, )
         seed : int, optional (default: None)
             Random seed.
 
@@ -123,9 +125,11 @@ class ContextModel:
             Added percentage of T used as a transient. In total a realization of length
             (transient_fraction + 1)*T will be generated, but then transient_fraction*T will be
             cut off.
-        noises : list of callables or array, optional (default: None)
-            Random distribution function that is called with noises[j](T). If an array,
-            it must be of shape ((transient_fraction + 1)*T, N).
+        noises : list of callables or list of arrays, optional (default: None)
+            Random distribution function that is called with noises[j](T) for system and time-context nodes, or
+            noises[j](M) for space-context nodes where M is the number of datasets. If list of arrays,
+            for noises corresponding to time-context and system variables the array needs to be of
+            shape ((transient_fraction + 1)*T, ), for space-context variables it needs to be of shape (M, )
         seed : int, optional (default: None)
             Random seed.
 
@@ -160,6 +164,8 @@ class ContextModel:
         """
         if self.noises is not None:
             noises_tc = [self.noises[key] for key in links_tc.keys()]
+            if np.all([isinstance(el, np.ndarray) for el in noises_tc]):
+                noises_tc = np.stack(noises_tc).transpose()
         else:
             noises_tc = None
         shifted_links_tc = _shift_link_entries(links_tc, -self.N)
@@ -180,10 +186,14 @@ class ContextModel:
         shifted_links_sc = _shift_link_entries(links_sc, -shift)
         if self.noises is not None:
             noises_sc = [self.noises[key] for key in links_sc.keys()]
+            if np.all([isinstance(el, np.ndarray) for el in noises_sc]):
+                noises_sc = np.stack(noises_sc).transpose()
         else:
             noises_sc = None
+
+        print(noises_sc)
         data_sc, nonstat_sc = toys.structural_causal_process(shifted_links_sc, T=M, noises=noises_sc,
-                                                             transient_fraction=self.transient_fraction,
+                                                             transient_fraction=0.,
                                                              seed=seed)
 
         data_sc_list = self._constant_over_time(data_sc, T, M, shift)
@@ -232,10 +242,20 @@ class ContextModel:
             data_context = dict(data_tc_list[m])
             data_context.update(data_sc_list[m])
 
+            if self.noises is not None:
+                if np.all([isinstance(el, np.ndarray) for el in self.noises]):
+                    noises_filled = np.copy(self.noises)
+                    for key in self.links_sc.keys():
+                        # fill up any space-context noise to have T entries, then convert to numpy array
+                        noises_filled[key] = np.random.standard_normal(len(self.noises[list(self.links_sys.keys())[0]]))
+                    noises_filled = np.stack(noises_filled).transpose()
+            else:
+                noises_filled = None
+
             # generate system data that varies over space and time
             data_m, nonstat = toys.structural_causal_process(links, T=T, intervention=data_context,
                                                              transient_fraction=self.transient_fraction,
-                                                             seed=system_seed, noises=self.noises)
+                                                             seed=system_seed, noises=noises_filled)
             data[m] = data_m
             nonstationary.append(nonstat or nonstat_tc or nonstat_sc)
         return data, np.any(nonstationary)
