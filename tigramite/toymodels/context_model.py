@@ -184,6 +184,13 @@ class ContextModel:
         Generates M datasets of time series generated from a joint structural causal model over different spatial
         and temporal contexts.
 
+         Parameters
+         ----------
+         M : int
+            Number of datasets.
+         T : int
+            Sample size.
+
         Returns
         ----------
         data : dictionary with array-like values
