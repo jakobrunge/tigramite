@@ -2129,6 +2129,7 @@ if __name__ == '__main__':
     # dataframe = pp.DataFrame(data,  missing_flag = missing_flag)
 
 
+
     # model = LinearRegression()
     # model.fit(X=np.random.randn(10,2), y=np.random.randn(10))
     # model.predict(X=np.random.randn(10,2)[:,2:])
@@ -2139,6 +2140,7 @@ if __name__ == '__main__':
     # med.fit_model(all_parents=parents, tau_max=None,  return_data=True)
 
     # print(med.get_residuals_cov_mean())
+
     # med.fit_model_bootstrap( 
     #             boot_blocklength='cube_root',
     #             seed = 42,

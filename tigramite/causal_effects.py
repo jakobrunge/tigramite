@@ -2613,7 +2613,9 @@ if __name__ == '__main__':
 
     T = 1000
     def lin_f(x): return x
+
     auto_coeff = 0.5
+
     coeff = 2.
     links = {
             0: [((0, -1), auto_coeff, lin_f)], 
@@ -2622,14 +2624,11 @@ if __name__ == '__main__':
     data, nonstat = toys.structural_causal_process(links, T=T, 
                                 noises=None, seed=7)
 
-    print(data)
+
     # # Create some missing values
     # data[-10:,:] = 999.
     # var_names = range(2)
 
-    # graph = np.array([['', '-->'],
-    #                   ['<--', '']], 
-    #                   dtype='<U3')
     dataframe = pp.DataFrame(data,
                     # vector_vars={0:[(0,0), (1,0)], 1:[(2,0), (3,0)]}
                     ) 
@@ -2649,6 +2648,7 @@ if __name__ == '__main__':
 
     # # Initialize class as `stationary_dag`
     causal_effects = CausalEffects(graph, graph_type='stationary_dag', 
+
                                 X=X, Y=Y, S=None, 
                                 hidden_variables=None, 
                                 verbosity=0)
@@ -2686,6 +2686,7 @@ if __name__ == '__main__':
     pred_Y = causal_effects.predict_total_effect( 
             intervention_data=intervention_data)
     print(pred_Y, pred_Y.shape)
+
 
 
 
