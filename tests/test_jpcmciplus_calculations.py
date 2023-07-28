@@ -91,7 +91,8 @@ def a_generate_random_context_model(N=3,
                                     K_time=2,
                                     tau_max=2):
     # use seedsequence
-    ss = SeedSequence(12347)
+    seed = 12347
+    ss = SeedSequence(seed)
     child_seeds = ss.spawn(7)
 
     dependency_funcs = ['linear']
@@ -198,15 +199,14 @@ def a_generate_random_context_model(N=3,
     # Generate a test data sample
     # value, total time length, and random seed to different numbers
     # links,               node_classification, noises, time, nb_domains, seed_val
-
     (a_generate_random_context_model(N=3,
                                      K_space=2,
                                      K_time=2,
-                                     tau_max=2), 100, 100, SeedSequence(12346).spawn(1)[0]),
+                                     tau_max=2), 100, 100, 12346),
     (a_generate_random_context_model(N=5,
                                      K_space=2,
                                      K_time=2,
-                                     tau_max=2), 100, 100, SeedSequence(12347).spawn(1)[0]),
+                                     tau_max=2), 100, 100, 12347),
     (({0: [((0, -1), 0.3, lin_f), ((3, -1), 0.6, lin_f), ((4, -1), 0.9, lin_f)],
        1: [((1, -1), 0.4, lin_f), ((3, -1), 0.4, lin_f)],
        2: [((2, -1), 0.3, lin_f), ((1, -2), -0.5, lin_f), ((4, -1), 0.5, lin_f), ((5, 0), 0.6, lin_f)],
@@ -218,7 +218,7 @@ def a_generate_random_context_model(N=3,
           3: "time_context",
           4: "time_context",
           5: "space_context"
-      }, None), 100, 50, SeedSequence(12345).spawn(1)[0]),
+      }, None), 100, 50, 12345),
 ])
 def a_jpcmciplus(request):
     # Set the parameters
@@ -241,7 +241,7 @@ def a_jpcmciplus(request):
     space_context_indices = [node for node in links.keys() if node_classification_gt[node] == "space_context"]
     system_indices = [node for node in links.keys() if node_classification_gt[node] == "system"]
 
-    random_state = np.random.default_rng(seed_val.spawn(1)[0])
+    random_state = np.random.default_rng(SeedSequence(seed_val).spawn(1)[0])
     # take care to only select nodes as latent that fulfill the no latent context confounder and mediator assumption
     observed_indices_time = random_state.choice(time_context_indices,
                                                 size=int(percent_observed * len(time_context_indices)),
