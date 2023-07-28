@@ -10,7 +10,7 @@ from tigramite.pcmci import PCMCI
 from copy import deepcopy
 import itertools
 
-from tigramite.toymodels.context_model import group_links
+from tigramite.toymodels.context_model import _group_links
 
 
 class JPCMCIplus(PCMCI):

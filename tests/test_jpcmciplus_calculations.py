@@ -9,7 +9,7 @@ from tigramite.toymodels import structural_causal_processes as toys
 from tigramite.independence_tests.parcorr_mult import ParCorrMult
 from tigramite.independence_tests.oracle_conditional_independence import OracleCI
 
-from tigramite.toymodels.context_model import shift_link_entries, ContextModel, do_dummy_projection, nb_latent_before
+from tigramite.toymodels.context_model import _shift_link_entries, ContextModel, _do_dummy_projection, _nb_latent_before
 import tigramite.data_processing as pp
 
 
@@ -129,7 +129,7 @@ def a_generate_random_context_model(N=3,
                                                                       noise_sigmas,
                                                                       MT19937(child_seeds[0]),
                                                                       MT19937(child_seeds[1]), )
-        links_tc = shift_link_entries(links_tc, N)
+        links_tc = _shift_link_entries(links_tc, N)
 
     if K_space != 0:
         # graph for spatial context vars
@@ -145,7 +145,7 @@ def a_generate_random_context_model(N=3,
                                                                       noise_sigmas,
                                                                       MT19937(child_seeds[2]),
                                                                       MT19937(child_seeds[3]))
-        links_sc = shift_link_entries(links_sc, N + K_time)
+        links_sc = _shift_link_entries(links_sc, N + K_time)
 
     # graph for system vars
     links_sys, noises_sys = toys.generate_structural_causal_process(len(nodes_sys),
@@ -281,7 +281,7 @@ def a_jpcmciplus(request):
 
     node_classification = {}
     for node in observed_indices:
-        node_classification[node - nb_latent_before(node, observed_context_indices, node_classification_gt)] = \
+        node_classification[node - _nb_latent_before(node, observed_context_indices, node_classification_gt)] = \
             node_classification_gt[node]
     node_classification[time_dummy_index] = "time_dummy"
     node_classification[space_dummy_index] = "space_dummy"
@@ -294,8 +294,8 @@ def a_jpcmciplus(request):
 
     # Get the true parents
     # augment the true_parents by remove context-context links and adding dummy (i.e. perform dummy projection)
-    augmented_links = do_dummy_projection(links, node_classification_gt, observed_context_indices,
-                                          time_dummy_index, space_dummy_index)
+    augmented_links = _do_dummy_projection(links, node_classification_gt, observed_context_indices,
+                                           time_dummy_index, space_dummy_index)
     augmented_true_graph = toys.links_to_graph(augmented_links, tau_max=tau_max)
 
     return dataframe, augmented_true_graph, augmented_links, tau_min, tau_max, node_classification
