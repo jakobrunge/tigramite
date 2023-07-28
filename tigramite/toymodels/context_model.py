@@ -88,6 +88,10 @@ class ContextModel:
             Options for the values are "system", "time_context", "space_context". The temporal context variables are
             assumed exogenous to the system variables. They cannot interact with the spatial context variables due
             to the assumption that they are constant across datasets.
+        transient_fraction : float
+            Added percentage of T used as a transient. In total a realization of length
+            (transient_fraction + 1)*T will be generated, but then transient_fraction*T will be
+            cut off.
         noises : list of callables or array, optional (default: None)
             Random distribution function that is called with noises[j](T). If an array,
             it must be of shape ((transient_fraction + 1)*T, N).
@@ -115,6 +119,10 @@ class ContextModel:
             ...} for all system variables where i must be in [0..N-1] and tau >= 0 with
             number of variables N. coeff must be a float and func a python
             callable of one argument.
+        transient_fraction : float
+            Added percentage of T used as a transient. In total a realization of length
+            (transient_fraction + 1)*T will be generated, but then transient_fraction*T will be
+            cut off.
         noises : list of callables or array, optional (default: None)
             Random distribution function that is called with noises[j](T). If an array,
             it must be of shape ((transient_fraction + 1)*T, N).
@@ -123,7 +131,7 @@ class ContextModel:
 
         """
 
-    def __init__(self, links={}, node_classification={}, noises=None, seed=None):
+    def __init__(self, links={}, node_classification={}, transient_fraction=0.2, noises=None, seed=None):
         self.links_tc = _group_links(links, node_classification, "time_context")
         self.links_sc = _group_links(links, node_classification, "space_context")
         self.links_sys = _group_links(links, node_classification, "system")
@@ -131,6 +139,7 @@ class ContextModel:
         self.N = len(self.links_sys.keys())
         self.noises = noises
         self.seed = seed
+        self.transient_fraction = transient_fraction
 
 
 
@@ -155,6 +164,7 @@ class ContextModel:
             noises_tc = None
         shifted_links_tc = _shift_link_entries(links_tc, -self.N)
         data_tc, nonstat_tc = toys.structural_causal_process(shifted_links_tc, T=T, noises=noises_tc,
+                                                             transient_fraction=self.transient_fraction,
                                                              seed=seed)
         data_tc = {i: data_tc[:, i - self.N] for i in links_tc.keys()}
 
@@ -173,6 +183,7 @@ class ContextModel:
         else:
             noises_sc = None
         data_sc, nonstat_sc = toys.structural_causal_process(shifted_links_sc, T=M, noises=noises_sc,
+                                                             transient_fraction=self.transient_fraction,
                                                              seed=seed)
 
         data_sc_list = self._constant_over_time(data_sc, T, M, shift)
@@ -223,6 +234,7 @@ class ContextModel:
 
             # generate system data that varies over space and time
             data_m, nonstat = toys.structural_causal_process(links, T=T, intervention=data_context,
+                                                             transient_fraction=self.transient_fraction,
                                                              seed=system_seed, noises=self.noises)
             data[m] = data_m
             nonstationary.append(nonstat or nonstat_tc or nonstat_sc)
