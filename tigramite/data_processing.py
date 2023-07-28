@@ -1333,7 +1333,7 @@ def trafo2normal(data, mask=None, thres=0.001):
 
     return normal_data
 
-@jit
+@jit(nopython=True)
 def _get_patterns(array, array_mask, patt, patt_mask, weights, dim, step, fac, N, T):
     v = np.zeros(dim, dtype='float')
 

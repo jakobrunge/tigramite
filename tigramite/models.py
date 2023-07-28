@@ -18,7 +18,11 @@ class Models():
     """Base class for time series models.
 
     Allows to fit any model from sklearn to the parents of a target variable.
-    Also takes care of missing values, masking and preprocessing.
+    Also takes care of missing values, masking and preprocessing. If the
+    target variable is multivariate, a model that supports multi-output
+    regression must be used. Note that
+    sklearn.multioutput.MultiOutputRegressor allows to extend single-output
+    models.
 
     Parameters
     ----------
@@ -49,7 +53,7 @@ class Models():
                  dataframe,
                  model,
                  conditional_model=None,
-                 data_transform=sklearn.preprocessing.StandardScaler(),
+                 data_transform=None,
                  mask_type=None,
                  verbosity=0):
         # Set the mask type and dataframe object
@@ -84,7 +88,7 @@ class Models():
         """Fit time series model.
 
         For each variable in selected_variables, the sklearn model is fitted
-        with :math:`y` given by the target variable, and :math:`X` given by its
+        with :math:`y` given by the target variable(s), and :math:`X` given by its
         parents. The fitted model class is returned for later use.
 
         Parameters
@@ -109,7 +113,7 @@ class Models():
 
         Returns
         -------
-        fit_results : dictionary of sklearn model objects for each variable
+        fit_results : dictionary of sklearn model objects
             Returns the sklearn model after fitting. Also returns the data
             transformation parameters.
         """
@@ -143,75 +147,70 @@ class Models():
                                  " max_lag = %d"
                                  "" % (self.tau_max, max_lag))
 
-        # Initialize the fit results
-        fit_results = {}
-        for y in self.Y:
+        # Construct array of shape (var, time)
+        array, xyz, _ = \
+            self.dataframe.construct_array(X=self.X, Y=self.Y,  
+                                           Z=self.conditions,
+                                           extraZ=self.Z,
+                                           tau_max=self.tau_max,
+                                           mask_type=self.mask_type,
+                                           cut_off=self.cut_off,
+                                           remove_overlaps=True,
+                                           verbosity=self.verbosity)
 
-            # Construct array of shape (var, time)
-            array, xyz, _ = \
-                self.dataframe.construct_array(X=self.X, Y=[y],  
-                                               Z=self.conditions,
-                                               extraZ=self.Z,
-                                               tau_max=self.tau_max,
-                                               mask_type=self.mask_type,
-                                               cut_off=self.cut_off,
-                                               remove_overlaps=True,
-                                               verbosity=self.verbosity)
+        # Transform the data if needed
+        self.fitted_data_transform = None
+        if self.data_transform is not None:
+            # Fit only X, Y, and S for later use in transforming input
+            X_transform = deepcopy(self.data_transform)
+            x_indices = list(np.where(xyz==0)[0])
+            X_transform.fit(array[x_indices, :].T)
+            self.fitted_data_transform = {'X': X_transform}
+            Y_transform = deepcopy(self.data_transform)
+            y_indices = list(np.where(xyz==1)[0])
+            Y_transform.fit(array[y_indices, :].T)
+            self.fitted_data_transform['Y'] = Y_transform
+            if len(self.conditions) > 0:
+                S_transform = deepcopy(self.data_transform)
+                s_indices = list(np.where(xyz==2)[0])
+                S_transform.fit(array[s_indices, :].T) 
+                self.fitted_data_transform['S'] = S_transform
 
-            # Transform the data if needed
-            self.fitted_data_transform = None
-            if self.data_transform is not None:
-                # Fit only X, Y, and S for later use in transforming input
-                X_transform = deepcopy(self.data_transform)
-                x_indices = list(np.where(xyz==0)[0])
-                X_transform.fit(array[x_indices, :].T)
-                self.fitted_data_transform = {'X': X_transform}
-                Y_transform = deepcopy(self.data_transform)
-                y_indices = list(np.where(xyz==1)[0])
-                Y_transform.fit(array[y_indices, :].T)
-                self.fitted_data_transform['Y'] = Y_transform
-                if len(self.conditions) > 0:
-                    S_transform = deepcopy(self.data_transform)
-                    s_indices = list(np.where(xyz==2)[0])
-                    S_transform.fit(array[s_indices, :].T) 
-                    self.fitted_data_transform['S'] = S_transform
+            # Now transform whole array
+            all_transform = deepcopy(self.data_transform)
+            array = all_transform.fit_transform(X=array.T).T
 
-                # Now transform whole array
-                all_transform = deepcopy(self.data_transform)
-                array = all_transform.fit_transform(X=array.T).T
+        # Fit the model 
+        # Copy and fit the model
+        a_model = deepcopy(self.model)
 
-            # Fit the model 
-            # Copy and fit the model
-            a_model = deepcopy(self.model)
+        predictor_indices =  list(np.where(xyz==0)[0]) \
+                           + list(np.where(xyz==3)[0]) \
+                           + list(np.where(xyz==2)[0])
+        predictor_array = array[predictor_indices, :].T
+        target_array = array[np.where(xyz==1)[0], :].T
 
-            predictor_indices =  list(np.where(xyz==0)[0]) \
-                               + list(np.where(xyz==3)[0]) \
-                               + list(np.where(xyz==2)[0])
-            predictor_array = array[predictor_indices, :].T
-            # Target is only first entry of Y, ie [y]
-            target_array = array[np.where(xyz==1)[0][0], :]
-
-            if predictor_array.size == 0:
-                # Just fit default (eg, mean)
-                class EmptyPredictorModel:
-                    def fit(self, X, y):
+        if predictor_array.size == 0:
+            # Just fit default (eg, mean)
+            class EmptyPredictorModel:
+                def fit(self, X, y):
+                    if y.ndim == 1:
                         self.result = empty_predictors_function(y)
-                    def predict(self, X):
-                        return self.result
-                a_model = EmptyPredictorModel()
-            
-            a_model.fit(X=predictor_array, y=target_array)
-            
-            # Cache the results
-            fit_results[y] = {}
-            fit_results[y]['observation_array'] = array
-            fit_results[y]['xyz'] = xyz
-            fit_results[y]['model'] = a_model
-            # Cache the data transform
-            fit_results[y]['fitted_data_transform'] = self.fitted_data_transform
-            # # Cache the data if needed
-            # if return_data:
-            #     fit_results[y]['data'] = array
+                    else:
+                        self.result = empty_predictors_function(y, axis=0)
+                def predict(self, X):
+                    return self.result
+            a_model = EmptyPredictorModel()
+        
+        a_model.fit(X=predictor_array, y=target_array)
+        
+        # Cache the results
+        fit_results = {}
+        fit_results['observation_array'] = array
+        fit_results['xyz'] = xyz
+        fit_results['model'] = a_model
+        # Cache the data transform
+        fit_results['fitted_data_transform'] = self.fitted_data_transform
 
         # Cache and return the fit results
         self.fit_results = fit_results
@@ -237,7 +236,8 @@ class Models():
         conditions_data : data object, optional
             Numpy array of shape (time, len(S)) that contains the S=s values.
         pred_params : dict, optional
-            Optional parameters passed on to sklearn prediction function.
+            Optional parameters passed on to sklearn prediction function (model and
+            conditional_model).
         transform_interventions_and_prediction : bool (default: False)
             Whether to perform the inverse data_transform on prediction results.
         return_further_pred_results : bool, optional (default: False)
@@ -265,88 +265,89 @@ class Models():
         lenS = len(self.conditions)
         lenY = len(self.Y)
 
-        # predicted_array = np.zeros((intervention_T, lenY))
+        # Print message
+        if self.verbosity > 1:
+            print("\n## Predicting target %s" % str(self.Y))
+            if pred_params is not None:
+                for key in list(pred_params):
+                    print("%s = %s" % (key, pred_params[key]))
+
+        # Default value for pred_params
+        if pred_params is None:
+            pred_params = {}
+
+        # Check the model is fitted.
+        if self.fit_results is None:
+            raise ValueError("Model not yet fitted.")
+
+        # Transform the data if needed
+        fitted_data_transform = self.fit_results['fitted_data_transform']
+        if transform_interventions_and_prediction and fitted_data_transform is not None:
+            intervention_data = fitted_data_transform['X'].transform(X=intervention_data)
+            if self.conditions is not None and conditions_data is not None:
+                conditions_data = fitted_data_transform['S'].transform(X=conditions_data)
+
+        # Extract observational Z from stored array
+        z_indices = list(np.where(self.fit_results['xyz']==3)[0])
+        z_array = self.fit_results['observation_array'][z_indices, :].T  
+        Tobs = len(self.fit_results['observation_array'].T) 
+
+        if self.conditions is not None and conditions_data is not None:
+            s_indices = list(np.where(self.fit_results['xyz']==2)[0])
+            s_array = self.fit_results['observation_array'][s_indices, :].T  
+
         pred_dict = {}
-        for iy, y in enumerate(self.Y):
-            pred_dict[iy] = {}
-            # Print message
-            if self.verbosity > 1:
-                print("\n## Predicting target %s" % str(y))
-                if pred_params is not None:
-                    for key in list(pred_params):
-                        print("%s = %s" % (key, pred_params[key]))
-            # Default value for pred_params
-            if pred_params is None:
-                pred_params = {}
-            # Check this is a valid target
-            if y not in self.fit_results:
-                raise ValueError("y = %s not yet fitted" % str(y))
 
-            # Transform the data if needed
-            fitted_data_transform = self.fit_results[y]['fitted_data_transform']
-            if transform_interventions_and_prediction and fitted_data_transform is not None:
-                intervention_data = fitted_data_transform['X'].transform(X=intervention_data)
-                if self.conditions is not None and conditions_data is not None:
-                    conditions_data = fitted_data_transform['S'].transform(X=conditions_data)
+        # Now iterate through interventions (and potentially S)
+        for index, dox_vals in enumerate(intervention_data):
+            # Construct XZS-array
+            intervention_array = dox_vals.reshape(1, lenX) * np.ones((Tobs, lenX))
+            if self.conditions is not None and conditions_data is not None:
+                conditions_array = conditions_data[index].reshape(1, lenS) * np.ones((Tobs, lenS))  
+                predictor_array = np.hstack((intervention_array, z_array, conditions_array))
+            else:
+                predictor_array = np.hstack((intervention_array, z_array))
 
-            # Extract observational Z from stored array
-            z_indices = list(np.where(self.fit_results[y]['xyz']==3)[0])
-            z_array = self.fit_results[y]['observation_array'][z_indices, :].T  
-            Tobs = len(self.fit_results[y]['observation_array'].T) 
+            predicted_vals = self.fit_results['model'].predict(
+            X=predictor_array, **pred_params)
 
             if self.conditions is not None and conditions_data is not None:
-                s_indices = list(np.where(self.fit_results[y]['xyz']==2)[0])
-                s_array = self.fit_results[y]['observation_array'][s_indices, :].T  
 
-            # Now iterate through interventions (and potentially S)
-            for index, dox_vals in enumerate(intervention_data):
-                # Construct XZS-array
-                intervention_array = dox_vals.reshape(1, lenX) * np.ones((Tobs, lenX))
-                if self.conditions is not None and conditions_data is not None:
-                    conditions_array = conditions_data[index].reshape(1, lenS) * np.ones((Tobs, lenS))  
-                    predictor_array = np.hstack((intervention_array, z_array, conditions_array))
-                else:
-                    predictor_array = np.hstack((intervention_array, z_array))
-
-                predicted_vals = self.fit_results[y]['model'].predict(
-                X=predictor_array, **pred_params)
-
-                # print(predicted_vals)
-                if self.conditions is not None and conditions_data is not None:
- 
-                    a_conditional_model = deepcopy(self.conditional_model)
-                    
-                    if type(predicted_vals) is tuple:
-                        predicted_vals_here = predicted_vals[0]
-                    else:
-                        predicted_vals_here = predicted_vals
-                    
-                    a_conditional_model.fit(X=s_array, y=predicted_vals_here)
-                    self.fit_results[y]['conditional_model'] = a_conditional_model
-
-                    predicted_vals = a_conditional_model.predict(
-                        X=conditions_array, **pred_params)
-
-                if transform_interventions_and_prediction and fitted_data_transform is not None:
-                    predicted_vals = fitted_data_transform['Y'].inverse_transform(X=predicted_vals.reshape(-1, 1)).squeeze()
-
-                pred_dict[iy][index] = predicted_vals
-
-                # Apply aggregation function
+                a_conditional_model = deepcopy(self.conditional_model)
+                
                 if type(predicted_vals) is tuple:
-                    aggregated_pred = aggregation_func(predicted_vals[0])
+                    predicted_vals_here = predicted_vals[0]
                 else:
-                    aggregated_pred = aggregation_func(predicted_vals)
+                    predicted_vals_here = predicted_vals
+                
+                a_conditional_model.fit(X=s_array, y=predicted_vals_here)
+                self.fit_results['conditional_model'] = a_conditional_model
 
-                if iy == 0 and index == 0:
-                    predicted_array = np.empty((intervention_T, lenY,) + aggregated_pred.shape, 
-                                            dtype=aggregated_pred.dtype)
+                predicted_vals = a_conditional_model.predict(
+                    X=conditions_array, **pred_params)
 
-                predicted_array[index, iy] = aggregated_pred
+            if transform_interventions_and_prediction and fitted_data_transform is not None:
+                predicted_vals = fitted_data_transform['Y'].inverse_transform(X=predicted_vals.reshape(-1, 1)).squeeze()
 
-                # if fitted_data_transform is not None:
-                #     rescaled = fitted_data_transform['Y'].inverse_transform(X=predicted_array[index, iy].reshape(-1, 1))
-                #     predicted_array[index, iy] = rescaled.squeeze()
+            pred_dict[index] = predicted_vals
+
+            # Apply aggregation function
+            if type(predicted_vals) is tuple:
+                aggregated_pred = aggregation_func(predicted_vals[0], axis=0)
+            else:
+                aggregated_pred = aggregation_func(predicted_vals, axis=0)
+
+            aggregated_pred = aggregated_pred.squeeze()
+
+            if index == 0:
+                predicted_array = np.zeros((intervention_T, ) + aggregated_pred.shape, 
+                                        dtype=aggregated_pred.dtype)
+
+            predicted_array[index] = aggregated_pred
+
+            # if fitted_data_transform is not None:
+            #     rescaled = fitted_data_transform['Y'].inverse_transform(X=predicted_array[index, iy].reshape(-1, 1))
+            #     predicted_array[index, iy] = rescaled.squeeze()
 
         if return_further_pred_results:
             return predicted_array, pred_dict
@@ -2034,28 +2035,99 @@ if __name__ == '__main__':
     from tigramite.independence_tests.parcorr import ParCorr
     import tigramite.plotting as tp
 
-    from sklearn.linear_model import LinearRegression
+    from sklearn.linear_model import LinearRegression, LogisticRegression
+    from sklearn.multioutput import MultiOutputRegressor
 
     def lin_f(x): return x
  
+
     T = 1000
+    def lin_f(x): return x
+    auto_coeff = 0.
+    coeff = 2.
+    links = {
+            0: [((0, -1), auto_coeff, lin_f)], 
+            1: [((1, -1), auto_coeff, lin_f), ((0, 0), coeff, lin_f)],
+            }
+    data, nonstat = toys.structural_causal_process(links, T=T, 
+                                noises=None, seed=7)
+
+    # data[:,1] = data[:,1] > 0.
+
+    # # Create some missing values
+    # data[-10:,:] = 999.
+    # var_names = range(2)
+
+    # graph = np.array([['', '-->'],
+    #                   ['<--', '']], 
+    #                   dtype='<U3')
+    print(data, data.mean(axis=0))
+    dataframe = pp.DataFrame(data,
+                    # vector_vars={0:[(0,0), (1,0)], 1:[(2,0), (3,0)]}
+                    ) 
+    graph = toys.links_to_graph(links, tau_max=4)
     
-    links = {0: [((0, -1), 0.9, lin_f)],
-             1: [((1, -1), 0.9, lin_f), ((0, 0), -0.8, lin_f)],
-             2: [((2, -1), 0.9, lin_f), ((0, 0), 0.9, lin_f),  ((1, 0), 0.8, lin_f)],
-             # 3: [((3, -1), 0.9, lin_f), ((1, 0), 0.8, lin_f),  ((2, 0), -0.9, lin_f)]
-             }
-    # noises = [np.random.randn for j in links.keys()]
-    data, nonstat = toys.structural_causal_process(links, T=T, noises=None, seed=7)
+    # # We are interested in lagged total effect of X on Y
+    X = [(0, 0), (0, -1)]
+    Y = [(1, 0), (1, -1)]
 
-    missing_flag = 999
-    for i in range(0, 20):
-        data[i::100] = missing_flag
+    model = Models(dataframe=dataframe, 
+        model = LinearRegression(),
+        # model = LogisticRegression(),
+        # model = MultiOutputRegressor(LogisticRegression()),
 
-    # mask = data>0
+        )
 
-    parents = toys._get_true_parent_neighbor_dict(links)
-    dataframe = pp.DataFrame(data,  missing_flag = missing_flag)
+    model.get_general_fitted_model( 
+                    Y=Y, X=X, Z=[(0, -2)],
+                    conditions=[(0, -3)],
+                    tau_max=7,
+                    cut_off='tau_max',
+                    empty_predictors_function=np.mean,
+                    return_data=False)
+
+    # print(model.fit_results[(1, 0)]['model'].coef_)
+
+    dox_vals = np.array([0.])   #np.linspace(-1., 1., 1)
+    intervention_data = np.tile(dox_vals.reshape(len(dox_vals), 1), len(X))
+
+    conditions_data = np.tile(1. + dox_vals.reshape(len(dox_vals), 1), 1)
+
+    def aggregation_func(x, axis=0, bins=2):
+        x = x.astype('int64')
+        return np.apply_along_axis(np.bincount, axis=axis, arr=x, minlength=bins).T
+    aggregation_func = np.mean
+
+    pred = model.get_general_prediction(
+                intervention_data=intervention_data,
+                conditions_data=conditions_data,
+                pred_params=None,
+                transform_interventions_and_prediction=False,
+                return_further_pred_results=False,
+                aggregation_func=aggregation_func,
+                )
+
+    print("\n", pred)
+
+    # T = 1000
+    
+    # links = {0: [((0, -1), 0.9, lin_f)],
+    #          1: [((1, -1), 0.9, lin_f), ((0, 0), -0.8, lin_f)],
+    #          2: [((2, -1), 0.9, lin_f), ((0, 0), 0.9, lin_f),  ((1, 0), 0.8, lin_f)],
+    #          # 3: [((3, -1), 0.9, lin_f), ((1, 0), 0.8, lin_f),  ((2, 0), -0.9, lin_f)]
+    #          }
+    # # noises = [np.random.randn for j in links.keys()]
+    # data, nonstat = toys.structural_causal_process(links, T=T, noises=None, seed=7)
+
+    # missing_flag = 999
+    # for i in range(0, 20):
+    #     data[i::100] = missing_flag
+
+    # # mask = data>0
+
+    # parents = toys._get_true_parent_neighbor_dict(links)
+    # dataframe = pp.DataFrame(data,  missing_flag = missing_flag)
+
 
 
     # model = LinearRegression()
@@ -2063,11 +2135,12 @@ if __name__ == '__main__':
     # model.predict(X=np.random.randn(10,2)[:,2:])
     # sys.exit(0)
 
-    med = LinearMediation(dataframe=dataframe, #mask_type='y',
-        data_transform=None)
-    med.fit_model(all_parents=parents, tau_max=None,  return_data=True)
+    # med = LinearMediation(dataframe=dataframe, #mask_type='y',
+    #     data_transform=None)
+    # med.fit_model(all_parents=parents, tau_max=None,  return_data=True)
 
-    print(med.get_residuals_cov_mean())
+    # print(med.get_residuals_cov_mean())
+
     # med.fit_model_bootstrap( 
     #             boot_blocklength='cube_root',
     #             seed = 42,

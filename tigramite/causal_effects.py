@@ -1875,8 +1875,6 @@ class CausalEffects():
         if self.N != self.dataframe.N:
             raise ValueError("Dataset dimensions inconsistent with number of variables in graph.")
 
-
-
         if adjustment_set == 'optimal':
             # Check optimality and use either optimal or colliders_only set
             adjustment_set = self.get_optimal_set()
@@ -2102,7 +2100,7 @@ class CausalEffects():
                         tau_max=self.tau_max,
                         cut_off='tau_max',
                         return_data=False)
-                    coeffs[medy][par] = fit_res[medy]['model'].coef_[0]
+                    coeffs[medy][par] = fit_res['model'].coef_[0]
 
         elif method == 'parents':
             coeffs = {}
@@ -2127,8 +2125,8 @@ class CausalEffects():
                     return_data=False)
 
                 for ipar, par in enumerate(list(all_parents)):
-                    # print(par, fit_res[medy]['model'].coef_[ipar])
-                    coeffs[medy][par] = fit_res[medy]['model'].coef_[ipar]
+                    # print(par, fit_res['model'].coef_)
+                    coeffs[medy][par] = fit_res['model'].coef_[0][ipar]
 
         else:
             raise ValueError("method must be 'optimal', 'links_coeffs', or 'parents'.")
@@ -2346,7 +2344,7 @@ class CausalEffects():
 
         Returns
         -------
-        confidence_intervals : numpy array of 
+        confidence_intervals : numpy array
         """
 
         valid_methods = ['predict_total_effect',
@@ -2366,16 +2364,19 @@ class CausalEffects():
         intervention_T, _ = method_args['intervention_data'].shape
 
         boot_samples = len(self.bootstrap_results)
-        bootstrap_predicted_array = np.zeros((boot_samples, intervention_T, lenY))
+        # bootstrap_predicted_array = np.zeros((boot_samples, intervention_T, lenY))
         
-        for b in self.bootstrap_results.keys():
+        for b in range(boot_samples): #self.bootstrap_results.keys():
             self.model = self.bootstrap_results[b]
             boot_effect = getattr(self, method)(**method_args)
 
             if isinstance(boot_effect, tuple):
-                bootstrap_predicted_array[b] = boot_effect[0]
-            else:
-                bootstrap_predicted_array[b] = boot_effect
+                boot_effect = boot_effect[0]
+            
+            if b == 0:
+                bootstrap_predicted_array = np.zeros((boot_samples, ) + boot_effect.shape, 
+                                            dtype=boot_effect.dtype)
+            bootstrap_predicted_array[b] = boot_effect
 
         # Reset model
         self.model = self.original_model
@@ -2384,7 +2385,7 @@ class CausalEffects():
         c_int = (1. - (1. - conf_lev)/2.)
         confidence_interval = np.percentile(
                 bootstrap_predicted_array, axis=0,
-                q = [100*(1. - c_int), 100*c_int])[:,:,0]
+                q = [100*(1. - c_int), 100*c_int])   #[:,:,0]
 
         if return_individual_bootstrap_results:
             return bootstrap_predicted_array, confidence_interval
@@ -2510,6 +2511,7 @@ if __name__ == '__main__':
     import sklearn
     from sklearn.linear_model import LinearRegression, LogisticRegression
     from sklearn.preprocessing import StandardScaler
+    from sklearn.neural_network import MLPRegressor
 
 
     # def lin_f(x): return x
@@ -2611,7 +2613,9 @@ if __name__ == '__main__':
 
     T = 1000
     def lin_f(x): return x
-    auto_coeff = 0.
+
+    auto_coeff = 0.5
+
     coeff = 2.
     links = {
             0: [((0, -1), auto_coeff, lin_f)], 
@@ -2625,9 +2629,6 @@ if __name__ == '__main__':
     # data[-10:,:] = 999.
     # var_names = range(2)
 
-    graph = np.array([['', '-->'],
-                      ['<--', '']], 
-                      dtype='<U3')
     dataframe = pp.DataFrame(data,
                     # vector_vars={0:[(0,0), (1,0)], 1:[(2,0), (3,0)]}
                     ) 
@@ -2639,14 +2640,15 @@ if __name__ == '__main__':
     # #          2: [(2, -1), (1, 0),],
     # #          }
     # # Use staticmethod to get graph
-    # graph = CausalEffects.get_graph_from_dict(links, tau_max=None)
+    graph = CausalEffects.get_graph_from_dict(links, tau_max=4)
     
     # # We are interested in lagged total effect of X on Y
-    X = [(0, 0)]
-    Y = [(1, 0)]
+    X = [(0, -2)]
+    Y = [(1, -1)]
 
     # # Initialize class as `stationary_dag`
-    causal_effects = CausalEffects(graph, graph_type='dag', 
+    causal_effects = CausalEffects(graph, graph_type='stationary_dag', 
+
                                 X=X, Y=Y, S=None, 
                                 hidden_variables=None, 
                                 verbosity=0)
@@ -2662,40 +2664,40 @@ if __name__ == '__main__':
         estimator=LinearRegression(),
         )
 
-
-    # # Fit causal effect model from observational data
-    # causal_effects.fit_bootstrap_of(
-    #     method='fit_total_effect',
-    #     method_args={'dataframe':dataframe,  
-    #     # mask_type='y',
-    #     'estimator':LinearRegression()
-    #     },
-    #     boot_samples=3,
-    #     boot_blocklength=1,
-    #     seed=5
-    #     )
+    # Fit causal effect model from observational data
+    causal_effects.fit_bootstrap_of(
+        method='fit_total_effect',
+        method_args={'dataframe':dataframe,  
+        # mask_type='y',
+        'estimator':LinearRegression()
+        },
+        boot_samples=3,
+        boot_blocklength=1,
+        seed=5
+        )
 
 
     # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go
-    dox_vals = np.array([1.]) #np.linspace(0., 1., 1)
-    # intervention_data = dox_vals.reshape(len(dox_vals), len(X))
-    intervention_data = np.array([[1.]])
-    print(intervention_data.shape)
+    dox_vals = np.linspace(0., 1., 3)
+    intervention_data = np.tile(dox_vals.reshape(len(dox_vals), 1), len(X))
+
+    print(intervention_data)
 
     pred_Y = causal_effects.predict_total_effect( 
             intervention_data=intervention_data)
-    print(pred_Y)
+    print(pred_Y, pred_Y.shape)
 
 
 
 
-    # # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go
+
+    # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go
     # dox_vals = np.array([1.]) #np.linspace(0., 1., 1)
-    # intervention_data = dox_vals.reshape(len(dox_vals), len(X))
-    # conf = causal_effects.predict_bootstrap_of(
-    #     method='predict_total_effect',
-    #     method_args={'intervention_data':intervention_data})
-    # print(conf)
+    intervention_data = np.tile(dox_vals.reshape(len(dox_vals), 1), len(X))
+    conf = causal_effects.predict_bootstrap_of(
+        method='predict_total_effect',
+        method_args={'intervention_data':intervention_data})
+    print(conf, conf.shape)
 
 
 
