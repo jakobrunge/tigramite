@@ -191,7 +191,6 @@ class ContextModel:
         else:
             noises_sc = None
 
-        print(noises_sc)
         data_sc, nonstat_sc = toys.structural_causal_process(shifted_links_sc, T=M, noises=noises_sc,
                                                              transient_fraction=0.,
                                                              seed=seed)
@@ -243,6 +242,7 @@ class ContextModel:
             data_context.update(data_sc_list[m])
 
             if self.noises is not None:
+                noises_filled = self.noises
                 if np.all([isinstance(el, np.ndarray) for el in self.noises]):
                     noises_filled = np.copy(self.noises)
                     for key in self.links_sc.keys():
