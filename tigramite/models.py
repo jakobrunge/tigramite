@@ -118,6 +118,9 @@ class Models():
             transformation parameters.
         """
 
+        def get_vectorized_length(W):
+            return sum([len(self.dataframe.vector_vars[w[0]]) for w in W])
+
         self.X = X 
         self.Y = Y
 
@@ -129,6 +132,11 @@ class Models():
             Z = [z for z in Z if z not in conditions]
 
         self.Z = Z
+
+        # lenX = len(self.X)
+        # lenS = len(self.conditions)
+        self.lenX = get_vectorized_length(self.X)
+        self.lenS = get_vectorized_length(self.conditions)
 
         self.cut_off = cut_off
 
@@ -251,9 +259,9 @@ class Models():
         Results from prediction.
         """
 
-        intervention_T, lenX = intervention_data.shape
+        intervention_T, _ = intervention_data.shape
 
-        if intervention_data.shape[1] != len(self.X):
+        if intervention_data.shape[1] != self.lenX:
             raise ValueError("intervention_data.shape[1] must be len(X).")
 
         if conditions_data is not None:
@@ -261,9 +269,6 @@ class Models():
                 raise ValueError("conditions_data.shape[1] must be len(S).")
             if conditions_data.shape[0] != intervention_data.shape[0]:
                 raise ValueError("conditions_data.shape[0] must match intervention_data.shape[0].")
-
-        lenS = len(self.conditions)
-        lenY = len(self.Y)
 
         # Print message
         if self.verbosity > 1:
@@ -301,9 +306,9 @@ class Models():
         # Now iterate through interventions (and potentially S)
         for index, dox_vals in enumerate(intervention_data):
             # Construct XZS-array
-            intervention_array = dox_vals.reshape(1, lenX) * np.ones((Tobs, lenX))
+            intervention_array = dox_vals.reshape(1, self.lenX) * np.ones((Tobs, self.lenX))
             if self.conditions is not None and conditions_data is not None:
-                conditions_array = conditions_data[index].reshape(1, lenS) * np.ones((Tobs, lenS))  
+                conditions_array = conditions_data[index].reshape(1, self.lenS) * np.ones((Tobs, self.lenS))  
                 predictor_array = np.hstack((intervention_array, z_array, conditions_array))
             else:
                 predictor_array = np.hstack((intervention_array, z_array))

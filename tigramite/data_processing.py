@@ -682,7 +682,6 @@ class DataFrame():
         Z = vectorize(Z) 
         extraZ = vectorize(extraZ) 
 
-
         # Remove duplicates in X, Y, Z, extraZ
         X = list(OrderedDict.fromkeys(X))
         Y = list(OrderedDict.fromkeys(Y))
