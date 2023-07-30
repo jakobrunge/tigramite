@@ -1866,11 +1866,11 @@ class CausalEffects():
         self.dataframe = dataframe
         self.conditional_estimator = conditional_estimator
 
-        if self.dataframe.has_vector_data:
-            raise ValueError("vector_vars in DataFrame cannot be used together with CausalEffects!"
-                             " You can estimate vector-valued effects by using multivariate X, Y, S."
-                             " Note, however, that this requires assuming a graph at the level "
-                             "of the components of X, Y, S, ...")
+        # if self.dataframe.has_vector_data:
+        #     raise ValueError("vector_vars in DataFrame cannot be used together with CausalEffects!"
+        #                      " You can estimate vector-valued effects by using multivariate X, Y, S."
+        #                      " Note, however, that this requires assuming a graph at the level "
+        #                      "of the components of X, Y, S, ...")
 
         if self.N != self.dataframe.N:
             raise ValueError("Dataset dimensions inconsistent with number of variables in graph.")
@@ -1944,11 +1944,14 @@ class CausalEffects():
         If estimate_confidence = True, then a tuple is returned.
         """
 
-        # def get_vectorized_length(W):
-        #     return sum([len(self.dataframe.vector_vars[w[0]]) for w in W])
+        def get_vectorized_length(W):
+            return sum([len(self.dataframe.vector_vars[w[0]]) for w in W])
 
-        lenX = len(self.listX)
-        lenS = len(self.listS)
+        # lenX = len(self.listX)
+        # lenS = len(self.listS)
+
+        lenX = get_vectorized_length(self.listX)
+        lenS = get_vectorized_length(self.listS)
 
         if intervention_data.shape[1] != lenX:
             raise ValueError("intervention_data.shape[1] must be len(X).")
@@ -2029,10 +2032,11 @@ class CausalEffects():
 
         self.dataframe = dataframe
         if self.dataframe.has_vector_data:
-            raise ValueError("vector_vars in DataFrame cannot be used together with CausalEffects!"
-                             " You can estimate vector-valued effects by using multivariate X, Y, S."
-                             " Note, however, that this requires assuming a graph at the level "
-                             "of the components of X, Y, S, ...")
+            raise ValueError("vector_vars in DataFrame cannot be used together with Wright method!"
+                             " You can either 1) estimate vector-valued effects by using multivariate (X, Y, S)"
+                             " together with assuming a graph at the level of the components of (X, Y, S), "
+                             " or 2) use vector_vars together with fit_total_effect and an estimator"
+                             " that supports multiple outputs.")
 
         estimator = sklearn.linear_model.LinearRegression()
 
@@ -2611,15 +2615,17 @@ if __name__ == '__main__':
     #     figsize=(8, 4),
     #     )
 
-    T = 1000
+    T = 10000
     def lin_f(x): return x
 
-    auto_coeff = 0.5
-
+    auto_coeff = 0.
     coeff = 2.
+
     links = {
             0: [((0, -1), auto_coeff, lin_f)], 
-            1: [((1, -1), auto_coeff, lin_f), ((0, 0), coeff, lin_f)],
+            1: [((1, -1), auto_coeff, lin_f)], 
+            2: [((2, -1), auto_coeff, lin_f), ((0, 0), coeff, lin_f)],
+            3: [((3, -1), auto_coeff, lin_f)], 
             }
     data, nonstat = toys.structural_causal_process(links, T=T, 
                                 noises=None, seed=7)
@@ -2630,30 +2636,30 @@ if __name__ == '__main__':
     # var_names = range(2)
 
     dataframe = pp.DataFrame(data,
-                    # vector_vars={0:[(0,0), (1,0)], 1:[(2,0), (3,0)]}
-                    ) 
-
+                    vector_vars={0:[(0,0), (1,0)], 
+                                 1:[(2,0), (3,0)]}
+                    )
 
     # # Construct expert knowledge graph from links here 
-    # # links = {0: [(0, -1)],
-    # #          1: [(1, -1), (0, -1)],
-    # #          2: [(2, -1), (1, 0),],
-    # #          }
+    aux_links = {0: [(0, -1)],
+                 1: [(1, -1), (0, 0)],
+              }
     # # Use staticmethod to get graph
-    graph = CausalEffects.get_graph_from_dict(links, tau_max=4)
+    graph = CausalEffects.get_graph_from_dict(aux_links, tau_max=2)
+    # graph = np.array([['', '-->'],
+    #                   ['<--', '']], dtype='<U3')
     
     # # We are interested in lagged total effect of X on Y
-    X = [(0, -2)]
-    Y = [(1, -1)]
+    X = [(0, 0), (0, -1)]
+    Y = [(1, 0), (1, -1)]
 
     # # Initialize class as `stationary_dag`
     causal_effects = CausalEffects(graph, graph_type='stationary_dag', 
-
                                 X=X, Y=Y, S=None, 
                                 hidden_variables=None, 
-                                verbosity=0)
+                                verbosity=1)
 
-    # # print(data)
+    # print(data)
     # # Optimal adjustment set (is used by default)
     # # print(causal_effects.get_optimal_set())
 
@@ -2664,22 +2670,25 @@ if __name__ == '__main__':
         estimator=LinearRegression(),
         )
 
-    # Fit causal effect model from observational data
-    causal_effects.fit_bootstrap_of(
-        method='fit_total_effect',
-        method_args={'dataframe':dataframe,  
-        # mask_type='y',
-        'estimator':LinearRegression()
-        },
-        boot_samples=3,
-        boot_blocklength=1,
-        seed=5
-        )
+    # # Fit causal effect model from observational data
+    # causal_effects.fit_bootstrap_of(
+    #     method='fit_total_effect',
+    #     method_args={'dataframe':dataframe,  
+    #     # mask_type='y',
+    #     'estimator':LinearRegression()
+    #     },
+    #     boot_samples=3,
+    #     boot_blocklength=1,
+    #     seed=5
+    #     )
 
 
     # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go
+    lenX = 4 # len(dataframe.vector_vars[X[0][0]])
     dox_vals = np.linspace(0., 1., 3)
-    intervention_data = np.tile(dox_vals.reshape(len(dox_vals), 1), len(X))
+    intervention_data = np.tile(dox_vals.reshape(len(dox_vals), 1), lenX)
+
+    intervention_data = np.array([[1., 0., 0., 0.]])
 
     print(intervention_data)
 
@@ -2691,13 +2700,13 @@ if __name__ == '__main__':
 
 
 
-    # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go
-    # dox_vals = np.array([1.]) #np.linspace(0., 1., 1)
-    intervention_data = np.tile(dox_vals.reshape(len(dox_vals), 1), len(X))
-    conf = causal_effects.predict_bootstrap_of(
-        method='predict_total_effect',
-        method_args={'intervention_data':intervention_data})
-    print(conf, conf.shape)
+    # # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go
+    # # dox_vals = np.array([1.]) #np.linspace(0., 1., 1)
+    # intervention_data = np.tile(dox_vals.reshape(len(dox_vals), 1), len(X))
+    # conf = causal_effects.predict_bootstrap_of(
+    #     method='predict_total_effect',
+    #     method_args={'intervention_data':intervention_data})
+    # print(conf, conf.shape)
 
 
 
