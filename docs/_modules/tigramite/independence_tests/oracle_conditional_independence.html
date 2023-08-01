@@ -474,6 +474,10 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Max. non-repeated ancestral time lag: &quot;</span><span class="p">,</span> <span class="n">max_lag</span><span class="p">)</span>
 
+        <span class="c1"># ATTENTION: this may not find correct common ancestors, therefore multiply by 10</span>
+        <span class="c1"># until the problem is solved</span>
+        <span class="n">max_lag</span> <span class="o">*=</span> <span class="mi">10</span>
+
         <span class="k">return</span> <span class="n">max_lag</span>
 
     <span class="k">def</span> <span class="nf">_get_descendants</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">children</span><span class="p">,</span> <span class="n">max_lag</span><span class="p">,</span> <span class="n">ignore_time_bounds</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>

@@ -41,6 +41,8 @@ Tigramite is a causal time series analysis python package. It allows to efficien
 
 - RPCMCI: Elena Saggioro, Jana de Wiljes, Marlene Kretschmer, Jakob Runge; Reconstructing regime-dependent causal relationships from observational time series. Chaos 1 November 2020; 30 (11): 113115. https://doi.org/10.1063/5.0020538
 
+- JPCMCIplus: W. Günther, U. Ninad, J. Runge, Causal discovery for time series from multiple datasets with latent contexts. UAI 2023
+
 - Generally: J. Runge (2018): Causal Network Reconstruction from Time Series: From Theoretical Assumptions to Practical Estimation. Chaos: An Interdisciplinary Journal of Nonlinear Science 28 (7): 075310. https://aip.scitation.org/doi/10.1063/1.5025050
 
 - Nature Communications Perspective paper: https://www.nature.com/articles/s41467-019-10105-3
@@ -64,6 +66,7 @@ Tigramite is a causal time series analysis python package. It allows to efficien
    tigramite.pcmci.PCMCI
    tigramite.lpcmci.LPCMCI
    tigramite.rpcmci.RPCMCI
+   tigramite.rpcmci.JPCMCIplus
    tigramite.independence_tests.independence_tests_base.CondIndTest
    tigramite.independence_tests.parcorr.ParCorr
    tigramite.independence_tests.robust_parcorr.RobustParCorr
@@ -101,6 +104,12 @@ Tigramite is a causal time series analysis python package. It allows to efficien
 ===========================================
 
 .. autoclass:: tigramite.rpcmci.RPCMCI
+   :members:
+
+:mod:`tigramite.jpcmciplus`: JPCMCIplus
+===========================================
+
+.. autoclass:: tigramite.jpcmciplus.JPCMCIplus
    :members:
 
 :mod:`tigramite.independence_tests`: Conditional independence tests

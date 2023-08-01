@@ -372,8 +372,7 @@
 <span class="sd">            is unrestricted.</span>
 <span class="sd">        max_combinations : int, optional (default: 1)</span>
 <span class="sd">            Maximum number of combinations of conditions of current cardinality</span>
-<span class="sd">            to test. Defaults to 1 for PC_1 algorithm. For original PC algorithm</span>
-<span class="sd">            a larger number, such as 10, can be used.</span>
+<span class="sd">            to test in PC1 step.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -525,7 +524,7 @@
 <span class="sd">        max_combinations : int</span>
 <span class="sd">            Maximum number of combinations of conditions to test.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">##</span><span class="se">\n</span><span class="s2">## Step 1: PC1 algorithm with lagged conditions</span><span class="se">\n</span><span class="s2">##&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">##</span><span class="se">\n</span><span class="s2">## Step 1: PC1 algorithm for selecting lagged conditions</span><span class="se">\n</span><span class="s2">##&quot;</span>
               <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">Parameters:&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">link_assumptions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;link_assumptions = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">link_assumptions</span><span class="p">))</span>
@@ -651,8 +650,7 @@
 <span class="sd">            is unrestricted.</span>
 <span class="sd">        max_combinations : int, default: 1</span>
 <span class="sd">            Maximum number of combinations of conditions of current cardinality</span>
-<span class="sd">            to test. Defaults to 1 for PC_1 algorithm. For original PC algorithm</span>
-<span class="sd">            a larger number, such as 10, can be used.</span>
+<span class="sd">            to test in PC1 step.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1916,8 +1914,7 @@
 <span class="sd">            is unrestricted.</span>
 <span class="sd">        max_combinations : int, optional (default: 1)</span>
 <span class="sd">            Maximum number of combinations of conditions of current cardinality</span>
-<span class="sd">            to test. Defaults to 1 for PC_1 algorithm. For original PC algorithm</span>
-<span class="sd">            a larger number, such as 10, can be used.</span>
+<span class="sd">            to test in PC1 step.</span>
 <span class="sd">        max_conds_py : int, optional (default: None)</span>
 <span class="sd">            Maximum number of conditions of Y to use. If None is passed, this</span>
 <span class="sd">            number is unrestricted.</span>
@@ -2146,8 +2143,7 @@
 <span class="sd">            is unrestricted.</span>
 <span class="sd">        max_combinations : int, optional (default: 1)</span>
 <span class="sd">            Maximum number of combinations of conditions of current cardinality</span>
-<span class="sd">            to test. Defaults to 1 for PC_1 algorithm. For original PC algorithm</span>
-<span class="sd">            a larger number, such as 10, can be used.</span>
+<span class="sd">            to test in PC1 step.</span>
 <span class="sd">        max_conds_py : int, optional (default: None)</span>
 <span class="sd">            Maximum number of lagged conditions of Y to use in MCI tests. If</span>
 <span class="sd">            None is passed, this number is unrestricted.</span>
@@ -2249,7 +2245,7 @@
                             <span class="n">tau_min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> 
                             <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span> 
                             <span class="n">max_conds_dim</span><span class="o">=</span><span class="n">max_conds_dim</span><span class="p">,</span> 
-                            <span class="n">max_combinations</span><span class="o">=</span><span class="n">max_combinations</span><span class="p">,</span> 
+                            <span class="n">max_combinations</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>    <span class="c1"># Otherwise MCI step is not consistent</span>
                             <span class="n">max_conds_py</span><span class="o">=</span><span class="n">max_conds_py</span><span class="p">,</span>
                             <span class="n">max_conds_px</span><span class="o">=</span><span class="n">max_conds_px</span><span class="p">,</span> 
                             <span class="n">max_conds_px_lagged</span><span class="o">=</span><span class="n">max_conds_px_lagged</span><span class="p">,</span> 
@@ -2615,7 +2611,7 @@
 <span class="sd">            is unrestricted.</span>
 <span class="sd">        max_combinations : int</span>
 <span class="sd">            Maximum number of combinations of conditions of current cardinality</span>
-<span class="sd">            to test.</span>
+<span class="sd">            to test. Must be infinite (default for max_combinations=1) for consistency.</span>
 <span class="sd">        max_conds_py : int, optional (default: None)</span>
 <span class="sd">            Maximum number of lagged conditions of Y to use in MCI tests. If</span>
 <span class="sd">            None is passed, this number is unrestricted.</span>
@@ -2769,7 +2765,7 @@
 <span class="sd">            is unrestricted.</span>
 <span class="sd">        max_combinations : int</span>
 <span class="sd">            Maximum number of combinations of conditions of current cardinality</span>
-<span class="sd">            to test.</span>
+<span class="sd">            to test. Must be infinite (default for max_combinations=1) for consistency.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -2794,11 +2790,11 @@
         <span class="c1"># Remove tau-dimension</span>
         <span class="n">old_sepsets</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;sepsets&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">results</span><span class="p">[</span><span class="s1">&#39;sepsets&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">old_sepsets</span> <span class="ow">in</span> <span class="n">old_sepsets</span><span class="p">:</span>
-           <span class="n">new_sepsets</span> <span class="o">=</span> <span class="p">(</span><span class="n">old_sepsets</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">old_sepsets</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-           <span class="n">conds</span> <span class="o">=</span> <span class="p">[</span><span class="n">cond</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">cond</span> <span class="ow">in</span> <span class="n">old_sepsets</span><span class="p">[</span><span class="n">old_sepsets</span><span class="p">]]</span>
+        <span class="k">for</span> <span class="n">old_sepset</span> <span class="ow">in</span> <span class="n">old_sepsets</span><span class="p">:</span>
+           <span class="n">new_sepset</span> <span class="o">=</span> <span class="p">(</span><span class="n">old_sepset</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">old_sepset</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+           <span class="n">conds</span> <span class="o">=</span> <span class="p">[</span><span class="n">cond</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">cond</span> <span class="ow">in</span> <span class="n">old_sepsets</span><span class="p">[</span><span class="n">old_sepset</span><span class="p">]]</span>
 
-           <span class="n">results</span><span class="p">[</span><span class="s1">&#39;sepsets&#39;</span><span class="p">][</span><span class="n">new_sepsets</span><span class="p">]</span> <span class="o">=</span> <span class="n">conds</span>
+           <span class="n">results</span><span class="p">[</span><span class="s1">&#39;sepsets&#39;</span><span class="p">][</span><span class="n">new_sepset</span><span class="p">]</span> <span class="o">=</span> <span class="n">conds</span>
 
         <span class="n">ambiguous_triples</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;ambiguous_triples&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">results</span><span class="p">[</span><span class="s1">&#39;ambiguous_triples&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
@@ -2978,7 +2974,7 @@
 <span class="sd">            is unrestricted.</span>
 <span class="sd">        max_combinations : int</span>
 <span class="sd">            Maximum number of combinations of conditions of current cardinality</span>
-<span class="sd">            to test.</span>
+<span class="sd">            to test. Must be infinite (default for max_combinations=1) for consistency.</span>
 <span class="sd">        max_conds_py : int, optional (default: None)</span>
 <span class="sd">            Maximum number of lagged conditions of Y to use in MCI tests. If</span>
 <span class="sd">            None is passed, this number is unrestricted.</span>

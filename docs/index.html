@@ -55,6 +55,7 @@
 <li><p>PCMCI+: J. Runge (2020): Discovering contemporaneous and lagged causal relations in autocorrelated nonlinear time series datasets. Proceedings of the 36th Conference on Uncertainty in Artificial Intelligence, UAI 2020,Toronto, Canada, 2019, AUAI Press, 2020. <a class="reference external" href="http://auai.org/uai2020/proceedings/579_main_paper.pdf">http://auai.org/uai2020/proceedings/579_main_paper.pdf</a></p></li>
 <li><p>LPCMCI: Gerhardus, A. &amp; Runge, J. High-recall causal discovery for autocorrelated time series with latent confounders Advances in Neural Information Processing Systems, 2020, 33. <a class="reference external" href="https://proceedings.neurips.cc/paper/2020/hash/94e70705efae423efda1088614128d0b-Abstract.html">https://proceedings.neurips.cc/paper/2020/hash/94e70705efae423efda1088614128d0b-Abstract.html</a></p></li>
 <li><p>RPCMCI: Elena Saggioro, Jana de Wiljes, Marlene Kretschmer, Jakob Runge; Reconstructing regime-dependent causal relationships from observational time series. Chaos 1 November 2020; 30 (11): 113115. <a class="reference external" href="https://doi.org/10.1063/5.0020538">https://doi.org/10.1063/5.0020538</a></p></li>
+<li><p>JPCMCIplus: W. Günther, U. Ninad, J. Runge, Causal discovery for time series from multiple datasets with latent contexts. UAI 2023</p></li>
 <li><p>Generally: J. Runge (2018): Causal Network Reconstruction from Time Series: From Theoretical Assumptions to Practical Estimation. Chaos: An Interdisciplinary Journal of Nonlinear Science 28 (7): 075310. <a class="reference external" href="https://aip.scitation.org/doi/10.1063/1.5025050">https://aip.scitation.org/doi/10.1063/1.5025050</a></p></li>
 <li><p>Nature Communications Perspective paper: <a class="reference external" href="https://www.nature.com/articles/s41467-019-10105-3">https://www.nature.com/articles/s41467-019-10105-3</a></p></li>
 <li><p>Causal effects: J. Runge, Necessary and sufficient graphical conditions for optimal adjustment sets in causal graphical models with hidden variables, Advances in Neural Information Processing Systems, 2021, 34</p></li>
@@ -72,64 +73,61 @@
 <tr class="row-even"><td><p><a class="reference internal" href="#tigramite.lpcmci.LPCMCI" title="tigramite.lpcmci.LPCMCI"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.lpcmci.LPCMCI</span></code></a>(dataframe, cond_ind_test)</p></td>
 <td><p>LPCMCI is an algorithm for causal discovery in large-scale times series that allows for latent confounders and learns lag-specific causal relationships.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#tigramite.rpcmci.RPCMCI" title="tigramite.rpcmci.RPCMCI"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.rpcmci.RPCMCI</span></code></a>(dataframe[, ...])</p></td>
-<td><p>RPCMCI class for extracting causal regimes and the associated graphs from time series data.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#tigramite.independence_tests.independence_tests_base.CondIndTest" title="tigramite.independence_tests.independence_tests_base.CondIndTest"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.independence_tests.independence_tests_base.CondIndTest</span></code></a>([...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tigramite.independence_tests.independence_tests_base.CondIndTest" title="tigramite.independence_tests.independence_tests_base.CondIndTest"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.independence_tests.independence_tests_base.CondIndTest</span></code></a>([...])</p></td>
 <td><p>Base class of conditional independence tests.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#tigramite.independence_tests.parcorr.ParCorr" title="tigramite.independence_tests.parcorr.ParCorr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.independence_tests.parcorr.ParCorr</span></code></a>(...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#tigramite.independence_tests.parcorr.ParCorr" title="tigramite.independence_tests.parcorr.ParCorr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.independence_tests.parcorr.ParCorr</span></code></a>(...)</p></td>
 <td><p>Partial correlation test.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#tigramite.independence_tests.robust_parcorr.RobustParCorr" title="tigramite.independence_tests.robust_parcorr.RobustParCorr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.independence_tests.robust_parcorr.RobustParCorr</span></code></a>(...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tigramite.independence_tests.robust_parcorr.RobustParCorr" title="tigramite.independence_tests.robust_parcorr.RobustParCorr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.independence_tests.robust_parcorr.RobustParCorr</span></code></a>(...)</p></td>
 <td><p>Robust partial correlation test based on non-paranormal models.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#tigramite.independence_tests.gpdc.GPDC" title="tigramite.independence_tests.gpdc.GPDC"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.independence_tests.gpdc.GPDC</span></code></a>([...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#tigramite.independence_tests.gpdc.GPDC" title="tigramite.independence_tests.gpdc.GPDC"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.independence_tests.gpdc.GPDC</span></code></a>([...])</p></td>
 <td><p>GPDC conditional independence test based on Gaussian processes and distance correlation.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#tigramite.independence_tests.gpdc_torch.GPDCtorch" title="tigramite.independence_tests.gpdc_torch.GPDCtorch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.independence_tests.gpdc_torch.GPDCtorch</span></code></a>([...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tigramite.independence_tests.gpdc_torch.GPDCtorch" title="tigramite.independence_tests.gpdc_torch.GPDCtorch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.independence_tests.gpdc_torch.GPDCtorch</span></code></a>([...])</p></td>
 <td><p>GPDC conditional independence test based on Gaussian processes and distance correlation.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#tigramite.independence_tests.cmiknn.CMIknn" title="tigramite.independence_tests.cmiknn.CMIknn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.independence_tests.cmiknn.CMIknn</span></code></a>([...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#tigramite.independence_tests.cmiknn.CMIknn" title="tigramite.independence_tests.cmiknn.CMIknn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.independence_tests.cmiknn.CMIknn</span></code></a>([...])</p></td>
 <td><p>Conditional mutual information test based on nearest-neighbor estimator.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#tigramite.independence_tests.cmisymb.CMIsymb" title="tigramite.independence_tests.cmisymb.CMIsymb"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.independence_tests.cmisymb.CMIsymb</span></code></a>([...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tigramite.independence_tests.cmisymb.CMIsymb" title="tigramite.independence_tests.cmisymb.CMIsymb"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.independence_tests.cmisymb.CMIsymb</span></code></a>([...])</p></td>
 <td><p>Conditional mutual information test for discrete/categorical data.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#tigramite.independence_tests.oracle_conditional_independence.OracleCI" title="tigramite.independence_tests.oracle_conditional_independence.OracleCI"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.independence_tests.oracle_conditional_independence.OracleCI</span></code></a>([...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#tigramite.independence_tests.oracle_conditional_independence.OracleCI" title="tigramite.independence_tests.oracle_conditional_independence.OracleCI"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.independence_tests.oracle_conditional_independence.OracleCI</span></code></a>([...])</p></td>
 <td><p>Oracle of conditional independence test X _|_ Y | Z given a graph.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#tigramite.independence_tests.parcorr_mult.ParCorrMult" title="tigramite.independence_tests.parcorr_mult.ParCorrMult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.independence_tests.parcorr_mult.ParCorrMult</span></code></a>([...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tigramite.independence_tests.parcorr_mult.ParCorrMult" title="tigramite.independence_tests.parcorr_mult.ParCorrMult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.independence_tests.parcorr_mult.ParCorrMult</span></code></a>([...])</p></td>
 <td><p>Partial correlation test for multivariate X and Y.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#tigramite.independence_tests.gsquared.Gsquared" title="tigramite.independence_tests.gsquared.Gsquared"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.independence_tests.gsquared.Gsquared</span></code></a>([...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#tigramite.independence_tests.gsquared.Gsquared" title="tigramite.independence_tests.gsquared.Gsquared"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.independence_tests.gsquared.Gsquared</span></code></a>([...])</p></td>
 <td><p>G-squared conditional independence test for categorical data.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#tigramite.independence_tests.parcorr_wls.ParCorrWLS" title="tigramite.independence_tests.parcorr_wls.ParCorrWLS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.independence_tests.parcorr_wls.ParCorrWLS</span></code></a>([...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tigramite.independence_tests.parcorr_wls.ParCorrWLS" title="tigramite.independence_tests.parcorr_wls.ParCorrWLS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.independence_tests.parcorr_wls.ParCorrWLS</span></code></a>([...])</p></td>
 <td><p>Weighted partial correlation test.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#tigramite.independence_tests.regressionCI.RegressionCI" title="tigramite.independence_tests.regressionCI.RegressionCI"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.independence_tests.regressionCI.RegressionCI</span></code></a>(...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#tigramite.independence_tests.regressionCI.RegressionCI" title="tigramite.independence_tests.regressionCI.RegressionCI"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.independence_tests.regressionCI.RegressionCI</span></code></a>(...)</p></td>
 <td><p>Flexible parametric conditional independence tests for continuous, categorical, or mixed data.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#tigramite.causal_effects.CausalEffects" title="tigramite.causal_effects.CausalEffects"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.causal_effects.CausalEffects</span></code></a>(...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tigramite.causal_effects.CausalEffects" title="tigramite.causal_effects.CausalEffects"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.causal_effects.CausalEffects</span></code></a>(...)</p></td>
 <td><p>Causal effect estimation.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#tigramite.models.Models" title="tigramite.models.Models"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.models.Models</span></code></a>(dataframe, model[, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#tigramite.models.Models" title="tigramite.models.Models"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.models.Models</span></code></a>(dataframe, model[, ...])</p></td>
 <td><p>Base class for time series models.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#tigramite.models.LinearMediation" title="tigramite.models.LinearMediation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.models.LinearMediation</span></code></a>(dataframe)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tigramite.models.LinearMediation" title="tigramite.models.LinearMediation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.models.LinearMediation</span></code></a>(dataframe)</p></td>
 <td><p>Linear mediation analysis for time series models.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#tigramite.models.Prediction" title="tigramite.models.Prediction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.models.Prediction</span></code></a>(dataframe, ...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#tigramite.models.Prediction" title="tigramite.models.Prediction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.models.Prediction</span></code></a>(dataframe, ...)</p></td>
 <td><p>Prediction class for time series models.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#module-tigramite.data_processing" title="tigramite.data_processing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.data_processing</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#module-tigramite.data_processing" title="tigramite.data_processing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.data_processing</span></code></a></p></td>
 <td><p>Tigramite data processing functions.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#module-tigramite.toymodels.structural_causal_processes" title="tigramite.toymodels.structural_causal_processes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.toymodels.structural_causal_processes</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#module-tigramite.toymodels.structural_causal_processes" title="tigramite.toymodels.structural_causal_processes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.toymodels.structural_causal_processes</span></code></a></p></td>
 <td><p>Tigramite toymodels.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#module-tigramite.plotting" title="tigramite.plotting"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.plotting</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#module-tigramite.plotting" title="tigramite.plotting"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.plotting</span></code></a></p></td>
 <td><p>Tigramite plotting package.</p></td>
 </tr>
 </tbody>
@@ -143,7 +141,7 @@
 <dd><p>PCMCI causal discovery for time series datasets.</p>
 <p>PCMCI is a causal discovery framework for large-scale time series
 datasets. This class contains several methods. The standard PCMCI method
-addresses time-lagged causal discovery and is described in <a class="footnote-reference brackets" href="#id3" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a> where
+addresses time-lagged causal discovery and is described in <a href="#id42"><span class="problematic" id="id1">[1]_</span></a> where
 also further sub-variants are discussed. Lagged as well as contemporaneous
 causal discovery is addressed with PCMCIplus and described in <a class="footnote-reference brackets" href="#id4" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>5<span class="fn-bracket">]</span></a>. See the
 tutorials for guidance in applying these methods.</p>
@@ -181,7 +179,6 @@ estimation functionality of Tigramite.</p>
 <p class="rubric">References</p>
 <aside class="footnote brackets" id="id3" role="note">
 <span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
-<span class="backrefs">(<a role="doc-backlink" href="#id1">1</a>,<a role="doc-backlink" href="#id5">2</a>,<a role="doc-backlink" href="#id6">3</a>,<a role="doc-backlink" href="#id7">4</a>,<a role="doc-backlink" href="#id9">5</a>,<a role="doc-backlink" href="#id15">6</a>,<a role="doc-backlink" href="#id16">7</a>,<a role="doc-backlink" href="#id17">8</a>,<a role="doc-backlink" href="#id33">9</a>,<a role="doc-backlink" href="#id34">10</a>)</span>
 <p>J. Runge, P. Nowack, M. Kretschmer, S. Flaxman, D. Sejdinovic,
 Detecting and quantifying causal associations in large nonlinear time
 series datasets. Sci. Adv. 5, eaau4996 (2019)
@@ -443,7 +440,7 @@ containing estimated parents.</p>
 <dt class="sig sig-object py" id="tigramite.pcmci.PCMCI.run_bivci">
 <span class="sig-name descname"><span class="pre">run_bivci</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">selected_links</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_assumptions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fdr_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/pcmci.html#PCMCI.run_bivci"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.pcmci.PCMCI.run_bivci" title="Permalink to this definition">¶</a></dt>
 <dd><p>BivCI conditional independence tests.</p>
-<p>Implements the BivCI test (see <a class="footnote-reference brackets" href="#id3" id="id5" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>).</p>
+<p>Implements the BivCI test (see <a href="#id43"><span class="problematic" id="id5">[1]_</span></a>).</p>
 <p>Returns the matrices of test statistic values, (optionally corrected)
 p-values, and (optionally) confidence intervals. Also (new in 4.3)
 returns graph based on alpha_level (and optional FDR-correction).</p>
@@ -491,7 +488,7 @@ are set.</p></li>
 <dt class="sig sig-object py" id="tigramite.pcmci.PCMCI.run_fullci">
 <span class="sig-name descname"><span class="pre">run_fullci</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">selected_links</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_assumptions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fdr_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/pcmci.html#PCMCI.run_fullci"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.pcmci.PCMCI.run_fullci" title="Permalink to this definition">¶</a></dt>
 <dd><p>FullCI conditional independence tests.</p>
-<p>Implements the FullCI test (see <a class="footnote-reference brackets" href="#id3" id="id6" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>).</p>
+<p>Implements the FullCI test (see <a href="#id44"><span class="problematic" id="id6">[1]_</span></a>).</p>
 <p>Returns the matrices of test statistic values, (optionally corrected)
 p-values, and (optionally) confidence intervals. Also (new in 4.3)
 returns graph based on alpha_level (and optional FDR-correction).</p>
@@ -539,7 +536,7 @@ are set.</p></li>
 <dt class="sig sig-object py" id="tigramite.pcmci.PCMCI.run_mci">
 <span class="sig-name descname"><span class="pre">run_mci</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">selected_links</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_assumptions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parents</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_conds_py</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_conds_px</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fdr_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/pcmci.html#PCMCI.run_mci"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.pcmci.PCMCI.run_mci" title="Permalink to this definition">¶</a></dt>
 <dd><p>MCI conditional independence tests.</p>
-<p>Implements the MCI test (Algorithm 2 in <a class="footnote-reference brackets" href="#id3" id="id7" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>).</p>
+<p>Implements the MCI test (Algorithm 2 in <a href="#id45"><span class="problematic" id="id7">[1]_</span></a>).</p>
 <p>Returns the matrices of test statistic values, (optionally corrected)
 p-values, and (optionally) confidence intervals. Also (new in 4.3)
 returns graph based on alpha_level (and optional FDR-correction).</p>
@@ -622,8 +619,7 @@ cond_ind_test.get_model_selection_criterion().</p></li>
 <li><p><strong>max_conds_dim</strong> (<em>int</em><em> or </em><em>None</em>) – Maximum number of conditions to test. If None is passed, this number
 is unrestricted.</p></li>
 <li><p><strong>max_combinations</strong> (<em>int</em><em>, </em><em>default: 1</em>) – Maximum number of combinations of conditions of current cardinality
-to test. Defaults to 1 for PC_1 algorithm. For original PC algorithm
-a larger number, such as 10, can be used.</p></li>
+to test in PC1 step.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -678,7 +674,7 @@ this leads to an order-independent algorithm.</p></li>
 <li><p><strong>max_conds_dim</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Maximum number of conditions to test. If None is passed, this number
 is unrestricted.</p></li>
 <li><p><strong>max_combinations</strong> (<em>int</em>) – Maximum number of combinations of conditions of current cardinality
-to test.</p></li>
+to test. Must be infinite (default for max_combinations=1) for consistency.</p></li>
 <li><p><strong>max_conds_py</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Maximum number of lagged conditions of Y to use in MCI tests. If
 None is passed, this number is unrestricted.</p></li>
 <li><p><strong>max_conds_px</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Maximum number of lagged conditions of X to use in MCI tests. If
@@ -719,7 +715,7 @@ this leads to an order-independent algorithm.</p></li>
 <li><p><strong>max_conds_dim</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Maximum number of conditions to test. If None is passed, this number
 is unrestricted.</p></li>
 <li><p><strong>max_combinations</strong> (<em>int</em>) – Maximum number of combinations of conditions of current cardinality
-to test.</p></li>
+to test. Must be infinite (default for max_combinations=1) for consistency.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -785,7 +781,7 @@ of a regularization parameter in model-selection techniques. If a
 list of values is given or <code class="docutils literal notranslate"><span class="pre">pc_alpha=None</span></code>, <img class="math" src="_images/math/2f5aa019312e1bbc969deab8dca8b00f76025404.png" alt="\alpha"/> is
 optimized using model selection criteria implemented in the respective
 <code class="docutils literal notranslate"><span class="pre">tigramite.independence_tests</span></code>.</p>
-<p>Further optional parameters are discussed in <a class="footnote-reference brackets" href="#id3" id="id9" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.</p>
+<p>Further optional parameters are discussed in <a href="#id46"><span class="problematic" id="id9">[1]_</span></a>.</p>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">tigramite.pcmci</span> <span class="kn">import</span> <span class="n">PCMCI</span>
@@ -848,8 +844,7 @@ or the links are assumed absent.</p></li>
 <li><p><strong>max_conds_dim</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Maximum number of conditions to test. If None is passed, this number
 is unrestricted.</p></li>
 <li><p><strong>max_combinations</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) – Maximum number of combinations of conditions of current cardinality
-to test. Defaults to 1 for PC_1 algorithm. For original PC algorithm
-a larger number, such as 10, can be used.</p></li>
+to test in PC1 step.</p></li>
 <li><p><strong>max_conds_py</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Maximum number of conditions of Y to use. If None is passed, this
 number is unrestricted.</p></li>
 <li><p><strong>max_conds_px</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Maximum number of conditions of Z to use. If None is passed, this
@@ -999,8 +994,7 @@ runtimes.</p></li>
 <li><p><strong>max_conds_dim</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Maximum number of conditions to test. If None is passed, this number
 is unrestricted.</p></li>
 <li><p><strong>max_combinations</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) – Maximum number of combinations of conditions of current cardinality
-to test. Defaults to 1 for PC_1 algorithm. For original PC algorithm
-a larger number, such as 10, can be used.</p></li>
+to test in PC1 step.</p></li>
 <li><p><strong>max_conds_py</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Maximum number of lagged conditions of Y to use in MCI tests. If
 None is passed, this number is unrestricted.</p></li>
 <li><p><strong>max_conds_px</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Maximum number of lagged conditions of X to use in MCI tests. If
@@ -1258,73 +1252,433 @@ options passed to this function.</p>
 </section>
 <section id="tigramite-rpcmci-rpcmci">
 <h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">tigramite.rpcmci</span></code>: RPCMCI<a class="headerlink" href="#tigramite-rpcmci-rpcmci" title="Permalink to this heading">¶</a></h1>
+</section>
+<section id="tigramite-jpcmciplus-jpcmciplus">
+<h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">tigramite.jpcmciplus</span></code>: JPCMCIplus<a class="headerlink" href="#tigramite-jpcmciplus-jpcmciplus" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="tigramite.rpcmci.RPCMCI">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tigramite.rpcmci.</span></span><span class="sig-name descname"><span class="pre">RPCMCI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cond_ind_test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prediction_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbosity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/rpcmci.html#RPCMCI"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.rpcmci.RPCMCI" title="Permalink to this definition">¶</a></dt>
-<dd><p>RPCMCI class for extracting causal regimes and the associated graphs from
-time series data.</p>
-<p class="rubric">Notes</p>
-<p>The Regime-PCMCI causal discovery method is described in:</p>
-<p>Elena Saggioro, Jana de Wiljes, Marlene Kretschmer, Jakob Runge;
-Reconstructing regime-dependent causal relationships from observational
-time series. Chaos 1 November 2020; 30 (11): 113115.
-<a class="reference external" href="https://doi.org/10.1063/5.0020538">https://doi.org/10.1063/5.0020538</a></p>
-<p>The method iterates between two phases –a regime learning phase
-(optimization-based) and a causal discovery phase (PCMCI)– to identify
-regime dependent causal relationships. A persistent discrete regime
-variable is assumed that leads to a finite number of regimes within which
-stationarity can be assumed.</p>
+<dt class="sig sig-object py" id="tigramite.jpcmciplus.JPCMCIplus">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tigramite.jpcmciplus.</span></span><span class="sig-name descname"><span class="pre">JPCMCIplus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_classification</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/jpcmciplus.html#JPCMCIplus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.jpcmciplus.JPCMCIplus" title="Permalink to this definition">¶</a></dt>
+<dd><p>J-PCMCI+ causal discovery for time series datasets from multiple contexts.
+This class is based on the PCMCI framework as described in <a href="#id47"><span class="problematic" id="id15">[1]_</span></a>.
+JPCMCIplus enables causal discovery for time series data from different contexts,
+i.e. datasets, where some of the variables describing the context might be unobserved.
+The method is described in detail in <a class="footnote-reference brackets" href="#id18" id="id16" role="doc-noteref"><span class="fn-bracket">[</span>10<span class="fn-bracket">]</span></a>.
+See the tutorial for guidance in applying the method.</p>
+<p class="rubric">References</p>
+<aside class="footnote brackets" id="id17" role="note">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<p>J. Runge, P. Nowack, M. Kretschmer, S. Flaxman, D. Sejdinovic,
+Detecting and quantifying causal associations in large nonlinear time
+series datasets. Sci. Adv. 5, eaau4996 (2019)
+<a class="reference external" href="https://advances.sciencemag.org/content/5/11/eaau4996">https://advances.sciencemag.org/content/5/11/eaau4996</a></p>
+</aside>
+<aside class="footnote brackets" id="id18" role="note">
+<span class="label"><span class="fn-bracket">[</span>10<span class="fn-bracket">]</span></span>
+<span class="backrefs">(<a role="doc-backlink" href="#id16">1</a>,<a role="doc-backlink" href="#id19">2</a>,<a role="doc-backlink" href="#id20">3</a>)</span>
+<p>W. Günther, U. Ninad, J. Runge,
+Causal discovery for time series from multiple datasets with latent contexts. UAI 2023</p>
+</aside>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>dataframe</strong> (<em>data object</em>) – This is the Tigramite dataframe object. It has the attributes
-dataframe.values yielding a numpy array of shape ( observations T,
-variables N). For RPCMCI the mask will be ignored. You may use the
-missing_flag to indicate missing values.</p></li>
-<li><p><strong>cond_ind_test</strong> (<em>conditional independence test object</em>) – This can be ParCorr or other classes from
-<code class="docutils literal notranslate"><span class="pre">tigramite.independence_tests</span></code> or an external test passed as a
-callable. This test can be based on the class
-tigramite.independence_tests.CondIndTest.</p></li>
-<li><p><strong>prediction_model</strong> (<em>sklearn model object</em>) – For example, sklearn.linear_model.LinearRegression() for a linear
-regression model. This should be consistent with cond_ind_test, ie,
-use ParCorr() with a linear model and, eg, GPDC() with a
-GaussianProcessRegressor model, or CMIknn with NearestNeighbors model.</p></li>
-<li><p><strong>seed</strong> (<em>int</em>) – Random seed for annealing step.</p></li>
-<li><p><strong>verbosity</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: -1</em><em>)</em>) – Verbose levels -1, 0, 1, …</p></li>
-</ul>
+<dd class="field-odd"><p><strong>node_classification</strong> (<em>dictionary</em>) – Classification of nodes into system, context, or dummy nodes.
+Keys of the dictionary are from {0, …, N-1} where N is the number of nodes.
+Options for the values are “system”, “time_context”, “space_context”, “time_dummy”, or “space_dummy”.</p>
 </dd>
 </dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tigramite.jpcmciplus.JPCMCIplus.all_parents">
+<span class="sig-name descname"><span class="pre">all_parents</span></span><a class="headerlink" href="#tigramite.jpcmciplus.JPCMCIplus.all_parents" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary of form {0:[(0, -1), (3, -2), …], 1:[], …} containing
+the conditioning-parents estimated with PC algorithm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dictionary</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tigramite.jpcmciplus.JPCMCIplus.val_min">
+<span class="sig-name descname"><span class="pre">val_min</span></span><a class="headerlink" href="#tigramite.jpcmciplus.JPCMCIplus.val_min" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary of form val_min[j][(i, -tau)] = float
+containing the minimum test statistic value for each link estimated in
+the PC algorithm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dictionary</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tigramite.jpcmciplus.JPCMCIplus.pval_max">
+<span class="sig-name descname"><span class="pre">pval_max</span></span><a class="headerlink" href="#tigramite.jpcmciplus.JPCMCIplus.pval_max" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary of form pval_max[j][(i, -tau)] = float containing the maximum
+p-value for each link estimated in the PC algorithm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dictionary</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tigramite.jpcmciplus.JPCMCIplus.iterations">
+<span class="sig-name descname"><span class="pre">iterations</span></span><a class="headerlink" href="#tigramite.jpcmciplus.JPCMCIplus.iterations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary containing further information on algorithm steps.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dictionary</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tigramite.jpcmciplus.JPCMCIplus.N">
+<span class="sig-name descname"><span class="pre">N</span></span><a class="headerlink" href="#tigramite.jpcmciplus.JPCMCIplus.N" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of variables.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tigramite.jpcmciplus.JPCMCIplus.T">
+<span class="sig-name descname"><span class="pre">T</span></span><a class="headerlink" href="#tigramite.jpcmciplus.JPCMCIplus.T" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time series sample length of dataset(s).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tigramite.jpcmciplus.JPCMCIplus.dummy_parents">
+<span class="sig-name descname"><span class="pre">dummy_parents</span></span><a class="headerlink" href="#tigramite.jpcmciplus.JPCMCIplus.dummy_parents" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary of form {0:[(0, -1), (3, -2), …], 1:[], …} containing
+the dependence of the system nodes on the dummy nodes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dictionary or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tigramite.jpcmciplus.JPCMCIplus.observed_context_parents">
+<span class="sig-name descname"><span class="pre">observed_context_parents</span></span><a class="headerlink" href="#tigramite.jpcmciplus.JPCMCIplus.observed_context_parents" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary of form {0:[(0, -1), (3, -2), …], 1:[], …} containing
+the dependence of the system nodes on the observed context nodes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dictionary or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tigramite.jpcmciplus.JPCMCIplus.dummy_ci_test">
+<span class="sig-name descname"><span class="pre">dummy_ci_test</span></span><a class="headerlink" href="#tigramite.jpcmciplus.JPCMCIplus.dummy_ci_test" title="Permalink to this definition">¶</a></dt>
+<dd><p>Conditional independence test used to test dependence between system nodes and dummy nodes.
+Currently, ParCorr is used with one-hot encoded dummies.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>conditional independence test object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tigramite.jpcmciplus.JPCMCIplus.mode">
+<span class="sig-name descname"><span class="pre">mode</span></span><a class="headerlink" href="#tigramite.jpcmciplus.JPCMCIplus.mode" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>“system_search” or “context_search” or “dummy_search” (default: “system_search”)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tigramite.jpcmciplus.JPCMCIplus.time_context_nodes">
+<span class="sig-name descname"><span class="pre">time_context_nodes</span></span><a class="headerlink" href="#tigramite.jpcmciplus.JPCMCIplus.time_context_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>List with entries from {0, …, N-1} where N is the number of nodes.
+This is the list of the temporal context nodes which are assumed to be constant over the different datasets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tigramite.jpcmciplus.JPCMCIplus.space_context_nodes">
+<span class="sig-name descname"><span class="pre">space_context_nodes</span></span><a class="headerlink" href="#tigramite.jpcmciplus.JPCMCIplus.space_context_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>List with entries from {0, …, N-1} where N is the number of nodes.
+This is the list of the spatial context nodes which are assumed to be constant over time.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tigramite.jpcmciplus.JPCMCIplus.time_dummy">
+<span class="sig-name descname"><span class="pre">time_dummy</span></span><a class="headerlink" href="#tigramite.jpcmciplus.JPCMCIplus.time_dummy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Node corresponding to the temporal dummy variable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int or None (default: None)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tigramite.jpcmciplus.JPCMCIplus.space_dummy">
+<span class="sig-name descname"><span class="pre">space_dummy</span></span><a class="headerlink" href="#tigramite.jpcmciplus.JPCMCIplus.space_dummy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Node corresponding to the spatial dummy variable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int or None (default: None)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tigramite.jpcmciplus.JPCMCIplus.system_nodes">
+<span class="sig-name descname"><span class="pre">system_nodes</span></span><a class="headerlink" href="#tigramite.jpcmciplus.JPCMCIplus.system_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>List with entries from {0, …, N-1} where N is the number of nodes.
+This is the list of the system nodes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
-<dt class="sig sig-object py" id="tigramite.rpcmci.RPCMCI.run_rpcmci">
-<span class="sig-name descname"><span class="pre">run_rpcmci</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_regimes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_transitions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">switch_thres</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_iterations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_anneal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pc_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/rpcmci.html#RPCMCI.run_rpcmci"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.rpcmci.RPCMCI.run_rpcmci" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>Run RPCMCI method for extracting causal regimes and the associated graphs from</dt><dd><p>time series data.</p>
-</dd>
-</dl>
+<dt class="sig sig-object py" id="tigramite.jpcmciplus.JPCMCIplus.add_found_context_link_assumptions">
+<span class="sig-name descname"><span class="pre">add_found_context_link_assumptions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">link_assumptions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_max</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/jpcmciplus.html#JPCMCIplus.add_found_context_link_assumptions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.jpcmciplus.JPCMCIplus.add_found_context_link_assumptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function to add discovered links between system and observed context nodes to link_assumptions.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tigramite.jpcmciplus.JPCMCIplus.assume_exogenous_context">
+<span class="sig-name descname"><span class="pre">assume_exogenous_context</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">link_assumptions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observed_context_nodes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/jpcmciplus.html#JPCMCIplus.assume_exogenous_context"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.jpcmciplus.JPCMCIplus.assume_exogenous_context" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function to amend the link_assumptions to ensure that all context-system links are oriented
+such that the context variable is the parent.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tigramite.jpcmciplus.JPCMCIplus.clean_link_assumptions">
+<span class="sig-name descname"><span class="pre">clean_link_assumptions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">link_assumptions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_max</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/jpcmciplus.html#JPCMCIplus.clean_link_assumptions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.jpcmciplus.JPCMCIplus.clean_link_assumptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function to amend the link_assumptions in the following ways
+* remove any links where dummy is the child
+* remove any lagged links to dummy, and space_context (not to observed time context)
+* and system - context links where context is the child
+* and any links between spatial and temporal context</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tigramite.jpcmciplus.JPCMCIplus.clean_system_link_assumptions">
+<span class="sig-name descname"><span class="pre">clean_system_link_assumptions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">link_assumptions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_max</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/jpcmciplus.html#JPCMCIplus.clean_system_link_assumptions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.jpcmciplus.JPCMCIplus.clean_system_link_assumptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function to remove any links to dummy and observed context nodes from link_assumptions.
+Add discovered links to contextual parents (from steps 1 and 2) to the link_assumptions.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tigramite.jpcmciplus.JPCMCIplus.discover_dummy_system_links">
+<span class="sig-name descname"><span class="pre">discover_dummy_system_links</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">link_assumptions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_system_results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lagged_parents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pc_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reset_lagged_links</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_conds_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_conds_py</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_conds_px</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_conds_px_lagged</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fdr_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/jpcmciplus.html#JPCMCIplus.discover_dummy_system_links"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.jpcmciplus.JPCMCIplus.discover_dummy_system_links" title="Permalink to this definition">¶</a></dt>
+<dd><p>Step 2 of JPCMCIplus, i.e. discovery of links between observed (time and space) dummy nodes and system nodes
+through an application of the skeleton phase of PCMCIplus to this subset of nodes (dummy nodes and
+system nodes).
+See run_jpcmciplus for a description of the parameters.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>num_regimes</strong> (<em>int</em>) – Number of assumed regimes.</p></li>
-<li><p><strong>max_transitions</strong> (<em>int</em>) – Maximum number of transitions within a single regime (persistency parameter).</p></li>
-<li><p><strong>switch_thres</strong> (<em>float</em>) – Switch threshold.</p></li>
-<li><p><strong>num_iterations</strong> (<em>int</em>) – Optimization iterations.</p></li>
-<li><p><strong>max_anneal</strong> (<em>int</em>) – Maximum annealing runs.</p></li>
-<li><p><strong>tau_min</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) – Minimum time lag to test.</p></li>
-<li><p><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) – Maximum time lag. Must be larger or equal to tau_min.</p></li>
-<li><p><strong>pc_alpha</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.2</em><em>)</em>) – Significance level in PCMCI.</p></li>
-<li><p><strong>alpha_level</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.05</em><em>)</em>) – Significance level in PCMCI at which the p_matrix is thresholded to
-get graph.</p></li>
-<li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: -1</em><em>)</em>) – Number of CPUs to use in joblib parallization. Default n_jobs=-1
-uses all available.</p></li>
+<li><p><strong>context_system_results</strong> (<em>dictionary</em>) – Output of discover_lagged_and_context_system_links, i.e. lagged and context parents together with the
+corresponding estimated test statistic values regarding adjacencies.</p></li>
+<li><p><strong>lagged_parents</strong> (<em>dictionary</em>) – Dictionary of form {0:[(0, -1), (3, -2), …], 1:[], …} containing the conditioning-parents
+estimated with PC algorithm.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
-<li><p><strong>regimes</strong> (<em>array of shape (n_regimes, T)</em>) – One-hot encoded regime variable.</p></li>
-<li><p><strong>causal_results</strong> (<em>dictionary</em>) – Contains result of run_pcmci() after convergence.</p></li>
-<li><p><strong>diff_g_f</strong> (<em>tuple</em>) – Difference between two consecutive optimizations for all annealings and
-the optimal one with minimum objective value (see paper).</p></li>
-<li><p><strong>error_free_annealings</strong> (<em>int</em>) – Number of annealings that converged without error.</p></li>
+<li><p><strong>graph</strong> (<em>array of shape [N, N, tau_max+1]</em>) – Resulting causal graph, see description above for interpretation.</p></li>
+<li><p><strong>val_matrix</strong> (<em>array of shape [N, N, tau_max+1]</em>) – Estimated matrix of test statistic values regarding adjacencies.</p></li>
+<li><p><strong>p_matrix</strong> (<em>array of shape [N, N, tau_max+1]</em>) – Estimated matrix of p-values regarding adjacencies.</p></li>
+<li><p><strong>parents</strong> (<em>dictionary</em>) – Dictionary of form {0:[(0, -1), (3, -2), …], 1:[], …} containing
+the estimated dummy parents of the system nodes.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tigramite.jpcmciplus.JPCMCIplus.discover_lagged_context_system_links">
+<span class="sig-name descname"><span class="pre">discover_lagged_context_system_links</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">link_assumptions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pc_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reset_lagged_links</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_conds_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_combinations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_conds_py</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_conds_px</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_conds_px_lagged</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fdr_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/jpcmciplus.html#JPCMCIplus.discover_lagged_context_system_links"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.jpcmciplus.JPCMCIplus.discover_lagged_context_system_links" title="Permalink to this definition">¶</a></dt>
+<dd><p>Step 1 of JPCMCIplus, i.e. discovery of links between observed context nodes and system nodes through an
+application of the skeleton phase of PCMCIplus to this subset of nodes (observed context nodes and system
+nodes).
+See run_jpcmciplus for a description of the parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p><strong>graph</strong> (<em>array of shape [N, N, tau_max+1]</em>) – Resulting causal graph, see description above for interpretation.</p></li>
+<li><p><strong>val_matrix</strong> (<em>array of shape [N, N, tau_max+1]</em>) – Estimated matrix of test statistic values regarding adjacencies.</p></li>
+<li><p><strong>p_matrix</strong> (<em>array of shape [N, N, tau_max+1]</em>) – Estimated matrix of p-values regarding adjacencies.</p></li>
+<li><p><strong>parents</strong> (<em>dictionary</em>) – Dictionary of form {0:[(0, -1), (3, -2), …], 1:[], …} containing
+the estimated context parents of the system nodes.</p></li>
+<li><p><strong>lagged_parents</strong> (<em>dictionary</em>) – Dictionary of form {0:[(0, -1), (3, -2), …], 1:[], …} containing
+the conditioning-parents estimated with PC algorithm.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tigramite.jpcmciplus.JPCMCIplus.discover_system_system_links">
+<span class="sig-name descname"><span class="pre">discover_system_system_links</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">link_assumptions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lagged_context_dummy_parents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pc_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reset_lagged_links</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_conds_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_conds_py</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_conds_px</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_conds_px_lagged</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fdr_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/jpcmciplus.html#JPCMCIplus.discover_system_system_links"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.jpcmciplus.JPCMCIplus.discover_system_system_links" title="Permalink to this definition">¶</a></dt>
+<dd><p>Step 4 of JPCMCIplus and orientation phase, i.e. discovery of links between system nodes given the knowledge
+about their context parents through an application of PCMCIplus to this subset of nodes (system nodes).
+See run_jpcmciplus for a description of the other parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>lagged_context_dummy_parents</strong> (<em>dictionary</em>) – Dictionary containing lagged and (dummy and observed) context parents of the system nodes estimated during
+step 1 and step 2 of J-PCMCI+.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>graph</strong> (<em>array of shape [N, N, tau_max+1]</em>) – Resulting causal graph, see description above for interpretation.</p></li>
+<li><p><strong>val_matrix</strong> (<em>array of shape [N, N, tau_max+1]</em>) – Estimated matrix of test statistic values regarding adjacencies.</p></li>
+<li><p><strong>p_matrix</strong> (<em>array of shape [N, N, tau_max+1]</em>) – Estimated matrix of p-values regarding adjacencies.</p></li>
+<li><p><strong>sepset</strong> (<em>dictionary</em>) – Separating sets. See paper for details.</p></li>
+<li><p><strong>ambiguous_triples</strong> (<em>list</em>) – List of ambiguous triples, only relevant for ‘majority’ and
+‘conservative’ rules, see paper for details.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tigramite.jpcmciplus.JPCMCIplus.remove_dummy_link_assumptions">
+<span class="sig-name descname"><span class="pre">remove_dummy_link_assumptions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">link_assumptions</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/jpcmciplus.html#JPCMCIplus.remove_dummy_link_assumptions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.jpcmciplus.JPCMCIplus.remove_dummy_link_assumptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function to remove any links to dummy from link_assumptions.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tigramite.jpcmciplus.JPCMCIplus.run_jpcmciplus">
+<span class="sig-name descname"><span class="pre">run_jpcmciplus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">contemp_collider_rule</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'majority'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_assumptions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pc_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conflict_resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reset_lagged_links</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_conds_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_combinations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_conds_py</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_conds_px</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_conds_px_lagged</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fdr_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/jpcmciplus.html#JPCMCIplus.run_jpcmciplus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.jpcmciplus.JPCMCIplus.run_jpcmciplus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs JPCMCIplus time-lagged and contemporaneous causal discovery for time series from multiple contexts.
+Method described in <a class="footnote-reference brackets" href="#id18" id="id19" role="doc-noteref"><span class="fn-bracket">[</span>10<span class="fn-bracket">]</span></a>:</p>
+<blockquote>
+<div><p>W. Günther, U. Ninad, J. Runge,
+Causal discovery for time series from multiple datasets with latent contexts. UAI 2023</p>
+</div></blockquote>
+<p class="rubric">Notes</p>
+<p>The JPCMCIplus causal discovery method is described in <a class="footnote-reference brackets" href="#id18" id="id20" role="doc-noteref"><span class="fn-bracket">[</span>10<span class="fn-bracket">]</span></a>, where
+also analytical and numerical results are presented. JPCMCIplus can identify the joint causal graph
+over multiple datasets containing time series data from different contexts under the standard assumptions
+of Causal Sufficiency, Faithfulness and the Markov condition, as well as some background knowledge assumptions.
+JPCMCIplus estimates time-lagged and contemporaneous causal links from context to system
+variables and in between system variables by a four-step procedure:</p>
+<p>1.  <strong>Discovery of supersets of the lagged parents of the system and observed temporal context nodes</strong> by
+running the <img class="math" src="_images/math/70934d1a42028f6a8731ad6d32f977bb87341b40.png" alt="PC_1"/> lagged phase on this subset of nodes to obtain <img class="math" src="_images/math/29133806d050a99e9f41db86843ab84d3ffe4cfe.png" alt="\hat{\mathcal{B}}^-_t(X_t^j)"/>.</p>
+<p>2.  Next, the <strong>MCI test is run on pairs of system and context nodes conditional on subsets of system
+and context</strong>, i.e. perform MCI tests for pairs <img class="math" src="_images/math/610793d48383ce74a3f75cae82f741afb4b15a1f.png" alt="((C^j_{t-\tau}, X^i_t))_{\tau &gt; 0}"/>,
+<img class="math" src="_images/math/2aaf85f27254655d2bf003e4ae743175538f32a2.png" alt="(C_t^j, X_t^i)"/>, <img class="math" src="_images/math/5970d3340fdc7a1a2408a0f96f0ca4ccaa2e05c7.png" alt="(X_t^i, C_t^j)"/> for all <img class="math" src="_images/math/5183ea9096ac86aff6e13dd3d4389ae47617b059.png" alt="i,j"/>,</p>
+<div class="math">
+<p><img src="_images/math/343ec6b8711e2e83b11d1c666c823c15e3076152.png" alt="C_{t-\tau}^i \perp X_t^j | \mathbf{S}, \hat{\mathcal{B}}^-_t(X_t^j)
+\setminus \{ C_{t-\tau}^i \}, \hat{\mathcal{B}}^-_{t-\tau}(C_{t-\tau}^i)"/></p>
+</div><p>with <img class="math" src="_images/math/f1d8d254182790e09d0e2127717a635ab620c4b3.png" alt="\mathbf{S}"/> being a subset of the contemporaneous adjacencies <img class="math" src="_images/math/002fcaabed0489f553d1c33fb1480262c02bbf5d.png" alt="\mathcal{A}_t(X_t^j)"/> and
+<img class="math" src="_images/math/29133806d050a99e9f41db86843ab84d3ffe4cfe.png" alt="\hat{\mathcal{B}}^-_t(X_t^j)"/> are the lagged adjacencies from step one. If <img class="math" src="_images/math/4db5b6e16e06f929ce3f675c5e535d06ffb02ff7.png" alt="C"/> is a
+spatial context variable, we only have to test the contemporaneous pairs
+<img class="math" src="_images/math/2aaf85f27254655d2bf003e4ae743175538f32a2.png" alt="(C_t^j, X_t^i)"/>, <img class="math" src="_images/math/5970d3340fdc7a1a2408a0f96f0ca4ccaa2e05c7.png" alt="(X_t^i, C_t^j)"/> for all <img class="math" src="_images/math/5183ea9096ac86aff6e13dd3d4389ae47617b059.png" alt="i,j"/>.
+If <img class="math" src="_images/math/4dd97b4d2674b7708c46d41c6c012664a2806da0.png" alt="C_t^j"/> and <img class="math" src="_images/math/6ab2d8fa50060307398282bb0365d98a3e7face8.png" alt="X_t^i"/> are conditionally independent, all lagged links between <img class="math" src="_images/math/4dd97b4d2674b7708c46d41c6c012664a2806da0.png" alt="C_t^j"/> and
+<img class="math" src="_images/math/707dd16c533765c87784b918b5b28c7b743df715.png" alt="X^j_{t-\tau}"/> are also removed for all <img class="math" src="_images/math/914b2d4b6659b86d3153d5510839dfb254dfc8a3.png" alt="\tau"/>.</p>
+<p>3.  <strong>Perform MCI tests on all system-dummy pairs conditional on the superset of lagged links, the discovered
+contemporaneous context adjacencies, as well as on subsets of contemporaneous system links</strong>, i.e. test
+for <img class="math" src="_images/math/8d6552e42ca019ac82a58b45cd15b5d1caa13c56.png" alt="(D, X_t^i)"/>, <img class="math" src="_images/math/38ab485b0f9e684860df7cece119065d1709ecde.png" alt="(X_t^i, D)"/> for all <img class="math" src="_images/math/5aa339d4daf45a810dda332e3c80a0698e526e04.png" alt="i"/>, i.e.</p>
+<div class="math">
+<p><img src="_images/math/f99414a531135c89c3f9f0f2541a28676fb61af6.png" alt="D \perp X_t^j | \mathbf{S}, \hat{\mathcal{B}}^C_t(X_t^j),"/></p>
+</div><p>where <img class="math" src="_images/math/8ef6e1b47375edf9ee5c1272b3d0484949cd0a14.png" alt="\mathbf{S} \subset \mathcal{A}_t(X_t^i)"/> and <img class="math" src="_images/math/371dd8b10886065c02a506b1120f2a9a95b3864e.png" alt="\hat{\mathcal{B}}^C_t(X_t^j)"/>
+are the lagged and contextual adjacencies found in the previous step.
+If <img class="math" src="_images/math/0fcab9067b50b87e868c4fd70f213a086addb964.png" alt="D"/> and <img class="math" src="_images/math/0df0e569fa1d374ca4ebaab68658b71fa6b1e866.png" alt="X_t^j"/> are found to be conditionally independence, links between <img class="math" src="_images/math/0fcab9067b50b87e868c4fd70f213a086addb964.png" alt="D"/> and
+<img class="math" src="_images/math/707dd16c533765c87784b918b5b28c7b743df715.png" alt="X^j_{t-\tau}"/> are removed for all <img class="math" src="_images/math/914b2d4b6659b86d3153d5510839dfb254dfc8a3.png" alt="\tau"/>.
+By assumption context node is the parent in all system-context links.</p>
+<p>4.  Finally, we <strong>perform  MCI tests on all system pairs conditional on discovered lagged, context and dummy
+adjacencies, as well as on subsets of contemporaneous system links</strong> and <strong>orientation phase</strong>. In more detail,
+we perform MCI test for pairs <img class="math" src="_images/math/b9c77bc33e087d8d416ef250a6bdce03e0f3291f.png" alt="((X^j_{t-\tau}, X_t^i))_{\tau &gt; 0}"/>, <img class="math" src="_images/math/f1d76f63eb859df9073c72ce72af6be86519c006.png" alt="(X_t^i, X_t^j)"/> for all
+<img class="math" src="_images/math/f49c62bf4f2fbed05875f0ca49a0c1dbf887c13b.png" alt="i, j"/>, i.e.</p>
+<div class="math">
+<p><img src="_images/math/e66456f289e2e2476ded91f1a4c5f64f1fd7218b.png" alt="X^i_{t-\tau} \perp X_t^j | \mathbf{S}, \hat{\mathcal{B}}^{CD}_t(X_t^j)
+\setminus \{ X_{t-\tau}^i \},\hat{\mathcal{B}}^{CD}_t(X_{t-\tau}^i)"/></p>
+</div><p>where <img class="math" src="_images/math/8ef6e1b47375edf9ee5c1272b3d0484949cd0a14.png" alt="\mathbf{S} \subset \mathcal{A}_t(X_t^i)"/> and <img class="math" src="_images/math/0eb451d0d56882f580d23d9206b9beee3b114658.png" alt="\hat{\mathcal{B}}^{CD}_t(X_t^j)"/>
+are the lagged, contextual, and dummy adjacencies found in the previous steps.
+Finally, all remaining edges (without expert knowledge) are oriented using the PCMCI+ orientation phase while
+making use of all triples involving one context or dummy variable and two system variables as in the non-time
+series case.</p>
+<p>JPCMCIplus can be flexibly combined with any kind of conditional
+independence test statistic adapted to the kind of data (continuous
+or discrete) and its assumed dependency types. These are available in
+<code class="docutils literal notranslate"><span class="pre">tigramite.independence_tests</span></code>.
+See PCMCIplus for a description of the parameters of JPCMCIplus. Also, guidance on best practices for
+setting these parameters is given there.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>link_assumptions</strong> (<em>dict</em>) – Dictionary of form {j:{(i, -tau): link_type, …}, …} specifying
+assumptions about links. This initializes the graph with entries
+graph[i,j,tau] = link_type. For example, graph[i,j,0] = ‘–&gt;’
+implies that a directed link from i to j at lag 0 must exist.
+Valid link types are ‘o-o’, ‘–&gt;’, ‘&lt;–’. In addition, the middle
+mark can be ‘?’ instead of ‘-’. Then ‘-?&gt;’ implies that this link
+may not exist, but if it exists, its orientation is ‘–&gt;’. Link
+assumptions need to be consistent, i.e., graph[i,j,0] = ‘–&gt;’
+requires graph[j,i,0] = ‘&lt;–’ and acyclicity must hold. If a link
+does not appear in the dictionary, it is assumed absent. That is,
+if link_assumptions is not None, then all links have to be specified
+or the links are assumed absent.</p></li>
+<li><p><strong>tau_min</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) – Minimum time lag to test.</p></li>
+<li><p><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) – Maximum time lag. Must be larger or equal to tau_min.</p></li>
+<li><p><strong>pc_alpha</strong> (<em>float</em><em> or </em><em>list of floats</em><em>, </em><em>default: 0.01</em>) – Significance level in algorithm. If a list or None is passed, the
+pc_alpha level is optimized for every graph across the given
+pc_alpha values ([0.001, 0.005, 0.01, 0.025, 0.05] for None) using
+the score computed in cond_ind_test.get_model_selection_criterion().</p></li>
+<li><p><strong>contemp_collider_rule</strong> (<em>{'majority'</em><em>, </em><em>'conservative'</em><em>, </em><em>'none'}</em>) – Rule for collider phase to use. See the paper for details. Only
+‘majority’ and ‘conservative’ lead to an order-independent
+algorithm.</p></li>
+<li><p><strong>conflict_resolution</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – Whether to mark conflicts in orientation rules. Only for True
+this leads to an order-independent algorithm.</p></li>
+<li><p><strong>reset_lagged_links</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – Restricts the detection of lagged causal links in Step 2 to the
+significant adjacencies found in the PC1 algorithm in Step 1. For
+True, <em>all</em> lagged links are considered again, which improves
+detection power for lagged links, but also leads to larger
+runtimes.</p></li>
+<li><p><strong>max_conds_dim</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Maximum number of conditions to test. If None is passed, this number
+is unrestricted.</p></li>
+<li><p><strong>max_combinations</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) – Maximum number of combinations of conditions of current cardinality
+to test. Defaults to 1 for PC_1 algorithm. For original PC algorithm
+a larger number, such as 10, can be used.</p></li>
+<li><p><strong>max_conds_py</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Maximum number of lagged conditions of Y to use in MCI tests. If
+None is passed, this number is unrestricted.</p></li>
+<li><p><strong>max_conds_px</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Maximum number of lagged conditions of X to use in MCI tests. If
+None is passed, this number is unrestricted.</p></li>
+<li><p><strong>max_conds_px_lagged</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Maximum number of lagged conditions of X when X is lagged in MCI
+tests. If None is passed, this number is equal to max_conds_px.</p></li>
+<li><p><strong>fdr_method</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'none'</em><em>)</em>) – Correction method, default is Benjamini-Hochberg False Discovery
+Rate method.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>graph</strong> (<em>array of shape [N, N, tau_max+1]</em>) – Resulting causal graph, see description above for interpretation.</p></li>
+<li><p><strong>val_matrix</strong> (<em>array of shape [N, N, tau_max+1]</em>) – Estimated matrix of test statistic values regarding adjacencies.</p></li>
+<li><p><strong>p_matrix</strong> (<em>array of shape [N, N, tau_max+1]</em>) – Estimated matrix of p-values regarding adjacencies.</p></li>
+<li><p><strong>sepset</strong> (<em>dictionary</em>) – Separating sets. See paper for details.</p></li>
+<li><p><strong>ambiguous_triples</strong> (<em>list</em>) – List of ambiguous triples, only relevant for ‘majority’ and
+‘conservative’ rules, see paper for details.</p></li>
 </ul>
 </p>
 </dd>
@@ -1358,14 +1712,14 @@ Explained in tutorial on masking and missing values.</p></li>
 <li><p><strong>sig_samples</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 500</em><em>)</em>) – Number of samples for shuffle significance test.</p></li>
 <li><p><strong>sig_blocklength</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Block length for block-shuffle significance test. If None, the
 block length is determined from the decay of the autocovariance as
-explained in <a class="footnote-reference brackets" href="#id3" id="id15" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.</p></li>
+explained in <a href="#id48"><span class="problematic" id="id21">[1]_</span></a>.</p></li>
 <li><p><strong>confidence</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Specify type of confidence estimation. If False, numpy.nan is returned.
 ‘bootstrap’ can be used with any test, for ParCorr also ‘analytic’ is
 implemented.</p></li>
 <li><p><strong>conf_lev</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.9</em><em>)</em>) – Two-sided confidence interval.</p></li>
 <li><p><strong>conf_samples</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 100</em><em>)</em>) – Number of samples for bootstrap.</p></li>
 <li><p><strong>conf_blocklength</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Block length for block-bootstrap. If None, the block length is
-determined from the decay of the autocovariance as explained in <a class="footnote-reference brackets" href="#id3" id="id16" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.</p></li>
+determined from the decay of the autocovariance as explained in <a href="#id49"><span class="problematic" id="id22">[1]_</span></a>.</p></li>
 <li><p><strong>recycle_residuals</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – Specifies whether residuals should be stored. This may be faster, but
 can cost considerable memory.</p></li>
 <li><p><strong>verbosity</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) – Level of verbosity.</p></li>
@@ -1406,7 +1760,7 @@ dependence_measure(array, xyz) and return a numeric value</p>
 </dd>
 <dt>conf_blocklength<span class="classifier">int, optional (default: None)</span></dt><dd><p>Block length for block-bootstrap. If None, the block length is
 determined from the decay of the autocovariance as explained in
-<a class="footnote-reference brackets" href="#id3" id="id17" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.</p>
+<a href="#id50"><span class="problematic" id="id23">[1]_</span></a>.</p>
 </dd>
 </dl>
 </div></blockquote>
@@ -1532,7 +1886,7 @@ should override when possible.</p>
 <dt class="sig sig-object py" id="tigramite.independence_tests.independence_tests_base.CondIndTest.run_test">
 <span class="sig-name descname"><span class="pre">run_test</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cut_off</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'2xtau_max'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_or_thres</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/independence_tests_base.html#CondIndTest.run_test"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.independence_tests.independence_tests_base.CondIndTest.run_test" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform conditional independence test.</p>
-<p>Calls the dependence measure and signficicance test functions. The child
+<p>Calls the dependence measure and significance test functions. The child
 classes must specify a function get_dependence_measure and either or
 both functions get_analytic_significance and  get_shuffle_significance.
 If recycle_residuals is True, also _get_single_residuals must be
@@ -1988,7 +2342,7 @@ similarly, all values that are too close to one, are replaced by
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tigramite.independence_tests.gpdc.</span></span><span class="sig-name descname"><span class="pre">GPDC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">null_dist_filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gp_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/gpdc.html#GPDC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.independence_tests.gpdc.GPDC" title="Permalink to this definition">¶</a></dt>
 <dd><p>GPDC conditional independence test based on Gaussian processes and distance correlation.</p>
 <p>GPDC is based on a Gaussian process (GP) regression and a distance
-correlation test on the residuals <a class="footnote-reference brackets" href="#id20" id="id18" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>. GP is estimated with scikit-learn
+correlation test on the residuals <a class="footnote-reference brackets" href="#id26" id="id24" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>. GP is estimated with scikit-learn
 and allows to flexibly specify kernels and hyperparameters or let them be
 optimized automatically. The distance correlation test is implemented with
 cython. Here the null distribution is not analytically available, but can be
@@ -1998,7 +2352,7 @@ This file can then be supplied as null_dist_filename.</p>
 <p class="rubric">Notes</p>
 <p>GPDC is based on a Gaussian process (GP) regression and a distance
 correlation test on the residuals. Distance correlation is described in
-<a class="footnote-reference brackets" href="#id20" id="id19" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>. To test <img class="math" src="_images/math/667eda4bf3d5ce33b6cc785cadfef79bb95741ca.png" alt="X \perp Y | Z"/>, first <img class="math" src="_images/math/95f028ab2b20b895fa12d986e0d9f40f7b6e52d3.png" alt="Z"/> is regressed out from
+<a class="footnote-reference brackets" href="#id26" id="id25" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>. To test <img class="math" src="_images/math/667eda4bf3d5ce33b6cc785cadfef79bb95741ca.png" alt="X \perp Y | Z"/>, first <img class="math" src="_images/math/95f028ab2b20b895fa12d986e0d9f40f7b6e52d3.png" alt="Z"/> is regressed out from
 <img class="math" src="_images/math/ed38fa24f1c94891bd312012aab3f6673be3eb83.png" alt="X"/> and <img class="math" src="_images/math/7daf0d4815e763eb90f0d5f1dc406f668c1e21db.png" alt="Y"/> assuming the  model</p>
 <div class="math">
 <p><img src="_images/math/db3d34854a6f48587cf5b9a41df90ad1c5e332d6.png" alt="X &amp; =  f_X(Z) + \epsilon_{X} \\
@@ -2012,9 +2366,9 @@ marginals yielding <img class="math" src="_images/math/be07aa32325c7a6161c0cef04
 </div><p>The null distribution of the distance correlation should be pre-computed.
 Otherwise it is computed during runtime.</p>
 <p class="rubric">References</p>
-<aside class="footnote brackets" id="id20" role="note">
+<aside class="footnote brackets" id="id26" role="note">
 <span class="label"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></span>
-<span class="backrefs">(<a role="doc-backlink" href="#id18">1</a>,<a role="doc-backlink" href="#id19">2</a>,<a role="doc-backlink" href="#id21">3</a>,<a role="doc-backlink" href="#id22">4</a>)</span>
+<span class="backrefs">(<a role="doc-backlink" href="#id24">1</a>,<a role="doc-backlink" href="#id25">2</a>,<a role="doc-backlink" href="#id27">3</a>,<a role="doc-backlink" href="#id28">4</a>)</span>
 <p>Gabor J. Szekely, Maria L. Rizzo, and Nail K. Bakirov: Measuring and
 testing dependence by correlation of distances,
 <a class="reference external" href="https://arxiv.org/abs/0803.4101">https://arxiv.org/abs/0803.4101</a></p>
@@ -2179,7 +2533,7 @@ different lags in X, Z, all have the same sample size.</p></li>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tigramite.independence_tests.gpdc_torch.</span></span><span class="sig-name descname"><span class="pre">GPDCtorch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">null_dist_filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/gpdc_torch.html#GPDCtorch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.independence_tests.gpdc_torch.GPDCtorch" title="Permalink to this definition">¶</a></dt>
 <dd><p>GPDC conditional independence test based on Gaussian processes and distance correlation. Here with gpytorch implementation.</p>
 <p>GPDC is based on a Gaussian process (GP) regression and a distance
-correlation test on the residuals <a class="footnote-reference brackets" href="#id20" id="id21" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>. GP is estimated with gpytorch.
+correlation test on the residuals <a class="footnote-reference brackets" href="#id26" id="id27" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>. GP is estimated with gpytorch.
 The distance correlation test is implemented with the dcor package available
 from pip. Here the null distribution is not analytically available, but can be
 precomputed with the function generate_and_save_nulldists(…) which saves a
@@ -2188,7 +2542,7 @@ This file can then be supplied as null_dist_filename.</p>
 <p class="rubric">Notes</p>
 <p>GPDC is based on a Gaussian process (GP) regression and a distance
 correlation test on the residuals. Distance correlation is described in
-<a class="footnote-reference brackets" href="#id20" id="id22" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>. To test <img class="math" src="_images/math/667eda4bf3d5ce33b6cc785cadfef79bb95741ca.png" alt="X \perp Y | Z"/>, first <img class="math" src="_images/math/95f028ab2b20b895fa12d986e0d9f40f7b6e52d3.png" alt="Z"/> is regressed out from
+<a class="footnote-reference brackets" href="#id26" id="id28" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>. To test <img class="math" src="_images/math/667eda4bf3d5ce33b6cc785cadfef79bb95741ca.png" alt="X \perp Y | Z"/>, first <img class="math" src="_images/math/95f028ab2b20b895fa12d986e0d9f40f7b6e52d3.png" alt="Z"/> is regressed out from
 <img class="math" src="_images/math/ed38fa24f1c94891bd312012aab3f6673be3eb83.png" alt="X"/> and <img class="math" src="_images/math/7daf0d4815e763eb90f0d5f1dc406f668c1e21db.png" alt="Y"/> assuming the  model</p>
 <div class="math">
 <p><img src="_images/math/db3d34854a6f48587cf5b9a41df90ad1c5e332d6.png" alt="X &amp; =  f_X(Z) + \epsilon_{X} \\
@@ -2365,7 +2719,7 @@ parametric form of the dependencies by directly estimating the underlying
 joint density. The test here is based on the estimator in  S. Frenzel and B.
 Pompe, Phys. Rev. Lett. 99, 204101 (2007), combined with a shuffle test to
 generate  the distribution under the null hypothesis of independence first
-used in <a class="footnote-reference brackets" href="#id24" id="id23" role="doc-noteref"><span class="fn-bracket">[</span>3<span class="fn-bracket">]</span></a>. The knn-estimator is suitable only for variables taking a
+used in <a class="footnote-reference brackets" href="#id30" id="id29" role="doc-noteref"><span class="fn-bracket">[</span>3<span class="fn-bracket">]</span></a>. The knn-estimator is suitable only for variables taking a
 continuous range of values. For discrete variables use the CMIsymb class.</p>
 <p class="rubric">Notes</p>
 <p>CMI is given by</p>
@@ -2389,8 +2743,8 @@ that the estimated CMI values can be slightly negative while CMI is a non-
 negative quantity.</p>
 <p>This method requires the scipy.spatial.cKDTree package.</p>
 <p class="rubric">References</p>
-<aside class="footnote brackets" id="id24" role="note">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id23">3</a><span class="fn-bracket">]</span></span>
+<aside class="footnote brackets" id="id30" role="note">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id29">3</a><span class="fn-bracket">]</span></span>
 <p>J. Runge (2018): Conditional Independence Testing Based on a
 Nearest-Neighbor Estimator of Conditional Mutual Information.
 In Proceedings of the 21st International Conference on Artificial
@@ -2799,13 +3153,6 @@ correlation is performed.</p>
 </dd>
 </dl>
 <dl class="py method">
-<dt class="sig sig-object py" id="tigramite.independence_tests.parcorr_mult.ParCorrMult.get_analytic_confidence">
-<span class="sig-name descname"><span class="pre">get_analytic_confidence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf_lev</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/parcorr_mult.html#ParCorrMult.get_analytic_confidence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.independence_tests.parcorr_mult.ParCorrMult.get_analytic_confidence" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base class assumption that this is not implemented.  Concrete classes
-should override when possible.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="tigramite.independence_tests.parcorr_mult.ParCorrMult.get_analytic_significance">
 <span class="sig-name descname"><span class="pre">get_analytic_significance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xyz</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/parcorr_mult.html#ParCorrMult.get_analytic_significance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.independence_tests.parcorr_mult.ParCorrMult.get_analytic_significance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns analytic p-value depending on correlation_type.</p>
@@ -2853,9 +3200,25 @@ residuals of a linear OLS regression.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="tigramite.independence_tests.parcorr_mult.ParCorrMult.get_model_selection_criterion">
-<span class="sig-name descname"><span class="pre">get_model_selection_criterion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">j</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/parcorr_mult.html#ParCorrMult.get_model_selection_criterion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.independence_tests.parcorr_mult.ParCorrMult.get_model_selection_criterion" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base class assumption that this is not implemented.  Concrete classes
-should override when possible.</p>
+<span class="sig-name descname"><span class="pre">get_model_selection_criterion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">j</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corrected_aic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/parcorr_mult.html#ParCorrMult.get_model_selection_criterion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.independence_tests.parcorr_mult.ParCorrMult.get_model_selection_criterion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns Akaike’s Information criterion modulo constants.</p>
+<p>Fits a linear model of the parents to each variable in j and returns
+the average score. Leave-one-out cross-validation is asymptotically
+equivalent to AIC for ordinary linear regression models. Here used to
+determine optimal hyperparameters in PCMCI, in particular the
+pc_alpha value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>j</strong> (<em>int</em>) – Index of target variable in data array.</p></li>
+<li><p><strong>parents</strong> (<em>list</em>) – List of form [(0, -1), (3, -2), …] containing parents.</p></li>
+<li><p><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) – Maximum time lag. This may be used to make sure that estimates for
+different lags in X, Z, all have the same sample size.</p></li>
+<li><p><strong>Returns</strong> – </p></li>
+<li><p><strong>score</strong> (<em>float</em>) – Model score.</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -2914,7 +3277,7 @@ partial correlation.</p></li>
 <dt class="sig sig-object py" id="tigramite.independence_tests.gsquared.Gsquared">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tigramite.independence_tests.gsquared.</span></span><span class="sig-name descname"><span class="pre">Gsquared</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_symbs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/gsquared.html#Gsquared"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.independence_tests.gsquared.Gsquared" title="Permalink to this definition">¶</a></dt>
 <dd><p>G-squared conditional independence test for categorical data.</p>
-<p>Uses Chi2 as the null distribution and the method from <a class="footnote-reference brackets" href="#id26" id="id25" role="doc-noteref"><span class="fn-bracket">[</span>7<span class="fn-bracket">]</span></a> to
+<p>Uses Chi2 as the null distribution and the method from <a class="footnote-reference brackets" href="#id32" id="id31" role="doc-noteref"><span class="fn-bracket">[</span>7<span class="fn-bracket">]</span></a> to
 adjust the degrees of freedom. Valid only asymptotically, recommended are
 above 1000-2000 samples (depends on data). For smaller sample sizes use the
 CMIsymb class which includes a local permutation test.</p>
@@ -2927,8 +3290,8 @@ CMIsymb class which includes a local permutation test.</p>
 \frac{ p(x,y |z)}{p(x|z)\cdot p(y |z)}"/></p>
 </div><p>where <img class="math" src="_images/math/5a939c5280da7202ca4531f175a7780ad5e1f80a.png" alt="n"/> is the sample size. This is simply <img class="math" src="_images/math/88da5b28f5e08d9d8ed693d334e710f4adadbcfd.png" alt="2 n CMI(X;Y|Z)"/>.</p>
 <p class="rubric">References</p>
-<aside class="footnote brackets" id="id26" role="note">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id25">7</a><span class="fn-bracket">]</span></span>
+<aside class="footnote brackets" id="id32" role="note">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id31">7</a><span class="fn-bracket">]</span></span>
 <p>Bishop, Y.M.M., Fienberg, S.E. and Holland, P.W. (1975) Discrete
 Multivariate Analysis: Theory and Practice. MIT Press, Cambridge.</p>
 </aside>
@@ -3169,11 +3532,11 @@ supported, also including hidden variables.</p>
 linear case without hidden variables also an efficient estimation
 based on Wright’s path coefficients is available. This estimator
 also allows to estimate mediation effects.</p>
-<p>See the corresponding paper <a class="footnote-reference brackets" href="#id28" id="id27" role="doc-noteref"><span class="fn-bracket">[</span>6<span class="fn-bracket">]</span></a> and tigramite tutorial for an
+<p>See the corresponding paper <a class="footnote-reference brackets" href="#id34" id="id33" role="doc-noteref"><span class="fn-bracket">[</span>6<span class="fn-bracket">]</span></a> and tigramite tutorial for an
 in-depth introduction.</p>
 <p class="rubric">References</p>
-<aside class="footnote brackets" id="id28" role="note">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id27">6</a><span class="fn-bracket">]</span></span>
+<aside class="footnote brackets" id="id34" role="note">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id33">6</a><span class="fn-bracket">]</span></span>
 <p>J. Runge, Necessary and sufficient graphical conditions for
 optimal adjustment sets in causal graphical models with
 hidden variables, Advances in Neural Information Processing
@@ -3414,7 +3777,7 @@ expected values of the predict function, not potential other output.</p>
 <dd class="field-even"><p><strong>confidence_intervals</strong></p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>numpy array of</p>
+<dd class="field-odd"><p>numpy array</p>
 </dd>
 </dl>
 </dd></dl>
@@ -3474,10 +3837,14 @@ the entire results can be returned.</p></li>
 <p>Base class:</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="tigramite.models.Models">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tigramite.models.</span></span><span class="sig-name descname"><span class="pre">Models</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conditional_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_transform</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">StandardScaler()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbosity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#Models"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.models.Models" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tigramite.models.</span></span><span class="sig-name descname"><span class="pre">Models</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conditional_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_transform</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbosity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#Models"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.models.Models" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for time series models.</p>
 <p>Allows to fit any model from sklearn to the parents of a target variable.
-Also takes care of missing values, masking and preprocessing.</p>
+Also takes care of missing values, masking and preprocessing. If the
+target variable is multivariate, a model that supports multi-output
+regression must be used. Note that
+sklearn.multioutput.MultiOutputRegressor allows to extend single-output
+models.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -3555,7 +3922,7 @@ parents and the regression coefficients as values.</p>
 <span class="sig-name descname"><span class="pre">get_general_fitted_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Z=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conditions=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_max=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cut_off='max_lag_or_tau_max'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">empty_predictors_function=&lt;function</span> <span class="pre">mean&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_data=False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#Models.get_general_fitted_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.models.Models.get_general_fitted_model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fit time series model.</p>
 <p>For each variable in selected_variables, the sklearn model is fitted
-with <img class="math" src="_images/math/1b5e577d6216dca3af7d87aa122a0b9b360d6cb3.png" alt="y"/> given by the target variable, and <img class="math" src="_images/math/ed38fa24f1c94891bd312012aab3f6673be3eb83.png" alt="X"/> given by its
+with <img class="math" src="_images/math/1b5e577d6216dca3af7d87aa122a0b9b360d6cb3.png" alt="y"/> given by the target variable(s), and <img class="math" src="_images/math/ed38fa24f1c94891bd312012aab3f6673be3eb83.png" alt="X"/> given by its
 parents. The fitted model class is returned for later use.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -3580,7 +3947,7 @@ as much samples as possible.</p></li>
 transformation parameters.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>dictionary of sklearn model objects for each variable</p>
+<dd class="field-odd"><p>dictionary of sklearn model objects</p>
 </dd>
 </dl>
 </dd></dl>
@@ -3595,11 +3962,32 @@ transformation parameters.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>intervention_data</strong> (<em>numpy array</em>) – Numpy array of shape (time, len(X)) that contains the do(X) values.</p></li>
 <li><p><strong>conditions_data</strong> (<em>data object</em><em>, </em><em>optional</em>) – Numpy array of shape (time, len(S)) that contains the S=s values.</p></li>
-<li><p><strong>pred_params</strong> (<em>dict</em><em>, </em><em>optional</em>) – Optional parameters passed on to sklearn prediction function.</p></li>
+<li><p><strong>pred_params</strong> (<em>dict</em><em>, </em><em>optional</em>) – Optional parameters passed on to sklearn prediction function (model and
+conditional_model).</p></li>
 <li><p><strong>transform_interventions_and_prediction</strong> (<em>bool</em><em> (</em><em>default: False</em><em>)</em>) – Whether to perform the inverse data_transform on prediction results.</p></li>
 <li><p><strong>return_further_pred_results</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – In case the predictor class returns more than just the expected value,
 the entire results can be returned.</p></li>
 <li><p><strong>aggregation_func</strong> (<em>callable</em>) – Callable applied to output of ‘predict’. Default is ‘np.mean’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Results from prediction.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tigramite.models.Models.get_residuals_cov_mean">
+<span class="sig-name descname"><span class="pre">get_residuals_cov_mean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pred_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#Models.get_residuals_cov_mean"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.models.Models.get_residuals_cov_mean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns covariance and means of residuals from fitted model.</p>
+<p>Residuals are available as self.residuals.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>new_data</strong> (<em>data object</em><em>, </em><em>optional</em>) – New Tigramite dataframe object with optional new mask. Note that
+the data will be cut off according to cut_off, see parameter
+<cite>cut_off</cite> below.</p></li>
+<li><p><strong>pred_params</strong> (<em>dict</em><em>, </em><em>optional</em>) – Optional parameters passed on to sklearn prediction function.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -3624,6 +4012,33 @@ coefficient of the link from i to j at lag tau, including tau=0.</p>
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="tigramite.models.Models.predict_full_model">
+<span class="sig-name descname"><span class="pre">predict_full_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pred_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cut_off</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'max_lag_or_tau_max'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#Models.predict_full_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.models.Models.predict_full_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict target variable with fitted model.</p>
+<p>Uses the model.predict() function of the sklearn model.</p>
+<p>A list of predicted time series for self.selected_variables is returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>new_data</strong> (<em>data object</em><em>, </em><em>optional</em>) – New Tigramite dataframe object with optional new mask. Note that
+the data will be cut off according to cut_off, see parameter
+<cite>cut_off</cite> below.</p></li>
+<li><p><strong>pred_params</strong> (<em>dict</em><em>, </em><em>optional</em>) – Optional parameters passed on to sklearn prediction function.</p></li>
+<li><p><strong>cut_off</strong> (<em>{'2xtau_max'</em><em>, </em><em>'max_lag'</em><em>, </em><em>'max_lag_or_tau_max'}</em>) – How many samples to cutoff at the beginning. The default is
+‘2xtau_max’, which guarantees that MCI tests are all conducted on
+the same samples.  For modeling, ‘max_lag_or_tau_max’ can be used,
+which uses the maximum of tau_max and the conditions, which is
+useful to compare multiple models on the same sample. Last,
+‘max_lag’ uses as much samples as possible.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Results from prediction.</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <p>Derived classes:</p>
@@ -3633,12 +4048,12 @@ coefficient of the link from i to j at lag tau, including tau=0.</p>
 <dd><p>Linear mediation analysis for time series models.</p>
 <p>Fits linear model to parents and provides functions to return measures such
 as causal effect, mediated causal effect, average causal effect, etc. as
-described in <a class="footnote-reference brackets" href="#id31" id="id29" role="doc-noteref"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></a>. Also allows for contemporaneous links.</p>
+described in <a class="footnote-reference brackets" href="#id37" id="id35" role="doc-noteref"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></a>. Also allows for contemporaneous links.</p>
 <p>For general linear and nonlinear causal effect analysis including latent
 variables and further functionality use the CausalEffects class.</p>
 <p class="rubric">Notes</p>
 <p>This class implements the following causal mediation measures introduced in
-<a class="footnote-reference brackets" href="#id31" id="id30" role="doc-noteref"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></a>:</p>
+<a class="footnote-reference brackets" href="#id37" id="id36" role="doc-noteref"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></a>:</p>
 <blockquote>
 <div><ul class="simple">
 <li><p>causal effect (CE)</p></li>
@@ -3680,9 +4095,9 @@ has CE 0.5 on <img class="math" src="_images/math/7daf0d4815e763eb90f0d5f1dc406f
 </pre></div>
 </div>
 <p class="rubric">References</p>
-<aside class="footnote brackets" id="id31" role="note">
+<aside class="footnote brackets" id="id37" role="note">
 <span class="label"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></span>
-<span class="backrefs">(<a role="doc-backlink" href="#id29">1</a>,<a role="doc-backlink" href="#id30">2</a>,<a role="doc-backlink" href="#id32">3</a>)</span>
+<span class="backrefs">(<a role="doc-backlink" href="#id35">1</a>,<a role="doc-backlink" href="#id36">2</a>,<a role="doc-backlink" href="#id38">3</a>)</span>
 <p>J. Runge et al. (2015): Identifying causal gateways and mediators in
 complex spatio-temporal systems.
 Nature Communications, 6, 8502. <a class="reference external" href="http://doi.org/10.1038/ncomms9502">http://doi.org/10.1038/ncomms9502</a></p>
@@ -3706,17 +4121,18 @@ is not used. Explained in tutorial on masking and missing values.</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="tigramite.models.LinearMediation.fit_model">
-<span class="sig-name descname"><span class="pre">fit_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_parents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#LinearMediation.fit_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.models.LinearMediation.fit_model" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">fit_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_parents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/models.html#LinearMediation.fit_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.models.LinearMediation.fit_model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fit linear time series model.</p>
 <p>Fits a sklearn.linear_model.LinearRegression model to the parents of
 each variable and computes the coefficient matrices <img class="math" src="_images/math/d8ee85ac4d75924cdf4b18f5fb3b46550932fc26.png" alt="\Phi"/> and
-<img class="math" src="_images/math/20582dab63cb7f6604f5bf70224030ad3411ae16.png" alt="\Psi"/> as described in <a class="footnote-reference brackets" href="#id31" id="id32" role="doc-noteref"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></a>. Does accept contemporaneous links.</p>
+<img class="math" src="_images/math/20582dab63cb7f6604f5bf70224030ad3411ae16.png" alt="\Psi"/> as described in <a class="footnote-reference brackets" href="#id37" id="id38" role="doc-noteref"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></a>. Does accept contemporaneous links.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>all_parents</strong> (<em>dictionary</em>) – Dictionary of form {0:[(0, -1), (3, 0), …], 1:[], …} containing
 the parents estimated with PCMCI.</p></li>
 <li><p><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Maximum time lag. If None, the maximum lag in all_parents is used.</p></li>
+<li><p><strong>return_data</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – Whether to save the data array. Needed to get residuals.</p></li>
 </ul>
 </dd>
 </dl>
@@ -3730,10 +4146,8 @@ the parents estimated with PCMCI.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>boot_blocklength</strong> (<em>int</em><em>, or </em><em>in {'cube_root'</em><em>, </em><em>'from_autocorrelation'}</em>) – Block length for block-bootstrap, which only applies to
-generate_noise_from=’residuals’. If ‘from_autocorrelation’, the block
-length is determined from the decay of the autocovariance and
-if ‘cube_root’ it is the cube root of the time series length.</p></li>
+<li><p><strong>boot_blocklength</strong> (<em>int</em><em>, or </em><em>in {'cube_root'</em><em>, </em><em>'from_autocorrelation'}</em>) – Block length for block-bootstrap. If ‘cube_root’ it is the cube
+root of the time series length.</p></li>
 <li><p><strong>seed</strong> (<em>int</em><em>, </em><em>optional</em><em>(</em><em>default = None</em><em>)</em>) – Seed for RandomState (default_rng)</p></li>
 <li><p><strong>boot_samples</strong> (<em>int</em>) – Number of bootstrap samples.</p></li>
 </ul>
@@ -4333,10 +4747,12 @@ useful to compare multiple models on the same sample. Last,
 <dl class="py class">
 <dt class="sig sig-object py" id="tigramite.data_processing.DataFrame">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tigramite.data_processing.</span></span><span class="sig-name descname"><span class="pre">DataFrame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">missing_flag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vector_vars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datatime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'single'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_offsets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_missing_upto_maxlag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/data_processing.html#DataFrame"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.data_processing.DataFrame" title="Permalink to this definition">¶</a></dt>
-<dd><dl>
-<dt>Data object containing single or multiple time series arrays and optional</dt><dd><p>mask, as well as variable definitions.</p>
-<dl class="simple">
-<dt>data<span class="classifier">array-like</span></dt><dd><dl class="simple">
+<dd><p>Data object containing single or multiple time series arrays and optional
+mask, as well as variable definitions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>array-like</em>) – <dl class="simple">
 <dt>if analysis_mode == ‘single’:</dt><dd><p>1) Numpy array of shape (observations T, variables N)
 OR
 2) Dictionary with a single entry whose value is a numpy array of
@@ -4351,54 +4767,41 @@ T_i may vary across the multiple datasets but the number of variables
 N is fixed.</p>
 </dd>
 </dl>
-</dd>
-<dt>mask<span class="classifier">array-like, optional (default: None)</span></dt><dd><p>Optional mask array, must be of same format and shape as data.</p>
-</dd>
-</dl>
-</dd>
-<dt>data_type<span class="classifier">array-like</span></dt><dd><blockquote>
-<div><p>Binary data array of same shape as array which describes whether
+</p></li>
+<li><p><strong>mask</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Optional mask array, must be of same format and shape as data.</p></li>
+<li><p><strong>data_type</strong> (<em>array-like</em>) – Binary data array of same shape as array which describes whether
 individual samples in a variable (or all samples) are continuous
-or discrete: 0s for continuous variables and 1s for discrete variables.</p>
-</div></blockquote>
-<dl class="simple">
-<dt>missing_flag<span class="classifier">number, optional (default: None)</span></dt><dd><p>Flag for missing values in dataframe. Dismisses all time slices of
+or discrete: 0s for continuous variables and 1s for discrete variables.</p></li>
+<li><p><strong>missing_flag</strong> (<em>number</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Flag for missing values in dataframe. Dismisses all time slices of
 samples where missing values occur in any variable. For
 remove_missing_upto_maxlag=True also flags samples for all lags up to
 2*tau_max (more precisely, this depends on the cut_off argument in
 self.construct_array(), see further below). This avoids biases, see
-section on masking in Supplement of Runge et al. SciAdv (2019).</p>
-</dd>
-<dt>vector_vars<span class="classifier">dict</span></dt><dd><p>Dictionary of vector variables of the form,
+section on masking in Supplement of Runge et al. SciAdv (2019).</p></li>
+<li><p><strong>vector_vars</strong> (<em>dict</em>) – Dictionary of vector variables of the form,
 Eg. {0: [(0, 0), (1, 0)], 1: [(2, 0)], 2: [(3, 0)], 3: [(4, 0)]}
 The keys are the new vectorized variables and respective tuple values
 are the individual components of the vector variables. In the method of
 construct_array(), the individual components are parsed from vector_vars
 and added (accounting for lags) to the list that creates X, Y and Z for
-conditional independence test.</p>
-</dd>
-<dt>var_names<span class="classifier">list of strings, optional (default: range(N))</span></dt><dd><p>Names of variables, must match the number of variables. If None is
-passed, variables are enumerated as [0, 1, …]</p>
-</dd>
-<dt>datatime<span class="classifier">array-like, optional (default: None)</span></dt><dd><p>Timelabel array. If None, range(T) is used.</p>
-</dd>
-<dt>remove_missing_upto_maxlag<span class="classifier">bool, optional (default: False)</span></dt><dd><p>Whether to remove not only missing samples, but also all neighboring
-samples up to max_lag (as given by cut_off in construct_array).</p>
-</dd>
-<dt>analysis_mode<span class="classifier">string, optional (default: ‘single’)</span></dt><dd><p>Must be ‘single’ or ‘multiple’.
+conditional independence test.</p></li>
+<li><p><strong>var_names</strong> (<em>list of strings</em><em>, </em><em>optional</em><em> (</em><em>default: range</em><em>(</em><em>N</em><em>)</em><em>)</em>) – Names of variables, must match the number of variables. If None is
+passed, variables are enumerated as [0, 1, …]</p></li>
+<li><p><strong>datatime</strong> (<em>array-like</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Timelabel array. If None, range(T) is used.</p></li>
+<li><p><strong>remove_missing_upto_maxlag</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – Whether to remove not only missing samples, but also all neighboring
+samples up to max_lag (as given by cut_off in construct_array).</p></li>
+<li><p><strong>analysis_mode</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default: 'single'</em><em>)</em>) – Must be ‘single’ or ‘multiple’.
 Determines whether data contains a single (potentially multivariate)
-time series (–&gt; ‘single’) or multiple time series (–&gt; ‘multiple’).</p>
-</dd>
-<dt>reference_points<span class="classifier">None, int, or list (or 1D array) of integers,</span></dt><dd><p>optional (default:None)
+time series (–&gt; ‘single’) or multiple time series (–&gt; ‘multiple’).</p></li>
+<li><p><strong>reference_points</strong> (<em>None</em><em>, </em><em>int</em><em>, or </em><em>list</em><em> (or </em><em>1D array</em><em>) </em><em>of integers</em><em>,</em>) – optional (default:None)
 Determines the time steps — relative to the shared time axis as
 defined by the optional time_offset argument (see below) — that are
 used to create samples for conditional independence testing.
 Set to [0, 1, …, T_max-1] if None is passed, where T_max is
 self.largest_time_step, see below.
 All values smaller than 0 and bigger than T_max-1 will be ignored.
-At least one value must be in [0, 1, …, T_max-1].</p>
-</dd>
-<dt>time_offsets<span class="classifier">None or dict, optional (default: None)</span></dt><dd><dl class="simple">
+At least one value must be in [0, 1, …, T_max-1].</p></li>
+<li><p><strong>time_offsets</strong> (<em>None</em><em> or </em><em>dict</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – <dl class="simple">
 <dt>if analysis_mode == ‘single’:</dt><dd><p>Must be None.
 Shared time axis defined by the time indices of the single time series</p>
 </dd>
@@ -4413,13 +4816,26 @@ time_offset(m) defines the time offset of dataset m with
 respect to a shared time axis.</p>
 </dd>
 </dl>
+</p></li>
+</ul>
 </dd>
 </dl>
-<dl>
-<dt>self._initialized_from<span class="classifier">string</span></dt><dd><p>Specifies the data format in which data was given at instantiation.
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tigramite.data_processing.DataFrame.self._initialized_from">
+<span class="sig-prename descclassname"><span class="pre">self.</span></span><span class="sig-name descname"><span class="pre">_initialized_from</span></span><a class="headerlink" href="#tigramite.data_processing.DataFrame.self._initialized_from" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies the data format in which data was given at instantiation.
 Possible values: ‘2d numpy array’, ‘3d numpy array’, ‘dict’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>string</p>
 </dd>
-<dt>self.values<span class="classifier">dictionary</span></dt><dd><p>Dictionary holding the observations given by data internally mapped to a
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tigramite.data_processing.DataFrame.self.values">
+<span class="sig-prename descclassname"><span class="pre">self.</span></span><span class="sig-name descname"><span class="pre">values</span></span><a class="headerlink" href="#tigramite.data_processing.DataFrame.self.values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary holding the observations given by data internally mapped to a
 dictionary representation as follows:
 If analysis_mode == ‘single’:</p>
 <blockquote>
@@ -4439,62 +4855,181 @@ If analysis_mode == ‘single’:</p>
 </dl>
 </dd>
 </dl>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dictionary</p>
 </dd>
-<dt>self.datasets: list</dt><dd><p>List of the keys identifiying the multiple datasets, i.e.,
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tigramite.data_processing.DataFrame.self.datasets">
+<span class="sig-prename descclassname"><span class="pre">self.</span></span><span class="sig-name descname"><span class="pre">datasets</span></span><a class="headerlink" href="#tigramite.data_processing.DataFrame.self.datasets" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of the keys identifiying the multiple datasets, i.e.,
 list(self.values.keys())</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
 </dd>
-<dt>self.mask<span class="classifier">dictionary</span></dt><dd><p>Mask internally mapped to a dictionary representation in the same way as
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tigramite.data_processing.DataFrame.self.mask">
+<span class="sig-prename descclassname"><span class="pre">self.</span></span><span class="sig-name descname"><span class="pre">mask</span></span><a class="headerlink" href="#tigramite.data_processing.DataFrame.self.mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mask internally mapped to a dictionary representation in the same way as
 data is mapped to self.values</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dictionary</p>
 </dd>
-<dt>self.data_type<span class="classifier">array-like</span></dt><dd><p>Binary data array of same shape as array which describes whether
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tigramite.data_processing.DataFrame.self.data_type">
+<span class="sig-prename descclassname"><span class="pre">self.</span></span><span class="sig-name descname"><span class="pre">data_type</span></span><a class="headerlink" href="#tigramite.data_processing.DataFrame.self.data_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Binary data array of same shape as array which describes whether
 individual samples in a variable (or all samples) are continuous
 or discrete: 0s for continuous variables and 1s for discrete variables.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array-like</p>
 </dd>
-<dt>self.missing_flag:</dt><dd><p>Is missing_flag</p>
-</dd>
-<dt>self.var_names:</dt><dd><dl class="simple">
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tigramite.data_processing.DataFrame.self.missing_flag">
+<span class="sig-prename descclassname"><span class="pre">self.</span></span><span class="sig-name descname"><span class="pre">missing_flag</span></span><a class="headerlink" href="#tigramite.data_processing.DataFrame.self.missing_flag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Is missing_flag</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tigramite.data_processing.DataFrame.self.var_names">
+<span class="sig-prename descclassname"><span class="pre">self.</span></span><span class="sig-name descname"><span class="pre">var_names</span></span><a class="headerlink" href="#tigramite.data_processing.DataFrame.self.var_names" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
 <dt>If var_names is not None:</dt><dd><p>Is var_names</p>
 </dd>
 <dt>If var_names is None:</dt><dd><p>Is {i: i for i in range(self.N)}</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tigramite.data_processing.DataFrame.self.datatime">
+<span class="sig-prename descclassname"><span class="pre">self.</span></span><span class="sig-name descname"><span class="pre">datatime</span></span><a class="headerlink" href="#tigramite.data_processing.DataFrame.self.datatime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time axis for each of the multiple datasets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dictionary</p>
 </dd>
-<dt>self.datatime<span class="classifier">dictionary</span></dt><dd><p>Time axis for each of the multiple datasets.</p>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tigramite.data_processing.DataFrame.self.analysis_mode">
+<span class="sig-prename descclassname"><span class="pre">self.</span></span><span class="sig-name descname"><span class="pre">analysis_mode</span></span><a class="headerlink" href="#tigramite.data_processing.DataFrame.self.analysis_mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Is analysis_mode</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>string</p>
 </dd>
-<dt>self.analysis_mode<span class="classifier">string</span></dt><dd><p>Is analysis_mode</p>
-</dd>
-<dt>self.reference_points: array-like</dt><dd><dl class="simple">
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tigramite.data_processing.DataFrame.self.reference_points">
+<span class="sig-prename descclassname"><span class="pre">self.</span></span><span class="sig-name descname"><span class="pre">reference_points</span></span><a class="headerlink" href="#tigramite.data_processing.DataFrame.self.reference_points" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
 <dt>If reference_points is not None:</dt><dd><p>1D numpy array holding all specified reference_points, less those
 smaller than 0 and larger than self.largest_time_step-1</p>
 </dd>
 <dt>If reference_points is None:</dt><dd><p>Is np.array(self.largest_time_step)</p>
 </dd>
 </dl>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array-like</p>
 </dd>
-<dt>self.time_offsets<span class="classifier">dictionary</span></dt><dd><dl class="simple">
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tigramite.data_processing.DataFrame.self.time_offsets">
+<span class="sig-prename descclassname"><span class="pre">self.</span></span><span class="sig-name descname"><span class="pre">time_offsets</span></span><a class="headerlink" href="#tigramite.data_processing.DataFrame.self.time_offsets" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
 <dt>If time_offsets is not None:</dt><dd><p>Is time_offsets</p>
 </dd>
 <dt>If time_offsets is None:</dt><dd><p>Is {key: 0 for key in self.values.keys()}</p>
 </dd>
 </dl>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dictionary</p>
 </dd>
-<dt>self.M<span class="classifier">int</span></dt><dd><p>Number of datasets</p>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tigramite.data_processing.DataFrame.self.M">
+<span class="sig-prename descclassname"><span class="pre">self.</span></span><span class="sig-name descname"><span class="pre">M</span></span><a class="headerlink" href="#tigramite.data_processing.DataFrame.self.M" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of datasets</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
 </dd>
-<dt>self.N<span class="classifier">int</span></dt><dd><p>Number of variables (constant across datasets)</p>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tigramite.data_processing.DataFrame.self.N">
+<span class="sig-prename descclassname"><span class="pre">self.</span></span><span class="sig-name descname"><span class="pre">N</span></span><a class="headerlink" href="#tigramite.data_processing.DataFrame.self.N" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of variables (constant across datasets)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
 </dd>
-<dt>self.T<span class="classifier">dictionary</span></dt><dd><p>Dictionary {key(m): T(m), …}, where T(m) is the time length of
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tigramite.data_processing.DataFrame.self.T">
+<span class="sig-prename descclassname"><span class="pre">self.</span></span><span class="sig-name descname"><span class="pre">T</span></span><a class="headerlink" href="#tigramite.data_processing.DataFrame.self.T" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary {key(m): T(m), …}, where T(m) is the time length of
 datasets m and key(m) its identifier as in self.values</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dictionary</p>
 </dd>
-<dt>self.largest_time_step<span class="classifier">int</span></dt><dd><p>max_{0 &lt;= m &lt;= M} [ T(m) + time_offset(m)], i.e., the largest (latest)
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tigramite.data_processing.DataFrame.self.largest_time_step">
+<span class="sig-prename descclassname"><span class="pre">self.</span></span><span class="sig-name descname"><span class="pre">largest_time_step</span></span><a class="headerlink" href="#tigramite.data_processing.DataFrame.self.largest_time_step" title="Permalink to this definition">¶</a></dt>
+<dd><p>max_{0 &lt;= m &lt;= M} [ T(m) + time_offset(m)], i.e., the largest (latest)
 time step relative to the shared time axis for which at least one
 observation exists in the dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
 </dd>
-<dt>self.bootstrap<span class="classifier">dictionary</span></dt><dd><p>Whether to use bootstrap. Must be a dictionary with keys random_state,
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tigramite.data_processing.DataFrame.self.bootstrap">
+<span class="sig-prename descclassname"><span class="pre">self.</span></span><span class="sig-name descname"><span class="pre">bootstrap</span></span><a class="headerlink" href="#tigramite.data_processing.DataFrame.self.bootstrap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether to use bootstrap. Must be a dictionary with keys random_state,
 boot_samples, and boot_blocklength.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dictionary</p>
 </dd>
 </dl>
-</dd>
-</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="tigramite.data_processing.DataFrame.construct_array">
 <span class="sig-name descname"><span class="pre">construct_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extraZ</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_cleaned_xyz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_checks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_overlaps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cut_off</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'2xtau_max'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbosity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/data_processing.html#DataFrame.construct_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.data_processing.DataFrame.construct_array" title="Permalink to this definition">¶</a></dt>
@@ -4637,7 +5172,7 @@ multivariate [(var1, -lag), (var2, -lag), …] .</p></li>
 <li><p><strong>missing_flag</strong> (<em>number</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Flag for missing values. Dismisses all time slices of samples where
 missing values occur in any variable and also flags samples for all
 lags up to 2*tau_max. This avoids biases, see section on masking in
-Supplement of <a class="footnote-reference brackets" href="#id3" id="id33" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.</p></li>
+Supplement of <a href="#id51"><span class="problematic" id="id39">[1]_</span></a>.</p></li>
 <li><p><strong>mask_type</strong> (<em>{'y'</em><em>,</em><em>'x'</em><em>,</em><em>'z'</em><em>,</em><em>'xy'</em><em>,</em><em>'xz'</em><em>,</em><em>'yz'</em><em>,</em><em>'xyz'}</em>) – Masking mode: Indicators for which variables in the dependence
 measure I(X; Y | Z) the samples should be masked. If None, the mask
 is not used. Explained in tutorial on masking and missing values.</p></li>
@@ -4678,7 +5213,7 @@ the data series length are used.</p></li>
 <dd><p>Returns optimal block length for significance and confidence tests.</p>
 <p>Determine block length using approach in Mader (2013) [Eq. (6)] which
 improves the method of Pfeifer (2005) with non-overlapping blocks In
-case of multidimensional X, the max is used. Further details in <a class="footnote-reference brackets" href="#id3" id="id34" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.
+case of multidimensional X, the max is used. Further details in <a href="#id52"><span class="problematic" id="id40">[1]_</span></a>.
 Two modes are available. For mode=’significance’, only the indices
 corresponding to X are shuffled in array. For mode=’confidence’ all
 variables are jointly shuffled. If the autocorrelation curve fit fails,
@@ -5342,7 +5877,7 @@ matrix.add_scatterplot function.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="tigramite.plotting.plot_time_series_graph">
-<span class="sig-prename descclassname"><span class="pre">tigramite.plotting.</span></span><span class="sig-name descname"><span class="pre">plot_time_series_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig_ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_colorbar_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'MCI'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_attribute</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrow_linewidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_ticks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RdBu_r'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_aspect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrowhead_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curved_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tick_label_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inner_edge_style</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dashed'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">special_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">standard_color_links</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'black'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">standard_color_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lightgrey'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_time_series_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.plotting.plot_time_series_graph" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">tigramite.plotting.</span></span><span class="sig-name descname"><span class="pre">plot_time_series_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig_ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_colorbar_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'MCI'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_attribute</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrow_linewidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_ticks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RdBu_r'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_aspect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrowhead_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curved_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tick_label_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inner_edge_style</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dashed'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">special_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_classification</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">standard_color_links</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'black'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">standard_color_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lightgrey'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_time_series_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.plotting.plot_time_series_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a time series graph.
 This is still in beta. The time series graph’s links are colored by
 val_matrix.</p>
@@ -5380,6 +5915,11 @@ given by arrow_linewidth. If None, all links have same width.</p></li>
 <li><p><strong>tick_label_size</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 6</em><em>)</em>) – Fontsize of tick labels.</p></li>
 <li><p><strong>inner_edge_style</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default: 'dashed'</em><em>)</em>) – Style of inner_edge contemporaneous links.</p></li>
 <li><p><strong>special_nodes</strong> (<em>dict</em>) – Dictionary of format {(i, -tau): ‘blue’, …} to color special nodes.</p></li>
+<li><p><strong>node_classification</strong> (<em>dict</em><em> or </em><em>None</em><em> (</em><em>default: None</em><em>)</em>) – Dictionary of format {i: ‘space_context’, …} to classify nodes into system, context, or dummy nodes.
+Keys of the dictionary are from {0, …, N-1} where N is the number of nodes.
+Options for the values are “system”, “time_context”, “space_context”, “time_dummy”, or “space_dummy”.
+Space_contexts and dummy nodes need to be represented as a single node in the time series graph.
+In case no value is supplied all nodes are treated as system nodes, i.e. are plotted in a time-resolved manner.</p></li>
 </ul>
 </dd>
 </dl>
@@ -5387,7 +5927,7 @@ given by arrow_linewidth. If None, all links have same width.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="tigramite.plotting.plot_timeseries">
-<span class="sig-prename descclassname"><span class="pre">tigramite.plotting.</span></span><span class="sig-name descname"><span class="pre">plot_timeseries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig_axes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grey_masked_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_meanline</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_linewidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_ticks_data_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_ticks_data_y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'black'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tick_label_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_dataset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjust_plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_timeseries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.plotting.plot_timeseries" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">tigramite.plotting.</span></span><span class="sig-name descname"><span class="pre">plot_timeseries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig_axes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grey_masked_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_meanline</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_linewidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_ticks_data_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_ticks_data_y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'black'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tick_label_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_dataset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjust_plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_variables</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/plotting.html#plot_timeseries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.plotting.plot_timeseries" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create and save figure of stacked panels with time series.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -5413,6 +5953,7 @@ is used.</p></li>
 <li><p><strong>color</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: black</em><em>)</em>) – Line color.</p></li>
 <li><p><strong>alpha</strong> (<em>float</em>) – Alpha opacity.</p></li>
 <li><p><strong>selected_dataset</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) – In case of multiple datasets in dataframe, plot this one.</p></li>
+<li><p><strong>selected_variables</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – List of variables which to plot.</p></li>
 </ul>
 </dd>
 </dl>
@@ -5642,8 +6183,8 @@ given by arrow_linewidth. If None, all links have same width.</p></li>
 </dd></dl>
 
 </section>
-<section id="id35">
-<h1>Indices and tables<a class="headerlink" href="#id35" title="Permalink to this heading">¶</a></h1>
+<section id="id41">
+<h1>Indices and tables<a class="headerlink" href="#id41" title="Permalink to this heading">¶</a></h1>
 <ul class="simple">
 <li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
