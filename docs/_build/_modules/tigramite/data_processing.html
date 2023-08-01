@@ -72,7 +72,7 @@
 <span class="sd">            N is fixed. </span>
 <span class="sd">    mask : array-like, optional (default: None)</span>
 <span class="sd">        Optional mask array, must be of same format and shape as data.</span>
-<span class="sd">   data_type : array-like</span>
+<span class="sd">    data_type : array-like</span>
 <span class="sd">        Binary data array of same shape as array which describes whether </span>
 <span class="sd">        individual samples in a variable (or all samples) are continuous </span>
 <span class="sd">        or discrete: 0s for continuous variables and 1s for discrete variables.</span>
@@ -699,6 +699,9 @@
 
         <span class="k">if</span> <span class="n">extraZ</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">extraZ</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">if</span> <span class="n">Z</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">Z</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="c1"># If vector-valued variables exist, add them</span>
         <span class="k">def</span> <span class="nf">vectorize</span><span class="p">(</span><span class="n">varlag</span><span class="p">):</span>     
@@ -839,7 +842,7 @@
 
                 <span class="k">if</span> <span class="n">n_blks</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only </span><span class="si">%d</span><span class="s2"> block(s) for block-sampling,&quot;</span>  <span class="o">%</span><span class="n">n_blks</span> <span class="o">+</span>
-                                     <span class="s2">&quot;choose smaller boot_blocklength!&quot;</span><span class="p">)</span>
+                                     <span class="s2">&quot; choose smaller boot_blocklength!&quot;</span><span class="p">)</span>
 
                 <span class="c1"># Get the starting indices for the blocks</span>
                 <span class="n">blk_strt</span> <span class="o">=</span> <span class="n">random_state</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ref_points_here</span><span class="p">)</span> <span class="o">-</span> <span class="n">boot_blocklength</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="n">n_blks</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -1364,7 +1367,7 @@
 
     <span class="k">return</span> <span class="n">normal_data</span></div>
 
-<span class="nd">@jit</span>
+<span class="nd">@jit</span><span class="p">(</span><span class="n">nopython</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">_get_patterns</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">array_mask</span><span class="p">,</span> <span class="n">patt</span><span class="p">,</span> <span class="n">patt_mask</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">fac</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
     <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
 

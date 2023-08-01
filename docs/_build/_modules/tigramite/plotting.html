@@ -57,6 +57,8 @@
 <span class="kn">import</span> <span class="nn">matplotlib.patheffects</span> <span class="k">as</span> <span class="nn">PathEffects</span>
 <span class="kn">from</span> <span class="nn">mpl_toolkits.axisartist.axislines</span> <span class="kn">import</span> <span class="n">Axes</span>
 <span class="kn">import</span> <span class="nn">csv</span>
+
+
 <span class="c1"># TODO: Add proper docstrings to internal functions...</span>
 
 
@@ -165,15 +167,16 @@
 
 
 <span class="k">def</span> <span class="nf">_add_timeseries</span><span class="p">(</span>
-    <span class="n">dataframe</span><span class="p">,</span>
-    <span class="n">fig_axes</span><span class="p">,</span>
-    <span class="n">grey_masked_samples</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">show_meanline</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">data_linewidth</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
-    <span class="n">alpha</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
-    <span class="n">grey_alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-    <span class="n">selected_dataset</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">dataframe</span><span class="p">,</span>
+        <span class="n">fig_axes</span><span class="p">,</span>
+        <span class="n">grey_masked_samples</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">show_meanline</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">data_linewidth</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
+        <span class="n">grey_alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">selected_dataset</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">selected_variables</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Adds a time series plot to an axis.</span>
 <span class="sd">    Plot of dataseries is added to axis. Allows for proper visualization of</span>
@@ -200,6 +203,8 @@
 <span class="sd">        Opacity of fill_between.</span>
 <span class="sd">    selected_dataset : int, optional (default: 0)</span>
 <span class="sd">        In case of multiple datasets in dataframe, plot this one.</span>
+<span class="sd">    selected_variables : list, optional (default: None)</span>
+<span class="sd">        List of variables which to plot.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">fig_axes</span>
 
@@ -214,10 +219,15 @@
     <span class="n">time</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">datatime</span><span class="p">[</span><span class="n">selected_dataset</span><span class="p">]</span>
     <span class="n">T</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
 
-    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dataframe</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
-        
+    <span class="k">if</span> <span class="n">selected_variables</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">selected_variables</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">dataframe</span><span class="o">.</span><span class="n">N</span><span class="p">))</span>
+
+    <span class="n">nb_components</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">dataframe</span><span class="o">.</span><span class="n">vector_vars</span><span class="p">[</span><span class="n">var</span><span class="p">])</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">selected_variables</span><span class="p">])</span>
+
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nb_components</span><span class="p">):</span>
+
         <span class="n">ax</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
-        <span class="n">dataseries</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span><span class="n">j</span><span class="p">]</span>
+        <span class="n">dataseries</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="n">missing_flag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">dataseries_nomissing</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span>
@@ -230,7 +240,7 @@
 
 
         <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">maskseries</span> <span class="o">=</span> <span class="n">mask</span><span class="p">[:,</span><span class="n">j</span><span class="p">]</span>
+            <span class="n">maskseries</span> <span class="o">=</span> <span class="n">mask</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span>
 
             <span class="n">maskdata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span><span class="n">maskseries</span><span class="p">,</span> <span class="n">dataseries_nomissing</span><span class="p">)</span>
 
@@ -257,7 +267,7 @@
                     <span class="n">alpha</span><span class="o">=</span><span class="n">grey_alpha</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="k">if</span> <span class="n">show_meanline</span><span class="p">:</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">maskdata</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">T</span><span class="p">),</span> <span class="n">lw</span><span class="o">=</span><span class="n">data_linewidth</span><span class="o">/</span><span class="mf">2.</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">maskdata</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">T</span><span class="p">),</span> <span class="n">lw</span><span class="o">=</span><span class="n">data_linewidth</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
 
             <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
                 <span class="n">time</span><span class="p">,</span>
@@ -271,7 +281,7 @@
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">show_meanline</span><span class="p">:</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">dataseries_nomissing</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">T</span><span class="p">),</span> <span class="n">lw</span><span class="o">=</span><span class="n">data_linewidth</span><span class="o">/</span><span class="mf">2.</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">dataseries_nomissing</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">T</span><span class="p">),</span> <span class="n">lw</span><span class="o">=</span><span class="n">data_linewidth</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
 
             <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
                 <span class="n">time</span><span class="p">,</span>
@@ -280,27 +290,28 @@
                 <span class="n">linewidth</span><span class="o">=</span><span class="n">data_linewidth</span><span class="p">,</span>
                 <span class="n">clip_on</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                 <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
-                <span class="p">)</span>
+            <span class="p">)</span>
 
 
 <div class="viewcode-block" id="plot_timeseries"><a class="viewcode-back" href="../../index.html#tigramite.plotting.plot_timeseries">[docs]</a><span class="k">def</span> <span class="nf">plot_timeseries</span><span class="p">(</span>
-    <span class="n">dataframe</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">save_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">fig_axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">figsize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">var_units</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">time_label</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
-    <span class="n">grey_masked_samples</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">show_meanline</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">data_linewidth</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-    <span class="n">skip_ticks_data_x</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-    <span class="n">skip_ticks_data_y</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-    <span class="n">label_fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-    <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span>
-    <span class="n">alpha</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
-    <span class="n">tick_label_size</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
-    <span class="n">selected_dataset</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-    <span class="n">adjust_plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">dataframe</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">save_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">fig_axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">figsize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">var_units</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">time_label</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="n">grey_masked_samples</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">show_meanline</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">data_linewidth</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">skip_ticks_data_x</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">skip_ticks_data_y</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">label_fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+        <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
+        <span class="n">tick_label_size</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+        <span class="n">selected_dataset</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">adjust_plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">selected_variables</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create and save figure of stacked panels with time series.</span>
 
@@ -343,6 +354,8 @@
 <span class="sd">        Alpha opacity.</span>
 <span class="sd">    selected_dataset : int, optional (default: 0)</span>
 <span class="sd">        In case of multiple datasets in dataframe, plot this one.</span>
+<span class="sd">    selected_variables : list, optional (default: None)</span>
+<span class="sd">        List of variables which to plot.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">var_names</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">var_names</span>
@@ -350,20 +363,27 @@
 
     <span class="n">N</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">N</span>
 
+    <span class="k">if</span> <span class="n">selected_variables</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">selected_variables</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">))</span>
+
+    <span class="n">nb_components_per_var</span> <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">dataframe</span><span class="o">.</span><span class="n">vector_vars</span><span class="p">[</span><span class="n">var</span><span class="p">])</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">selected_variables</span><span class="p">]</span>
+    <span class="n">N_index</span> <span class="o">=</span> <span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">nb_components_per_var</span><span class="p">[:</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">el</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">nb_components_per_var</span><span class="p">)]</span>
+    <span class="n">nb_components</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">nb_components_per_var</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="n">var_units</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">var_units</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)]</span>
 
     <span class="k">if</span> <span class="n">fig_axes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">)</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nb_components</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">fig_axes</span>
 
     <span class="k">if</span> <span class="n">adjust_plot</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nb_components</span><span class="p">):</span>
 
             <span class="n">ax</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
 
-            <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">==</span> <span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">==</span> <span class="n">nb_components</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
                 <span class="n">_make_nice_axes</span><span class="p">(</span>
                     <span class="n">ax</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">,</span> <span class="s2">&quot;bottom&quot;</span><span class="p">],</span> <span class="n">skip</span><span class="o">=</span><span class="p">(</span><span class="n">skip_ticks_data_x</span><span class="p">,</span> <span class="n">skip_ticks_data_y</span><span class="p">)</span>
                 <span class="p">)</span>
@@ -378,24 +398,27 @@
             <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">time</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">time</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
 
             <span class="c1"># trans = transforms.blended_transform_factory(fig.transFigure, ax.transAxes)</span>
-            <span class="k">if</span> <span class="n">var_units</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> [</span><span class="si">%s</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">var_units</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">N_index</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">var_units</span><span class="p">[</span><span class="n">N_index</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">i</span><span class="p">)]:</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> [</span><span class="si">%s</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">var_names</span><span class="p">[</span><span class="n">N_index</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">i</span><span class="p">)],</span> <span class="n">var_units</span><span class="p">[</span><span class="n">N_index</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">i</span><span class="p">)]),</span>
+                                  <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">var_names</span><span class="p">[</span><span class="n">N_index</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">i</span><span class="p">)]),</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">)</span>
 
             <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s1">&#39;major&#39;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="n">tick_label_size</span><span class="p">)</span>
             <span class="c1"># ax.tick_params(axis=&#39;both&#39;, which=&#39;minor&#39;, labelsize=tick_label_size)</span>
 
     <span class="n">_add_timeseries</span><span class="p">(</span>
         <span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span>
-        <span class="n">fig_axes</span> <span class="o">=</span> <span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">axes</span><span class="p">),</span>
+        <span class="n">fig_axes</span><span class="o">=</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">axes</span><span class="p">),</span>
         <span class="n">grey_masked_samples</span><span class="o">=</span><span class="n">grey_masked_samples</span><span class="p">,</span>
         <span class="n">show_meanline</span><span class="o">=</span><span class="n">show_meanline</span><span class="p">,</span>
         <span class="n">data_linewidth</span><span class="o">=</span><span class="n">data_linewidth</span><span class="p">,</span>
         <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
         <span class="n">selected_dataset</span><span class="o">=</span><span class="n">selected_dataset</span><span class="p">,</span>
         <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="n">selected_variables</span><span class="o">=</span><span class="n">selected_variables</span>
+    <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">adjust_plot</span><span class="p">:</span>
         <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">bottom</span><span class="o">=</span><span class="mf">0.15</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">left</span><span class="o">=</span><span class="mf">0.15</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span> <span class="n">hspace</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
@@ -1512,46 +1535,48 @@
             <span class="n">pyplot</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div></div>
 
 <span class="k">def</span> <span class="nf">_draw_network_with_curved_edges</span><span class="p">(</span>
-    <span class="n">fig</span><span class="p">,</span>
-    <span class="n">ax</span><span class="p">,</span>
-    <span class="n">G</span><span class="p">,</span>
-    <span class="n">pos</span><span class="p">,</span>
-    <span class="n">node_rings</span><span class="p">,</span>
-    <span class="n">node_labels</span><span class="p">,</span>
-    <span class="n">node_label_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-    <span class="n">node_alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-    <span class="n">standard_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-    <span class="n">node_aspect</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">standard_cmap</span><span class="o">=</span><span class="s2">&quot;OrRd&quot;</span><span class="p">,</span>
-    <span class="n">standard_color_links</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span>
-    <span class="n">standard_color_nodes</span><span class="o">=</span><span class="s1">&#39;lightgrey&#39;</span><span class="p">,</span>
-    <span class="n">log_sizes</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">cmap_links</span><span class="o">=</span><span class="s2">&quot;YlOrRd&quot;</span><span class="p">,</span>
-    <span class="c1"># cmap_links_edges=&quot;YlOrRd&quot;,</span>
-    <span class="n">links_vmin</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-    <span class="n">links_vmax</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-    <span class="n">links_edges_vmin</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-    <span class="n">links_edges_vmax</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-    <span class="n">links_ticks</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
-    <span class="n">links_edges_ticks</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
-    <span class="n">link_label_fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
-    <span class="n">arrowstyle</span><span class="o">=</span><span class="s2">&quot;-&gt;, head_width=0.4, head_length=1&quot;</span><span class="p">,</span>
-    <span class="n">arrowhead_size</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span>
-    <span class="n">curved_radius</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
-    <span class="n">label_fontsize</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
-    <span class="n">label_fraction</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
-    <span class="n">link_colorbar_label</span><span class="o">=</span><span class="s2">&quot;link&quot;</span><span class="p">,</span>
-    <span class="n">tick_label_size</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
-    <span class="c1"># link_edge_colorbar_label=&#39;link_edge&#39;,</span>
-    <span class="n">inner_edge_curved</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">inner_edge_style</span><span class="o">=</span><span class="s2">&quot;solid&quot;</span><span class="p">,</span>
-    <span class="c1"># network_lower_bound=0.2,</span>
-    <span class="n">network_left_bound</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">show_colorbar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">special_nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">autodep_sig_lags</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">show_autodependency_lags</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">transform</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="p">,</span>
+        <span class="n">fig</span><span class="p">,</span>
+        <span class="n">ax</span><span class="p">,</span>
+        <span class="n">G</span><span class="p">,</span>
+        <span class="n">pos</span><span class="p">,</span>
+        <span class="n">node_rings</span><span class="p">,</span>
+        <span class="n">node_labels</span><span class="p">,</span>
+        <span class="n">node_label_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+        <span class="n">node_alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">standard_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+        <span class="n">node_aspect</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">standard_cmap</span><span class="o">=</span><span class="s2">&quot;OrRd&quot;</span><span class="p">,</span>
+        <span class="n">standard_color_links</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span>
+        <span class="n">standard_color_nodes</span><span class="o">=</span><span class="s1">&#39;lightgrey&#39;</span><span class="p">,</span>
+        <span class="n">log_sizes</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">cmap_links</span><span class="o">=</span><span class="s2">&quot;YlOrRd&quot;</span><span class="p">,</span>
+        <span class="c1"># cmap_links_edges=&quot;YlOrRd&quot;,</span>
+        <span class="n">links_vmin</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">links_vmax</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">links_edges_vmin</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">links_edges_vmax</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">links_ticks</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+        <span class="n">links_edges_ticks</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+        <span class="n">link_label_fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+        <span class="n">arrowstyle</span><span class="o">=</span><span class="s2">&quot;-&gt;, head_width=0.4, head_length=1&quot;</span><span class="p">,</span>
+        <span class="n">arrowhead_size</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span>
+        <span class="n">curved_radius</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+        <span class="n">label_fontsize</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+        <span class="n">label_fraction</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+        <span class="n">link_colorbar_label</span><span class="o">=</span><span class="s2">&quot;link&quot;</span><span class="p">,</span>
+        <span class="n">tick_label_size</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+        <span class="c1"># link_edge_colorbar_label=&#39;link_edge&#39;,</span>
+        <span class="n">inner_edge_curved</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">inner_edge_style</span><span class="o">=</span><span class="s2">&quot;solid&quot;</span><span class="p">,</span>
+        <span class="c1"># network_lower_bound=0.2,</span>
+        <span class="n">network_left_bound</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">show_colorbar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">special_nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">autodep_sig_lags</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">show_autodependency_lags</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">transform</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="p">,</span>
+        <span class="n">node_classification</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_lag</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to draw a network from networkx graph instance.</span>
 <span class="sd">    Various attributes are used to specify the graph&#39;s properties.</span>
@@ -2452,6 +2477,21 @@
 
             <span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
 
+            <span class="k">if</span> <span class="n">node_classification</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">node_classification</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;space_context_last&quot;</span><span class="p">,</span> <span class="s2">&quot;space_dummy_last&quot;</span><span class="p">,</span> <span class="s2">&quot;time_dummy_last&quot;</span><span class="p">]:</span>
+                <span class="n">node_height</span> <span class="o">=</span> <span class="n">node_sizes</span><span class="p">[:</span> <span class="n">ring</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="n">n</span><span class="p">]</span>
+                <span class="n">node_width_difference_to_height</span> <span class="o">=</span> <span class="n">node_height</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">node_aspect</span><span class="p">)</span>
+
+                <span class="n">c_wide</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">FancyBboxPatch</span><span class="p">((</span><span class="n">pos</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="n">max_lag</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">node_width_difference_to_height</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">pos</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="n">max_lag</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]),</span>
+                                                 <span class="p">(</span><span class="n">pos</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">pos</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="n">max_lag</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">node_width_difference_to_height</span><span class="p">),</span>
+                                                 <span class="mf">0.</span><span class="p">,</span>
+                                                 <span class="n">boxstyle</span><span class="o">=</span><span class="n">mpatches</span><span class="o">.</span><span class="n">BoxStyle</span><span class="o">.</span><span class="n">Round</span><span class="p">(</span><span class="n">pad</span><span class="o">=</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">node_height</span><span class="p">),</span>
+                                                 <span class="n">facecolor</span><span class="o">=</span><span class="n">color_here</span><span class="p">,</span>
+                                                 <span class="n">edgecolor</span><span class="o">=</span><span class="n">color_here</span><span class="p">,</span>
+                                                 <span class="p">)</span>
+
+                <span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">c_wide</span><span class="p">)</span>
+
+
             <span class="c1"># avoiding attribute error raised by changes in networkx</span>
             <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="s2">&quot;node&quot;</span><span class="p">):</span>
                 <span class="c1"># works with networkx 1.10</span>
@@ -3078,34 +3118,35 @@
 
 
 <div class="viewcode-block" id="plot_time_series_graph"><a class="viewcode-back" href="../../index.html#tigramite.plotting.plot_time_series_graph">[docs]</a><span class="k">def</span> <span class="nf">plot_time_series_graph</span><span class="p">(</span>
-    <span class="n">graph</span><span class="p">,</span>
-    <span class="n">val_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">var_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">fig_ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">figsize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">link_colorbar_label</span><span class="o">=</span><span class="s2">&quot;MCI&quot;</span><span class="p">,</span>
-    <span class="n">save_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">link_width</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">link_attribute</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">arrow_linewidth</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
-    <span class="n">vmin_edges</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
-    <span class="n">vmax_edges</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-    <span class="n">edge_ticks</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span>
-    <span class="n">cmap_edges</span><span class="o">=</span><span class="s2">&quot;RdBu_r&quot;</span><span class="p">,</span>
-    <span class="n">order</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">node_size</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
-    <span class="n">node_aspect</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">arrowhead_size</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
-    <span class="n">curved_radius</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
-    <span class="n">label_fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-    <span class="n">tick_label_size</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
-    <span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-    <span class="n">inner_edge_style</span><span class="o">=</span><span class="s2">&quot;dashed&quot;</span><span class="p">,</span>
-    <span class="n">link_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">special_nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="c1"># aux_graph=None,</span>
-    <span class="n">standard_color_links</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span>
-    <span class="n">standard_color_nodes</span><span class="o">=</span><span class="s1">&#39;lightgrey&#39;</span><span class="p">,</span>
+        <span class="n">graph</span><span class="p">,</span>
+        <span class="n">val_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">var_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">fig_ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">figsize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">link_colorbar_label</span><span class="o">=</span><span class="s2">&quot;MCI&quot;</span><span class="p">,</span>
+        <span class="n">save_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">link_width</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">link_attribute</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">arrow_linewidth</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+        <span class="n">vmin_edges</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">vmax_edges</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">edge_ticks</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span>
+        <span class="n">cmap_edges</span><span class="o">=</span><span class="s2">&quot;RdBu_r&quot;</span><span class="p">,</span>
+        <span class="n">order</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">node_size</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+        <span class="n">node_aspect</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">arrowhead_size</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+        <span class="n">curved_radius</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+        <span class="n">label_fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+        <span class="n">tick_label_size</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">inner_edge_style</span><span class="o">=</span><span class="s2">&quot;dashed&quot;</span><span class="p">,</span>
+        <span class="n">link_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">special_nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">node_classification</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="c1"># aux_graph=None,</span>
+        <span class="n">standard_color_links</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span>
+        <span class="n">standard_color_nodes</span><span class="o">=</span><span class="s1">&#39;lightgrey&#39;</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Creates a time series graph.</span>
 <span class="sd">    This is still in beta. The time series graph&#39;s links are colored by</span>
@@ -3168,6 +3209,12 @@
 <span class="sd">        Style of inner_edge contemporaneous links.</span>
 <span class="sd">    special_nodes : dict</span>
 <span class="sd">        Dictionary of format {(i, -tau): &#39;blue&#39;, ...} to color special nodes.</span>
+<span class="sd">    node_classification : dict or None (default: None)</span>
+<span class="sd">        Dictionary of format {i: &#39;space_context&#39;, ...} to classify nodes into system, context, or dummy nodes.</span>
+<span class="sd">        Keys of the dictionary are from {0, ..., N-1} where N is the number of nodes.</span>
+<span class="sd">        Options for the values are &quot;system&quot;, &quot;time_context&quot;, &quot;space_context&quot;, &quot;time_dummy&quot;, or &quot;space_dummy&quot;.</span>
+<span class="sd">        Space_contexts and dummy nodes need to be represented as a single node in the time series graph.</span>
+<span class="sd">        In case no value is supplied all nodes are treated as system nodes, i.e. are plotted in a time-resolved manner.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">link_matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -3293,6 +3340,19 @@
 
         <span class="n">special_nodes</span> <span class="o">=</span> <span class="n">special_nodes_tsg</span>
 
+    <span class="k">if</span> <span class="n">node_classification</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">node_classification</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="s2">&quot;system&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)}</span>
+    <span class="n">node_classification_tsg</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">node_classification</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">tau</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_lag</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">tau</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">suffix</span> <span class="o">=</span> <span class="s2">&quot;_first&quot;</span>
+            <span class="k">elif</span> <span class="n">tau</span> <span class="o">==</span> <span class="n">max_lag</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">suffix</span> <span class="o">=</span> <span class="s2">&quot;_last&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">suffix</span> <span class="o">=</span> <span class="s2">&quot;_middle&quot;</span>
+            <span class="n">node_classification_tsg</span><span class="p">[</span><span class="n">translate</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">tau</span><span class="p">)]</span> <span class="o">=</span> <span class="n">node_classification</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">+</span> <span class="n">suffix</span>
+
     <span class="c1"># node_color = np.zeros(N)</span>
     <span class="c1"># list of all strengths for color map</span>
     <span class="n">all_strengths</span> <span class="o">=</span> <span class="p">[]</span>
@@ -3413,6 +3473,8 @@
         <span class="n">inner_edge_style</span><span class="o">=</span><span class="n">inner_edge_style</span><span class="p">,</span>
         <span class="n">special_nodes</span><span class="o">=</span><span class="n">special_nodes</span><span class="p">,</span>
         <span class="n">show_colorbar</span><span class="o">=</span><span class="n">show_colorbar</span><span class="p">,</span>
+        <span class="n">node_classification</span><span class="o">=</span><span class="n">node_classification_tsg</span><span class="p">,</span>
+        <span class="n">max_lag</span><span class="o">=</span><span class="n">max_lag</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
@@ -4435,7 +4497,7 @@
         <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">tau</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">graph</span><span class="o">!=</span><span class="s1">&#39;&#39;</span><span class="p">)):</span>
             <span class="c1"># Only consider contemporaneous links once</span>
             <span class="k">if</span> <span class="n">tau</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">j</span><span class="p">:</span>
-                <span class="n">row</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="nb">str</span><span class="p">(</span><span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tau</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">graph</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="n">tau</span><span class="p">]]</span>
+                <span class="n">row</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="nb">str</span><span class="p">(</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">]),</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tau</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">graph</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="n">tau</span><span class="p">]]</span>
                 <span class="k">if</span> <span class="n">val_matrix_exists</span><span class="p">:</span>
                     <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">val_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="n">tau</span><span class="p">]</span><span class="si">:</span><span class="s2">.</span><span class="si">{</span><span class="n">digits</span><span class="si">}}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">link_attribute</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
