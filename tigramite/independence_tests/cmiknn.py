@@ -82,7 +82,7 @@ class CMIknn(CondIndTest):
         Number of workers to use for parallel processing. If -1 is given
         all processors are used. Default: -1.
 
-    model_selection_folds : int
+    model_selection_folds : int (optional, default = 3)
         Number of folds in cross-validation used in model selection.
 
     significance : str, optional (default: 'shuffle_test')
