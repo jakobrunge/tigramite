@@ -17,47 +17,47 @@ from tigramite.models import Prediction
 from tigramite.pcmci import PCMCI
 
 class RPCMCI(PCMCI):
-    """RPCMCI class for extracting causal regimes and the associated graphs from
-    time series data.
+    r"""RPCMCI class for extracting causal regimes and the associated graphs from
+        time series data.
 
-    Notes
-    ----------
-    The Regime-PCMCI causal discovery method is described in: 
+        Notes
+        -----
+        The Regime-PCMCI causal discovery method is described in: 
 
-    Elena Saggioro, Jana de Wiljes, Marlene Kretschmer, Jakob Runge;
-    Reconstructing regime-dependent causal relationships from observational
-    time series. Chaos 1 November 2020; 30 (11): 113115.
-    https://doi.org/10.1063/5.0020538
+        Elena Saggioro, Jana de Wiljes, Marlene Kretschmer, Jakob Runge;
+        Reconstructing regime-dependent causal relationships from observational
+        time series. Chaos 1 November 2020; 30 (11): 113115.
+        https://doi.org/10.1063/5.0020538
 
-    The method iterates between two phases --a regime learning phase
-    (optimization-based) and a causal discovery phase (PCMCI)-- to identify
-    regime dependent causal relationships. A persistent discrete regime
-    variable is assumed that leads to a finite number of regimes within which
-    stationarity can be assumed.
+        The method iterates between two phases --a regime learning phase
+        (optimization-based) and a causal discovery phase (PCMCI)-- to identify
+        regime dependent causal relationships. A persistent discrete regime
+        variable is assumed that leads to a finite number of regimes within which
+        stationarity can be assumed.
 
-    Parameters
-    ----------
-    dataframe : data object
-        This is the Tigramite dataframe object. It has the attributes
-        dataframe.values yielding a numpy array of shape ( observations T,
-        variables N). For RPCMCI the mask will be ignored. You may use the
-        missing_flag to indicate missing values.
-    cond_ind_test : conditional independence test object
-        This can be ParCorr or other classes from
-        ``tigramite.independence_tests`` or an external test passed as a
-        callable. This test can be based on the class
-        tigramite.independence_tests.CondIndTest.
-    prediction_model : sklearn model object
-        For example, sklearn.linear_model.LinearRegression() for a linear
-        regression model. This should be consistent with cond_ind_test, ie, 
-        use ParCorr() with a linear model and, eg, GPDC() with a 
-        GaussianProcessRegressor model, or CMIknn with NearestNeighbors model.
-    seed : int
-        Random seed for annealing step.
-    verbosity : int, optional (default: -1)
-        Verbose levels -1, 0, 1, ...
-    
-    """
+        Parameters
+        ----------
+        dataframe : data object
+            This is the Tigramite dataframe object. It has the attributes
+            dataframe.values yielding a numpy array of shape ( observations T,
+            variables N). For RPCMCI the mask will be ignored. You may use the
+            missing_flag to indicate missing values.
+        cond_ind_test : conditional independence test object
+            This can be ParCorr or other classes from
+            ``tigramite.independence_tests`` or an external test passed as a
+            callable. This test can be based on the class
+            tigramite.independence_tests.CondIndTest.
+        prediction_model : sklearn model object
+            For example, sklearn.linear_model.LinearRegression() for a linear
+            regression model. This should be consistent with cond_ind_test, ie, 
+            use ParCorr() with a linear model and, eg, GPDC() with a 
+            GaussianProcessRegressor model, or CMIknn with NearestNeighbors model.
+        seed : int
+            Random seed for annealing step.
+        verbosity : int, optional (default: -1)
+            Verbose levels -1, 0, 1, ...
+        """
+
     def __init__(self, dataframe, cond_ind_test=None, 
                     prediction_model=None, seed=None, verbosity=-1):
 

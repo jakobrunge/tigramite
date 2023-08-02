@@ -295,13 +295,12 @@
         <span class="k">return</span> <span class="p">(</span><span class="n">conf_lower</span><span class="p">,</span> <span class="n">conf_upper</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="ParCorr.get_model_selection_criterion"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.parcorr.ParCorr.get_model_selection_criterion">[docs]</a>    <span class="k">def</span> <span class="nf">get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">corrected_aic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns Akaike&#39;s Information criterion modulo constants.</span>
+<div class="viewcode-block" id="ParCorr.get_model_selection_criterion"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.parcorr.ParCorr.get_model_selection_criterion">[docs]</a>    <span class="k">def</span> <span class="nf">get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">criterion</span><span class="o">=</span><span class="s1">&#39;aic&#39;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns model selection criterion modulo constants.</span>
 
 <span class="sd">        Fits a linear model of the parents to variable j and returns the</span>
-<span class="sd">        score. Leave-one-out cross-validation is asymptotically equivalent to</span>
-<span class="sd">        AIC for ordinary linear regression models. Here used to determine</span>
-<span class="sd">        optimal hyperparameters in PCMCI, in particular the pc_alpha value.</span>
+<span class="sd">        score. Here used to determine optimal hyperparameters in PCMCI, </span>
+<span class="sd">        in particular the pc_alpha value.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -314,6 +313,9 @@
 <span class="sd">        tau_max : int, optional (default: 0)</span>
 <span class="sd">            Maximum time lag. This may be used to make sure that estimates for</span>
 <span class="sd">            different lags in X, Z, all have the same sample size.</span>
+
+<span class="sd">        criterion : string</span>
+<span class="sd">            Scoring criterion among AIC, BIC, or corrected AIC.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">        score : float</span>
@@ -335,13 +337,18 @@
         <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_residuals</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">return_means</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="c1"># Get RSS</span>
         <span class="n">rss</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-        <span class="c1"># Number of parameters</span>
+        <span class="c1"># Number of parameters dim includes dummy x, therefore -1 which includes de-meaning </span>
         <span class="n">p</span> <span class="o">=</span> <span class="n">dim</span> <span class="o">-</span> <span class="mi">1</span>
+
         <span class="c1"># Get AIC</span>
-        <span class="k">if</span> <span class="n">corrected_aic</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">criterion</span> <span class="o">==</span> <span class="s1">&#39;corrected_aic&#39;</span><span class="p">:</span>
             <span class="n">score</span> <span class="o">=</span> <span class="n">T</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">rss</span><span class="p">)</span> <span class="o">+</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">p</span> <span class="o">+</span> <span class="p">(</span><span class="mf">2.</span><span class="o">*</span><span class="n">p</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">2.</span><span class="o">*</span><span class="n">p</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">T</span> <span class="o">-</span> <span class="n">p</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">criterion</span> <span class="o">==</span> <span class="s1">&#39;bic&#39;</span><span class="p">:</span>
+            <span class="n">score</span> <span class="o">=</span> <span class="n">T</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">rss</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">T</span><span class="p">))</span> <span class="o">+</span> <span class="n">p</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>  <span class="c1"># BIC = n*log(residual sum of squares/n) + K*log(n)</span>
+        <span class="k">elif</span> <span class="n">criterion</span> <span class="o">==</span> <span class="s1">&#39;aic&#39;</span><span class="p">:</span>
             <span class="n">score</span> <span class="o">=</span> <span class="n">T</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">rss</span><span class="p">)</span> <span class="o">+</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">p</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unknown scoring criterion.&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">score</span></div></div>
 </pre></div>

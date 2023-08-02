@@ -15,6 +15,7 @@ from tigramite.toymodels.context_model import _group_links
 
 class JPCMCIplus(PCMCI):
     r"""J-PCMCI+ causal discovery for time series datasets from multiple contexts.
+        
         This class is based on the PCMCI framework as described in [1]_.
         JPCMCIplus enables causal discovery for time series data from different contexts,
         i.e. datasets, where some of the variables describing the context might be unobserved.
@@ -29,12 +30,14 @@ class JPCMCIplus(PCMCI):
                https://advances.sciencemag.org/content/5/11/eaau4996
         .. [10] W. Günther, U. Ninad, J. Runge,
                Causal discovery for time series from multiple datasets with latent contexts. UAI 2023
+        
         Parameters
         ----------
         node_classification : dictionary
             Classification of nodes into system, context, or dummy nodes.
             Keys of the dictionary are from {0, ..., N-1} where N is the number of nodes.
             Options for the values are "system", "time_context", "space_context", "time_dummy", or "space_dummy".
+        
         Attributes
         ----------
         all_parents : dictionary
