@@ -261,13 +261,12 @@ class ParCorr(CondIndTest):
         return (conf_lower, conf_upper)
 
 
-    def get_model_selection_criterion(self, j, parents, tau_max=0, corrected_aic=False):
-        """Returns Akaike's Information criterion modulo constants.
+    def get_model_selection_criterion(self, j, parents, tau_max=0, criterion='aic'):
+        """Returns model selection criterion modulo constants.
 
         Fits a linear model of the parents to variable j and returns the
-        score. Leave-one-out cross-validation is asymptotically equivalent to
-        AIC for ordinary linear regression models. Here used to determine
-        optimal hyperparameters in PCMCI, in particular the pc_alpha value.
+        score. Here used to determine optimal hyperparameters in PCMCI, 
+        in particular the pc_alpha value.
 
         Parameters
         ----------
@@ -280,6 +279,9 @@ class ParCorr(CondIndTest):
         tau_max : int, optional (default: 0)
             Maximum time lag. This may be used to make sure that estimates for
             different lags in X, Z, all have the same sample size.
+
+        criterion : string
+            Scoring criterion among AIC, BIC, or corrected AIC.
 
         Returns:
         score : float
@@ -301,12 +303,17 @@ class ParCorr(CondIndTest):
         y = self._get_single_residuals(array, target_var=1, return_means=False)
         # Get RSS
         rss = (y**2).sum()
-        # Number of parameters
+        # Number of parameters dim includes dummy x, therefore -1 which includes de-meaning 
         p = dim - 1
+
         # Get AIC
-        if corrected_aic:
+        if criterion == 'corrected_aic':
             score = T * np.log(rss) + 2. * p + (2.*p**2 + 2.*p)/(T - p - 1)
-        else:
+        elif criterion == 'bic':
+            score = T * np.log(rss / float(T)) + p * np.log(T)  # BIC = n*log(residual sum of squares/n) + K*log(n)
+        elif criterion == 'aic':
             score = T * np.log(rss) + 2. * p
+        else:
+            raise ValueError("Unknown scoring criterion.")
 
         return score
