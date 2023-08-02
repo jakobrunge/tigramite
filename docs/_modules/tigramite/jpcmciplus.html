@@ -49,6 +49,7 @@
 
 <div class="viewcode-block" id="JPCMCIplus"><a class="viewcode-back" href="../../index.html#tigramite.jpcmciplus.JPCMCIplus">[docs]</a><span class="k">class</span> <span class="nc">JPCMCIplus</span><span class="p">(</span><span class="n">PCMCI</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;J-PCMCI+ causal discovery for time series datasets from multiple contexts.</span>
+<span class="sd">        </span>
 <span class="sd">        This class is based on the PCMCI framework as described in [1]_.</span>
 <span class="sd">        JPCMCIplus enables causal discovery for time series data from different contexts,</span>
 <span class="sd">        i.e. datasets, where some of the variables describing the context might be unobserved.</span>
@@ -63,12 +64,14 @@
 <span class="sd">               https://advances.sciencemag.org/content/5/11/eaau4996</span>
 <span class="sd">        .. [10] W. Günther, U. Ninad, J. Runge,</span>
 <span class="sd">               Causal discovery for time series from multiple datasets with latent contexts. UAI 2023</span>
+<span class="sd">        </span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        node_classification : dictionary</span>
 <span class="sd">            Classification of nodes into system, context, or dummy nodes.</span>
 <span class="sd">            Keys of the dictionary are from {0, ..., N-1} where N is the number of nodes.</span>
 <span class="sd">            Options for the values are &quot;system&quot;, &quot;time_context&quot;, &quot;space_context&quot;, &quot;time_dummy&quot;, or &quot;space_dummy&quot;.</span>
+<span class="sd">        </span>
 <span class="sd">        Attributes</span>
 <span class="sd">        ----------</span>
 <span class="sd">        all_parents : dictionary</span>

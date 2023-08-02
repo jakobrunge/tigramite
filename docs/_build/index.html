@@ -1258,8 +1258,8 @@ options passed to this function.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="tigramite.jpcmciplus.JPCMCIplus">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tigramite.jpcmciplus.</span></span><span class="sig-name descname"><span class="pre">JPCMCIplus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_classification</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/jpcmciplus.html#JPCMCIplus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.jpcmciplus.JPCMCIplus" title="Permalink to this definition">¶</a></dt>
-<dd><p>J-PCMCI+ causal discovery for time series datasets from multiple contexts.
-This class is based on the PCMCI framework as described in <a href="#id47"><span class="problematic" id="id15">[1]_</span></a>.
+<dd><p>J-PCMCI+ causal discovery for time series datasets from multiple contexts.</p>
+<p>This class is based on the PCMCI framework as described in <a href="#id47"><span class="problematic" id="id15">[1]_</span></a>.
 JPCMCIplus enables causal discovery for time series data from different contexts,
 i.e. datasets, where some of the variables describing the context might be unobserved.
 The method is described in detail in <a class="footnote-reference brackets" href="#id18" id="id16" role="doc-noteref"><span class="fn-bracket">[</span>10<span class="fn-bracket">]</span></a>.
@@ -2087,12 +2087,11 @@ OLS regression.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="tigramite.independence_tests.parcorr.ParCorr.get_model_selection_criterion">
-<span class="sig-name descname"><span class="pre">get_model_selection_criterion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">j</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corrected_aic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/parcorr.html#ParCorr.get_model_selection_criterion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.independence_tests.parcorr.ParCorr.get_model_selection_criterion" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns Akaike’s Information criterion modulo constants.</p>
+<span class="sig-name descname"><span class="pre">get_model_selection_criterion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">j</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">criterion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'aic'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/parcorr.html#ParCorr.get_model_selection_criterion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.independence_tests.parcorr.ParCorr.get_model_selection_criterion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns model selection criterion modulo constants.</p>
 <p>Fits a linear model of the parents to variable j and returns the
-score. Leave-one-out cross-validation is asymptotically equivalent to
-AIC for ordinary linear regression models. Here used to determine
-optimal hyperparameters in PCMCI, in particular the pc_alpha value.</p>
+score. Here used to determine optimal hyperparameters in PCMCI,
+in particular the pc_alpha value.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -2100,6 +2099,7 @@ optimal hyperparameters in PCMCI, in particular the pc_alpha value.</p>
 <li><p><strong>parents</strong> (<em>list</em>) – List of form [(0, -1), (3, -2), …] containing parents.</p></li>
 <li><p><strong>tau_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) – Maximum time lag. This may be used to make sure that estimates for
 different lags in X, Z, all have the same sample size.</p></li>
+<li><p><strong>criterion</strong> (<em>string</em>) – Scoring criterion among AIC, BIC, or corrected AIC.</p></li>
 <li><p><strong>Returns</strong> – </p></li>
 <li><p><strong>score</strong> (<em>float</em>) – Model score.</p></li>
 </ul>
@@ -2766,7 +2766,7 @@ Whether to transform the array beforehand by standardizing
 or transforming to uniform marginals.</p></li>
 <li><p><strong>workers</strong> (<em>int</em><em> (</em><em>optional</em><em>, </em><em>default = -1</em><em>)</em>) – Number of workers to use for parallel processing. If -1 is given
 all processors are used. Default: -1.</p></li>
-<li><p><strong>model_selection_folds</strong> (<em>int</em>) – Number of folds in cross-validation used in model selection.</p></li>
+<li><p><strong>model_selection_folds</strong> (<em>int</em><em> (</em><em>optional</em><em>, </em><em>default = 3</em><em>)</em>) – Number of folds in cross-validation used in model selection.</p></li>
 <li><p><strong>significance</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: 'shuffle_test'</em><em>)</em>) – Type of significance test to use. For CMIknn only ‘fixed_thres’ and
 ‘shuffle_test’ are available.</p></li>
 <li><p><strong>**kwargs</strong> – Arguments passed on to parent class CondIndTest.</p></li>
