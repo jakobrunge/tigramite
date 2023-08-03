@@ -39,7 +39,7 @@
 <span class="kn">from</span> <span class="nn">.pcmci_base</span> <span class="kn">import</span> <span class="n">PCMCIbase</span>
 
 <div class="viewcode-block" id="LPCMCI"><a class="viewcode-back" href="../../index.html#tigramite.lpcmci.LPCMCI">[docs]</a><span class="k">class</span> <span class="nc">LPCMCI</span><span class="p">(</span><span class="n">PCMCIbase</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; LPCMCI is an algorithm for causal discovery in large-scale times series that allows for latent confounders and</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot; LPCMCI is an algorithm for causal discovery in large-scale times series that allows for latent confounders and</span>
 <span class="sd">    learns lag-specific causal relationships. The algorithm is introduced and explained in:</span>
 
 <span class="sd">    [1] Gerhardus, A. &amp; Runge, J. High-recall causal discovery for autocorrelated time series with latent confounders.</span>
@@ -51,28 +51,28 @@
 <span class="sd">    The main function, which applies the algorithm, is &#39;run_lpcmci&#39;.</span>
 
 <span class="sd">    Parameters passed to the constructor:</span>
-<span class="sd">    - dataframe:</span>
-<span class="sd">        Tigramite dataframe object that contains the the time series dataset \bold{X}</span>
-<span class="sd">    - cond_ind_test:</span>
-<span class="sd">        A conditional independence test object that specifies which conditional independence test CI is to be used</span>
-<span class="sd">    - verbosity:</span>
-<span class="sd">        Controls the verbose output self.run_lpcmci() and the function it calls.</span>
 
-<span class="sd">    Parameters passed to self.run_lpcmci():</span>
+<span class="sd">    - dataframe: Tigramite dataframe object that contains the the time series dataset \bold{X}</span>
+<span class="sd">    </span>
+<span class="sd">    - cond_ind_test: A conditional independence test object that specifies which conditional independence test CI is to be used</span>
+<span class="sd">    </span>
+<span class="sd">    - verbosity: Controls the verbose output self.run_lpcmci() and the function it calls.</span>
+
+<span class="sd">    Parameters passed to self.run_lpcmci(): </span>
 <span class="sd">    Note: The default values are still being tuned and some parameters might be removed in the future.</span>
+<span class="sd">    </span>
 <span class="sd">    - link_assumptions: dict or None</span>
 <span class="sd">        Two-level nested dictionary such that link_assumptions[j][(i, lag_i)], where 0 &lt;= j, i &lt;= N-1 (with N the number of component</span>
 <span class="sd">        time series) and -tau_max &lt;= lag_i &lt;= -tau_min, is a string which specifies background knowledge about the link from X^i_{t+lag_i} to</span>
 <span class="sd">        X^j_t. These are the possibilities for this string and the corresponding claim:</span>
+<span class="sd">            </span>
 <span class="sd">            &#39;-?&gt;&#39;   : X^i_{t+lag_i} is an ancestor of X^j_t.</span>
 <span class="sd">            &#39;--&gt;&#39;   : X^i_{t+lag_i} is an ancestor of X^j_t, and there is a link between X^i_{t+lag_i} and X^j_t</span>
 <span class="sd">            &#39;&lt;?-&#39;   : Only allowed for lag_i = 0. X^j_t is an ancestor of X^i_t.</span>
 <span class="sd">            &#39;&lt;--&#39;   : Only allowed for lag_i = 0. X^j_t is an ancestor of X^i_t, and there is a link between X^i_t and X^j_t</span>
 <span class="sd">            &#39;&lt;?&gt;&#39;   : Neither X^i_{t+lag_i} is an ancestor of X^j_t nor the other way around</span>
-<span class="sd">            &#39;&lt;-&gt;&#39;   : Neither X^i_{t+lag_i} is an ancestor of X^j_t nor the other way around, and there is a link between X^i_{t+lag_i}</span>
-<span class="sd">                      and X^j_t</span>
-<span class="sd">            &#39;o?&gt;&#39;   : X^j_t is not an ancestor of X^i_{t+lag_i} (for lag_i &lt; 0 this background knowledge is (for the default settings of</span>
-<span class="sd">                      self.run_lpcmci()) imposed automatically)</span>
+<span class="sd">            &#39;&lt;-&gt;&#39;   : Neither X^i_{t+lag_i} is an ancestor of X^j_t nor the other way around, and there is a link between X^i_{t+lag_i} and X^j_t</span>
+<span class="sd">            &#39;o?&gt;&#39;   : X^j_t is not an ancestor of X^i_{t+lag_i} (for lag_i &lt; 0 this background knowledge is (for the default settings of self.run_lpcmci()) imposed automatically)</span>
 <span class="sd">            &#39;o-&gt;&#39;   : X^j_t is not an ancestor of X^i_{t+lag_i}, and there is a link between X^i_{t+lag_i} and X^j_t</span>
 <span class="sd">            &#39;&lt;?o&#39;   : Only allowed for lag_i = 0. X^i_t is not an ancestor of X^j_t</span>
 <span class="sd">            &#39;&lt;-o&#39;   : Only allowed for lag_i = 0. X^i_t is not an ancestor of X^j_t, and there is a link between X^i_t and X^j_t</span>
@@ -83,74 +83,104 @@
 <span class="sd">        Another way to specify the absent link is if the form of the link between (i, lag_i) and (j, 0) is not specified by the dictionary, that is, if either</span>
 <span class="sd">        link_assumptions[j] does not exist or link_assumptions[j] does exist but link_assumptions[j][(i, lag_i)] does</span>
 <span class="sd">        not exist, then the link between (i, lag_i) and (j, 0) is assumed to be absent.</span>
-<span class="sd">    - tau_min:</span>
-<span class="sd">        The assumed minimum time lag, i.e., links with a lag smaller than tau_min are assumed to be absent.</span>
-<span class="sd">    - tau_max:</span>
-<span class="sd">        The maximum considered time lag, i.e., the algorithm learns a DPAG on a time window [t-\taumax, t] with \tau_max + 1 time steps.</span>
-<span class="sd">        It is *not* assumed that in the underlying time series DAG there are no links with a lag larger than \tau_max.</span>
-<span class="sd">    - pc_alpha:</span>
-<span class="sd">        The significance level of conditional independence tests</span>
-<span class="sd">    - n_preliminary_iterations:</span>
-<span class="sd">        Determines the number of iterations in the preliminary phase of LPCMCI, corresponding to the &#39;k&#39; in LPCMCI(k) in [1].</span>
-<span class="sd">    - max_cond_px:</span>
-<span class="sd">        Consider a pair of variables (X^i_{t-\tau}, X^j_t) with \tau &gt; 0. In Algorithm S2 in [1] (here this is</span>
-<span class="sd">        self._run_ancestral_removal_phase()), the algorithm does not test for conditional independence given subsets of</span>
-<span class="sd">        apds_t(X^i_{t-\tau}, X^j_t, C(G)) of cardinality higher than max_cond_px. In Algorithm S3 in [1] (here this is</span>
-<span class="sd">        self._run_non_ancestral_removal_phase()), the algorithm does not test for conditional independence given subsets of</span>
-<span class="sd">        napds_t(X^i_{t-\tau}, X^j_t, C(G)) of cardinality higher than max_cond_px.</span>
-<span class="sd">    - max_p_global:</span>
-<span class="sd">        Restricts all conditional independence tests to conditioning sets with cardinality smaller or equal to max_p_global</span>
-<span class="sd">    - max_p_non_ancestral:</span>
-<span class="sd">        Restricts all conditional independence tests in the second removal phase (here this is self._run_dsep_removal_phase()) to</span>
-<span class="sd">        conditioning sets with cardinality smaller or equal to max_p_global</span>
-<span class="sd">    - max_q_global:</span>
-<span class="sd">        For each ordered pair (X^i_{t-\tau}, X^j_t) of adjacent variables and for each cardinality of the conditioning sets test at most</span>
-<span class="sd">        max_q_global many conditioning sets (when summing over all tested cardinalities more than max_q_global tests may be made)</span>
-<span class="sd">    - max_pds_set:</span>
-<span class="sd">        In Algorithm S3 (here this is self._run_non_ancestral_removal_phase()), the algorithm tests for conditional independence given</span>
-<span class="sd">        subsets of the relevant napds_t sets. If for a given link the set napds_t(X^j_t, X^i_{t-\tau}, C(G)) has more than max_pds_set many</span>
-<span class="sd">        elements (or, if the link is also tested in the opposite directed, if napds_t(X^i_{t-\tau}, X^j_t, C(G)) has more than max_pds_set</span>
-<span class="sd">        elements), this link is not tested.</span>
-<span class="sd">    - prelim_with_collider_rules:</span>
-<span class="sd">        If True: As in pseudocode</span>
-<span class="sd">        If False: Line 22 of Algorithm S2 in [1] is replaced by line 18 of Algorithm S2 when Algorithm S2 is called from the preliminary</span>
-<span class="sd">        phase (not in the last application of Algorithm S2 directly before Algorithm S3 is applied)</span>
-<span class="sd">    - parents_of_lagged:</span>
-<span class="sd">        If True: As in pseudocode</span>
-<span class="sd">        If False: The default conditioning set is pa(X^j_t, C(G)) rather than pa({X^j_t, X^i_{t-\tau}, C(G)) for tau &gt; 0</span>
-<span class="sd">    - prelim_only:</span>
-<span class="sd">        If True, stop after the preliminary phase. Can be used for detailed performance analysis</span>
-<span class="sd">    - break_once_separated:</span>
-<span class="sd">        If True: As in pseudocode</span>
-<span class="sd">        If False: The break commands are removed from Algorithms S2 and S3 in in [1]</span>
-<span class="sd">    - no_non_ancestral_phase:</span>
-<span class="sd">        If True, do not execute Algorithm S3. Can be used for detailed performance analysis</span>
-<span class="sd">    - use_a_pds_t_for_majority:</span>
-<span class="sd">        If True: As in pseudocode</span>
-<span class="sd">        If False: The search for separating sets instructed by the majority rule is made given subsets adj(X^j_t, C(G)) rather than</span>
-<span class="sd">        subsets of apds_t(X^j_t, X^i_{t-\tau}, C(G))</span>
+<span class="sd">    </span>
+<span class="sd">    - tau_min: The assumed minimum time lag, i.e., links with a lag smaller</span>
+<span class="sd">      than tau_min are assumed to be absent.</span>
+<span class="sd">    </span>
+<span class="sd">    - tau_max: The maximum considered time lag, i.e., the algorithm learns a</span>
+<span class="sd">      DPAG on a time window [t-\taumax, t] with \tau_max + 1 time steps. It</span>
+<span class="sd">      is *not* assumed that in the underlying time series DAG there are no</span>
+<span class="sd">      links with a lag larger than \tau_max.</span>
+<span class="sd">    </span>
+<span class="sd">    - pc_alpha: The significance level of conditional independence tests</span>
+<span class="sd">    </span>
+<span class="sd">    - n_preliminary_iterations: Determines the number of iterations in the</span>
+<span class="sd">      preliminary phase of LPCMCI, corresponding to the &#39;k&#39; in LPCMCI(k) in</span>
+<span class="sd">      [1].</span>
+<span class="sd">    </span>
+<span class="sd">    - max_cond_px: Consider a pair of variables (X^i_{t-\tau}, X^j_t)</span>
+<span class="sd">      with \tau &gt; 0. In Algorithm S2 in [1] (here this is</span>
+<span class="sd">      self._run_ancestral_removal_phase()), the algorithm does not test for</span>
+<span class="sd">      conditional independence given subsets of apds_t(X^i_{t-\tau}, X^j_t, C</span>
+<span class="sd">      (G)) of cardinality higher than max_cond_px. In Algorithm S3 in [1]</span>
+<span class="sd">      (here this is self._run_non_ancestral_removal_phase()), the algorithm</span>
+<span class="sd">      does not test for conditional independence given subsets of napds_t</span>
+<span class="sd">      (X^i_{t-\tau}, X^j_t, C(G)) of cardinality higher than max_cond_px.</span>
+<span class="sd">    </span>
+<span class="sd">    - max_p_global: Restricts all conditional independence tests to</span>
+<span class="sd">      conditioning sets with cardinality smaller or equal to max_p_global</span>
+<span class="sd">    </span>
+<span class="sd">    - max_p_non_ancestral: Restricts all conditional independence tests in the</span>
+<span class="sd">      second removal phase (here this is self._run_dsep_removal_phase()) to</span>
+<span class="sd">      conditioning sets with cardinality smaller or equal to max_p_global</span>
+<span class="sd">    </span>
+<span class="sd">    - max_q_global: For each ordered pair (X^i_{t-\tau}, X^j_t) of adjacent</span>
+<span class="sd">      variables and for each cardinality of the conditioning sets test at</span>
+<span class="sd">      most max_q_global many conditioning sets (when summing over all tested</span>
+<span class="sd">      cardinalities more than max_q_global tests may be made)</span>
+<span class="sd">    </span>
+<span class="sd">    - max_pds_set: In Algorithm S3 (here this is</span>
+<span class="sd">      self._run_non_ancestral_removal_phase()), the algorithm tests for</span>
+<span class="sd">      conditional independence given subsets of the relevant napds_t sets. If</span>
+<span class="sd">      for a given link the set napds_t(X^j_t, X^i_{t-\tau}, C(G)) has more</span>
+<span class="sd">      than max_pds_set many elements (or, if the link is also tested in the</span>
+<span class="sd">      opposite directed, if napds_t(X^i_{t-\tau}, X^j_t, C(G)) has more than</span>
+<span class="sd">      max_pds_set elements), this link is not tested.</span>
+<span class="sd">    </span>
+<span class="sd">    - prelim_with_collider_rules: If True: As in pseudocode If False: Line 22</span>
+<span class="sd">      of Algorithm S2 in [1] is replaced by line 18 of Algorithm S2 when</span>
+<span class="sd">      Algorithm S2 is called from the preliminary phase (not in the last</span>
+<span class="sd">      application of Algorithm S2 directly before Algorithm S3 is applied)</span>
+<span class="sd">    </span>
+<span class="sd">    - parents_of_lagged: If True: As in pseudocode If False: The default</span>
+<span class="sd">      conditioning set is pa(X^j_t, C(G)) rather than pa({X^j_t, X^i_</span>
+<span class="sd">      {t-\tau}, C(G)) for tau &gt; 0</span>
+<span class="sd">    </span>
+<span class="sd">    - prelim_only: If True, stop after the preliminary phase. Can be used for</span>
+<span class="sd">      detailed performance analysis</span>
+<span class="sd">    </span>
+<span class="sd">    - break_once_separated: If True: As in pseudocode If False: The break</span>
+<span class="sd">      commands are removed from Algorithms S2 and S3 in in [1]</span>
+<span class="sd">    </span>
+<span class="sd">    - no_non_ancestral_phase: If True, do not execute Algorithm S3. Can be</span>
+<span class="sd">      used for detailed performance analysis</span>
+<span class="sd">    </span>
+<span class="sd">    - use_a_pds_t_for_majority: If True: As in pseudocode If False: The search</span>
+<span class="sd">      for separating sets instructed by the majority rule is made given</span>
+<span class="sd">      subsets adj(X^j_t, C(G)) rather than subsets of apds_t(X^j_t, X^i_</span>
+<span class="sd">      {t-\tau}, C(G))</span>
+<span class="sd">    </span>
 <span class="sd">    - orient_contemp:</span>
 <span class="sd">        If orient_contemp == 1: As in pseudocode of Algorithm S2 in [1]</span>
 <span class="sd">        If orient_contemp == 2: Also orient contemporaneous links in line 18 of Algorithm S2</span>
 <span class="sd">        If orient_comtemp == 0: Also not orient contemporaneous links in line 22 of Algorithm S2</span>
+<span class="sd">    </span>
 <span class="sd">    - update_middle_marks:</span>
 <span class="sd">        If True: As in pseudoce of Algorithms S2 and S3 in [1]</span>
 <span class="sd">        If False: The MMR rule is not applied</span>
+<span class="sd">    </span>
 <span class="sd">    - prelim_rules:</span>
 <span class="sd">        If prelim_rules == 1: As in pseudocode of Algorithm S2 in [1]</span>
 <span class="sd">        If prelim_rules == 0: Exclude rules R9^prime and R10^\prime from line 18 in Algorithm S2</span>
-<span class="sd">    - fix_all_edges_before_final_orientation:</span>
-<span class="sd">        When one of max_p_global, max_p_non_ancestral, max_q_global or max_pds_set is not np.inf, the algorithm may terminate although not</span>
-<span class="sd">        all middle marks are empty. All orientation rules are nevertheless sound, since the rules always check for the appropriate middle</span>
-<span class="sd">        marks. If fix_all_edges_before_final_orientation is True, all middle marks are set to the empty middle mark by force, followed by</span>
-<span class="sd">        another application of the rules.</span>
-<span class="sd">    - auto_first:</span>
-<span class="sd">        If True: As in pseudcode of Algorithms S2 and S3 in [1]</span>
-<span class="sd">        If False: Autodependency links are not prioritized even before contemporaneous links</span>
+<span class="sd">    </span>
+<span class="sd">    - fix_all_edges_before_final_orientation: When one of max_p_global,</span>
+<span class="sd">      max_p_non_ancestral, max_q_global or max_pds_set is not np.inf, the</span>
+<span class="sd">      algorithm may terminate although not all middle marks are empty. All</span>
+<span class="sd">      orientation rules are nevertheless sound, since the rules always check</span>
+<span class="sd">      for the appropriate middle marks. If</span>
+<span class="sd">      fix_all_edges_before_final_orientation is True, all middle marks are</span>
+<span class="sd">      set to the empty middle mark by force, followed by another application</span>
+<span class="sd">      of the rules.</span>
+<span class="sd">    </span>
+<span class="sd">    - auto_first: If True: As in pseudcode of Algorithms S2 and S3 in [1] If</span>
+<span class="sd">      False: Autodependency links are not prioritized even before</span>
+<span class="sd">      contemporaneous links</span>
+<span class="sd">    </span>
 <span class="sd">    - remember_only_parents:</span>
 <span class="sd">        If True: As in pseudocode of Algorithm 1</span>
 <span class="sd">        If False: If X^i_{t-\tau} has been marked as ancestor of X^j_t at any point of a preliminary iteration but the link between</span>
 <span class="sd">        X^i_{t-\tau} and X^j_t was removed later, the link is nevertheless initialized with a tail at X^i_{t-\tau} in the re-initialization</span>
+<span class="sd">    </span>
 <span class="sd">    - no_apr:</span>
 <span class="sd">        If no_apr == 0: As in pseudcode of Algorithms S2 and S3 in [1]</span>
 <span class="sd">        If no_apr == 1: The APR is not applied by Algorithm S2, except in line 22 of its last call directly before the call of Algorithm S3</span>
@@ -164,12 +194,14 @@
 <span class="sd">        p_matrix : array of shape [N, N, tau_max+1]</span>
 <span class="sd">            Estimated matrix of p-values regarding adjacencies.</span>
 
-<span class="sd">    A note on middle marks:</span>
-<span class="sd">        For convenience (to have strings of the same lengths) we here internally denote the empty middle mark by &#39;-&#39;.  For post-processing</span>
-<span class="sd">        purposes all middle marks are set to the empty middle mark (here &#39;-&#39;).</span>
+<span class="sd">    A note on middle marks: For convenience (to have strings of the same</span>
+<span class="sd">    lengths) we here internally denote the empty middle mark by &#39;-&#39;.  For</span>
+<span class="sd">    post-processing purposes all middle marks are set to the empty middle</span>
+<span class="sd">    mark (here &#39;-&#39;).</span>
 <span class="sd">    </span>
-<span class="sd">    A note on wildcards:</span>
-<span class="sd">        The middle mark wildcard \ast and the edge mark wildcard are here represented as *, the edge mark wildcard \star as +</span>
+<span class="sd">    A note on wildcards: The middle mark wildcard \ast and the edge mark</span>
+<span class="sd">    wildcard are here represented as &#39;*&#39;&#39;, the edge mark wildcard \star</span>
+<span class="sd">    as &#39;+&#39;.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">,</span> <span class="n">cond_ind_test</span><span class="p">,</span> <span class="n">verbosity</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>

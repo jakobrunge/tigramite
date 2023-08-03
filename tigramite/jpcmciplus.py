@@ -14,72 +14,74 @@ from tigramite.toymodels.context_model import _group_links
 
 
 class JPCMCIplus(PCMCI):
-    r"""J-PCMCI+ causal discovery for time series datasets from multiple contexts.
+    r"""J-PCMCIplus causal discovery for time series datasets from multiple contexts.
         
-        This class is based on the PCMCI framework as described in [1]_.
-        JPCMCIplus enables causal discovery for time series data from different contexts,
-        i.e. datasets, where some of the variables describing the context might be unobserved.
-        The method is described in detail in [10]_.
-        See the tutorial for guidance in applying the method.
+    This class is based on the PCMCI framework as described in
+    [1]. JPCMCIplus enables causal discovery for time series data from
+    different contexts, i.e. datasets, where some of the variables
+    describing the context might be unobserved. The method is described
+    in detail in [10]. See the tutorial for guidance in applying the
+    method.
 
-        References
-        ----------
-        .. [1] J. Runge, P. Nowack, M. Kretschmer, S. Flaxman, D. Sejdinovic,
-               Detecting and quantifying causal associations in large nonlinear time
-               series datasets. Sci. Adv. 5, eaau4996 (2019)
-               https://advances.sciencemag.org/content/5/11/eaau4996
-        .. [10] W. Günther, U. Ninad, J. Runge,
-               Causal discovery for time series from multiple datasets with latent contexts. UAI 2023
-        
-        Parameters
-        ----------
-        node_classification : dictionary
-            Classification of nodes into system, context, or dummy nodes.
-            Keys of the dictionary are from {0, ..., N-1} where N is the number of nodes.
-            Options for the values are "system", "time_context", "space_context", "time_dummy", or "space_dummy".
-        
-        Attributes
-        ----------
-        all_parents : dictionary
-            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing
-            the conditioning-parents estimated with PC algorithm.
-        val_min : dictionary
-            Dictionary of form val_min[j][(i, -tau)] = float
-            containing the minimum test statistic value for each link estimated in
-            the PC algorithm.
-        pval_max : dictionary
-            Dictionary of form pval_max[j][(i, -tau)] = float containing the maximum
-            p-value for each link estimated in the PC algorithm.
-        iterations : dictionary
-            Dictionary containing further information on algorithm steps.
-        N : int
-            Number of variables.
-        T : dict
-            Time series sample length of dataset(s).
-        dummy_parents : dictionary or None
-            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing
-            the dependence of the system nodes on the dummy nodes.
-        observed_context_parents : dictionary or None
-            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing
-            the dependence of the system nodes on the observed context nodes.
-        dummy_ci_test : conditional independence test object
-            Conditional independence test used to test dependence between system nodes and dummy nodes.
-            Currently, ParCorr is used with one-hot encoded dummies.
-        mode : "system_search" or "context_search" or "dummy_search" (default: "system_search")
-        time_context_nodes : list
-            List with entries from {0, ..., N-1} where N is the number of nodes.
-            This is the list of the temporal context nodes which are assumed to be constant over the different datasets.
-        space_context_nodes :
-            List with entries from {0, ..., N-1} where N is the number of nodes.
-            This is the list of the spatial context nodes which are assumed to be constant over time.
-        time_dummy : int or None (default: None)
-            Node corresponding to the temporal dummy variable.
-        space_dummy : int or None (default: None)
-            Node corresponding to the spatial dummy variable.
-        system_nodes : list
-            List with entries from {0, ..., N-1} where N is the number of nodes.
-            This is the list of the system nodes.
-        """
+    References
+    ----------
+    .. [1] J. Runge, P. Nowack, M. Kretschmer, S. Flaxman, D. Sejdinovic,
+       Detecting and quantifying causal associations in large nonlinear
+       time series datasets. Sci. Adv. 5, eaau4996
+       (2019) https://advances.sciencemag.org/content/5/11/eaau4996
+    
+    .. [10] W. Günther, U. Ninad, J. Runge, Causal discovery for time
+       series from multiple datasets with latent contexts. UAI 2023
+    
+    Parameters
+    ----------
+    node_classification : dictionary
+        Classification of nodes into system, context, or dummy nodes.
+        Keys of the dictionary are from {0, ..., N-1} where N is the number of nodes.
+        Options for the values are "system", "time_context", "space_context", "time_dummy", or "space_dummy".
+    
+    Attributes
+    ----------
+    all_parents : dictionary
+        Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing
+        the conditioning-parents estimated with PC algorithm.
+    val_min : dictionary
+        Dictionary of form val_min[j][(i, -tau)] = float
+        containing the minimum test statistic value for each link estimated in
+        the PC algorithm.
+    pval_max : dictionary
+        Dictionary of form pval_max[j][(i, -tau)] = float containing the maximum
+        p-value for each link estimated in the PC algorithm.
+    iterations : dictionary
+        Dictionary containing further information on algorithm steps.
+    N : int
+        Number of variables.
+    T : dict
+        Time series sample length of dataset(s).
+    dummy_parents : dictionary or None
+        Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing
+        the dependence of the system nodes on the dummy nodes.
+    observed_context_parents : dictionary or None
+        Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing
+        the dependence of the system nodes on the observed context nodes.
+    dummy_ci_test : conditional independence test object
+        Conditional independence test used to test dependence between system nodes and dummy nodes.
+        Currently, ParCorr is used with one-hot encoded dummies.
+    mode : "system_search" or "context_search" or "dummy_search" (default: "system_search")
+    time_context_nodes : list
+        List with entries from {0, ..., N-1} where N is the number of nodes.
+        This is the list of the temporal context nodes which are assumed to be constant over the different datasets.
+    space_context_nodes :
+        List with entries from {0, ..., N-1} where N is the number of nodes.
+        This is the list of the spatial context nodes which are assumed to be constant over time.
+    time_dummy : int or None (default: None)
+        Node corresponding to the temporal dummy variable.
+    space_dummy : int or None (default: None)
+        Node corresponding to the spatial dummy variable.
+    system_nodes : list
+        List with entries from {0, ..., N-1} where N is the number of nodes.
+        This is the list of the system nodes.
+    """
 
     def __init__(self, node_classification, **kwargs):
         # Init base class
@@ -113,14 +115,15 @@ class JPCMCIplus(PCMCI):
                        max_conds_px=None,
                        max_conds_px_lagged=None,
                        fdr_method='none'):
-        """
-        Runs JPCMCIplus time-lagged and contemporaneous causal discovery for time series from multiple contexts.
-        Method described in [10]_:
-            W. Günther, U. Ninad, J. Runge,
-            Causal discovery for time series from multiple datasets with latent contexts. UAI 2023
+        """Runs JPCMCIplus time-lagged and contemporaneous causal discovery for time series from multiple contexts.
+        
+        Method described in: W. Günther, U. Ninad, J. Runge, Causal discovery
+        for time series from multiple datasets with latent contexts. UAI
+        2023
+        
         Notes
         -----
-        The JPCMCIplus causal discovery method is described in [10]_, where
+        The JPCMCIplus causal discovery method is described in [10], where
         also analytical and numerical results are presented. JPCMCIplus can identify the joint causal graph
         over multiple datasets containing time series data from different contexts under the standard assumptions
         of Causal Sufficiency, Faithfulness and the Markov condition, as well as some background knowledge assumptions.

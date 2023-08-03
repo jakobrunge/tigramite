@@ -58,18 +58,18 @@
 <span class="sd">    ----------</span>
 <span class="sd">    data : array-like</span>
 <span class="sd">        if analysis_mode == &#39;single&#39;:</span>
-<span class="sd">            1) Numpy array of shape (observations T, variables N)</span>
-<span class="sd">            OR</span>
-<span class="sd">            2) Dictionary with a single entry whose value is a numpy array of</span>
-<span class="sd">            shape (observations T, variables N)</span>
+<span class="sd">         Numpy array of shape (observations T, variables N)</span>
+<span class="sd">         OR</span>
+<span class="sd">         Dictionary with a single entry whose value is a numpy array of</span>
+<span class="sd">         shape (observations T, variables N)</span>
 <span class="sd">        if analysis_mode == &#39;multiple&#39;:</span>
-<span class="sd">            1) Numpy array of shape (multiple datasets M, observations T,</span>
-<span class="sd">            variables N)</span>
-<span class="sd">            OR</span>
-<span class="sd">            2) Dictionary whose values are numpy arrays of shape</span>
-<span class="sd">            (observations T_i, variables N), where the number of observations</span>
-<span class="sd">            T_i may vary across the multiple datasets but the number of variables</span>
-<span class="sd">            N is fixed. </span>
+<span class="sd">         Numpy array of shape (multiple datasets M, observations T,</span>
+<span class="sd">         variables N)</span>
+<span class="sd">         OR</span>
+<span class="sd">         Dictionary whose values are numpy arrays of shape</span>
+<span class="sd">         (observations T_i, variables N), where the number of observations</span>
+<span class="sd">         T_i may vary across the multiple datasets but the number of variables</span>
+<span class="sd">         N is fixed. </span>
 <span class="sd">    mask : array-like, optional (default: None)</span>
 <span class="sd">        Optional mask array, must be of same format and shape as data.</span>
 <span class="sd">    data_type : array-like</span>
@@ -114,18 +114,18 @@
 <span class="sd">        At least one value must be in [0, 1, ..., T_max-1].</span>
 <span class="sd">    time_offsets : None or dict, optional (default: None)</span>
 <span class="sd">        if analysis_mode == &#39;single&#39;:</span>
-<span class="sd">            Must be None.</span>
-<span class="sd">            Shared time axis defined by the time indices of the single time series</span>
+<span class="sd">         Must be None.</span>
+<span class="sd">         Shared time axis defined by the time indices of the single time series</span>
 <span class="sd">        if analysis_mode == &#39;multiple&#39; and data is numpy array:</span>
-<span class="sd">            Must be None.</span>
-<span class="sd">            All datasets are assumed to be already aligned in time with</span>
-<span class="sd">            respect to a shared time axis, which is the time axis of data</span>
+<span class="sd">         Must be None.</span>
+<span class="sd">         All datasets are assumed to be already aligned in time with</span>
+<span class="sd">         respect to a shared time axis, which is the time axis of data</span>
 <span class="sd">        if analysis_mode == &#39;multiple&#39; and data is dictionary:</span>
-<span class="sd">            Must be dictionary of the form {key(m): time_offset(m), ...} whose</span>
-<span class="sd">            set of keys agrees with the set of keys of data and whose values are</span>
-<span class="sd">            non-negative integers, at least one of which is 0. The value</span>
-<span class="sd">            time_offset(m) defines the time offset of dataset m with</span>
-<span class="sd">            respect to a shared time axis.</span>
+<span class="sd">         Must be dictionary of the form {key(m): time_offset(m), ...} whose</span>
+<span class="sd">         set of keys agrees with the set of keys of data and whose values are</span>
+<span class="sd">         non-negative integers, at least one of which is 0. The value</span>
+<span class="sd">         time_offset(m) defines the time offset of dataset m with</span>
+<span class="sd">         respect to a shared time axis.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
@@ -135,16 +135,11 @@
 <span class="sd">    self.values : dictionary</span>
 <span class="sd">        Dictionary holding the observations given by data internally mapped to a</span>
 <span class="sd">        dictionary representation as follows:</span>
-<span class="sd">        If analysis_mode == &#39;single&#39;:</span>
-<span class="sd">            If self._initialized_from == &#39;2d numpy array&#39;:</span>
-<span class="sd">                Is {0: data}</span>
-<span class="sd">            If self._initialized_from == &#39;dict&#39;:</span>
-<span class="sd">                Is data</span>
-<span class="sd">        If analysis_mode == &#39;multiple&#39;:</span>
-<span class="sd">            If self._initialized_from == &#39;3d numpy array&#39;:</span>
-<span class="sd">                Is {m: data[m, :, :] for m in range(data.shape[0])}</span>
-<span class="sd">            If self._initialized_from == &#39;dict&#39;:</span>
-<span class="sd">                Is data</span>
+<span class="sd">        If analysis_mode == &#39;single&#39;: for self._initialized_from == &#39;2d numpy array&#39; this</span>
+<span class="sd">        is {0: data} and for self._initialized_from == &#39;dict&#39; this is data.</span>
+<span class="sd">        If analysis_mode == &#39;multiple&#39;: If self._initialized_from == &#39;3d numpy array&#39;, this is</span>
+<span class="sd">        {m: data[m, :, :] for m in range(data.shape[0])} and for self._initialized_from == &#39;dict&#39; this</span>
+<span class="sd">        is data.</span>
 <span class="sd">    self.datasets: list</span>
 <span class="sd">        List of the keys identifiying the multiple datasets, i.e.,</span>
 <span class="sd">        list(self.values.keys())</span>
@@ -628,44 +623,50 @@
 <span class="sd">            Whether to perform sanity checks on input X,Y,Z</span>
 <span class="sd">        remove_overlaps : bool, optional (default: True)</span>
 <span class="sd">            Whether to remove variables from Z/extraZ if they overlap with X or Y.</span>
-<span class="sd">        cut_off : {&#39;2xtau_max&#39;, &#39;tau_max&#39;, &#39;max_lag&#39;, &#39;max_lag_or_tau_max&#39;,</span>
-<span class="sd">                    2xtau_max_future}</span>
+<span class="sd">        cut_off : {&#39;2xtau_max&#39;, &#39;tau_max&#39;, &#39;max_lag&#39;, &#39;max_lag_or_tau_max&#39;, 2xtau_max_future}</span>
 <span class="sd">            If cut_off == &#39;2xtau_max&#39;:</span>
 <span class="sd">                - 2*tau_max samples are cut off at the beginning of the time</span>
-<span class="sd">                series (&#39;beginning&#39; here refers to the temporally first time</span>
-<span class="sd">                steps). This guarantees that (as long as no mask is used) all</span>
-<span class="sd">                MCI tests are conducted on the same samples, independent of X,</span>
-<span class="sd">                Y, and Z.</span>
+<span class="sd">                  series (&#39;beginning&#39; here refers to the temporally first</span>
+<span class="sd">                  time steps). This guarantees that (as long as no mask is</span>
+<span class="sd">                  used) all MCI tests are conducted on the same samples,</span>
+<span class="sd">                  independent of X, Y, and Z.</span>
+
 <span class="sd">                - If at time step t_missing a data value is missing, then the</span>
-<span class="sd">                time steps t_missing, ..., t_missing + 2*tau_max are cut out.</span>
-<span class="sd">                The latter part only holds if remove_missing_upto_maxlag=True.</span>
+<span class="sd">                  time steps t_missing, ..., t_missing + 2*tau_max are cut</span>
+<span class="sd">                  out. The latter part only holds if</span>
+<span class="sd">                  remove_missing_upto_maxlag=True.</span>
+
 <span class="sd">            If cut_off ==  &#39;max_lag&#39;:</span>
 <span class="sd">                - max_lag(X, Y, Z) samples are cut off at the beginning of the</span>
-<span class="sd">                time series, where max_lag(X, Y, Z) is the maximum lag of all</span>
-<span class="sd">                nodes in X, Y, and Z. These are all samples that can in</span>
-<span class="sd">                principle be used.</span>
+<span class="sd">                  time series, where max_lag(X, Y, Z) is the maximum lag of</span>
+<span class="sd">                  all nodes in X, Y, and Z. These are all samples that can in</span>
+<span class="sd">                  principle be used.</span>
+
 <span class="sd">                - If at time step t_missing a data value is missing, then the</span>
-<span class="sd">                time steps t_missing, ..., t_missing + max_lag(X, Y, Z) are cut</span>
-<span class="sd">                out.</span>
-<span class="sd">                The latter part only holds if remove_missing_upto_maxlag=True.</span>
+<span class="sd">                  time steps t_missing, ..., t_missing + max_lag(X, Y, Z) are</span>
+<span class="sd">                  cut out. The latter part only holds if</span>
+<span class="sd">                  remove_missing_upto_maxlag=True.</span>
+
 <span class="sd">            If cut_off == &#39;max_lag_or_tau_max&#39;:</span>
 <span class="sd">                - max(max_lag(X, Y, Z), tau_max) are cut off at the beginning.</span>
-<span class="sd">                This may be useful for modeling by comparing multiple models on</span>
-<span class="sd">                the same samples. </span>
+<span class="sd">                  This may be useful for modeling by comparing multiple</span>
+<span class="sd">                  models on the same samples. </span>
+
 <span class="sd">                - If at time step t_missing a data value is missing, then the</span>
-<span class="sd">                time steps</span>
-<span class="sd">                t_missing, ..., t_missing + max(max_lag(X, Y, Z), tau_max)</span>
-<span class="sd">                are cut out.</span>
-<span class="sd">                The latter part only holds if remove_missing_upto_maxlag=True.</span>
+<span class="sd">                  time steps t_missing, ..., t_missing + max(max_lag(X, Y,</span>
+<span class="sd">                  Z), tau_max) are cut out. The latter part only holds if</span>
+<span class="sd">                  remove_missing_upto_maxlag=True.</span>
+
 <span class="sd">            If cut_off == &#39;tau_max&#39;:</span>
-<span class="sd">                - tau_max samples are cut off at the beginning.</span>
-<span class="sd">                This may be useful for modeling by comparing multiple models on</span>
-<span class="sd">                the same samples. </span>
+<span class="sd">                - tau_max samples are cut off at the beginning. This may be</span>
+<span class="sd">                  useful for modeling by comparing multiple models on the</span>
+<span class="sd">                  same samples. </span>
+
 <span class="sd">                - If at time step t_missing a data value is missing, then the</span>
-<span class="sd">                time steps</span>
-<span class="sd">                t_missing, ..., t_missing + max(max_lag(X, Y, Z), tau_max)</span>
-<span class="sd">                are cut out.</span>
-<span class="sd">                The latter part only holds if remove_missing_upto_maxlag=True.</span>
+<span class="sd">                  time steps t_missing, ..., t_missing + max(max_lag(X, Y,</span>
+<span class="sd">                  Z), tau_max) are cut out. The latter part only holds if</span>
+<span class="sd">                  remove_missing_upto_maxlag=True.</span>
+<span class="sd">                </span>
 <span class="sd">            If cut_off == &#39;2xtau_max_future&#39;:</span>
 <span class="sd">                First, the relevant time steps are determined as for cut_off ==</span>
 <span class="sd">                &#39;max_lag&#39;. Then, the temporally latest time steps are removed</span>

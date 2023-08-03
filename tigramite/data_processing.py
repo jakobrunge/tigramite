@@ -24,18 +24,18 @@ class DataFrame():
     ----------
     data : array-like
         if analysis_mode == 'single':
-            1) Numpy array of shape (observations T, variables N)
-            OR
-            2) Dictionary with a single entry whose value is a numpy array of
-            shape (observations T, variables N)
+         Numpy array of shape (observations T, variables N)
+         OR
+         Dictionary with a single entry whose value is a numpy array of
+         shape (observations T, variables N)
         if analysis_mode == 'multiple':
-            1) Numpy array of shape (multiple datasets M, observations T,
-            variables N)
-            OR
-            2) Dictionary whose values are numpy arrays of shape
-            (observations T_i, variables N), where the number of observations
-            T_i may vary across the multiple datasets but the number of variables
-            N is fixed. 
+         Numpy array of shape (multiple datasets M, observations T,
+         variables N)
+         OR
+         Dictionary whose values are numpy arrays of shape
+         (observations T_i, variables N), where the number of observations
+         T_i may vary across the multiple datasets but the number of variables
+         N is fixed. 
     mask : array-like, optional (default: None)
         Optional mask array, must be of same format and shape as data.
     data_type : array-like
@@ -80,18 +80,18 @@ class DataFrame():
         At least one value must be in [0, 1, ..., T_max-1].
     time_offsets : None or dict, optional (default: None)
         if analysis_mode == 'single':
-            Must be None.
-            Shared time axis defined by the time indices of the single time series
+         Must be None.
+         Shared time axis defined by the time indices of the single time series
         if analysis_mode == 'multiple' and data is numpy array:
-            Must be None.
-            All datasets are assumed to be already aligned in time with
-            respect to a shared time axis, which is the time axis of data
+         Must be None.
+         All datasets are assumed to be already aligned in time with
+         respect to a shared time axis, which is the time axis of data
         if analysis_mode == 'multiple' and data is dictionary:
-            Must be dictionary of the form {key(m): time_offset(m), ...} whose
-            set of keys agrees with the set of keys of data and whose values are
-            non-negative integers, at least one of which is 0. The value
-            time_offset(m) defines the time offset of dataset m with
-            respect to a shared time axis.
+         Must be dictionary of the form {key(m): time_offset(m), ...} whose
+         set of keys agrees with the set of keys of data and whose values are
+         non-negative integers, at least one of which is 0. The value
+         time_offset(m) defines the time offset of dataset m with
+         respect to a shared time axis.
 
     Attributes
     ----------
@@ -101,16 +101,11 @@ class DataFrame():
     self.values : dictionary
         Dictionary holding the observations given by data internally mapped to a
         dictionary representation as follows:
-        If analysis_mode == 'single':
-            If self._initialized_from == '2d numpy array':
-                Is {0: data}
-            If self._initialized_from == 'dict':
-                Is data
-        If analysis_mode == 'multiple':
-            If self._initialized_from == '3d numpy array':
-                Is {m: data[m, :, :] for m in range(data.shape[0])}
-            If self._initialized_from == 'dict':
-                Is data
+        If analysis_mode == 'single': for self._initialized_from == '2d numpy array' this
+        is {0: data} and for self._initialized_from == 'dict' this is data.
+        If analysis_mode == 'multiple': If self._initialized_from == '3d numpy array', this is
+        {m: data[m, :, :] for m in range(data.shape[0])} and for self._initialized_from == 'dict' this
+        is data.
     self.datasets: list
         List of the keys identifiying the multiple datasets, i.e.,
         list(self.values.keys())
@@ -594,44 +589,50 @@ class DataFrame():
             Whether to perform sanity checks on input X,Y,Z
         remove_overlaps : bool, optional (default: True)
             Whether to remove variables from Z/extraZ if they overlap with X or Y.
-        cut_off : {'2xtau_max', 'tau_max', 'max_lag', 'max_lag_or_tau_max',
-                    2xtau_max_future}
+        cut_off : {'2xtau_max', 'tau_max', 'max_lag', 'max_lag_or_tau_max', 2xtau_max_future}
             If cut_off == '2xtau_max':
                 - 2*tau_max samples are cut off at the beginning of the time
-                series ('beginning' here refers to the temporally first time
-                steps). This guarantees that (as long as no mask is used) all
-                MCI tests are conducted on the same samples, independent of X,
-                Y, and Z.
+                  series ('beginning' here refers to the temporally first
+                  time steps). This guarantees that (as long as no mask is
+                  used) all MCI tests are conducted on the same samples,
+                  independent of X, Y, and Z.
+
                 - If at time step t_missing a data value is missing, then the
-                time steps t_missing, ..., t_missing + 2*tau_max are cut out.
-                The latter part only holds if remove_missing_upto_maxlag=True.
+                  time steps t_missing, ..., t_missing + 2*tau_max are cut
+                  out. The latter part only holds if
+                  remove_missing_upto_maxlag=True.
+
             If cut_off ==  'max_lag':
                 - max_lag(X, Y, Z) samples are cut off at the beginning of the
-                time series, where max_lag(X, Y, Z) is the maximum lag of all
-                nodes in X, Y, and Z. These are all samples that can in
-                principle be used.
+                  time series, where max_lag(X, Y, Z) is the maximum lag of
+                  all nodes in X, Y, and Z. These are all samples that can in
+                  principle be used.
+
                 - If at time step t_missing a data value is missing, then the
-                time steps t_missing, ..., t_missing + max_lag(X, Y, Z) are cut
-                out.
-                The latter part only holds if remove_missing_upto_maxlag=True.
+                  time steps t_missing, ..., t_missing + max_lag(X, Y, Z) are
+                  cut out. The latter part only holds if
+                  remove_missing_upto_maxlag=True.
+
             If cut_off == 'max_lag_or_tau_max':
                 - max(max_lag(X, Y, Z), tau_max) are cut off at the beginning.
-                This may be useful for modeling by comparing multiple models on
-                the same samples. 
+                  This may be useful for modeling by comparing multiple
+                  models on the same samples. 
+
                 - If at time step t_missing a data value is missing, then the
-                time steps
-                t_missing, ..., t_missing + max(max_lag(X, Y, Z), tau_max)
-                are cut out.
-                The latter part only holds if remove_missing_upto_maxlag=True.
+                  time steps t_missing, ..., t_missing + max(max_lag(X, Y,
+                  Z), tau_max) are cut out. The latter part only holds if
+                  remove_missing_upto_maxlag=True.
+
             If cut_off == 'tau_max':
-                - tau_max samples are cut off at the beginning.
-                This may be useful for modeling by comparing multiple models on
-                the same samples. 
+                - tau_max samples are cut off at the beginning. This may be
+                  useful for modeling by comparing multiple models on the
+                  same samples. 
+
                 - If at time step t_missing a data value is missing, then the
-                time steps
-                t_missing, ..., t_missing + max(max_lag(X, Y, Z), tau_max)
-                are cut out.
-                The latter part only holds if remove_missing_upto_maxlag=True.
+                  time steps t_missing, ..., t_missing + max(max_lag(X, Y,
+                  Z), tau_max) are cut out. The latter part only holds if
+                  remove_missing_upto_maxlag=True.
+                
             If cut_off == '2xtau_max_future':
                 First, the relevant time steps are determined as for cut_off ==
                 'max_lag'. Then, the temporally latest time steps are removed

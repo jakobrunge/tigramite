@@ -48,72 +48,74 @@
 
 
 <div class="viewcode-block" id="JPCMCIplus"><a class="viewcode-back" href="../../index.html#tigramite.jpcmciplus.JPCMCIplus">[docs]</a><span class="k">class</span> <span class="nc">JPCMCIplus</span><span class="p">(</span><span class="n">PCMCI</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;J-PCMCI+ causal discovery for time series datasets from multiple contexts.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;J-PCMCIplus causal discovery for time series datasets from multiple contexts.</span>
 <span class="sd">        </span>
-<span class="sd">        This class is based on the PCMCI framework as described in [1]_.</span>
-<span class="sd">        JPCMCIplus enables causal discovery for time series data from different contexts,</span>
-<span class="sd">        i.e. datasets, where some of the variables describing the context might be unobserved.</span>
-<span class="sd">        The method is described in detail in [10]_.</span>
-<span class="sd">        See the tutorial for guidance in applying the method.</span>
+<span class="sd">    This class is based on the PCMCI framework as described in</span>
+<span class="sd">    [1]. JPCMCIplus enables causal discovery for time series data from</span>
+<span class="sd">    different contexts, i.e. datasets, where some of the variables</span>
+<span class="sd">    describing the context might be unobserved. The method is described</span>
+<span class="sd">    in detail in [10]. See the tutorial for guidance in applying the</span>
+<span class="sd">    method.</span>
 
-<span class="sd">        References</span>
-<span class="sd">        ----------</span>
-<span class="sd">        .. [1] J. Runge, P. Nowack, M. Kretschmer, S. Flaxman, D. Sejdinovic,</span>
-<span class="sd">               Detecting and quantifying causal associations in large nonlinear time</span>
-<span class="sd">               series datasets. Sci. Adv. 5, eaau4996 (2019)</span>
-<span class="sd">               https://advances.sciencemag.org/content/5/11/eaau4996</span>
-<span class="sd">        .. [10] W. Günther, U. Ninad, J. Runge,</span>
-<span class="sd">               Causal discovery for time series from multiple datasets with latent contexts. UAI 2023</span>
-<span class="sd">        </span>
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        node_classification : dictionary</span>
-<span class="sd">            Classification of nodes into system, context, or dummy nodes.</span>
-<span class="sd">            Keys of the dictionary are from {0, ..., N-1} where N is the number of nodes.</span>
-<span class="sd">            Options for the values are &quot;system&quot;, &quot;time_context&quot;, &quot;space_context&quot;, &quot;time_dummy&quot;, or &quot;space_dummy&quot;.</span>
-<span class="sd">        </span>
-<span class="sd">        Attributes</span>
-<span class="sd">        ----------</span>
-<span class="sd">        all_parents : dictionary</span>
-<span class="sd">            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing</span>
-<span class="sd">            the conditioning-parents estimated with PC algorithm.</span>
-<span class="sd">        val_min : dictionary</span>
-<span class="sd">            Dictionary of form val_min[j][(i, -tau)] = float</span>
-<span class="sd">            containing the minimum test statistic value for each link estimated in</span>
-<span class="sd">            the PC algorithm.</span>
-<span class="sd">        pval_max : dictionary</span>
-<span class="sd">            Dictionary of form pval_max[j][(i, -tau)] = float containing the maximum</span>
-<span class="sd">            p-value for each link estimated in the PC algorithm.</span>
-<span class="sd">        iterations : dictionary</span>
-<span class="sd">            Dictionary containing further information on algorithm steps.</span>
-<span class="sd">        N : int</span>
-<span class="sd">            Number of variables.</span>
-<span class="sd">        T : dict</span>
-<span class="sd">            Time series sample length of dataset(s).</span>
-<span class="sd">        dummy_parents : dictionary or None</span>
-<span class="sd">            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing</span>
-<span class="sd">            the dependence of the system nodes on the dummy nodes.</span>
-<span class="sd">        observed_context_parents : dictionary or None</span>
-<span class="sd">            Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing</span>
-<span class="sd">            the dependence of the system nodes on the observed context nodes.</span>
-<span class="sd">        dummy_ci_test : conditional independence test object</span>
-<span class="sd">            Conditional independence test used to test dependence between system nodes and dummy nodes.</span>
-<span class="sd">            Currently, ParCorr is used with one-hot encoded dummies.</span>
-<span class="sd">        mode : &quot;system_search&quot; or &quot;context_search&quot; or &quot;dummy_search&quot; (default: &quot;system_search&quot;)</span>
-<span class="sd">        time_context_nodes : list</span>
-<span class="sd">            List with entries from {0, ..., N-1} where N is the number of nodes.</span>
-<span class="sd">            This is the list of the temporal context nodes which are assumed to be constant over the different datasets.</span>
-<span class="sd">        space_context_nodes :</span>
-<span class="sd">            List with entries from {0, ..., N-1} where N is the number of nodes.</span>
-<span class="sd">            This is the list of the spatial context nodes which are assumed to be constant over time.</span>
-<span class="sd">        time_dummy : int or None (default: None)</span>
-<span class="sd">            Node corresponding to the temporal dummy variable.</span>
-<span class="sd">        space_dummy : int or None (default: None)</span>
-<span class="sd">            Node corresponding to the spatial dummy variable.</span>
-<span class="sd">        system_nodes : list</span>
-<span class="sd">            List with entries from {0, ..., N-1} where N is the number of nodes.</span>
-<span class="sd">            This is the list of the system nodes.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] J. Runge, P. Nowack, M. Kretschmer, S. Flaxman, D. Sejdinovic,</span>
+<span class="sd">       Detecting and quantifying causal associations in large nonlinear</span>
+<span class="sd">       time series datasets. Sci. Adv. 5, eaau4996</span>
+<span class="sd">       (2019) https://advances.sciencemag.org/content/5/11/eaau4996</span>
+<span class="sd">    </span>
+<span class="sd">    .. [10] W. Günther, U. Ninad, J. Runge, Causal discovery for time</span>
+<span class="sd">       series from multiple datasets with latent contexts. UAI 2023</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    node_classification : dictionary</span>
+<span class="sd">        Classification of nodes into system, context, or dummy nodes.</span>
+<span class="sd">        Keys of the dictionary are from {0, ..., N-1} where N is the number of nodes.</span>
+<span class="sd">        Options for the values are &quot;system&quot;, &quot;time_context&quot;, &quot;space_context&quot;, &quot;time_dummy&quot;, or &quot;space_dummy&quot;.</span>
+<span class="sd">    </span>
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    all_parents : dictionary</span>
+<span class="sd">        Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing</span>
+<span class="sd">        the conditioning-parents estimated with PC algorithm.</span>
+<span class="sd">    val_min : dictionary</span>
+<span class="sd">        Dictionary of form val_min[j][(i, -tau)] = float</span>
+<span class="sd">        containing the minimum test statistic value for each link estimated in</span>
+<span class="sd">        the PC algorithm.</span>
+<span class="sd">    pval_max : dictionary</span>
+<span class="sd">        Dictionary of form pval_max[j][(i, -tau)] = float containing the maximum</span>
+<span class="sd">        p-value for each link estimated in the PC algorithm.</span>
+<span class="sd">    iterations : dictionary</span>
+<span class="sd">        Dictionary containing further information on algorithm steps.</span>
+<span class="sd">    N : int</span>
+<span class="sd">        Number of variables.</span>
+<span class="sd">    T : dict</span>
+<span class="sd">        Time series sample length of dataset(s).</span>
+<span class="sd">    dummy_parents : dictionary or None</span>
+<span class="sd">        Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing</span>
+<span class="sd">        the dependence of the system nodes on the dummy nodes.</span>
+<span class="sd">    observed_context_parents : dictionary or None</span>
+<span class="sd">        Dictionary of form {0:[(0, -1), (3, -2), ...], 1:[], ...} containing</span>
+<span class="sd">        the dependence of the system nodes on the observed context nodes.</span>
+<span class="sd">    dummy_ci_test : conditional independence test object</span>
+<span class="sd">        Conditional independence test used to test dependence between system nodes and dummy nodes.</span>
+<span class="sd">        Currently, ParCorr is used with one-hot encoded dummies.</span>
+<span class="sd">    mode : &quot;system_search&quot; or &quot;context_search&quot; or &quot;dummy_search&quot; (default: &quot;system_search&quot;)</span>
+<span class="sd">    time_context_nodes : list</span>
+<span class="sd">        List with entries from {0, ..., N-1} where N is the number of nodes.</span>
+<span class="sd">        This is the list of the temporal context nodes which are assumed to be constant over the different datasets.</span>
+<span class="sd">    space_context_nodes :</span>
+<span class="sd">        List with entries from {0, ..., N-1} where N is the number of nodes.</span>
+<span class="sd">        This is the list of the spatial context nodes which are assumed to be constant over time.</span>
+<span class="sd">    time_dummy : int or None (default: None)</span>
+<span class="sd">        Node corresponding to the temporal dummy variable.</span>
+<span class="sd">    space_dummy : int or None (default: None)</span>
+<span class="sd">        Node corresponding to the spatial dummy variable.</span>
+<span class="sd">    system_nodes : list</span>
+<span class="sd">        List with entries from {0, ..., N-1} where N is the number of nodes.</span>
+<span class="sd">        This is the list of the system nodes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_classification</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="c1"># Init base class</span>
@@ -147,14 +149,15 @@
                        <span class="n">max_conds_px</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                        <span class="n">max_conds_px_lagged</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                        <span class="n">fdr_method</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Runs JPCMCIplus time-lagged and contemporaneous causal discovery for time series from multiple contexts.</span>
-<span class="sd">        Method described in [10]_:</span>
-<span class="sd">            W. Günther, U. Ninad, J. Runge,</span>
-<span class="sd">            Causal discovery for time series from multiple datasets with latent contexts. UAI 2023</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Runs JPCMCIplus time-lagged and contemporaneous causal discovery for time series from multiple contexts.</span>
+<span class="sd">        </span>
+<span class="sd">        Method described in: W. Günther, U. Ninad, J. Runge, Causal discovery</span>
+<span class="sd">        for time series from multiple datasets with latent contexts. UAI</span>
+<span class="sd">        2023</span>
+<span class="sd">        </span>
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
-<span class="sd">        The JPCMCIplus causal discovery method is described in [10]_, where</span>
+<span class="sd">        The JPCMCIplus causal discovery method is described in [10], where</span>
 <span class="sd">        also analytical and numerical results are presented. JPCMCIplus can identify the joint causal graph</span>
 <span class="sd">        over multiple datasets containing time series data from different contexts under the standard assumptions</span>
 <span class="sd">        of Causal Sufficiency, Faithfulness and the Markov condition, as well as some background knowledge assumptions.</span>
