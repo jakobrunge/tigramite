@@ -83,9 +83,9 @@
 
 <span class="sd">    PCMCI is a causal discovery framework for large-scale time series</span>
 <span class="sd">    datasets. This class contains several methods. The standard PCMCI method</span>
-<span class="sd">    addresses time-lagged causal discovery and is described in [1]_ where</span>
+<span class="sd">    addresses time-lagged causal discovery and is described in Ref [1] where</span>
 <span class="sd">    also further sub-variants are discussed. Lagged as well as contemporaneous</span>
-<span class="sd">    causal discovery is addressed with PCMCIplus and described in [5]_. See the</span>
+<span class="sd">    causal discovery is addressed with PCMCIplus and described in [5]. See the</span>
 <span class="sd">    tutorials for guidance in applying these methods.</span>
 
 <span class="sd">    PCMCI has:</span>
@@ -130,12 +130,12 @@
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
 
-<span class="sd">    .. [1] J. Runge, P. Nowack, M. Kretschmer, S. Flaxman, D. Sejdinovic,</span>
+<span class="sd">    [1] J. Runge, P. Nowack, M. Kretschmer, S. Flaxman, D. Sejdinovic,</span>
 <span class="sd">           Detecting and quantifying causal associations in large nonlinear time </span>
 <span class="sd">           series datasets. Sci. Adv. 5, eaau4996 (2019) </span>
 <span class="sd">           https://advances.sciencemag.org/content/5/11/eaau4996</span>
 
-<span class="sd">    .. [5] J. Runge,</span>
+<span class="sd">    [5] J. Runge,</span>
 <span class="sd">           Discovering contemporaneous and lagged causal relations in </span>
 <span class="sd">           autocorrelated nonlinear time series datasets</span>
 <span class="sd">           http://www.auai.org/~w-auai/uai2020/proceedings/579_main_paper.pdf</span>
@@ -1996,13 +1996,17 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Runs PCMCIplus time-lagged and contemporaneous causal discovery for</span>
 <span class="sd">        time series.</span>
 
-<span class="sd">        Method described in [5]_: </span>
+<span class="sd">        Method described in [5]: </span>
+<span class="sd">        http://www.auai.org/~w-auai/uai2020/proceedings/579_main_paper.pdf</span>
+
+<span class="sd">        [5] J. Runge, Discovering contemporaneous and lagged causal relations</span>
+<span class="sd">        in autocorrelated nonlinear time series datasets</span>
 <span class="sd">        http://www.auai.org/~w-auai/uai2020/proceedings/579_main_paper.pdf</span>
 
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
 
-<span class="sd">        The PCMCIplus causal discovery method is described in [5]_, where</span>
+<span class="sd">        The PCMCIplus causal discovery method is described in [5], where</span>
 <span class="sd">        also analytical and numerical results are presented. In contrast to</span>
 <span class="sd">        PCMCI, PCMCIplus can identify the full, lagged and contemporaneous,</span>
 <span class="sd">        causal graph (up to the Markov equivalence class for contemporaneous</span>
@@ -2097,7 +2101,7 @@
 <span class="sd">        which improves detection power for lagged links, but also leads to</span>
 <span class="sd">        larger runtimes.</span>
 
-<span class="sd">        Further optional parameters are discussed in [5]_.</span>
+<span class="sd">        Further optional parameters are discussed in [5].</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -2564,8 +2568,12 @@
 <span class="sd">        discovery for time series.</span>
 
 <span class="sd">        For ``mode=&#39;contemp_conds&#39;`` this implements Steps 2-4 of the</span>
-<span class="sd">        PCMCIplus method described in [5]_. For ``mode=&#39;standard&#39;`` this</span>
+<span class="sd">        PCMCIplus method described in [5]. For ``mode=&#39;standard&#39;`` this</span>
 <span class="sd">        implements the standard PC algorithm adapted to time series.</span>
+
+<span class="sd">        [5] J. Runge, Discovering contemporaneous and lagged causal relations</span>
+<span class="sd">        in autocorrelated nonlinear time series datasets</span>
+<span class="sd">        http://www.auai.org/~w-auai/uai2020/proceedings/579_main_paper.pdf</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>

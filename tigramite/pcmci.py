@@ -49,9 +49,9 @@ class PCMCI(PCMCIbase):
 
     PCMCI is a causal discovery framework for large-scale time series
     datasets. This class contains several methods. The standard PCMCI method
-    addresses time-lagged causal discovery and is described in [1]_ where
+    addresses time-lagged causal discovery and is described in Ref [1] where
     also further sub-variants are discussed. Lagged as well as contemporaneous
-    causal discovery is addressed with PCMCIplus and described in [5]_. See the
+    causal discovery is addressed with PCMCIplus and described in [5]. See the
     tutorials for guidance in applying these methods.
 
     PCMCI has:
@@ -96,12 +96,12 @@ class PCMCI(PCMCIbase):
     References
     ----------
 
-    .. [1] J. Runge, P. Nowack, M. Kretschmer, S. Flaxman, D. Sejdinovic,
+    [1] J. Runge, P. Nowack, M. Kretschmer, S. Flaxman, D. Sejdinovic,
            Detecting and quantifying causal associations in large nonlinear time 
            series datasets. Sci. Adv. 5, eaau4996 (2019) 
            https://advances.sciencemag.org/content/5/11/eaau4996
 
-    .. [5] J. Runge,
+    [5] J. Runge,
            Discovering contemporaneous and lagged causal relations in 
            autocorrelated nonlinear time series datasets
            http://www.auai.org/~w-auai/uai2020/proceedings/579_main_paper.pdf
@@ -1962,13 +1962,17 @@ class PCMCI(PCMCIbase):
         """Runs PCMCIplus time-lagged and contemporaneous causal discovery for
         time series.
 
-        Method described in [5]_: 
+        Method described in [5]: 
+        http://www.auai.org/~w-auai/uai2020/proceedings/579_main_paper.pdf
+
+        [5] J. Runge, Discovering contemporaneous and lagged causal relations
+        in autocorrelated nonlinear time series datasets
         http://www.auai.org/~w-auai/uai2020/proceedings/579_main_paper.pdf
 
         Notes
         -----
 
-        The PCMCIplus causal discovery method is described in [5]_, where
+        The PCMCIplus causal discovery method is described in [5], where
         also analytical and numerical results are presented. In contrast to
         PCMCI, PCMCIplus can identify the full, lagged and contemporaneous,
         causal graph (up to the Markov equivalence class for contemporaneous
@@ -2063,7 +2067,7 @@ class PCMCI(PCMCIbase):
         which improves detection power for lagged links, but also leads to
         larger runtimes.
 
-        Further optional parameters are discussed in [5]_.
+        Further optional parameters are discussed in [5].
 
         Parameters
         ----------
@@ -2530,8 +2534,12 @@ class PCMCI(PCMCIbase):
         discovery for time series.
 
         For ``mode='contemp_conds'`` this implements Steps 2-4 of the
-        PCMCIplus method described in [5]_. For ``mode='standard'`` this
+        PCMCIplus method described in [5]. For ``mode='standard'`` this
         implements the standard PC algorithm adapted to time series.
+
+        [5] J. Runge, Discovering contemporaneous and lagged causal relations
+        in autocorrelated nonlinear time series datasets
+        http://www.auai.org/~w-auai/uai2020/proceedings/579_main_paper.pdf
 
         Parameters
         ----------

@@ -15,56 +15,56 @@ from .independence_tests_base import CondIndTest
 class RobustParCorr(CondIndTest):
     r"""Robust partial correlation test based on non-paranormal models.
 
-    Partial correlation is estimated through transformation to standard
-    normal marginals, ordinary least squares (OLS) regression, and a test for
-    non-zero linear Pearson correlation on the residuals.
+        Partial correlation is estimated through transformation to standard
+        normal marginals, ordinary least squares (OLS) regression, and a test for
+        non-zero linear Pearson correlation on the residuals.
 
-    Notes
-    -----
-    To test :math:`X \perp Y | Z`, firstly, each marginal is transformed to be
-    standard normally distributed. For that, the transform
-    :math:`\Phi^{-1}\circ\hat{F}` is used. Here, :math:`\Phi^{-1}` is the
-     quantile function of a standard normal distribution and 
-     :math:`\hat{F}` is the empirical distribution function for the respective
-     marginal.
+        Notes
+        -----
+        To test :math:`X \perp Y | Z`, firstly, each marginal is transformed to be
+        standard normally distributed. For that, the transform
+        :math:`\Phi^{-1}\circ\hat{F}` is used. Here, :math:`\Phi^{-1}` is the
+        quantile function of a standard normal distribution and 
+        :math:`\hat{F}` is the empirical distribution function for the respective
+        marginal.
 
 
-    This idea stems from the literature on nonparanormal models, see:
+        This idea stems from the literature on nonparanormal models, see:
 
-    - Han Liu, John Lafferty, and Larry Wasserman. The nonparanormal:
-      semiparametric estimation of high dimensional undirected graphs. J.
-      Mach. Learn. Res., 10:2295–2328, 2009.
+        - Han Liu, John Lafferty, and Larry Wasserman. The nonparanormal:
+          semiparametric estimation of high dimensional undirected graphs. J.
+          Mach. Learn. Res., 10:2295–2328, 2009.
 
-    - Han Liu, Fang Han, Ming Yuan, John Lafferty, and Larry Wasserman.
-      High-dimensional semiparametric Gaussian copula graphical models. Ann.
-      Statist., 40(4):2293–2326, 2012a.
+        - Han Liu, Fang Han, Ming Yuan, John Lafferty, and Larry Wasserman.
+          High-dimensional semiparametric Gaussian copula graphical models. Ann.
+          Statist., 40(4):2293–2326, 2012a.
 
-    - Naftali Harris, Mathias Drton. PC Algorithm for Nonparanormal Graphical
-      Models. Journal of Machine Learning Research, 14: 3365-3383, 2013.
+        - Naftali Harris, Mathias Drton. PC Algorithm for Nonparanormal Graphical
+          Models. Journal of Machine Learning Research, 14: 3365-3383, 2013.
 
-    Afterwards (where Z, X, and Y are now assumed to be transformed to the
-    standard normal scale):
+        Afterwards (where Z, X, and Y are now assumed to be transformed to the
+        standard normal scale):
 
-    :math:`Z` is regressed out from
-    :math:`X` and :math:`Y` assuming the  model
+        :math:`Z` is regressed out from
+        :math:`X` and :math:`Y` assuming the  model
 
-    .. math::  X & =  Z \beta_X + \epsilon_{X} \\
-        Y & =  Z \beta_Y + \epsilon_{Y}
+        .. math::  X & =  Z \beta_X + \epsilon_{X} \\
+            Y & =  Z \beta_Y + \epsilon_{Y}
 
-    using OLS regression. Then the dependency of the residuals is tested with
-    the Pearson correlation test.
+        using OLS regression. Then the dependency of the residuals is tested with
+        the Pearson correlation test.
 
-    .. math::  \rho\left(r_X, r_Y\right)
+        .. math::  \rho\left(r_X, r_Y\right)
 
-    For the ``significance='analytic'`` Student's-*t* distribution with
-    :math:`T-D_Z-2` degrees of freedom is implemented.
+        For the ``significance='analytic'`` Student's-*t* distribution with
+        :math:`T-D_Z-2` degrees of freedom is implemented.
 
-    Parameters
-    ----------
-    **kwargs :
-        Arguments passed on to Parent class CondIndTest.
+        Parameters
+        ----------
+        **kwargs :
+            Arguments passed on to Parent class CondIndTest.
     """
-    # documentation
+
     @property
     def measure(self):
         """

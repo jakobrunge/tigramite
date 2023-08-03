@@ -49,56 +49,56 @@
 <div class="viewcode-block" id="RobustParCorr"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.robust_parcorr.RobustParCorr">[docs]</a><span class="k">class</span> <span class="nc">RobustParCorr</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Robust partial correlation test based on non-paranormal models.</span>
 
-<span class="sd">    Partial correlation is estimated through transformation to standard</span>
-<span class="sd">    normal marginals, ordinary least squares (OLS) regression, and a test for</span>
-<span class="sd">    non-zero linear Pearson correlation on the residuals.</span>
+<span class="sd">        Partial correlation is estimated through transformation to standard</span>
+<span class="sd">        normal marginals, ordinary least squares (OLS) regression, and a test for</span>
+<span class="sd">        non-zero linear Pearson correlation on the residuals.</span>
 
-<span class="sd">    Notes</span>
-<span class="sd">    -----</span>
-<span class="sd">    To test :math:`X \perp Y | Z`, firstly, each marginal is transformed to be</span>
-<span class="sd">    standard normally distributed. For that, the transform</span>
-<span class="sd">    :math:`\Phi^{-1}\circ\hat{F}` is used. Here, :math:`\Phi^{-1}` is the</span>
-<span class="sd">     quantile function of a standard normal distribution and </span>
-<span class="sd">     :math:`\hat{F}` is the empirical distribution function for the respective</span>
-<span class="sd">     marginal.</span>
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        To test :math:`X \perp Y | Z`, firstly, each marginal is transformed to be</span>
+<span class="sd">        standard normally distributed. For that, the transform</span>
+<span class="sd">        :math:`\Phi^{-1}\circ\hat{F}` is used. Here, :math:`\Phi^{-1}` is the</span>
+<span class="sd">        quantile function of a standard normal distribution and </span>
+<span class="sd">        :math:`\hat{F}` is the empirical distribution function for the respective</span>
+<span class="sd">        marginal.</span>
 
 
-<span class="sd">    This idea stems from the literature on nonparanormal models, see:</span>
+<span class="sd">        This idea stems from the literature on nonparanormal models, see:</span>
 
-<span class="sd">    - Han Liu, John Lafferty, and Larry Wasserman. The nonparanormal:</span>
-<span class="sd">      semiparametric estimation of high dimensional undirected graphs. J.</span>
-<span class="sd">      Mach. Learn. Res., 10:2295–2328, 2009.</span>
+<span class="sd">        - Han Liu, John Lafferty, and Larry Wasserman. The nonparanormal:</span>
+<span class="sd">          semiparametric estimation of high dimensional undirected graphs. J.</span>
+<span class="sd">          Mach. Learn. Res., 10:2295–2328, 2009.</span>
 
-<span class="sd">    - Han Liu, Fang Han, Ming Yuan, John Lafferty, and Larry Wasserman.</span>
-<span class="sd">      High-dimensional semiparametric Gaussian copula graphical models. Ann.</span>
-<span class="sd">      Statist., 40(4):2293–2326, 2012a.</span>
+<span class="sd">        - Han Liu, Fang Han, Ming Yuan, John Lafferty, and Larry Wasserman.</span>
+<span class="sd">          High-dimensional semiparametric Gaussian copula graphical models. Ann.</span>
+<span class="sd">          Statist., 40(4):2293–2326, 2012a.</span>
 
-<span class="sd">    - Naftali Harris, Mathias Drton. PC Algorithm for Nonparanormal Graphical</span>
-<span class="sd">      Models. Journal of Machine Learning Research, 14: 3365-3383, 2013.</span>
+<span class="sd">        - Naftali Harris, Mathias Drton. PC Algorithm for Nonparanormal Graphical</span>
+<span class="sd">          Models. Journal of Machine Learning Research, 14: 3365-3383, 2013.</span>
 
-<span class="sd">    Afterwards (where Z, X, and Y are now assumed to be transformed to the</span>
-<span class="sd">    standard normal scale):</span>
+<span class="sd">        Afterwards (where Z, X, and Y are now assumed to be transformed to the</span>
+<span class="sd">        standard normal scale):</span>
 
-<span class="sd">    :math:`Z` is regressed out from</span>
-<span class="sd">    :math:`X` and :math:`Y` assuming the  model</span>
+<span class="sd">        :math:`Z` is regressed out from</span>
+<span class="sd">        :math:`X` and :math:`Y` assuming the  model</span>
 
-<span class="sd">    .. math::  X &amp; =  Z \beta_X + \epsilon_{X} \\</span>
-<span class="sd">        Y &amp; =  Z \beta_Y + \epsilon_{Y}</span>
+<span class="sd">        .. math::  X &amp; =  Z \beta_X + \epsilon_{X} \\</span>
+<span class="sd">            Y &amp; =  Z \beta_Y + \epsilon_{Y}</span>
 
-<span class="sd">    using OLS regression. Then the dependency of the residuals is tested with</span>
-<span class="sd">    the Pearson correlation test.</span>
+<span class="sd">        using OLS regression. Then the dependency of the residuals is tested with</span>
+<span class="sd">        the Pearson correlation test.</span>
 
-<span class="sd">    .. math::  \rho\left(r_X, r_Y\right)</span>
+<span class="sd">        .. math::  \rho\left(r_X, r_Y\right)</span>
 
-<span class="sd">    For the ``significance=&#39;analytic&#39;`` Student&#39;s-*t* distribution with</span>
-<span class="sd">    :math:`T-D_Z-2` degrees of freedom is implemented.</span>
+<span class="sd">        For the ``significance=&#39;analytic&#39;`` Student&#39;s-*t* distribution with</span>
+<span class="sd">        :math:`T-D_Z-2` degrees of freedom is implemented.</span>
 
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    **kwargs :</span>
-<span class="sd">        Arguments passed on to Parent class CondIndTest.</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        **kwargs :</span>
+<span class="sd">            Arguments passed on to Parent class CondIndTest.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># documentation</span>
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">measure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
