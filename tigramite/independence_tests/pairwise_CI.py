@@ -76,7 +76,6 @@ class PairwiseMultCI(CondIndTest):
         self.alpha_pre = alpha_pre
         self.pre_step_sample_fraction = pre_step_sample_fraction
         self.fixed_thres_pre = fixed_thres_pre
-        self.already_calculated = False
         self.two_sided = False
         CondIndTest.__init__(self, **kwargs)
 
@@ -110,12 +109,14 @@ class PairwiseMultCI(CondIndTest):
         fixed_thres_bool = False
         if self.significance == "fixed_thres":
             fixed_thres_bool = True
+            self.cond_ind_test.significance = "fixed_thres"
         if self.cond_ind_test.significance == "fixed_thres":
             fixed_thres_bool = True
             self.significance = "fixed_thres"
 
         if (fixed_thres_bool) and (self.fixed_thres_pre == None):
-            raise ValueError("A fixed threshold for the pre-step needs to be defined.")
+            raise ValueError("If significance == 'fixed_thres', fixed_thres_pre for the"
+                             " pre-step needs to be defined in initializing PairwiseMultCI.")
 
         x_indices = np.where(xyz == 0)[0]
         y_indices = np.where(xyz == 1)[0]
@@ -188,7 +189,7 @@ class PairwiseMultCI(CondIndTest):
                                                                    x_type = x_type_s1,
                                                                    y_type = y_type_s1,
                                                                    z_type = z_type_s1,
-                                                                   calculate_pval = False)[0].astype(int)
+                                                                   alpha_or_thres=999.)[0] # just a dummy
         if fixed_thres_bool == False:
             indep_set = np.where(p_vals_pre > self.alpha_pre)
         else:
@@ -234,7 +235,7 @@ class PairwiseMultCI(CondIndTest):
                                                         x_type = x_type_s2,
                                                         y_type = y_type_s2,
                                                         z_type = z_type_s2,
-                                                        calculate_pval = False)
+                                                        alpha_or_thres=999.) # just a dummy
                     elif (lix <= liy):
                         if y_type_s2 is not None:
                             z_type_s2 = np.hstack((z_type_s2, y_type_s2[:, indicesY]))
@@ -254,7 +255,7 @@ class PairwiseMultCI(CondIndTest):
                                                         x_type = x_type_s2,
                                                         y_type = y_type_s2,
                                                         z_type = z_type_s2,
-                                                        calculate_pval = False)
+                                                        alpha_or_thres=999.) # just a dummy
 
                 else:
                     if fixed_thres_bool == False:
@@ -271,18 +272,19 @@ class PairwiseMultCI(CondIndTest):
                                                                       x_type = x_type_s2,
                                                                       y_type = y_type_s2,
                                                                       z_type = z_type_s2,
-                                                                      calculate_pval = False)
+                                                                      alpha_or_thres=999.) # just a dummy
+                
                 test_stats_main[j, jj] = test_result[0]
                 if fixed_thres_bool == False:
                     p_vals_main[j, jj] = test_result[1]
 
 
-        # aggregate p-values
+        # Aggregate p-values
         test_stats_aggregated = np.max(np.abs(test_stats_main))
         if self.cond_ind_test.significance != "fixed_thres":
             p_aggregated = np.min(np.array([np.min(p_vals_main) * dim_x * dim_y, 1]))
         else:
-           p_aggregated = None
+            p_aggregated = None
 
         return test_stats_aggregated, p_aggregated
 
