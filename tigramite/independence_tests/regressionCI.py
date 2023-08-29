@@ -105,10 +105,11 @@ class RegressionCI(CondIndTest):
 
         def convert_to_one_hot(data, nb_classes):
             """Convert an iterable of indices to one-hot encoded labels."""
-            
-            targets = np.array(data).reshape(-1)
+            targets = np.array(data).reshape(-1).tolist()
             # categories need to be mapped to 0, 1, ... in this function
-            targets = targets - np.min(targets)
+            s = sorted(set(targets))
+            targets = [s.index(i) for i in targets]
+            targets = np.array(targets)
             return np.eye(nb_classes)[targets]
 
         def do_componentwise_one_hot_encoding(X, var_type):
