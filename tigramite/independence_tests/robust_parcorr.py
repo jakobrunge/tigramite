@@ -19,6 +19,9 @@ class RobustParCorr(CondIndTest):
         normal marginals, ordinary least squares (OLS) regression, and a test for
         non-zero linear Pearson correlation on the residuals.
 
+        Assumes one-dimensional X, Y. But can be combined with PairwiseMultCI to
+        obtain a test for multivariate X, Y.
+
         Notes
         -----
         To test :math:`X \perp Y | Z`, firstly, each marginal is transformed to be

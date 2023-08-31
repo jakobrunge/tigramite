@@ -35,6 +35,9 @@ class ParCorr(CondIndTest):
     For the ``significance='analytic'`` Student's-*t* distribution with
     :math:`T-D_Z-2` degrees of freedom is implemented.
 
+    Assumes one-dimensional X, Y.Use ParCorrMult for multivariate X, Y.
+
+
     Parameters
     ----------
     **kwargs :

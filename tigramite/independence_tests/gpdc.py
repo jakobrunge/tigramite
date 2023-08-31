@@ -27,6 +27,9 @@ class GaussProcReg():
     a \*.npz file containing the null distribution for different sample sizes.
     This file can then be supplied as null_dist_filename.
 
+    Assumes one-dimensional X, Y. But can be combined with PairwiseMultCI to
+    obtain a test for multivariate X, Y.
+
     Parameters
     ----------
     null_samples : int

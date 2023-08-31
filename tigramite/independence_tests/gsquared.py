@@ -23,7 +23,8 @@ class Gsquared(CondIndTest):
     above 1000-2000 samples (depends on data). For smaller sample sizes use the
     CMIsymb class which includes a local permutation test.
 
-    Assumes one-dimensional X, Y.
+    Assumes one-dimensional X, Y. But can be combined with PairwiseMultCI to
+    obtain a test for multivariate X, Y.
 
     This method requires the scipy.stats package.
 
