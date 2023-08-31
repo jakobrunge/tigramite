@@ -17,7 +17,19 @@ from .independence_tests_base import CondIndTest
 class RegressionCI(CondIndTest):
     r"""Flexible parametric conditional independence tests for continuous, categorical, or mixed data.
 
-    Assumes one-dimensional X, Y.
+    Asymptotically equivalent to the tests for mixed data suggested in
+
+    Tsagris, Michail, et al. "Constraint-based causal discovery with mixed
+    data." International journal of data science and analytics 6
+    (2018): 19-30.
+
+    For linear regression RegressionCI implements a likelihood ratio test,
+    while the above employs a F-statistic. Furthermore, while our
+    implementation utilizes the Chi^2 null distribution, theirs uses the
+    F-distribution. 
+
+    Assumes one-dimensional X, Y. But can be combined with PairwiseMultCI to
+    obtain a test for multivariate X, Y.
 
     Notes
     -----
