@@ -38,6 +38,11 @@ class PairwiseMultCI(CondIndTest):
 
     Parameters
     ----------
+
+    increased_cond_sets: boolean
+       Boolean on whether PairwiseMultCI should be executed with increased conditioning sets
+       or not. False indicates that conditioning sets should not be increased
+
     alpha_pre: float
         Significance level for the first step of the algorithm.
         If cond_ind_test is instantiated with significance = "fixed_thres",
