@@ -201,7 +201,7 @@ class PairwiseMultCI(CondIndTest):
                 indep_set = np.where(np.abs(vals_pre) >= self.fixed_thres_pre)
         else:
             indep_set = np.where(np.zeros((dim_x, dim_y)) > np.zeros((dim_x, dim_y)))
-        print(indep_set)
+
         # Step 2: test conditional independencies with increased effect sizes
         if self.cond_ind_test.significance != "fixed_thres":
             p_vals_main = np.zeros((dim_x, dim_y))
