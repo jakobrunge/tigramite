@@ -39,9 +39,10 @@ class PairwiseMultCI(CondIndTest):
     Parameters
     ----------
 
-    increased_cond_sets: boolean
+    run_with_increased_cond_sets: boolean
        Boolean on whether PairwiseMultCI should be executed with increased conditioning sets
-       or not. False indicates that conditioning sets should not be increased
+       or not, as explained in the tutorial or the above mentioned paper.
+        False indicates that conditioning sets should not be increased
 
     alpha_pre: float
         Significance level for the first step of the algorithm.
