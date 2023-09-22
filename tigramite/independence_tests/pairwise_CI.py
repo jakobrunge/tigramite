@@ -39,7 +39,7 @@ class PairwiseMultCI(CondIndTest):
     Parameters
     ----------
 
-    run_with_increased_cond_sets: boolean
+    learn_augmented_cond_sets: boolean
        Boolean on whether PairwiseMultCI should be executed with increased conditioning sets
        or not, as explained in the tutorial or the above mentioned paper.
         False indicates that conditioning sets should not be increased
@@ -76,14 +76,14 @@ class PairwiseMultCI(CondIndTest):
         """
         return self._measure
 
-    def __init__(self, run_with_increased_cond_sets = False, cond_ind_test = ParCorr(), alpha_pre = 0.5, pre_step_sample_fraction = 0.2, fixed_thres_pre = None, **kwargs):
+    def __init__(self, learn_augmented_cond_sets = False, cond_ind_test = ParCorr(), alpha_pre = 0.5, pre_step_sample_fraction = 0.2, fixed_thres_pre = None, **kwargs):
         self._measure = 'pairwise_CI'
         self.cond_ind_test = cond_ind_test
         self.alpha_pre = alpha_pre
         self.pre_step_sample_fraction = pre_step_sample_fraction
         self.fixed_thres_pre = fixed_thres_pre
         self.two_sided = False
-        self.run_with_increased_cond_sets = run_with_increased_cond_sets
+        self.learn_augmented_cond_sets = learn_augmented_cond_sets
         CondIndTest.__init__(self, **kwargs)
 
 
@@ -125,7 +125,7 @@ class PairwiseMultCI(CondIndTest):
             raise ValueError("If significance == 'fixed_thres', fixed_thres_pre for the"
                              " pre-step needs to be defined in initializing PairwiseMultCI.")
 
-        if self.run_with_increased_cond_sets == False:
+        if self.learn_augmented_cond_sets == False:
             self.pre_step_sample_fraction = 0
 
         x_indices = np.where(xyz == 0)[0]
@@ -325,7 +325,7 @@ if __name__ == '__main__':
     from tigramite.independence_tests.robust_parcorr import RobustParCorr
     from tigramite.independence_tests.cmiknn import CMIknn
     alpha = 0.05
-    ci = PairwiseMultCI(run_with_increased_cond_sets = True, fixed_thres_pre = 0.5, cond_ind_test = RobustParCorr(significance = "fixed_thres"))
+    ci = PairwiseMultCI(learn_augmented_cond_sets = True, fixed_thres_pre = 0.5, cond_ind_test = RobustParCorr(significance = "fixed_thres"))
     # ci = PairwiseMultCI(cond_ind_test=ParCorr(significance="fixed_thres"))
     # ci = PairwiseMultCI(cond_ind_test=ParCorr(significance="analytic"))
     T = 100

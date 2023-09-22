@@ -15,7 +15,7 @@ from tigramite.independence_tests.regressionCI import RegressionCI
 @pytest.fixture(params=[
     # Generate PairwiseMultCI test instances
     # test PairwiseMultCI for different combinations of:
-    # run_with_increased_cond_sets, significance (of the univariate tests),  alpha_pre, pre_step_sample_fraction, cond_ind_test, cond_ind_test_thres, cond_ind_test_thres_pre
+    # learn_augmented_cond_sets, significance (of the univariate tests),  alpha_pre, pre_step_sample_fraction, cond_ind_test, cond_ind_test_thres, cond_ind_test_thres_pre
     ('True', 'fixed_thres', 0.5, 0.2, ParCorr, 1, 0.5),
     ('True', 'fixed_thres', 0.5, 0.5, ParCorr, 1, 0.5),
     ('True', 'fixed_thres', 0.8, 0.2, ParCorr, 1, 0.5),
@@ -50,14 +50,14 @@ from tigramite.independence_tests.regressionCI import RegressionCI
 
 def pairwise_mult_ci(request):
     # Unpack the parameters
-    run_with_increased_cond_sets, sig, alpha_pre, pre_step_sample_fraction, cond_ind_test, cond_ind_test_thres, cond_ind_test_thres_pre = request.param
+    learn_augmented_cond_sets, sig, alpha_pre, pre_step_sample_fraction, cond_ind_test, cond_ind_test_thres, cond_ind_test_thres_pre = request.param
     # Generate the par_corr_wls independence test
     if sig != "fixed_thres":
-        return PairwiseMultCI(run_with_increased_cond_sets = run_with_increased_cond_sets, cond_ind_test = cond_ind_test(significance = sig),
+        return PairwiseMultCI(learn_augmented_cond_sets = learn_augmented_cond_sets, cond_ind_test = cond_ind_test(significance = sig),
                           alpha_pre = alpha_pre,
                           pre_step_sample_fraction = pre_step_sample_fraction)
     else:
-        return PairwiseMultCI(run_with_increased_cond_sets = run_with_increased_cond_sets, cond_ind_test = cond_ind_test(significance = sig),
+        return PairwiseMultCI(learn_augmented_cond_sets = learn_augmented_cond_sets, cond_ind_test = cond_ind_test(significance = sig),
                           alpha_pre = None,
                           pre_step_sample_fraction=pre_step_sample_fraction,
                           significance= sig,
