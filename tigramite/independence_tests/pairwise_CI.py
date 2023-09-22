@@ -38,6 +38,13 @@ class PairwiseMultCI(CondIndTest):
 
     Parameters
     ----------
+
+    learn_augmented_cond_sets: boolean
+       Boolean on whether PairwiseMultCI should be executed with a pre step that learns conditional independencies
+       and then augments conditioning sets.
+        That is explained in the tutorial or the above mentioned paper in more detail.
+        False indicates that conditioning sets should not be increased
+
     alpha_pre: float
         Significance level for the first step of the algorithm.
         If cond_ind_test is instantiated with significance = "fixed_thres",
@@ -70,13 +77,14 @@ class PairwiseMultCI(CondIndTest):
         """
         return self._measure
 
-    def __init__(self, cond_ind_test = ParCorr(), alpha_pre = 0.5, pre_step_sample_fraction = 0.2, fixed_thres_pre = None, **kwargs):
+    def __init__(self, learn_augmented_cond_sets = False, cond_ind_test = ParCorr(), alpha_pre = 0.5, pre_step_sample_fraction = 0.2, fixed_thres_pre = None, **kwargs):
         self._measure = 'pairwise_CI'
         self.cond_ind_test = cond_ind_test
         self.alpha_pre = alpha_pre
         self.pre_step_sample_fraction = pre_step_sample_fraction
         self.fixed_thres_pre = fixed_thres_pre
         self.two_sided = False
+        self.learn_augmented_cond_sets = learn_augmented_cond_sets
         CondIndTest.__init__(self, **kwargs)
 
 
@@ -118,6 +126,9 @@ class PairwiseMultCI(CondIndTest):
             raise ValueError("If significance == 'fixed_thres', fixed_thres_pre for the"
                              " pre-step needs to be defined in initializing PairwiseMultCI.")
 
+        if self.learn_augmented_cond_sets == False:
+            self.pre_step_sample_fraction = 0
+
         x_indices = np.where(xyz == 0)[0]
         y_indices = np.where(xyz == 1)[0]
         z_indices = np.where(xyz == 2)[0]
@@ -129,6 +140,10 @@ class PairwiseMultCI(CondIndTest):
         T = array.shape[1]
         size_first_block = np.floor(self.pre_step_sample_fraction * T)
         size_first_block = size_first_block.astype(int)
+
+        if size_first_block < 10:
+            self.pre_step_sample_fraction = 0
+
 
         # split the sample
         array_s1 = array[:, 0:size_first_block]
@@ -169,31 +184,34 @@ class PairwiseMultCI(CondIndTest):
             z_type_s2 = None
 
         ## Step 1: estimate conditional independencies
-        if fixed_thres_bool == False:
-            p_vals_pre = np.zeros((dim_x, dim_y))
+        if self.pre_step_sample_fraction > 0:
+            if fixed_thres_bool == False:
+                p_vals_pre = np.zeros((dim_x, dim_y))
+            else:
+                vals_pre = np.zeros((dim_x, dim_y))
+            for j in np.arange(0, dim_x):
+                for jj in np.arange(0, dim_y):
+                    if fixed_thres_bool == False:
+                        p_vals_pre[j, jj] = self.cond_ind_test.run_test_raw(x_s1[j].reshape(size_first_block, 1),
+                                                                       y_s1[jj].reshape(size_first_block, 1),
+                                                                       z_s1.reshape(size_first_block, dim_z),
+                                                                       x_type = x_type_s1,
+                                                                       y_type = y_type_s1,
+                                                                       z_type = z_type_s1)[1]
+                    else:
+                        vals_pre[j, jj] = self.cond_ind_test.run_test_raw(x_s1[j].reshape(size_first_block, 1),
+                                                                       y_s1[jj].reshape(size_first_block, 1),
+                                                                       z_s1.reshape(size_first_block, dim_z),
+                                                                       x_type = x_type_s1,
+                                                                       y_type = y_type_s1,
+                                                                       z_type = z_type_s1,
+                                                                       alpha_or_thres=999.)[0] # just a dummy
+            if fixed_thres_bool == False:
+                indep_set = np.where(p_vals_pre > self.alpha_pre)
+            else:
+                indep_set = np.where(np.abs(vals_pre) >= self.fixed_thres_pre)
         else:
-            vals_pre = np.zeros((dim_x, dim_y))
-        for j in np.arange(0, dim_x):
-            for jj in np.arange(0, dim_y):
-                if fixed_thres_bool == False:
-                    p_vals_pre[j, jj] = self.cond_ind_test.run_test_raw(x_s1[j].reshape(size_first_block, 1),
-                                                                   y_s1[jj].reshape(size_first_block, 1),
-                                                                   z_s1.reshape(size_first_block, dim_z),
-                                                                   x_type = x_type_s1,
-                                                                   y_type = y_type_s1,
-                                                                   z_type = z_type_s1)[1]
-                else:
-                    vals_pre[j, jj] = self.cond_ind_test.run_test_raw(x_s1[j].reshape(size_first_block, 1),
-                                                                   y_s1[jj].reshape(size_first_block, 1),
-                                                                   z_s1.reshape(size_first_block, dim_z),
-                                                                   x_type = x_type_s1,
-                                                                   y_type = y_type_s1,
-                                                                   z_type = z_type_s1,
-                                                                   alpha_or_thres=999.)[0] # just a dummy
-        if fixed_thres_bool == False:
-            indep_set = np.where(p_vals_pre > self.alpha_pre)
-        else:
-            indep_set = np.where(np.abs(vals_pre) >= self.fixed_thres_pre)
+            indep_set = np.where(np.zeros((dim_x, dim_y)) > np.zeros((dim_x, dim_y)))
 
         # Step 2: test conditional independencies with increased effect sizes
         if self.cond_ind_test.significance != "fixed_thres":
@@ -308,7 +326,7 @@ if __name__ == '__main__':
     from tigramite.independence_tests.robust_parcorr import RobustParCorr
     from tigramite.independence_tests.cmiknn import CMIknn
     alpha = 0.05
-    ci = PairwiseMultCI(fixed_thres_pre = 0.5, cond_ind_test = ParCorr(significance = "fixed_thres"))
+    ci = PairwiseMultCI(learn_augmented_cond_sets = True, fixed_thres_pre = 0.5, cond_ind_test = RobustParCorr(significance = "fixed_thres"))
     # ci = PairwiseMultCI(cond_ind_test=ParCorr(significance="fixed_thres"))
     # ci = PairwiseMultCI(cond_ind_test=ParCorr(significance="analytic"))
     T = 100
