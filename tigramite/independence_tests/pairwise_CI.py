@@ -40,8 +40,9 @@ class PairwiseMultCI(CondIndTest):
     ----------
 
     learn_augmented_cond_sets: boolean
-       Boolean on whether PairwiseMultCI should be executed with increased conditioning sets
-       or not, as explained in the tutorial or the above mentioned paper.
+       Boolean on whether PairwiseMultCI should be executed with a pre step that learns conditional independencies
+       and then augments conditioning sets.
+        That is explained in the tutorial or the above mentioned paper in more detail.
         False indicates that conditioning sets should not be increased
 
     alpha_pre: float
