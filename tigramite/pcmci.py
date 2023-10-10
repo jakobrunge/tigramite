@@ -127,7 +127,7 @@ class PCMCI(PCMCIbase):
         the conditioning-parents estimated with PC algorithm.
     val_min : dictionary
         Dictionary of form val_min[j][(i, -tau)] = float
-        containing the minimum test statistic value for each link estimated in
+        containing the minimum absolute test statistic value for each link estimated in
         the PC algorithm.
     pval_max : dictionary
         Dictionary of form pval_max[j][(i, -tau)] = float containing the maximum
@@ -345,8 +345,8 @@ class PCMCI(PCMCIbase):
         parents : list
             List of estimated parents.
         val_min : dict
-            Dictionary of form {(0, -1):float, ...} containing the minimum test
-            statistic value of a link.
+            Dictionary of form {(0, -1):float, ...} containing the minimum absolute
+            test statistic value of a link.
         pval_max : dict
             Dictionary of form {(0, -1):float, ...} containing the maximum
             p-value of a link across different conditions.
@@ -357,11 +357,11 @@ class PCMCI(PCMCIbase):
         if pc_alpha < 0. or pc_alpha > 1.:
             raise ValueError("Choose 0 <= pc_alpha <= 1")
 
-        # Initialize the dictionaries for the pval_max, val_min parents_values
+        # Initialize the dictionaries for the pval_max, val_dict, val_min
         # results
         pval_max = dict()
+        val_dict = dict()
         val_min = dict()
-        parents_values = dict()
         # Initialize the parents values from the selected links, copying to
         # ensure this initial argument is unchanged.
         parents = []
@@ -370,7 +370,7 @@ class PCMCI(PCMCIbase):
             if itau != (j, 0) and link_type not in ['<--', '<?-']:
                 parents.append(itau)
 
-        val_min = {(p[0], p[1]): None for p in parents}
+        val_dict = {(p[0], p[1]): None for p in parents}
         pval_max = {(p[0], p[1]): None for p in parents}
 
         # Define a nested defaultdict of depth 4 to save all information about
@@ -426,13 +426,13 @@ class PCMCI(PCMCIbase):
                         self._print_cond_info(Z, comb_index, pval, val)
                     # Keep track of maximum p-value and minimum estimated value
                     # for each pair (across any condition)
-                    parents_values[parent] = \
-                        min(np.abs(val), parents_values.get(parent,
+                    val_min[parent] = \
+                        min(np.abs(val), val_min.get(parent,
                                                             float("inf")))
 
                     if pval_max[parent] is None or pval > pval_max[parent]:
                         pval_max[parent] = pval
-                        val_min[parent] = val
+                        val_dict[parent] = val
 
                     # Save the iteration if we need to
                     if save_iterations:
@@ -453,14 +453,14 @@ class PCMCI(PCMCIbase):
 
             # Remove non-significant links
             for _, parent in nonsig_parents:
-                del parents_values[parent]
+                del val_min[parent]
             # Return the parents list sorted by the test metric so that the
             # updated parents list is given to the next cond_dim loop
-            parents = self._sort_parents(parents_values)
+            parents = self._sort_parents(val_min)
             # Print information about the change in possible parents
             if self.verbosity > 1:
                 print("\nUpdating parents:")
-                self._print_parents_single(j, parents, parents_values, pval_max)
+                self._print_parents_single(j, parents, val_min, pval_max)
 
         # Print information about if convergence was reached
         if self.verbosity > 1:
@@ -468,6 +468,7 @@ class PCMCI(PCMCIbase):
         # Return the results
         return {'parents': parents,
                 'val_min': val_min,
+                'val_dict': val_dict,
                 'pval_max': pval_max,
                 'iterations': _nested_to_normal(iterations)}
 
@@ -646,6 +647,7 @@ class PCMCI(PCMCIbase):
         # Implement defaultdict for all pval_max, val_max, and iterations
         pval_max = defaultdict(dict)
         val_min = defaultdict(dict)
+        val_dict = defaultdict(dict)
         iterations = defaultdict(dict)
 
         if self.verbosity > 0:
@@ -707,6 +709,7 @@ class PCMCI(PCMCIbase):
             # Record the results for this variable
             all_parents[j] = results[optimal_alpha]['parents']
             val_min[j] = results[optimal_alpha]['val_min']
+            val_dict[j] = results[optimal_alpha]['val_dict']
             pval_max[j] = results[optimal_alpha]['pval_max']
             iterations[j] = results[optimal_alpha]['iterations']
             # Only save the optimal alpha if there is more than one pc_alpha
@@ -714,7 +717,7 @@ class PCMCI(PCMCIbase):
                 iterations[j]['optimal_pc_alpha'] = optimal_alpha
         # Save the results in the current status of the algorithm
         self.all_parents = all_parents
-        self.val_matrix = self._dict_to_matrix(val_min, tau_max, self.N, 
+        self.val_matrix = self._dict_to_matrix(val_dict, tau_max, self.N, 
                                                default=0.)
         self.p_matrix = self._dict_to_matrix(pval_max, tau_max, self.N,
                                             default=1.)
@@ -738,8 +741,8 @@ class PCMCI(PCMCIbase):
         parents : list
             List of form [(0, -1), (3, -2), ...].
         val_min : dict
-            Dictionary of form {(0, -1):float, ...} containing the minimum test
-            statistic value of a link.
+            Dictionary of form {(0, -1):float, ...} containing the minimum absolute
+            test statistic value of a link.
         pval_max : dict
             Dictionary of form {(0, -1):float, ...} containing the maximum
             p-value of a link across different conditions.
@@ -757,9 +760,9 @@ class PCMCI(PCMCIbase):
                         self.var_names[p[0]], p[1]))
             else:
                 for p in parents:
-                    print("        (%s % .d): max_pval = %.5f, min_val = % .3f" % (
+                    print("        (%s % .d): max_pval = %.5f, |min_val| = % .3f" % (
                         self.var_names[p[0]], p[1], pval_max[p],
-                        val_min[p]))
+                        abs(val_min[p])))
         else:
             print("\n    Variable %s has %d link(s):" % (
                 self.var_names[j], len(parents)))
@@ -774,7 +777,7 @@ class PCMCI(PCMCIbase):
             the conditioning-parents estimated with PC algorithm.
         val_min : dict
             Dictionary of form {0:{(0, -1):float, ...}} containing the minimum
-            test statistic value of a link.
+            absolute test statistic value of a link.
         pval_max : dict
             Dictionary of form {0:{(0, -1):float, ...}} containing the maximum
             p-value of a link across different conditions.
@@ -3064,7 +3067,7 @@ class PCMCI(PCMCIbase):
                             max_conds_px=max_conds_px, max_conds_px_lagged=max_conds_px_lagged,
                             tau_max=tau_max, alpha_or_thres=pc_alpha)
 
-                        # Store minimum test statistic value for sorting adjt
+                        # Store minimum absolute test statistic value for sorting adjt
                         # (only internally used)
                         val_min[j][(i, -abstau)] = min(np.abs(val),
                                                        val_min[j].get(

@@ -1032,7 +1032,7 @@ class setup_scatter_matrix:
 
             # print(i, j, lag, x.shape, y.shape)
             self.axes_dict[(i, j)].scatter(
-                x, y,
+                y, x,    # NEW: inverted to match rows and columns!
                 color=color,
                 marker=marker,
                 s=markersize,
@@ -1391,7 +1391,7 @@ class setup_density_matrix:
                 # ax.yaxis.set_ticks_position("none")
                 # ax.yaxis.set_ticklabels([])
             else:
-                sns.kdeplot(x=x, y=y, 
+                sns.kdeplot(x=y, y=x,        # NEW: inverted to match rows/columns
                     #label=r"$\tau{=}%d$" %lag,
                     **snskdeplot_args,
                     # fill=True,

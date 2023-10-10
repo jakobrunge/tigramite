@@ -584,6 +584,52 @@ class _Graph():
 
         return stack
 
+def structural_causal_process_ensemble(realizations=10, ensemble_seed=None, **kwargs):
+    """Returns an ensemble of time series generated from a structural causal process.
+
+    This adds an ensemble dimension to the output of structural_causal_process.
+
+    See docstring of structural_causal_process for details.
+
+    Parameters
+    ----------
+    ensemble_seed : int, optional (default: None)
+        Random seed for entire ensemble.
+    ** kwargs : 
+        Arguments of structural_causal_process.
+
+    Returns
+    -------
+    data : array-like
+        Data generated from this process, shape (M, T, N).
+    nonvalid : bool
+        Indicates whether data has NaNs or infinities.
+
+    """
+
+    nonvalid = False
+    for m in range(realizations):
+
+        # Set ensemble seed
+        if ensemble_seed is None:
+            seed_here = None
+        else:
+            seed_here = realizations * ensemble_seed + m
+
+        # Get data
+        data, nonvalid_here = structural_causal_process(seed=seed_here, **kwargs)
+        
+        # Update non-validity
+        if nonvalid_here:
+            nonvalid = True
+
+        if m == 0:
+            data_ensemble = np.zeros((realizations,) + data.shape, dtype='float32')
+
+        data_ensemble[m] = data
+
+    return data_ensemble, nonvalid
+
 def structural_causal_process(links, T, noises=None, 
                         intervention=None, intervention_type='hard',
                         transient_fraction=0.2,
@@ -1132,11 +1178,17 @@ if __name__ == '__main__':
     def lin_f(x): return x
     def nonlin_f(x): return (x + 5. * x**2 * np.exp(-x**2 / 20.))
 
-    links, noises = generate_structural_causal_process()
+    links, noises = generate_structural_causal_process(seed=1, noise_seed=1)
     
-    data, nonstat = structural_causal_process(links,
-             T=100, noises=noises)
+    # data, nonstat = structural_causal_process(links, seed=1,
+    #          T=10, noises=noises)
+
+    data, nonstat = structural_causal_process_ensemble(realizations=2, ensemble_seed=0, 
+        links=links, T=2, noises=noises)
+
     print(data)
+    print(data.shape)
+
 
     # links = {0: [((0, -1), 0.9, lin_f)],
     #          1: [((1, -1), 0.8, lin_f), ((0, -1), 0.3, nonlin_f)],
