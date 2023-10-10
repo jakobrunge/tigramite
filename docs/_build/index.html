@@ -223,7 +223,7 @@ the conditioning-parents estimated with PC algorithm.</p>
 <dt class="sig sig-object py" id="tigramite.pcmci.PCMCI.val_min">
 <span class="sig-name descname"><span class="pre">val_min</span></span><a class="headerlink" href="#tigramite.pcmci.PCMCI.val_min" title="Permalink to this definition">¶</a></dt>
 <dd><p>Dictionary of form val_min[j][(i, -tau)] = float
-containing the minimum test statistic value for each link estimated in
+containing the minimum absolute test statistic value for each link estimated in
 the PC algorithm.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
@@ -441,7 +441,7 @@ containing estimated parents.</p>
 <dt class="sig sig-object py" id="tigramite.pcmci.PCMCI.run_bivci">
 <span class="sig-name descname"><span class="pre">run_bivci</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">selected_links</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_assumptions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fdr_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/pcmci.html#PCMCI.run_bivci"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.pcmci.PCMCI.run_bivci" title="Permalink to this definition">¶</a></dt>
 <dd><p>BivCI conditional independence tests.</p>
-<p>Implements the BivCI test (see <a class="footnote-reference brackets" href="#id5" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>).</p>
+<p>Implements the BivCI test (see <a href="#id26"><span class="problematic" id="id1">[1]_</span></a>).</p>
 <p>Returns the matrices of test statistic values, (optionally corrected)
 p-values, and (optionally) confidence intervals. Also (new in 4.3)
 returns graph based on alpha_level (and optional FDR-correction).</p>
@@ -489,7 +489,7 @@ are set.</p></li>
 <dt class="sig sig-object py" id="tigramite.pcmci.PCMCI.run_fullci">
 <span class="sig-name descname"><span class="pre">run_fullci</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">selected_links</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_assumptions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fdr_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/pcmci.html#PCMCI.run_fullci"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.pcmci.PCMCI.run_fullci" title="Permalink to this definition">¶</a></dt>
 <dd><p>FullCI conditional independence tests.</p>
-<p>Implements the FullCI test (see <a class="footnote-reference brackets" href="#id5" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>).</p>
+<p>Implements the FullCI test (see <a href="#id27"><span class="problematic" id="id2">[1]_</span></a>).</p>
 <p>Returns the matrices of test statistic values, (optionally corrected)
 p-values, and (optionally) confidence intervals. Also (new in 4.3)
 returns graph based on alpha_level (and optional FDR-correction).</p>
@@ -537,7 +537,7 @@ are set.</p></li>
 <dt class="sig sig-object py" id="tigramite.pcmci.PCMCI.run_mci">
 <span class="sig-name descname"><span class="pre">run_mci</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">selected_links</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_assumptions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parents</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_conds_py</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_conds_px</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fdr_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/pcmci.html#PCMCI.run_mci"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.pcmci.PCMCI.run_mci" title="Permalink to this definition">¶</a></dt>
 <dd><p>MCI conditional independence tests.</p>
-<p>Implements the MCI test (Algorithm 2 in <a class="footnote-reference brackets" href="#id5" id="id3" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>).</p>
+<p>Implements the MCI test (Algorithm 2 in <a href="#id28"><span class="problematic" id="id3">[1]_</span></a>).</p>
 <p>Returns the matrices of test statistic values, (optionally corrected)
 p-values, and (optionally) confidence intervals. Also (new in 4.3)
 returns graph based on alpha_level (and optional FDR-correction).</p>
@@ -785,7 +785,7 @@ of a regularization parameter in model-selection techniques. If a
 list of values is given or <code class="docutils literal notranslate"><span class="pre">pc_alpha=None</span></code>, <img class="math" src="_images/math/2f5aa019312e1bbc969deab8dca8b00f76025404.png" alt="\alpha"/> is
 optimized using model selection criteria implemented in the respective
 <code class="docutils literal notranslate"><span class="pre">tigramite.independence_tests</span></code>.</p>
-<p>Further optional parameters are discussed in <a class="footnote-reference brackets" href="#id5" id="id4" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.</p>
+<p>Further optional parameters are discussed in <a href="#id29"><span class="problematic" id="id4">[1]_</span></a>.</p>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">tigramite.pcmci</span> <span class="kn">import</span> <span class="n">PCMCI</span>
@@ -1285,25 +1285,26 @@ the optimal one with minimum objective value (see paper).</p></li>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tigramite.jpcmciplus.</span></span><span class="sig-name descname"><span class="pre">JPCMCIplus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_classification</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/jpcmciplus.html#JPCMCIplus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.jpcmciplus.JPCMCIplus" title="Permalink to this definition">¶</a></dt>
 <dd><p>J-PCMCIplus causal discovery for time series datasets from multiple contexts.</p>
 <p>This class is based on the PCMCI framework as described in
-[1]. JPCMCIplus enables causal discovery for time series data from
+[i]. JPCMCIplus enables causal discovery for time series data from
 different contexts, i.e. datasets, where some of the variables
 describing the context might be unobserved. The method is described
-in detail in [10]. See the tutorial for guidance in applying the
+in detail in [ii]. See the tutorial for guidance in applying the
 method.</p>
 <p class="rubric">References</p>
-<aside class="footnote brackets" id="id5" role="note">
-<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
-<span class="backrefs">(<a role="doc-backlink" href="#id1">1</a>,<a role="doc-backlink" href="#id2">2</a>,<a role="doc-backlink" href="#id3">3</a>,<a role="doc-backlink" href="#id4">4</a>,<a role="doc-backlink" href="#id7">5</a>,<a role="doc-backlink" href="#id8">6</a>,<a role="doc-backlink" href="#id9">7</a>,<a role="doc-backlink" href="#id25">8</a>,<a role="doc-backlink" href="#id26">9</a>)</span>
+<div role="list" class="citation-list">
+<div class="citation" id="i" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>i<span class="fn-bracket">]</span></span>
 <p>J. Runge, P. Nowack, M. Kretschmer, S. Flaxman, D. Sejdinovic,
 Detecting and quantifying causal associations in large nonlinear
 time series datasets. Sci. Adv. 5, eaau4996
 (2019) <a class="reference external" href="https://advances.sciencemag.org/content/5/11/eaau4996">https://advances.sciencemag.org/content/5/11/eaau4996</a></p>
-</aside>
-<aside class="footnote brackets" id="id6" role="note">
-<span class="label"><span class="fn-bracket">[</span>10<span class="fn-bracket">]</span></span>
+</div>
+<div class="citation" id="ii" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>ii<span class="fn-bracket">]</span></span>
 <p>W. Günther, U. Ninad, J. Runge, Causal discovery for time
 series from multiple datasets with latent contexts. UAI 2023</p>
-</aside>
+</div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>node_classification</strong> (<em>dictionary</em>) – Classification of nodes into system, context, or dummy nodes.
@@ -1601,7 +1602,7 @@ step 1 and step 2 of J-PCMCI+.</p>
 for time series from multiple datasets with latent contexts. UAI
 2023</p>
 <p class="rubric">Notes</p>
-<p>The JPCMCIplus causal discovery method is described in [10], where
+<p>The JPCMCIplus causal discovery method is described in [ii], where
 also analytical and numerical results are presented. JPCMCIplus can identify the joint causal graph
 over multiple datasets containing time series data from different contexts under the standard assumptions
 of Causal Sufficiency, Faithfulness and the Markov condition, as well as some background knowledge assumptions.
@@ -1736,14 +1737,14 @@ Explained in tutorial on masking and missing values.</p></li>
 <li><p><strong>sig_samples</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 500</em><em>)</em>) – Number of samples for shuffle significance test.</p></li>
 <li><p><strong>sig_blocklength</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Block length for block-shuffle significance test. If None, the
 block length is determined from the decay of the autocovariance as
-explained in <a class="footnote-reference brackets" href="#id5" id="id7" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.</p></li>
+explained in <a href="#id30"><span class="problematic" id="id5">[1]_</span></a>.</p></li>
 <li><p><strong>confidence</strong> (<em>str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Specify type of confidence estimation. If False, numpy.nan is returned.
 ‘bootstrap’ can be used with any test, for ParCorr also ‘analytic’ is
 implemented.</p></li>
 <li><p><strong>conf_lev</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.9</em><em>)</em>) – Two-sided confidence interval.</p></li>
 <li><p><strong>conf_samples</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 100</em><em>)</em>) – Number of samples for bootstrap.</p></li>
 <li><p><strong>conf_blocklength</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Block length for block-bootstrap. If None, the block length is
-determined from the decay of the autocovariance as explained in <a class="footnote-reference brackets" href="#id5" id="id8" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.</p></li>
+determined from the decay of the autocovariance as explained in <a href="#id31"><span class="problematic" id="id6">[1]_</span></a>.</p></li>
 <li><p><strong>recycle_residuals</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – Specifies whether residuals should be stored. This may be faster, but
 can cost considerable memory.</p></li>
 <li><p><strong>verbosity</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) – Level of verbosity.</p></li>
@@ -1784,7 +1785,7 @@ dependence_measure(array, xyz) and return a numeric value</p>
 </dd>
 <dt>conf_blocklength<span class="classifier">int, optional (default: None)</span></dt><dd><p>Block length for block-bootstrap. If None, the block length is
 determined from the decay of the autocovariance as explained in
-<a class="footnote-reference brackets" href="#id5" id="id9" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.</p>
+<a href="#id32"><span class="problematic" id="id7">[1]_</span></a>.</p>
 </dd>
 </dl>
 </div></blockquote>
@@ -2035,6 +2036,7 @@ the Pearson correlation test.</p>
 <p><img src="_images/math/789735c1db036ea36cd0aa25a3af4b2528ed3abe.png" alt="\rho\left(r_X, r_Y\right)"/></p>
 </div><p>For the <code class="docutils literal notranslate"><span class="pre">significance='analytic'</span></code> Student’s-<em>t</em> distribution with
 <img class="math" src="_images/math/9c353382eebb42a8a9dec3a426d346d4842bd39d.png" alt="T-D_Z-2"/> degrees of freedom is implemented.</p>
+<p>Assumes one-dimensional X, Y.Use ParCorrMult for multivariate X, Y.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>**kwargs</strong> – Arguments passed on to Parent class CondIndTest.</p>
@@ -2168,6 +2170,8 @@ different lags in X, Z, all have the same sample size.</p></li>
 <p>Partial correlation is estimated through transformation to standard
 normal marginals, ordinary least squares (OLS) regression, and a test for
 non-zero linear Pearson correlation on the residuals.</p>
+<p>Assumes one-dimensional X, Y. But can be combined with PairwiseMultCI to
+obtain a test for multivariate X, Y.</p>
 <p class="rubric">Notes</p>
 <p>To test <img class="math" src="_images/math/667eda4bf3d5ce33b6cc785cadfef79bb95741ca.png" alt="X \perp Y | Z"/>, firstly, each marginal is transformed to be
 standard normally distributed. For that, the transform
@@ -2364,7 +2368,7 @@ similarly, all values that are too close to one, are replaced by
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tigramite.independence_tests.gpdc.</span></span><span class="sig-name descname"><span class="pre">GPDC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">null_dist_filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gp_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/gpdc.html#GPDC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.independence_tests.gpdc.GPDC" title="Permalink to this definition">¶</a></dt>
 <dd><p>GPDC conditional independence test based on Gaussian processes and distance correlation.</p>
 <p>GPDC is based on a Gaussian process (GP) regression and a distance
-correlation test on the residuals <a class="footnote-reference brackets" href="#id12" id="id10" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>. GP is estimated with scikit-learn
+correlation test on the residuals <a class="footnote-reference brackets" href="#id10" id="id8" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>. GP is estimated with scikit-learn
 and allows to flexibly specify kernels and hyperparameters or let them be
 optimized automatically. The distance correlation test is implemented with
 cython. Here the null distribution is not analytically available, but can be
@@ -2374,7 +2378,7 @@ This file can then be supplied as null_dist_filename.</p>
 <p class="rubric">Notes</p>
 <p>GPDC is based on a Gaussian process (GP) regression and a distance
 correlation test on the residuals. Distance correlation is described in
-<a class="footnote-reference brackets" href="#id12" id="id11" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>. To test <img class="math" src="_images/math/667eda4bf3d5ce33b6cc785cadfef79bb95741ca.png" alt="X \perp Y | Z"/>, first <img class="math" src="_images/math/95f028ab2b20b895fa12d986e0d9f40f7b6e52d3.png" alt="Z"/> is regressed out from
+<a class="footnote-reference brackets" href="#id10" id="id9" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>. To test <img class="math" src="_images/math/667eda4bf3d5ce33b6cc785cadfef79bb95741ca.png" alt="X \perp Y | Z"/>, first <img class="math" src="_images/math/95f028ab2b20b895fa12d986e0d9f40f7b6e52d3.png" alt="Z"/> is regressed out from
 <img class="math" src="_images/math/ed38fa24f1c94891bd312012aab3f6673be3eb83.png" alt="X"/> and <img class="math" src="_images/math/7daf0d4815e763eb90f0d5f1dc406f668c1e21db.png" alt="Y"/> assuming the  model</p>
 <div class="math">
 <p><img src="_images/math/db3d34854a6f48587cf5b9a41df90ad1c5e332d6.png" alt="X &amp; =  f_X(Z) + \epsilon_{X} \\
@@ -2388,9 +2392,9 @@ marginals yielding <img class="math" src="_images/math/be07aa32325c7a6161c0cef04
 </div><p>The null distribution of the distance correlation should be pre-computed.
 Otherwise it is computed during runtime.</p>
 <p class="rubric">References</p>
-<aside class="footnote brackets" id="id12" role="note">
+<aside class="footnote brackets" id="id10" role="note">
 <span class="label"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></span>
-<span class="backrefs">(<a role="doc-backlink" href="#id10">1</a>,<a role="doc-backlink" href="#id11">2</a>,<a role="doc-backlink" href="#id13">3</a>,<a role="doc-backlink" href="#id14">4</a>)</span>
+<span class="backrefs">(<a role="doc-backlink" href="#id8">1</a>,<a role="doc-backlink" href="#id9">2</a>,<a role="doc-backlink" href="#id11">3</a>,<a role="doc-backlink" href="#id12">4</a>)</span>
 <p>Gabor J. Szekely, Maria L. Rizzo, and Nail K. Bakirov: Measuring and
 testing dependence by correlation of distances,
 <a class="reference external" href="https://arxiv.org/abs/0803.4101">https://arxiv.org/abs/0803.4101</a></p>
@@ -2555,7 +2559,7 @@ different lags in X, Z, all have the same sample size.</p></li>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tigramite.independence_tests.gpdc_torch.</span></span><span class="sig-name descname"><span class="pre">GPDCtorch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">null_dist_filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/gpdc_torch.html#GPDCtorch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.independence_tests.gpdc_torch.GPDCtorch" title="Permalink to this definition">¶</a></dt>
 <dd><p>GPDC conditional independence test based on Gaussian processes and distance correlation. Here with gpytorch implementation.</p>
 <p>GPDC is based on a Gaussian process (GP) regression and a distance
-correlation test on the residuals <a class="footnote-reference brackets" href="#id12" id="id13" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>. GP is estimated with gpytorch.
+correlation test on the residuals <a class="footnote-reference brackets" href="#id10" id="id11" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>. GP is estimated with gpytorch.
 The distance correlation test is implemented with the dcor package available
 from pip. Here the null distribution is not analytically available, but can be
 precomputed with the function generate_and_save_nulldists(…) which saves a
@@ -2564,7 +2568,7 @@ This file can then be supplied as null_dist_filename.</p>
 <p class="rubric">Notes</p>
 <p>GPDC is based on a Gaussian process (GP) regression and a distance
 correlation test on the residuals. Distance correlation is described in
-<a class="footnote-reference brackets" href="#id12" id="id14" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>. To test <img class="math" src="_images/math/667eda4bf3d5ce33b6cc785cadfef79bb95741ca.png" alt="X \perp Y | Z"/>, first <img class="math" src="_images/math/95f028ab2b20b895fa12d986e0d9f40f7b6e52d3.png" alt="Z"/> is regressed out from
+<a class="footnote-reference brackets" href="#id10" id="id12" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>. To test <img class="math" src="_images/math/667eda4bf3d5ce33b6cc785cadfef79bb95741ca.png" alt="X \perp Y | Z"/>, first <img class="math" src="_images/math/95f028ab2b20b895fa12d986e0d9f40f7b6e52d3.png" alt="Z"/> is regressed out from
 <img class="math" src="_images/math/ed38fa24f1c94891bd312012aab3f6673be3eb83.png" alt="X"/> and <img class="math" src="_images/math/7daf0d4815e763eb90f0d5f1dc406f668c1e21db.png" alt="Y"/> assuming the  model</p>
 <div class="math">
 <p><img src="_images/math/db3d34854a6f48587cf5b9a41df90ad1c5e332d6.png" alt="X &amp; =  f_X(Z) + \epsilon_{X} \\
@@ -2741,7 +2745,7 @@ parametric form of the dependencies by directly estimating the underlying
 joint density. The test here is based on the estimator in  S. Frenzel and B.
 Pompe, Phys. Rev. Lett. 99, 204101 (2007), combined with a shuffle test to
 generate  the distribution under the null hypothesis of independence first
-used in <a class="footnote-reference brackets" href="#id16" id="id15" role="doc-noteref"><span class="fn-bracket">[</span>3<span class="fn-bracket">]</span></a>. The knn-estimator is suitable only for variables taking a
+used in <a class="footnote-reference brackets" href="#id14" id="id13" role="doc-noteref"><span class="fn-bracket">[</span>3<span class="fn-bracket">]</span></a>. The knn-estimator is suitable only for variables taking a
 continuous range of values. For discrete variables use the CMIsymb class.</p>
 <p class="rubric">Notes</p>
 <p>CMI is given by</p>
@@ -2765,8 +2769,8 @@ that the estimated CMI values can be slightly negative while CMI is a non-
 negative quantity.</p>
 <p>This method requires the scipy.spatial.cKDTree package.</p>
 <p class="rubric">References</p>
-<aside class="footnote brackets" id="id16" role="note">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id15">3</a><span class="fn-bracket">]</span></span>
+<aside class="footnote brackets" id="id14" role="note">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id13">3</a><span class="fn-bracket">]</span></span>
 <p>J. Runge (2018): Conditional Independence Testing Based on a
 Nearest-Neighbor Estimator of Conditional Mutual Information.
 In Proceedings of the 21st International Conference on Artificial
@@ -3299,11 +3303,12 @@ partial correlation.</p></li>
 <dt class="sig sig-object py" id="tigramite.independence_tests.gsquared.Gsquared">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tigramite.independence_tests.gsquared.</span></span><span class="sig-name descname"><span class="pre">Gsquared</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_symbs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/gsquared.html#Gsquared"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.independence_tests.gsquared.Gsquared" title="Permalink to this definition">¶</a></dt>
 <dd><p>G-squared conditional independence test for categorical data.</p>
-<p>Uses Chi2 as the null distribution and the method from <a class="footnote-reference brackets" href="#id18" id="id17" role="doc-noteref"><span class="fn-bracket">[</span>7<span class="fn-bracket">]</span></a> to
+<p>Uses Chi2 as the null distribution and the method from <a class="footnote-reference brackets" href="#id16" id="id15" role="doc-noteref"><span class="fn-bracket">[</span>7<span class="fn-bracket">]</span></a> to
 adjust the degrees of freedom. Valid only asymptotically, recommended are
 above 1000-2000 samples (depends on data). For smaller sample sizes use the
 CMIsymb class which includes a local permutation test.</p>
-<p>Assumes one-dimensional X, Y.</p>
+<p>Assumes one-dimensional X, Y. But can be combined with PairwiseMultCI to
+obtain a test for multivariate X, Y.</p>
 <p>This method requires the scipy.stats package.</p>
 <p class="rubric">Notes</p>
 <p>The general formula is</p>
@@ -3312,8 +3317,8 @@ CMIsymb class which includes a local permutation test.</p>
 \frac{ p(x,y |z)}{p(x|z)\cdot p(y |z)}"/></p>
 </div><p>where <img class="math" src="_images/math/5a939c5280da7202ca4531f175a7780ad5e1f80a.png" alt="n"/> is the sample size. This is simply <img class="math" src="_images/math/88da5b28f5e08d9d8ed693d334e710f4adadbcfd.png" alt="2 n CMI(X;Y|Z)"/>.</p>
 <p class="rubric">References</p>
-<aside class="footnote brackets" id="id18" role="note">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id17">7</a><span class="fn-bracket">]</span></span>
+<aside class="footnote brackets" id="id16" role="note">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id15">7</a><span class="fn-bracket">]</span></span>
 <p>Bishop, Y.M.M., Fienberg, S.E. and Holland, P.W. (1975) Discrete
 Multivariate Analysis: Theory and Practice. MIT Press, Cambridge.</p>
 </aside>
@@ -3469,7 +3474,16 @@ different lags in X, Z, all have the same sample size.</p></li>
 <dt class="sig sig-object py" id="tigramite.independence_tests.regressionCI.RegressionCI">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tigramite.independence_tests.regressionCI.</span></span><span class="sig-name descname"><span class="pre">RegressionCI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/regressionCI.html#RegressionCI"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.independence_tests.regressionCI.RegressionCI" title="Permalink to this definition">¶</a></dt>
 <dd><p>Flexible parametric conditional independence tests for continuous, categorical, or mixed data.</p>
-<p>Assumes one-dimensional X, Y.</p>
+<p>Asymptotically equivalent to the tests for mixed data suggested in</p>
+<p>Tsagris, Michail, et al. “Constraint-based causal discovery with mixed
+data.” International journal of data science and analytics 6
+(2018): 19-30.</p>
+<p>For linear regression RegressionCI implements a likelihood ratio test,
+while the above employs a F-statistic. Furthermore, while our
+implementation utilizes the Chi^2 null distribution, theirs uses the
+F-distribution.</p>
+<p>Assumes one-dimensional X, Y. But can be combined with PairwiseMultCI to
+obtain a test for multivariate X, Y.</p>
 <p class="rubric">Notes</p>
 <p>To test <img class="math" src="_images/math/667eda4bf3d5ce33b6cc785cadfef79bb95741ca.png" alt="X \perp Y | Z"/>, the regressions Y|XZ vs Y|Z, or, depending
 on certain criteria, X|YZ vs X|Z are compared. For that, the notion of
@@ -3554,11 +3568,11 @@ supported, also including hidden variables.</p>
 linear case without hidden variables also an efficient estimation
 based on Wright’s path coefficients is available. This estimator
 also allows to estimate mediation effects.</p>
-<p>See the corresponding paper <a class="footnote-reference brackets" href="#id20" id="id19" role="doc-noteref"><span class="fn-bracket">[</span>6<span class="fn-bracket">]</span></a> and tigramite tutorial for an
+<p>See the corresponding paper <a class="footnote-reference brackets" href="#id18" id="id17" role="doc-noteref"><span class="fn-bracket">[</span>6<span class="fn-bracket">]</span></a> and tigramite tutorial for an
 in-depth introduction.</p>
 <p class="rubric">References</p>
-<aside class="footnote brackets" id="id20" role="note">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id19">6</a><span class="fn-bracket">]</span></span>
+<aside class="footnote brackets" id="id18" role="note">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id17">6</a><span class="fn-bracket">]</span></span>
 <p>J. Runge, Necessary and sufficient graphical conditions for
 optimal adjustment sets in causal graphical models with
 hidden variables, Advances in Neural Information Processing
@@ -4070,12 +4084,12 @@ useful to compare multiple models on the same sample. Last,
 <dd><p>Linear mediation analysis for time series models.</p>
 <p>Fits linear model to parents and provides functions to return measures such
 as causal effect, mediated causal effect, average causal effect, etc. as
-described in <a class="footnote-reference brackets" href="#id23" id="id21" role="doc-noteref"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></a>. Also allows for contemporaneous links.</p>
+described in <a class="footnote-reference brackets" href="#id21" id="id19" role="doc-noteref"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></a>. Also allows for contemporaneous links.</p>
 <p>For general linear and nonlinear causal effect analysis including latent
 variables and further functionality use the CausalEffects class.</p>
 <p class="rubric">Notes</p>
 <p>This class implements the following causal mediation measures introduced in
-<a class="footnote-reference brackets" href="#id23" id="id22" role="doc-noteref"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></a>:</p>
+<a class="footnote-reference brackets" href="#id21" id="id20" role="doc-noteref"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></a>:</p>
 <blockquote>
 <div><ul class="simple">
 <li><p>causal effect (CE)</p></li>
@@ -4117,9 +4131,9 @@ has CE 0.5 on <img class="math" src="_images/math/7daf0d4815e763eb90f0d5f1dc406f
 </pre></div>
 </div>
 <p class="rubric">References</p>
-<aside class="footnote brackets" id="id23" role="note">
+<aside class="footnote brackets" id="id21" role="note">
 <span class="label"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></span>
-<span class="backrefs">(<a role="doc-backlink" href="#id21">1</a>,<a role="doc-backlink" href="#id22">2</a>,<a role="doc-backlink" href="#id24">3</a>)</span>
+<span class="backrefs">(<a role="doc-backlink" href="#id19">1</a>,<a role="doc-backlink" href="#id20">2</a>,<a role="doc-backlink" href="#id22">3</a>)</span>
 <p>J. Runge et al. (2015): Identifying causal gateways and mediators in
 complex spatio-temporal systems.
 Nature Communications, 6, 8502. <a class="reference external" href="http://doi.org/10.1038/ncomms9502">http://doi.org/10.1038/ncomms9502</a></p>
@@ -4147,7 +4161,7 @@ is not used. Explained in tutorial on masking and missing values.</p></li>
 <dd><p>Fit linear time series model.</p>
 <p>Fits a sklearn.linear_model.LinearRegression model to the parents of
 each variable and computes the coefficient matrices <img class="math" src="_images/math/d8ee85ac4d75924cdf4b18f5fb3b46550932fc26.png" alt="\Phi"/> and
-<img class="math" src="_images/math/20582dab63cb7f6604f5bf70224030ad3411ae16.png" alt="\Psi"/> as described in <a class="footnote-reference brackets" href="#id23" id="id24" role="doc-noteref"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></a>. Does accept contemporaneous links.</p>
+<img class="math" src="_images/math/20582dab63cb7f6604f5bf70224030ad3411ae16.png" alt="\Psi"/> as described in <a class="footnote-reference brackets" href="#id21" id="id22" role="doc-noteref"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></a>. Does accept contemporaneous links.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -5177,7 +5191,7 @@ multivariate [(var1, -lag), (var2, -lag), …] .</p></li>
 <li><p><strong>missing_flag</strong> (<em>number</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Flag for missing values. Dismisses all time slices of samples where
 missing values occur in any variable and also flags samples for all
 lags up to 2*tau_max. This avoids biases, see section on masking in
-Supplement of <a class="footnote-reference brackets" href="#id5" id="id25" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.</p></li>
+Supplement of <a href="#id33"><span class="problematic" id="id23">[1]_</span></a>.</p></li>
 <li><p><strong>mask_type</strong> (<em>{'y'</em><em>,</em><em>'x'</em><em>,</em><em>'z'</em><em>,</em><em>'xy'</em><em>,</em><em>'xz'</em><em>,</em><em>'yz'</em><em>,</em><em>'xyz'}</em>) – Masking mode: Indicators for which variables in the dependence
 measure I(X; Y | Z) the samples should be masked. If None, the mask
 is not used. Explained in tutorial on masking and missing values.</p></li>
@@ -5218,7 +5232,7 @@ the data series length are used.</p></li>
 <dd><p>Returns optimal block length for significance and confidence tests.</p>
 <p>Determine block length using approach in Mader (2013) [Eq. (6)] which
 improves the method of Pfeifer (2005) with non-overlapping blocks In
-case of multidimensional X, the max is used. Further details in <a class="footnote-reference brackets" href="#id5" id="id26" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.
+case of multidimensional X, the max is used. Further details in <a href="#id34"><span class="problematic" id="id24">[1]_</span></a>.
 Two modes are available. For mode=’significance’, only the indices
 corresponding to X are shuffled in array. For mode=’confidence’ all
 variables are jointly shuffled. If the autocorrelation curve fit fails,
@@ -5590,6 +5604,29 @@ cut off.</p></li>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p><strong>data</strong> (<em>array-like</em>) – Data generated from this process, shape (T, N).</p></li>
+<li><p><strong>nonvalid</strong> (<em>bool</em>) – Indicates whether data has NaNs or infinities.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tigramite.toymodels.structural_causal_processes.structural_causal_process_ensemble">
+<span class="sig-prename descclassname"><span class="pre">tigramite.toymodels.structural_causal_processes.</span></span><span class="sig-name descname"><span class="pre">structural_causal_process_ensemble</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">realizations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ensemble_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/toymodels/structural_causal_processes.html#structural_causal_process_ensemble"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.toymodels.structural_causal_processes.structural_causal_process_ensemble" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an ensemble of time series generated from a structural causal process.</p>
+<p>This adds an ensemble dimension to the output of structural_causal_process.</p>
+<p>See docstring of structural_causal_process for details.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ensemble_seed</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Random seed for entire ensemble.</p></li>
+<li><p><strong>kwargs</strong> (<em>**</em>) – Arguments of structural_causal_process.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>data</strong> (<em>array-like</em>) – Data generated from this process, shape (M, T, N).</p></li>
 <li><p><strong>nonvalid</strong> (<em>bool</em>) – Indicates whether data has NaNs or infinities.</p></li>
 </ul>
 </p>
@@ -6188,8 +6225,8 @@ given by arrow_linewidth. If None, all links have same width.</p></li>
 </dd></dl>
 
 </section>
-<section id="id27">
-<h1>Indices and tables<a class="headerlink" href="#id27" title="Permalink to this heading">¶</a></h1>
+<section id="id25">
+<h1>Indices and tables<a class="headerlink" href="#id25" title="Permalink to this heading">¶</a></h1>
 <ul class="simple">
 <li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>

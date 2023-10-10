@@ -17,20 +17,20 @@ class JPCMCIplus(PCMCI):
     r"""J-PCMCIplus causal discovery for time series datasets from multiple contexts.
         
     This class is based on the PCMCI framework as described in
-    [1]. JPCMCIplus enables causal discovery for time series data from
+    [i]. JPCMCIplus enables causal discovery for time series data from
     different contexts, i.e. datasets, where some of the variables
     describing the context might be unobserved. The method is described
-    in detail in [10]. See the tutorial for guidance in applying the
+    in detail in [ii]. See the tutorial for guidance in applying the
     method.
 
     References
     ----------
-    .. [1] J. Runge, P. Nowack, M. Kretschmer, S. Flaxman, D. Sejdinovic,
+    .. [i] J. Runge, P. Nowack, M. Kretschmer, S. Flaxman, D. Sejdinovic,
        Detecting and quantifying causal associations in large nonlinear
        time series datasets. Sci. Adv. 5, eaau4996
        (2019) https://advances.sciencemag.org/content/5/11/eaau4996
     
-    .. [10] W. Günther, U. Ninad, J. Runge, Causal discovery for time
+    .. [ii] W. Günther, U. Ninad, J. Runge, Causal discovery for time
        series from multiple datasets with latent contexts. UAI 2023
     
     Parameters
@@ -123,7 +123,7 @@ class JPCMCIplus(PCMCI):
         
         Notes
         -----
-        The JPCMCIplus causal discovery method is described in [10], where
+        The JPCMCIplus causal discovery method is described in [ii], where
         also analytical and numerical results are presented. JPCMCIplus can identify the joint causal graph
         over multiple datasets containing time series data from different contexts under the standard assumptions
         of Causal Sufficiency, Faithfulness and the Markov condition, as well as some background knowledge assumptions.

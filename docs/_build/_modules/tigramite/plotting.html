@@ -1066,7 +1066,7 @@
 
             <span class="c1"># print(i, j, lag, x.shape, y.shape)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">axes_dict</span><span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)]</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
-                <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span>
+                <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span>    <span class="c1"># NEW: inverted to match rows and columns!</span>
                 <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
                 <span class="n">marker</span><span class="o">=</span><span class="n">marker</span><span class="p">,</span>
                 <span class="n">s</span><span class="o">=</span><span class="n">markersize</span><span class="p">,</span>
@@ -1425,7 +1425,7 @@
                 <span class="c1"># ax.yaxis.set_ticks_position(&quot;none&quot;)</span>
                 <span class="c1"># ax.yaxis.set_ticklabels([])</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">sns</span><span class="o">.</span><span class="n">kdeplot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> 
+                <span class="n">sns</span><span class="o">.</span><span class="n">kdeplot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>        <span class="c1"># NEW: inverted to match rows/columns</span>
                     <span class="c1">#label=r&quot;$\tau{=}%d$&quot; %lag,</span>
                     <span class="o">**</span><span class="n">snskdeplot_args</span><span class="p">,</span>
                     <span class="c1"># fill=True,</span>

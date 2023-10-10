@@ -618,6 +618,52 @@
 
         <span class="k">return</span> <span class="n">stack</span>
 
+<div class="viewcode-block" id="structural_causal_process_ensemble"><a class="viewcode-back" href="../../../index.html#tigramite.toymodels.structural_causal_processes.structural_causal_process_ensemble">[docs]</a><span class="k">def</span> <span class="nf">structural_causal_process_ensemble</span><span class="p">(</span><span class="n">realizations</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">ensemble_seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns an ensemble of time series generated from a structural causal process.</span>
+
+<span class="sd">    This adds an ensemble dimension to the output of structural_causal_process.</span>
+
+<span class="sd">    See docstring of structural_causal_process for details.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ensemble_seed : int, optional (default: None)</span>
+<span class="sd">        Random seed for entire ensemble.</span>
+<span class="sd">    ** kwargs : </span>
+<span class="sd">        Arguments of structural_causal_process.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    data : array-like</span>
+<span class="sd">        Data generated from this process, shape (M, T, N).</span>
+<span class="sd">    nonvalid : bool</span>
+<span class="sd">        Indicates whether data has NaNs or infinities.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nonvalid</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">realizations</span><span class="p">):</span>
+
+        <span class="c1"># Set ensemble seed</span>
+        <span class="k">if</span> <span class="n">ensemble_seed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">seed_here</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">seed_here</span> <span class="o">=</span> <span class="n">realizations</span> <span class="o">*</span> <span class="n">ensemble_seed</span> <span class="o">+</span> <span class="n">m</span>
+
+        <span class="c1"># Get data</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">nonvalid_here</span> <span class="o">=</span> <span class="n">structural_causal_process</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seed_here</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        
+        <span class="c1"># Update non-validity</span>
+        <span class="k">if</span> <span class="n">nonvalid_here</span><span class="p">:</span>
+            <span class="n">nonvalid</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="n">m</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">data_ensemble</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">realizations</span><span class="p">,)</span> <span class="o">+</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span>
+
+        <span class="n">data_ensemble</span><span class="p">[</span><span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
+
+    <span class="k">return</span> <span class="n">data_ensemble</span><span class="p">,</span> <span class="n">nonvalid</span></div>
+
 <div class="viewcode-block" id="structural_causal_process"><a class="viewcode-back" href="../../../index.html#tigramite.toymodels.structural_causal_processes.structural_causal_process">[docs]</a><span class="k">def</span> <span class="nf">structural_causal_process</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">noises</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
                         <span class="n">intervention</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">intervention_type</span><span class="o">=</span><span class="s1">&#39;hard&#39;</span><span class="p">,</span>
                         <span class="n">transient_fraction</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
@@ -1166,11 +1212,17 @@
     <span class="k">def</span> <span class="nf">lin_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span>
     <span class="k">def</span> <span class="nf">nonlin_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mf">5.</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="mf">20.</span><span class="p">))</span>
 
-    <span class="n">links</span><span class="p">,</span> <span class="n">noises</span> <span class="o">=</span> <span class="n">generate_structural_causal_process</span><span class="p">()</span>
+    <span class="n">links</span><span class="p">,</span> <span class="n">noises</span> <span class="o">=</span> <span class="n">generate_structural_causal_process</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">noise_seed</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     
-    <span class="n">data</span><span class="p">,</span> <span class="n">nonstat</span> <span class="o">=</span> <span class="n">structural_causal_process</span><span class="p">(</span><span class="n">links</span><span class="p">,</span>
-             <span class="n">T</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">noises</span><span class="o">=</span><span class="n">noises</span><span class="p">)</span>
+    <span class="c1"># data, nonstat = structural_causal_process(links, seed=1,</span>
+    <span class="c1">#          T=10, noises=noises)</span>
+
+    <span class="n">data</span><span class="p">,</span> <span class="n">nonstat</span> <span class="o">=</span> <span class="n">structural_causal_process_ensemble</span><span class="p">(</span><span class="n">realizations</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ensemble_seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> 
+        <span class="n">links</span><span class="o">=</span><span class="n">links</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">noises</span><span class="o">=</span><span class="n">noises</span><span class="p">)</span>
+
     <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
 
     <span class="c1"># links = {0: [((0, -1), 0.9, lin_f)],</span>
     <span class="c1">#          1: [((1, -1), 0.8, lin_f), ((0, -1), 0.3, nonlin_f)],</span>
