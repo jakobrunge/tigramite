@@ -161,7 +161,7 @@
 <span class="sd">        the conditioning-parents estimated with PC algorithm.</span>
 <span class="sd">    val_min : dictionary</span>
 <span class="sd">        Dictionary of form val_min[j][(i, -tau)] = float</span>
-<span class="sd">        containing the minimum test statistic value for each link estimated in</span>
+<span class="sd">        containing the minimum absolute test statistic value for each link estimated in</span>
 <span class="sd">        the PC algorithm.</span>
 <span class="sd">    pval_max : dictionary</span>
 <span class="sd">        Dictionary of form pval_max[j][(i, -tau)] = float containing the maximum</span>
@@ -379,8 +379,8 @@
 <span class="sd">        parents : list</span>
 <span class="sd">            List of estimated parents.</span>
 <span class="sd">        val_min : dict</span>
-<span class="sd">            Dictionary of form {(0, -1):float, ...} containing the minimum test</span>
-<span class="sd">            statistic value of a link.</span>
+<span class="sd">            Dictionary of form {(0, -1):float, ...} containing the minimum absolute</span>
+<span class="sd">            test statistic value of a link.</span>
 <span class="sd">        pval_max : dict</span>
 <span class="sd">            Dictionary of form {(0, -1):float, ...} containing the maximum</span>
 <span class="sd">            p-value of a link across different conditions.</span>
@@ -391,11 +391,11 @@
         <span class="k">if</span> <span class="n">pc_alpha</span> <span class="o">&lt;</span> <span class="mf">0.</span> <span class="ow">or</span> <span class="n">pc_alpha</span> <span class="o">&gt;</span> <span class="mf">1.</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Choose 0 &lt;= pc_alpha &lt;= 1&quot;</span><span class="p">)</span>
 
-        <span class="c1"># Initialize the dictionaries for the pval_max, val_min parents_values</span>
+        <span class="c1"># Initialize the dictionaries for the pval_max, val_dict, val_min</span>
         <span class="c1"># results</span>
         <span class="n">pval_max</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">val_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
         <span class="n">val_min</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
-        <span class="n">parents_values</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
         <span class="c1"># Initialize the parents values from the selected links, copying to</span>
         <span class="c1"># ensure this initial argument is unchanged.</span>
         <span class="n">parents</span> <span class="o">=</span> <span class="p">[]</span>
@@ -404,7 +404,7 @@
             <span class="k">if</span> <span class="n">itau</span> <span class="o">!=</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> <span class="n">link_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;&lt;--&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;?-&#39;</span><span class="p">]:</span>
                 <span class="n">parents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">itau</span><span class="p">)</span>
 
-        <span class="n">val_min</span> <span class="o">=</span> <span class="p">{(</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parents</span><span class="p">}</span>
+        <span class="n">val_dict</span> <span class="o">=</span> <span class="p">{(</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parents</span><span class="p">}</span>
         <span class="n">pval_max</span> <span class="o">=</span> <span class="p">{(</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parents</span><span class="p">}</span>
 
         <span class="c1"># Define a nested defaultdict of depth 4 to save all information about</span>
@@ -460,13 +460,13 @@
                         <span class="bp">self</span><span class="o">.</span><span class="n">_print_cond_info</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span> <span class="n">comb_index</span><span class="p">,</span> <span class="n">pval</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
                     <span class="c1"># Keep track of maximum p-value and minimum estimated value</span>
                     <span class="c1"># for each pair (across any condition)</span>
-                    <span class="n">parents_values</span><span class="p">[</span><span class="n">parent</span><span class="p">]</span> <span class="o">=</span> \
-                        <span class="nb">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">val</span><span class="p">),</span> <span class="n">parents_values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span>
+                    <span class="n">val_min</span><span class="p">[</span><span class="n">parent</span><span class="p">]</span> <span class="o">=</span> \
+                        <span class="nb">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">val</span><span class="p">),</span> <span class="n">val_min</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span>
                                                             <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)))</span>
 
                     <span class="k">if</span> <span class="n">pval_max</span><span class="p">[</span><span class="n">parent</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">pval</span> <span class="o">&gt;</span> <span class="n">pval_max</span><span class="p">[</span><span class="n">parent</span><span class="p">]:</span>
                         <span class="n">pval_max</span><span class="p">[</span><span class="n">parent</span><span class="p">]</span> <span class="o">=</span> <span class="n">pval</span>
-                        <span class="n">val_min</span><span class="p">[</span><span class="n">parent</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+                        <span class="n">val_dict</span><span class="p">[</span><span class="n">parent</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
 
                     <span class="c1"># Save the iteration if we need to</span>
                     <span class="k">if</span> <span class="n">save_iterations</span><span class="p">:</span>
@@ -487,14 +487,14 @@
 
             <span class="c1"># Remove non-significant links</span>
             <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">parent</span> <span class="ow">in</span> <span class="n">nonsig_parents</span><span class="p">:</span>
-                <span class="k">del</span> <span class="n">parents_values</span><span class="p">[</span><span class="n">parent</span><span class="p">]</span>
+                <span class="k">del</span> <span class="n">val_min</span><span class="p">[</span><span class="n">parent</span><span class="p">]</span>
             <span class="c1"># Return the parents list sorted by the test metric so that the</span>
             <span class="c1"># updated parents list is given to the next cond_dim loop</span>
-            <span class="n">parents</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sort_parents</span><span class="p">(</span><span class="n">parents_values</span><span class="p">)</span>
+            <span class="n">parents</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sort_parents</span><span class="p">(</span><span class="n">val_min</span><span class="p">)</span>
             <span class="c1"># Print information about the change in possible parents</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Updating parents:&quot;</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_print_parents_single</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">parents_values</span><span class="p">,</span> <span class="n">pval_max</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_print_parents_single</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">val_min</span><span class="p">,</span> <span class="n">pval_max</span><span class="p">)</span>
 
         <span class="c1"># Print information about if convergence was reached</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
@@ -502,6 +502,7 @@
         <span class="c1"># Return the results</span>
         <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;parents&#39;</span><span class="p">:</span> <span class="n">parents</span><span class="p">,</span>
                 <span class="s1">&#39;val_min&#39;</span><span class="p">:</span> <span class="n">val_min</span><span class="p">,</span>
+                <span class="s1">&#39;val_dict&#39;</span><span class="p">:</span> <span class="n">val_dict</span><span class="p">,</span>
                 <span class="s1">&#39;pval_max&#39;</span><span class="p">:</span> <span class="n">pval_max</span><span class="p">,</span>
                 <span class="s1">&#39;iterations&#39;</span><span class="p">:</span> <span class="n">_nested_to_normal</span><span class="p">(</span><span class="n">iterations</span><span class="p">)}</span>
 
@@ -680,6 +681,7 @@
         <span class="c1"># Implement defaultdict for all pval_max, val_max, and iterations</span>
         <span class="n">pval_max</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
         <span class="n">val_min</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
+        <span class="n">val_dict</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
         <span class="n">iterations</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -741,6 +743,7 @@
             <span class="c1"># Record the results for this variable</span>
             <span class="n">all_parents</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="n">optimal_alpha</span><span class="p">][</span><span class="s1">&#39;parents&#39;</span><span class="p">]</span>
             <span class="n">val_min</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="n">optimal_alpha</span><span class="p">][</span><span class="s1">&#39;val_min&#39;</span><span class="p">]</span>
+            <span class="n">val_dict</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="n">optimal_alpha</span><span class="p">][</span><span class="s1">&#39;val_dict&#39;</span><span class="p">]</span>
             <span class="n">pval_max</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="n">optimal_alpha</span><span class="p">][</span><span class="s1">&#39;pval_max&#39;</span><span class="p">]</span>
             <span class="n">iterations</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="n">optimal_alpha</span><span class="p">][</span><span class="s1">&#39;iterations&#39;</span><span class="p">]</span>
             <span class="c1"># Only save the optimal alpha if there is more than one pc_alpha</span>
@@ -748,7 +751,7 @@
                 <span class="n">iterations</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="s1">&#39;optimal_pc_alpha&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">optimal_alpha</span>
         <span class="c1"># Save the results in the current status of the algorithm</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">all_parents</span> <span class="o">=</span> <span class="n">all_parents</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">val_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dict_to_matrix</span><span class="p">(</span><span class="n">val_min</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">val_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dict_to_matrix</span><span class="p">(</span><span class="n">val_dict</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> 
                                                <span class="n">default</span><span class="o">=</span><span class="mf">0.</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">p_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dict_to_matrix</span><span class="p">(</span><span class="n">pval_max</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span>
                                             <span class="n">default</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
@@ -772,8 +775,8 @@
 <span class="sd">        parents : list</span>
 <span class="sd">            List of form [(0, -1), (3, -2), ...].</span>
 <span class="sd">        val_min : dict</span>
-<span class="sd">            Dictionary of form {(0, -1):float, ...} containing the minimum test</span>
-<span class="sd">            statistic value of a link.</span>
+<span class="sd">            Dictionary of form {(0, -1):float, ...} containing the minimum absolute</span>
+<span class="sd">            test statistic value of a link.</span>
 <span class="sd">        pval_max : dict</span>
 <span class="sd">            Dictionary of form {(0, -1):float, ...} containing the maximum</span>
 <span class="sd">            p-value of a link across different conditions.</span>
@@ -791,9 +794,9 @@
                         <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parents</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;        (</span><span class="si">%s</span><span class="s2"> % .d): max_pval = </span><span class="si">%.5f</span><span class="s2">, min_val = </span><span class="si">% .3f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;        (</span><span class="si">%s</span><span class="s2"> % .d): max_pval = </span><span class="si">%.5f</span><span class="s2">, |min_val| = </span><span class="si">% .3f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">pval_max</span><span class="p">[</span><span class="n">p</span><span class="p">],</span>
-                        <span class="n">val_min</span><span class="p">[</span><span class="n">p</span><span class="p">]))</span>
+                        <span class="nb">abs</span><span class="p">(</span><span class="n">val_min</span><span class="p">[</span><span class="n">p</span><span class="p">])))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">    Variable </span><span class="si">%s</span><span class="s2"> has </span><span class="si">%d</span><span class="s2"> link(s):&quot;</span> <span class="o">%</span> <span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="n">parents</span><span class="p">)))</span>
@@ -808,7 +811,7 @@
 <span class="sd">            the conditioning-parents estimated with PC algorithm.</span>
 <span class="sd">        val_min : dict</span>
 <span class="sd">            Dictionary of form {0:{(0, -1):float, ...}} containing the minimum</span>
-<span class="sd">            test statistic value of a link.</span>
+<span class="sd">            absolute test statistic value of a link.</span>
 <span class="sd">        pval_max : dict</span>
 <span class="sd">            Dictionary of form {0:{(0, -1):float, ...}} containing the maximum</span>
 <span class="sd">            p-value of a link across different conditions.</span>
@@ -3098,7 +3101,7 @@
                             <span class="n">max_conds_px</span><span class="o">=</span><span class="n">max_conds_px</span><span class="p">,</span> <span class="n">max_conds_px_lagged</span><span class="o">=</span><span class="n">max_conds_px_lagged</span><span class="p">,</span>
                             <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span> <span class="n">alpha_or_thres</span><span class="o">=</span><span class="n">pc_alpha</span><span class="p">)</span>
 
-                        <span class="c1"># Store minimum test statistic value for sorting adjt</span>
+                        <span class="c1"># Store minimum absolute test statistic value for sorting adjt</span>
                         <span class="c1"># (only internally used)</span>
                         <span class="n">val_min</span><span class="p">[</span><span class="n">j</span><span class="p">][(</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="n">abstau</span><span class="p">)]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">val</span><span class="p">),</span>
                                                        <span class="n">val_min</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>

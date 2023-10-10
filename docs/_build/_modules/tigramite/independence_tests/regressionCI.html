@@ -51,7 +51,19 @@
 <div class="viewcode-block" id="RegressionCI"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.regressionCI.RegressionCI">[docs]</a><span class="k">class</span> <span class="nc">RegressionCI</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Flexible parametric conditional independence tests for continuous, categorical, or mixed data.</span>
 
-<span class="sd">    Assumes one-dimensional X, Y.</span>
+<span class="sd">    Asymptotically equivalent to the tests for mixed data suggested in</span>
+
+<span class="sd">    Tsagris, Michail, et al. &quot;Constraint-based causal discovery with mixed</span>
+<span class="sd">    data.&quot; International journal of data science and analytics 6</span>
+<span class="sd">    (2018): 19-30.</span>
+
+<span class="sd">    For linear regression RegressionCI implements a likelihood ratio test,</span>
+<span class="sd">    while the above employs a F-statistic. Furthermore, while our</span>
+<span class="sd">    implementation utilizes the Chi^2 null distribution, theirs uses the</span>
+<span class="sd">    F-distribution. </span>
+
+<span class="sd">    Assumes one-dimensional X, Y. But can be combined with PairwiseMultCI to</span>
+<span class="sd">    obtain a test for multivariate X, Y.</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
@@ -139,10 +151,11 @@
 
         <span class="k">def</span> <span class="nf">convert_to_one_hot</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">nb_classes</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;Convert an iterable of indices to one-hot encoded labels.&quot;&quot;&quot;</span>
-            
-            <span class="n">targets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">targets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
             <span class="c1"># categories need to be mapped to 0, 1, ... in this function</span>
-            <span class="n">targets</span> <span class="o">=</span> <span class="n">targets</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">targets</span><span class="p">))</span>
+            <span class="n">targets</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">]</span>
+            <span class="n">targets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">nb_classes</span><span class="p">)[</span><span class="n">targets</span><span class="p">]</span>
 
         <span class="k">def</span> <span class="nf">do_componentwise_one_hot_encoding</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">var_type</span><span class="p">):</span>
