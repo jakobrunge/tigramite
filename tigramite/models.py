@@ -332,7 +332,7 @@ class Models():
                     X=conditions_array, **pred_params)
 
             if transform_interventions_and_prediction and fitted_data_transform is not None:
-                predicted_vals = fitted_data_transform['Y'].inverse_transform(X=predicted_vals.reshape(-1, 1)).squeeze()
+                predicted_vals = fitted_data_transform['Y'].inverse_transform(X=predicted_vals).squeeze()
 
             pred_dict[index] = predicted_vals
 
