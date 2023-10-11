@@ -450,9 +450,9 @@ class setup_matrix:
     figsize : tuple of floats, optional (default: None)
         Figure size if new figure is created. If None, default pyplot figsize
         is used.
-    minimum : int, optional (default: -1)
+    minimum : float, optional (default: -1.)
         Lower y-axis limit.
-    maximum : int, optional (default: 1)
+    maximum : float, optional (default: 1.)
         Upper y-axis limit.
     label_space_left : float, optional (default: 0.1)
         Fraction of horizontal figure space to allocate left of plot for labels.
@@ -4520,10 +4520,14 @@ if __name__ == "__main__":
     #     verbosity=1)
 
 
-    # correlations = pcmci.get_lagged_dependencies(tau_max=20, val_only=True)['val_matrix']
-    # lag_func_matrix = plot_lagfuncs(val_matrix=correlations, setup_args={'label_space_left':0.05, 
-    #                                 'x_base':5, 'y_base':.5})
-    # plt.show()
+    correlations = np.random.rand(3, 3, 5) - 0.5 #pcmci.get_lagged_dependencies(tau_max=20, val_only=True)['val_matrix']
+    lag_func_matrix = plot_lagfuncs(val_matrix=correlations, setup_args={
+                        'label_space_left':0.05, 
+                                    'minimum': 0.0,
+                                    'maximum':.05,
+                                    'x_base':5, 
+                                    'y_base':.5})
+    plt.show()
 
     
     # N = len(links)
@@ -4559,36 +4563,36 @@ if __name__ == "__main__":
 
     # val_matrix = np.zeros((4, 4, 3))
 
-    # Complete test case
-    graph = np.zeros((3,3,2), dtype='<U3')
-    val_matrix = 0.*np.random.rand(*graph.shape)
-    val_matrix[:,:,0] = 0.2
-    graph[:] = ""
-    # graph[0, 1, 0] = "<-+"
-    # graph[1, 0, 0] = "+->"
-    graph[0, 0, 1] = "-->"
-    graph[1, 1, 1] = "-->"
+    # # Complete test case
+    # graph = np.zeros((3,3,2), dtype='<U3')
+    # val_matrix = 0.*np.random.rand(*graph.shape)
+    # val_matrix[:,:,0] = 0.2
+    # graph[:] = ""
+    # # graph[0, 1, 0] = "<-+"
+    # # graph[1, 0, 0] = "+->"
+    # graph[0, 0, 1] = "-->"
+    # graph[1, 1, 1] = "-->"
 
-    graph[0, 1, 1] = "+->"
-    # graph[1, 0, 1] = "o-o"
+    # graph[0, 1, 1] = "+->"
+    # # graph[1, 0, 1] = "o-o"
 
     # graph[1, 2, 0] = "<->"
     # graph[2, 1, 0] = "<->"
 
     # graph[0, 2, 0] = "x-x"
-    # graph[2, 0, 0] = "x-x"
-    nolinks = np.zeros(graph.shape)
-    # nolinks[range(4), range(4), 1] = 1
+    # # graph[2, 0, 0] = "x-x"
+    # nolinks = np.zeros(graph.shape)
+    # # nolinks[range(4), range(4), 1] = 1
 
-    # graph = graph[:2, :2, :]
+    # # graph = graph[:2, :2, :]
 
-    # fig, axes = pyplot.subplots(nrows=1, ncols=1, figsize=(6, 5))
+    # # fig, axes = pyplot.subplots(nrows=1, ncols=1, figsize=(6, 5))
 
 
-    # import cartopy.crs as ccrs
-    graph = np.ones((5, 5, 2), dtype='<U3')
-    graph[:] = ""
-    graph[3, :, 1] = '+->' 
+    # # import cartopy.crs as ccrs
+    # graph = np.ones((5, 5, 2), dtype='<U3')
+    # graph[:] = ""
+    # graph[3, :, 1] = '+->' 
 
     # fig = pyplot.figure(figsize=(8, 6))
     # fig = pyplot.figure(figsize=(10, 5))
@@ -4605,18 +4609,18 @@ if __name__ == "__main__":
     #         'transform':ccrs.PlateCarree(), # t.PlateCarree()
     #         }
 
-    plot_time_series_graph(graph=graph,
-        # fig_ax = (fig, ax),
-        # val_matrix=val_matrix,
-        # figsize=(5, 5),
-        # var_names = ['Var %s' %i for i in range(len(graph))],
-        # arrow_linewidth=6,
-        # label_space_left = label_space_left,
-        # label_space_top = label_space_top,
-        # # network_lower_bound=network_lower_bound,
-        save_name="tsg_test.pdf"
-        )
-    pyplot.tight_layout()
+    # plot_time_series_graph(graph=graph,
+    #     # fig_ax = (fig, ax),
+    #     # val_matrix=val_matrix,
+    #     # figsize=(5, 5),
+    #     # var_names = ['Var %s' %i for i in range(len(graph))],
+    #     # arrow_linewidth=6,
+    #     # label_space_left = label_space_left,
+    #     # label_space_top = label_space_top,
+    #     # # network_lower_bound=network_lower_bound,
+    #     save_name="tsg_test.pdf"
+    #     )
+    # pyplot.tight_layout()
 
     # network_lower_bound = 0.
     # show_colorbar=True
