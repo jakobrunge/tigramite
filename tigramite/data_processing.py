@@ -978,7 +978,7 @@ class DataFrame():
         if self.mask is not None and mask_type is not None:
             print(indt+"with masked samples in %s removed" % mask_type)
         if self.data_type is not None:
-            print(indt+"with %s % discrete values" % np.sum(data_type)/data_type.size)
+            print(indt+"with %s discrete values" % str(np.sum(data_type)/data_type.size))
         if self.missing_flag is not None:
             print(indt+"with missing values = %s removed" % self.missing_flag)
 

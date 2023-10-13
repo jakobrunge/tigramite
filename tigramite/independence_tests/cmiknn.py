@@ -570,7 +570,7 @@ if __name__ == '__main__':
     print (data.shape)
     dataframe = DataFrame(data=data)
     cmi.set_dataframe(dataframe)
-    print(cmi.run_test(X=[(0, 0)], Y=[(1, 0)], alpha_or_thres=0.5  ))
+    print(cmi.run_test(X=[(0, 0)], Y=[(1, 0)], alpha_or_thres=0.5))
     # print(cmi.get_model_selection_criterion(j=1, parents=[], tau_max=0))
     # print(cmi.get_model_selection_criterion(j=1, parents=[(0, 0)], tau_max=0))
     # print(cmi.get_model_selection_criterion(j=1, parents=[(0, 0), (2, 0)], tau_max=0))

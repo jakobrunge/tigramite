@@ -426,7 +426,8 @@ class CondIndTest():
                                             nonzero_xyz, nonzero_array, nonzero_data_type)
                 # Get the p-value (None if significance = 'fixed_thres')
                 dim, T = nonzero_array.shape
-                pval = self._get_p_value(val=val, array=nonzero_array, xyz=nonzero_xyz, T=T, dim=dim)
+                pval = self._get_p_value(val=val, array=nonzero_array, xyz=nonzero_xyz, T=T, dim=dim,
+                                         data_type=data_type)
             self.cached_ci_results[combined_hash] = (val, pval)
 
         # Make test decision
@@ -545,12 +546,8 @@ class CondIndTest():
 
 
         # Get the p-value (returns None if significance='fixed_thres')
-        if has_data_type:
-            pval = self._get_p_value(val=val, array=array, xyz=xyz,
-                    T=T, dim=dim, data_type=data_type)
-        else:
-            pval = self._get_p_value(val=val, array=array, xyz=xyz,
-                    T=T, dim=dim)
+        pval = self._get_p_value(val=val, array=array, xyz=xyz,
+                T=T, dim=dim, data_type=data_type)
 
         # Make test decision
         if self.significance == 'fixed_thres':
@@ -701,9 +698,15 @@ class CondIndTest():
             pval = self.get_analytic_significance(value=val, T=T, dim=dim, xyz=xyz)
         # Check if we are using the shuffle significance
         elif use_sig == 'shuffle_test':
-            pval = self.get_shuffle_significance(array=array,
-                                                 xyz=xyz,
-                                                 value=val)
+            if data_type is None:
+                pval = self.get_shuffle_significance(array=array,
+                                                     xyz=xyz,
+                                                     value=val)
+            else:
+                pval = self.get_shuffle_significance(array=array,
+                                                     xyz=xyz,
+                                                     value=val,
+                                                     data_type=data_type)
         # Check if we are using the fixed_thres significance
         elif use_sig == 'fixed_thres':
             # Determined outside then
