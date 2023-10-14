@@ -4,7 +4,10 @@ import math
 
 from scipy import special, spatial
 import numpy as np
-from numba import jit
+from numba import jit, njit, prange
+
+from numba.core.errors import NumbaDeprecationWarning, NumbaWarning
+import warnings
 
 from sklearn.preprocessing import OneHotEncoder, MinMaxScaler
 from sklearn.utils.extmath import cartesian
@@ -12,6 +15,11 @@ from sklearn.utils.extmath import cartesian
 from tigramite.independence_tests.independence_tests_base import CondIndTest
 from tigramite import data_processing as pp
 from tigramite.pcmci import PCMCI
+
+import time
+
+warnings.simplefilter('ignore', category=NumbaDeprecationWarning)
+warnings.simplefilter('ignore', category=NumbaWarning)
 
 
 class CMIknnMixed(CondIndTest):
@@ -1024,7 +1032,25 @@ class CMIknnMixed(CondIndTest):
 
         return restricted_permutation
 
-    @jit(forceobj=True)
+    @jit(parallel=True)
+    def _permute_and_get_p_value_parallel(self, array, xyz, type_mask, valid_neighbors,
+                                          value):
+        p = 0
+        for sam in prange(self.sig_samples):
+            # permute un-encoded array using the valud neighbors list
+            array_shuffled, type_mask_shuffled = self._generate_random_permutation(array,
+                                                                                   valid_neighbors,
+                                                                                   x_indices=np.where(xyz == 0)[0],
+                                                                                   type_mask=type_mask)
+
+            # use array instead of narray to avoid double encoding
+            perm_stat = self.get_dependence_measure(array_shuffled.T,
+                                                         xyz,
+                                                         data_type=type_mask_shuffled.T)
+            p += (perm_stat >= value)
+
+        return p
+    # @jit(forceobj=True)
     def _generate_random_permutation(self, array, neighbors, x_indices, type_mask):
 
         T, dim = array.shape
@@ -1057,9 +1083,9 @@ class CMIknnMixed(CondIndTest):
 
         return array_shuffled, type_mask_shuffled
 
-    @jit(forceobj=True)
+    # @jit(forceobj=True)
     def compute_perm_null_dist(self, array, xyz,
-                               type_mask=None):
+                               type_mask=None, value=0.05):
         # compute valid neighbors
         narray, nxyz, ntype_mask, discrete_idx_list = self._transform_to_one_hot_mixed(array,
                                                                                        xyz,
@@ -1092,6 +1118,7 @@ class CMIknnMixed(CondIndTest):
         valid_neighbors[neighbors[0] != np.inf] = neighbors[1][neighbors[0] != np.inf]
 
         null_dist = np.zeros(self.sig_samples)
+        # p = self._permute_and_get_p_value_parallel(array, xyz, type_mask, valid_neighbors, value)
 
         for sam in range(self.sig_samples):
             # permute un-encoded array using the valud neighbors list
@@ -1105,6 +1132,8 @@ class CMIknnMixed(CondIndTest):
                                                          xyz,
                                                          data_type=type_mask_shuffled.T)
         return null_dist
+
+        # return p
 
     def get_shuffle_significance(self, array, xyz, value,
                                  return_null_dist=False,
@@ -1143,7 +1172,8 @@ class CMIknnMixed(CondIndTest):
 
         if len(z_indices) > 0 and self.shuffle_neighbors < T:
 
-            null_dist = self.compute_perm_null_dist(array, xyz, data_type)
+            null_dist = self.compute_perm_null_dist(array, xyz, data_type, value)
+            # pval = null_dist / self.sig_samples
 
         else:
             null_dist = \
@@ -1346,7 +1376,7 @@ class CMIknnMixed(CondIndTest):
 if __name__ == '__main__':
     # Generate some mixed-type data with a binary variable (can also be multinomial) causing two continuous ones.
     random_state = np.random.default_rng(42)
-    T = 10
+    T = 1000
     data = np.zeros((T, 3))
     data[:, 1] = random_state.binomial(n=1, p=0.5, size=T)
     for t in range(2, T):
@@ -1367,10 +1397,23 @@ if __name__ == '__main__':
                              data_type=data_type,
                              var_names=var_names)
 
-    cmi_knn_mixed = CMIknnMixed(significance='fixed_thres',
+    cmi_knn_mixed = CMIknnMixed(significance='shuffle_test',
+                                sig_samples=500,
                                 estimator='MSinf',
-                                knn=0.1,
-                                transform=None,
-                                model_selection_folds=3)
+                                knn=0.1)
+
+    Y = [(1, 0)]
+    X = [(2, 0)]  # dummy variable here
+    Z = [(0, 0)]
+
+    array, xyz, data_type = dataframe.construct_array(X=X, Y=Y, Z=Z,
+                                                           tau_max=0)
+
+    start = time.time()
+    sig = cmi_knn_mixed.get_shuffle_significance(array, xyz, 0.05, data_type=data_type)
+    end = time.time()
+
+    print(end-start, sig)
+
 
     # print(cmi_knn_mixed.get_model_selection_criterion(j=2, parents=[(1, -1), (1, 0)], tau_max=0))
