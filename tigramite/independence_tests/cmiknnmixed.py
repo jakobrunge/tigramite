@@ -503,6 +503,7 @@ class CMIknnMixed(CondIndTest):
             else:
                 epsarray[i] = neighbors[0][i, knn]
 
+
         neighbors_radius_xyz = tree_xyz.query_ball_point(narray, epsarray, p=np.inf)
 
         k_tilde = [
@@ -525,6 +526,8 @@ class CMIknnMixed(CondIndTest):
         else:
             # Number of neighbors is T when z is empty.
             k_z = np.full(T, T, dtype='float')
+
+        end = time.time()
 
         k_xz = np.asarray([i - 1 if i > 1 else i for i in k_xz])
         k_yz = np.asarray([i - 1 if i > 1 else i for i in k_yz])
@@ -1032,25 +1035,8 @@ class CMIknnMixed(CondIndTest):
 
         return restricted_permutation
 
-    @jit(parallel=True)
-    def _permute_and_get_p_value_parallel(self, array, xyz, type_mask, valid_neighbors,
-                                          value):
-        p = 0
-        for sam in prange(self.sig_samples):
-            # permute un-encoded array using the valud neighbors list
-            array_shuffled, type_mask_shuffled = self._generate_random_permutation(array,
-                                                                                   valid_neighbors,
-                                                                                   x_indices=np.where(xyz == 0)[0],
-                                                                                   type_mask=type_mask)
 
-            # use array instead of narray to avoid double encoding
-            perm_stat = self.get_dependence_measure(array_shuffled.T,
-                                                         xyz,
-                                                         data_type=type_mask_shuffled.T)
-            p += (perm_stat >= value)
-
-        return p
-    # @jit(forceobj=True)
+    @jit(forceobj=True)
     def _generate_random_permutation(self, array, neighbors, x_indices, type_mask):
 
         T, dim = array.shape
@@ -1118,7 +1104,6 @@ class CMIknnMixed(CondIndTest):
         valid_neighbors[neighbors[0] != np.inf] = neighbors[1][neighbors[0] != np.inf]
 
         null_dist = np.zeros(self.sig_samples)
-        # p = self._permute_and_get_p_value_parallel(array, xyz, type_mask, valid_neighbors, value)
 
         for sam in range(self.sig_samples):
             # permute un-encoded array using the valud neighbors list
