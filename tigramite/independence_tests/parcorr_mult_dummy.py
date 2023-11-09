@@ -13,11 +13,14 @@ import warnings
 from tigramite.independence_tests.parcorr_mult import ParCorrMult
 from .independence_tests_base import CondIndTest
 
-class ParCorrMultNew(ParCorrMult):
+class ParCorrMultDummy(ParCorrMult):
     r"""Partial correlation test for multivariate X and Y.
 
-    Multivariate partial correlation is estimated through ordinary least squares (OLS)
-    regression and some test for multivariate dependency among the residuals.
+    Adaption of the ParCorMult conditional independence test to be able to deal with one-hot encoded dummy variables.
+    Namely, if a dummy variable takes on the role of X or Y, it is excluded from the regression step. Data of dummy
+    variables is also not standardized.
+    ParCorMult estimates multivariate partial correlation through ordinary least squares (OLS) regression and some
+    test for multivariate dependency among the residuals.
 
     Notes
     -----
@@ -33,8 +36,8 @@ class ParCorrMultNew(ParCorrMult):
 
     Parameters
     ----------
-    correlation_type : {'max_corr'}
-        Which dependency measure to use on residuals.
+    dummy_indices : list
+        List of lists of all indices that belong to dummy variables.
     **kwargs :
         Arguments passed on to Parent class CondIndTest.
     """
