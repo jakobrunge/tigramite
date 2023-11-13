@@ -18,7 +18,7 @@ class ParCorrMultDummy(ParCorrMult):
 
     Adaption of the ParCorMult conditional independence test to be able to deal with one-hot encoded dummy variables.
     Namely, if a dummy variable takes on the role of X or Y, it is excluded from the regression step. Data of dummy
-    variables is also not standardized.
+    variables is also not standardized. Importantly, dummy variables are assumed to be exogenous to the system.
     ParCorMult estimates multivariate partial correlation through ordinary least squares (OLS) regression and some
     test for multivariate dependency among the residuals.
 
