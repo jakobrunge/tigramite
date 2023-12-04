@@ -14,6 +14,7 @@ import gpytorch
 from .LBFGS import FullBatchLBFGS
 from .independence_tests_base import CondIndTest
 
+
 class GaussProcRegTorch():
     r"""Gaussian processes abstract base class.
 
@@ -163,13 +164,12 @@ class GaussProcRegTorch():
                  exact_dist=null_dists,
                  T=np.array(sample_sizes))
 
-
     def _get_single_residuals(self, array, target_var,
-                                    return_means=False,
-                                    standardize=True,
-                                    return_likelihood=False,
-                                    training_iter=50,
-                                    lr=0.1):
+                              return_means=False,
+                              standardize=True,
+                              return_likelihood=False,
+                              training_iter=50,
+                              lr=0.1):
         """Returns residuals of Gaussian process regression.
 
         Performs a GP regression of the variable indexed by target_var on the
@@ -244,6 +244,7 @@ class GaussProcRegTorch():
         if device_type == 'cuda':
             # If GPU is available, use MultiGPU with Kernel Partitioning
             n_devices = torch.cuda.device_count()
+
             class mExactGPModel(gpytorch.models.ExactGP):
                 def __init__(self, train_x, train_y, likelihood, n_devices):
                     super(mExactGPModel, self).__init__(train_x, train_y, likelihood)
@@ -261,13 +262,13 @@ class GaussProcRegTorch():
                     return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
 
             def mtrain(train_x,
-                      train_y,
-                      n_devices,
-                      output_device,
-                      checkpoint_size,
-                      preconditioner_size,
-                      n_training_iter,
-                      ):
+                       train_y,
+                       n_devices,
+                       output_device,
+                       checkpoint_size,
+                       preconditioner_size,
+                       n_training_iter,
+                       ):
                 likelihood = gpytorch.likelihoods.GaussianLikelihood().to(output_device)
                 model = mExactGPModel(train_x, train_y, likelihood, n_devices).to(output_device)
                 model.train()
@@ -322,9 +323,9 @@ class GaussProcRegTorch():
                     try:
                         # Try a full forward and backward pass with this setting to check memory usage
                         _, _, _ = mtrain(train_x, train_y,
-                                     n_devices=n_devices, output_device=output_device,
-                                     checkpoint_size=checkpoint_size,
-                                     preconditioner_size=preconditioner_size, n_training_iter=1)
+                                         n_devices=n_devices, output_device=output_device,
+                                         checkpoint_size=checkpoint_size,
+                                         preconditioner_size=preconditioner_size, n_training_iter=1)
 
                         # when successful, break out of for-loop and jump to finally block
                         break
@@ -342,15 +343,15 @@ class GaussProcRegTorch():
             preconditioner_size = 100
             if self.checkpoint_size is None:
                 self.checkpoint_size = find_best_gpu_setting(train_x, train_y,
-                                                        n_devices=n_devices,
-                                                        output_device=output_device,
-                                                        preconditioner_size=preconditioner_size)
+                                                             n_devices=n_devices,
+                                                             output_device=output_device,
+                                                             preconditioner_size=preconditioner_size)
 
             model, likelihood, mll = mtrain(train_x, train_y,
-                                      n_devices=n_devices, output_device=output_device,
-                                      checkpoint_size=self.checkpoint_size,
-                                      preconditioner_size=100,
-                                      n_training_iter=training_iter)
+                                            n_devices=n_devices, output_device=output_device,
+                                            checkpoint_size=self.checkpoint_size,
+                                            preconditioner_size=100,
+                                            n_training_iter=training_iter)
 
             # Get into evaluation (predictive posterior) mode
             model.eval()
@@ -359,7 +360,7 @@ class GaussProcRegTorch():
             # Make predictions by feeding model through likelihood
             with torch.no_grad(), gpytorch.settings.fast_pred_var(), gpytorch.beta_features.checkpoint_kernel(1000):
                 mean = model(train_x).loc.detach()
-                loglik = mll(model(train_x), train_y)*T
+                loglik = mll(model(train_x), train_y) * T
 
             resid = (train_y - mean).detach().cpu().numpy()
             mean = mean.detach().cpu().numpy()
@@ -452,7 +453,7 @@ class GaussProcRegTorch():
         """
 
         Y = [(j, 0)]
-        X = [(j, 0)]   # dummy variable here
+        X = [(j, 0)]  # dummy variable here
         Z = parents
         array, xyz, _ = \
             self.cond_ind_test.dataframe.construct_array(
@@ -514,6 +515,7 @@ class GPDCtorch(CondIndTest):
         Arguments passed on to parent class GaussProcRegTorch.
 
     """
+
     @property
     def measure(self):
         """
@@ -531,9 +533,9 @@ class GPDCtorch(CondIndTest):
         CondIndTest.__init__(self, **kwargs)
         # Build the regressor
         self.gauss_pr = GaussProcRegTorch(self.sig_samples,
-                                     self,
-                                     null_dist_filename=null_dist_filename,
-                                     verbosity=self.verbosity)
+                                          self,
+                                          null_dist_filename=null_dist_filename,
+                                          verbosity=self.verbosity)
 
         if self.verbosity > 0:
             print("null_dist_filename = %s" % self.gauss_pr.null_dist_filename)
@@ -601,13 +603,12 @@ class GPDCtorch(CondIndTest):
         self.gauss_pr._generate_and_save_nulldists(sample_sizes,
                                                    null_dist_filename)
 
-
     def _get_single_residuals(self, array, target_var,
-                                    return_means=False,
-                                    standardize=True,
-                                    return_likelihood=False,
-                                    training_iter=50,
-                                    lr=0.1):
+                              return_means=False,
+                              standardize=True,
+                              return_likelihood=False,
+                              training_iter=50,
+                              lr=0.1):
         """Returns residuals of Gaussian process regression.
 
         Performs a GP regression of the variable indexed by target_var on the
@@ -677,7 +678,7 @@ class GPDCtorch(CondIndTest):
         """
         return self.gauss_pr._get_model_selection_criterion(j, parents, tau_max)
 
-    def get_dependence_measure(self, array, xyz):
+    def get_dependence_measure(self, array, xyz, data_type=None):
         """Return GPDC measure.
 
         Estimated as the distance correlation of the residuals of a GP
@@ -690,6 +691,11 @@ class GPDCtorch(CondIndTest):
 
         xyz : array of ints
             XYZ identifier array of shape (dim,).
+
+        data_type : array-like
+            data array of same shape as array which describes whether variables
+            are continuous or discrete: 0s for continuous variables and
+            1s for discrete variables. Here, it is not used.
 
         Returns
         -------
@@ -729,7 +735,8 @@ class GPDCtorch(CondIndTest):
         return val
 
     def get_shuffle_significance(self, array, xyz, value,
-                                 return_null_dist=False):
+                                 return_null_dist=False,
+                                 data_type=None):
         """Returns p-value for shuffle significance test.
 
         For residual-based test statistics only the residuals are shuffled.
@@ -744,6 +751,11 @@ class GPDCtorch(CondIndTest):
 
         value : number
             Value of test statistic for unshuffled estimate.
+
+        data_type : array-like
+            data array of same shape as array which describes whether variables
+            are continuous or discrete: 0s for continuous variables and
+            1s for discrete variables. Here, it is not used.
 
         Returns
         -------
@@ -815,4 +827,3 @@ class GPDCtorch(CondIndTest):
             null_dist_here = self.gauss_pr.null_dists[int(df)]
             pval = np.mean(null_dist_here > np.abs(value))
         return pval
-

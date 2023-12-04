@@ -70,7 +70,7 @@ class CondIndTest():
         Level of verbosity.
     """
     @abc.abstractmethod
-    def get_dependence_measure(self, array, xyz):
+    def get_dependence_measure(self, array, xyz, data_type=None):
         """
         Abstract function that all concrete classes must instantiate.
         """
@@ -525,6 +525,8 @@ class CondIndTest():
 
             if has_data_type:
                 data_type = np.vstack((x_type.T, y_type.T, z_type.T))
+            else:
+                data_type = None
             # xyz is the dimension indicator
             xyz = np.array([0 for i in range(x.shape[1])] +
                            [1 for i in range(y.shape[1])] +
@@ -539,11 +541,7 @@ class CondIndTest():
         if np.isnan(array).sum() != 0:
             raise ValueError("nans in the array!")
         # Get the dependence measure
-        if has_data_type:
-            val = self.get_dependence_measure(array, xyz, data_type=data_type)
-        else:
-            val = self.get_dependence_measure(array, xyz)
-
+        val = self.get_dependence_measure(array, xyz, data_type=data_type)
 
         # Get the p-value (returns None if significance='fixed_thres')
         pval = self._get_p_value(val=val, array=array, xyz=xyz,
@@ -606,14 +604,12 @@ class CondIndTest():
             xyz_resid = np.array([0, 1])
             # Return the dependence measure
             # data type can only be continuous in this case
-            return self.get_dependence_measure(array_resid, xyz_resid)
+            # @Jakob: should this then be hardcoded None?!
+            return self.get_dependence_measure(array_resid, xyz_resid, data_type=data_type)
 
         # If not, return the dependence measure on the array and xyz
-        if data_type is not None:
-            return self.get_dependence_measure(array, xyz, 
-                                        data_type=data_type)
-        else:
-            return self.get_dependence_measure(array, xyz)
+        return self.get_dependence_measure(array, xyz,
+                                    data_type=data_type)
 
     def _get_cached_residuals(self, x_nodes, z_nodes, array, target_var):
         """
@@ -730,8 +726,7 @@ class CondIndTest():
         # else:
         return pval
 
-    def get_measure(self, X, Y, Z=None, tau_max=0, 
-                    data_type=None):
+    def get_measure(self, X, Y, Z=None, tau_max=0):
         """Estimate dependence measure.
 
         Calls the dependence measure function. The child classes must specify
@@ -760,17 +755,16 @@ class CondIndTest():
 
         """
         # Make the array
-        array, xyz, (X, Y, Z), _ = self._get_array(X=X, Y=Y, Z=Z, tau_max=tau_max,
+        array, xyz, (X, Y, Z), data_type = self._get_array(X=X, Y=Y, Z=Z, tau_max=tau_max,
                                             remove_constant_data=False)
         D, T = array.shape
         # Check it is valid
         if np.isnan(array).sum() != 0:
             raise ValueError("nans in the array!")
         # Return the dependence measure
-        return self._get_dependence_measure_recycle(X, Y, Z, xyz, array)
+        return self._get_dependence_measure_recycle(X, Y, Z, xyz, array, data_type=data_type)
 
-    def get_confidence(self, X, Y, Z=None, tau_max=0,
-                       data_type=None):
+    def get_confidence(self, X, Y, Z=None, tau_max=0):
         """Perform confidence interval estimation.
 
         Calls the dependence measure and confidence test functions. The child
@@ -819,7 +813,7 @@ class CondIndTest():
 
             # Check if we are using analytic confidence or bootstrapping it
             if self.confidence == 'analytic':
-                val = self.get_dependence_measure(array, xyz)
+                val = self.get_dependence_measure(array, xyz, data_type=data_type)
                 (conf_lower, conf_upper) = \
                         self.get_analytic_confidence(df=T-dim,
                                                      value=val,

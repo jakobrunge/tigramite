@@ -20,7 +20,7 @@ from tigramite.independence_tests.regressionCI import RegressionCI
 import tigramite.data_processing as pp
 from tigramite.toymodels import structural_causal_processes as toys
 
-from test_pcmci_calculations import a_chain, gen_data_frame
+from test_pcmci_calculations import a_chain, gen_data_frame, gen_data_frame_mixed
 
 # Pylint settings
 # pylint: disable=redefined-outer-name
@@ -151,9 +151,9 @@ def check_get_measure(ind_test, sample):
     # Run the test
     val = ind_test.get_measure(x_nds, y_nds, z_nds, tau_max)
     # Get the array the test is running on
-    array, xyz, _, _ = ind_test._get_array(x_nds, y_nds, z_nds, tau_max)
+    array, xyz, _, data_type = ind_test._get_array(x_nds, y_nds, z_nds, tau_max)
     # Get the correct dependence measure
-    val_expt = ind_test.get_dependence_measure(array, xyz)
+    val_expt = ind_test.get_dependence_measure(array, xyz, data_type=data_type)
     # Check the values are close
     np.testing.assert_allclose(np.array(val), np.array(val_expt), atol=1e-2)
 
@@ -795,6 +795,19 @@ def cmi_knn(request):
                   conf_blocklength=1,
                   verbosity=0)
 
+@pytest.fixture()
+def cmi_knn_mixed(request):
+    return CMIknnMixed(mask_type=None,
+                  significance='shuffle_test',
+                  sig_samples=10000,
+                  sig_blocklength=3,
+                  knn=0.3,
+                  confidence='bootstrap',
+                  conf_lev=0.9,
+                  conf_samples=10000,
+                  conf_blocklength=1,
+                  verbosity=0)
+
 @pytest.fixture(params=[
     # Generate the sample to be used for confidence interval comparison
     #seed, corr_val, T
@@ -820,6 +833,20 @@ def data_frame_c(request):
     links_coeffs, time, seed_val = request.param
     # Generate the dataframe
     return gen_data_frame(links_coeffs, time, seed_val)
+
+@pytest.fixture(params=[
+    # Generate a test data sample
+    # Parameterize the sample by setting the autocorrelation value, coefficient
+    # value, total time length, and random seed to different numbers
+    # links_coeffs,               time, seed_val
+    (a_chain(0.1, 0.9),           100, 2),
+    (a_chain(0.5, 0.6),           100, 11),
+    (a_chain(0.5, 0.6, length=5), 100, 42)])
+def data_frame_c_mixed(request):
+    # Set the parameters
+    links_coeffs, time, seed_val = request.param
+    # Generate the dataframe
+    return gen_data_frame_mixed(links_coeffs, time, seed_val)
 
 def test_get_array_cmi_knn(cmi_knn, data_frame_c):
     # Check the get_array function
@@ -856,6 +883,10 @@ def test_cmi_knn(cmi_knn, data_sample_c):
     np.testing.assert_allclose(np.array(_par_corr_to_cmi(corr_val)),
                                np.array(val_est),
                                atol=0.02)
+
+def test_get_measure_cmi_knn_mixed(cmi_knn_mixed, data_frame_c_mixed):
+    # Check the get_measure function
+    check_get_measure(cmi_knn_mixed, data_frame_c_mixed)
 
 # CMIsymb TESTING ##############################################################
 @pytest.fixture()

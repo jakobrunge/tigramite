@@ -68,6 +68,17 @@ def gen_data_frame(links_coeffs, time, seed_val):
     true_parents = _get_parent_graph(links_coeffs)
     return pp.DataFrame(data), true_parents
 
+
+def gen_data_frame_mixed(links_coeffs, time, seed_val):
+    # Set the random seed
+    np.random.seed(seed_val)
+    # Generate the data
+    data, _ = toys.var_process(links_coeffs, T=time)
+    data_type = np.zeros(data.shape)
+    # Get the true parents
+    true_parents = _get_parent_graph(links_coeffs)
+    return pp.DataFrame(data, data_type=data_type), true_parents
+
 # TEST LINK GENERATION #########################################################
 def a_chain(auto_corr, coeff, length=3):
     """

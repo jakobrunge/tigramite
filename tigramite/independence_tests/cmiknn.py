@@ -216,7 +216,7 @@ class CMIknn(CondIndTest):
 
         return k_xz, k_yz, k_z
 
-    def get_dependence_measure(self, array, xyz):
+    def get_dependence_measure(self, array, xyz, data_type=None):
         """Returns CMI estimate as described in Frenzel and Pompe PRL (2007).
 
         Parameters
@@ -226,6 +226,11 @@ class CMIknn(CondIndTest):
 
         xyz : array of ints
             XYZ identifier array of shape (dim,).
+
+        data_type : array-like
+            data array of same shape as array which describes whether variables
+            are continuous or discrete: 0s for continuous variables and
+            1s for discrete variables. Here, it is not used.
 
         Returns
         -------
@@ -253,7 +258,7 @@ class CMIknn(CondIndTest):
 
 
     def get_shuffle_significance(self, array, xyz, value,
-                                 return_null_dist=False):
+                                 return_null_dist=False, data_type=None):
         """Returns p-value for nearest-neighbor shuffle significance test.
 
         For non-empty Z, overwrites get_shuffle_significance from the parent
@@ -273,6 +278,11 @@ class CMIknn(CondIndTest):
 
         value : number
             Value of test statistic for unshuffled estimate.
+
+        data_type : array-like
+            data array of same shape as array which describes whether variables
+            are continuous or discrete: 0s for continuous variables and
+            1s for discrete variables. Here, it is not used.
 
         Returns
         -------

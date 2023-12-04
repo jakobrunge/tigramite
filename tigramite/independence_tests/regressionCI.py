@@ -11,6 +11,8 @@ from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn import metrics
 
 from .independence_tests_base import CondIndTest
+
+
 # from numba import jit   # could make it even faster, also acticate @jit(forceobj=True)
 
 
@@ -51,16 +53,17 @@ class RegressionCI(CondIndTest):
     **kwargs :
         Arguments passed on to parent class CondIndTest.
     """
+
     @property
     def measure(self):
         """
         Concrete property to return the measure of the independence test
         """
         return self._measure
-    
+
     def __init__(self,
                  **kwargs):
-        
+
         # Setup the member variables
         self._measure = 'regression_ci'
         self.two_sided = False
@@ -82,18 +85,18 @@ class RegressionCI(CondIndTest):
 
         """
         self.dataframe = dataframe
-        
+
         if self.mask_type is not None:
             if dataframe.mask is None:
                 raise ValueError("mask_type is not None, but no mask in dataframe.")
             dataframe._check_mask(dataframe.mask)
-        
+
         if dataframe.data_type is None:
             raise ValueError("data_type cannot be None for RegressionCI.")
         dataframe._check_mask(dataframe.data_type, check_data_type=True)
 
     # @jit(forceobj=True)
-    def get_dependence_measure(self, array, xyz, data_type):
+    def get_dependence_measure(self, array, xyz, data_type=None):
         """Returns test statistic.
 
         Parameters
@@ -126,7 +129,7 @@ class RegressionCI(CondIndTest):
 
         def do_componentwise_one_hot_encoding(X, var_type):
             """A function that one-hot encodes all categorical components of X"""
-           
+
             T, dim = X.shape
             X_new = np.empty([T, 0])
             # componentwise dummy-encoding (if necessary, otherwise, keep component as usual):
@@ -151,7 +154,7 @@ class RegressionCI(CondIndTest):
             # do logistic regression
             model = LogisticRegression(multi_class='multinomial', solver='lbfgs')
             model.fit(X, y)
-            deviance = 2*metrics.log_loss(y, model.predict_proba(X), normalize=False)
+            deviance = 2 * metrics.log_loss(y, model.predict_proba(X), normalize=False)
             # dofs: +2 for intercept (+1) (not too important, cancels out later anyway)
             dof = model.n_features_in_ + 1
             return deviance, dof
@@ -163,7 +166,7 @@ class RegressionCI(CondIndTest):
 
             n, p = X.shape  # p is not important for later
             # 1-hot-encode all categorical columns
-            X = do_componentwise_one_hot_encoding(X, var_type = var_type)
+            X = do_componentwise_one_hot_encoding(X, var_type=var_type)
             y = np.ravel(y)
             # do linear regression
             model = LinearRegression()
@@ -176,7 +179,7 @@ class RegressionCI(CondIndTest):
             # deviance is calculated as -2*log-likelihood
             deviance = n * np.log(2 * np.pi) + n * np.log(rss / n) + n
             # dofs: +2 for intercept (+1)  (not too important, cancels out later anyway)
-            dof = model.n_features_in_  + 1
+            dof = model.n_features_in_ + 1
             return deviance, dof
 
         def entropy(series):
@@ -205,13 +208,13 @@ class RegressionCI(CondIndTest):
         # check, whether within X and within Y all datapoints have the same datatype
         if ((x_type.max() != x_type.min()) or (y_type.max() != y_type.min())):
             raise ValueError("All samples regarding X or respectively Y must have the same datatype")
-        
+
         x_type = x_type.max()
         y_type = y_type.max()
 
         # if z was (originally) None, then just an intercept is fitted ...
         # Now, different cases for X discrete/continuous and Y discrete/continuous
-        
+
         # Case 1: X continuous, Y continuous
         if (x_type == 0) and (y_type == 0):
             # Use the more normal variable as dependent variable TODO: makes sense?
@@ -221,11 +224,11 @@ class RegressionCI(CondIndTest):
                 rest_type = np.hstack((x_type, z_type))
             else:
                 dep_var = x
-                rest = np.hstack((y, z))  
+                rest = np.hstack((y, z))
                 rest_type = np.hstack((y_type, z_type))
-              
+
             # Fit Y | Z
-            dev1, dof1 = calc_deviance_linear(z, dep_var, var_type = z_type)
+            dev1, dof1 = calc_deviance_linear(z, dep_var, var_type=z_type)
             # Fit Y | ZX
             dev2, dof2 = calc_deviance_linear(rest, dep_var, var_type=rest_type)
             # print(dev1, dev2, np.abs(dev1 - dev2))
@@ -234,18 +237,18 @@ class RegressionCI(CondIndTest):
         elif (x_type == 1) and (y_type == 0):
             xz = np.hstack((x, z))
             # Fit Y | Z
-            dev1, dof1 = calc_deviance_linear(z, y, var_type = z_type)
+            dev1, dof1 = calc_deviance_linear(z, y, var_type=z_type)
             # Fit Y | XZ
-            dev2, dof2 = calc_deviance_linear(xz, y, var_type = np.hstack((x_type, z_type)))
-        
+            dev2, dof2 = calc_deviance_linear(xz, y, var_type=np.hstack((x_type, z_type)))
+
         # Case 3: X continuous, Y discrete
         elif (x_type == 0) and (y_type == 1):
             yz = np.hstack((y, z))
             # Fit X | Z
-            dev1, dof1 = calc_deviance_linear(z, x, var_type = z_type)
+            dev1, dof1 = calc_deviance_linear(z, x, var_type=z_type)
             # Fit X | YZ
-            dev2, dof2 = calc_deviance_linear(yz, x, var_type = np.hstack((y_type, z_type)))
-        
+            dev2, dof2 = calc_deviance_linear(yz, x, var_type=np.hstack((y_type, z_type)))
+
         # Case 4: X discrete, Y discrete
         elif (x_type == 1) and (y_type == 1):
             # Use the variable with smaller entropy as dependent variable TODO: makes sense?
@@ -255,11 +258,11 @@ class RegressionCI(CondIndTest):
                 rest_type = np.hstack((x_type, z_type))
             else:
                 dep_var = x
-                rest = np.hstack((y, z))  
+                rest = np.hstack((y, z))
                 rest_type = np.hstack((y_type, z_type))
             # xz = np.hstack((x, z))
             # Fit Y | Z
-            dev1, dof1 = calc_deviance_logistic(z, dep_var, var_type = z_type)
+            dev1, dof1 = calc_deviance_logistic(z, dep_var, var_type=z_type)
             # Fit Y | XZ
             dev2, dof2 = calc_deviance_logistic(rest, dep_var, var_type=rest_type)
 
@@ -277,7 +280,7 @@ class RegressionCI(CondIndTest):
         According to a chi-square distribution with 'dof' degrees of freedom.
 
         """
-                      
+
         # Calculate the p_value
         p_value = chi2.sf(value, self._temp_dof)
         del self._temp_dof
@@ -286,13 +289,13 @@ class RegressionCI(CondIndTest):
 
 
 if __name__ == '__main__':
-    
+
     import tigramite
     from tigramite.data_processing import DataFrame
     import tigramite.data_processing as pp
     import numpy as np
 
-    seed=43
+    seed = 43
     random_state = np.random.default_rng(seed=seed)
     ci = RegressionCI()
 
@@ -305,7 +308,7 @@ if __name__ == '__main__':
     y_example = "continuous"
     dimz = 1
     # z_example = ["discrete", "continuous"]
-    z_example = ["continuous"] #, "discrete"]
+    z_example = ["continuous"]  # , "discrete"]
     # z_example = None
     rate = np.zeros(reals)
     for i in range(reals):
@@ -315,7 +318,7 @@ if __name__ == '__main__':
                 if z_example[k] == "discrete":
                     z[:, k] = random_state.binomial(n=1, p=0.5, size=T)
                 else:
-                    z[:, k] = random_state.uniform(low = 0, high = 1, size=T)
+                    z[:, k] = random_state.uniform(low=0, high=1, size=T)
         else:
             z = None
         x = np.empty(T).reshape(T, 1)
@@ -332,11 +335,11 @@ if __name__ == '__main__':
             if x_example == "discrete":
                 x[t] = random_state.choice([0, 1], p=[prob, 1. - prob])
             else:
-                x[t] = 0.1*random_state.random() # np.random.uniform(prob, 1)  #np.random.normal(prob, 1)
+                x[t] = 0.1 * random_state.random()  # np.random.uniform(prob, 1)  #np.random.normal(prob, 1)
             if y_example == "discrete":
-                y[t] = random_state.choice([0, 1], p=[prob, (1. - prob)]) # + x[t]
+                y[t] = random_state.choice([0, 1], p=[prob, (1. - prob)])  # + x[t]
             else:
-                y[t] = random_state.normal(prob, 1) + 0.5*x[t]
+                y[t] = random_state.normal(prob, 1) + 0.5 * x[t]
 
         # # Continuous data
         # z = np.random.randn(T, dimz)
@@ -373,10 +376,8 @@ if __name__ == '__main__':
         # # print(data_type)
         # dataframe = pp.DataFrame(data=data, data_type=data_type)
         # ci.set_dataframe(dataframe)
-        
+
         # val, pval = ci.run_test(X=[(0, 0)], Y=[(1, 0)], Z=[(2, 0)])
         # rate[i] = pval
 
     print((rate <= 0.05).mean())
-
-

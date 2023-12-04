@@ -15,6 +15,7 @@ from scipy.stats.contingency import expected_freq
 from scipy.stats.contingency import margins
 from .independence_tests_base import CondIndTest
 
+
 class Gsquared(CondIndTest):
     r"""G-squared conditional independence test for categorical data.
 
@@ -52,17 +53,18 @@ class Gsquared(CondIndTest):
     **kwargs :
         Arguments passed on to parent class CondIndTest.
     """
+
     @property
     def measure(self):
         """
         Concrete property to return the measure of the independence test
         """
         return self._measure
-    
+
     def __init__(self,
                  n_symbs=None,
                  **kwargs):
-        
+
         # Setup the member variables
         self._measure = 'gsquared'
         self.n_symbs = n_symbs
@@ -75,7 +77,7 @@ class Gsquared(CondIndTest):
             print("n_symbs = %s" % self.n_symbs)
             print("")
 
-    def get_dependence_measure(self, array, xyz):
+    def get_dependence_measure(self, array, xyz, data_type=None):
         """Returns Gsquared/G-test test statistic.
 
         Parameters
@@ -85,6 +87,11 @@ class Gsquared(CondIndTest):
 
         xyz : array of ints
             XYZ identifier array of shape (dim,).
+
+        data_type : array-like
+            data array of same shape as array which describes whether variables
+            are continuous or discrete: 0s for continuous variables and
+            1s for discrete variables. Here, it is not used.
 
         Returns
         -------
@@ -108,11 +115,11 @@ class Gsquared(CondIndTest):
         if self.n_symbs is None:
             levels = None
         else:
-            levels = np.tile(np.arange(self.n_symbs), (len(xyz), 1))  
+            levels = np.tile(np.arange(self.n_symbs), (len(xyz), 1))
             # Assuming same list of levels for (z, y, x).
 
         _, observed = crosstab(*(np.asarray(np.split(array_flip, len(xyz), axis=0)).reshape((-1, T))), levels=levels,
-                           sparse=False)
+                               sparse=False)
 
         observed_shape = observed.shape
 
@@ -131,14 +138,14 @@ class Gsquared(CondIndTest):
             observedYX = observed[zs]
             mY, mX = margins(observedYX)
 
-            if(np.sum(mY)!=0):
+            if (np.sum(mY) != 0):
                 expectedYX = expected_freq(observedYX)
-                gsquare += 2 * np.sum(xlogy(observedYX, observedYX) 
+                gsquare += 2 * np.sum(xlogy(observedYX, observedYX)
                                       - xlogy(observedYX, expectedYX))
 
                 # Check how many rows and columns are all-zeros. i.e. how may
                 # marginals are zero in expected-frq
-                nzero_rows = np.sum(~expectedYX.any(axis=1)) 
+                nzero_rows = np.sum(~expectedYX.any(axis=1))
                 nzero_cols = np.sum(~expectedYX.any(axis=0))
 
                 # Compute dof. Reduce by 1 dof for every marginal row & column=
@@ -155,7 +162,7 @@ class Gsquared(CondIndTest):
     def get_analytic_significance(self, value, T, dim, xyz):
         """Return the p_value of test statistic value 'value', according to a
            chi-square distribution with 'dof' degrees of freedom."""
-                      
+
         # Calculate the p_value
         p_value = chi2.sf(value, self._temp_dof)
         del self._temp_dof
@@ -164,13 +171,13 @@ class Gsquared(CondIndTest):
 
 
 if __name__ == '__main__':
-    
+
     import tigramite
     from tigramite.data_processing import DataFrame
     import tigramite.data_processing as pp
     import numpy as np
 
-    seed=42
+    seed = 42
     random_state = np.random.default_rng(seed=seed)
     cmi = Gsquared()
 
@@ -181,9 +188,9 @@ if __name__ == '__main__':
     y = np.empty(T).reshape(T, 1)
     for t in range(T):
         val = z[t, 0].squeeze()
-        prob = 0.2+val*0.6
-        x[t] = random_state.choice([0,1], p=[prob, 1.-prob])
-        y[t] = random_state.choice([0,1, 2], p=[prob, (1.-prob)/2., (1.-prob)/2.])
+        prob = 0.2 + val * 0.6
+        x[t] = random_state.choice([0, 1], p=[prob, 1. - prob])
+        y[t] = random_state.choice([0, 1, 2], p=[prob, (1. - prob) / 2., (1. - prob) / 2.])
 
     print('start')
     print(cmi.run_test_raw(x, y, z=None))

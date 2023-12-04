@@ -1137,7 +1137,7 @@ class CMIknnMixed(CondIndTest):
         value : number
             Value of test statistic for unshuffled estimate.
         
-        type_mask : array-like
+        data_type : array-like
             data array of same shape as array which describes whether variables
             are continuous or discrete: 0s for continuous variables and 
             1s for discrete variables
