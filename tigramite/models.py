@@ -185,6 +185,7 @@ class Models():
                 self.fitted_data_transform['S'] = S_transform
 
             # Now transform whole array
+            # TODO: Rather concatenate transformed arrays
             all_transform = deepcopy(self.data_transform)
             array = all_transform.fit_transform(X=array.T).T
 
@@ -314,7 +315,7 @@ class Models():
                 predictor_array = np.hstack((intervention_array, z_array))
 
             predicted_vals = self.fit_results['model'].predict(
-            X=predictor_array, **pred_params)
+                                                    X=predictor_array, **pred_params)
 
             if self.conditions is not None and conditions_data is not None:
 
