@@ -69,6 +69,7 @@ class CondIndTest():
     verbosity : int, optional (default: 0)
         Level of verbosity.
     """
+
     @abc.abstractmethod
     def get_dependence_measure(self, array, xyz, data_type=None):
         """
@@ -169,7 +170,7 @@ class CondIndTest():
         # Check if this confidence type is boostrapping
         if self.confidence == 'bootstrap':
             info_str += "\nconf_samples = %s" % self.conf_samples
-            info_str += "\nconf_blocklength = %s" %self.conf_blocklength
+            info_str += "\nconf_blocklength = %s" % self.conf_blocklength
         # Check if we use a non-trivial mask type
         if self.mask_type is not None:
             info_str += "\nmask_type = %s" % self.mask_type
@@ -190,17 +191,16 @@ class CondIndTest():
         if self.mask_type is not None:
             mask_set = set(self.mask_type) - set(['x', 'y', 'z'])
             if mask_set:
-                err_msg = "mask_type = %s," % self.mask_type + " but must be" +\
+                err_msg = "mask_type = %s," % self.mask_type + " but must be" + \
                           " list containing 'x','y','z', or any combination"
                 raise ValueError(err_msg)
-
 
     def get_analytic_confidence(self, value, df, conf_lev):
         """
         Base class assumption that this is not implemented.  Concrete classes
         should override when possible.
         """
-        raise NotImplementedError("Analytic confidence not"+\
+        raise NotImplementedError("Analytic confidence not" + \
                                   " implemented for %s" % self.measure)
 
     def get_model_selection_criterion(self, j, parents, tau_max=0):
@@ -208,7 +208,7 @@ class CondIndTest():
         Base class assumption that this is not implemented.  Concrete classes
         should override when possible.
         """
-        raise NotImplementedError("Model selection not"+\
+        raise NotImplementedError("Model selection not" + \
                                   " implemented for %s" % self.measure)
 
     def get_analytic_significance(self, value, T, dim):
@@ -216,7 +216,7 @@ class CondIndTest():
         Base class assumption that this is not implemented.  Concrete classes
         should override when possible.
         """
-        raise NotImplementedError("Analytic significance not"+\
+        raise NotImplementedError("Analytic significance not" + \
                                   " implemented for %s" % self.measure)
 
     def get_shuffle_significance(self, array, xyz, value,
@@ -226,7 +226,7 @@ class CondIndTest():
         Base class assumption that this is not implemented.  Concrete classes
         should override when possible.
         """
-        raise NotImplementedError("Shuffle significance not"+\
+        raise NotImplementedError("Shuffle significance not" + \
                                   " implemented for %s" % self.measure)
 
     def _get_single_residuals(self, array, target_var,
@@ -235,7 +235,7 @@ class CondIndTest():
         Base class assumption that this is not implemented.  Concrete classes
         should override when possible.
         """
-        raise NotImplementedError("Residual calculation not"+\
+        raise NotImplementedError("Residual calculation not" + \
                                   " implemented for %s" % self.measure)
 
     def set_dataframe(self, dataframe):
@@ -265,23 +265,23 @@ class CondIndTest():
                    verbosity=0):
         """Convencience wrapper around construct_array."""
 
-        if self.measure in ['par_corr', 'par_corr_wls', 'robust_par_corr', 'regressionCI', 
+        if self.measure in ['par_corr', 'par_corr_wls', 'robust_par_corr', 'regressionCI',
                             'gsquared', 'gp_dc']:
             if len(X) > 1 or len(Y) > 1:
                 raise ValueError("X and Y for %s must be univariate." %
-                                        self.measure)
+                                 self.measure)
         # Call the wrapped function
         array, xyz, XYZ, type_array = self.dataframe.construct_array(X=X, Y=Y, Z=Z,
-                                              tau_max=tau_max,
-                                              mask_type=self.mask_type,
-                                              return_cleaned_xyz=True,
-                                              do_checks=True,
-                                              remove_overlaps=True,
-                                              cut_off=cut_off,
-                                              verbosity=verbosity)
-        
+                                                                     tau_max=tau_max,
+                                                                     mask_type=self.mask_type,
+                                                                     return_cleaned_xyz=True,
+                                                                     do_checks=True,
+                                                                     remove_overlaps=True,
+                                                                     cut_off=cut_off,
+                                                                     verbosity=verbosity)
+
         if remove_constant_data:
-            zero_components = np.where(array.std(axis=1)==0.)[0]
+            zero_components = np.where(array.std(axis=1) == 0.)[0]
 
             X, Y, Z = XYZ
             x_indices = np.where(xyz == 0)[0]
@@ -306,7 +306,6 @@ class CondIndTest():
 
         return array, xyz, XYZ, type_array
 
-    
     def _get_array_hash(self, array, xyz, XYZ):
         """Helper function to get hash of array.
 
@@ -337,21 +336,20 @@ class CondIndTest():
         # Individually sort X, Y, Z since for a CI test it does not matter
         # how they are aranged
         x_orderd = sorted(range(len(X)), key=X.__getitem__)
-        arr_x = array[xyz==0][x_orderd]
+        arr_x = array[xyz == 0][x_orderd]
         x_hash = sha1(np.ascontiguousarray(arr_x)).hexdigest()
 
         y_orderd = sorted(range(len(Y)), key=Y.__getitem__)
-        arr_y = array[xyz==1][y_orderd]
+        arr_y = array[xyz == 1][y_orderd]
         y_hash = sha1(np.ascontiguousarray(arr_y)).hexdigest()
 
         z_orderd = sorted(range(len(Z)), key=Z.__getitem__)
-        arr_z = array[xyz==2][z_orderd]
+        arr_z = array[xyz == 2][z_orderd]
         z_hash = sha1(np.ascontiguousarray(arr_z)).hexdigest()
 
         sorted_xy = sorted([x_hash, y_hash])
         combined_hash = (sorted_xy[0], sorted_xy[1], z_hash)
         return combined_hash
-
 
     def run_test(self, X, Y, Z=None, tau_max=0, cut_off='2xtau_max', alpha_or_thres=None):
         """Perform conditional independence test.
@@ -393,10 +391,10 @@ class CondIndTest():
             raise ValueError("significance == 'fixed_thres' requires setting alpha_or_thres")
 
         # Get the array to test on
-        (array, xyz, XYZ, data_type, 
+        (array, xyz, XYZ, data_type,
          nonzero_array, nonzero_xyz, nonzero_XYZ, nonzero_data_type) = self._get_array(
-                                            X=X, Y=Y, Z=Z, tau_max=tau_max, cut_off=cut_off,
-                                            remove_constant_data=True, verbosity=self.verbosity)
+            X=X, Y=Y, Z=Z, tau_max=tau_max, cut_off=cut_off,
+            remove_constant_data=True, verbosity=self.verbosity)
         X, Y, Z = XYZ
         nonzero_X, nonzero_Y, nonzero_Z = nonzero_XYZ
 
@@ -422,8 +420,8 @@ class CondIndTest():
                 pval = None if self.significance == 'fixed_thres' else 1.
             else:
                 # Get the dependence measure, reycling residuals if need be
-                val = self._get_dependence_measure_recycle(nonzero_X, nonzero_Y, nonzero_Z, 
-                                            nonzero_xyz, nonzero_array, nonzero_data_type)
+                val = self._get_dependence_measure_recycle(nonzero_X, nonzero_Y, nonzero_Z,
+                                                           nonzero_xyz, nonzero_array, nonzero_data_type)
                 # Get the p-value (None if significance = 'fixed_thres')
                 dim, T = nonzero_array.shape
                 pval = self._get_p_value(val=val, array=nonzero_array, xyz=nonzero_xyz, T=T, dim=dim,
@@ -433,7 +431,7 @@ class CondIndTest():
         # Make test decision
         if len(nonzero_X) == 0 or len(nonzero_Y) == 0:
             dependent = False
-        else: 
+        else:
             if self.significance == 'fixed_thres':
                 if self.two_sided:
                     dependent = np.abs(val) >= np.abs(alpha_or_thres)
@@ -445,8 +443,8 @@ class CondIndTest():
                     dependent = None
                 else:
                     dependent = pval <= alpha_or_thres
-                
-        self.ci_results[(tuple(X), tuple(Y),tuple(Z))] = (val, pval, dependent)
+
+        self.ci_results[(tuple(X), tuple(Y), tuple(Z))] = (val, pval, dependent)
 
         # Return the calculated value(s)
         if self.verbosity > 1:
@@ -455,9 +453,8 @@ class CondIndTest():
 
         if alpha_or_thres is None:
             return val, pval
-        else:              
+        else:
             return val, pval, dependent
-
 
     def run_test_raw(self, x, y, z=None, x_type=None, y_type=None, z_type=None, alpha_or_thres=None):
         """Perform conditional independence test directly on input arrays x, y, z.
@@ -531,7 +528,7 @@ class CondIndTest():
             xyz = np.array([0 for i in range(x.shape[1])] +
                            [1 for i in range(y.shape[1])] +
                            [2 for i in range(z.shape[1])])
-        
+
         if self.significance == 'fixed_thres' and alpha_or_thres is None:
             raise ValueError("significance == 'fixed_thres' requires setting alpha_or_thres")
 
@@ -545,7 +542,7 @@ class CondIndTest():
 
         # Get the p-value (returns None if significance='fixed_thres')
         pval = self._get_p_value(val=val, array=array, xyz=xyz,
-                T=T, dim=dim, data_type=data_type)
+                                 T=T, dim=dim, data_type=data_type)
 
         # Make test decision
         if self.significance == 'fixed_thres':
@@ -563,7 +560,7 @@ class CondIndTest():
         # Return the value and the pvalue
         if alpha_or_thres is None:
             return val, pval
-        else:              
+        else:
             return val, pval, dependent
 
     def _get_dependence_measure_recycle(self, X, Y, Z, xyz, array, data_type=None):
@@ -609,7 +606,7 @@ class CondIndTest():
 
         # If not, return the dependence measure on the array and xyz
         return self.get_dependence_measure(array, xyz,
-                                    data_type=data_type)
+                                           data_type=data_type)
 
     def _get_cached_residuals(self, x_nodes, z_nodes, array, target_var):
         """
@@ -648,8 +645,8 @@ class CondIndTest():
         return x_resid
 
     def _get_p_value(self, val, array, xyz, T, dim,
-                         data_type=None,
-                         sig_override=None):
+                     data_type=None,
+                     sig_override=None):
         """
         Returns the p-value from whichever significance function is specified
         for this test. If an override is used, then it will call a different
@@ -756,7 +753,7 @@ class CondIndTest():
         """
         # Make the array
         array, xyz, (X, Y, Z), data_type = self._get_array(X=X, Y=Y, Z=Z, tau_max=tau_max,
-                                            remove_constant_data=False)
+                                                           remove_constant_data=False)
         D, T = array.shape
         # Check it is valid
         if np.isnan(array).sum() != 0:
@@ -798,15 +795,15 @@ class CondIndTest():
             if self.conf_lev < .5 or self.conf_lev >= 1.:
                 raise ValueError("conf_lev = %.2f, " % self.conf_lev +
                                  "but must be between 0.5 and 1")
-            half_conf = self.conf_samples * (1. - self.conf_lev)/2.
-            if self.confidence == 'bootstrap' and  half_conf < 1.:
+            half_conf = self.conf_samples * (1. - self.conf_lev) / 2.
+            if self.confidence == 'bootstrap' and half_conf < 1.:
                 raise ValueError("conf_samples*(1.-conf_lev)/2 is %.2f"
                                  % half_conf + ", must be >> 1")
 
         if self.confidence:
             # Make and check the array
             array, xyz, _, data_type = self._get_array(X=X, Y=Y, Z=Z, tau_max=tau_max,
-                                            remove_constant_data=False, verbosity=0)
+                                                       remove_constant_data=False, verbosity=0)
             dim, T = array.shape
             if np.isnan(array).sum() != 0:
                 raise ValueError("nans in the array!")
@@ -815,17 +812,17 @@ class CondIndTest():
             if self.confidence == 'analytic':
                 val = self.get_dependence_measure(array, xyz, data_type=data_type)
                 (conf_lower, conf_upper) = \
-                        self.get_analytic_confidence(df=T-dim,
-                                                     value=val,
-                                                     conf_lev=self.conf_lev)
+                    self.get_analytic_confidence(df=T - dim,
+                                                 value=val,
+                                                 conf_lev=self.conf_lev)
             elif self.confidence == 'bootstrap':
                 # Overwrite analytic values
                 (conf_lower, conf_upper) = \
-                        self.get_bootstrap_confidence(
-                            array, xyz,
-                            conf_samples=self.conf_samples,
-                            conf_blocklength=self.conf_blocklength,
-                            conf_lev=self.conf_lev, verbosity=self.verbosity)
+                    self.get_bootstrap_confidence(
+                        array, xyz,
+                        conf_samples=self.conf_samples,
+                        conf_blocklength=self.conf_blocklength,
+                        conf_lev=self.conf_lev, verbosity=self.verbosity)
             else:
                 raise ValueError("%s confidence estimation not implemented"
                                  % self.confidence)
@@ -854,7 +851,7 @@ class CondIndTest():
         conf : tuple of floats, optional (default: None)
             Confidence bounds.
         """
-        printstr = "        val = % .3f" % (val)      
+        printstr = "        val = % .3f" % (val)
         if pval is not None:
             printstr += " | pval = %.5f" % (pval)
         if dependent is not None:
@@ -863,13 +860,13 @@ class CondIndTest():
             printstr += " | conf bounds = (%.3f, %.3f)" % (
                 conf[0], conf[1])
         if cached is not None:
-            printstr += " %s" % ({0:"", 1:"[cached]"}[cached])
+            printstr += " %s" % ({0: "", 1: "[cached]"}[cached])
 
         print(printstr)
 
     def get_bootstrap_confidence(self, array, xyz, dependence_measure=None,
                                  conf_samples=100, conf_blocklength=None,
-                                 conf_lev=.95, 
+                                 conf_lev=.95,
                                  data_type=None,
                                  verbosity=0):
         """Perform bootstrap confidence interval estimation.
@@ -918,17 +915,17 @@ class CondIndTest():
             dependence_measure = self.get_dependence_measure
 
         # confidence interval is two-sided
-        c_int = 1. - (1. - conf_lev)/2.
+        c_int = 1. - (1. - conf_lev) / 2.
         dim, T = array.shape
 
         # If not block length is given, determine the optimal block length.
         # This has a maximum of 10% of the time sample length
         if conf_blocklength is None:
             conf_blocklength = \
-                    self._get_block_length(array, xyz, mode='confidence')
+                self._get_block_length(array, xyz, mode='confidence')
         # Determine the number of blocks total, rounding up for non-integer
         # amounts
-        n_blks = int(math.ceil(float(T)/conf_blocklength))
+        n_blks = int(math.ceil(float(T) / conf_blocklength))
 
         # Print some information
         if verbosity > 2:
@@ -942,7 +939,7 @@ class CondIndTest():
             blk_strt = self.random_state.integers(0, T - conf_blocklength + 1, n_blks)
             # Get the empty array of block resampled values
             array_bootstrap = \
-                    np.zeros((dim, n_blks*conf_blocklength), dtype=array.dtype)
+                np.zeros((dim, n_blks * conf_blocklength), dtype=array.dtype)
             # Fill the array of block resamples
             for i in range(conf_blocklength):
                 array_bootstrap[:, i::conf_blocklength] = array[:, blk_strt + i]
@@ -977,7 +974,7 @@ class CondIndTest():
         """
         # Set the default max lag
         if max_lag is None:
-            max_lag = int(max(5, 0.1*len(series)))
+            max_lag = int(max(5, 0.1 * len(series)))
         # Initialize the result
         autocorr = np.ones(max_lag + 1)
         # Iterate over possible lags
@@ -1030,10 +1027,11 @@ class CondIndTest():
             indices = np.where(xyz == 0)[0]
 
         # Maximum lag for autocov estimation
-        max_lag = int(0.1*T)
+        max_lag = int(0.1 * T)
+
         # Define the function to optimize against
         def func(x_vals, a_const, decay):
-            return a_const * decay**x_vals
+            return a_const * decay ** x_vals
 
         # Calculate the block length
         block_len = 1
@@ -1047,13 +1045,13 @@ class CondIndTest():
             try:
                 popt, _ = optimize.curve_fit(
                     f=func,
-                    xdata=np.arange(0, max_lag+1),
+                    xdata=np.arange(0, max_lag + 1),
                     ydata=hilbert,
                 )
                 phi = popt[1]
                 # Formula assuming non-overlapping blocks
-                l_opt = (4. * T * (phi / (1. - phi) + phi**2 / (1. - phi)**2)**2
-                         / (1. + 2. * phi / (1. - phi))**2)**(1. / 3.)
+                l_opt = (4. * T * (phi / (1. - phi) + phi ** 2 / (1. - phi) ** 2) ** 2
+                         / (1. + 2. * phi / (1. - phi)) ** 2) ** (1. / 3.)
                 block_len = max(block_len, int(l_opt))
             except RuntimeError:
                 print("Error - curve_fit failed in block_shuffle, using"
@@ -1110,7 +1108,7 @@ class CondIndTest():
             sig_blocklength = self._get_block_length(array, xyz,
                                                      mode='significance')
 
-        n_blks = int(math.floor(float(T)/sig_blocklength))
+        n_blks = int(math.floor(float(T) / sig_blocklength))
         # print 'n_blks ', n_blks
         if verbosity > 2:
             print("            Significance test with block-length = %d "
@@ -1121,20 +1119,20 @@ class CondIndTest():
 
         # Dividing the array up into n_blks of length sig_blocklength may
         # leave a tail. This tail is later randomly inserted
-        tail = array[x_indices, n_blks*sig_blocklength:]
+        tail = array[x_indices, n_blks * sig_blocklength:]
 
         null_dist = np.zeros(sig_samples)
         for sam in range(sig_samples):
 
             blk_starts = self.random_state.permutation(block_starts)[:n_blks]
 
-            x_shuffled = np.zeros((dim_x, n_blks*sig_blocklength),
+            x_shuffled = np.zeros((dim_x, n_blks * sig_blocklength),
                                   dtype=array.dtype)
 
             for i, index in enumerate(x_indices):
                 for blk in range(sig_blocklength):
                     x_shuffled[i, blk::sig_blocklength] = \
-                            array[index, blk_starts + blk]
+                        array[index, blk_starts + blk]
 
             # Insert tail randomly somewhere
             if tail.shape[1] > 0:
