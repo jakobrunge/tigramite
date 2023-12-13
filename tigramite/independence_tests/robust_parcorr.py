@@ -12,6 +12,7 @@ import warnings
 
 from .independence_tests_base import CondIndTest
 
+
 class RobustParCorr(CondIndTest):
     r"""Robust partial correlation test based on non-paranormal models.
 
@@ -114,16 +115,16 @@ class RobustParCorr(CondIndTest):
 
         if np.ndim(x) == 1:
             u = trafo(x)
-            u[u==0.] = thres
-            u[u==1.] = 1. - thres
+            u[u == 0.] = thres
+            u[u == 1.] = 1. - thres
             normal = stats.norm.ppf(u)
         else:
             normal = np.empty(x.shape)
             for i in range(x.shape[0]):
                 uniform = trafo(x[i])
-        
-                uniform[uniform==0.] = thres
-                uniform[uniform==1.] = 1. - thres
+
+                uniform[uniform == 0.] = thres
+                uniform[uniform == 1.] = 1. - thres
                 normal[i] = stats.norm.ppf(uniform)
 
         return normal
@@ -206,6 +207,11 @@ class RobustParCorr(CondIndTest):
         xyz : array of ints
             XYZ identifier array of shape (dim,).
 
+        data_type : array-like
+            data array of same shape as array which describes whether variables
+            are continuous or discrete: 0s for continuous variables and
+            1s for discrete variables. Here, it is not used.
+
         Returns
         -------
         val : float
@@ -222,7 +228,8 @@ class RobustParCorr(CondIndTest):
         return val
 
     def get_shuffle_significance(self, array, xyz, value,
-                                 return_null_dist=False):
+                                 return_null_dist=False,
+                                 data_type=None):
         """Returns p-value for shuffle significance test.
 
         Firstly, each marginal is transformed to the standard normal scale.
@@ -238,6 +245,11 @@ class RobustParCorr(CondIndTest):
 
         value : number
             Value of test statistic for unshuffled estimate.
+
+        data_type : array-like
+            data array of same shape as array which describes whether variables
+            are continuous or discrete: 0s for continuous variables and
+            1s for discrete variables. Here, it is not used.
 
         Returns
         -------
@@ -303,7 +315,7 @@ class RobustParCorr(CondIndTest):
         elif abs(abs(value) - 1.0) <= sys.float_info.min:
             pval = 0.0
         else:
-            trafo_val = value * np.sqrt(deg_f/(1. - value*value))
+            trafo_val = value * np.sqrt(deg_f / (1. - value * value))
             # Two sided significance level
             pval = stats.t.sf(np.abs(trafo_val), deg_f) * 2
 
@@ -333,15 +345,14 @@ class RobustParCorr(CondIndTest):
         # Confidence interval is two-sided
         c_int = (1. - (1. - conf_lev) / 2.)
 
-        value_tdist = value * np.sqrt(df) / np.sqrt(1. - value**2)
+        value_tdist = value * np.sqrt(df) / np.sqrt(1. - value ** 2)
         conf_lower = (stats.t.ppf(q=1. - c_int, df=df, loc=value_tdist)
                       / np.sqrt(df + stats.t.ppf(q=1. - c_int, df=df,
-                                                 loc=value_tdist)**2))
+                                                 loc=value_tdist) ** 2))
         conf_upper = (stats.t.ppf(q=c_int, df=df, loc=value_tdist)
                       / np.sqrt(df + stats.t.ppf(q=c_int, df=df,
-                                                 loc=value_tdist)**2))
+                                                 loc=value_tdist) ** 2))
         return (conf_lower, conf_upper)
-
 
     def get_model_selection_criterion(self, j, parents, tau_max=0, corrected_aic=False):
         """Returns Akaike's Information criterion modulo constants.
@@ -374,14 +385,14 @@ class RobustParCorr(CondIndTest):
         """
 
         Y = [(j, 0)]
-        X = [(j, 0)]   # dummy variable here
+        X = [(j, 0)]  # dummy variable here
         Z = parents
         array, xyz, _ = self.dataframe.construct_array(X=X, Y=Y, Z=Z,
-                                                    tau_max=tau_max,
-                                                    mask_type=self.mask_type,
-                                                    return_cleaned_xyz=False,
-                                                    do_checks=True,
-                                                    verbosity=self.verbosity)
+                                                       tau_max=tau_max,
+                                                       mask_type=self.mask_type,
+                                                       return_cleaned_xyz=False,
+                                                       do_checks=True,
+                                                       verbosity=self.verbosity)
 
         dim, T = array.shape
 
@@ -390,12 +401,12 @@ class RobustParCorr(CondIndTest):
 
         y = self._get_single_residuals(array, target_var=1, return_means=False)
         # Get RSS
-        rss = (y**2).sum()
+        rss = (y ** 2).sum()
         # Number of parameters
         p = dim - 1
         # Get AIC
         if corrected_aic:
-            score = T * np.log(rss) + 2. * p + (2.*p**2 + 2.*p)/(T - p - 1)
+            score = T * np.log(rss) + 2. * p + (2. * p ** 2 + 2. * p) / (T - p - 1)
         else:
             score = T * np.log(rss) + 2. * p
         return score

@@ -12,6 +12,7 @@ import warnings
 
 from .independence_tests_base import CondIndTest
 
+
 class ParCorrMult(CondIndTest):
     r"""Partial correlation test for multivariate X and Y.
 
@@ -37,6 +38,7 @@ class ParCorrMult(CondIndTest):
     **kwargs :
         Arguments passed on to Parent class CondIndTest.
     """
+
     # documentation
     @property
     def measure(self):
@@ -108,10 +110,10 @@ class ParCorrMult(CondIndTest):
             #     raise ValueError("nans after standardizing, "
             #                      "possibly constant array!")
 
-        y = np.fastCopyAndTranspose(array[np.where(xyz==target_var)[0], :])
+        y = np.fastCopyAndTranspose(array[np.where(xyz == target_var)[0], :])
 
         if dim_z > 0:
-            z = np.fastCopyAndTranspose(array[np.where(xyz==2)[0], :])
+            z = np.fastCopyAndTranspose(array[np.where(xyz == 2)[0], :])
             beta_hat = np.linalg.lstsq(z, y, rcond=None)[0]
             mean = np.dot(z, beta_hat)
             resid = y - mean
@@ -124,7 +126,7 @@ class ParCorrMult(CondIndTest):
 
         return np.fastCopyAndTranspose(resid)
 
-    def get_dependence_measure(self, array, xyz):
+    def get_dependence_measure(self, array, xyz, data_type=None):
         """Return multivariate kernel correlation coefficient.
 
         Estimated as some dependency measure on the
@@ -138,6 +140,11 @@ class ParCorrMult(CondIndTest):
         xyz : array of ints
             XYZ identifier array of shape (dim,).
 
+        data_type : array-like
+            data array of same shape as array which describes whether variables
+            are continuous or discrete: 0s for continuous variables and
+            1s for discrete variables. Here, it is not used.
+
         Returns
         -------
         val : float
@@ -145,8 +152,8 @@ class ParCorrMult(CondIndTest):
         """
 
         dim, T = array.shape
-        dim_x = (xyz==0).sum()
-        dim_y = (xyz==1).sum()
+        dim_x = (xyz == 0).sum()
+        dim_y = (xyz == 1).sum()
 
         x_vals = self._get_single_residuals(array, xyz, target_var=0)
         y_vals = self._get_single_residuals(array, xyz, target_var=1)
@@ -180,8 +187,8 @@ class ParCorrMult(CondIndTest):
         """
 
         dim, n = array.shape
-        dim_x = (xyz==0).sum()
-        dim_y = (xyz==1).sum()
+        dim_x = (xyz == 0).sum()
+        dim_y = (xyz == 1).sum()
 
         # Standardize
         if standardize:
@@ -197,8 +204,8 @@ class ParCorrMult(CondIndTest):
             #     raise ValueError("nans after standardizing, "
             #                      "possibly constant array!")
 
-        x = array[np.where(xyz==0)[0]]
-        y = array[np.where(xyz==1)[0]]
+        x = array[np.where(xyz == 0)[0]]
+        y = array[np.where(xyz == 1)[0]]
 
         if self.correlation_type == 'max_corr':
             # Get (positive or negative) absolute maximum correlation value
@@ -210,7 +217,7 @@ class ParCorrMult(CondIndTest):
             #     for y_vals in y:
             #         val_here, _ = stats.pearsonr(x_vals, y_vals)
             #         val = max(val, np.abs(val_here))
-        
+
         # elif self.correlation_type == 'linear_hsci':
         #     # For linear kernel and standardized data (centered and divided by std)
         #     # biased V -statistic of HSIC reduces to sum of squared inner products
@@ -223,7 +230,8 @@ class ParCorrMult(CondIndTest):
         return val
 
     def get_shuffle_significance(self, array, xyz, value,
-                                 return_null_dist=False):
+                                 return_null_dist=False,
+                                 data_type=None):
         """Returns p-value for shuffle significance test.
 
         For residual-based test statistics only the residuals are shuffled.
@@ -239,6 +247,11 @@ class ParCorrMult(CondIndTest):
         value : number
             Value of test statistic for unshuffled estimate.
 
+        data_type : array-like
+            data array of same shape as array which describes whether variables
+            are continuous or discrete: 0s for continuous variables and
+            1s for discrete variables. Here, it is not used.
+
         Returns
         -------
         pval : float
@@ -246,15 +259,14 @@ class ParCorrMult(CondIndTest):
         """
 
         dim, T = array.shape
-        dim_x = (xyz==0).sum()
-        dim_y = (xyz==1).sum()
+        dim_x = (xyz == 0).sum()
+        dim_y = (xyz == 1).sum()
 
         x_vals = self._get_single_residuals(array, xyz, target_var=0)
         y_vals = self._get_single_residuals(array, xyz, target_var=1)
 
         array_resid = np.vstack((x_vals.reshape(dim_x, T), y_vals.reshape(dim_y, T)))
         xyz_resid = np.array([index_code for index_code in xyz if index_code != 2])
-
 
         null_dist = self._get_shuffle_dist(array_resid, xyz_resid,
                                            self.get_dependence_measure,
@@ -303,8 +315,8 @@ class ParCorrMult(CondIndTest):
         # Get the number of degrees of freedom
         deg_f = T - dim
 
-        dim_x = (xyz==0).sum()
-        dim_y = (xyz==1).sum()
+        dim_x = (xyz == 0).sum()
+        dim_y = (xyz == 1).sum()
 
         if self.correlation_type == 'max_corr':
             if deg_f < 1:
@@ -312,7 +324,7 @@ class ParCorrMult(CondIndTest):
             elif abs(abs(value) - 1.0) <= sys.float_info.min:
                 pval = 0.0
             else:
-                trafo_val = value * np.sqrt(deg_f/(1. - value*value))
+                trafo_val = value * np.sqrt(deg_f / (1. - value * value))
                 # Two sided significance level
                 pval = stats.t.sf(np.abs(trafo_val), deg_f) * 2
         else:
@@ -320,7 +332,7 @@ class ParCorrMult(CondIndTest):
                                       "correlation_type == 'max_corr' implemented.")
 
         # Adjust p-value for dimensions of x and y (conservative Bonferroni-correction)
-        pval *= dim_x*dim_y
+        pval *= dim_x * dim_y
 
         return pval
 
@@ -351,14 +363,14 @@ class ParCorrMult(CondIndTest):
         """
 
         Y = [(j, 0)]
-        X = [(j, 0)]   # dummy variable here
+        X = [(j, 0)]  # dummy variable here
         Z = parents
         array, xyz, _ = self.dataframe.construct_array(X=X, Y=Y, Z=Z,
-                                                    tau_max=tau_max,
-                                                    mask_type=self.mask_type,
-                                                    return_cleaned_xyz=False,
-                                                    do_checks=True,
-                                                    verbosity=self.verbosity)
+                                                       tau_max=tau_max,
+                                                       mask_type=self.mask_type,
+                                                       return_cleaned_xyz=False,
+                                                       do_checks=True,
+                                                       verbosity=self.verbosity)
 
         dim, T = array.shape
 
@@ -368,12 +380,12 @@ class ParCorrMult(CondIndTest):
         score = 0.
         for y_component in y:
             # Get RSS
-            rss = (y_component**2).sum()
+            rss = (y_component ** 2).sum()
             # Number of parameters
             p = dim - 1
             # Get AIC
             if corrected_aic:
-                comp_score = T * np.log(rss) + 2. * p + (2.*p**2 + 2.*p)/(T - p - 1)
+                comp_score = T * np.log(rss) + 2. * p + (2. * p ** 2 + 2. * p) / (T - p - 1)
             else:
                 comp_score = T * np.log(rss) + 2. * p
             score += comp_score
@@ -383,39 +395,39 @@ class ParCorrMult(CondIndTest):
 
 
 if __name__ == '__main__':
-    
+
     import tigramite
     from tigramite.data_processing import DataFrame
     # import numpy as np
     import timeit
 
-    seed=3
+    seed = 3
     random_state = np.random.default_rng(seed=seed)
     cmi = ParCorrMult(
-            # significance = 'shuffle_test',
-            # sig_samples=1000,
-        )
+        # significance = 'shuffle_test',
+        # sig_samples=1000,
+    )
 
-    samples=1
+    samples = 1
     rate = np.zeros(1)
     for i in range(1):
         print(i)
         data = random_state.standard_normal((100, 6))
-        data[:,2] += -0.5*data[:,0]
+        data[:, 2] += -0.5 * data[:, 0]
         # data[:,1] += data[:,2]
-        dataframe = DataFrame(data, 
-            # vector_vars={0:[(0,0), (1,0)], 1:[(2,0),(3,0)], 2:[(4,0),(5,0)]}
-            )
+        dataframe = DataFrame(data,
+                              # vector_vars={0:[(0,0), (1,0)], 1:[(2,0),(3,0)], 2:[(4,0),(5,0)]}
+                              )
 
         cmi.set_dataframe(dataframe)
 
         pval = cmi.run_test(
-                X=[(0,0)], 
-                Y=[(1,0)], #, (3, 0)], 
-                # Z=[(5,0)]
-                Z = [(2, 0)]
-                )[1]
-        
+            X=[(0, 0)],
+            Y=[(1, 0)],  # , (3, 0)],
+            # Z=[(5,0)]
+            Z=[(2, 0)]
+        )[1]
+
         rate[i] = pval <= 0.1
 
         cmi.get_model_selection_criterion(j=0, parents=[(1, 0), (2, 0)], tau_max=0, corrected_aic=False)

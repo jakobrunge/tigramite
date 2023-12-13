@@ -90,7 +90,7 @@ class CMIsymb(CondIndTest):
                           "autocorrelation may not be correct for discrete "
                           "data")
 
-    def get_dependence_measure(self, array, xyz):
+    def get_dependence_measure(self, array, xyz, data_type=None):
         """Returns CMI estimate based on contingency table from scipy's crosstab
         to approximate probability mass.
 
@@ -101,6 +101,11 @@ class CMIsymb(CondIndTest):
 
         xyz : array of ints
             XYZ identifier array of shape (dim,).
+
+        data_type : array-like
+            data array of same shape as array which describes whether variables
+            are continuous or discrete: 0s for continuous variables and
+            1s for discrete variables. Here, it is not used.
 
         Returns
         -------
@@ -147,7 +152,7 @@ class CMIsymb(CondIndTest):
         return val
 
     def get_shuffle_significance(self, array, xyz, value,
-                                 return_null_dist=False):
+                                 return_null_dist=False, data_type=None):
         """Returns p-value for shuffle significance test.
 
         Performes a local permutation test: x_i values are only permuted with
@@ -164,6 +169,11 @@ class CMIsymb(CondIndTest):
 
         value : number
             Value of test statistic for original (unshuffled) estimate.
+
+        data_type : array-like
+            data array of same shape as array which describes whether variables
+            are continuous or discrete: 0s for continuous variables and
+            1s for discrete variables. Here, it is not used.
 
         Returns
         -------

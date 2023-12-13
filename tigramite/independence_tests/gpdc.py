@@ -11,6 +11,7 @@ import dcor
 from sklearn import gaussian_process
 from .independence_tests_base import CondIndTest
 
+
 class GaussProcReg():
     r"""Gaussian processes abstract base class.
 
@@ -49,6 +50,7 @@ class GaussProcReg():
     verbosity : int, optional (default: 0)
         Level of verbosity.
     """
+
     def __init__(self,
                  null_samples,
                  cond_ind_test,
@@ -67,7 +69,7 @@ class GaussProcReg():
         # Check if we are loading a null distrubtion from a cached file
         if self.null_dist_filename is not None:
             self.null_dists, self.null_samples = \
-                    self._load_nulldist(self.null_dist_filename)
+                self._load_nulldist(self.null_dist_filename)
 
     def _load_nulldist(self, filename):
         r"""
@@ -122,7 +124,7 @@ class GaussProcReg():
                       "precompute null distribution and load *.npz file with "
                       "argument null_dist_filename")
 
-        xyz = np.array([0,1])
+        xyz = np.array([0, 1])
 
         null_dist = np.zeros(self.null_samples)
         for i in range(self.null_samples):
@@ -227,12 +229,11 @@ class GaussProcReg():
         if np.ndim(z) == 1:
             z = z.reshape(-1, 1)
 
-
         # Overwrite default kernel and alpha values
         params = self.gp_params.copy()
         if 'kernel' not in list(self.gp_params):
-            kernel = gaussian_process.kernels.RBF() +\
-             gaussian_process.kernels.WhiteKernel()
+            kernel = gaussian_process.kernels.RBF() + \
+                     gaussian_process.kernels.WhiteKernel()
         else:
             kernel = self.gp_params['kernel']
             del params['kernel']
@@ -244,8 +245,8 @@ class GaussProcReg():
             del params['alpha']
 
         gp = gaussian_process.GaussianProcessRegressor(kernel=kernel,
-                                               alpha=alpha,
-                                               **params)
+                                                       alpha=alpha,
+                                                       **params)
 
         gp.fit(z, target_series.reshape(-1, 1))
 
@@ -292,16 +293,16 @@ class GaussProcReg():
         """
 
         Y = [(j, 0)]
-        X = [(j, 0)]   # dummy variable here
+        X = [(j, 0)]  # dummy variable here
         Z = parents
         array, xyz, _ = \
-                self.cond_ind_test.dataframe.construct_array(
-                    X=X, Y=Y, Z=Z,
-                    tau_max=tau_max,
-                    mask_type=self.cond_ind_test.mask_type,
-                    return_cleaned_xyz=False,
-                    do_checks=True,
-                    verbosity=self.verbosity)
+            self.cond_ind_test.dataframe.construct_array(
+                X=X, Y=Y, Z=Z,
+                tau_max=tau_max,
+                mask_type=self.cond_ind_test.mask_type,
+                return_cleaned_xyz=False,
+                do_checks=True,
+                verbosity=self.verbosity)
 
         dim, T = array.shape
 
@@ -311,6 +312,7 @@ class GaussProcReg():
 
         score = -logli
         return score
+
 
 class GPDC(CondIndTest):
     r"""GPDC conditional independence test based on Gaussian processes and distance correlation.
@@ -363,6 +365,7 @@ class GPDC(CondIndTest):
         Arguments passed on to parent class GaussProcReg.
 
     """
+
     @property
     def measure(self):
         """
@@ -389,7 +392,7 @@ class GPDC(CondIndTest):
         if self.verbosity > 0:
             print("null_dist_filename = %s" % self.gauss_pr.null_dist_filename)
             if self.gauss_pr.gp_params is not None:
-                for key in  list(self.gauss_pr.gp_params):
+                for key in list(self.gauss_pr.gp_params):
                     print("%s = %s" % (key, self.gauss_pr.gp_params[key]))
             print("")
 
@@ -520,7 +523,7 @@ class GPDC(CondIndTest):
         """
         return self.gauss_pr._get_model_selection_criterion(j, parents, tau_max)
 
-    def get_dependence_measure(self, array, xyz):
+    def get_dependence_measure(self, array, xyz, data_type=None):
         """Return GPDC measure.
 
         Estimated as the distance correlation of the residuals of a GP
@@ -534,6 +537,11 @@ class GPDC(CondIndTest):
         xyz : array of ints
             XYZ identifier array of shape (dim,).
 
+        data_type : array-like
+            data array of same shape as array which describes whether variables
+            are continuous or discrete: 0s for continuous variables and
+            1s for discrete variables. Here, it is not used.
+
         Returns
         -------
         val : float
@@ -544,7 +552,6 @@ class GPDC(CondIndTest):
         y_vals = self._get_single_residuals(array, target_var=1)
         val = self._get_dcorr(np.array([x_vals, y_vals]))
         return val
-
 
     def _get_dcorr(self, array_resid):
         r"""Return distance correlation coefficient.
@@ -573,7 +580,8 @@ class GPDC(CondIndTest):
         return val
 
     def get_shuffle_significance(self, array, xyz, value,
-                                 return_null_dist=False):
+                                 return_null_dist=False,
+                                 data_type=None):
         """Returns p-value for shuffle significance test.
 
         For residual-based test statistics only the residuals are shuffled.
@@ -588,6 +596,11 @@ class GPDC(CondIndTest):
 
         value : number
             Value of test statistic for unshuffled estimate.
+
+        data_type : array-like
+            data array of same shape as array which describes whether variables
+            are continuous or discrete: 0s for continuous variables and
+            1s for discrete variables. Here, it is not used.
 
         Returns
         -------
@@ -651,7 +664,7 @@ class GPDC(CondIndTest):
         else:
             # idx_near = (np.abs(self.sample_sizes - df)).argmin()
             if int(df) not in list(self.gauss_pr.null_dists):
-            # if np.abs(self.sample_sizes[idx_near] - df) / float(df) > 0.01:
+                # if np.abs(self.sample_sizes[idx_near] - df) / float(df) > 0.01:
                 if self.verbosity > 0:
                     print("Null distribution for GPDC not available "
                           "for deg. of freed. = %d." % df)
@@ -659,4 +672,3 @@ class GPDC(CondIndTest):
             null_dist_here = self.gauss_pr.null_dists[int(df)]
             pval = np.mean(null_dist_here > np.abs(value))
         return pval
-
