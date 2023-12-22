@@ -83,7 +83,7 @@ class PairwiseMultCI(CondIndTest):
         self.alpha_pre = alpha_pre
         self.pre_step_sample_fraction = pre_step_sample_fraction
         self.fixed_thres_pre = fixed_thres_pre
-        self.two_sided = False
+        self.two_sided = cond_ind_test.two_sided
         self.learn_augmented_cond_sets = learn_augmented_cond_sets
         CondIndTest.__init__(self, **kwargs)
 
@@ -122,7 +122,7 @@ class PairwiseMultCI(CondIndTest):
             fixed_thres_bool = True
             self.significance = "fixed_thres"
 
-        if (fixed_thres_bool) and (self.fixed_thres_pre == None):
+        if (fixed_thres_bool) and (self.fixed_thres_pre == None) and (self.learn_augmented_cond_sets == True):
             raise ValueError("If significance == 'fixed_thres', fixed_thres_pre for the"
                              " pre-step needs to be defined in initializing PairwiseMultCI.")
 
@@ -298,7 +298,10 @@ class PairwiseMultCI(CondIndTest):
 
 
         # Aggregate p-values
-        test_stats_aggregated = np.max(np.abs(test_stats_main))
+        max_abs_test_stat = np.max(np.abs(test_stats_main))
+        pos_max = np.where(np.abs(test_stats_main) == max_abs_test_stat)
+        test_stats_aggregated = test_stats_main[pos_max[0], pos_max[1]][0]
+
         if self.cond_ind_test.significance != "fixed_thres":
             p_aggregated = np.min(np.array([np.min(p_vals_main) * dim_x * dim_y, 1]))
         else:
@@ -327,17 +330,19 @@ if __name__ == '__main__':
     from tigramite.independence_tests.cmiknn import CMIknn
     alpha = 0.05
     ci = PairwiseMultCI(learn_augmented_cond_sets = True, fixed_thres_pre = 0.5, cond_ind_test = RobustParCorr(significance = "fixed_thres"))
+    #ci = PairwiseMultCI(cond_ind_test=RobustParCorr(significance = "fixed_thres"), fixed_thres_pre = 0.3, learn_augmented_cond_sets= True)
     # ci = PairwiseMultCI(cond_ind_test=ParCorr(significance="fixed_thres"))
     # ci = PairwiseMultCI(cond_ind_test=ParCorr(significance="analytic"))
     T = 100
     reals = 1
     rate = np.zeros(reals)
-    np.random.seed(123)
+    #np.random.seed(1203)
     for t in range(reals):
         # continuous example
-        x = np.random.normal(0, 1, T).reshape(T, 1)
+        x1 = np.random.normal(0, 1, T).reshape(T, 1)
+        x2 = np.random.normal(0, 1, T).reshape(T, 1)
         y1 = np.random.normal(0, 1, T).reshape(T, 1)
-        y2 = 5 * x + y1 + 0.3 * np.random.normal(0, 1, T).reshape(T, 1)
+        y2 = -50 * x1 + y1 + 0.3 * np.random.normal(0, 1, T).reshape(T, 1)
         z = np.random.normal(0, 1, T).reshape(T, 1)
         # discrete example
         #x = np.random.binomial(n=10, p=0.5, size=T).reshape(T, 1)
@@ -345,7 +350,7 @@ if __name__ == '__main__':
         #y2 = np.random.binomial(n=10, p=0.5, size=T).reshape(T, 1) +  x + y1
         # z = np.random.binomial(n=10, p=0.5, size=T).reshape(T, 1)
 
-        test_stat, pval, dependent = ci.run_test_raw(x = x, y = np.hstack((y1,y2)), z = z, alpha_or_thres=0.91)#, z = z, alpha_pre = 0.5, pre_step_sample_fraction = 0.2, cond_ind_test = base_ci)# , x_type = np.ones((T, 1)), y_type = np.ones((T, 2)) , z_type = np.zeros((T, 1)))
+        test_stat, pval, dependent = ci.run_test_raw(x = np.hstack((x1,x2)), y = np.hstack((y1,y2)), z = z, alpha_or_thres=0.9)#, alpha_or_thres=0.9)#, z = z, alpha_pre = 0.5, pre_step_sample_fraction = 0.2, cond_ind_test = base_ci)# , x_type = np.ones((T, 1)), y_type = np.ones((T, 2)) , z_type = np.zeros((T, 1)))
         print(dependent)
         if (pval <= alpha):
             rate[t] = 1
