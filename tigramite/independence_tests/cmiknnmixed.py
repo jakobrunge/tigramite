@@ -404,25 +404,28 @@ class CMIknnMixed(CondIndTest):
         """
         discrete_idx_list = np.where(np.any(type_mask == 1, axis=0), 1, 0)
         discrete_xyz_idx = np.where(np.asarray(discrete_idx_list) == 1)[0]
+        # if both are fully continuous, return 0.1 * n
+        if len(discrete_xyz_idx) == 0:
+            min_nc = array.shape[0]
+        else:
+            num_xyz_classes = [np.unique(array[:, index]) for index in range(len(discrete_idx_list)) if
+                               (discrete_idx_list[index] == 1)]
 
-        num_xyz_classes = [np.unique(array[:, index]) for index in range(len(discrete_idx_list)) if
-                           (discrete_idx_list[index] == 1)]
+            xyz_cartesian_product = []
 
-        xyz_cartesian_product = []
+            if len(num_xyz_classes) > 1:
+                xyz_cartesian_product = cartesian(num_xyz_classes)
+            elif len(num_xyz_classes) > 0:
+                xyz_cartesian_product = num_xyz_classes[0]
 
-        if len(num_xyz_classes) > 1:
-            xyz_cartesian_product = cartesian(num_xyz_classes)
-        elif len(num_xyz_classes) > 0:
-            xyz_cartesian_product = num_xyz_classes[0]
+            min_nc = array.shape[0]
 
-        min_nc = array.shape[0]
-
-        if len(xyz_cartesian_product) > 0:
-            for i, entry in enumerate(xyz_cartesian_product):
-                current_array = array[np.sum(array[:, discrete_xyz_idx] == entry,
-                                             axis=-1) == len(discrete_xyz_idx)]
-                if current_array.shape[0] > 0 and current_array.shape[0] < min_nc:
-                    min_nc = current_array.shape[0]
+            if len(xyz_cartesian_product) > 0:
+                for i, entry in enumerate(xyz_cartesian_product):
+                    current_array = array[np.sum(array[:, discrete_xyz_idx] == entry,
+                                                 axis=-1) == len(discrete_xyz_idx)]
+                    if current_array.shape[0] > 0 and current_array.shape[0] < min_nc:
+                        min_nc = current_array.shape[0]
 
         return min_nc
 
@@ -561,7 +564,6 @@ class CMIknnMixed(CondIndTest):
             Conditional mutual information estimate.
         """
         dim, T = array.shape
-
         # compute knn according to knn type
         if self.knn < 1:
             if self.knn_type == 'global':
@@ -1328,9 +1330,6 @@ class CMIknnMixed(CondIndTest):
         # Target is only first entry of Y, ie [y]
         target_array = array[np.where(xyz == 1)[0][0], :]
 
-        print('pred', predictor_array)
-        print('target', target_array)
-
         if predictor_array.size == 0:
             # Regressing on ones if empty parents
             predictor_array = np.ones(T).reshape(T, 1)
@@ -1354,7 +1353,6 @@ class CMIknnMixed(CondIndTest):
         scores = cross_val_score(estimator=knn_model,
                                  X=predictor_array, y=target_array, cv=self.model_selection_folds, n_jobs=self.workers)
 
-        print(scores)
         return -scores.mean()
 
 

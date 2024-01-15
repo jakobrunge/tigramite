@@ -872,6 +872,7 @@ class DataFrame():
 
             # Accordingly update the data array
             samples_datasets[dataset_key] = samples_datasets[dataset_key][:, use_indices_dataset == 1]
+            data_types[dataset_key] = data_types[dataset_key][:, use_indices_dataset == 1]
 
         ## end for dataset_key, dataset_data in self.values.items()
 

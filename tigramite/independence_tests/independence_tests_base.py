@@ -66,6 +66,11 @@ class CondIndTest():
         Specifies whether residuals should be stored. This may be faster, but
         can cost considerable memory.
 
+    remove_constant_data: bool (optional)
+            Whether to use a clean version of the dataset where constant-valued
+            data has been removed. Set to False if using mixed data - otherwise
+            it will lead to errors.
+
     verbosity : int, optional (default: 0)
         Level of verbosity.
     """
@@ -96,6 +101,7 @@ class CondIndTest():
                  conf_samples=100,
                  conf_blocklength=None,
                  recycle_residuals=False,
+                 remove_constant_data=False,
                  verbosity=0):
         # Set the dataframe to None for now, will be reset during pcmci call
         self.dataframe = None
@@ -115,7 +121,8 @@ class CondIndTest():
             self.residuals = {}
         # If we use a mask, we cannot recycle residuals
         self.set_mask_type(mask_type)
-
+        # remove constant data
+        self.remove_constant_data = remove_constant_data
         # Set the confidence type and details
         self.confidence = confidence
         self.conf_lev = conf_lev
@@ -261,7 +268,6 @@ class CondIndTest():
         return (tuple(set(x)), tuple(set(z)))
 
     def _get_array(self, X, Y, Z, tau_max=0, cut_off='2xtau_max',
-                   remove_constant_data=False,
                    verbosity=0):
         """Convencience wrapper around construct_array."""
 
@@ -279,8 +285,7 @@ class CondIndTest():
                                                                      remove_overlaps=True,
                                                                      cut_off=cut_off,
                                                                      verbosity=verbosity)
-
-        if remove_constant_data:
+        if self.remove_constant_data:
             zero_components = np.where(array.std(axis=1) == 0.)[0]
 
             X, Y, Z = XYZ
@@ -303,8 +308,8 @@ class CondIndTest():
                 nonzero_type_array = None
 
             return array, xyz, XYZ, type_array, nonzero_array, nonzero_xyz, nonzero_XYZ, nonzero_type_array
-
-        return array, xyz, XYZ, type_array
+        # just return the same array again otherwise - TODO: do this better
+        return array, xyz, XYZ, type_array, array, xyz, XYZ, type_array
 
     def _get_array_hash(self, array, xyz, XYZ):
         """Helper function to get hash of array.
@@ -380,6 +385,7 @@ class CondIndTest():
             threshold (if significance='fixed_thres'). If given, run_test returns
             the test decision dependent=True/False.
 
+
         Returns
         -------
         val, pval, [dependent] : Tuple of floats and bool
@@ -389,15 +395,12 @@ class CondIndTest():
 
         if self.significance == 'fixed_thres' and alpha_or_thres is None:
             raise ValueError("significance == 'fixed_thres' requires setting alpha_or_thres")
-
         # Get the array to test on
         (array, xyz, XYZ, data_type,
          nonzero_array, nonzero_xyz, nonzero_XYZ, nonzero_data_type) = self._get_array(
-            X=X, Y=Y, Z=Z, tau_max=tau_max, cut_off=cut_off,
-            remove_constant_data=True, verbosity=self.verbosity)
+            X=X, Y=Y, Z=Z, tau_max=tau_max, cut_off=cut_off, verbosity=self.verbosity)
         X, Y, Z = XYZ
         nonzero_X, nonzero_Y, nonzero_Z = nonzero_XYZ
-
         # Record the dimensions
         # dim, T = array.shape
 
@@ -413,19 +416,18 @@ class CondIndTest():
             val, pval = self.cached_ci_results[combined_hash]
         else:
             cached = False
-
             # If all X or all Y are zero, then return pval=1, val=0, dependent=False
             if len(nonzero_X) == 0 or len(nonzero_Y) == 0:
                 val = 0.
                 pval = None if self.significance == 'fixed_thres' else 1.
             else:
-                # Get the dependence measure, reycling residuals if need be
+                # Get the dependence measure, recycling residuals if need be
                 val = self._get_dependence_measure_recycle(nonzero_X, nonzero_Y, nonzero_Z,
                                                            nonzero_xyz, nonzero_array, nonzero_data_type)
                 # Get the p-value (None if significance = 'fixed_thres')
                 dim, T = nonzero_array.shape
                 pval = self._get_p_value(val=val, array=nonzero_array, xyz=nonzero_xyz, T=T, dim=dim,
-                                         data_type=data_type)
+                                         data_type=nonzero_data_type)
             self.cached_ci_results[combined_hash] = (val, pval)
 
         # Make test decision
@@ -682,6 +684,7 @@ class CondIndTest():
         pval : float or numpy.nan
             P-value.
         """
+
         # Defaults to the self.significance member value
         use_sig = self.significance
         if sig_override is not None:
@@ -752,8 +755,7 @@ class CondIndTest():
 
         """
         # Make the array
-        array, xyz, (X, Y, Z), data_type = self._get_array(X=X, Y=Y, Z=Z, tau_max=tau_max,
-                                                           remove_constant_data=False)
+        array, xyz, (X, Y, Z), data_type = self._get_array(X=X, Y=Y, Z=Z, tau_max=tau_max)
         D, T = array.shape
         # Check it is valid
         if np.isnan(array).sum() != 0:
@@ -803,7 +805,7 @@ class CondIndTest():
         if self.confidence:
             # Make and check the array
             array, xyz, _, data_type = self._get_array(X=X, Y=Y, Z=Z, tau_max=tau_max,
-                                                       remove_constant_data=False, verbosity=0)
+                                                       verbosity=0)
             dim, T = array.shape
             if np.isnan(array).sum() != 0:
                 raise ValueError("nans in the array!")
