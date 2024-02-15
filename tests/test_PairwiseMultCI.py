@@ -173,12 +173,12 @@ def data_sample_c_cc_cc2(request):
     # Return data xyz
     return x, y, z
 
-def compare_pairwise_mult_ci(pairwise_mult_ci2, data_sample_c_cc_cc2):
+def compare_pairwise_mult_ci(pairwise_mult_ci2, compare_ci, data_sample_c_cc_cc2):
     # Get the data sample values
     x, y, z = data_sample_c_cc_cc2
     # Get the analytic significance
     test_result = pairwise_mult_ci.run_test_raw(x = x, y = y, z = z, alpha_or_thres=1)
-    test_result2 = pairwise_mult_ci.run_test_raw(x=x, y=y, z=z, alpha_or_thres=1)
+    test_result2 = compare_ci.run_test_raw(x=x, y=y, z=z, alpha_or_thres=1)
     val = test_result[0]
     pval = test_result[1]
     val2 = test_result2[0]
