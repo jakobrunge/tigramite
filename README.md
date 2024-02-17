@@ -1,5 +1,5 @@
 # Tigramite – Causal inference for time series datasets
-![Logo](docs/_images/logo/logoWhiteOrange.png)
+![Logo](docs/_images/logoWhiteOrange.png)
 Version 5.2
 
 (Python Package)
