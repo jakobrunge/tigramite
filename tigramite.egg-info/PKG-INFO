@@ -1,5 +1,53 @@
+Metadata-Version: 2.1
+Name: tigramite
+Version: 5.2.5.0
+Summary: Tigramite causal inference for time series
+Home-page: https://github.com/jakobrunge/tigramite/
+Author: Jakob Runge
+Author-email: jakob@jakob-runge.com
+License: GNU General Public License v3.0
+Keywords: causal inference,causal discovery,prediction,time series
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Science/Research
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Classifier: Topic :: Scientific/Engineering :: Mathematics
+Classifier: License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)
+Classifier: Programming Language :: Python
+Description-Content-Type: text/markdown
+Requires-Dist: numpy<1.24,>=1.18
+Requires-Dist: scipy>=1.10.0
+Requires-Dist: numba==0.56.4
+Requires-Dist: six
+Provides-Extra: all
+Requires-Dist: scikit-learn>=1.2; extra == "all"
+Requires-Dist: matplotlib>=3.7.0; extra == "all"
+Requires-Dist: seaborn>=0.12.2; extra == "all"
+Requires-Dist: networkx>=3.0; extra == "all"
+Requires-Dist: pytorch>=1.13.1; extra == "all"
+Requires-Dist: gpytorch>=1.9.1; extra == "all"
+Requires-Dist: dcor>=0.6; extra == "all"
+Requires-Dist: joblib>=1.2.0; extra == "all"
+Requires-Dist: ortools>=9.2; extra == "all"
+Provides-Extra: test
+Requires-Dist: nose; extra == "test"
+Requires-Dist: pytest; extra == "test"
+Requires-Dist: networkx>=3.0; extra == "test"
+Requires-Dist: scikit-learn>=1.2; extra == "test"
+Requires-Dist: pytorch>=1.13.1; extra == "test"
+Requires-Dist: gpytorch>=1.9.1; extra == "test"
+Requires-Dist: dcor>=0.6; extra == "test"
+Provides-Extra: dev
+Requires-Dist: scikit-learn>=1.2; extra == "dev"
+Requires-Dist: matplotlib>=3.7.0; extra == "dev"
+Requires-Dist: seaborn>=0.12.2; extra == "dev"
+Requires-Dist: networkx>=3.0; extra == "dev"
+Requires-Dist: pytorch>=1.13.1; extra == "dev"
+Requires-Dist: gpytorch>=1.9.1; extra == "dev"
+Requires-Dist: dcor>=0.6; extra == "dev"
+Requires-Dist: joblib>=1.2.0; extra == "dev"
+Requires-Dist: ortools>=9.2; extra == "dev"
+
 # Tigramite – Causal inference for time series datasets
-![Logo](docs/_images/logoWhiteOrange.png)
 Version 5.2
 
 (Python Package)
