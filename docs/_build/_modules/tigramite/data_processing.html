@@ -712,6 +712,35 @@
                     <span class="n">vectorized_var</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">vector_var</span><span class="p">,</span> <span class="n">vector_lag</span> <span class="o">+</span> <span class="n">lag</span><span class="p">))</span>
             <span class="k">return</span> <span class="n">vectorized_var</span>
 
+
+
+        <span class="c1"># if extended_summary_graph_lag is not None:</span>
+        <span class="c1">#     assert self.vector_vars does not contain lagged microvariables # only space-vectors</span>
+        <span class="c1">#     assert tau_max == 1  # or 0 if mode is &#39;summary_graph&#39; /?</span>
+        <span class="c1">#     # Y = vectorize(Y)</span>
+        <span class="c1">#     varX, lagX = X[0]  # because X = [(i, -lag)]</span>
+            
+        <span class="c1">#     if lagX == 0:</span>
+        <span class="c1">#         pass #X = vectorize(X)</span>
+        <span class="c1">#     elif: lagX == -1:</span>
+        <span class="c1">#         X = [(varX, -lag) for lag in range(1, extended_summary_graph_lag + 1)]</span>
+        <span class="c1">#     else:</span>
+        <span class="c1">#         raise ValueError(&quot;Extended summary graph can only have tau_max = 1&quot;)</span>
+
+        <span class="c1">#     Znew = []</span>
+        <span class="c1">#     for z in Z:</span>
+        <span class="c1">#         varZ, lagZ = z   # z = (k, -1) or (k, -2) or (k, 0)</span>
+        <span class="c1">#         if: lagZ == 0:</span>
+        <span class="c1">#             Znew += z</span>
+        <span class="c1">#         elif: lagZ == -1:</span>
+        <span class="c1">#             Znew += [(varZ, -lag) for lag in range(1, extended_summary_graph_lag + 1)]   </span>
+        <span class="c1">#         elif: lagZ == -2:</span>
+        <span class="c1">#             Znew += [(varZ, -lag) for lag in range(2, 2*extended_summary_graph_lag + 1)]   </span>
+        <span class="c1">#         else:</span>
+        <span class="c1">#             raise ValueError(&quot;Extended summary graph can only have tau_max = 1&quot;)</span>
+        <span class="c1">#     Z = Znew</span>
+
+
         <span class="n">X</span> <span class="o">=</span> <span class="n">vectorize</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> 
         <span class="n">Y</span> <span class="o">=</span> <span class="n">vectorize</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span> 
         <span class="n">Z</span> <span class="o">=</span> <span class="n">vectorize</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span> 

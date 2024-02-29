@@ -118,22 +118,25 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="#tigramite.causal_effects.CausalEffects" title="tigramite.causal_effects.CausalEffects"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.causal_effects.CausalEffects</span></code></a>(...)</p></td>
 <td><p>Causal effect estimation.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#tigramite.models.Models" title="tigramite.models.Models"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.models.Models</span></code></a>(dataframe, model[, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#tigramite.causal_mediation.CausalMediation" title="tigramite.causal_mediation.CausalMediation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.causal_mediation.CausalMediation</span></code></a>(...)</p></td>
+<td><p>Non-linear, non-additive causal mediation analysis.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tigramite.models.Models" title="tigramite.models.Models"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.models.Models</span></code></a>(dataframe, model[, ...])</p></td>
 <td><p>Base class for time series models.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#tigramite.models.LinearMediation" title="tigramite.models.LinearMediation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.models.LinearMediation</span></code></a>(dataframe)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#tigramite.models.LinearMediation" title="tigramite.models.LinearMediation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.models.LinearMediation</span></code></a>(dataframe)</p></td>
 <td><p>Linear mediation analysis for time series models.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#tigramite.models.Prediction" title="tigramite.models.Prediction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.models.Prediction</span></code></a>(dataframe, ...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tigramite.models.Prediction" title="tigramite.models.Prediction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.models.Prediction</span></code></a>(dataframe, ...)</p></td>
 <td><p>Prediction class for time series models.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#module-tigramite.data_processing" title="tigramite.data_processing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.data_processing</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#module-tigramite.data_processing" title="tigramite.data_processing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.data_processing</span></code></a></p></td>
 <td><p>Tigramite data processing functions.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#module-tigramite.toymodels.structural_causal_processes" title="tigramite.toymodels.structural_causal_processes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.toymodels.structural_causal_processes</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#module-tigramite.toymodels.structural_causal_processes" title="tigramite.toymodels.structural_causal_processes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.toymodels.structural_causal_processes</span></code></a></p></td>
 <td><p>Tigramite toymodels.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#module-tigramite.plotting" title="tigramite.plotting"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.plotting</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#module-tigramite.plotting" title="tigramite.plotting"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigramite.plotting</span></code></a></p></td>
 <td><p>Tigramite plotting package.</p></td>
 </tr>
 </tbody>
@@ -3868,6 +3871,137 @@ the entire results can be returned.</p></li>
 </dd></dl>
 
 </section>
+<section id="tigramite-causal-mediation-causal-mediation-analysis">
+<h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">tigramite.causal_mediation</span></code>: Causal mediation analysis<a class="headerlink" href="#tigramite-causal-mediation-causal-mediation-analysis" title="Permalink to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="tigramite.causal_mediation.CausalMediation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tigramite.causal_mediation.</span></span><span class="sig-name descname"><span class="pre">CausalMediation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">graph_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">S</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_variables</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbosity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/causal_mediation.html#CausalMediation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.causal_mediation.CausalMediation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Non-linear, non-additive causal mediation analysis.</p>
+<p>See the tutorial on Causal Mediation.</p>
+<p>Extends the tigramite.CausalEffects class by natural-effect estimation for counter-factual mediation analysis.
+Effects are estimated by adjustment, where adjustment-sets can be generated automatically (if they exist).</p>
+<p>Actual fit-models can be chosen independently, for details see
+technical appendix B in the mediation-tutorial.</p>
+<p>See references and tigramite tutorial for an in-depth introduction.</p>
+<p class="rubric">References</p>
+<p>J. Pearl. Direct and indirect effects. Proceedings of the Seventeenth Conference
+on Uncertainty in Artificial intelligence, 2001.</p>
+<p>J. Pearl. Interpretation and identification of causal mediation. Psychological
+methods, 19(4):459, 2014.</p>
+<p>I. Shpitser and T. J. VanderWeele. A complete graphical criterion for the adjust-
+ment formula in mediation analysis. The international journal of biostatistics,
+7(1), 2011.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> (<em>np.array</em><em>( </em><em>[</em><em>N</em><em>, </em><em>N</em><em>] or </em><em>[</em><em>N</em><em>, </em><em>N</em><em>, </em><em>tau_max+1</em><em>] </em><em>depending on graph_type</em><em> ) </em><em>of 3-character patterns</em>) – The causal graph, see ‘Causal Effects’ tutorial. E.g. returned by causal discovery method
+(see “Tutorials/Causal Discovery/CD Overview”) or by a toymodel (see toy_setup.Model.GetGroundtruthGraph or
+the Mediation tutorial).</p></li>
+<li><p><strong>graph_type</strong> (<em>string</em>) – The type of graph, tested for ‘dag’ and ‘stationary_dag’ (time-series). See ‘Causal Effects’ tutorial.</p></li>
+<li><p><strong>X</strong> (<em>(</em><em>idx</em><em>, </em><em>-lag</em><em>)</em>) – Index of the effect-source.</p></li>
+<li><p><strong>Y</strong> (<em>(</em><em>idx</em><em>, </em><em>-lag</em><em>)</em>) – Index of the effect-target.</p></li>
+<li><p><strong>S</strong> (<em>None</em>) – Reserved. Must be None in current version.</p></li>
+<li><p><strong>hidden_variables</strong> (<em>None</em>) – Reserved. Must be None in current version.</p></li>
+<li><p><strong>verbosity</strong> (<em>uint</em>) – Tigramite.CausalEffects verbosity setting.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="tigramite.causal_mediation.CausalMediation.fit_natural_direct_effect">
+<span class="sig-name descname"><span class="pre">fit_natural_direct_effect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mixed_data_estimator=&lt;tigramite.causal_mediation.FitSetup</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blocked_mediators='all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjustment_set='auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_mediation_impl_for_total_effect_fallback=False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/causal_mediation.html#CausalMediation.fit_natural_direct_effect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.causal_mediation.CausalMediation.fit_natural_direct_effect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit a natural direct effect.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataframe</strong> (<em>tigramite.Dataframe</em>) – Observed data.</p></li>
+<li><p><strong>mixed_data_estimator</strong> (<em>mixed_fit.FitSetup</em>) – The fit-configuration to use. See mixed_fit.FitSetup and the Mediation tutorial, Appendix B.</p></li>
+<li><p><strong>blocked_mediators</strong> (‘all’ or <em>iterable</em> of &lt; (idx, -lag) &gt;) – Which mediators to ‘block’ (consider indirect), <em>un</em>blocked mediators are considered as
+contributions to the <em>direct</em> effect.</p></li>
+<li><p><strong>adjustment_set</strong> (‘auto’ or None or <em>iterable</em> &lt; (idx, -lag) &gt;) – Adjustment-set to use. Will be validated if specified explicitly, if ‘auto’ or None, will try
+to use an ‘optimal’ set, fall back to [Perkovic et al]’s adjustment-set (which should always
+work if single-set adjustment as in [Shpitser, VanderWeele] os possible; this follows
+from combining results of [Shpitser, VanderWeele] and [Perkovic et al]).
+See ‘Causal Effects’ and its tutorial for more info and references on (optimal) adjustment.</p></li>
+<li><p><strong>use_mediation_impl_for_total_effect_fallback</strong> (<em>bool</em>) – If True, if no mediators are blocked, use mediation implementation to estimate the total effect.
+In this case, estimating the total effect through the ‘Causal Effects’ class might be easier,
+however, for comparison to other estimates, using this option might yield more consistent results.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>estimator</strong> – Typically, use predict_natural_direct_effect or predict_natural_direct_effect_function
+to use the fitted estimator.
+The internal NaturalEffects_GraphMediation (if needed).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>NaturalEffects_GraphMediation</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tigramite.causal_mediation.CausalMediation.predict_natural_direct_effect">
+<span class="sig-name descname"><span class="pre">predict_natural_direct_effect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference_value_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cf_intervention_value_x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/causal_mediation.html#CausalMediation.predict_natural_direct_effect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.causal_mediation.CausalMediation.predict_natural_direct_effect" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>After fitting</em> a natural direct effect, predict its value at a specific point.
+See also predict_natural_direct_effect_function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reference_value_x</strong> (<em>single value of same type as single sample for X</em><em> (</em><em>float</em><em>, </em><em>int</em><em>, or </em><em>bool</em><em>)</em>) – Reference-value to which X is set by intervention in the world seen by the (blocked) mediators.</p></li>
+<li><p><strong>cf_intervention_value_x</strong> (<em>single value of same type as single sample for X</em><em> (</em><em>float</em><em>, </em><em>int</em><em>, or </em><em>bool</em><em>)</em>) – Post-intervention-value to which X is set by intervention in the world seen by the effect (directly).</p></li>
+<li><p><strong>Throws</strong> – </p></li>
+<li><p><strong>------</strong> – </p></li>
+<li><p><strong>valid.</strong> (<em>Raises and exception if parameters are not meaningful</em><em> or </em><em>if adjustment-set is not</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>NDE</strong> (<em>If Y is categorical -&gt; np.array( # categories Y, 2 )</em>) – The probabilities the categories of Y (after, before) changing the interventional value of X
+as “seen” by Y from change_from to change_to, while keeping (blocked) M as if X remained at change_from.</p></li>
+<li><p><strong>NDE</strong> (<em>If Y is continuous -&gt; float</em>) – The change in the expectation-value of Y induced by changing the interventional value of X
+as “seen” by Y from change_from to change_to, while keeping (blocked) M as if X remained at change_from.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tigramite.causal_mediation.CausalMediation.predict_natural_direct_effect_function">
+<span class="sig-name descname"><span class="pre">predict_natural_direct_effect_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cf_delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoothing_gaussian_sigma_in_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_by_delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/causal_mediation.html#CausalMediation.predict_natural_direct_effect_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.causal_mediation.CausalMediation.predict_natural_direct_effect_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute NDE as <em>smoothed</em> function</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>min_x</strong> (<em>float</em>) – Lower bound of interval on which reference-values for X are taken</p></li>
+<li><p><strong>max_x</strong> (<em>float</em>) – Upper bound of interval on which reference-values for X are taken</p></li>
+<li><p><strong>cf_delta</strong> (<em>float</em>) – The change from reference-value to effect-value (change_from=reference, change_to=ref + delta)</p></li>
+<li><p><strong>steps</strong> (<em>uint</em>) – Number of intermediate values to compute in the interval [min_x, max_x]</p></li>
+<li><p><strong>smoothing_gaussian_sigma_in_steps</strong> (<em>uint</em>) – The width of the Gauß-kernel used for smoothing, given in steps.</p></li>
+<li><p><strong>normalize_by_delta</strong> (<em>bool</em>) – Normalize the effect by dividing by cf_delta.</p></li>
+<li><p><strong>Throws</strong> – </p></li>
+<li><p><strong>------</strong> – </p></li>
+<li><p><strong>meaningful</strong> (<em>Raises and exception if parameters are not</em>) – </p></li>
+<li><p><strong>or</strong> (<em>adjustment-set is not valid</em>) – </p></li>
+<li><p><strong>delta</strong><strong>)</strong><strong>.</strong> (<em>normalization requested makes no sense</em><em> (</em><em>normalizing probabilites by</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>NDE</strong> (<em>If Y is categorical -&gt; np.array( # steps, # categories Y, 2 )</em>) – For each grid-point:
+The probabilities the categories of Y (after, before) changing the interventional value of X
+as “seen” by Y from change_from to change_to, while keeping (blocked) M as if X remained at change_from.</p></li>
+<li><p><strong>NDE</strong> (<em>If Y is continuous -&gt; np.array( # steps )</em>) – For each grid-point:
+The change in the expectation-value of Y induced by changing the interventional value of X
+as “seen” by Y from change_from to change_to, while keeping (blocked) M as if X remained at change_from.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
 <section id="tigramite-models-time-series-modeling-mediation-and-prediction">
 <h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">tigramite.models</span></code>: Time series modeling, mediation, and prediction<a class="headerlink" href="#tigramite-models-time-series-modeling-mediation-and-prediction" title="Permalink to this heading">¶</a></h1>
 <p>Base class:</p>
@@ -6088,8 +6222,8 @@ overlaid for comparison.</p>
 <li><p><strong>var_names</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – List of variable names. If None, range(N) is used.</p></li>
 <li><p><strong>figsize</strong> (<em>tuple of floats</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Figure size if new figure is created. If None, default pyplot figsize
 is used.</p></li>
-<li><p><strong>minimum</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: -1</em><em>)</em>) – Lower y-axis limit.</p></li>
-<li><p><strong>maximum</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) – Upper y-axis limit.</p></li>
+<li><p><strong>minimum</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: -1.</em><em>)</em>) – Lower y-axis limit.</p></li>
+<li><p><strong>maximum</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1.</em><em>)</em>) – Upper y-axis limit.</p></li>
 <li><p><strong>label_space_left</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.1</em><em>)</em>) – Fraction of horizontal figure space to allocate left of plot for labels.</p></li>
 <li><p><strong>label_space_top</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.05</em><em>)</em>) – Fraction of vertical figure space to allocate top of plot for labels.</p></li>
 <li><p><strong>legend_width</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.15</em><em>)</em>) – Fraction of horizontal figure space to allocate right of plot for
