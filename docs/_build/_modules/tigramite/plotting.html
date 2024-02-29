@@ -484,9 +484,9 @@
 <span class="sd">    figsize : tuple of floats, optional (default: None)</span>
 <span class="sd">        Figure size if new figure is created. If None, default pyplot figsize</span>
 <span class="sd">        is used.</span>
-<span class="sd">    minimum : int, optional (default: -1)</span>
+<span class="sd">    minimum : float, optional (default: -1.)</span>
 <span class="sd">        Lower y-axis limit.</span>
-<span class="sd">    maximum : int, optional (default: 1)</span>
+<span class="sd">    maximum : float, optional (default: 1.)</span>
 <span class="sd">        Upper y-axis limit.</span>
 <span class="sd">    label_space_left : float, optional (default: 0.1)</span>
 <span class="sd">        Fraction of horizontal figure space to allocate left of plot for labels.</span>
@@ -4554,10 +4554,14 @@
     <span class="c1">#     verbosity=1)</span>
 
 
-    <span class="c1"># correlations = pcmci.get_lagged_dependencies(tau_max=20, val_only=True)[&#39;val_matrix&#39;]</span>
-    <span class="c1"># lag_func_matrix = plot_lagfuncs(val_matrix=correlations, setup_args={&#39;label_space_left&#39;:0.05, </span>
-    <span class="c1">#                                 &#39;x_base&#39;:5, &#39;y_base&#39;:.5})</span>
-    <span class="c1"># plt.show()</span>
+    <span class="n">correlations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="c1">#pcmci.get_lagged_dependencies(tau_max=20, val_only=True)[&#39;val_matrix&#39;]</span>
+    <span class="n">lag_func_matrix</span> <span class="o">=</span> <span class="n">plot_lagfuncs</span><span class="p">(</span><span class="n">val_matrix</span><span class="o">=</span><span class="n">correlations</span><span class="p">,</span> <span class="n">setup_args</span><span class="o">=</span><span class="p">{</span>
+                        <span class="s1">&#39;label_space_left&#39;</span><span class="p">:</span><span class="mf">0.05</span><span class="p">,</span> 
+                                    <span class="s1">&#39;minimum&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+                                    <span class="s1">&#39;maximum&#39;</span><span class="p">:</span><span class="mf">.05</span><span class="p">,</span>
+                                    <span class="s1">&#39;x_base&#39;</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span> 
+                                    <span class="s1">&#39;y_base&#39;</span><span class="p">:</span><span class="mf">.5</span><span class="p">})</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
     
     <span class="c1"># N = len(links)</span>
@@ -4593,36 +4597,36 @@
 
     <span class="c1"># val_matrix = np.zeros((4, 4, 3))</span>
 
-    <span class="c1"># Complete test case</span>
-    <span class="n">graph</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;&lt;U3&#39;</span><span class="p">)</span>
-    <span class="n">val_matrix</span> <span class="o">=</span> <span class="mf">0.</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="o">*</span><span class="n">graph</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-    <span class="n">val_matrix</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.2</span>
-    <span class="n">graph</span><span class="p">[:]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-    <span class="c1"># graph[0, 1, 0] = &quot;&lt;-+&quot;</span>
-    <span class="c1"># graph[1, 0, 0] = &quot;+-&gt;&quot;</span>
-    <span class="n">graph</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;--&gt;&quot;</span>
-    <span class="n">graph</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;--&gt;&quot;</span>
+    <span class="c1"># # Complete test case</span>
+    <span class="c1"># graph = np.zeros((3,3,2), dtype=&#39;&lt;U3&#39;)</span>
+    <span class="c1"># val_matrix = 0.*np.random.rand(*graph.shape)</span>
+    <span class="c1"># val_matrix[:,:,0] = 0.2</span>
+    <span class="c1"># graph[:] = &quot;&quot;</span>
+    <span class="c1"># # graph[0, 1, 0] = &quot;&lt;-+&quot;</span>
+    <span class="c1"># # graph[1, 0, 0] = &quot;+-&gt;&quot;</span>
+    <span class="c1"># graph[0, 0, 1] = &quot;--&gt;&quot;</span>
+    <span class="c1"># graph[1, 1, 1] = &quot;--&gt;&quot;</span>
 
-    <span class="n">graph</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;+-&gt;&quot;</span>
-    <span class="c1"># graph[1, 0, 1] = &quot;o-o&quot;</span>
+    <span class="c1"># graph[0, 1, 1] = &quot;+-&gt;&quot;</span>
+    <span class="c1"># # graph[1, 0, 1] = &quot;o-o&quot;</span>
 
     <span class="c1"># graph[1, 2, 0] = &quot;&lt;-&gt;&quot;</span>
     <span class="c1"># graph[2, 1, 0] = &quot;&lt;-&gt;&quot;</span>
 
     <span class="c1"># graph[0, 2, 0] = &quot;x-x&quot;</span>
-    <span class="c1"># graph[2, 0, 0] = &quot;x-x&quot;</span>
-    <span class="n">nolinks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-    <span class="c1"># nolinks[range(4), range(4), 1] = 1</span>
+    <span class="c1"># # graph[2, 0, 0] = &quot;x-x&quot;</span>
+    <span class="c1"># nolinks = np.zeros(graph.shape)</span>
+    <span class="c1"># # nolinks[range(4), range(4), 1] = 1</span>
 
-    <span class="c1"># graph = graph[:2, :2, :]</span>
+    <span class="c1"># # graph = graph[:2, :2, :]</span>
 
-    <span class="c1"># fig, axes = pyplot.subplots(nrows=1, ncols=1, figsize=(6, 5))</span>
+    <span class="c1"># # fig, axes = pyplot.subplots(nrows=1, ncols=1, figsize=(6, 5))</span>
 
 
-    <span class="c1"># import cartopy.crs as ccrs</span>
-    <span class="n">graph</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;&lt;U3&#39;</span><span class="p">)</span>
-    <span class="n">graph</span><span class="p">[:]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-    <span class="n">graph</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;+-&gt;&#39;</span> 
+    <span class="c1"># # import cartopy.crs as ccrs</span>
+    <span class="c1"># graph = np.ones((5, 5, 2), dtype=&#39;&lt;U3&#39;)</span>
+    <span class="c1"># graph[:] = &quot;&quot;</span>
+    <span class="c1"># graph[3, :, 1] = &#39;+-&gt;&#39; </span>
 
     <span class="c1"># fig = pyplot.figure(figsize=(8, 6))</span>
     <span class="c1"># fig = pyplot.figure(figsize=(10, 5))</span>
@@ -4639,18 +4643,18 @@
     <span class="c1">#         &#39;transform&#39;:ccrs.PlateCarree(), # t.PlateCarree()</span>
     <span class="c1">#         }</span>
 
-    <span class="n">plot_time_series_graph</span><span class="p">(</span><span class="n">graph</span><span class="o">=</span><span class="n">graph</span><span class="p">,</span>
-        <span class="c1"># fig_ax = (fig, ax),</span>
-        <span class="c1"># val_matrix=val_matrix,</span>
-        <span class="c1"># figsize=(5, 5),</span>
-        <span class="c1"># var_names = [&#39;Var %s&#39; %i for i in range(len(graph))],</span>
-        <span class="c1"># arrow_linewidth=6,</span>
-        <span class="c1"># label_space_left = label_space_left,</span>
-        <span class="c1"># label_space_top = label_space_top,</span>
-        <span class="c1"># # network_lower_bound=network_lower_bound,</span>
-        <span class="n">save_name</span><span class="o">=</span><span class="s2">&quot;tsg_test.pdf&quot;</span>
-        <span class="p">)</span>
-    <span class="n">pyplot</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="c1"># plot_time_series_graph(graph=graph,</span>
+    <span class="c1">#     # fig_ax = (fig, ax),</span>
+    <span class="c1">#     # val_matrix=val_matrix,</span>
+    <span class="c1">#     # figsize=(5, 5),</span>
+    <span class="c1">#     # var_names = [&#39;Var %s&#39; %i for i in range(len(graph))],</span>
+    <span class="c1">#     # arrow_linewidth=6,</span>
+    <span class="c1">#     # label_space_left = label_space_left,</span>
+    <span class="c1">#     # label_space_top = label_space_top,</span>
+    <span class="c1">#     # # network_lower_bound=network_lower_bound,</span>
+    <span class="c1">#     save_name=&quot;tsg_test.pdf&quot;</span>
+    <span class="c1">#     )</span>
+    <span class="c1"># pyplot.tight_layout()</span>
 
     <span class="c1"># network_lower_bound = 0.</span>
     <span class="c1"># show_colorbar=True</span>
