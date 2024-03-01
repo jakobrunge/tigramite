@@ -38,6 +38,7 @@ Further, Tigramite provides several causal discovery methods that can be used un
 | CMIsymb                       | multivariate discrete/categorical variables (permutation-based test)                                   |
 | RegressionCI                  | mixed datasets with univariate discrete/categorical and (linear) continuous variables                  |
 
+Remark: With the conditional independence test wrapper class PairwiseCI you can turn every univariate test into a multivariate test.
 
 ## General Notes
 
