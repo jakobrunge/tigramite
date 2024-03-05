@@ -3,11 +3,10 @@
 Version 5.2
 (Python Package)
 
-[Github](https://github.com/jakobrunge/tigramite.git)
-
-[Documentation](https://jakobrunge.github.io/tigramite/)
-
-[Tutorials](https://github.com/jakobrunge/tigramite/tree/master/tutorials/)
+> Quickstart links:
+> - [GitHub](https://github.com/jakobrunge/tigramite.git)
+> - [Documentation](https://jakobrunge.github.io/tigramite/)
+> - [Tutorials](https://github.com/jakobrunge/tigramite/tree/master/tutorials/)
 
 ## Overview
 
@@ -69,35 +68,44 @@ Tigramite is a causal inference for time series python package. It allows to eff
 
 ## Required python packages
 
-- python=3.7/3.8/3.9/3.10
-- numpy <1.24,>=1.18
-- scipy>=1.10.0
-- numba==0.56.4
+- `python=3.7/3.8/3.9/3.10`
+- `numpy <1.24,>=1.18`
+- `scipy>=1.10.0`
+- `numba==0.56.4`
 
 ## Optional packages depending on used functions
-- scikit-learn>=1.2   # Gaussian Process (GP) Regression
-- matplotlib>=3.7.0   # Plotting
-- seaborn>=0.12.2     # Plotting
-- networkx>=3.0       # Plotting
-- torch>=1.13.1       # GPDC pytorch version (in conda install pytorch)
-- gpytorch>=1.9.1     # GPDC gpytorch version
-- dcor>=0.6           # GPDC distance correlation version
-- joblib>=1.2.0       # CMIsymb shuffle parallelization
-- ortools>=9.2        # RPCMCI
+- `scikit-learn>=1.2`   for Gaussian Process (GP) Regression
+- `matplotlib>=3.7.0`   for Plotting
+- `seaborn>=0.12.2`     for Plotting
+- `networkx>=3.0`       for Plotting
+- `torch>=1.13.1`       for GPDC pytorch version (in `conda install pytorch`)
+- `gpytorch>=1.9.1`     for GPDC gpytorch version
+- `dcor>=0.6`           for GPDC distance correlation version
+- `joblib>=1.2.0`       for CMIsymb shuffle parallelization
+- `ortools>=9.2`        for RPCMCI
 
 ## Installation
 
+To install from PyPI, you can use pip:
+```bash
+pip install tigramite
+```
+
+To install from source, you can use the following commands:
+```bash
+git clone https://github.com/jakobrunge/tigramite.git
+cd tigramite
 python setup.py install
+```
 
 This will install tigramite in your path.
 
-To use just the ParCorr, CMIknn, and CMIsymb independence tests, only numpy/numba and scipy are required. For other independence tests more packages are required:
+To use just the ParCorr, CMIknn, and CMIsymb independence tests, only `numpy`/`numba` and `scipy` are required. For other independence tests more packages are required:
 
-- GPDC: scikit-learn is required for Gaussian Process regression and dcor for distance correlation
+- GPDC: `scikit-learn` is required for Gaussian Process regression and `dcor` for distance correlation
+- GPDCtorch: `gpytorch` is required for Gaussian Process regression
 
-- GPDCtorch: gpytorch is required for Gaussian Process regression
-
-Note: Due to incompatibility issues between numba and numpy, we currently enforce soft dependencies on the versions.
+Note: Due to incompatibility issues between `numba` and `numpy`, we currently enforce soft dependencies on the versions.
 
 ## User Agreement
 
@@ -108,10 +116,8 @@ You commit to cite above papers in your reports or publications.
 
 ## License
 
-Copyright (C) 2014-2023 Jakob Runge
+Copyright (C) 2014-2024 Jakob Runge
 
-See license.txt for full text.
-
-GNU General Public License v3.0
+See the [`LICENSE`](./LICENSE) file for full text.
 
 TIGRAMITE is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any later version. TIGRAMITE is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
