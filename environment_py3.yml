@@ -1,6 +1,0 @@
-name: tigramite_conda
-dependencies:
-    - python>=3.9
-    - numpy<1.24,>=1.18
-    - scipy>=1.10.0
-    - numba==0.56.4
