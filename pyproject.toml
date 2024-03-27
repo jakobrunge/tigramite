@@ -16,7 +16,7 @@ classifiers = [
     "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     "Programming Language :: Python",
 ]
-requires-python = ">=3.8,<3.13"
+requires-python = ">=3.8,<3.12"
 dependencies = [
     "numpy<2.0,>=1.18",
     "scipy<2.0,>=1.10.0",
@@ -30,11 +30,11 @@ all = [
     "matplotlib>=3.7.0",
     "seaborn>=0.12.2",
     "networkx>=3.0",
-    "torch>=1.13.1",
     "gpytorch>=1.9.1",
     "dcor>=0.6",
     "joblib>=1.2.0",
-    "ortools>=9.2",
+    "ortools==9.9.3963",
+    "torch!=2.0.1,!=2.1.0,>=2.0.0",
 ]
 
 
