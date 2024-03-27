@@ -12,7 +12,7 @@ from tigramite.independence_tests.parcorr_wls import ParCorrWLS
 from tigramite.independence_tests.gpdc import GPDC
 from tigramite.independence_tests.gpdc_torch import GPDCtorch
 from tigramite.independence_tests.cmiknn import CMIknn
-from tigramite.independence_tests.cmiknnmixed import CMIknnMixed
+#from tigramite.independence_tests.cmiknnmixed import CMIknnMixed
 from tigramite.independence_tests.cmisymb import CMIsymb
 from tigramite.independence_tests.gsquared import Gsquared
 from tigramite.independence_tests.regressionCI import RegressionCI
@@ -20,7 +20,7 @@ from tigramite.independence_tests.regressionCI import RegressionCI
 import tigramite.data_processing as pp
 from tigramite.toymodels import structural_causal_processes as toys
 
-from test_pcmci_calculations import a_chain, gen_data_frame
+from .test_pcmci_calculations import a_chain, gen_data_frame
 
 # Pylint settings
 # pylint: disable=redefined-outer-name
