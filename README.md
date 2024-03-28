@@ -1,34 +1,36 @@
 # Tigramite – Causal inference for time series datasets
+
+![Tests](https://github.com/jakobrunge/tigramite/actions/workflows/tests.yaml/badge.svg)
+![PyPI - Version](https://img.shields.io/pypi/v/tigramite)
+![GitHub License](https://img.shields.io/github/license/jakobrunge/tigramite)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/tigramite)
+![GitHub Repo stars](https://img.shields.io/github/stars/jakobrunge/tigramite)
+
 ![logo](docs/_images/tigramite_logo_header.png)
-Version 5.2
-(Python Package)
-
-[Github](https://github.com/jakobrunge/tigramite.git)
-
-[Documentation](https://jakobrunge.github.io/tigramite/)
-
-[Tutorials](https://github.com/jakobrunge/tigramite/tree/master/tutorials/)
 
 ## Overview
 
-It's best to start with our [Overview/review paper: Causal inference for time series](https://github.com/jakobrunge/tigramite/blob/master/tutorials/Runge_Causal_Inference_for_Time_Series_NREE.pdf)
+- ➡️ [GitHub Repository](https://github.com/jakobrunge/tigramite.git)
+- ➡️ [Documentation](https://jakobrunge.github.io/tigramite/)
+- ➡️ [Tutorials](https://github.com/jakobrunge/tigramite/tree/master/tutorials/)
 
-__Update:__ Tigramite now has a new CausalEffects class that allows to estimate (conditional) causal effects and mediation based on assuming a causal graph. Have a look at the tutorial.
+It's best to start with our [Overview/review paper: Causal inference for time series](https://github.com/jakobrunge/tigramite/blob/master/tutorials/Runge_Causal_Inference_for_Time_Series_NREE.pdf).
+
+🆕 **Update:** Tigramite now has a new `CausalEffects` class that allows to estimate (conditional) causal effects and mediation based on assuming a causal graph. Have a look at the tutorial.
 
 Further, Tigramite provides several causal discovery methods that can be used under different sets of assumptions. An application always consists of a method and a chosen conditional independence test, e.g. PCMCIplus together with ParCorr. The following two tables give an overview of the assumptions involved:
 
-| Method | Assumptions         | Output |
-| :-- | :-- | :-- |
-|         |   (in addition to Causal Markov Condition and Faithfulness)   |    |
-| PCMCI  | Causal stationarity, no contemporaneous causal links, no hidden variables |  Directed lagged links, undirected contemporaneous links (for tau_min=0)  |
-| PCMCIplus | Causal stationarity, no hidden variables    | Directed lagged links, directed and undirected contemp. links (Time series CPDAG) |
-| LPCMCI | Causal stationarity    | Time series PAG |
-| RPCMCI  | No contemporaneous causal links, no hidden variables |  Regime-variable and causal graphs for each regime with directed lagged links, undirected contemporaneous links (for tau_min=0)  |
-| J-PCMCI+ | Multiple datasets, causal stationarity, no hidden system confounding, except if context-related   | Directed lagged links, directed and undirected contemp. links (Joint time series CPDAG) |
-
+| Method    | Assumptions                                                                                     | Output                                                                                                                         |
+| :-------- | :---------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------- |
+|           | (in addition to Causal Markov Condition and Faithfulness)                                       |                                                                                                                                |
+| PCMCI     | Causal stationarity, no contemporaneous causal links, no hidden variables                       | Directed lagged links, undirected contemporaneous links (for tau_min=0)                                                        |
+| PCMCIplus | Causal stationarity, no hidden variables                                                        | Directed lagged links, directed and undirected contemp. links (Time series CPDAG)                                              |
+| LPCMCI    | Causal stationarity                                                                             | Time series PAG                                                                                                                |
+| RPCMCI    | No contemporaneous causal links, no hidden variables                                            | Regime-variable and causal graphs for each regime with directed lagged links, undirected contemporaneous links (for tau_min=0) |
+| J-PCMCI+  | Multiple datasets, causal stationarity, no hidden system confounding, except if context-related | Directed lagged links, directed and undirected contemp. links (Joint time series CPDAG)                                        |
 
 | Conditional independence test | Assumptions                                                                                            |
-| :-- | :-- | 
+| :---------------------------- | :----------------------------------------------------------------------------------------------------- |
 | ParCorr                       | univariate, continuous variables with linear dependencies and Gaussian noise                           |
 | RobustParCorr                 | univariate, continuous variables with linear dependencies, robust for different marginal distributions |
 | ParCorrWLS                    | univariate, continuous variables with linear dependencies, can account for heteroskedastic data        |
@@ -64,40 +66,56 @@ Tigramite is a causal inference for time series python package. It allows to eff
   linear or nonlinear dependencies
 - handling of missing values and masks
 - p-value correction and (bootstrap) confidence interval estimation
-- causal effect class to  non-parametrically estimate (conditional) causal effects and also linear mediated causal effects
+- causal effect class to non-parametrically estimate (conditional) causal effects and also linear mediated causal effects
 - prediction class based on sklearn models including causal feature selection
 
-## Required python packages
+## Minimum requirements
 
-- python=3.7/3.8/3.9/3.10
-- numpy <1.24,>=1.18
-- scipy>=1.10.0
-- numba==0.56.4
+- Python 3.8, 3.9, 3.10, 3.11
+- `numpy`, `scipy`, `numba`
 
 ## Optional packages depending on used functions
-- scikit-learn>=1.2   # Gaussian Process (GP) Regression
-- matplotlib>=3.7.0   # Plotting
-- seaborn>=0.12.2     # Plotting
-- networkx>=3.0       # Plotting
-- torch>=1.13.1       # GPDC pytorch version (in conda install pytorch)
-- gpytorch>=1.9.1     # GPDC gpytorch version
-- dcor>=0.6           # GPDC distance correlation version
-- joblib>=1.2.0       # CMIsymb shuffle parallelization
-- ortools>=9.2        # RPCMCI
+
+- `scikit-learn`   for Gaussian Process (GP) Regression
+- `matplotlib`     for Plotting
+- `seaborn`        for Plotting
+- `networkx`       for Plotting
+- `torch`          for GPDC pytorch version
+- `gpytorch`       for GPDC gpytorch version
+- `dcor`           for GPDC distance correlation version
+- `joblib`         for CMIsymb shuffle parallelization
+- `ortools`        for RPCMCI
 
 ## Installation
 
-python setup.py install
+To install from PyPI, you can use pip:
 
-This will install tigramite in your path.
+```bash
+pip install tigramite
+```
 
-To use just the ParCorr, CMIknn, and CMIsymb independence tests, only numpy/numba and scipy are required. For other independence tests more packages are required:
+This will install `tigramite` in your path.
 
-- GPDC: scikit-learn is required for Gaussian Process regression and dcor for distance correlation
+To install from source, you can use the following commands:
 
-- GPDCtorch: gpytorch is required for Gaussian Process regression
+```bash
+git clone https://github.com/jakobrunge/tigramite.git
+cd tigramite
+pip install .
+```
 
-Note: Due to incompatibility issues between numba and numpy, we currently enforce soft dependencies on the versions.
+For development purposes, use [PDM](https://pdm-project.org/latest/) to install the dependencies from the `pdm.lock` file:
+
+```bash
+pdm sync
+```
+
+To use just the ParCorr, CMIknn, and CMIsymb independence tests, only `numpy`/`numba` and `scipy` are required. For other independence tests more packages are required:
+
+- GPDC: `scikit-learn` is required for Gaussian Process regression and `dcor` for distance correlation
+- GPDCtorch: `gpytorch` is required for Gaussian Process regression
+
+Note: Due to incompatibility issues between `numba` and `numpy`, we currently enforce soft dependencies on the versions.
 
 ## User Agreement
 
@@ -105,13 +123,10 @@ By downloading TIGRAMITE you agree with the following points: TIGRAMITE is provi
 
 You commit to cite above papers in your reports or publications.
 
-
 ## License
 
-Copyright (C) 2014-2023 Jakob Runge
+Copyright (C) 2014-2024 Jakob Runge.
 
-See license.txt for full text.
-
-GNU General Public License v3.0
+See the [`LICENSE`](./LICENSE) file for full text.
 
 TIGRAMITE is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any later version. TIGRAMITE is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
