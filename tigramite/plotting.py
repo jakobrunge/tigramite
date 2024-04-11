@@ -458,6 +458,8 @@ class setup_matrix:
         Fraction of horizontal figure space to allocate left of plot for labels.
     label_space_top : float, optional (default: 0.05)
         Fraction of vertical figure space to allocate top of plot for labels.
+    label_rotation_left : float, optional (default: 0)
+        Rotation of variable labels. Set to 90 for vertical labels on y-axis.
     legend_width : float, optional (default: 0.15)
         Fraction of horizontal figure space to allocate right of plot for
         legend.
@@ -486,6 +488,7 @@ class setup_matrix:
         maximum=1,
         label_space_left=0.1,
         label_space_top=0.05,
+        label_rotation_left=0,
         legend_width=0.15,
         legend_fontsize=10,
         x_base=1.0,
@@ -540,6 +543,7 @@ class setup_matrix:
                         fontsize=label_fontsize,
                         horizontalalignment="left",
                         verticalalignment="center",
+                        rotation=label_rotation_left,
                         transform=trans,
                     )
                 if i == 0:
