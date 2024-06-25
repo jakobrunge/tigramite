@@ -11,7 +11,6 @@ from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn import metrics
 
 from .independence_tests_base import CondIndTest
-# from numba import jit   # could make it even faster, also acticate @jit(forceobj=True)
 
 
 class RegressionCI(CondIndTest):
@@ -92,7 +91,6 @@ class RegressionCI(CondIndTest):
             raise ValueError("data_type cannot be None for RegressionCI.")
         dataframe._check_mask(dataframe.data_type, check_data_type=True)
 
-    # @jit(forceobj=True)
     def get_dependence_measure(self, array, xyz, data_type):
         """Returns test statistic.
 

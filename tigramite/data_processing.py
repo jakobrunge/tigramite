@@ -14,7 +14,7 @@ import numpy as np
 import scipy.sparse
 import scipy.sparse.linalg
 from scipy import stats
-from numba import jit
+# from numba import jit
 
 class DataFrame():
     """Data object containing single or multiple time series arrays and optional 
@@ -1362,7 +1362,7 @@ def trafo2normal(data, mask=None, thres=0.001):
 
     return normal_data
 
-@jit(nopython=True)
+# @jit(nopython=True)
 def _get_patterns(array, array_mask, patt, patt_mask, weights, dim, step, fac, N, T):
     v = np.zeros(dim, dtype='float')
 
@@ -1396,7 +1396,7 @@ def _get_patterns(array, array_mask, patt, patt_mask, weights, dim, step, fac, N
     return patt, patt_mask, weights
 
 def ordinal_patt_array(array, array_mask=None, dim=2, step=1,
-                        weights=False, verbosity=0):
+                        weights=False, seed=None, verbosity=0):
     """Returns symbolified array of ordinal patterns.
 
     Each data vector (X_t, ..., X_t+(dim-1)*step) is converted to its rank
@@ -1421,6 +1421,8 @@ def ordinal_patt_array(array, array_mask=None, dim=2, step=1,
         Delay of pattern embedding vector.
     weights : bool, optional (default: False)
         Whether to return array of variances of embedding vectors as weights.
+    seed : int
+        For adding noise to break ties.
     verbosity : int, optional (default: 0)
         Level of verbosity.
 
@@ -1429,7 +1431,9 @@ def ordinal_patt_array(array, array_mask=None, dim=2, step=1,
     patt, patt_mask [, patt_time] : tuple of arrays
         Tuple of converted pattern array and new length
     """
-    from scipy.misc import factorial
+    random_state = np.random.default_rng(seed)
+
+    from scipy.special import factorial
 
     array = array.astype('float64')
 
@@ -1582,3 +1586,6 @@ if __name__ == '__main__':
                         do_checks=True,
                         cut_off='2xtau_max',
                         verbosity=4)
+
+    print(ordinal_patt_array(data, array_mask=None, dim=2, step=1,
+                        weights=False, verbosity=0)[0])

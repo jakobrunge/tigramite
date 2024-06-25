@@ -31,7 +31,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 # Define the minimal classes needed to install and run tigramite
-INSTALL_REQUIRES =  ["numpy<1.24,>=1.18", "scipy>=1.10.0", "numba>=0.58", "six"]
+INSTALL_REQUIRES =  ["numpy>=1.18", "scipy>=1.10.0", "six"]
 # Define all the possible extras needed
 EXTRAS_REQUIRE = {
     "all": [
@@ -44,6 +44,7 @@ EXTRAS_REQUIRE = {
         "dcor>=0.6",          # GPDC distance correlation version
         "joblib>=1.2.0",      # CMIsymb shuffle parallelization and others
         "ortools>=9.2",       # RPCMCI
+        "numba>=0.58",        # CMIknn and CMIsymb and derived classes
     ]
 }
 
@@ -60,7 +61,7 @@ CMDCLASS = {"build_ext": UseNumpyHeadersBuildExt}
 # Run the setup
 setup(
     name="tigramite",
-    version="5.2.5.4",
+    version="5.2.5.5",
     packages=["tigramite", "tigramite.independence_tests", "tigramite.toymodels"],
     license="GNU General Public License v3.0",
     description="Tigramite causal inference for time series",

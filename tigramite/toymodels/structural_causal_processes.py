@@ -12,7 +12,6 @@ import math
 import numpy as np
 import scipy.sparse
 import scipy.sparse.linalg
-from numba import jit
 import itertools
 
 def _generate_noise(covar_matrix, time=1000, use_inverse=False):
