@@ -57,7 +57,7 @@ class PCMCIbase():
         # Set the data for this iteration of the algorithm
         self.dataframe = dataframe
         # Set the conditional independence test to be used
-        self.cond_ind_test = cond_ind_test
+        self.cond_ind_test = deepcopy(cond_ind_test)
         if isinstance(self.cond_ind_test, type):
             raise ValueError("PCMCI requires that cond_ind_test "
                              "is instantiated, e.g. cond_ind_test =  "

@@ -12,7 +12,7 @@ from copy import deepcopy
 import numpy as np
 import scipy.stats
 
-from .pcmci_base import PCMCIbase
+from pcmci_base import PCMCIbase
 
 def _create_nested_dictionary(depth=0, lowest_type=dict):
     """Create a series of nested dictionaries to a maximum depth.  The first
@@ -3932,37 +3932,37 @@ if __name__ == '__main__':
     import tigramite.plotting as tp
     from matplotlib import pyplot as plt
 
-    random_state = np.random.default_rng(seed=43)
-    # Example process to play around with
-    # Each key refers to a variable and the incoming links are supplied
-    # as a list of format [((var, -lag), coeff, function), ...]
-    def lin_f(x): return x
-    def nonlin_f(x): return (x + 5. * x ** 2 * np.exp(-x ** 2 / 20.))
+    # random_state = np.random.default_rng(seed=43)
+    # # Example process to play around with
+    # # Each key refers to a variable and the incoming links are supplied
+    # # as a list of format [((var, -lag), coeff, function), ...]
+    # def lin_f(x): return x
+    # def nonlin_f(x): return (x + 5. * x ** 2 * np.exp(-x ** 2 / 20.))
 
-    T = 1000
-    data = random_state.standard_normal((T, 4))
-    # Simple sun
-    data[:,3] = random_state.standard_normal((T)) # np.sin(np.arange(T)*20/np.pi) + 0.1*random_state.standard_normal((T))
-    c = 0.8
-    for t in range(1, T):
-        data[t, 0] += 0.4*data[t-1, 0] + 0.4*data[t-1, 1] + c*data[t-1,3]
-        data[t, 1] += 0.5*data[t-1, 1] + c*data[t,3]
-        data[t, 2] += 0.6*data[t-1, 2] + 0.3*data[t-2, 1] #+ c*data[t-1,3]
-    dataframe = pp.DataFrame(data, var_names=[r'$X^0$', r'$X^1$', r'$X^2$', 'Sun'])
-    # tp.plot_timeseries(dataframe); plt.show()
+    # T = 1000
+    # data = random_state.standard_normal((T, 4))
+    # # Simple sun
+    # data[:,3] = random_state.standard_normal((T)) # np.sin(np.arange(T)*20/np.pi) + 0.1*random_state.standard_normal((T))
+    # c = 0.8
+    # for t in range(1, T):
+    #     data[t, 0] += 0.4*data[t-1, 0] + 0.4*data[t-1, 1] + c*data[t-1,3]
+    #     data[t, 1] += 0.5*data[t-1, 1] + c*data[t,3]
+    #     data[t, 2] += 0.6*data[t-1, 2] + 0.3*data[t-2, 1] #+ c*data[t-1,3]
+    # dataframe = pp.DataFrame(data, var_names=[r'$X^0$', r'$X^1$', r'$X^2$', 'Sun'])
+    # # tp.plot_timeseries(dataframe); plt.show()
 
-    ci_test = CMIknn(significance="fixed_thres", verbosity=3)   #
+    # ci_test = CMIknn(significance="fixed_thres", verbosity=3)   #
     # ci_test = ParCorr() #significance="fixed_thres")   #
     # dataframe_nosun = pp.DataFrame(data[:,[0,1,2]], var_names=[r'$X^0$', r'$X^1$', r'$X^2$'])
     # pcmci_parcorr = PCMCI(
     #     dataframe=dataframe_nosun, 
     #     cond_ind_test=parcorr,
     #     verbosity=0)
-    tau_max = 1  #2
+    # tau_max = 1  #2
     # results = pcmci_parcorr.run_pcmci(tau_max=tau_max, pc_alpha=0.2, alpha_level = 0.01)
     # Remove parents of variable 3
     # Only estimate parents of variables 0, 1, 2
-    link_assumptions = None #{}
+    # link_assumptions = None #{}
     # for j in range(4):
     #     if j in [0, 1, 2]:
     #         # Directed lagged links
@@ -3978,20 +3978,20 @@ if __name__ == '__main__':
 
     # for j in link_assumptions:
     #     print(link_assumptions[j])
-    pcmci_parcorr = PCMCI(
-        dataframe=dataframe, 
-        cond_ind_test=ci_test,
-        verbosity=1)
-    results = pcmci_parcorr.run_pcmciplus(tau_max=tau_max, 
-                    pc_alpha=[0.001, 0.01, 0.05, 0.8], 
-                    reset_lagged_links=False,
-                    link_assumptions=link_assumptions
-                    ) #, alpha_level = 0.01)
-    print(results['graph'].shape)
-    # print(results['graph'][:,3,:])
-    print(np.round(results['p_matrix'][:,:,0], 2))
-    print(np.round(results['val_matrix'][:,:,0], 2))
-    print(results['graph'][:,:,0])
+    # pcmci_parcorr = PCMCI(
+    #     dataframe=dataframe, 
+    #     cond_ind_test=ci_test,
+    #     verbosity=1)
+    # results = pcmci_parcorr.run_pcmciplus(tau_max=tau_max, 
+    #                 pc_alpha=[0.001, 0.01, 0.05, 0.8], 
+    #                 reset_lagged_links=False,
+    #                 link_assumptions=link_assumptions
+    #                 ) #, alpha_level = 0.01)
+    # print(results['graph'].shape)
+    # # print(results['graph'][:,3,:])
+    # print(np.round(results['p_matrix'][:,:,0], 2))
+    # print(np.round(results['val_matrix'][:,:,0], 2))
+    # print(results['graph'][:,:,0])
 
     # Plot time series graph
     # tp.plot_graph(
@@ -4045,4 +4045,3 @@ if __name__ == '__main__':
     # print(results['window_results']['val_matrix'][1][0,1])
 
     # plt.show()
-

@@ -108,7 +108,7 @@ You commit to cite above papers in your reports or publications.
 
 ## License
 
-Copyright (C) 2014-2023 Jakob Runge
+Copyright (C) 2014-2025 Jakob Runge
 
 See license.txt for full text.
 
