@@ -45,7 +45,6 @@
 <span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">metrics</span>
 
 <span class="kn">from</span> <span class="nn">.independence_tests_base</span> <span class="kn">import</span> <span class="n">CondIndTest</span>
-<span class="c1"># from numba import jit   # could make it even faster, also acticate @jit(forceobj=True)</span>
 
 
 <div class="viewcode-block" id="RegressionCI"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.regressionCI.RegressionCI">[docs]</a><span class="k">class</span> <span class="nc">RegressionCI</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
@@ -126,7 +125,6 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;data_type cannot be None for RegressionCI.&quot;</span><span class="p">)</span>
         <span class="n">dataframe</span><span class="o">.</span><span class="n">_check_mask</span><span class="p">(</span><span class="n">dataframe</span><span class="o">.</span><span class="n">data_type</span><span class="p">,</span> <span class="n">check_data_type</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
-    <span class="c1"># @jit(forceobj=True)</span>
 <div class="viewcode-block" id="RegressionCI.get_dependence_measure"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.regressionCI.RegressionCI.get_dependence_measure">[docs]</a>    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">data_type</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns test statistic.</span>
 

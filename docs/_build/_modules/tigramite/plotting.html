@@ -492,6 +492,8 @@
 <span class="sd">        Fraction of horizontal figure space to allocate left of plot for labels.</span>
 <span class="sd">    label_space_top : float, optional (default: 0.05)</span>
 <span class="sd">        Fraction of vertical figure space to allocate top of plot for labels.</span>
+<span class="sd">    label_rotation_left : float, optional (default: 0)</span>
+<span class="sd">        Rotation of variable labels. Set to 90 for vertical labels on y-axis.</span>
 <span class="sd">    legend_width : float, optional (default: 0.15)</span>
 <span class="sd">        Fraction of horizontal figure space to allocate right of plot for</span>
 <span class="sd">        legend.</span>
@@ -520,6 +522,7 @@
         <span class="n">maximum</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="n">label_space_left</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
         <span class="n">label_space_top</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+        <span class="n">label_rotation_left</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
         <span class="n">legend_width</span><span class="o">=</span><span class="mf">0.15</span><span class="p">,</span>
         <span class="n">legend_fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
         <span class="n">x_base</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
@@ -574,6 +577,7 @@
                         <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">,</span>
                         <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span>
                         <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+                        <span class="n">rotation</span><span class="o">=</span><span class="n">label_rotation_left</span><span class="p">,</span>
                         <span class="n">transform</span><span class="o">=</span><span class="n">trans</span><span class="p">,</span>
                     <span class="p">)</span>
                 <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -903,6 +907,8 @@
 <span class="sd">        Fraction of horizontal figure space to allocate left of plot for labels.</span>
 <span class="sd">    label_space_top : float, optional (default: 0.05)</span>
 <span class="sd">        Fraction of vertical figure space to allocate top of plot for labels.</span>
+<span class="sd">    label_rotation_left : float, optional (default: 0)</span>
+<span class="sd">        Rotation of variable labels. Set to 90 for vertical labels on y-axis.</span>
 <span class="sd">    legend_width : float, optional (default: 0.15)</span>
 <span class="sd">        Fraction of horizontal figure space to allocate right of plot for</span>
 <span class="sd">        legend.</span>
@@ -921,6 +927,7 @@
         <span class="n">figsize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">label_space_left</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
         <span class="n">label_space_top</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+        <span class="n">label_rotation_left</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
         <span class="n">legend_width</span><span class="o">=</span><span class="mf">0.15</span><span class="p">,</span>
         <span class="n">legend_fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
         <span class="n">plot_gridlines</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -960,6 +967,7 @@
                         <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">,</span>
                         <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span>
                         <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+                        <span class="n">rotation</span><span class="o">=</span><span class="n">label_rotation_left</span><span class="p">,</span>
                         <span class="n">transform</span><span class="o">=</span><span class="n">trans</span><span class="p">,</span>
                     <span class="p">)</span>
                 <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -1237,6 +1245,8 @@
 <span class="sd">        Fraction of horizontal figure space to allocate left of plot for labels.</span>
 <span class="sd">    label_space_top : float, optional (default: 0.05)</span>
 <span class="sd">        Fraction of vertical figure space to allocate top of plot for labels.</span>
+<span class="sd">    label_rotation_left : float, optional (default: 0)</span>
+<span class="sd">        Rotation of variable labels. Set to 90 for vertical labels on y-axis.</span>
 <span class="sd">    legend_width : float, optional (default: 0.15)</span>
 <span class="sd">        Fraction of horizontal figure space to allocate right of plot for</span>
 <span class="sd">        legend.</span>
@@ -1255,6 +1265,7 @@
         <span class="n">figsize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">label_space_left</span><span class="o">=</span><span class="mf">0.15</span><span class="p">,</span>
         <span class="n">label_space_top</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+        <span class="n">label_rotation_left</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
         <span class="n">legend_width</span><span class="o">=</span><span class="mf">0.15</span><span class="p">,</span>
         <span class="n">legend_fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
         <span class="n">tick_label_size</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
@@ -1294,6 +1305,7 @@
                         <span class="n">fontsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">,</span>
                         <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span>
                         <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+                        <span class="n">rotation</span><span class="o">=</span><span class="n">label_rotation_left</span><span class="p">,</span>
                         <span class="n">transform</span><span class="o">=</span><span class="n">trans</span><span class="p">,</span>
                     <span class="p">)</span>
                 <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>

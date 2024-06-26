@@ -1759,10 +1759,13 @@ class Prediction(Models, PCMCI):
             # Force the masking
             cond_ind_test.set_mask_type('y')
             cond_ind_test.verbosity = verbosity
-            PCMCI.__init__(self,
-                           dataframe=self.dataframe,
-                           cond_ind_test=cond_ind_test,
-                           verbosity=verbosity)
+            # PCMCI.__init__(self,
+            #                dataframe=self.dataframe,
+            #                cond_ind_test=cond_ind_test,
+            #                verbosity=verbosity)
+            self.pcmci = PCMCI(dataframe=self.dataframe,
+                               cond_ind_test=cond_ind_test,
+                               verbosity=verbosity)
 
         # Set the member variables
         self.cond_ind_test = cond_ind_test
@@ -1832,7 +1835,8 @@ class Prediction(Models, PCMCI):
         self.selected_variables = range(self.N)
         if selected_targets is not None:
             self.selected_variables = selected_targets
-        predictors = self.run_pc_stable(link_assumptions=link_assumptions,
+        
+        predictors = self.pcmci.run_pc_stable(link_assumptions=link_assumptions,
                                         tau_min=steps_ahead,
                                         tau_max=tau_max,
                                         save_iterations=False,

@@ -1793,10 +1793,13 @@
             <span class="c1"># Force the masking</span>
             <span class="n">cond_ind_test</span><span class="o">.</span><span class="n">set_mask_type</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
             <span class="n">cond_ind_test</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">=</span> <span class="n">verbosity</span>
-            <span class="n">PCMCI</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                           <span class="n">dataframe</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="p">,</span>
-                           <span class="n">cond_ind_test</span><span class="o">=</span><span class="n">cond_ind_test</span><span class="p">,</span>
-                           <span class="n">verbosity</span><span class="o">=</span><span class="n">verbosity</span><span class="p">)</span>
+            <span class="c1"># PCMCI.__init__(self,</span>
+            <span class="c1">#                dataframe=self.dataframe,</span>
+            <span class="c1">#                cond_ind_test=cond_ind_test,</span>
+            <span class="c1">#                verbosity=verbosity)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pcmci</span> <span class="o">=</span> <span class="n">PCMCI</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="p">,</span>
+                               <span class="n">cond_ind_test</span><span class="o">=</span><span class="n">cond_ind_test</span><span class="p">,</span>
+                               <span class="n">verbosity</span><span class="o">=</span><span class="n">verbosity</span><span class="p">)</span>
 
         <span class="c1"># Set the member variables</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span> <span class="o">=</span> <span class="n">cond_ind_test</span>
@@ -1866,7 +1869,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">selected_variables</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">selected_targets</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">selected_variables</span> <span class="o">=</span> <span class="n">selected_targets</span>
-        <span class="n">predictors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_pc_stable</span><span class="p">(</span><span class="n">link_assumptions</span><span class="o">=</span><span class="n">link_assumptions</span><span class="p">,</span>
+        
+        <span class="n">predictors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pcmci</span><span class="o">.</span><span class="n">run_pc_stable</span><span class="p">(</span><span class="n">link_assumptions</span><span class="o">=</span><span class="n">link_assumptions</span><span class="p">,</span>
                                         <span class="n">tau_min</span><span class="o">=</span><span class="n">steps_ahead</span><span class="p">,</span>
                                         <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
                                         <span class="n">save_iterations</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
