@@ -48,7 +48,7 @@
 <span class="kn">import</span> <span class="nn">scipy.sparse</span>
 <span class="kn">import</span> <span class="nn">scipy.sparse.linalg</span>
 <span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span>
-<span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">jit</span>
+<span class="c1"># from numba import jit</span>
 
 <div class="viewcode-block" id="DataFrame"><a class="viewcode-back" href="../../index.html#tigramite.data_processing.DataFrame">[docs]</a><span class="k">class</span> <span class="nc">DataFrame</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Data object containing single or multiple time series arrays and optional </span>
@@ -1396,7 +1396,7 @@
 
     <span class="k">return</span> <span class="n">normal_data</span></div>
 
-<span class="nd">@jit</span><span class="p">(</span><span class="n">nopython</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="c1"># @jit(nopython=True)</span>
 <span class="k">def</span> <span class="nf">_get_patterns</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">array_mask</span><span class="p">,</span> <span class="n">patt</span><span class="p">,</span> <span class="n">patt_mask</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">fac</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
     <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
 
@@ -1430,7 +1430,7 @@
     <span class="k">return</span> <span class="n">patt</span><span class="p">,</span> <span class="n">patt_mask</span><span class="p">,</span> <span class="n">weights</span>
 
 <div class="viewcode-block" id="ordinal_patt_array"><a class="viewcode-back" href="../../index.html#tigramite.data_processing.ordinal_patt_array">[docs]</a><span class="k">def</span> <span class="nf">ordinal_patt_array</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">array_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                        <span class="n">weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+                        <span class="n">weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns symbolified array of ordinal patterns.</span>
 
 <span class="sd">    Each data vector (X_t, ..., X_t+(dim-1)*step) is converted to its rank</span>
@@ -1455,6 +1455,8 @@
 <span class="sd">        Delay of pattern embedding vector.</span>
 <span class="sd">    weights : bool, optional (default: False)</span>
 <span class="sd">        Whether to return array of variances of embedding vectors as weights.</span>
+<span class="sd">    seed : int</span>
+<span class="sd">        For adding noise to break ties.</span>
 <span class="sd">    verbosity : int, optional (default: 0)</span>
 <span class="sd">        Level of verbosity.</span>
 
@@ -1463,7 +1465,9 @@
 <span class="sd">    patt, patt_mask [, patt_time] : tuple of arrays</span>
 <span class="sd">        Tuple of converted pattern array and new length</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">scipy.misc</span> <span class="kn">import</span> <span class="n">factorial</span>
+    <span class="n">random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+
+    <span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">factorial</span>
 
     <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float64&#39;</span><span class="p">)</span>
 
@@ -1616,6 +1620,9 @@
                         <span class="n">do_checks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                         <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;2xtau_max&#39;</span><span class="p">,</span>
                         <span class="n">verbosity</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="n">ordinal_patt_array</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">array_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                        <span class="n">weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
 </pre></div>
 
           </div>
