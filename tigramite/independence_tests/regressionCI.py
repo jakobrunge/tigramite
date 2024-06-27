@@ -147,7 +147,7 @@ class RegressionCI(CondIndTest):
             X = do_componentwise_one_hot_encoding(X, var_type=var_type)
             y = np.ravel(y)
             # do logistic regression
-            model = LogisticRegression(multi_class='multinomial', solver='lbfgs')
+            model = LogisticRegression(solver='lbfgs')
             model.fit(X, y)
             deviance = 2*metrics.log_loss(y, model.predict_proba(X), normalize=False)
             # dofs: +2 for intercept (+1) (not too important, cancels out later anyway)
