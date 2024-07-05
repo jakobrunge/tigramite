@@ -463,6 +463,7 @@ class FitSetup:
                 for cY in range(y_category_count):
                     # Use Bayes' Theorem to avoid fitting densities conditional on continuous variables
                     filter_both = np.logical_and(x_categorical == cX, y_categorical == cY)
+                    assert len(filter_both.shape) == 1
                     p_y_given_discrete_x = np.count_nonzero(filter_both) / normalization
                     p_continuous_x_given_discrete_x_and_y = self.fit_density.Get_Fit_Density(
                         x_continuous[:, filter_both].T)
@@ -1050,21 +1051,25 @@ class NaturalEffects_GraphMediation:
         however, for comparison to other estimates, using this option might yield more consistent results.
     _internal_provide_cfx : *None* or tigramite.CausalEffects
         Set to None. Used when called from CausalMediation, which already has a causal-effects class.
+    enable_dataframe_based_preprocessing : bool
+        Enable (and enforce) data-preprocessing through the tigramite::dataframe, makes missing-data
+        and other features available to the mediation analysis. Custom (just in time) handling
+        of missing data might be more sample-efficient.
     """
 
     def __init__(self, graph, graph_type, tau_max, fit_setup, observations_data, effect_source, effect_target,
                  blocked_mediators="all", adjustment_set="auto", only_check_validity=False,
-                 fall_back_to_total_effect=False, _internal_provide_cfx=None):
+                 fall_back_to_total_effect=False, _internal_provide_cfx=None, enable_dataframe_based_preprocessing=True):
 
-        data = toy_setup.DataHandler(observations_data)
+        data = toy_setup.DataHandler(observations_data, dataframe_based_preprocessing=enable_dataframe_based_preprocessing)
 
-        self.Source = data.GetVariableAuto(effect_source)
-        self.Target = data.GetVariableAuto(effect_target)
+        self.Source = data.GetVariableAuto(effect_source, "Source")
+        self.Target = data.GetVariableAuto(effect_target, "Target")
 
         if blocked_mediators != "all":
-            blocked_mediators = data.GetVariablesAuto(blocked_mediators)
+            blocked_mediators = data.GetVariablesAuto(blocked_mediators, "Mediator")
         if adjustment_set != "auto":
-            adjustment_set = data.GetVariablesAuto(adjustment_set)
+            adjustment_set = data.GetVariablesAuto(adjustment_set, "Adjustment")
 
         X = data[self.Source]
         Y = data[self.Target]
@@ -1078,7 +1083,7 @@ class NaturalEffects_GraphMediation:
         all_mediators = blocked_mediators == "all"
         if all_mediators:
             M = cfx_xy.M
-            blocked_mediators = data.ReverseLookupMulti(M)
+            blocked_mediators = data.ReverseLookupMulti(M, "Mediator")
         else:
             M = data[blocked_mediators]
             if not set(M) <= set(cfx_xy.M):
@@ -1107,7 +1112,7 @@ class NaturalEffects_GraphMediation:
                 # fall back to adjust, which should work if any single adjustmentset works
                 Z = cfx_xy._get_adjust_set()
 
-            adjustment_set = data.ReverseLookupMulti(Z)
+            adjustment_set = data.ReverseLookupMulti(Z, "Adjustment")
 
         else:
             Z = data[adjustment_set]
@@ -1135,6 +1140,11 @@ class NaturalEffects_GraphMediation:
                     "X -> Y. If such a set exists, Perkovic's Adjust(X,Y) is valid, which is tried as "
                     "fallback if adjustment-set='auto' is used.")
 
+        
+        # lock in mediators and adjustment for preprocessing
+        self.BlockedMediators = data.ReverseLookupMulti(M)
+        self.AdjustmentSet = data.ReverseLookupMulti(Z)
+
         # ----- STORE RESULTS ON INSTANCE -----
         self.X, self.sources = data.Get("Source", [X], tau_max=tau_max)
         self.X = self.X[0]  # currently univariate anyway
@@ -1146,7 +1156,6 @@ class NaturalEffects_GraphMediation:
             self.M_ids = None
             self.mediators = {}
 
-        self.BlockedMediators = data.ReverseLookupMulti(M)
 
         if len(Z) > 0:
             self.Z_ids, self.adjustment = data.Get("Adjustment", Z, tau_max=tau_max)
@@ -1154,7 +1163,6 @@ class NaturalEffects_GraphMediation:
             self.Z_ids = None
             self.adjustment = {}
 
-        self.AdjustmentSet = data.ReverseLookupMulti(Z)
 
         self.fit_setup = fit_setup
         self._E_Y_XMZ = None
@@ -1294,7 +1302,12 @@ class NaturalEffects_GraphMediation:
             # and they are purely categorical, then the mapping (M u Z) -> P_Y
             # has finite image, treating it as categorical gives better results
 
-            labels_y, transformed_y = np.unique(p_y_values, return_inverse=True, axis=0)
+            # different numpy-versions behave differently wrt this call:
+            # https://numpy.org/devdocs/release/2.0.0-notes.html#np-unique-return-inverse-shape-for-multi-dimensional-inputs
+            # see also https://github.com/numpy/numpy/issues/26738
+            labels_y, transformed_y_numpy_version_dependent = np.unique(p_y_values, return_inverse=True, axis=0)
+            transformed_y = transformed_y_numpy_version_dependent.squeeze()
+
             P_Y = toy_setup.CategoricalVariable(categories=labels_y)
             P_P_Y_xz = self.fit_setup.Fit({**self.sources, **self.adjustment}, {P_Y: transformed_y})
 
@@ -1446,7 +1459,8 @@ class CausalMediation(CausalEffects):
 
     def fit_natural_direct_effect(self, dataframe, mixed_data_estimator=FitSetup(),
                                   blocked_mediators='all', adjustment_set='auto',
-                                  use_mediation_impl_for_total_effect_fallback=False):
+                                  use_mediation_impl_for_total_effect_fallback=False,
+                                  enable_dataframe_based_preprocessing=True):
         """Fit a natural direct effect.
 
         Parameters
@@ -1467,7 +1481,11 @@ class CausalMediation(CausalEffects):
         use_mediation_impl_for_total_effect_fallback : bool
             If True, if no mediators are blocked, use mediation implementation to estimate the total effect.
             In this case, estimating the total effect through the 'Causal Effects' class might be easier,
-            however, for comparison to other estimates, using this option might yield more consistent results.
+            however, for comparison to other estimates, using this option might yield more consistent results.        
+        enable_dataframe_based_preprocessing : bool
+            Enable (and enforce) data-preprocessing through the tigramite::dataframe, makes missing-data
+            and other features available to the mediation analysis. Custom (just in time) handling
+            of missing data might be more sample-efficient.
 
         Returns
         -------
@@ -1491,7 +1509,7 @@ class CausalMediation(CausalEffects):
             effect_source=source, effect_target=target,
             blocked_mediators=self.BlockedMediators, adjustment_set=adjustment_set, only_check_validity=False,
             fall_back_to_total_effect=use_mediation_impl_for_total_effect_fallback,
-            _internal_provide_cfx=self)
+            _internal_provide_cfx=self, enable_dataframe_based_preprocessing=enable_dataframe_based_preprocessing)
         # return a NDE_Graph Estimator, but also remember it for predict_nde
         return self.MediationEstimator
 
