@@ -504,7 +504,7 @@ def test_graph_nde_fully_binary():
     fit_setup = mediation.FitSetup()
 
     tau_max = 2
-    estimator = mediation.NaturalEffects_GraphMediation(graph, graph_type, tau_max, fit_setup, world.Observables(),
+    estimator = mediation.NaturalEffects_GraphMediation(graph, graph_type, tau_max, fit_setup, obs,
                                                   effect_source=X, effect_target=M,
                                                   blocked_mediators="all", adjustment_set="auto",
                                                   fall_back_to_total_effect=True)
@@ -645,9 +645,9 @@ def test_interventions(med_vars, env, world, world0, world1):
     # in the "real" world A is noise, thus not always 0
     assert np.any(world.Observables()[med_vars.A] != 0.0)
     # After intervention A=0, a should always be 0
-    assert np.alltrue(world0.Observables()[med_vars.A] == 0.0)
+    assert np.all(world0.Observables()[med_vars.A] == 0.0)
     # After intervention A=0, a should always be 1
-    assert np.alltrue(world1.Observables()[med_vars.A] == 1.0)
+    assert np.all(world1.Observables()[med_vars.A] == 1.0)
 
 
 @pytest.fixture(scope="module")
@@ -660,11 +660,11 @@ def cfworld(med_vars, env, model, world, world0, world1):
 
 
 def test_cfworld(med_vars, cfworld, world, world0, world1):
-    assert np.alltrue(cfworld.Observables()[med_vars.A] == world1.Observables()[med_vars.A] )
-    assert np.alltrue(cfworld.Observables()[med_vars.M] == world0.Observables()[med_vars.M] )
-    assert np.alltrue(cfworld.data[med_vars.A.Noise()] == world.data[med_vars.A.Noise()] )
-    assert np.alltrue(cfworld.data[med_vars.M.Noise()] == world.data[med_vars.M.Noise()] )
-    assert np.alltrue(cfworld.data[med_vars.Y.Noise()] == world.data[med_vars.Y.Noise()] )
+    assert np.all(cfworld.Observables()[med_vars.A] == world1.Observables()[med_vars.A] )
+    assert np.all(cfworld.Observables()[med_vars.M] == world0.Observables()[med_vars.M] )
+    assert np.all(cfworld.data[med_vars.A.Noise()] == world.data[med_vars.A.Noise()] )
+    assert np.all(cfworld.data[med_vars.M.Noise()] == world.data[med_vars.M.Noise()] )
+    assert np.all(cfworld.data[med_vars.Y.Noise()] == world.data[med_vars.Y.Noise()] )
 
 
 
@@ -674,9 +674,71 @@ def test_cfworld(med_vars, cfworld, world, world0, world1):
 -------------------------------------------------------------------------------------------"""
 
 
+def test_tutorial_example0():
+    graph =  np.array([[['', '-->', ''],
+                    ['', '', ''],
+                    ['', '', '']],
+                   [['', '-->', ''],
+                    ['', '-->', ''],
+                    ['-->', '', '-->']],
+                   [['', '', ''],
+                    ['<--', '', ''],
+                    ['', '-->', '']]], dtype='<U3')
+
+    X = [(1,-2)]
+    Y = [(2,0)]
+    causal_effects = CausalMediation(graph, graph_type='stationary_dag', X=X, Y=Y,
+                                    S=None, # (currently S must be None)
+                                    hidden_variables=None, # (currently hidden must be None)
+                                    verbosity=1)
+    var_names = ['$X^0$', '$X^1$', '$X^2$']
+
+    opt = causal_effects.get_optimal_set()
+
+    from tigramite import data_processing as pp
+    from tigramite.toymodels import structural_causal_processes as toys
+
+    coeff = .5
+    direct_eff = 0.5
+    def lin_f(x): return x
+    links_coeffs = {
+                    0: [((0, -1), coeff, lin_f), ((1, -1), coeff, lin_f)], 
+                    1: [((1, -1), coeff, lin_f),], 
+                    2: [((2, -1), coeff, lin_f), ((1, 0), coeff, lin_f), ((1,-2), direct_eff, lin_f)],
+                    }
+    # Observational data
+    T = 1000
+    data, nonstat = toys.structural_causal_process(links_coeffs, T=T, noises=None, seed=42)
+    normalization = []
+    data_normalized = np.empty_like(data)
+    for v in range(0,3):
+        m = np.std(data[:,v])
+        normalization.append(m)
+        data_normalized[:,v] = data[:,v] / m
+    dataframe = pp.DataFrame(data, var_names=var_names)
+    dataframe_normalized = pp.DataFrame(data_normalized, var_names=var_names)
+    fit_setup = mediation.FitSetup(mediation.FitProvider_Continuous_Default.UseSklearn(20))
+
+    # unnormalized data
+    causal_effects.fit_natural_direct_effect(dataframe, blocked_mediators='all',
+                                    mixed_data_estimator=fit_setup).PrintInfo()
+
+    nde_est = causal_effects.predict_natural_direct_effect(0.0, 1.0)
+
+    # normalized data
+    causal_effects.fit_natural_direct_effect(dataframe_normalized, blocked_mediators='all',
+                                    mixed_data_estimator=fit_setup)
+
+    nde_est_from_normalized = causal_effects.predict_natural_direct_effect(0.0, 1.0) * normalization[2] / normalization[1]
+
+    # print results
+    print( f"Estimate of the NDE is:\n{nde_est} from unnormalized data, "
+        + f"\n{nde_est_from_normalized} from normalized data,\nground-truth is {direct_eff}." )
+    
+    assert 0.3 < nde_est_from_normalized < 0.6
 
 
-def test_tutorial_example():
+def test_tutorial_example():    
     graph = np.array([[['', '-->', ''],
                        ['', '', ''],
                        ['', '', '']],
@@ -728,3 +790,113 @@ def test_tutorial_example():
     print(f"Estimate of the NDE is {nde_est}, ground-truth is {direct_eff}.")
 
     assert 0.8 < nde_est / direct_eff < 1.1
+
+
+
+
+class FitProvider_Continous_Filtered:
+    def __init__(self, underlying_fit_provider, filter_to_use):
+        self.filter = filter_to_use
+        self.underlying_fit_provider = underlying_fit_provider
+    def Get_Fit_Continuous(self,x_train,y_train):
+        return self.underlying_fit_provider.Get_Fit_Continuous(*self.filter.apply(x_train,y_train))
+    
+class FitProvider_Density_Filtered:
+    def __init__(self, underlying_fit_provider, filter_to_use):
+        self.filter = filter_to_use
+        self.underlying_fit_provider = underlying_fit_provider
+    def Get_Fit_Density(self, x_train):
+        return self.underlying_fit_provider.Get_Fit_Density(self.filter.apply(x_train))
+
+class FilterMissingValues:
+    def __init__(self, missing_value_flag):
+        self.missing_value_flag = missing_value_flag
+    def apply(self,x,y=None):
+        missing_in_any_x = np.any( x==self.missing_value_flag, axis=1 )
+        if y is None:
+            valid = np.logical_not( missing_in_any_x )
+            return x[valid]
+        else:
+            missing_in_y = ( y==self.missing_value_flag )
+            valid = np.logical_not( np.logical_or(missing_in_any_x, missing_in_y) )
+            return x[valid], y[valid]
+
+def apply_filter_to_all_inputs(fit_setup, filter_to_apply):
+    # Assume the fit_setup can be contructed from map & density fit and has corresponding members
+    # (for all implementations based on the FitSetup class in the mediation-module
+    #  of tigramite this is the case; see tutorial on mediation, appendix B)
+    return fit_setup.__class__(
+        fit_map=FitProvider_Continous_Filtered(fit_setup.fit_map, filter_to_apply),
+        fit_density=FitProvider_Density_Filtered(fit_setup.fit_density, filter_to_apply),
+    )
+
+
+def test_tutorial_example_custom_fit():
+    graph =  np.array([[['', '-->', ''],
+                    ['', '', ''],
+                    ['', '', '']],
+                   [['', '-->', ''],
+                    ['', '-->', ''],
+                    ['-->', '', '-->']],
+                   [['', '', ''],
+                    ['<--', '', ''],
+                    ['', '-->', '']]], dtype='<U3')
+
+    X = [(1,-2)]
+    Y = [(2,0)]
+    var_names = ['$X^0$', '$X^1$', '$X^2$']
+
+    from tigramite import data_processing as pp
+    from tigramite.toymodels import structural_causal_processes as toys
+
+    coeff = .5
+    direct_eff = 0.5
+    def lin_f(x): return x
+    links_coeffs = {
+                    0: [((0, -1), coeff, lin_f), ((1, -1), coeff, lin_f)], 
+                    1: [((1, -1), coeff, lin_f),], 
+                    2: [((2, -1), coeff, lin_f), ((1, 0), coeff, lin_f), ((1,-2), direct_eff, lin_f)],
+                    }
+    # Observational data
+    T = 1000
+    data, nonstat = toys.structural_causal_process(links_coeffs, T=T, noises=None, seed=None)
+    normalization = []
+    data_normalized = np.empty_like(data)
+    for v in range(0,3):
+        m = np.std(data[:,v])
+        normalization.append(m)
+        data_normalized[:,v] = data[:,v] / m
+    dataframe = pp.DataFrame(data, var_names=var_names)
+    dataframe_normalized = pp.DataFrame(data_normalized, var_names=var_names)
+
+
+    seed = 12345
+    gap_count = 10
+    gap_min_len = 10
+    gap_max_len = 20
+    rng = np.random.default_rng(seed)
+    var_idx = rng.integers(0, data_normalized.shape[1], gap_count)
+    offset = rng.integers(0, data_normalized.shape[0]-gap_max_len, gap_count)
+    missing_count = rng.integers(10, 20, gap_count)
+
+    modified_data = data_normalized
+    for gap in range(gap_count):
+        modified_data[offset[gap]:offset[gap]+missing_count[gap], var_idx] = 999
+
+    fit_setup = mediation.FitSetup(mediation.FitProvider_Continuous_Default.UseSklearn(20))
+    fit_setup2 = apply_filter_to_all_inputs(fit_setup, FilterMissingValues(999))
+    dataframe_unmarked_missing = pp.DataFrame(data_normalized, var_names=var_names) #missing_flag=999)
+
+    causal_effects = CausalMediation(graph, graph_type='stationary_dag', X=X, Y=Y,
+                                    S=None, # (currently S must be None)
+                                    hidden_variables=None, # (currently hidden must be None)
+                                    verbosity=1)
+    # normalized data
+    causal_effects.fit_natural_direct_effect(dataframe_unmarked_missing, blocked_mediators='all',
+                                    mixed_data_estimator=fit_setup2, # set the new fit_setup
+                                    enable_dataframe_based_preprocessing=False)
+
+    nde_est = causal_effects.predict_natural_direct_effect(0.0, 1.0) * normalization[2] / normalization[1]
+
+    # print results
+    print( f"Estimate of the NDE is:\n{nde_est} with missing values,\nground-truth is {direct_eff}." )

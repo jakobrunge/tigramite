@@ -985,15 +985,21 @@ def GroundTruth_NIE(change_from, change_to, source, target, mediator, env, model
 class DataHandler:
     """[INTERNAL] Implement some helper functions and generate time-series data via tigramite's data-frames."""
 
-    def __init__(self, observables):
+    def __init__(self, observables, dataframe_based_preprocessing=True):
         if isinstance(observables, DataFrame):
             self._from_dataframe = True
             self._data = VariablesFromDataframe(observables)
             self._dataframe = observables
+            self.use_dataframe_for_preprocessing = dataframe_based_preprocessing
+            self.data_selection_virtual_ids = {}
+            self._info = {}
+            self.preprocessed_data = False
+            self.data_selection_frozen = False # filter all data for all fits for missing values, lock after first data-access (see GetVariableAuto and operator [] / __getitem__)
         else:
             self._from_dataframe = False
             self._data = observables
-            self._dataframe = DataframeFromVariables(observables)
+            self._dataframe = DataframeFromVariables(observables)            
+            self.use_dataframe_for_preprocessing = False
 
         self._indices = {}
         self._keys = list(self._data.keys())
@@ -1002,16 +1008,35 @@ class DataHandler:
             self._indices[var] = idx
             idx += 1
 
-    def GetVariableAuto(self, var):
+
+    def GetIdFor(self, idx, lag, display_name):
+        # self._keys[idx] contains info (eg catgorical or continuous, 'original name') for variable idx, attach display name (eg Mediator)
+        # also add 'original name' eg 'temperature' in square brackets as well as lag
+        base_id =  self._keys[idx]
+        return base_id.CopyInfo(display_name + f"[{base_id.Info(detail=1)} at lag {lag}]")
+    
+    def RequirePreprocessingFor(self, var, info):
+        if self.use_dataframe_for_preprocessing:            
+            if var not in self.data_selection_virtual_ids:
+                # if variable locked also ok after frozen
+                if self.data_selection_frozen:
+                    raise Exception("Cannot add variables to preprocessing after variable-set has been locked-in")
+                assert info is not None
+                var_id = self.GetIdFor(var[0], var[1], info)
+                self.data_selection_virtual_ids[var] = var_id
+                self._indices[var_id] = var
+                self._info[var_id] = info
+
+    def GetVariableAuto(self, var, info="Other"):
         if self._from_dataframe:
-            return self.ReverseLookupSingle(var)
+            return self.ReverseLookupSingle(var, info)
         else:
             return var
 
-    def GetVariablesAuto(self, vars):
+    def GetVariablesAuto(self, vars, info="Other"):
         result = []
         for var in vars:
-            result.append(self.GetVariableAuto(var))
+            result.append(self.GetVariableAuto(var, info))
         return result
 
     def DataFrame(self):
@@ -1020,18 +1045,75 @@ class DataHandler:
     def __getitem__(self, key):
         if hasattr(key, '__iter__'):
             return [self[entry] for entry in key]
+        
+        if self.use_dataframe_for_preprocessing:
+            return self._indices[key]
 
         if key.__class__ == LaggedVariable:
             return self._indices[key.var], -key.lag
         else:
             return self._indices[key], 0
 
+    def _PreprocessData(self, **kwargs):
+        self.data_selection_frozen = True
+        self.preprocessed_data = True
+        X = []
+        Y = []
+        Z = []
+        M = []
+        for var_lag_index, var_id in self.data_selection_virtual_ids.items():
+            info = self._info[var_id]
+            if info == "Source":
+                X.append(var_lag_index)
+            elif info == "Target":
+                Y.append(var_lag_index)
+            elif info == "Mediator":
+                M.append(var_lag_index)
+            elif info == "Adjustment":
+                Z.append(var_lag_index)
+            else:
+                raise Exception("Unknown Variable-Interpretation")
+        data_preprocessed, xyz, data_type = self.DataFrame().construct_array(X=X, Y=Y, Z=Z, extraZ=M, **kwargs) # kw-args forwards eg tau-max
+        self._data = {}
+        i = 0
+        for x in X:
+            self._data[self.data_selection_virtual_ids[x]] = data_preprocessed[i]
+            assert xyz[i] == 0
+            i += 1
+        for y in Y:
+            self._data[self.data_selection_virtual_ids[y]] = data_preprocessed[i]
+            assert xyz[i] == 1
+            i += 1
+        for z in Z:
+            self._data[self.data_selection_virtual_ids[z]] = data_preprocessed[i]
+            assert xyz[i] == 2
+            i += 1
+        for m in M:
+            self._data[self.data_selection_virtual_ids[m]] = data_preprocessed[i]
+            assert xyz[i] == 3
+            i += 1
+        assert i == data_preprocessed.shape[0]
+            
+    def GetPreprocessed(self, vars, **kwargs):
+        if not self.preprocessed_data:
+            self._PreprocessData(**kwargs)
+        result = {}
+        for var in vars:
+            assert var in self.data_selection_virtual_ids
+            var_id = self.data_selection_virtual_ids[var]
+            result[var_id] = self._data[var_id]
+        return list(result.keys()), result
+            
+
     def Get(self, name, vars, **kwargs):
+        if self.use_dataframe_for_preprocessing:
+            return self.GetPreprocessed(vars, **kwargs)
         ids = []
         i = 1
         for idx, lag in vars:
+            # assemble names for this variable-group, eg "Mediator5"
             the_name = name if len(vars) == 1 else name + str(i)
-            ids.append(self._keys[idx].CopyInfo(the_name + f"[{self.ReverseLookupSingle((idx, lag)).Info(detail=1)}]"))
+            ids.append( self.GetIdFor(idx, lag, the_name) )
             i += 1
         data, xyz, data_type = self.DataFrame().construct_array(X=vars, Y=[], Z=[], **kwargs)
         assert data.shape[0] == len(ids)
@@ -1042,11 +1124,15 @@ class DataHandler:
             i += 1
         return ids, result
 
-    def ReverseLookupSingle(self, index):
-        return self._keys[index[0]].Lag(-index[1])
+    def ReverseLookupSingle(self, index, info):
+        if self.use_dataframe_for_preprocessing:
+            self.RequirePreprocessingFor(index, info)
+            return self.data_selection_virtual_ids[index]
+        else:
+            return self._keys[index[0]].Lag(-index[1])
 
-    def ReverseLookupMulti(self, index_set):
-        return [self.ReverseLookupSingle(index) for index in index_set]
+    def ReverseLookupMulti(self, index_set, info=None):
+        return [self.ReverseLookupSingle(index, info) for index in index_set]
 
 
 def VariablesFromDataframe(dataframe):
