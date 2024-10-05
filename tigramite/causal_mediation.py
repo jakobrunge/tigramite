@@ -1,4 +1,4 @@
-"""Tigramite causal discovery for time series."""
+"""Tigramite causal inference for time series."""
 
 # Authors: Martin Rabel, Jakob Runge <jakob@jakob-runge.com>
 #
@@ -1039,7 +1039,7 @@ class NaturalEffects_GraphMediation:
     adjustment_set : iterable of Variable-descriptions or 'auto'
         Adjustment-set to use. Will be validated if specified explicitly, if 'auto', will try
         to use an 'optimal' set, fall back to [Perkovic et al]'s adjustment-set (which should always
-        work if single-set adjustment as in [Shpitser, VanderWeele] os possible; this follows
+        work if single-set adjustment as in [Shpitser, VanderWeele] is possible; this follows
         from combining results of [Shpitser, VanderWeele] and [Perkovic et al]).
         See 'Causal Effects' and its tutorial for more info and references on (optimal) adjustment.
     only_check_validity : bool

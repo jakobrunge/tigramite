@@ -1,25 +1,23 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="../../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>tigramite.pcmci &#8212; Tigramite 5.2 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/jquery.js"></script>
-    <script src="../../_static/underscore.js"></script>
-    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../../_static/doctools.js"></script>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=db26dd79" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=19da42e6" />
+    <script src="../../_static/documentation_options.js?v=625b3a9a"></script>
+    <script src="../../_static/doctools.js?v=aa79a7b1"></script>
+    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
+
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+  
 
   </head><body>
   
@@ -78,7 +76,9 @@
     <span class="k">return</span> <span class="n">nested_dict</span>
 
 
-<div class="viewcode-block" id="PCMCI"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI">[docs]</a><span class="k">class</span> <span class="nc">PCMCI</span><span class="p">(</span><span class="n">PCMCIbase</span><span class="p">):</span>
+<div class="viewcode-block" id="PCMCI">
+<a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI">[docs]</a>
+<span class="k">class</span> <span class="nc">PCMCI</span><span class="p">(</span><span class="n">PCMCIbase</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;PCMCI causal discovery for time series datasets.</span>
 
 <span class="sd">    PCMCI is a causal discovery framework for large-scale time series</span>
@@ -604,7 +604,9 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;maximum condition dimension must be &gt;= 0&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">max_conds_dim</span>
 
-<div class="viewcode-block" id="PCMCI.run_pc_stable"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.run_pc_stable">[docs]</a>    <span class="k">def</span> <span class="nf">run_pc_stable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+<div class="viewcode-block" id="PCMCI.run_pc_stable">
+<a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.run_pc_stable">[docs]</a>
+    <span class="k">def</span> <span class="nf">run_pc_stable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                       <span class="n">selected_links</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                       <span class="n">link_assumptions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                       <span class="n">tau_min</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
@@ -764,6 +766,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_print_parents</span><span class="p">(</span><span class="n">all_parents</span><span class="p">,</span> <span class="n">val_min</span><span class="p">,</span> <span class="n">pval_max</span><span class="p">)</span>
         <span class="c1"># Return the parents</span>
         <span class="k">return</span> <span class="n">all_parents</span></div>
+
 
     <span class="k">def</span> <span class="nf">_print_parents_single</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">val_min</span><span class="p">,</span> <span class="n">pval_max</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Print current parents for variable j.</span>
@@ -1186,7 +1189,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="o">=</span> <span class="n">results</span>
         <span class="k">return</span> <span class="n">results</span>
 
-<div class="viewcode-block" id="PCMCI.run_mci"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.run_mci">[docs]</a>    <span class="k">def</span> <span class="nf">run_mci</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+<div class="viewcode-block" id="PCMCI.run_mci">
+<a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.run_mci">[docs]</a>
+    <span class="k">def</span> <span class="nf">run_mci</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                 <span class="n">selected_links</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">link_assumptions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">tau_min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
@@ -1284,7 +1289,10 @@
             <span class="n">alpha_level</span><span class="o">=</span><span class="n">alpha_level</span><span class="p">,</span>
             <span class="n">fdr_method</span><span class="o">=</span><span class="n">fdr_method</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="PCMCI.get_lagged_dependencies"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.get_lagged_dependencies">[docs]</a>    <span class="k">def</span> <span class="nf">get_lagged_dependencies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+
+<div class="viewcode-block" id="PCMCI.get_lagged_dependencies">
+<a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.get_lagged_dependencies">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_lagged_dependencies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                                 <span class="n">selected_links</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                                 <span class="n">link_assumptions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                                 <span class="n">tau_min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
@@ -1366,7 +1374,10 @@
             <span class="n">alpha_level</span><span class="o">=</span><span class="n">alpha_level</span><span class="p">,</span>
             <span class="n">fdr_method</span><span class="o">=</span><span class="n">fdr_method</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="PCMCI.run_fullci"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.run_fullci">[docs]</a>    <span class="k">def</span> <span class="nf">run_fullci</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+
+<div class="viewcode-block" id="PCMCI.run_fullci">
+<a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.run_fullci">[docs]</a>
+    <span class="k">def</span> <span class="nf">run_fullci</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                    <span class="n">selected_links</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                    <span class="n">link_assumptions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                    <span class="n">tau_min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
@@ -1454,7 +1465,10 @@
             <span class="n">alpha_level</span><span class="o">=</span><span class="n">alpha_level</span><span class="p">,</span>
             <span class="n">fdr_method</span><span class="o">=</span><span class="n">fdr_method</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="PCMCI.run_bivci"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.run_bivci">[docs]</a>    <span class="k">def</span> <span class="nf">run_bivci</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+
+<div class="viewcode-block" id="PCMCI.run_bivci">
+<a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.run_bivci">[docs]</a>
+    <span class="k">def</span> <span class="nf">run_bivci</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                   <span class="n">selected_links</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                   <span class="n">link_assumptions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                   <span class="n">tau_min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
@@ -1540,7 +1554,10 @@
             <span class="n">alpha_level</span><span class="o">=</span><span class="n">alpha_level</span><span class="p">,</span>
             <span class="n">fdr_method</span><span class="o">=</span><span class="n">fdr_method</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="PCMCI.get_graph_from_pmatrix"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.get_graph_from_pmatrix">[docs]</a>    <span class="k">def</span> <span class="nf">get_graph_from_pmatrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_matrix</span><span class="p">,</span> <span class="n">alpha_level</span><span class="p">,</span> 
+
+<div class="viewcode-block" id="PCMCI.get_graph_from_pmatrix">
+<a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.get_graph_from_pmatrix">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_graph_from_pmatrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_matrix</span><span class="p">,</span> <span class="n">alpha_level</span><span class="p">,</span> 
             <span class="n">tau_min</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span> <span class="n">link_assumptions</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Construct graph from thresholding the p_matrix at an alpha-level.</span>
 
@@ -1607,7 +1624,10 @@
         <span class="c1"># Return the graph</span>
         <span class="k">return</span> <span class="n">graph</span></div>
 
-<div class="viewcode-block" id="PCMCI.return_parents_dict"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.return_parents_dict">[docs]</a>    <span class="k">def</span> <span class="nf">return_parents_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span>
+
+<div class="viewcode-block" id="PCMCI.return_parents_dict">
+<a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.return_parents_dict">[docs]</a>
+    <span class="k">def</span> <span class="nf">return_parents_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span>
                              <span class="n">val_matrix</span><span class="p">,</span>
                              <span class="n">include_lagzero_parents</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns dictionary of parents sorted by val_matrix.</span>
@@ -1651,9 +1671,12 @@
             <span class="n">parents_dict</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">links</span><span class="o">.</span><span class="n">get</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         
         <span class="k">return</span> <span class="n">parents_dict</span></div>
+
                
 
-<div class="viewcode-block" id="PCMCI.return_significant_links"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.return_significant_links">[docs]</a>    <span class="k">def</span> <span class="nf">return_significant_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pq_matrix</span><span class="p">,</span>
+<div class="viewcode-block" id="PCMCI.return_significant_links">
+<a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.return_significant_links">[docs]</a>
+    <span class="k">def</span> <span class="nf">return_significant_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pq_matrix</span><span class="p">,</span>
                                  <span class="n">val_matrix</span><span class="p">,</span>
                                  <span class="n">alpha_level</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
                                  <span class="n">include_lagzero_links</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -1671,7 +1694,10 @@
               <span class="s2">&quot;with return_parents_dict().&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 
-<div class="viewcode-block" id="PCMCI.print_significant_links"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.print_significant_links">[docs]</a>    <span class="k">def</span> <span class="nf">print_significant_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+
+<div class="viewcode-block" id="PCMCI.print_significant_links">
+<a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.print_significant_links">[docs]</a>
+    <span class="k">def</span> <span class="nf">print_significant_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                                 <span class="n">p_matrix</span><span class="p">,</span>
                                 <span class="n">val_matrix</span><span class="p">,</span>
                                 <span class="n">conf_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1740,7 +1766,10 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">k</span><span class="p">],</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">]))</span></div>
 
-<div class="viewcode-block" id="PCMCI.print_results"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.print_results">[docs]</a>    <span class="k">def</span> <span class="nf">print_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+
+<div class="viewcode-block" id="PCMCI.print_results">
+<a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.print_results">[docs]</a>
+    <span class="k">def</span> <span class="nf">print_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                       <span class="n">return_dict</span><span class="p">,</span>
                       <span class="n">alpha_level</span><span class="o">=</span><span class="mf">0.05</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Prints significant parents from output of MCI or PCMCI algorithms.</span>
@@ -1777,7 +1806,10 @@
                                      <span class="n">ambiguous_triples</span><span class="o">=</span><span class="n">ambiguous_triples</span><span class="p">,</span>
                                      <span class="n">alpha_level</span><span class="o">=</span><span class="n">alpha_level</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="PCMCI.run_pcmci"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.run_pcmci">[docs]</a>    <span class="k">def</span> <span class="nf">run_pcmci</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+
+<div class="viewcode-block" id="PCMCI.run_pcmci">
+<a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.run_pcmci">[docs]</a>
+    <span class="k">def</span> <span class="nf">run_pcmci</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                   <span class="n">selected_links</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                   <span class="n">link_assumptions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                   <span class="n">tau_min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
@@ -1980,7 +2012,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="o">=</span> <span class="n">results</span>
         <span class="k">return</span> <span class="n">results</span></div>
 
-<div class="viewcode-block" id="PCMCI.run_pcmciplus"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.run_pcmciplus">[docs]</a>    <span class="k">def</span> <span class="nf">run_pcmciplus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+
+<div class="viewcode-block" id="PCMCI.run_pcmciplus">
+<a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.run_pcmciplus">[docs]</a>
+    <span class="k">def</span> <span class="nf">run_pcmciplus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                       <span class="n">selected_links</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                       <span class="n">link_assumptions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                       <span class="n">tau_min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
@@ -2309,6 +2344,7 @@
         
         <span class="k">return</span> <span class="n">return_dict</span></div>
 
+
     
         <span class="c1"># # Set the maximum condition dimension for Y and X</span>
         <span class="c1"># max_conds_py = self._set_max_condition_dim(max_conds_py,</span>
@@ -2551,7 +2587,9 @@
         <span class="k">return</span> <span class="n">final_graph</span>
 
 
-<div class="viewcode-block" id="PCMCI.run_pcalg"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.run_pcalg">[docs]</a>    <span class="k">def</span> <span class="nf">run_pcalg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+<div class="viewcode-block" id="PCMCI.run_pcalg">
+<a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.run_pcalg">[docs]</a>
+    <span class="k">def</span> <span class="nf">run_pcalg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
                     <span class="n">selected_links</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
                     <span class="n">link_assumptions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">pc_alpha</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> 
@@ -2750,7 +2788,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">pc_results</span> <span class="o">=</span> <span class="n">pc_results</span>
         <span class="k">return</span> <span class="n">pc_results</span></div>
 
-<div class="viewcode-block" id="PCMCI.run_pcalg_non_timeseries_data"><a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.run_pcalg_non_timeseries_data">[docs]</a>    <span class="k">def</span> <span class="nf">run_pcalg_non_timeseries_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pc_alpha</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+
+<div class="viewcode-block" id="PCMCI.run_pcalg_non_timeseries_data">
+<a class="viewcode-back" href="../../index.html#tigramite.pcmci.PCMCI.run_pcalg_non_timeseries_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">run_pcalg_non_timeseries_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pc_alpha</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
                   <span class="n">max_conds_dim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_combinations</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
                   <span class="n">contemp_collider_rule</span><span class="o">=</span><span class="s1">&#39;majority&#39;</span><span class="p">,</span>
                   <span class="n">conflict_resolution</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -2816,6 +2857,7 @@
         
         <span class="bp">self</span><span class="o">.</span><span class="n">pc_results</span> <span class="o">=</span> <span class="n">results</span>
         <span class="k">return</span> <span class="n">results</span></div>
+
 
 
     <span class="k">def</span> <span class="nf">_run_pcalg_test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">abstau</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">lagged_parents</span><span class="p">,</span> <span class="n">max_conds_py</span><span class="p">,</span>
@@ -3957,6 +3999,7 @@
 
 
 
+
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">tigramite.independence_tests.parcorr</span> <span class="kn">import</span> <span class="n">ParCorr</span>
     <span class="kn">from</span> <span class="nn">tigramite.independence_tests.cmiknn</span> <span class="kn">import</span> <span class="n">CMIknn</span>
@@ -4107,7 +4150,7 @@
   </ul></li>
 </ul>
 </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../../search.html" method="get">
@@ -4115,7 +4158,7 @@
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script>
 
 
@@ -4130,11 +4173,11 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2023, Jakob Runge.
+      &#169;2023, Jakob Runge.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
     </div>
 

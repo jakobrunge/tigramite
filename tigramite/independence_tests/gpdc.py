@@ -223,7 +223,7 @@ class GaussProcReg():
             #                      "possibly constant array!")
 
         target_series = array[target_var, :]
-        z = np.fastCopyAndTranspose(array[2:])
+        z = array[2:].T.copy()
         if np.ndim(z) == 1:
             z = z.reshape(-1, 1)
 

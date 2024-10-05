@@ -179,7 +179,7 @@ class RobustParCorr(CondIndTest):
         y = array[target_var, :]
 
         if dim_z > 0:
-            z = np.fastCopyAndTranspose(array[2:, :])
+            z = array[2:, :].T.copy()
             beta_hat = np.linalg.lstsq(z, y, rcond=None)[0]
             mean = np.dot(z, beta_hat)
             resid = y - mean

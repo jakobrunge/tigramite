@@ -108,7 +108,7 @@ class ParCorrMult(CondIndTest):
             #     raise ValueError("nans after standardizing, "
             #                      "possibly constant array!")
 
-        y = np.fastCopyAndTranspose(array[np.where(xyz==target_var)[0], :])
+        y = array[np.where(xyz==target_var)[0], :].T.copy()
 
         if dim_z > 0:
             z = np.fastCopyAndTranspose(array[np.where(xyz==2)[0], :])

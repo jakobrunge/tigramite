@@ -1,25 +1,23 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="../../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>tigramite.causal_effects &#8212; Tigramite 5.2 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/jquery.js"></script>
-    <script src="../../_static/underscore.js"></script>
-    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../../_static/doctools.js"></script>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=db26dd79" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=19da42e6" />
+    <script src="../../_static/documentation_options.js?v=625b3a9a"></script>
+    <script src="../../_static/doctools.js?v=aa79a7b1"></script>
+    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
+
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+  
 
   </head><body>
   
@@ -46,7 +44,9 @@
 <span class="kn">from</span> <span class="nn">tigramite.models</span> <span class="kn">import</span> <span class="n">Models</span>
 <span class="kn">import</span> <span class="nn">struct</span>
 
-<div class="viewcode-block" id="CausalEffects"><a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects">[docs]</a><span class="k">class</span> <span class="nc">CausalEffects</span><span class="p">():</span>
+<div class="viewcode-block" id="CausalEffects">
+<a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects">[docs]</a>
+<span class="k">class</span> <span class="nc">CausalEffects</span><span class="p">():</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Causal effect estimation.</span>
 
 <span class="sd">    Methods for the estimation of linear or non-parametric causal effects </span>
@@ -404,7 +404,9 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;XYS lags must be in [-taumax...0]&quot;</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="CausalEffects.check_XYS_paths"><a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.check_XYS_paths">[docs]</a>    <span class="k">def</span> <span class="nf">check_XYS_paths</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="CausalEffects.check_XYS_paths">
+<a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.check_XYS_paths">[docs]</a>
+    <span class="k">def</span> <span class="nf">check_XYS_paths</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Check whether one can remove nodes from X and Y with no proper causal paths.</span>
 
 <span class="sd">        Returns</span>
@@ -443,6 +445,7 @@
                   <span class="s2">&quot;since only these have causal path from X&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="nb">list</span><span class="p">(</span><span class="n">Y</span><span class="p">))</span></div>
+
 
 
     <span class="k">def</span> <span class="nf">_check_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
@@ -524,7 +527,9 @@
 
         <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">visit</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">graph_dict</span><span class="p">)</span>
 
-<div class="viewcode-block" id="CausalEffects.get_mediators"><a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.get_mediators">[docs]</a>    <span class="k">def</span> <span class="nf">get_mediators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
+<div class="viewcode-block" id="CausalEffects.get_mediators">
+<a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.get_mediators">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_mediators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns mediator variables on proper causal paths.</span>
 
 <span class="sd">        Parameters</span>
@@ -567,6 +572,7 @@
                 <span class="n">this_level</span> <span class="o">=</span> <span class="n">next_level</span>  
 
         <span class="k">return</span> <span class="n">mediators</span></div>
+
 
     <span class="k">def</span> <span class="nf">_get_mediators_stationary_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">max_lag</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns mediator variables on proper causal paths</span>
@@ -1361,7 +1367,9 @@
         <span class="c1"># print(&quot;Separated&quot;)</span>
         <span class="k">return</span> <span class="kc">False</span>
 
-<div class="viewcode-block" id="CausalEffects.get_optimal_set"><a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.get_optimal_set">[docs]</a>    <span class="k">def</span> <span class="nf">get_optimal_set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+<div class="viewcode-block" id="CausalEffects.get_optimal_set">
+<a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.get_optimal_set">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_optimal_set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
         <span class="n">alternative_conditions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">minimize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">return_separate_sets</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -1498,6 +1506,7 @@
             <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">Oset_S</span><span class="p">)</span></div>
 
 
+
     <span class="k">def</span> <span class="nf">_get_collider_paths_optimality</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_nodes</span><span class="p">,</span> <span class="n">target_nodes</span><span class="p">,</span>
         <span class="n">condition</span><span class="p">,</span> 
         <span class="n">inside_set</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
@@ -1577,7 +1586,9 @@
         <span class="c1"># return collider_paths</span>
 
 
-<div class="viewcode-block" id="CausalEffects.check_optimality"><a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.check_optimality">[docs]</a>    <span class="k">def</span> <span class="nf">check_optimality</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="CausalEffects.check_optimality">
+<a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.check_optimality">[docs]</a>
+    <span class="k">def</span> <span class="nf">check_optimality</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Check whether optimal adjustment set exists according to Thm. 3 in Runge NeurIPS 2021.</span>
 
 <span class="sd">        Returns</span>
@@ -1638,6 +1649,7 @@
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Optimality = </span><span class="si">%s</span><span class="s2"> with cond_0 = </span><span class="si">%s</span><span class="s2">, cond_I = </span><span class="si">%s</span><span class="s2">, cond_II = </span><span class="si">%s</span><span class="s2">&quot;</span>
                     <span class="o">%</span>  <span class="p">(</span><span class="n">optimality</span><span class="p">,</span> <span class="n">cond_0</span><span class="p">,</span> <span class="n">cond_I</span><span class="p">,</span> <span class="n">cond_II</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">optimality</span></div>
+
 
     <span class="k">def</span> <span class="nf">_check_validity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Z</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks whether Z is a valid adjustment set.&quot;&quot;&quot;</span>
@@ -1851,7 +1863,9 @@
 
         <span class="k">return</span> <span class="n">all_causal_paths</span>
 
-<div class="viewcode-block" id="CausalEffects.fit_total_effect"><a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.fit_total_effect">[docs]</a>    <span class="k">def</span> <span class="nf">fit_total_effect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+<div class="viewcode-block" id="CausalEffects.fit_total_effect">
+<a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.fit_total_effect">[docs]</a>
+    <span class="k">def</span> <span class="nf">fit_total_effect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
         <span class="n">dataframe</span><span class="p">,</span> 
         <span class="n">estimator</span><span class="p">,</span>
         <span class="n">adjustment_set</span><span class="o">=</span><span class="s1">&#39;optimal&#39;</span><span class="p">,</span>
@@ -1944,7 +1958,10 @@
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
-<div class="viewcode-block" id="CausalEffects.predict_total_effect"><a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.predict_total_effect">[docs]</a>    <span class="k">def</span> <span class="nf">predict_total_effect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+
+<div class="viewcode-block" id="CausalEffects.predict_total_effect">
+<a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.predict_total_effect">[docs]</a>
+    <span class="k">def</span> <span class="nf">predict_total_effect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
         <span class="n">intervention_data</span><span class="p">,</span> 
         <span class="n">conditions_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">pred_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -2016,7 +2033,10 @@
 
         <span class="k">return</span> <span class="n">effect</span></div>
 
-<div class="viewcode-block" id="CausalEffects.fit_wright_effect"><a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.fit_wright_effect">[docs]</a>    <span class="k">def</span> <span class="nf">fit_wright_effect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+
+<div class="viewcode-block" id="CausalEffects.fit_wright_effect">
+<a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.fit_wright_effect">[docs]</a>
+    <span class="k">def</span> <span class="nf">fit_wright_effect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
         <span class="n">dataframe</span><span class="p">,</span> 
         <span class="n">mediation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">method</span><span class="o">=</span><span class="s1">&#39;parents&#39;</span><span class="p">,</span>
@@ -2212,8 +2232,11 @@
         <span class="c1"># self.effect = effect</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fit_results</span> <span class="o">=</span> <span class="n">fit_results</span>
         <span class="k">return</span> <span class="bp">self</span></div>
+
  
-<div class="viewcode-block" id="CausalEffects.predict_wright_effect"><a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.predict_wright_effect">[docs]</a>    <span class="k">def</span> <span class="nf">predict_wright_effect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+<div class="viewcode-block" id="CausalEffects.predict_wright_effect">
+<a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.predict_wright_effect">[docs]</a>
+    <span class="k">def</span> <span class="nf">predict_wright_effect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
         <span class="n">intervention_data</span><span class="p">,</span> 
         <span class="n">pred_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="p">):</span>
@@ -2285,7 +2308,10 @@
         <span class="k">return</span> <span class="n">predicted_array</span></div>
 
 
-<div class="viewcode-block" id="CausalEffects.fit_bootstrap_of"><a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.fit_bootstrap_of">[docs]</a>    <span class="k">def</span> <span class="nf">fit_bootstrap_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">method_args</span><span class="p">,</span> 
+
+<div class="viewcode-block" id="CausalEffects.fit_bootstrap_of">
+<a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.fit_bootstrap_of">[docs]</a>
+    <span class="k">def</span> <span class="nf">fit_bootstrap_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">method_args</span><span class="p">,</span> 
                         <span class="n">boot_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
                         <span class="n">boot_blocklength</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                         <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -2361,7 +2387,10 @@
         <span class="k">return</span> <span class="bp">self</span></div>
 
 
-<div class="viewcode-block" id="CausalEffects.predict_bootstrap_of"><a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.predict_bootstrap_of">[docs]</a>    <span class="k">def</span> <span class="nf">predict_bootstrap_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">method_args</span><span class="p">,</span> 
+
+<div class="viewcode-block" id="CausalEffects.predict_bootstrap_of">
+<a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.predict_bootstrap_of">[docs]</a>
+    <span class="k">def</span> <span class="nf">predict_bootstrap_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">method_args</span><span class="p">,</span> 
                         <span class="n">conf_lev</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
                         <span class="n">return_individual_bootstrap_results</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Predicts with fitted bootstraps.</span>
@@ -2430,7 +2459,10 @@
 
         <span class="k">return</span> <span class="n">confidence_interval</span></div>
 
-<div class="viewcode-block" id="CausalEffects.get_dict_from_graph"><a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.get_dict_from_graph">[docs]</a>    <span class="nd">@staticmethod</span>
+
+<div class="viewcode-block" id="CausalEffects.get_dict_from_graph">
+<a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.get_dict_from_graph">[docs]</a>
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">get_dict_from_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">parents_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function to convert graph to dictionary of links.</span>
 
@@ -2460,7 +2492,10 @@
 
         <span class="k">return</span> <span class="n">links</span></div>
 
-<div class="viewcode-block" id="CausalEffects.get_graph_from_dict"><a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.get_graph_from_dict">[docs]</a>    <span class="nd">@staticmethod</span>
+
+<div class="viewcode-block" id="CausalEffects.get_graph_from_dict">
+<a class="viewcode-back" href="../../index.html#tigramite.causal_effects.CausalEffects.get_graph_from_dict">[docs]</a>
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">get_graph_from_dict</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function to convert dictionary of links to graph array format.</span>
 
@@ -2533,7 +2568,9 @@
                     <span class="k">if</span> <span class="n">lag</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                         <span class="n">graph</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&lt;--&quot;</span>
 
-        <span class="k">return</span> <span class="n">graph</span></div></div>
+        <span class="k">return</span> <span class="n">graph</span></div>
+</div>
+
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
@@ -2795,7 +2832,7 @@
   </ul></li>
 </ul>
 </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../../search.html" method="get">
@@ -2803,7 +2840,7 @@
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script>
 
 
@@ -2818,11 +2855,11 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2023, Jakob Runge.
+      &#169;2023, Jakob Runge.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
     </div>
 

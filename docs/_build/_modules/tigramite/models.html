@@ -1,25 +1,23 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="../../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>tigramite.models &#8212; Tigramite 5.2 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/jquery.js"></script>
-    <script src="../../_static/underscore.js"></script>
-    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../../_static/doctools.js"></script>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=db26dd79" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=19da42e6" />
+    <script src="../../_static/documentation_options.js?v=625b3a9a"></script>
+    <script src="../../_static/doctools.js?v=aa79a7b1"></script>
+    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
+
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+  
 
   </head><body>
   
@@ -48,7 +46,9 @@
 <span class="kn">from</span> <span class="nn">tigramite.data_processing</span> <span class="kn">import</span> <span class="n">DataFrame</span>
 <span class="kn">from</span> <span class="nn">tigramite.pcmci</span> <span class="kn">import</span> <span class="n">PCMCI</span>
 
-<div class="viewcode-block" id="Models"><a class="viewcode-back" href="../../index.html#tigramite.models.Models">[docs]</a><span class="k">class</span> <span class="nc">Models</span><span class="p">():</span>
+<div class="viewcode-block" id="Models">
+<a class="viewcode-back" href="../../index.html#tigramite.models.Models">[docs]</a>
+<span class="k">class</span> <span class="nc">Models</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for time series models.</span>
 
 <span class="sd">    Allows to fit any model from sklearn to the parents of a target variable.</span>
@@ -112,7 +112,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">fit_results</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="c1"># @profile    </span>
-<div class="viewcode-block" id="Models.get_general_fitted_model"><a class="viewcode-back" href="../../index.html#tigramite.models.Models.get_general_fitted_model">[docs]</a>    <span class="k">def</span> <span class="nf">get_general_fitted_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+<div class="viewcode-block" id="Models.get_general_fitted_model">
+<a class="viewcode-back" href="../../index.html#tigramite.models.Models.get_general_fitted_model">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_general_fitted_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
                 <span class="n">Y</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">conditions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">tau_max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -259,8 +261,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">fit_results</span> <span class="o">=</span> <span class="n">fit_results</span>
         <span class="k">return</span> <span class="n">fit_results</span></div>
 
+
     <span class="c1"># @profile</span>
-<div class="viewcode-block" id="Models.get_general_prediction"><a class="viewcode-back" href="../../index.html#tigramite.models.Models.get_general_prediction">[docs]</a>    <span class="k">def</span> <span class="nf">get_general_prediction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+<div class="viewcode-block" id="Models.get_general_prediction">
+<a class="viewcode-back" href="../../index.html#tigramite.models.Models.get_general_prediction">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_general_prediction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                 <span class="n">intervention_data</span><span class="p">,</span>
                 <span class="n">conditions_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">pred_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -395,7 +400,10 @@
             <span class="k">return</span> <span class="n">predicted_array</span></div>
 
 
-<div class="viewcode-block" id="Models.fit_full_model"><a class="viewcode-back" href="../../index.html#tigramite.models.Models.fit_full_model">[docs]</a>    <span class="k">def</span> <span class="nf">fit_full_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">all_parents</span><span class="p">,</span>
+
+<div class="viewcode-block" id="Models.fit_full_model">
+<a class="viewcode-back" href="../../index.html#tigramite.models.Models.fit_full_model">[docs]</a>
+    <span class="k">def</span> <span class="nf">fit_full_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">all_parents</span><span class="p">,</span>
                 <span class="n">selected_variables</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">tau_max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;max_lag_or_tau_max&#39;</span><span class="p">,</span>
@@ -505,7 +513,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">fit_results</span> <span class="o">=</span> <span class="n">fit_results</span>
         <span class="k">return</span> <span class="n">fit_results</span></div>
 
-<div class="viewcode-block" id="Models.get_coefs"><a class="viewcode-back" href="../../index.html#tigramite.models.Models.get_coefs">[docs]</a>    <span class="k">def</span> <span class="nf">get_coefs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Models.get_coefs">
+<a class="viewcode-back" href="../../index.html#tigramite.models.Models.get_coefs">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_coefs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns dictionary of coefficients for linear models.</span>
 
 <span class="sd">        Only for models from sklearn.linear_model</span>
@@ -523,7 +534,10 @@
                 <span class="n">coeffs</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">par</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_results</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="s1">&#39;model&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">coef_</span><span class="p">[</span><span class="n">ipar</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">coeffs</span></div>
 
-<div class="viewcode-block" id="Models.get_val_matrix"><a class="viewcode-back" href="../../index.html#tigramite.models.Models.get_val_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">get_val_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Models.get_val_matrix">
+<a class="viewcode-back" href="../../index.html#tigramite.models.Models.get_val_matrix">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_val_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the coefficient array for different lags for linear model.</span>
 
 <span class="sd">        Requires fit_model() before. An entry val_matrix[i,j,tau] gives the</span>
@@ -545,7 +559,10 @@
 
         <span class="k">return</span> <span class="n">val_matrix</span></div>
 
-<div class="viewcode-block" id="Models.predict_full_model"><a class="viewcode-back" href="../../index.html#tigramite.models.Models.predict_full_model">[docs]</a>    <span class="k">def</span> <span class="nf">predict_full_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+
+<div class="viewcode-block" id="Models.predict_full_model">
+<a class="viewcode-back" href="../../index.html#tigramite.models.Models.predict_full_model">[docs]</a>
+    <span class="k">def</span> <span class="nf">predict_full_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                 <span class="n">new_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">pred_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;max_lag_or_tau_max&#39;</span><span class="p">):</span>
@@ -637,7 +654,10 @@
         <span class="k">return</span> <span class="n">pred_list</span></div>
 
 
-<div class="viewcode-block" id="Models.get_residuals_cov_mean"><a class="viewcode-back" href="../../index.html#tigramite.models.Models.get_residuals_cov_mean">[docs]</a>    <span class="k">def</span> <span class="nf">get_residuals_cov_mean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pred_params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Models.get_residuals_cov_mean">
+<a class="viewcode-back" href="../../index.html#tigramite.models.Models.get_residuals_cov_mean">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_residuals_cov_mean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pred_params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Returns covariance and means of residuals from fitted model.</span>
 
 <span class="sd">        Residuals are available as self.residuals.</span>
@@ -696,9 +716,13 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">residuals</span> <span class="o">=</span> <span class="n">overlapping_residuals</span>
 
-        <span class="k">return</span> <span class="n">cov</span><span class="p">,</span> <span class="n">mean</span></div></div>
+        <span class="k">return</span> <span class="n">cov</span><span class="p">,</span> <span class="n">mean</span></div>
+</div>
 
-<div class="viewcode-block" id="LinearMediation"><a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation">[docs]</a><span class="k">class</span> <span class="nc">LinearMediation</span><span class="p">(</span><span class="n">Models</span><span class="p">):</span>
+
+<div class="viewcode-block" id="LinearMediation">
+<a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation">[docs]</a>
+<span class="k">class</span> <span class="nc">LinearMediation</span><span class="p">(</span><span class="n">Models</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Linear mediation analysis for time series models.</span>
 
 <span class="sd">    Fits linear model to parents and provides functions to return measures such</span>
@@ -809,7 +833,9 @@
                         <span class="n">mask_type</span><span class="o">=</span><span class="n">mask_type</span><span class="p">,</span>
                         <span class="n">verbosity</span><span class="o">=</span><span class="n">verbosity</span><span class="p">)</span>
 
-<div class="viewcode-block" id="LinearMediation.fit_model"><a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.fit_model">[docs]</a>    <span class="k">def</span> <span class="nf">fit_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">all_parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_data</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="LinearMediation.fit_model">
+<a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.fit_model">[docs]</a>
+    <span class="k">def</span> <span class="nf">fit_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">all_parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_data</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Fit linear time series model.</span>
 
 <span class="sd">        Fits a sklearn.linear_model.LinearRegression model to the parents of</span>
@@ -839,9 +865,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">all_psi_k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_all_psi_k</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">phi</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">all_parents</span> <span class="o">=</span> <span class="n">all_parents</span></div>
+
         <span class="c1"># self.tau_max = tau_max</span>
 
-<div class="viewcode-block" id="LinearMediation.fit_model_bootstrap"><a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.fit_model_bootstrap">[docs]</a>    <span class="k">def</span> <span class="nf">fit_model_bootstrap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+<div class="viewcode-block" id="LinearMediation.fit_model_bootstrap">
+<a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.fit_model_bootstrap">[docs]</a>
+    <span class="k">def</span> <span class="nf">fit_model_bootstrap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
             <span class="n">boot_blocklength</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
             <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">boot_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
@@ -903,7 +932,10 @@
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
-<div class="viewcode-block" id="LinearMediation.get_bootstrap_of"><a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_bootstrap_of">[docs]</a>    <span class="k">def</span> <span class="nf">get_bootstrap_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">function_args</span><span class="p">,</span> <span class="n">conf_lev</span><span class="o">=</span><span class="mf">0.9</span><span class="p">):</span>
+
+<div class="viewcode-block" id="LinearMediation.get_bootstrap_of">
+<a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_bootstrap_of">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_bootstrap_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">function_args</span><span class="p">,</span> <span class="n">conf_lev</span><span class="o">=</span><span class="mf">0.9</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Applies bootstrap-versions of Phi, Psi, etc. to any function in </span>
 <span class="sd">        this class.</span>
 
@@ -972,6 +1004,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">bootstrap_result</span> <span class="o">=</span> <span class="n">bootstrap_result</span>
 
         <span class="k">return</span> <span class="n">confidence_interval</span></div>
+
 
 
     <span class="k">def</span> <span class="nf">_check_sanity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -1116,7 +1149,9 @@
 
         <span class="k">return</span> <span class="n">all_psi_k</span>
 
-<div class="viewcode-block" id="LinearMediation.get_coeff"><a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_coeff">[docs]</a>    <span class="k">def</span> <span class="nf">get_coeff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+<div class="viewcode-block" id="LinearMediation.get_coeff">
+<a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_coeff">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_coeff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns link coefficient.</span>
 
 <span class="sd">        This is the direct causal effect for a particular link (i, -tau) --&gt; j.</span>
@@ -1136,7 +1171,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">phi</span><span class="p">[</span><span class="nb">abs</span><span class="p">(</span><span class="n">tau</span><span class="p">),</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="LinearMediation.get_ce"><a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_ce">[docs]</a>    <span class="k">def</span> <span class="nf">get_ce</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+
+<div class="viewcode-block" id="LinearMediation.get_ce">
+<a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_ce">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_ce</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the causal effect.</span>
 
 <span class="sd">        This is the causal effect for  (i, -tau) -- --&gt; j.</span>
@@ -1156,7 +1194,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi</span><span class="p">[</span><span class="nb">abs</span><span class="p">(</span><span class="n">tau</span><span class="p">),</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="LinearMediation.get_ce_max"><a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_ce_max">[docs]</a>    <span class="k">def</span> <span class="nf">get_ce_max</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+
+<div class="viewcode-block" id="LinearMediation.get_ce_max">
+<a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_ce_max">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_ce_max</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the causal effect.</span>
 
 <span class="sd">        This is the maximum absolute causal effect for  i --&gt; j across all</span>
@@ -1176,7 +1217,10 @@
         <span class="n">argmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psi</span><span class="p">[:,</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="n">argmax</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi</span><span class="p">[:,</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">][</span><span class="n">argmax</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="LinearMediation.get_joint_ce"><a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_joint_ce">[docs]</a>    <span class="k">def</span> <span class="nf">get_joint_ce</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+
+<div class="viewcode-block" id="LinearMediation.get_joint_ce">
+<a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_joint_ce">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_joint_ce</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the joint causal effect.</span>
 
 <span class="sd">        This is the causal effect from all lags [t, ..., t-tau_max]</span>
@@ -1198,7 +1242,10 @@
         <span class="n">joint_ce</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_psi_k</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:,</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">joint_ce</span></div>
 
-<div class="viewcode-block" id="LinearMediation.get_joint_ce_matrix"><a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_joint_ce_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">get_joint_ce_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+
+<div class="viewcode-block" id="LinearMediation.get_joint_ce_matrix">
+<a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_joint_ce_matrix">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_joint_ce_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the joint causal effect matrix of i on j.</span>
 
 <span class="sd">        This is the causal effect from all lags [t, ..., t-tau_max]</span>
@@ -1225,7 +1272,10 @@
 
         <span class="k">return</span> <span class="n">joint_ce_matrix</span></div>
 
-<div class="viewcode-block" id="LinearMediation.get_mce"><a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_mce">[docs]</a>    <span class="k">def</span> <span class="nf">get_mce</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+
+<div class="viewcode-block" id="LinearMediation.get_mce">
+<a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_mce">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_mce</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the mediated causal effect.</span>
 
 <span class="sd">        This is the causal effect for  i --&gt; j minus the causal effect not going</span>
@@ -1254,7 +1304,10 @@
         <span class="n">mce</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi</span><span class="p">[</span><span class="nb">abs</span><span class="p">(</span><span class="n">tau</span><span class="p">),</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">effect_without_k</span>
         <span class="k">return</span> <span class="n">mce</span></div>
 
-<div class="viewcode-block" id="LinearMediation.get_conditional_mce"><a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_conditional_mce">[docs]</a>    <span class="k">def</span> <span class="nf">get_conditional_mce</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">notk</span><span class="p">):</span>
+
+<div class="viewcode-block" id="LinearMediation.get_conditional_mce">
+<a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_conditional_mce">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_conditional_mce</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">notk</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the conditional mediated causal effect.</span>
 
 <span class="sd">        This is the causal effect for  i --&gt; j for all paths going through k, but not through notk.</span>
@@ -1297,7 +1350,10 @@
         <span class="k">return</span> <span class="n">mce</span></div>
 
 
-<div class="viewcode-block" id="LinearMediation.get_joint_mce"><a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_joint_mce">[docs]</a>    <span class="k">def</span> <span class="nf">get_joint_mce</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+
+<div class="viewcode-block" id="LinearMediation.get_joint_mce">
+<a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_joint_mce">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_joint_mce</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the joint causal effect mediated through k.</span>
 
 <span class="sd">        This is the mediated causal effect from all lags [t, ..., t-tau_max]</span>
@@ -1326,7 +1382,10 @@
         <span class="n">joint_mce</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_psi_k</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:,</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">effect_without_k</span><span class="p">[:,</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">joint_mce</span></div>
 
-<div class="viewcode-block" id="LinearMediation.get_ace"><a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_ace">[docs]</a>    <span class="k">def</span> <span class="nf">get_ace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">lag_mode</span><span class="o">=</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span> <span class="n">exclude_i</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+<div class="viewcode-block" id="LinearMediation.get_ace">
+<a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_ace">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_ace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">lag_mode</span><span class="o">=</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span> <span class="n">exclude_i</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the average causal effect.</span>
 
 <span class="sd">        This is the average causal effect (ACE) emanating from variable i to any</span>
@@ -1361,7 +1420,10 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;lag_mode = </span><span class="si">%s</span><span class="s2"> not implemented&quot;</span> <span class="o">%</span> <span class="n">lag_mode</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="LinearMediation.get_all_ace"><a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_all_ace">[docs]</a>    <span class="k">def</span> <span class="nf">get_all_ace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lag_mode</span><span class="o">=</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span> <span class="n">exclude_i</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+<div class="viewcode-block" id="LinearMediation.get_all_ace">
+<a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_all_ace">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_all_ace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lag_mode</span><span class="o">=</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span> <span class="n">exclude_i</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the average causal effect for all variables.</span>
 
 <span class="sd">        This is the average causal effect (ACE) emanating from variable i to any</span>
@@ -1389,7 +1451,10 @@
 
         <span class="k">return</span> <span class="n">ace</span></div>
 
-<div class="viewcode-block" id="LinearMediation.get_acs"><a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_acs">[docs]</a>    <span class="k">def</span> <span class="nf">get_acs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">lag_mode</span><span class="o">=</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span> <span class="n">exclude_j</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+<div class="viewcode-block" id="LinearMediation.get_acs">
+<a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_acs">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_acs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">lag_mode</span><span class="o">=</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span> <span class="n">exclude_j</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the average causal susceptibility.</span>
 
 <span class="sd">        This is the Average Causal Susceptibility (ACS) affecting a variable j</span>
@@ -1424,7 +1489,10 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;lag_mode = </span><span class="si">%s</span><span class="s2"> not implemented&quot;</span> <span class="o">%</span> <span class="n">lag_mode</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="LinearMediation.get_all_acs"><a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_all_acs">[docs]</a>    <span class="k">def</span> <span class="nf">get_all_acs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lag_mode</span><span class="o">=</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span> <span class="n">exclude_j</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+<div class="viewcode-block" id="LinearMediation.get_all_acs">
+<a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_all_acs">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_all_acs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lag_mode</span><span class="o">=</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span> <span class="n">exclude_j</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the average causal susceptibility.</span>
 
 <span class="sd">        This is the Average Causal Susceptibility (ACS) for each variable from</span>
@@ -1452,7 +1520,10 @@
 
         <span class="k">return</span> <span class="n">acs</span></div>
 
-<div class="viewcode-block" id="LinearMediation.get_amce"><a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_amce">[docs]</a>    <span class="k">def</span> <span class="nf">get_amce</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">lag_mode</span><span class="o">=</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span>
+
+<div class="viewcode-block" id="LinearMediation.get_amce">
+<a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_amce">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_amce</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">lag_mode</span><span class="o">=</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span>
                  <span class="n">exclude_k</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exclude_self_effects</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the average mediated causal effect.</span>
 
@@ -1506,7 +1577,10 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;lag_mode = </span><span class="si">%s</span><span class="s2"> not implemented&quot;</span> <span class="o">%</span> <span class="n">lag_mode</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="LinearMediation.get_all_amce"><a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_all_amce">[docs]</a>    <span class="k">def</span> <span class="nf">get_all_amce</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lag_mode</span><span class="o">=</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span>
+
+<div class="viewcode-block" id="LinearMediation.get_all_amce">
+<a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_all_amce">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_all_amce</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lag_mode</span><span class="o">=</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span>
                      <span class="n">exclude_k</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exclude_self_effects</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the average mediated causal effect.</span>
 
@@ -1540,7 +1614,10 @@
         <span class="k">return</span> <span class="n">amce</span></div>
 
 
-<div class="viewcode-block" id="LinearMediation.get_val_matrix"><a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_val_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">get_val_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symmetrize</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+<div class="viewcode-block" id="LinearMediation.get_val_matrix">
+<a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_val_matrix">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_val_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symmetrize</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the matrix of linear coefficients.</span>
 
 <span class="sd">        Requires fit_model() before. An entry val_matrix[i,j,tau] gives the</span>
@@ -1572,17 +1649,26 @@
 
         <span class="k">return</span> <span class="n">val_matrix</span></div>
 
-<div class="viewcode-block" id="LinearMediation.net_to_tsg"><a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.net_to_tsg">[docs]</a>    <span class="k">def</span> <span class="nf">net_to_tsg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">lag</span><span class="p">,</span> <span class="n">max_lag</span><span class="p">):</span>
+
+<div class="viewcode-block" id="LinearMediation.net_to_tsg">
+<a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.net_to_tsg">[docs]</a>
+    <span class="k">def</span> <span class="nf">net_to_tsg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">lag</span><span class="p">,</span> <span class="n">max_lag</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function to translate from network to time series graph.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">row</span> <span class="o">*</span> <span class="n">max_lag</span> <span class="o">+</span> <span class="n">lag</span></div>
 
-<div class="viewcode-block" id="LinearMediation.tsg_to_net"><a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.tsg_to_net">[docs]</a>    <span class="k">def</span> <span class="nf">tsg_to_net</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">max_lag</span><span class="p">):</span>
+
+<div class="viewcode-block" id="LinearMediation.tsg_to_net">
+<a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.tsg_to_net">[docs]</a>
+    <span class="k">def</span> <span class="nf">tsg_to_net</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">max_lag</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function to translate from time series graph to network.&quot;&quot;&quot;</span>
         <span class="n">row</span> <span class="o">=</span> <span class="n">node</span> <span class="o">//</span> <span class="n">max_lag</span>
         <span class="n">lag</span> <span class="o">=</span> <span class="n">node</span> <span class="o">%</span> <span class="n">max_lag</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="o">-</span><span class="n">lag</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="LinearMediation.get_tsg"><a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_tsg">[docs]</a>    <span class="k">def</span> <span class="nf">get_tsg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_matrix</span><span class="p">,</span> <span class="n">val_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">include_neighbors</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+<div class="viewcode-block" id="LinearMediation.get_tsg">
+<a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_tsg">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_tsg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_matrix</span><span class="p">,</span> <span class="n">val_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">include_neighbors</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns time series graph matrix.</span>
 
 <span class="sd">        Constructs a matrix of shape (N*tau_max, N*tau_max) from link_matrix.</span>
@@ -1623,7 +1709,10 @@
                             <span class="n">tsg</span><span class="p">[</span><span class="n">link_start</span><span class="p">,</span> <span class="n">link_end</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="k">return</span> <span class="n">tsg</span></div>
 
-<div class="viewcode-block" id="LinearMediation.get_mediation_graph_data"><a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_mediation_graph_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_mediation_graph_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">include_neighbors</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+<div class="viewcode-block" id="LinearMediation.get_mediation_graph_data">
+<a class="viewcode-back" href="../../index.html#tigramite.models.LinearMediation.get_mediation_graph_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_mediation_graph_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">include_neighbors</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Returns link and node weights for mediation analysis.</span>
 
 <span class="sd">        Returns array with non-zero entries for links that are on causal</span>
@@ -1707,10 +1796,14 @@
                       <span class="s1">&#39;path_val_matrix&#39;</span><span class="p">:</span> <span class="n">path_val_matrix</span><span class="p">,</span>
                       <span class="s1">&#39;tsg_path_val_matrix&#39;</span><span class="p">:</span> <span class="n">tsg_path_val_matrix</span><span class="p">}</span>
 
-        <span class="k">return</span> <span class="n">graph_data</span></div></div>
+        <span class="k">return</span> <span class="n">graph_data</span></div>
+</div>
 
 
-<div class="viewcode-block" id="Prediction"><a class="viewcode-back" href="../../index.html#tigramite.models.Prediction">[docs]</a><span class="k">class</span> <span class="nc">Prediction</span><span class="p">(</span><span class="n">Models</span><span class="p">,</span> <span class="n">PCMCI</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Prediction">
+<a class="viewcode-back" href="../../index.html#tigramite.models.Prediction">[docs]</a>
+<span class="k">class</span> <span class="nc">Prediction</span><span class="p">(</span><span class="n">Models</span><span class="p">,</span> <span class="n">PCMCI</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Prediction class for time series models.</span>
 
 <span class="sd">    Allows to fit and predict from any sklearn model. The optimal predictors can</span>
@@ -1809,7 +1902,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">fitted_model</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">test_array</span> <span class="o">=</span> <span class="kc">None</span>
 
-<div class="viewcode-block" id="Prediction.get_predictors"><a class="viewcode-back" href="../../index.html#tigramite.models.Prediction.get_predictors">[docs]</a>    <span class="k">def</span> <span class="nf">get_predictors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+<div class="viewcode-block" id="Prediction.get_predictors">
+<a class="viewcode-back" href="../../index.html#tigramite.models.Prediction.get_predictors">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_predictors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                        <span class="n">selected_targets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                        <span class="n">selected_links</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                        <span class="n">steps_ahead</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
@@ -1879,7 +1974,10 @@
                                         <span class="n">max_combinations</span><span class="o">=</span><span class="n">max_combinations</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">predictors</span></div>
 
-<div class="viewcode-block" id="Prediction.fit"><a class="viewcode-back" href="../../index.html#tigramite.models.Prediction.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_predictors</span><span class="p">,</span>
+
+<div class="viewcode-block" id="Prediction.fit">
+<a class="viewcode-back" href="../../index.html#tigramite.models.Prediction.fit">[docs]</a>
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_predictors</span><span class="p">,</span>
             <span class="n">selected_targets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_data</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Fit time series model.</span>
 
@@ -1942,7 +2040,10 @@
                          <span class="n">return_data</span><span class="o">=</span><span class="n">return_data</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
-<div class="viewcode-block" id="Prediction.predict"><a class="viewcode-back" href="../../index.html#tigramite.models.Prediction.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span>
+
+<div class="viewcode-block" id="Prediction.predict">
+<a class="viewcode-back" href="../../index.html#tigramite.models.Prediction.predict">[docs]</a>
+    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span>
                 <span class="n">new_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">pred_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;max_lag_or_tau_max&#39;</span><span class="p">):</span>
@@ -2063,13 +2164,21 @@
         <span class="k">elif</span> <span class="n">return_type</span> <span class="o">==</span> <span class="s1">&#39;array&#39;</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pred_list</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="Prediction.get_train_array"><a class="viewcode-back" href="../../index.html#tigramite.models.Prediction.get_train_array">[docs]</a>    <span class="k">def</span> <span class="nf">get_train_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Prediction.get_train_array">
+<a class="viewcode-back" href="../../index.html#tigramite.models.Prediction.get_train_array">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_train_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns training array for variable j.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitted_model</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="s1">&#39;data&#39;</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="Prediction.get_test_array"><a class="viewcode-back" href="../../index.html#tigramite.models.Prediction.get_test_array">[docs]</a>    <span class="k">def</span> <span class="nf">get_test_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Prediction.get_test_array">
+<a class="viewcode-back" href="../../index.html#tigramite.models.Prediction.get_test_array">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_test_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns test array for variable j.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">stored_test_array</span><span class="p">[</span><span class="n">j</span><span class="p">]</span></div></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">stored_test_array</span><span class="p">[</span><span class="n">j</span><span class="p">]</span></div>
+</div>
+
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
    
@@ -2303,7 +2412,7 @@
   </ul></li>
 </ul>
 </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../../search.html" method="get">
@@ -2311,7 +2420,7 @@
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script>
 
 
@@ -2326,11 +2435,11 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2023, Jakob Runge.
+      &#169;2023, Jakob Runge.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
     </div>
 

@@ -1,25 +1,23 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="../../../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>tigramite.independence_tests.independence_tests_base &#8212; Tigramite 5.2 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css" />
-    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
-    <script src="../../../_static/jquery.js"></script>
-    <script src="../../../_static/underscore.js"></script>
-    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../../../_static/doctools.js"></script>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=db26dd79" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=19da42e6" />
+    <script src="../../../_static/documentation_options.js?v=625b3a9a"></script>
+    <script src="../../../_static/doctools.js?v=aa79a7b1"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
+
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+  
 
   </head><body>
   
@@ -47,7 +45,9 @@
 <span class="kn">from</span> <span class="nn">hashlib</span> <span class="kn">import</span> <span class="n">sha1</span>
 
 
-<div class="viewcode-block" id="CondIndTest"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest">[docs]</a><span class="nd">@six</span><span class="o">.</span><span class="n">add_metaclass</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABCMeta</span><span class="p">)</span>
+<div class="viewcode-block" id="CondIndTest">
+<a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest">[docs]</a>
+<span class="nd">@six</span><span class="o">.</span><span class="n">add_metaclass</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABCMeta</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">CondIndTest</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class of conditional independence tests.</span>
 
@@ -103,12 +103,15 @@
 <span class="sd">    verbosity : int, optional (default: 0)</span>
 <span class="sd">        Level of verbosity.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="CondIndTest.get_dependence_measure"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_dependence_measure">[docs]</a>    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+<div class="viewcode-block" id="CondIndTest.get_dependence_measure">
+<a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_dependence_measure">[docs]</a>
+    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Abstract function that all concrete classes must instantiate.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
+
 
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractproperty</span>
     <span class="k">def</span> <span class="nf">measure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -159,7 +162,9 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">print_info</span><span class="p">()</span>
 
-<div class="viewcode-block" id="CondIndTest.set_mask_type"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.set_mask_type">[docs]</a>    <span class="k">def</span> <span class="nf">set_mask_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask_type</span><span class="p">):</span>
+<div class="viewcode-block" id="CondIndTest.set_mask_type">
+<a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.set_mask_type">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_mask_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask_type</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Setter for mask type to ensure that this option does not clash with</span>
 <span class="sd">        recycle_residuals.</span>
@@ -182,7 +187,10 @@
         <span class="c1"># Check the mask type is keyed correctly</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_mask_type</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="CondIndTest.print_info"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.print_info">[docs]</a>    <span class="k">def</span> <span class="nf">print_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CondIndTest.print_info">
+<a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.print_info">[docs]</a>
+    <span class="k">def</span> <span class="nf">print_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Print information about the conditional independence test parameters</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -213,6 +221,7 @@
         <span class="c1"># Print the information string</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">info_str</span><span class="p">)</span></div>
 
+
     <span class="k">def</span> <span class="nf">_check_mask_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        mask_type : str, optional (default = None)</span>
@@ -229,7 +238,9 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="CondIndTest.get_analytic_confidence"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_analytic_confidence">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">conf_lev</span><span class="p">):</span>
+<div class="viewcode-block" id="CondIndTest.get_analytic_confidence">
+<a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_analytic_confidence">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_analytic_confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">conf_lev</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Base class assumption that this is not implemented.  Concrete classes</span>
 <span class="sd">        should override when possible.</span>
@@ -237,7 +248,10 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Analytic confidence not&quot;</span><span class="o">+</span>\
                                   <span class="s2">&quot; implemented for </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="CondIndTest.get_model_selection_criterion"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_model_selection_criterion">[docs]</a>    <span class="k">def</span> <span class="nf">get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CondIndTest.get_model_selection_criterion">
+<a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_model_selection_criterion">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Base class assumption that this is not implemented.  Concrete classes</span>
 <span class="sd">        should override when possible.</span>
@@ -245,7 +259,10 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Model selection not&quot;</span><span class="o">+</span>\
                                   <span class="s2">&quot; implemented for </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="CondIndTest.get_analytic_significance"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_analytic_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CondIndTest.get_analytic_significance">
+<a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_analytic_significance">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Base class assumption that this is not implemented.  Concrete classes</span>
 <span class="sd">        should override when possible.</span>
@@ -253,7 +270,10 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Analytic significance not&quot;</span><span class="o">+</span>\
                                   <span class="s2">&quot; implemented for </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="CondIndTest.get_shuffle_significance"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_shuffle_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_shuffle_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span>
+
+<div class="viewcode-block" id="CondIndTest.get_shuffle_significance">
+<a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_shuffle_significance">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_shuffle_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span>
                                  <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                                  <span class="n">return_null_dist</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -262,6 +282,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Shuffle significance not&quot;</span><span class="o">+</span>\
                                   <span class="s2">&quot; implemented for </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span><span class="p">)</span></div>
+
 
     <span class="k">def</span> <span class="nf">_get_single_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="p">,</span>
                               <span class="n">standardize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">return_means</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -272,7 +293,9 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Residual calculation not&quot;</span><span class="o">+</span>\
                                   <span class="s2">&quot; implemented for </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span><span class="p">)</span>
 
-<div class="viewcode-block" id="CondIndTest.set_dataframe"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.set_dataframe">[docs]</a>    <span class="k">def</span> <span class="nf">set_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">):</span>
+<div class="viewcode-block" id="CondIndTest.set_dataframe">
+<a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.set_dataframe">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize and check the dataframe.</span>
 
 <span class="sd">        Parameters</span>
@@ -289,6 +312,7 @@
             <span class="k">if</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;mask_type is not None, but no mask in dataframe.&quot;</span><span class="p">)</span>
             <span class="n">dataframe</span><span class="o">.</span><span class="n">_check_mask</span><span class="p">(</span><span class="n">dataframe</span><span class="o">.</span><span class="n">mask</span><span class="p">)</span></div>
+
 
     <span class="k">def</span> <span class="nf">_keyfy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function to make lists unique.&quot;&quot;&quot;</span>
@@ -387,7 +411,9 @@
         <span class="k">return</span> <span class="n">combined_hash</span>
 
 
-<div class="viewcode-block" id="CondIndTest.run_test"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.run_test">[docs]</a>    <span class="k">def</span> <span class="nf">run_test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;2xtau_max&#39;</span><span class="p">,</span> <span class="n">alpha_or_thres</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="CondIndTest.run_test">
+<a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.run_test">[docs]</a>
+    <span class="k">def</span> <span class="nf">run_test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;2xtau_max&#39;</span><span class="p">,</span> <span class="n">alpha_or_thres</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform conditional independence test.</span>
 
 <span class="sd">        Calls the dependence measure and significance test functions. The child</span>
@@ -492,7 +518,10 @@
             <span class="k">return</span> <span class="n">val</span><span class="p">,</span> <span class="n">pval</span><span class="p">,</span> <span class="n">dependent</span></div>
 
 
-<div class="viewcode-block" id="CondIndTest.run_test_raw"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.run_test_raw">[docs]</a>    <span class="k">def</span> <span class="nf">run_test_raw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">y_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">z_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">alpha_or_thres</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CondIndTest.run_test_raw">
+<a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.run_test_raw">[docs]</a>
+    <span class="k">def</span> <span class="nf">run_test_raw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">y_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">z_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">alpha_or_thres</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform conditional independence test directly on input arrays x, y, z.</span>
 
 <span class="sd">        Calls the dependence measure and signficicance test functions. The child</span>
@@ -604,6 +633,7 @@
             <span class="k">return</span> <span class="n">val</span><span class="p">,</span> <span class="n">pval</span>
         <span class="k">else</span><span class="p">:</span>              
             <span class="k">return</span> <span class="n">val</span><span class="p">,</span> <span class="n">pval</span><span class="p">,</span> <span class="n">dependent</span></div>
+
 
     <span class="k">def</span> <span class="nf">_get_dependence_measure_recycle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the dependence_measure, optionally recycling residuals</span>
@@ -761,7 +791,9 @@
         <span class="c1"># else:</span>
         <span class="k">return</span> <span class="n">pval</span>
 
-<div class="viewcode-block" id="CondIndTest.get_measure"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_measure">[docs]</a>    <span class="k">def</span> <span class="nf">get_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> 
+<div class="viewcode-block" id="CondIndTest.get_measure">
+<a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_measure">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> 
                     <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Estimate dependence measure.</span>
 
@@ -800,7 +832,10 @@
         <span class="c1"># Return the dependence measure</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dependence_measure_recycle</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">array</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="CondIndTest.get_confidence"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_confidence">[docs]</a>    <span class="k">def</span> <span class="nf">get_confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+
+<div class="viewcode-block" id="CondIndTest.get_confidence">
+<a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_confidence">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                        <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform confidence interval estimation.</span>
 
@@ -874,6 +909,7 @@
         <span class="c1"># Return the confidence interval</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">conf_lower</span><span class="p">,</span> <span class="n">conf_upper</span><span class="p">)</span></div>
 
+
     <span class="k">def</span> <span class="nf">_print_cond_ind_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">pval</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cached</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dependent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">conf</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Print results from conditional independence test.</span>
 
@@ -904,7 +940,9 @@
 
         <span class="nb">print</span><span class="p">(</span><span class="n">printstr</span><span class="p">)</span>
 
-<div class="viewcode-block" id="CondIndTest.get_bootstrap_confidence"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_bootstrap_confidence">[docs]</a>    <span class="k">def</span> <span class="nf">get_bootstrap_confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">dependence_measure</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<div class="viewcode-block" id="CondIndTest.get_bootstrap_confidence">
+<a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_bootstrap_confidence">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_bootstrap_confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">dependence_measure</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                                  <span class="n">conf_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">conf_blocklength</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                                  <span class="n">conf_lev</span><span class="o">=</span><span class="mf">.95</span><span class="p">,</span> 
                                  <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -994,6 +1032,7 @@
         <span class="n">conf_upper</span> <span class="o">=</span> <span class="n">bootdist</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">c_int</span> <span class="o">*</span> <span class="n">conf_samples</span><span class="p">)]</span>
         <span class="c1"># Return the confidance limits as a tuple</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">conf_lower</span><span class="p">,</span> <span class="n">conf_upper</span><span class="p">)</span></div>
+
 
     <span class="k">def</span> <span class="nf">_get_acf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">series</span><span class="p">,</span> <span class="n">max_lag</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns autocorrelation function.</span>
@@ -1187,10 +1226,13 @@
 
         <span class="k">return</span> <span class="n">null_dist</span>
 
-<div class="viewcode-block" id="CondIndTest.get_fixed_thres_significance"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_fixed_thres_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_fixed_thres_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">fixed_thres</span><span class="p">):</span>
+<div class="viewcode-block" id="CondIndTest.get_fixed_thres_significance">
+<a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_fixed_thres_significance">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_fixed_thres_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">fixed_thres</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;DEPRECATED Returns signficance for thresholding test.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;fixed_thres is replaced by alpha_or_thres in run_test.&quot;</span><span class="p">)</span></div>
+
         <span class="c1"># if np.abs(value) &lt; np.abs(fixed_thres):</span>
         <span class="c1">#     pval = 1.</span>
         <span class="c1"># else:</span>
@@ -1226,6 +1268,7 @@
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
                 <span class="n">u</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">trafo</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">u</span></div>
+
 </pre></div>
 
           </div>
@@ -1254,7 +1297,7 @@
   </ul></li>
 </ul>
 </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../../../search.html" method="get">
@@ -1262,7 +1305,7 @@
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script>
 
 
@@ -1277,11 +1320,11 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2023, Jakob Runge.
+      &#169;2023, Jakob Runge.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
     </div>
 

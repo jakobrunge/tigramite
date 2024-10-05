@@ -1,25 +1,23 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="../../../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>tigramite.independence_tests.regressionCI &#8212; Tigramite 5.2 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css" />
-    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
-    <script src="../../../_static/jquery.js"></script>
-    <script src="../../../_static/underscore.js"></script>
-    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../../../_static/doctools.js"></script>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=db26dd79" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=19da42e6" />
+    <script src="../../../_static/documentation_options.js?v=625b3a9a"></script>
+    <script src="../../../_static/doctools.js?v=aa79a7b1"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
+
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+  
 
   </head><body>
   
@@ -47,7 +45,9 @@
 <span class="kn">from</span> <span class="nn">.independence_tests_base</span> <span class="kn">import</span> <span class="n">CondIndTest</span>
 
 
-<div class="viewcode-block" id="RegressionCI"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.regressionCI.RegressionCI">[docs]</a><span class="k">class</span> <span class="nc">RegressionCI</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
+<div class="viewcode-block" id="RegressionCI">
+<a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.regressionCI.RegressionCI">[docs]</a>
+<span class="k">class</span> <span class="nc">RegressionCI</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Flexible parametric conditional independence tests for continuous, categorical, or mixed data.</span>
 
 <span class="sd">    Asymptotically equivalent to the tests for mixed data suggested in</span>
@@ -102,7 +102,9 @@
 
         <span class="n">CondIndTest</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-<div class="viewcode-block" id="RegressionCI.set_dataframe"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.regressionCI.RegressionCI.set_dataframe">[docs]</a>    <span class="k">def</span> <span class="nf">set_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">):</span>
+<div class="viewcode-block" id="RegressionCI.set_dataframe">
+<a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.regressionCI.RegressionCI.set_dataframe">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize and check the dataframe.</span>
 
 <span class="sd">        Parameters</span>
@@ -125,7 +127,10 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;data_type cannot be None for RegressionCI.&quot;</span><span class="p">)</span>
         <span class="n">dataframe</span><span class="o">.</span><span class="n">_check_mask</span><span class="p">(</span><span class="n">dataframe</span><span class="o">.</span><span class="n">data_type</span><span class="p">,</span> <span class="n">check_data_type</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="RegressionCI.get_dependence_measure"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.regressionCI.RegressionCI.get_dependence_measure">[docs]</a>    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">data_type</span><span class="p">):</span>
+
+<div class="viewcode-block" id="RegressionCI.get_dependence_measure">
+<a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.regressionCI.RegressionCI.get_dependence_measure">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">data_type</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns test statistic.</span>
 
 <span class="sd">        Parameters</span>
@@ -181,7 +186,7 @@
             <span class="n">X</span> <span class="o">=</span> <span class="n">do_componentwise_one_hot_encoding</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">var_type</span><span class="o">=</span><span class="n">var_type</span><span class="p">)</span>
             <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
             <span class="c1"># do logistic regression</span>
-            <span class="n">model</span> <span class="o">=</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="n">multi_class</span><span class="o">=</span><span class="s1">&#39;multinomial&#39;</span><span class="p">,</span> <span class="n">solver</span><span class="o">=</span><span class="s1">&#39;lbfgs&#39;</span><span class="p">)</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="n">solver</span><span class="o">=</span><span class="s1">&#39;lbfgs&#39;</span><span class="p">)</span>
             <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
             <span class="n">deviance</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">metrics</span><span class="o">.</span><span class="n">log_loss</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="c1"># dofs: +2 for intercept (+1) (not too important, cancels out later anyway)</span>
@@ -303,7 +308,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_temp_dof</span> <span class="o">=</span> <span class="n">dof</span>
         <span class="k">return</span> <span class="n">stat</span></div>
 
-<div class="viewcode-block" id="RegressionCI.get_analytic_significance"><a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.regressionCI.RegressionCI.get_analytic_significance">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">xyz</span><span class="p">):</span>
+
+<div class="viewcode-block" id="RegressionCI.get_analytic_significance">
+<a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.regressionCI.RegressionCI.get_analytic_significance">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">xyz</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the p_value of test statistic.</span>
 
 <span class="sd">        According to a chi-square distribution with &#39;dof&#39; degrees of freedom.</span>
@@ -314,7 +322,9 @@
         <span class="n">p_value</span> <span class="o">=</span> <span class="n">chi2</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_temp_dof</span><span class="p">)</span>
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_temp_dof</span>
 
-        <span class="k">return</span> <span class="n">p_value</span></div></div>
+        <span class="k">return</span> <span class="n">p_value</span></div>
+</div>
+
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
@@ -440,7 +450,7 @@
   </ul></li>
 </ul>
 </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../../../search.html" method="get">
@@ -448,7 +458,7 @@
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script>
 
 
@@ -463,11 +473,11 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2023, Jakob Runge.
+      &#169;2023, Jakob Runge.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
     </div>
 
