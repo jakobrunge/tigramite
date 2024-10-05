@@ -183,7 +183,7 @@ class ParCorrWLS(ParCorr):
         y = np.copy(arr[target_var, :])
 
         if dim_z > 0:
-            z = np.fastCopyAndTranspose(arr[2:, :])
+            z = arr[2:, :].T.copy()
             beta_hat = np.linalg.lstsq(z, y, rcond=None)[0]
             mean = np.dot(z, beta_hat)
             resid = abs(y - mean)
@@ -223,7 +223,7 @@ class ParCorrWLS(ParCorr):
         y = np.copy(arr[target_var, :])
 
         if dim_z > 0:
-            z = np.fastCopyAndTranspose(arr[2:, :])
+            z = arr[2:, :].T.copy()
             beta_hat = np.linalg.lstsq(z, y, rcond=None)[0]
             mean = np.dot(z, beta_hat)
             resid = abs(y - mean)
@@ -368,7 +368,7 @@ class ParCorrWLS(ParCorr):
         weights = np.diag(np.reciprocal(stds))
 
         if dim_z > 0:
-            z = np.fastCopyAndTranspose(array[2:, :])
+            z = array[2:, :].T.copy()
             # include weights in z and y
             zw = np.dot(weights, z)
             yw = np.dot(y, weights)

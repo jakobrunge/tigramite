@@ -299,7 +299,7 @@ class CMIknn(CondIndTest):
                       self.shuffle_neighbors, self.sig_samples))
 
             # Get nearest neighbors around each sample point in Z
-            z_array = np.fastCopyAndTranspose(array[z_indices, :])
+            z_array = array[z_indices, :].T.copy()
             tree_xyz = spatial.cKDTree(z_array)
             neighbors = tree_xyz.query(z_array,
                                        k=self.shuffle_neighbors,
@@ -419,7 +419,7 @@ class CMIknn(CondIndTest):
             dim_y = 0
 
 
-        x_array = np.fastCopyAndTranspose(array[x_indices, :])
+        x_array = array[x_indices, :].T.copy()
         tree_xyz = spatial.cKDTree(x_array)
         epsarray = tree_xyz.query(x_array, k=[knn_here+1], p=np.inf,
                                   eps=0., workers=self.workers)[0][:, 0].astype(np.float64)

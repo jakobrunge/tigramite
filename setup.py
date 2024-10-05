@@ -61,7 +61,7 @@ CMDCLASS = {"build_ext": UseNumpyHeadersBuildExt}
 # Run the setup
 setup(
     name="tigramite",
-    version="5.2.5.12",
+    version="5.2.6.1",
     packages=["tigramite", "tigramite.independence_tests", "tigramite.toymodels"],
     license="GNU General Public License v3.0",
     description="Tigramite causal inference for time series",
