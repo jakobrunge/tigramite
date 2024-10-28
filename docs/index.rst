@@ -79,6 +79,7 @@ Tigramite is a causal time series analysis python package. It allows to efficien
    tigramite.independence_tests.gsquared.Gsquared
    tigramite.independence_tests.parcorr_wls.ParCorrWLS
    tigramite.independence_tests.regressionCI.RegressionCI
+   tigramite.graphs.Graphs
    tigramite.causal_effects.CausalEffects
    tigramite.causal_mediation.CausalMediation
    tigramite.models.Models
@@ -158,6 +159,9 @@ Test statistics:
 
 :mod:`tigramite.causal_effects`: Causal Effect analysis
 ===========================================================
+
+.. autoclass:: tigramite.graphs.Graphs
+   :members:
 
 .. autoclass:: tigramite.causal_effects.CausalEffects
    :members:
