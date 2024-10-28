@@ -5,7 +5,8 @@ from __future__ import print_function
 from collections import Counter, defaultdict
 import itertools
 import numpy as np
-from nose.tools import assert_equal
+# from nose.tools import assert_equal
+from numpy.testing import assert_equal
 import pytest
 
 from tigramite.pcmci import PCMCI
