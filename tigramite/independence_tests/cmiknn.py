@@ -7,7 +7,7 @@
 from __future__ import print_function
 from scipy import special, spatial
 import numpy as np
-from .independence_tests_base import CondIndTest
+from independence_tests_base import CondIndTest
 from numba import jit
 import warnings
 
@@ -568,9 +568,10 @@ if __name__ == '__main__':
     data = np.hstack((x, y, z))
     data[:,0] = 0.5
     print (data.shape)
-    dataframe = DataFrame(data=data)
-    cmi.set_dataframe(dataframe)
-    print(cmi.run_test(X=[(0, 0)], Y=[(1, 0)], alpha_or_thres=0.5  ))
+    # dataframe = DataFrame(data=data)
+    # cmi.set_dataframe(dataframe)
+    # print(cmi.run_test(X=[(0, 0)], Y=[(1, 0)], alpha_or_thres=0.5  ))
     # print(cmi.get_model_selection_criterion(j=1, parents=[], tau_max=0))
     # print(cmi.get_model_selection_criterion(j=1, parents=[(0, 0)], tau_max=0))
     # print(cmi.get_model_selection_criterion(j=1, parents=[(0, 0), (2, 0)], tau_max=0))
+    print(cmi.get_dependence_measure_raw(x=x,y=y,z=z))
