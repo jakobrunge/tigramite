@@ -270,6 +270,10 @@ class CondIndTest():
             if len(X) > 1 or len(Y) > 1:
                 raise ValueError("X and Y for %s must be univariate." %
                                         self.measure)
+
+        if self.dataframe is None:
+            raise ValueError("Call set_dataframe first when using CI test outside causal discovery classes.")
+
         # Call the wrapped function
         array, xyz, XYZ, type_array = self.dataframe.construct_array(X=X, Y=Y, Z=Z,
                                               tau_max=tau_max,
@@ -570,6 +574,83 @@ class CondIndTest():
             return val, pval
         else:              
             return val, pval, dependent
+
+    def get_dependence_measure_raw(self, x, y, z=None, x_type=None, y_type=None, z_type=None):
+        """Return test statistic directly on input arrays x, y, z.
+
+        Calls the dependence measure function. The child classes must specify
+        a function get_dependence_measure.
+
+        Parameters
+        ----------
+        x, y, z : arrays
+            x,y,z are of the form (samples, dimension).
+
+        x_type, y_type, z_type : array-like
+            data arrays of same shape as x, y and z respectively, which describes whether variables
+            are continuous or discrete: 0s for continuous variables and
+            1s for discrete variables
+
+        Returns
+        -------
+        val : float
+            The test statistic value.
+        """
+
+        if np.ndim(x) != 2 or np.ndim(y) != 2:
+            raise ValueError("x,y must be arrays of shape (samples, dimension)"
+                             " where dimension can be 1.")
+
+        if z is not None and np.ndim(z) != 2:
+            raise ValueError("z must be array of shape (samples, dimension)"
+                             " where dimension can be 1.")
+
+        if x_type is not None or y_type is not None or z_type is not None:
+            has_data_type = True
+        else:
+            has_data_type = False
+
+        if x_type is None and has_data_type:
+            x_type = np.zeros(x.shape, dtype='int')
+
+        if y_type is None and has_data_type:
+            y_type = np.zeros(y.shape, dtype='int')
+
+        if z is None:
+            # Get the array to test on
+            array = np.vstack((x.T, y.T))
+            if has_data_type:
+                data_type = np.vstack((x_type.T, y_type.T))
+
+            # xyz is the dimension indicator
+            xyz = np.array([0 for i in range(x.shape[1])] +
+                           [1 for i in range(y.shape[1])])
+
+        else:
+            # Get the array to test on
+            array = np.vstack((x.T, y.T, z.T))
+            if z_type is None and has_data_type:
+                z_type = np.zeros(z.shape, dtype='int')
+
+            if has_data_type:
+                data_type = np.vstack((x_type.T, y_type.T, z_type.T))
+            # xyz is the dimension indicator
+            xyz = np.array([0 for i in range(x.shape[1])] +
+                           [1 for i in range(y.shape[1])] +
+                           [2 for i in range(z.shape[1])])
+        
+        # Record the dimensions
+        dim, T = array.shape
+        # Ensure it is a valid array
+        if np.isnan(array).sum() != 0:
+            raise ValueError("nans in the array!")
+        # Get the dependence measure
+        if has_data_type:
+            val = self.get_dependence_measure(array, xyz, data_type=data_type)
+        else:
+            val = self.get_dependence_measure(array, xyz)
+              
+        return val
 
     def _get_dependence_measure_recycle(self, X, Y, Z, xyz, array, data_type=None):
         """Get the dependence_measure, optionally recycling residuals
