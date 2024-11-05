@@ -7,7 +7,7 @@
 from __future__ import print_function
 from scipy import special, spatial
 import numpy as np
-from independence_tests_base import CondIndTest
+from .independence_tests_base import CondIndTest
 from numba import jit
 import warnings
 
