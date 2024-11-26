@@ -837,15 +837,45 @@ class CondIndTest():
             The test statistic value.
 
         """
-        # Make the array
-        array, xyz, (X, Y, Z), _ = self._get_array(X=X, Y=Y, Z=Z, tau_max=tau_max,
-                                            remove_constant_data=False)
-        D, T = array.shape
-        # Check it is valid
-        if np.isnan(array).sum() != 0:
+
+        if self.significance == 'fixed_thres' and alpha_or_thres is None:
+            raise ValueError("significance == 'fixed_thres' requires setting alpha_or_thres")
+
+        # Get the array to test on
+        (array, xyz, XYZ, data_type, 
+         nonzero_array, nonzero_xyz, nonzero_XYZ, nonzero_data_type) = self._get_array(
+                                            X=X, Y=Y, Z=Z, tau_max=tau_max,
+                                            remove_constant_data=True, 
+                                            verbosity=self.verbosity)
+        X, Y, Z = XYZ
+        nonzero_X, nonzero_Y, nonzero_Z = nonzero_XYZ
+
+        # Record the dimensions
+        # dim, T = array.shape
+
+        # Ensure it is a valid array
+        if np.any(np.isnan(array)):
             raise ValueError("nans in the array!")
-        # Return the dependence measure
-        return self._get_dependence_measure_recycle(X, Y, Z, xyz, array)
+
+        # If all X or all Y are zero, then return pval=1, val=0, dependent=False
+        if len(nonzero_X) == 0 or len(nonzero_Y) == 0:
+            val = 0.
+        else:
+            # Get the dependence measure, reycling residuals if need be
+            val = self._get_dependence_measure_recycle(nonzero_X, nonzero_Y, nonzero_Z, 
+                                        nonzero_xyz, nonzero_array, nonzero_data_type)
+          
+        return val
+
+        # # Make the array
+        # array, xyz, (X, Y, Z), _ = self._get_array(X=X, Y=Y, Z=Z, tau_max=tau_max,
+        #                                     remove_constant_data=False)
+        # D, T = array.shape
+        # # Check it is valid
+        # if np.isnan(array).sum() != 0:
+        #     raise ValueError("nans in the array!")
+        # # Return the dependence measure
+        # return self._get_dependence_measure_recycle(X, Y, Z, xyz, array)
 
     def get_confidence(self, X, Y, Z=None, tau_max=0,
                        data_type=None):

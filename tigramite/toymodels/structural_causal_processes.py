@@ -738,7 +738,7 @@ def structural_causal_process(links, T, noises=None,
         elif isinstance(intervention_type, str):
             intervention_type = {j:intervention_type for j in intervention}
         for j in intervention.keys():
-            if len(intervention[j]) != T:
+            if len(np.atleast_1d(intervention[j])) != T:
                 raise ValueError("intervention array for j=%s must be of length T = %d" %(j, T))
             if j not in intervention_type.keys():        
                 raise ValueError("intervention_type dictionary must contain entry for %s" %(j))
