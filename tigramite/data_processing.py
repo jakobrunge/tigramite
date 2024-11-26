@@ -1574,18 +1574,18 @@ if __name__ == '__main__':
 
     print(frame.T)
 
-    X=[(0, 0)]
-    Y=[(0, 0)]
-    Z=[(0, -3)]
-    tau_max=5
-    frame.construct_array(X, Y, Z, tau_max,
-                        extraZ=None,
-                        mask=None,
-                        mask_type=None,
-                        return_cleaned_xyz=False,
-                        do_checks=True,
-                        cut_off='2xtau_max',
-                        verbosity=4)
+    # X=[(0, 0)]
+    # Y=[(0, 0)]
+    # Z=[(0, -3)]
+    # tau_max=5
+    # frame.construct_array(X, Y, Z, tau_max,
+    #                     extraZ=None,
+    #                     mask=None,
+    #                     mask_type=None,
+    #                     return_cleaned_xyz=False,
+    #                     do_checks=True,
+    #                     cut_off='2xtau_max',
+    #                     verbosity=4)
 
-    print(ordinal_patt_array(data, array_mask=None, dim=2, step=1,
-                        weights=False, verbosity=0)[0])
+    # print(ordinal_patt_array(data, array_mask=None, dim=2, step=1,
+    #                     weights=False, verbosity=0)[0])
