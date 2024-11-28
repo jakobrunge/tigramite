@@ -12,7 +12,7 @@ from tigramite.independence_tests.parcorr_wls import ParCorrWLS
 from tigramite.independence_tests.gpdc import GPDC
 from tigramite.independence_tests.gpdc_torch import GPDCtorch
 from tigramite.independence_tests.cmiknn import CMIknn
-from tigramite.independence_tests.cmiknnmixed import CMIknnMixed
+from tigramite.independence_tests.cmiknn_mixed import CMIknnMixed
 from tigramite.independence_tests.cmisymb import CMIsymb
 from tigramite.independence_tests.gsquared import Gsquared
 from tigramite.independence_tests.regressionCI import RegressionCI
@@ -20,7 +20,10 @@ from tigramite.independence_tests.regressionCI import RegressionCI
 import tigramite.data_processing as pp
 from tigramite.toymodels import structural_causal_processes as toys
 
-from test_pcmci_calculations import a_chain, gen_data_frame
+from test_pcmci_calculations import (a_chain, mixed_confounder,
+                                     gen_data_frame, 
+                                     gen_chain_data_frame_mixed, 
+                                     gen_confounder_data_frame_mixed)
 
 # Pylint settings
 # pylint: disable=redefined-outer-name
@@ -156,6 +159,7 @@ def check_get_measure(ind_test, sample):
     val_expt = ind_test.get_dependence_measure(array, xyz)
     # Check the values are close
     np.testing.assert_allclose(np.array(val), np.array(val_expt), atol=1e-2)
+
 
 def check_get_confidence(ind_test, sample):
     """
@@ -856,6 +860,139 @@ def test_cmi_knn(cmi_knn, data_sample_c):
     np.testing.assert_allclose(np.array(_par_corr_to_cmi(corr_val)),
                                np.array(val_est),
                                atol=0.02)
+
+
+# CMIknnMixed TESTING ##############################################################
+
+# Here we only test the main functionality of CMIknnMixed, as the rest of the 
+# functions are the same as for the continuous CMIknn test
+
+@pytest.fixture()
+def cmi_knn_mixed(request):
+    return CMIknnMixed(mask_type=None,
+                       significance='shuffle_test',
+                       sig_samples=20,
+                       sig_blocklength=3,
+                       knn=0.3,
+                       verbosity=2)
+
+@pytest.fixture(params=[
+    # Generate a test data sample
+    # Parameterize the sample by setting the autocorrelation value, coefficient
+    # value, total time length, and random seed to different numbers
+    # links_coeffs,               time, seed_val
+    (mixed_confounder(0.1, 0.9), 1000, 2),
+    (mixed_confounder(0.5, 0.6), 1000, 11),
+    (mixed_confounder(0.5, 0.6), 1000, 42)])
+def data_frame_conf_mixed(request):
+    # Set the parameters
+    links_coeffs, time, seed_val = request.param
+    # Generate the dataframe
+    return gen_confounder_data_frame_mixed(links_coeffs, time, seed_val)
+
+@pytest.fixture(params=[
+    # Generate a test data sample
+    # Parameterize the sample by setting the autocorrelation value, coefficient
+    # value, total time length, and random seed to different numbers
+    # links_coeffs,               time, seed_val
+    (a_chain(0.1, 0.9), 10, 2),
+    (a_chain(0.5, 0.6), 10, 11),
+    (a_chain(0.5, 0.6, length=5), 10, 42)])
+def data_frame_chain_mixed(request):
+    # Set the parameters
+    links_coeffs, time, seed_val = request.param
+    # Generate the dataframe
+    return gen_chain_data_frame_mixed(links_coeffs, time, seed_val)
+
+def check_get_measure_mixed(ind_test, sample):
+    # Get the data sample values
+    dataframe, true_parents = sample
+    # Set the dataframe of the test object
+    ind_test.set_dataframe(dataframe)
+    # Generate some nodes
+    y_nds = [(0, 0)]
+    x_nds = true_parents[0]
+    z_nds = true_parents[1]
+    tau_max = 3
+    # Run the test
+    val = ind_test.get_measure(x_nds, y_nds, z_nds, tau_max)
+    # Get the array the test is running on
+    array, xyz, _, type_array = ind_test._get_array(x_nds, y_nds, z_nds, tau_max)
+    # Get the correct dependence measure
+    val_expt = ind_test.get_dependence_measure(array, xyz, data_type=type_array)
+    # Check the values are close
+    np.testing.assert_allclose(np.array(val), np.array(val_expt), atol=1e-2)
+
+def check_run_test_mixed(ind_test, sample):
+    # Get the data sample values
+    dataframe, true_parents = sample
+    # Set the dataframe of the test object
+    ind_test.set_dataframe(dataframe)
+    # Generate some nodes
+    y_nds = [(0, 0)]
+    x_nds = true_parents[0]
+    z_nds = true_parents[1]
+
+    tau_max = 3
+    alpha_or_thres = 0.1
+    # Run the test
+    val, pval, dependent = ind_test.run_test(X=x_nds, Y=y_nds, Z=z_nds, 
+        tau_max=tau_max, alpha_or_thres=alpha_or_thres)
+
+    # Get the array the test is running on
+    (array, xyz, _, type_array, narray, nxyz, _, ntype_array) = ind_test._get_array(x_nds, y_nds, z_nds, tau_max, remove_constant_data=True)
+    dim, T = array.shape
+
+    # Get the correct dependence measure
+    val_expt = ind_test.get_dependence_measure(array, xyz, data_type=type_array)
+    print(val, val_expt)
+    # pval_expt = ind_test.get_shuffle_significance(array, xyz, val_expt,
+                                #  data_type=type_array)
+    pval_expt = ind_test._get_p_value(val, array, xyz, T, dim, data_type=type_array)
+    # pval_expt = 0
+    print(pval, pval_expt)
+
+    if ind_test.significance == 'fixed_thres':
+        dependent = val_expt >= alpha_or_thres
+        pval_expt = 0. if dependent else 1.
+    # Check the values are close
+    print(ind_test.significance)
+    np.testing.assert_allclose(np.array(val), np.array(val_expt), atol=1e-2)
+    np.testing.assert_allclose(np.array(pval), np.array(pval_expt), atol=1e-2)
+
+# def check_get_measure_cmi_knn_mixed_confounder(ind_test, sample):
+#     # Get the data sample values
+#     dataframe, true_parents = sample
+#     # Set the dataframe of the test object
+#     ind_test.set_dataframe(dataframe)
+#     # Generate some nodes
+#     z_nds = [(2, -1)]
+#     x_nds = [(0, 0)]
+#     y_nds = [(1, 0)]
+#     tau_max = 3
+#     # Run the test
+#     val = ind_test.get_measure(x_nds, y_nds, z_nds, tau_max)
+#     # Get the array the test is running on
+#     array, xyz, _, data_type = ind_test._get_array(x_nds, y_nds, z_nds, tau_max)
+#     # Get the correct dependence measure
+#     val_expt = ind_test.get_dependence_measure(array, xyz, data_type=data_type)
+#     # Check that the values are close
+#     np.testing.assert_allclose(np.array(val), np.array(val_expt), atol=1e-2)
+#     np.testing.assert_allclose(np.array(val), np.zeros(val.shape), atol=1e-2)
+
+
+def test_get_measure_cmi_knn_mixed_chain(cmi_knn_mixed, data_frame_chain_mixed):
+    # Check the get_measure function
+    check_get_measure_mixed(cmi_knn_mixed, data_frame_chain_mixed)
+
+def test_get_measure_cmi_knn_mixed_confounder(cmi_knn_mixed, data_frame_conf_mixed):
+    # Check the get_measure function, aditionally check the type matrix 
+    check_get_measure_mixed(cmi_knn_mixed, data_frame_conf_mixed)
+
+def test_run_test_cmi_knn_mixed(cmi_knn_mixed, data_frame_chain_mixed):
+    # Check the run_test function
+    check_run_test_mixed(cmi_knn_mixed, data_frame_chain_mixed)
+
 
 # CMIsymb TESTING ##############################################################
 @pytest.fixture()

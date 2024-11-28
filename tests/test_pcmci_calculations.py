@@ -69,6 +69,40 @@ def gen_data_frame(links_coeffs, time, seed_val):
     true_parents = _get_parent_graph(links_coeffs)
     return pp.DataFrame(data), true_parents
 
+
+def gen_confounder_data_frame_mixed(links_coeffs, time, seed_val):
+    # Set the random seed
+    random_state = np.random.default_rng(seed_val)
+    data = np.zeros((time, 3))
+    data[:, 2] = random_state.binomial(n=1, p=0.5, size=time)
+    for t in range(2, time):
+        data[t, 0] = links_coeffs[0][0][1] * data[t + links_coeffs[0][0][0][1], 1] + random_state.normal(
+            0.2 + data[t + links_coeffs[0][1][0][1], 2] * links_coeffs[0][1][1], 1)
+        data[t, 1] = links_coeffs[1][0][1] * data[t + links_coeffs[1][0][0][1], 2] + random_state.normal(
+            0.2 + data[t + links_coeffs[1][1][0][1], 2] * links_coeffs[1][1][1], 1)
+
+    data_type = np.zeros(data.shape, dtype='int')
+    # X2 is continuous, encoded as 1 in data_type
+    data_type[:, 2] = 1
+
+    dataframe = pp.DataFrame(data,
+                             data_type=data_type)
+
+    true_parents = _get_parent_graph(links_coeffs)
+    return dataframe, true_parents
+
+
+def gen_chain_data_frame_mixed(links_coeffs, time, seed_val):
+    # Set the random seed
+    np.random.seed(seed_val)
+    # Generate the data
+    data, _ = toys.var_process(links_coeffs, T=time)
+    data_type = np.zeros(data.shape)
+    # Get the true parents
+    true_parents = _get_parent_graph(links_coeffs)
+    return pp.DataFrame(data, data_type=data_type), true_parents
+
+
 # TEST LINK GENERATION #########################################################
 def a_chain(auto_corr, coeff, length=3):
     """
@@ -89,6 +123,27 @@ def a_chain(auto_corr, coeff, length=3):
     return_links[0] = [((0, -1), auto_corr)]
     for lnk in range(1, length):
         return_links[lnk] = [((lnk, -1), auto_corr), ((lnk-1, -1), coeff)]
+    return return_links
+
+def mixed_confounder(auto_corr, coeff, length=3):
+    """
+    Generate a simple confounder process with the given auto-correlations and
+    parents with the given coefficient strength.
+
+    Parameters
+    ----------
+    auto_corr: float
+        Autocorrelation strength for all nodes
+    coeff : float
+        Parent strength for all relations
+    length : int
+        Length of the confounder model.
+    """
+    return_links = dict()
+    return_links[2] = []
+    for lnk in range(0, length - 1):
+        return_links[lnk] = [((lnk, -1), auto_corr), ((2, -1), coeff)]
+
     return return_links
 
 # TODO implement common_driver: return two variables commonly driven by N common
