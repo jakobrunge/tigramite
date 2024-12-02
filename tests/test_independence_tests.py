@@ -903,62 +903,6 @@ def data_frame_chain_mixed(request):
     # Generate the dataframe
     return gen_chain_data_frame_mixed(links_coeffs, time, seed_val)
 
-# def check_get_measure_mixed(ind_test, sample):
-#     # Get the data sample values
-#     dataframe, true_parents = sample
-#     # Set the dataframe of the test object
-#     ind_test.set_dataframe(dataframe)
-#     # Generate some nodes
-#     y_nds = [(0, 0)]
-#     x_nds = true_parents[0]
-#     z_nds = true_parents[1]
-#     tau_max = 3
-#     # Run the test
-#     val = ind_test.get_measure(x_nds, y_nds, z_nds, tau_max)
-#     # Get the array the test is running on
-#     array, xyz, _, type_array = ind_test._get_array(x_nds, y_nds, z_nds, tau_max)
-#     # Get the correct dependence measure
-#     val_expt = ind_test.get_dependence_measure(array, xyz, data_type=type_array)
-#     # Check the values are close
-#     np.testing.assert_allclose(np.array(val), np.array(val_expt), atol=1e-2)
-
-# def check_run_test_mixed(ind_test, sample):
-#     # Get the data sample values
-#     dataframe, true_parents = sample
-#     # Set the dataframe of the test object
-#     ind_test.set_dataframe(dataframe)
-#     # Generate some nodes
-#     y_nds = [(0, 0)]
-#     x_nds = true_parents[0]
-#     z_nds = true_parents[1]
-
-#     tau_max = 3
-#     alpha_or_thres = 0.1
-#     # Run the test
-#     val, pval, dependent = ind_test.run_test(X=x_nds, Y=y_nds, Z=z_nds, 
-#         tau_max=tau_max, alpha_or_thres=alpha_or_thres)
-
-#     # Get the array the test is running on
-#     (array, xyz, _, type_array, narray, nxyz, _, ntype_array) = ind_test._get_array(x_nds, y_nds, z_nds, tau_max, remove_constant_data=True)
-#     dim, T = array.shape
-
-#     # Get the correct dependence measure
-#     val_expt = ind_test.get_dependence_measure(array, xyz, data_type=type_array)
-#     print(val, val_expt)
-#     # pval_expt = ind_test.get_shuffle_significance(array, xyz, val_expt,
-#                                 #  data_type=type_array)
-#     pval_expt = ind_test._get_p_value(val, array, xyz, T, dim, data_type=type_array)
-#     # pval_expt = 0
-#     print(pval, pval_expt)
-
-#     if ind_test.significance == 'fixed_thres':
-#         dependent = val_expt >= alpha_or_thres
-#         pval_expt = 0. if dependent else 1.
-#     # Check the values are close
-#     print(ind_test.significance)
-#     np.testing.assert_allclose(np.array(val), np.array(val_expt), atol=1e-2)
-#     np.testing.assert_allclose(np.array(pval), np.array(pval_expt), atol=1e-2)
-
 def test_get_measure_cmi_knn_mixed_chain(cmi_knn_mixed, data_frame_chain_mixed):
     # Check the get_measure function
     check_get_measure(cmi_knn_mixed, data_frame_chain_mixed)
