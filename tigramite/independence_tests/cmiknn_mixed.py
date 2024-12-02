@@ -6,7 +6,6 @@ from sklearn.preprocessing import OneHotEncoder, MinMaxScaler
 from sklearn.utils.extmath import cartesian
 import numpy as np
 import math
-import numba
 import warnings
 
 from tigramite.independence_tests.independence_tests_base import CondIndTest

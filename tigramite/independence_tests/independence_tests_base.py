@@ -70,7 +70,7 @@ class CondIndTest():
         Level of verbosity.
     """
     @abc.abstractmethod
-    def get_dependence_measure(self, array, xyz):
+    def get_dependence_measure(self, array, xyz, data_type=None):
         """
         Abstract function that all concrete classes must instantiate.
         """
@@ -785,7 +785,8 @@ class CondIndTest():
         elif use_sig == 'shuffle_test':
             pval = self.get_shuffle_significance(array=array,
                                                  xyz=xyz,
-                                                 value=val)
+                                                 value=val,
+                                                 data_type=data_type)
         # Check if we are using the fixed_thres significance
         elif use_sig == 'fixed_thres':
             # Determined outside then

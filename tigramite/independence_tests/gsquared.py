@@ -75,7 +75,7 @@ class Gsquared(CondIndTest):
             print("n_symbs = %s" % self.n_symbs)
             print("")
 
-    def get_dependence_measure(self, array, xyz):
+    def get_dependence_measure(self, array, xyz, data_type=None):
         """Returns Gsquared/G-test test statistic.
 
         Parameters

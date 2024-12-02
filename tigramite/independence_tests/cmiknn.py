@@ -216,7 +216,7 @@ class CMIknn(CondIndTest):
 
         return k_xz, k_yz, k_z
 
-    def get_dependence_measure(self, array, xyz):
+    def get_dependence_measure(self, array, xyz, data_type=None):
         """Returns CMI estimate as described in Frenzel and Pompe PRL (2007).
 
         Parameters
@@ -253,7 +253,8 @@ class CMIknn(CondIndTest):
 
 
     def get_shuffle_significance(self, array, xyz, value,
-                                 return_null_dist=False):
+                                 return_null_dist=False, 
+                                 data_type=None):
         """Returns p-value for nearest-neighbor shuffle significance test.
 
         For non-empty Z, overwrites get_shuffle_significance from the parent
