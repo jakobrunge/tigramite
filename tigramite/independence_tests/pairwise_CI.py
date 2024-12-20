@@ -312,7 +312,7 @@ class PairwiseMultCI(CondIndTest):
         return test_stats_aggregated, p_aggregated
 
 
-    def get_dependence_measure(self, array, xyz, data_type=None, ci_test_thres = None):
+    def get_dependence_measure(self, array, xyz, data_type=None, ci_test_thres = None, data_type=None):
 
         self.dep_measure, self.signif = self.calculate_dep_measure_and_significance(array = array, xyz = xyz, data_type = data_type, ci_test_thres = ci_test_thres)
 

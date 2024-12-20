@@ -124,7 +124,7 @@ class ParCorrMult(CondIndTest):
 
         return np.fastCopyAndTranspose(resid)
 
-    def get_dependence_measure(self, array, xyz):
+    def get_dependence_measure(self, array, xyz, data_type=None):
         """Return multivariate kernel correlation coefficient.
 
         Estimated as some dependency measure on the
@@ -223,7 +223,8 @@ class ParCorrMult(CondIndTest):
         return val
 
     def get_shuffle_significance(self, array, xyz, value,
-                                 return_null_dist=False):
+                                 return_null_dist=False,
+                                 data_type=None):
         """Returns p-value for shuffle significance test.
 
         For residual-based test statistics only the residuals are shuffled.

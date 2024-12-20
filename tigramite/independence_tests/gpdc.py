@@ -520,7 +520,7 @@ class GPDC(CondIndTest):
         """
         return self.gauss_pr._get_model_selection_criterion(j, parents, tau_max)
 
-    def get_dependence_measure(self, array, xyz):
+    def get_dependence_measure(self, array, xyz, data_type=None):
         """Return GPDC measure.
 
         Estimated as the distance correlation of the residuals of a GP
@@ -573,7 +573,8 @@ class GPDC(CondIndTest):
         return val
 
     def get_shuffle_significance(self, array, xyz, value,
-                                 return_null_dist=False):
+                                 return_null_dist=False,
+                                 data_type=None):
         """Returns p-value for shuffle significance test.
 
         For residual-based test statistics only the residuals are shuffled.

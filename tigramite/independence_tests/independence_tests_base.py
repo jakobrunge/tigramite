@@ -70,7 +70,7 @@ class CondIndTest():
         Level of verbosity.
     """
     @abc.abstractmethod
-    def get_dependence_measure(self, array, xyz):
+    def get_dependence_measure(self, array, xyz, data_type=None):
         """
         Abstract function that all concrete classes must instantiate.
         """
@@ -430,7 +430,8 @@ class CondIndTest():
                                             nonzero_xyz, nonzero_array, nonzero_data_type)
                 # Get the p-value (None if significance = 'fixed_thres')
                 dim, T = nonzero_array.shape
-                pval = self._get_p_value(val=val, array=nonzero_array, xyz=nonzero_xyz, T=T, dim=dim)
+                pval = self._get_p_value(val=val, array=nonzero_array, xyz=nonzero_xyz, T=T, dim=dim,
+                                         data_type=nonzero_data_type)
             self.cached_ci_results[combined_hash] = (val, pval)
 
         # Make test decision
@@ -454,7 +455,7 @@ class CondIndTest():
         # Return the calculated value(s)
         if self.verbosity > 1:
             self._print_cond_ind_results(val=val, pval=pval, cached=cached, dependent=dependent,
-                                         conf=None)
+                                         conf=None)                             
 
         if alpha_or_thres is None:
             return val, pval
@@ -784,7 +785,8 @@ class CondIndTest():
         elif use_sig == 'shuffle_test':
             pval = self.get_shuffle_significance(array=array,
                                                  xyz=xyz,
-                                                 value=val)
+                                                 value=val,
+                                                 data_type=data_type)
         # Check if we are using the fixed_thres significance
         elif use_sig == 'fixed_thres':
             # Determined outside then
@@ -866,16 +868,6 @@ class CondIndTest():
                                         nonzero_xyz, nonzero_array, nonzero_data_type)
           
         return val
-
-        # # Make the array
-        # array, xyz, (X, Y, Z), _ = self._get_array(X=X, Y=Y, Z=Z, tau_max=tau_max,
-        #                                     remove_constant_data=False)
-        # D, T = array.shape
-        # # Check it is valid
-        # if np.isnan(array).sum() != 0:
-        #     raise ValueError("nans in the array!")
-        # # Return the dependence measure
-        # return self._get_dependence_measure_recycle(X, Y, Z, xyz, array)
 
     def get_confidence(self, X, Y, Z=None, tau_max=0,
                        data_type=None):
