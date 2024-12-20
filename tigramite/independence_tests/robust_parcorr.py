@@ -222,7 +222,8 @@ class RobustParCorr(CondIndTest):
         return val
 
     def get_shuffle_significance(self, array, xyz, value,
-                                 return_null_dist=False):
+                                 return_null_dist=False,
+                                 data_type=None):
         """Returns p-value for shuffle significance test.
 
         Firstly, each marginal is transformed to the standard normal scale.

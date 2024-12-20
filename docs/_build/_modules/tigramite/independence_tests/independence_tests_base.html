@@ -328,6 +328,10 @@
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;X and Y for </span><span class="si">%s</span><span class="s2"> must be univariate.&quot;</span> <span class="o">%</span>
                                         <span class="bp">self</span><span class="o">.</span><span class="n">measure</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Call set_dataframe first when using CI test outside causal discovery classes.&quot;</span><span class="p">)</span>
+
         <span class="c1"># Call the wrapped function</span>
         <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">XYZ</span><span class="p">,</span> <span class="n">type_array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">construct_array</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="n">Z</span><span class="p">,</span>
                                               <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
@@ -635,6 +639,86 @@
             <span class="k">return</span> <span class="n">val</span><span class="p">,</span> <span class="n">pval</span><span class="p">,</span> <span class="n">dependent</span></div>
 
 
+<div class="viewcode-block" id="CondIndTest.get_dependence_measure_raw">
+<a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_dependence_measure_raw">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_dependence_measure_raw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">y_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">z_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return test statistic directly on input arrays x, y, z.</span>
+
+<span class="sd">        Calls the dependence measure function. The child classes must specify</span>
+<span class="sd">        a function get_dependence_measure.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x, y, z : arrays</span>
+<span class="sd">            x,y,z are of the form (samples, dimension).</span>
+
+<span class="sd">        x_type, y_type, z_type : array-like</span>
+<span class="sd">            data arrays of same shape as x, y and z respectively, which describes whether variables</span>
+<span class="sd">            are continuous or discrete: 0s for continuous variables and</span>
+<span class="sd">            1s for discrete variables</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        val : float</span>
+<span class="sd">            The test statistic value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;x,y must be arrays of shape (samples, dimension)&quot;</span>
+                             <span class="s2">&quot; where dimension can be 1.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">z</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;z must be array of shape (samples, dimension)&quot;</span>
+                             <span class="s2">&quot; where dimension can be 1.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">x_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">y_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">z_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">has_data_type</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">has_data_type</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">x_type</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">has_data_type</span><span class="p">:</span>
+            <span class="n">x_type</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">y_type</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">has_data_type</span><span class="p">:</span>
+            <span class="n">y_type</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">z</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Get the array to test on</span>
+            <span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">x</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">has_data_type</span><span class="p">:</span>
+                <span class="n">data_type</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">x_type</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">y_type</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+
+            <span class="c1"># xyz is the dimension indicator</span>
+            <span class="n">xyz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span> <span class="o">+</span>
+                           <span class="p">[</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])])</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Get the array to test on</span>
+            <span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">x</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">z</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">z_type</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">has_data_type</span><span class="p">:</span>
+                <span class="n">z_type</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">has_data_type</span><span class="p">:</span>
+                <span class="n">data_type</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">x_type</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">y_type</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">z_type</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+            <span class="c1"># xyz is the dimension indicator</span>
+            <span class="n">xyz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span> <span class="o">+</span>
+                           <span class="p">[</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span> <span class="o">+</span>
+                           <span class="p">[</span><span class="mi">2</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])])</span>
+        
+        <span class="c1"># Record the dimensions</span>
+        <span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
+        <span class="c1"># Ensure it is a valid array</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;nans in the array!&quot;</span><span class="p">)</span>
+        <span class="c1"># Get the dependence measure</span>
+        <span class="k">if</span> <span class="n">has_data_type</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="n">data_type</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">)</span>
+              
+        <span class="k">return</span> <span class="n">val</span></div>
+
+
     <span class="k">def</span> <span class="nf">_get_dependence_measure_recycle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the dependence_measure, optionally recycling residuals</span>
 
@@ -822,16 +906,46 @@
 <span class="sd">            The test statistic value.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Make the array</span>
-        <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">),</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_array</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
-                                            <span class="n">remove_constant_data</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="n">D</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
-        <span class="c1"># Check it is valid</span>
-        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;nans in the array!&quot;</span><span class="p">)</span>
-        <span class="c1"># Return the dependence measure</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dependence_measure_recycle</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">array</span><span class="p">)</span></div>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">significance</span> <span class="o">==</span> <span class="s1">&#39;fixed_thres&#39;</span> <span class="ow">and</span> <span class="n">alpha_or_thres</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;significance == &#39;fixed_thres&#39; requires setting alpha_or_thres&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Get the array to test on</span>
+        <span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">XYZ</span><span class="p">,</span> <span class="n">data_type</span><span class="p">,</span> 
+         <span class="n">nonzero_array</span><span class="p">,</span> <span class="n">nonzero_xyz</span><span class="p">,</span> <span class="n">nonzero_XYZ</span><span class="p">,</span> <span class="n">nonzero_data_type</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_array</span><span class="p">(</span>
+                                            <span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
+                                            <span class="n">remove_constant_data</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+                                            <span class="n">verbosity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
+        <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span> <span class="o">=</span> <span class="n">XYZ</span>
+        <span class="n">nonzero_X</span><span class="p">,</span> <span class="n">nonzero_Y</span><span class="p">,</span> <span class="n">nonzero_Z</span> <span class="o">=</span> <span class="n">nonzero_XYZ</span>
+
+        <span class="c1"># Record the dimensions</span>
+        <span class="c1"># dim, T = array.shape</span>
+
+        <span class="c1"># Ensure it is a valid array</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">array</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;nans in the array!&quot;</span><span class="p">)</span>
+
+        <span class="c1"># If all X or all Y are zero, then return pval=1, val=0, dependent=False</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nonzero_X</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">nonzero_Y</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Get the dependence measure, reycling residuals if need be</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dependence_measure_recycle</span><span class="p">(</span><span class="n">nonzero_X</span><span class="p">,</span> <span class="n">nonzero_Y</span><span class="p">,</span> <span class="n">nonzero_Z</span><span class="p">,</span> 
+                                        <span class="n">nonzero_xyz</span><span class="p">,</span> <span class="n">nonzero_array</span><span class="p">,</span> <span class="n">nonzero_data_type</span><span class="p">)</span>
+          
+        <span class="k">return</span> <span class="n">val</span></div>
+
+
+        <span class="c1"># # Make the array</span>
+        <span class="c1"># array, xyz, (X, Y, Z), _ = self._get_array(X=X, Y=Y, Z=Z, tau_max=tau_max,</span>
+        <span class="c1">#                                     remove_constant_data=False)</span>
+        <span class="c1"># D, T = array.shape</span>
+        <span class="c1"># # Check it is valid</span>
+        <span class="c1"># if np.isnan(array).sum() != 0:</span>
+        <span class="c1">#     raise ValueError(&quot;nans in the array!&quot;)</span>
+        <span class="c1"># # Return the dependence measure</span>
+        <span class="c1"># return self._get_dependence_measure_recycle(X, Y, Z, xyz, array)</span>
 
 <div class="viewcode-block" id="CondIndTest.get_confidence">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_confidence">[docs]</a>

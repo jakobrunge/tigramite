@@ -121,7 +121,7 @@ class ParCorr(CondIndTest):
             return (resid, mean)
         return resid
 
-    def get_dependence_measure(self, array, xyz):
+    def get_dependence_measure(self, array, xyz, data_type=None):
         """Return partial correlation.
 
         Estimated as the Pearson correlation of the residuals of a linear
@@ -147,7 +147,8 @@ class ParCorr(CondIndTest):
         return val
 
     def get_shuffle_significance(self, array, xyz, value,
-                                 return_null_dist=False):
+                                 return_null_dist=False,
+                                 data_type=None):
         """Returns p-value for shuffle significance test.
 
         For residual-based test statistics only the residuals are shuffled.
