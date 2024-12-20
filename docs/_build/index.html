@@ -1850,6 +1850,38 @@ or discrete: 0s for continuous variables and 1s for discrete variables.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="tigramite.independence_tests.independence_tests_base.CondIndTest.get_dependence_measure_raw">
+<span class="sig-name descname"><span class="pre">get_dependence_measure_raw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/independence_tests_base.html#CondIndTest.get_dependence_measure_raw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.independence_tests.independence_tests_base.CondIndTest.get_dependence_measure_raw" title="Link to this definition">¶</a></dt>
+<dd><p>Return test statistic directly on input arrays x, y, z.</p>
+<p>Calls the dependence measure function. The child classes must specify
+a function get_dependence_measure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>arrays</em>) – x,y,z are of the form (samples, dimension).</p></li>
+<li><p><strong>y</strong> (<em>arrays</em>) – x,y,z are of the form (samples, dimension).</p></li>
+<li><p><strong>z</strong> (<em>arrays</em>) – x,y,z are of the form (samples, dimension).</p></li>
+<li><p><strong>x_type</strong> (<em>array-like</em>) – data arrays of same shape as x, y and z respectively, which describes whether variables
+are continuous or discrete: 0s for continuous variables and
+1s for discrete variables</p></li>
+<li><p><strong>y_type</strong> (<em>array-like</em>) – data arrays of same shape as x, y and z respectively, which describes whether variables
+are continuous or discrete: 0s for continuous variables and
+1s for discrete variables</p></li>
+<li><p><strong>z_type</strong> (<em>array-like</em>) – data arrays of same shape as x, y and z respectively, which describes whether variables
+are continuous or discrete: 0s for continuous variables and
+1s for discrete variables</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>val</strong> – The test statistic value.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="tigramite.independence_tests.independence_tests_base.CondIndTest.get_fixed_thres_significance">
 <span class="sig-name descname"><span class="pre">get_fixed_thres_significance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_thres</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tigramite/independence_tests/independence_tests_base.html#CondIndTest.get_fixed_thres_significance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tigramite.independence_tests.independence_tests_base.CondIndTest.get_fixed_thres_significance" title="Link to this definition">¶</a></dt>
 <dd><p>DEPRECATED Returns signficance for thresholding test.</p>

@@ -2931,7 +2931,6 @@
             <span class="n">val</span><span class="p">,</span> <span class="n">pval</span><span class="p">,</span> <span class="n">dependent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cond_ind_test</span><span class="o">.</span><span class="n">run_test</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="n">abstau</span><span class="p">)],</span> <span class="n">Y</span><span class="o">=</span><span class="p">[(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">)],</span>
                                                 <span class="n">Z</span><span class="o">=</span><span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span>
                                                 <span class="n">alpha_or_thres</span><span class="o">=</span><span class="n">alpha_or_thres</span><span class="p">,</span>
-                                                <span class="c1"># verbosity=self.verbosity</span>
                                                 <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">val</span><span class="p">,</span> <span class="n">pval</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">dependent</span>
@@ -4002,7 +4001,8 @@
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">tigramite.independence_tests.parcorr</span> <span class="kn">import</span> <span class="n">ParCorr</span>
-    <span class="kn">from</span> <span class="nn">tigramite.independence_tests.cmiknn</span> <span class="kn">import</span> <span class="n">CMIknn</span>
+    <span class="kn">from</span> <span class="nn">tigramite.independence_tests.regression_ci</span> <span class="kn">import</span> <span class="n">RegressionCI</span>
+    <span class="c1"># from tigramite.independence_tests.cmiknn import CMIknn</span>
 
     <span class="kn">import</span> <span class="nn">tigramite.data_processing</span> <span class="k">as</span> <span class="nn">pp</span>
     <span class="kn">from</span> <span class="nn">tigramite.toymodels</span> <span class="kn">import</span> <span class="n">structural_causal_processes</span> <span class="k">as</span> <span class="n">toys</span>
@@ -4086,42 +4086,23 @@
     <span class="c1"># data, _ = toys.structural_causal_process(links_coeffs, T=T, seed=3)</span>
     <span class="c1"># T, N = data.shape</span>
 
-    <span class="c1"># # Initialize dataframe object</span>
-    <span class="c1"># dataframe = pp.DataFrame(data)</span>
-    <span class="c1"># pcmci = PCMCI(</span>
-    <span class="c1">#     dataframe=dataframe, </span>
-    <span class="c1">#     cond_ind_test=ParCorr(),</span>
-    <span class="c1">#     verbosity=0)</span>
 
-    <span class="c1"># multidata[0][40:100, :] = 999.</span>
+    <span class="n">multidata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+    <span class="n">data_type</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;bool&#39;</span><span class="p">)</span>
+    <span class="n">data_type</span><span class="p">[:,:,:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
 
-    <span class="c1"># dataframe = pp.DataFrame(multidata, analysis_mode=&#39;multiple&#39;,</span>
-    <span class="c1">#         missing_flag = 999.,</span>
-    <span class="c1">#         time_offsets = {0:50, 1:0}</span>
-    <span class="c1">#          # reference_points=list(range(500, 1000))</span>
-    <span class="c1">#          ) </span>
+    <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">multidata</span><span class="p">,</span> 
+        <span class="n">data_type</span><span class="o">=</span><span class="n">data_type</span><span class="p">,</span>
+        <span class="n">analysis_mode</span><span class="o">=</span><span class="s1">&#39;multiple&#39;</span><span class="p">,</span>
+            <span class="n">missing_flag</span> <span class="o">=</span> <span class="mf">999.</span><span class="p">,</span>
+            <span class="n">time_offsets</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span><span class="mi">50</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">0</span><span class="p">}</span>
+             <span class="c1"># reference_points=list(range(500, 1000))</span>
+             <span class="p">)</span> 
 
-    <span class="c1"># pcmci = PCMCI(dataframe=dataframe, </span>
-    <span class="c1">#     cond_ind_test=ParCorr(verbosity=0), verbosity=0)</span>
+    <span class="n">pcmci</span> <span class="o">=</span> <span class="n">PCMCI</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span> 
+        <span class="n">cond_ind_test</span><span class="o">=</span><span class="n">RegressionCI</span><span class="p">(</span><span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-    <span class="c1"># # results = pcmci.run_pcmciplus(tau_max=1)</span>
-
-    <span class="c1"># results = pcmci.run_sliding_window_of(</span>
-    <span class="c1">#     window_step=499, window_length=500,</span>
-    <span class="c1">#     method=&#39;run_pcmciplus&#39;, method_args={&#39;tau_max&#39;:1, </span>
-    <span class="c1">#     &#39;link_assumptions&#39;:{</span>
-    <span class="c1">#     0: {(0, -1): &#39;--&gt;&#39;},</span>
-    <span class="c1">#     1: {(1, -1): &#39;--&gt;&#39;, (0, -1): &#39;-!&gt;&#39;},</span>
-    <span class="c1">#     }</span>
-    <span class="c1">#     })</span>
-
-    <span class="c1"># # tp.plot_graph(results[&#39;graph&#39;])</span>
-    <span class="c1"># print(multidata[0].shape, multidata[1].shape)</span>
-    <span class="c1"># print(results[&#39;window_results&#39;][&#39;val_matrix&#39;])</span>
-    <span class="c1"># print(results[&#39;window_results&#39;][&#39;val_matrix&#39;][0][0,1])</span>
-    <span class="c1"># print(results[&#39;window_results&#39;][&#39;val_matrix&#39;][1][0,1])</span>
-
-    <span class="c1"># plt.show()</span>
+    <span class="c1"># results = pcmci.run_pcmciplus(tau_max=1)</span>
 </pre></div>
 
           </div>
