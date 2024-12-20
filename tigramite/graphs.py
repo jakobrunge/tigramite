@@ -97,7 +97,7 @@ class Graphs():
             if graph.ndim != 2:
                 raise ValueError("graph_type in ['dag', 'admg'] assumes graph.shape=(N, N).")
 
-            allowed_edges = ["-->", "<--", "<->"] 
+            allowed_edges = ["-->", "<--", "<->", ""] 
             if np.any(np.isin(graph, allowed_edges) == False):
                 raise ValueError("Graph contains invalid graph edge. " +
                                  "For graph_type = %s only %s are allowed." %(graph_type, str(allowed_edges)))
@@ -120,7 +120,7 @@ class Graphs():
             if graph.ndim != 4:
                 raise ValueError("tsg-graph_type assumes graph.shape=(N, N, tau_max+1, tau_max+1).")
 
-            allowed_edges = ["-->", "<--", "<->"] 
+            allowed_edges = ["-->", "<--", "<->", ""] 
             if np.any(np.isin(graph, allowed_edges) == False):
                 raise ValueError("Graph contains invalid graph edge. " +
                                  "For graph_type = %s only %s are allowed." %(graph_type, str(allowed_edges)))
@@ -141,7 +141,7 @@ class Graphs():
             if graph.ndim != 3:
                 raise ValueError("stationary graph_type assumes graph.shape=(N, N, tau_max+1).")
             
-            allowed_edges = ["-->", "<--", "<->"] 
+            allowed_edges = ["-->", "<--", "<->", ""] 
             if np.any(np.isin(graph, allowed_edges) == False):
                 raise ValueError("Graph contains invalid graph edge. " +
                                  "For graph_type = %s only %s are allowed." %(graph_type, str(allowed_edges)))
