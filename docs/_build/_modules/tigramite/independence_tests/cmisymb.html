@@ -126,7 +126,7 @@
 
 <div class="viewcode-block" id="CMIsymb.get_dependence_measure">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.cmisymb.CMIsymb.get_dependence_measure">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns CMI estimate based on contingency table from scipy&#39;s crosstab</span>
 <span class="sd">        to approximate probability mass.</span>
 
@@ -186,7 +186,8 @@
 <div class="viewcode-block" id="CMIsymb.get_shuffle_significance">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.cmisymb.CMIsymb.get_shuffle_significance">[docs]</a>
     <span class="k">def</span> <span class="nf">get_shuffle_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span>
-                                 <span class="n">return_null_dist</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+                                 <span class="n">return_null_dist</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                 <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns p-value for shuffle significance test.</span>
 
 <span class="sd">        Performes a local permutation test: x_i values are only permuted with</span>

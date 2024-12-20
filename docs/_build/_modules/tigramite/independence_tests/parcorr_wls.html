@@ -424,7 +424,7 @@
 
 <div class="viewcode-block" id="ParCorrWLS.get_dependence_measure">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.parcorr_wls.ParCorrWLS.get_dependence_measure">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">robustify</span><span class="p">:</span>
             <span class="n">array</span> <span class="o">=</span> <span class="n">RobustParCorr</span><span class="o">.</span><span class="n">trafo2normal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ParCorr</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">)</span></div>
@@ -433,7 +433,8 @@
 <div class="viewcode-block" id="ParCorrWLS.get_shuffle_significance">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.parcorr_wls.ParCorrWLS.get_shuffle_significance">[docs]</a>
     <span class="k">def</span> <span class="nf">get_shuffle_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span>
-                                 <span class="n">return_null_dist</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+                                 <span class="n">return_null_dist</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                 <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">robustify</span><span class="p">:</span>
             <span class="n">array</span> <span class="o">=</span> <span class="n">RobustParCorr</span><span class="o">.</span><span class="n">trafo2normal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ParCorr</span><span class="o">.</span><span class="n">get_shuffle_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span>

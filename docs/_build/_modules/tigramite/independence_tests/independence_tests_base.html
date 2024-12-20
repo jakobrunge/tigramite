@@ -106,7 +106,7 @@
 <div class="viewcode-block" id="CondIndTest.get_dependence_measure">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_dependence_measure">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
-    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Abstract function that all concrete classes must instantiate.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -490,7 +490,8 @@
                                             <span class="n">nonzero_xyz</span><span class="p">,</span> <span class="n">nonzero_array</span><span class="p">,</span> <span class="n">nonzero_data_type</span><span class="p">)</span>
                 <span class="c1"># Get the p-value (None if significance = &#39;fixed_thres&#39;)</span>
                 <span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">nonzero_array</span><span class="o">.</span><span class="n">shape</span>
-                <span class="n">pval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_p_value</span><span class="p">(</span><span class="n">val</span><span class="o">=</span><span class="n">val</span><span class="p">,</span> <span class="n">array</span><span class="o">=</span><span class="n">nonzero_array</span><span class="p">,</span> <span class="n">xyz</span><span class="o">=</span><span class="n">nonzero_xyz</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">)</span>
+                <span class="n">pval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_p_value</span><span class="p">(</span><span class="n">val</span><span class="o">=</span><span class="n">val</span><span class="p">,</span> <span class="n">array</span><span class="o">=</span><span class="n">nonzero_array</span><span class="p">,</span> <span class="n">xyz</span><span class="o">=</span><span class="n">nonzero_xyz</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span>
+                                         <span class="n">data_type</span><span class="o">=</span><span class="n">nonzero_data_type</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">cached_ci_results</span><span class="p">[</span><span class="n">combined_hash</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">pval</span><span class="p">)</span>
 
         <span class="c1"># Make test decision</span>
@@ -514,7 +515,7 @@
         <span class="c1"># Return the calculated value(s)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_print_cond_ind_results</span><span class="p">(</span><span class="n">val</span><span class="o">=</span><span class="n">val</span><span class="p">,</span> <span class="n">pval</span><span class="o">=</span><span class="n">pval</span><span class="p">,</span> <span class="n">cached</span><span class="o">=</span><span class="n">cached</span><span class="p">,</span> <span class="n">dependent</span><span class="o">=</span><span class="n">dependent</span><span class="p">,</span>
-                                         <span class="n">conf</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+                                         <span class="n">conf</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>                             
 
         <span class="k">if</span> <span class="n">alpha_or_thres</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">val</span><span class="p">,</span> <span class="n">pval</span>
@@ -851,7 +852,8 @@
         <span class="k">elif</span> <span class="n">use_sig</span> <span class="o">==</span> <span class="s1">&#39;shuffle_test&#39;</span><span class="p">:</span>
             <span class="n">pval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_shuffle_significance</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">array</span><span class="p">,</span>
                                                  <span class="n">xyz</span><span class="o">=</span><span class="n">xyz</span><span class="p">,</span>
-                                                 <span class="n">value</span><span class="o">=</span><span class="n">val</span><span class="p">)</span>
+                                                 <span class="n">value</span><span class="o">=</span><span class="n">val</span><span class="p">,</span>
+                                                 <span class="n">data_type</span><span class="o">=</span><span class="n">data_type</span><span class="p">)</span>
         <span class="c1"># Check if we are using the fixed_thres significance</span>
         <span class="k">elif</span> <span class="n">use_sig</span> <span class="o">==</span> <span class="s1">&#39;fixed_thres&#39;</span><span class="p">:</span>
             <span class="c1"># Determined outside then</span>
@@ -907,9 +909,6 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">significance</span> <span class="o">==</span> <span class="s1">&#39;fixed_thres&#39;</span> <span class="ow">and</span> <span class="n">alpha_or_thres</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;significance == &#39;fixed_thres&#39; requires setting alpha_or_thres&quot;</span><span class="p">)</span>
-
         <span class="c1"># Get the array to test on</span>
         <span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">XYZ</span><span class="p">,</span> <span class="n">data_type</span><span class="p">,</span> 
          <span class="n">nonzero_array</span><span class="p">,</span> <span class="n">nonzero_xyz</span><span class="p">,</span> <span class="n">nonzero_XYZ</span><span class="p">,</span> <span class="n">nonzero_data_type</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_array</span><span class="p">(</span>
@@ -936,16 +935,6 @@
           
         <span class="k">return</span> <span class="n">val</span></div>
 
-
-        <span class="c1"># # Make the array</span>
-        <span class="c1"># array, xyz, (X, Y, Z), _ = self._get_array(X=X, Y=Y, Z=Z, tau_max=tau_max,</span>
-        <span class="c1">#                                     remove_constant_data=False)</span>
-        <span class="c1"># D, T = array.shape</span>
-        <span class="c1"># # Check it is valid</span>
-        <span class="c1"># if np.isnan(array).sum() != 0:</span>
-        <span class="c1">#     raise ValueError(&quot;nans in the array!&quot;)</span>
-        <span class="c1"># # Return the dependence measure</span>
-        <span class="c1"># return self._get_dependence_measure_recycle(X, Y, Z, xyz, array)</span>
 
 <div class="viewcode-block" id="CondIndTest.get_confidence">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_confidence">[docs]</a>
