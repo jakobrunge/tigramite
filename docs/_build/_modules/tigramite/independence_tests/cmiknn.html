@@ -252,7 +252,7 @@
 
 <div class="viewcode-block" id="CMIknn.get_dependence_measure">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.cmiknn.CMIknn.get_dependence_measure">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns CMI estimate as described in Frenzel and Pompe PRL (2007).</span>
 
 <span class="sd">        Parameters</span>
@@ -292,7 +292,8 @@
 <div class="viewcode-block" id="CMIknn.get_shuffle_significance">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.cmiknn.CMIknn.get_shuffle_significance">[docs]</a>
     <span class="k">def</span> <span class="nf">get_shuffle_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span>
-                                 <span class="n">return_null_dist</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+                                 <span class="n">return_null_dist</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
+                                 <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns p-value for nearest-neighbor shuffle significance test.</span>
 
 <span class="sd">        For non-empty Z, overwrites get_shuffle_significance from the parent</span>

@@ -69,7 +69,7 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">graph</span><span class="p">,</span>
                  <span class="n">graph_type</span><span class="p">,</span>
-                 <span class="n">tau_max</span><span class="p">,</span>
+                 <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                  <span class="n">hidden_variables</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         
@@ -130,6 +130,12 @@
         <span class="k">if</span> <span class="n">graph_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;dag&#39;</span><span class="p">,</span> <span class="s1">&#39;admg&#39;</span><span class="p">]:</span> 
             <span class="k">if</span> <span class="n">graph</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;graph_type in [&#39;dag&#39;, &#39;admg&#39;] assumes graph.shape=(N, N).&quot;</span><span class="p">)</span>
+
+            <span class="n">allowed_edges</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;--&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;--&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;-&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;-+&quot;</span><span class="p">,</span> <span class="s2">&quot;+-&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">]</span> 
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">allowed_edges</span><span class="p">)</span> <span class="o">==</span> <span class="kc">False</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Graph contains invalid graph edge. &quot;</span> <span class="o">+</span>
+                                 <span class="s2">&quot;For graph_type = </span><span class="si">%s</span><span class="s2"> only </span><span class="si">%s</span><span class="s2"> are allowed.&quot;</span> <span class="o">%</span><span class="p">(</span><span class="n">graph_type</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">allowed_edges</span><span class="p">)))</span>
+
             <span class="c1"># Convert to shape [N, N, 1, 1] with dummy dimension</span>
             <span class="c1"># to process as tsg_dag or tsg_admg with potential hidden variables</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
@@ -148,6 +154,11 @@
             <span class="k">if</span> <span class="n">graph</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;tsg-graph_type assumes graph.shape=(N, N, tau_max+1, tau_max+1).&quot;</span><span class="p">)</span>
 
+            <span class="n">allowed_edges</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;--&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;--&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;-&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;-+&quot;</span><span class="p">,</span> <span class="s2">&quot;+-&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">]</span> 
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">allowed_edges</span><span class="p">)</span> <span class="o">==</span> <span class="kc">False</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Graph contains invalid graph edge. &quot;</span> <span class="o">+</span>
+                                 <span class="s2">&quot;For graph_type = </span><span class="si">%s</span><span class="s2"> only </span><span class="si">%s</span><span class="s2"> are allowed.&quot;</span> <span class="o">%</span><span class="p">(</span><span class="n">graph_type</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">allowed_edges</span><span class="p">)))</span>
+
             <span class="c1"># Then tau_max is implicitely derived from</span>
             <span class="c1"># the dimensions </span>
             <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span>
@@ -164,6 +175,11 @@
             <span class="k">if</span> <span class="n">graph</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;stationary graph_type assumes graph.shape=(N, N, tau_max+1).&quot;</span><span class="p">)</span>
             
+            <span class="n">allowed_edges</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;--&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;--&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;-&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;-+&quot;</span><span class="p">,</span> <span class="s2">&quot;+-&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">]</span> 
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">allowed_edges</span><span class="p">)</span> <span class="o">==</span> <span class="kc">False</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Graph contains invalid graph edge. &quot;</span> <span class="o">+</span>
+                                 <span class="s2">&quot;For graph_type = </span><span class="si">%s</span><span class="s2"> only </span><span class="si">%s</span><span class="s2"> are allowed.&quot;</span> <span class="o">%</span><span class="p">(</span><span class="n">graph_type</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">allowed_edges</span><span class="p">)))</span>
+
             <span class="c1"># # TODO: remove if theory for stationary ADMGs is clear</span>
             <span class="c1"># if graph_type == &#39;stationary_dag&#39; and len(hidden_variables) &gt; 0:</span>
             <span class="c1">#     raise ValueError(&quot;Hidden variables currently not supported for &quot;</span>
@@ -1375,227 +1391,15 @@
     <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
     <span class="kn">import</span> <span class="nn">sys</span>
 
-    <span class="kn">import</span> <span class="nn">sklearn</span>
-    <span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LinearRegression</span><span class="p">,</span> <span class="n">LogisticRegression</span>
-    <span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">StandardScaler</span>
-    <span class="kn">from</span> <span class="nn">sklearn.neural_network</span> <span class="kn">import</span> <span class="n">MLPRegressor</span>
-
-
-    <span class="c1"># def lin_f(x): return x</span>
-    <span class="c1"># coeff = .5</span>
- 
-    <span class="c1"># links_coeffs = {0: [((0, -1), 0.5, lin_f)],</span>
-    <span class="c1">#          1: [((1, -1), 0.5, lin_f), ((0, -1), 0.5, lin_f)],</span>
-    <span class="c1">#          2: [((2, -1), 0.5, lin_f), ((1, 0), 0.5, lin_f)]</span>
-    <span class="c1">#          }</span>
-    <span class="c1"># T = 1000</span>
-    <span class="c1"># data, nonstat = toys.structural_causal_process(</span>
-    <span class="c1">#     links_coeffs, T=T, noises=None, seed=7)</span>
-    <span class="c1"># dataframe = pp.DataFrame(data)</span>
-
-    <span class="c1"># graph = CausalEffects.get_graph_from_dict(links_coeffs)</span>
-
-    <span class="c1"># original_graph = np.array([[[&#39;&#39;, &#39;&#39;],</span>
-    <span class="c1">#     [&#39;--&gt;&#39;, &#39;&#39;],</span>
-    <span class="c1">#     [&#39;--&gt;&#39;, &#39;&#39;],</span>
-    <span class="c1">#     [&#39;&#39;, &#39;&#39;]],</span>
-
-    <span class="c1">#    [[&#39;&lt;--&#39;, &#39;&#39;],</span>
-    <span class="c1">#     [&#39;&#39;, &#39;--&gt;&#39;],</span>
-    <span class="c1">#     [&#39;--&gt;&#39;, &#39;&#39;],</span>
-    <span class="c1">#     [&#39;--&gt;&#39;, &#39;&#39;]],</span>
-
-    <span class="c1">#    [[&#39;&lt;--&#39;, &#39;&#39;],</span>
-    <span class="c1">#     [&#39;&lt;--&#39;, &#39;&#39;],</span>
-    <span class="c1">#     [&#39;&#39;, &#39;--&gt;&#39;],</span>
-    <span class="c1">#     [&#39;--&gt;&#39;, &#39;&#39;]],</span>
-
-    <span class="c1">#    [[&#39;&#39;, &#39;&#39;],</span>
-    <span class="c1">#     [&#39;&lt;--&#39;, &#39;&#39;],</span>
-    <span class="c1">#     [&#39;&lt;--&#39;, &#39;&#39;],</span>
-    <span class="c1">#     [&#39;&#39;, &#39;--&gt;&#39;]]], dtype=&#39;&lt;U3&#39;)</span>
-    <span class="c1"># graph = np.copy(original_graph)</span>
-
-    <span class="c1"># # Add T &lt;-&gt; Reco and T </span>
-    <span class="c1"># graph[2,3,0] = &#39;+-&gt;&#39; ; graph[3,2,0] = &#39;&lt;-+&#39;</span>
-    <span class="c1"># graph[1,3,1] = &#39;&lt;-&gt;&#39; #; graph[2,1,0] = &#39;&lt;--&#39;</span>
-
-    <span class="c1"># added = np.zeros((4, 4, 1), dtype=&#39;&lt;U3&#39;)</span>
-    <span class="c1"># added[:] = &quot;&quot;</span>
-    <span class="c1"># graph = np.append(graph, added , axis=2)</span>
-
-
-    <span class="c1"># X = [(1, 0)]</span>
-    <span class="c1"># Y = [(3, 0)]</span>
-
-    <span class="c1"># # # Initialize class as `stationary_dag`</span>
-    <span class="c1"># causal_effects = CausalEffects(graph, graph_type=&#39;stationary_admg&#39;, </span>
-    <span class="c1">#                             X=X, Y=Y, S=None, </span>
-    <span class="c1">#                             hidden_variables=None, </span>
-    <span class="c1">#                             verbosity=0)</span>
-
-    <span class="c1"># print(causal_effects.get_optimal_set())</span>
-
-    <span class="c1"># tp.plot_time_series_graph(</span>
-    <span class="c1">#     graph = graph,</span>
-    <span class="c1">#     save_name=&#39;Example_graph_in.pdf&#39;,</span>
-    <span class="c1">#     # special_nodes=special_nodes,</span>
-    <span class="c1">#     # var_names=var_names,</span>
-    <span class="c1">#     figsize=(6, 4),</span>
-    <span class="c1">#     )</span>
-
-    <span class="c1"># tp.plot_time_series_graph(</span>
-    <span class="c1">#     graph = causal_effects.graph,</span>
-    <span class="c1">#     save_name=&#39;Example_graph_out.pdf&#39;,</span>
-    <span class="c1">#     # special_nodes=special_nodes,</span>
-    <span class="c1">#     # var_names=var_names,</span>
-    <span class="c1">#     figsize=(6, 4),</span>
-    <span class="c1">#     )</span>
-
-    <span class="c1"># causal_effects.fit_wright_effect(dataframe=dataframe, </span>
-    <span class="c1">#                         # links_coeffs = links_coeffs,</span>
-    <span class="c1">#                         # mediation = [(1, 0), (1, -1), (1, -2)]</span>
-    <span class="c1">#                         )</span>
-
-    <span class="c1"># intervention_data = 1.*np.ones((1, 1))</span>
-    <span class="c1"># y1 = causal_effects.predict_wright_effect( </span>
-    <span class="c1">#         intervention_data=intervention_data,</span>
-    <span class="c1">#         )</span>
-
-    <span class="c1"># intervention_data = 0.*np.ones((1, 1))</span>
-    <span class="c1"># y2 = causal_effects.predict_wright_effect( </span>
-    <span class="c1">#         intervention_data=intervention_data,</span>
-    <span class="c1">#         )</span>
-
-    <span class="c1"># beta = (y1 - y2)</span>
-    <span class="c1"># print(&quot;Causal effect is %.5f&quot; %(beta))</span>
-
-    <span class="c1"># tp.plot_time_series_graph(</span>
-    <span class="c1">#     graph = causal_effects.graph,</span>
-    <span class="c1">#     save_name=&#39;Example_graph.pdf&#39;,</span>
-    <span class="c1">#     # special_nodes=special_nodes,</span>
-    <span class="c1">#     var_names=var_names,</span>
-    <span class="c1">#     figsize=(8, 4),</span>
-    <span class="c1">#     )</span>
-
-    <span class="n">T</span> <span class="o">=</span> <span class="mi">10000</span>
-    <span class="k">def</span> <span class="nf">lin_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span>
-
-    <span class="n">auto_coeff</span> <span class="o">=</span> <span class="mf">0.</span>
-    <span class="n">coeff</span> <span class="o">=</span> <span class="mf">2.</span>
-
-    <span class="n">links</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="mi">0</span><span class="p">:</span> <span class="p">[((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">auto_coeff</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span> 
-            <span class="mi">1</span><span class="p">:</span> <span class="p">[((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">auto_coeff</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span> 
-            <span class="mi">2</span><span class="p">:</span> <span class="p">[((</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">auto_coeff</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">coeff</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
-            <span class="mi">3</span><span class="p">:</span> <span class="p">[((</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">auto_coeff</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span> 
-            <span class="p">}</span>
-    <span class="n">data</span><span class="p">,</span> <span class="n">nonstat</span> <span class="o">=</span> <span class="n">toys</span><span class="o">.</span><span class="n">structural_causal_process</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">,</span> 
-                                <span class="n">noises</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
-
-
-    <span class="c1"># # Create some missing values</span>
-    <span class="c1"># data[-10:,:] = 999.</span>
-    <span class="c1"># var_names = range(2)</span>
-
-    <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">,</span>
-                    <span class="n">vector_vars</span><span class="o">=</span><span class="p">{</span><span class="mi">0</span><span class="p">:[(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">)],</span> 
-                                 <span class="mi">1</span><span class="p">:[(</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">)]}</span>
-                    <span class="p">)</span>
-
-    <span class="c1"># # Construct expert knowledge graph from links here </span>
-    <span class="n">aux_links</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)],</span>
-                 <span class="mi">1</span><span class="p">:</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)],</span>
-              <span class="p">}</span>
     <span class="c1"># # Use staticmethod to get graph</span>
-    <span class="n">graph</span> <span class="o">=</span> <span class="n">CausalEffects</span><span class="o">.</span><span class="n">get_graph_from_dict</span><span class="p">(</span><span class="n">aux_links</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-    <span class="c1"># graph = np.array([[&#39;&#39;, &#39;--&gt;&#39;],</span>
-    <span class="c1">#                   [&#39;&lt;--&#39;, &#39;&#39;]], dtype=&#39;&lt;U3&#39;)</span>
+    <span class="n">graph</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;--&gt;&#39;</span><span class="p">],</span>
+                      <span class="p">[</span><span class="s1">&#39;&lt;--&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;&lt;U3&#39;</span><span class="p">)</span>
     
-    <span class="c1"># # We are interested in lagged total effect of X on Y</span>
-    <span class="n">X</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)]</span>
-    <span class="n">Y</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)]</span>
 
     <span class="c1"># # Initialize class as `stationary_dag`</span>
-    <span class="n">causal_effects</span> <span class="o">=</span> <span class="n">CausalEffects</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">graph_type</span><span class="o">=</span><span class="s1">&#39;stationary_dag&#39;</span><span class="p">,</span> 
-                                <span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="n">Y</span><span class="p">,</span> <span class="n">S</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
-                                <span class="n">hidden_variables</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="n">causal_effects</span> <span class="o">=</span> <span class="n">Graphs</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">graph_type</span><span class="o">=</span><span class="s1">&#39;dag&#39;</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                                 <span class="n">verbosity</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
-    <span class="c1"># print(data)</span>
-    <span class="c1"># # Optimal adjustment set (is used by default)</span>
-    <span class="c1"># # print(causal_effects.get_optimal_set())</span>
-
-    <span class="c1"># # # Fit causal effect model from observational data</span>
-    <span class="n">causal_effects</span><span class="o">.</span><span class="n">fit_total_effect</span><span class="p">(</span>
-        <span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span> 
-        <span class="c1"># mask_type=&#39;y&#39;,</span>
-        <span class="n">estimator</span><span class="o">=</span><span class="n">LinearRegression</span><span class="p">(),</span>
-        <span class="p">)</span>
-
-    <span class="c1"># # Fit causal effect model from observational data</span>
-    <span class="c1"># causal_effects.fit_bootstrap_of(</span>
-    <span class="c1">#     method=&#39;fit_total_effect&#39;,</span>
-    <span class="c1">#     method_args={&#39;dataframe&#39;:dataframe,  </span>
-    <span class="c1">#     # mask_type=&#39;y&#39;,</span>
-    <span class="c1">#     &#39;estimator&#39;:LinearRegression()</span>
-    <span class="c1">#     },</span>
-    <span class="c1">#     boot_samples=3,</span>
-    <span class="c1">#     boot_blocklength=1,</span>
-    <span class="c1">#     seed=5</span>
-    <span class="c1">#     )</span>
-
-
-    <span class="c1"># Predict effect of interventions do(X=0.), ..., do(X=1.) in one go</span>
-    <span class="n">lenX</span> <span class="o">=</span> <span class="mi">4</span> <span class="c1"># len(dataframe.vector_vars[X[0][0]])</span>
-    <span class="n">dox_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-    <span class="n">intervention_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">dox_vals</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dox_vals</span><span class="p">),</span> <span class="mi">1</span><span class="p">),</span> <span class="n">lenX</span><span class="p">)</span>
-
-    <span class="n">intervention_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">]])</span>
-
-    <span class="nb">print</span><span class="p">(</span><span class="n">intervention_data</span><span class="p">)</span>
-
-    <span class="n">pred_Y</span> <span class="o">=</span> <span class="n">causal_effects</span><span class="o">.</span><span class="n">predict_total_effect</span><span class="p">(</span> 
-            <span class="n">intervention_data</span><span class="o">=</span><span class="n">intervention_data</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">pred_Y</span><span class="p">,</span> <span class="n">pred_Y</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-
-
-
-
-
-    <span class="c1"># # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go</span>
-    <span class="c1"># # dox_vals = np.array([1.]) #np.linspace(0., 1., 1)</span>
-    <span class="c1"># intervention_data = np.tile(dox_vals.reshape(len(dox_vals), 1), len(X))</span>
-    <span class="c1"># conf = causal_effects.predict_bootstrap_of(</span>
-    <span class="c1">#     method=&#39;predict_total_effect&#39;,</span>
-    <span class="c1">#     method_args={&#39;intervention_data&#39;:intervention_data})</span>
-    <span class="c1"># print(conf, conf.shape)</span>
-
-
-
-    <span class="c1"># # # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go</span>
-    <span class="c1"># # dox_vals = np.array([1.]) #np.linspace(0., 1., 1)</span>
-    <span class="c1"># # intervention_data = dox_vals.reshape(len(dox_vals), len(X))</span>
-    <span class="c1"># # pred_Y = causal_effects.predict_total_effect( </span>
-    <span class="c1"># #         intervention_data=intervention_data)</span>
-    <span class="c1"># # print(pred_Y)</span>
-
-
-
-    <span class="c1"># # Fit causal effect model from observational data</span>
-    <span class="c1"># causal_effects.fit_wright_effect(</span>
-    <span class="c1">#     dataframe=dataframe, </span>
-    <span class="c1">#     # mask_type=&#39;y&#39;,</span>
-    <span class="c1">#     # estimator=LinearRegression(),</span>
-    <span class="c1">#     # data_transform=StandardScaler(),</span>
-    <span class="c1">#     )</span>
-
-    <span class="c1"># # # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go</span>
-    <span class="c1"># dox_vals = np.linspace(0., 1., 5)</span>
-    <span class="c1"># intervention_data = dox_vals.reshape(len(dox_vals), len(X))</span>
-    <span class="c1"># pred_Y = causal_effects.predict_wright_effect( </span>
-    <span class="c1">#         intervention_data=intervention_data)</span>
-    <span class="c1"># print(pred_Y)</span>
 </pre></div>
 
           </div>
