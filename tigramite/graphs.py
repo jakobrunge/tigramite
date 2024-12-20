@@ -35,7 +35,7 @@ class Graphs():
     def __init__(self,
                  graph,
                  graph_type,
-                 tau_max,
+                 tau_max=0,
                  hidden_variables=None,
                  verbosity=0):
         
@@ -96,6 +96,12 @@ class Graphs():
         if graph_type in ['dag', 'admg']: 
             if graph.ndim != 2:
                 raise ValueError("graph_type in ['dag', 'admg'] assumes graph.shape=(N, N).")
+
+            allowed_edges = ["-->", "<--", "<->"] 
+            if np.any(np.isin(graph, allowed_edges) == False):
+                raise ValueError("Graph contains invalid graph edge. " +
+                                 "For graph_type = %s only %s are allowed." %(graph_type, str(allowed_edges)))
+
             # Convert to shape [N, N, 1, 1] with dummy dimension
             # to process as tsg_dag or tsg_admg with potential hidden variables
             self.graph = np.expand_dims(graph, axis=(2, 3))
@@ -114,6 +120,11 @@ class Graphs():
             if graph.ndim != 4:
                 raise ValueError("tsg-graph_type assumes graph.shape=(N, N, tau_max+1, tau_max+1).")
 
+            allowed_edges = ["-->", "<--", "<->"] 
+            if np.any(np.isin(graph, allowed_edges) == False):
+                raise ValueError("Graph contains invalid graph edge. " +
+                                 "For graph_type = %s only %s are allowed." %(graph_type, str(allowed_edges)))
+
             # Then tau_max is implicitely derived from
             # the dimensions 
             self.graph = graph
@@ -130,6 +141,11 @@ class Graphs():
             if graph.ndim != 3:
                 raise ValueError("stationary graph_type assumes graph.shape=(N, N, tau_max+1).")
             
+            allowed_edges = ["-->", "<--", "<->"] 
+            if np.any(np.isin(graph, allowed_edges) == False):
+                raise ValueError("Graph contains invalid graph edge. " +
+                                 "For graph_type = %s only %s are allowed." %(graph_type, str(allowed_edges)))
+
             # # TODO: remove if theory for stationary ADMGs is clear
             # if graph_type == 'stationary_dag' and len(hidden_variables) > 0:
             #     raise ValueError("Hidden variables currently not supported for "
@@ -1331,224 +1347,12 @@ if __name__ == '__main__':
     from matplotlib import pyplot as plt
     import sys
 
-    import sklearn
-    from sklearn.linear_model import LinearRegression, LogisticRegression
-    from sklearn.preprocessing import StandardScaler
-    from sklearn.neural_network import MLPRegressor
-
-
-    # def lin_f(x): return x
-    # coeff = .5
- 
-    # links_coeffs = {0: [((0, -1), 0.5, lin_f)],
-    #          1: [((1, -1), 0.5, lin_f), ((0, -1), 0.5, lin_f)],
-    #          2: [((2, -1), 0.5, lin_f), ((1, 0), 0.5, lin_f)]
-    #          }
-    # T = 1000
-    # data, nonstat = toys.structural_causal_process(
-    #     links_coeffs, T=T, noises=None, seed=7)
-    # dataframe = pp.DataFrame(data)
-
-    # graph = CausalEffects.get_graph_from_dict(links_coeffs)
-
-    # original_graph = np.array([[['', ''],
-    #     ['-->', ''],
-    #     ['-->', ''],
-    #     ['', '']],
-
-    #    [['<--', ''],
-    #     ['', '-->'],
-    #     ['-->', ''],
-    #     ['-->', '']],
-
-    #    [['<--', ''],
-    #     ['<--', ''],
-    #     ['', '-->'],
-    #     ['-->', '']],
-
-    #    [['', ''],
-    #     ['<--', ''],
-    #     ['<--', ''],
-    #     ['', '-->']]], dtype='<U3')
-    # graph = np.copy(original_graph)
-
-    # # Add T <-> Reco and T 
-    # graph[2,3,0] = '+->' ; graph[3,2,0] = '<-+'
-    # graph[1,3,1] = '<->' #; graph[2,1,0] = '<--'
-
-    # added = np.zeros((4, 4, 1), dtype='<U3')
-    # added[:] = ""
-    # graph = np.append(graph, added , axis=2)
-
-
-    # X = [(1, 0)]
-    # Y = [(3, 0)]
-
-    # # # Initialize class as `stationary_dag`
-    # causal_effects = CausalEffects(graph, graph_type='stationary_admg', 
-    #                             X=X, Y=Y, S=None, 
-    #                             hidden_variables=None, 
-    #                             verbosity=0)
-
-    # print(causal_effects.get_optimal_set())
-
-    # tp.plot_time_series_graph(
-    #     graph = graph,
-    #     save_name='Example_graph_in.pdf',
-    #     # special_nodes=special_nodes,
-    #     # var_names=var_names,
-    #     figsize=(6, 4),
-    #     )
-
-    # tp.plot_time_series_graph(
-    #     graph = causal_effects.graph,
-    #     save_name='Example_graph_out.pdf',
-    #     # special_nodes=special_nodes,
-    #     # var_names=var_names,
-    #     figsize=(6, 4),
-    #     )
-
-    # causal_effects.fit_wright_effect(dataframe=dataframe, 
-    #                         # links_coeffs = links_coeffs,
-    #                         # mediation = [(1, 0), (1, -1), (1, -2)]
-    #                         )
-
-    # intervention_data = 1.*np.ones((1, 1))
-    # y1 = causal_effects.predict_wright_effect( 
-    #         intervention_data=intervention_data,
-    #         )
-
-    # intervention_data = 0.*np.ones((1, 1))
-    # y2 = causal_effects.predict_wright_effect( 
-    #         intervention_data=intervention_data,
-    #         )
-
-    # beta = (y1 - y2)
-    # print("Causal effect is %.5f" %(beta))
-
-    # tp.plot_time_series_graph(
-    #     graph = causal_effects.graph,
-    #     save_name='Example_graph.pdf',
-    #     # special_nodes=special_nodes,
-    #     var_names=var_names,
-    #     figsize=(8, 4),
-    #     )
-
-    T = 10000
-    def lin_f(x): return x
-
-    auto_coeff = 0.
-    coeff = 2.
-
-    links = {
-            0: [((0, -1), auto_coeff, lin_f)], 
-            1: [((1, -1), auto_coeff, lin_f)], 
-            2: [((2, -1), auto_coeff, lin_f), ((0, 0), coeff, lin_f)],
-            3: [((3, -1), auto_coeff, lin_f)], 
-            }
-    data, nonstat = toys.structural_causal_process(links, T=T, 
-                                noises=None, seed=7)
-
-
-    # # Create some missing values
-    # data[-10:,:] = 999.
-    # var_names = range(2)
-
-    dataframe = pp.DataFrame(data,
-                    vector_vars={0:[(0,0), (1,0)], 
-                                 1:[(2,0), (3,0)]}
-                    )
-
-    # # Construct expert knowledge graph from links here 
-    aux_links = {0: [(0, -1)],
-                 1: [(1, -1), (0, 0)],
-              }
     # # Use staticmethod to get graph
-    graph = CausalEffects.get_graph_from_dict(aux_links, tau_max=2)
-    # graph = np.array([['', '-->'],
-    #                   ['<--', '']], dtype='<U3')
+    graph = np.array([['', '-->'],
+                      ['<--', '']], dtype='<U3')
     
-    # # We are interested in lagged total effect of X on Y
-    X = [(0, 0), (0, -1)]
-    Y = [(1, 0), (1, -1)]
 
     # # Initialize class as `stationary_dag`
-    causal_effects = CausalEffects(graph, graph_type='stationary_dag', 
-                                X=X, Y=Y, S=None, 
-                                hidden_variables=None, 
+    causal_effects = Graphs(graph, graph_type='dag', tau_max=0,
                                 verbosity=1)
 
-    # print(data)
-    # # Optimal adjustment set (is used by default)
-    # # print(causal_effects.get_optimal_set())
-
-    # # # Fit causal effect model from observational data
-    causal_effects.fit_total_effect(
-        dataframe=dataframe, 
-        # mask_type='y',
-        estimator=LinearRegression(),
-        )
-
-    # # Fit causal effect model from observational data
-    # causal_effects.fit_bootstrap_of(
-    #     method='fit_total_effect',
-    #     method_args={'dataframe':dataframe,  
-    #     # mask_type='y',
-    #     'estimator':LinearRegression()
-    #     },
-    #     boot_samples=3,
-    #     boot_blocklength=1,
-    #     seed=5
-    #     )
-
-
-    # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go
-    lenX = 4 # len(dataframe.vector_vars[X[0][0]])
-    dox_vals = np.linspace(0., 1., 3)
-    intervention_data = np.tile(dox_vals.reshape(len(dox_vals), 1), lenX)
-
-    intervention_data = np.array([[1., 0., 0., 0.]])
-
-    print(intervention_data)
-
-    pred_Y = causal_effects.predict_total_effect( 
-            intervention_data=intervention_data)
-    print(pred_Y, pred_Y.shape)
-
-
-
-
-
-    # # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go
-    # # dox_vals = np.array([1.]) #np.linspace(0., 1., 1)
-    # intervention_data = np.tile(dox_vals.reshape(len(dox_vals), 1), len(X))
-    # conf = causal_effects.predict_bootstrap_of(
-    #     method='predict_total_effect',
-    #     method_args={'intervention_data':intervention_data})
-    # print(conf, conf.shape)
-
-
-
-    # # # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go
-    # # dox_vals = np.array([1.]) #np.linspace(0., 1., 1)
-    # # intervention_data = dox_vals.reshape(len(dox_vals), len(X))
-    # # pred_Y = causal_effects.predict_total_effect( 
-    # #         intervention_data=intervention_data)
-    # # print(pred_Y)
-
-
-
-    # # Fit causal effect model from observational data
-    # causal_effects.fit_wright_effect(
-    #     dataframe=dataframe, 
-    #     # mask_type='y',
-    #     # estimator=LinearRegression(),
-    #     # data_transform=StandardScaler(),
-    #     )
-
-    # # # Predict effect of interventions do(X=0.), ..., do(X=1.) in one go
-    # dox_vals = np.linspace(0., 1., 5)
-    # intervention_data = dox_vals.reshape(len(dox_vals), len(X))
-    # pred_Y = causal_effects.predict_wright_effect( 
-    #         intervention_data=intervention_data)
-    # print(pred_Y)

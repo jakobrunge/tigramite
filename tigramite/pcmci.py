@@ -2855,7 +2855,6 @@ class PCMCI(PCMCIbase):
             val, pval, dependent = self.cond_ind_test.run_test(X=[(i, -abstau)], Y=[(j, 0)],
                                                 Z=Z, tau_max=tau_max,
                                                 alpha_or_thres=alpha_or_thres,
-                                                # verbosity=self.verbosity
                                                 )
 
         return val, pval, Z, dependent
@@ -3925,7 +3924,8 @@ class PCMCI(PCMCIbase):
 
 if __name__ == '__main__':
     from tigramite.independence_tests.parcorr import ParCorr
-    from tigramite.independence_tests.cmiknn import CMIknn
+    from tigramite.independence_tests.regression_ci import RegressionCI
+    # from tigramite.independence_tests.cmiknn import CMIknn
 
     import tigramite.data_processing as pp
     from tigramite.toymodels import structural_causal_processes as toys
@@ -4009,39 +4009,20 @@ if __name__ == '__main__':
     # data, _ = toys.structural_causal_process(links_coeffs, T=T, seed=3)
     # T, N = data.shape
 
-    # # Initialize dataframe object
-    # dataframe = pp.DataFrame(data)
-    # pcmci = PCMCI(
-    #     dataframe=dataframe, 
-    #     cond_ind_test=ParCorr(),
-    #     verbosity=0)
 
-    # multidata[0][40:100, :] = 999.
+    multidata = np.random.randn(10, 100, 5)
+    data_type = np.zeros((10, 100, 5), dtype='bool')
+    data_type[:,:,:3] = True
 
-    # dataframe = pp.DataFrame(multidata, analysis_mode='multiple',
-    #         missing_flag = 999.,
-    #         time_offsets = {0:50, 1:0}
-    #          # reference_points=list(range(500, 1000))
-    #          ) 
+    dataframe = pp.DataFrame(multidata, 
+        data_type=data_type,
+        analysis_mode='multiple',
+            missing_flag = 999.,
+            time_offsets = {0:50, 1:0}
+             # reference_points=list(range(500, 1000))
+             ) 
 
-    # pcmci = PCMCI(dataframe=dataframe, 
-    #     cond_ind_test=ParCorr(verbosity=0), verbosity=0)
+    pcmci = PCMCI(dataframe=dataframe, 
+        cond_ind_test=RegressionCI(verbosity=0), verbosity=0)
 
-    # # results = pcmci.run_pcmciplus(tau_max=1)
-
-    # results = pcmci.run_sliding_window_of(
-    #     window_step=499, window_length=500,
-    #     method='run_pcmciplus', method_args={'tau_max':1, 
-    #     'link_assumptions':{
-    #     0: {(0, -1): '-->'},
-    #     1: {(1, -1): '-->', (0, -1): '-!>'},
-    #     }
-    #     })
-
-    # # tp.plot_graph(results['graph'])
-    # print(multidata[0].shape, multidata[1].shape)
-    # print(results['window_results']['val_matrix'])
-    # print(results['window_results']['val_matrix'][0][0,1])
-    # print(results['window_results']['val_matrix'][1][0,1])
-
-    # plt.show()
+    # results = pcmci.run_pcmciplus(tau_max=1)
