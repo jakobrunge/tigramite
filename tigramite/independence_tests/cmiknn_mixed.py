@@ -13,15 +13,15 @@ from tigramite.independence_tests.independence_tests_base import CondIndTest
 class CMIknnMixed(CondIndTest):
     r"""Conditional mutual information test based on nearest-neighbor estimator.
 
-    Conditional mutual information is the most general dependency measure coming
-    from an information-theoretic framework. It makes no assumptions about the
+    Conditional mutual information is a general dependency measure coming
+    from an information-theoretic framework. It makes almost no assumptions about the
     parametric form of the dependencies by directly estimating the underlying
     joint density. The tests here are based on the entropy estimation using 
     k-nearest neighbors. We implement three different approaches:
     
     (1) Mesner & Shalizi [1]
     (2) Conditional variant [2]
-    (3) Our variant 
+    (3) Our variant [3]
     
     These approaches differ in how the distance metrics are defined when searching 
     for neighbors: 
@@ -34,21 +34,20 @@ class CMIknnMixed(CondIndTest):
         points with unequal discrete values as infinite, and ignores all 
         neighbors that have infinite distances. 
 
-    Combined with a shuffle test to
-    generate the distribution under the null hypothesis of independence,
-    also described in [2].
-    The knn-estimator is suitable for heterogeneous variables
-    (mixed-type, multivariate with discrete and continuous dimensions). 
-    For mixture-type variables, use only (1) or (3). 
+    The tests can be combined with a shuffle test to generate the distribution
+    under the null hypothesis of independence, described in [4]. The
+    knn-estimator is suitable for heterogeneous variables
+    (mixed-type, multivariate with discrete and continuous dimensions). For
+    mixture-type variables, use only (1) or (3). 
     
-    For continuous variables, use the CMI class.
-    For discrete variables, use the CMIsymb class.
+    For continuous variables, use the CMI class. For discrete variables, use
+    the CMIsymb or Gsquared class.
 
     Notes
     -----
-    These estimators have as a
-    parameter the number of nearest-neighbors :math:`k` which determines the
-    size of hyper-cubes around each (high-dimensional) sample point.
+    These estimators have as a parameter the number of
+    nearest-neighbors :math:`k` which determines the size of hyper-cubes
+    around each (high-dimensional) sample point.
     
     For variants (2) and (3), k is used locally, meaning that it defines
     how many neighbors from a respective subsample should be considered.
@@ -76,7 +75,11 @@ class CMIknnMixed(CondIndTest):
            Entropy, 24.
            https://www.mdpi.com/1099-4300/24/9/1234/html
 
-    .. [3] J. Runge (2018): Conditional Independence Testing Based on a
+    .. [3] Oana-Iuliana Popescu, Andreas Gerhardus, Martin Rabel, Jakob Runge
+           (2024), submitted to CLEAR        
+           https://arxiv.org/abs/2310.11132
+
+    .. [4] J. Runge (2018): Conditional Independence Testing Based on a
            Nearest-Neighbor Estimator of Conditional Mutual Information.
            In Proceedings of the 21st International Conference on Artificial
            Intelligence and Statistics.
