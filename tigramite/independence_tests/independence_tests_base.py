@@ -840,9 +840,6 @@ class CondIndTest():
 
         """
 
-        if self.significance == 'fixed_thres' and alpha_or_thres is None:
-            raise ValueError("significance == 'fixed_thres' requires setting alpha_or_thres")
-
         # Get the array to test on
         (array, xyz, XYZ, data_type, 
          nonzero_array, nonzero_xyz, nonzero_XYZ, nonzero_data_type) = self._get_array(
