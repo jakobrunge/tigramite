@@ -576,7 +576,7 @@ class PCMCI(PCMCIbase):
                       tau_min=1,
                       tau_max=1,
                       save_iterations=False,
-                      pc_alpha=0.2,
+                      pc_alpha=None,
                       max_conds_dim=None,
                       max_combinations=1):
         """Lagged PC algorithm for estimating lagged parents of all variables.
