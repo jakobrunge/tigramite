@@ -778,8 +778,9 @@ class PCMCIbase():
 
     def run_bootstrap_of(self, method, method_args,
                         boot_samples=100,
-                        boot_blocklength=1,
-                        conf_lev=0.9, seed=None):
+                        boot_meanblocklength=1,
+                        conf_lev=0.9,
+                        seed=None):
         """Runs chosen method on bootstrap samples drawn from DataFrame.
 
         Bootstraps for tau=0 are drawn from [2xtau_max, ..., T] and all lagged
@@ -809,11 +810,11 @@ class PCMCIbase():
             Arguments passed to method.
         boot_samples : int
             Number of bootstrap samples to draw.
-        boot_blocklength : int, optional (default: 1)
-            Block length for block-bootstrap.
+        boot_meanblocklength : int or float, optional (default: 1)
+            Mean block length for stationary block-bootstrap.
         conf_lev : float, optional (default: 0.9)
             Two-sided confidence interval for summary results.
-        seed : int, optional(default = None)
+       seed : int, optional(default = None)
             Seed for RandomState (default_rng)
 
         Returns
@@ -853,12 +854,12 @@ class PCMCIbase():
             print("\n##\n## Running Bootstrap of %s " % method +
                   "\n##\n" +
                   "\nboot_samples = %s \n" % boot_samples +
-                  "\nboot_blocklength = %s \n" % boot_blocklength
+                  "\nboot_meanblocklength = %s \n" % boot_meanblocklength
                   )
 
         # Set bootstrap attribute to be passed to dataframe
         self.dataframe.bootstrap = {}
-        self.dataframe.bootstrap['boot_blocklength'] = boot_blocklength
+        self.dataframe.bootstrap['boot_meanblocklength'] = boot_meanblocklength
 
         boot_results = {}
         #for b in range(boot_samples):
@@ -869,7 +870,7 @@ class PCMCIbase():
             #self.dataframe.bootstrap['random_state'] = boot_random_state
 
         child_seeds = seed_sequence.spawn(boot_samples)
-
+        
         aggregated_results = Parallel(n_jobs=-1)(
             delayed(self.parallelized_bootstraps)(method, method_args, boot_seed=child_seeds[b]) for
             b in range(boot_samples))

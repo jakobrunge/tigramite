@@ -339,7 +339,7 @@ class CMIknn(CondIndTest):
                     self._get_shuffle_dist(array, xyz,
                                            self.get_dependence_measure,
                                            sig_samples=self.sig_samples,
-                                           sig_blocklength=self.sig_blocklength,
+                                           sig_meanblocklength=self.sig_meanblocklength,
                                            verbosity=self.verbosity)
 
         pval = (null_dist >= value).mean()
@@ -543,7 +543,7 @@ if __name__ == '__main__':
     cmi = CMIknn(mask_type=None,
                    significance='fixed_thres',
                    sig_samples=100,
-                   sig_blocklength=1,
+                   sig_meanblocklength=1,
                    transform='none',
                    knn=0.1,
                    verbosity=0)

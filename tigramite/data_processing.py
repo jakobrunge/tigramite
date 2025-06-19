@@ -151,7 +151,7 @@ class DataFrame():
         observation exists in the dataset.
     self.bootstrap : dictionary
         Whether to use bootstrap. Must be a dictionary with keys random_state,
-        boot_samples, and boot_blocklength.
+        boot_samples, boot_meanblocklength.
     """
 
     def __init__(self, data, mask=None, missing_flag=None, vector_vars=None, var_names=None,
@@ -559,6 +559,11 @@ class DataFrame():
         Data is of shape (T, N) if analysis_mode == 'single', where T is the
         time series length and N the number of variables, and of (n_ens, T, N)
         if analysis_mode == 'multiple'.
+    
+        if self.bootstrap is not None, uses the stationary bootstrap of Politis
+        and Romano (1994)
+        Politis, D. N., & Romano, J. P. (1994). The stationary bootstrap.
+        Journal of the American Statistical association
 
         Parameters
         ----------
@@ -765,8 +770,8 @@ class DataFrame():
                       'z' : 2,
                       'e' : 3}
         xyz = np.array([index_code[name]
-                        for var, name in zip([X, Y, Z, extraZ], ['x', 'y', 'z', 'e'])
-                        for _ in var])
+                    for var, name in zip([X, Y, Z, extraZ], ['x', 'y', 'z', 'e'])
+                    for _ in var])
 
         # Run through all datasets and fill a dictionary holding the
         # samples taken from the individual datasets
@@ -811,17 +816,17 @@ class DataFrame():
 
             if self.bootstrap is not None:
 
-                boot_blocklength = self.bootstrap['boot_blocklength']
+                boot_meanblocklength = self.bootstrap['boot_meanblocklength']
 
-                if boot_blocklength == 'cube_root':
-                    boot_blocklength = max(1, int(len(ref_points_here)**(1/3)))
-                # elif boot_blocklength == 'from_autocorrelation':
-                #     boot_blocklength = \
-                #         get_block_length(overlapping_residuals.T, xyz=np.zeros(N), mode='confidence')
-                elif type(boot_blocklength) is int and boot_blocklength > 0:
+                if boot_meanblocklength == 'cube_root':
+                    boot_meanblocklength = max(1, int(len(ref_points_here)**(1/3)))
+                elif boot_meanblocklength == 'from_autocorrelation':
+                    boot_meanblocklength = \
+                        get_mean_block_length(dataset_data.T,xyz,mode='confidence')
+                elif type(boot_meanblocklength) in [int,float] and boot_meanblocklength >= 1:
                     pass
                 else:
-                    raise ValueError("boot_blocklength must be integer > 0, 'cube_root', or 'from_autocorrelation'")
+                    raise ValueError("boot_meanblocklength must be integer or float >= 1, 'cube_root', or 'from_autocorrelation'")
 
                 # Chooses THE SAME random seed for every dataset, maybe that's what we want...
                 # If the reference points are all the same, this will give the same bootstrap
@@ -831,23 +836,21 @@ class DataFrame():
                 # random_state = self.bootstrap['random_state']
                 random_state = deepcopy(self.bootstrap['random_state'])
 
-                # Determine the number of blocks total, rounding up for non-integer
-                # amounts
-                n_blks = int(math.ceil(float(len(ref_points_here))/boot_blocklength))
-
-                if n_blks < 10:
-                    raise ValueError("Only %d block(s) for block-sampling,"  %n_blks +
-                                     " choose smaller boot_blocklength!")
-
-                # Get the starting indices for the blocks
-                blk_strt = random_state.choice(np.arange(len(ref_points_here) - boot_blocklength), size=n_blks, replace=True)
-                # Get the empty array of block resampled values
-                boot_draw = np.zeros(n_blks*boot_blocklength, dtype='int')
-                # Fill the array of block resamples
-                for i in range(boot_blocklength):
-                    boot_draw[i::boot_blocklength] = ref_points_here[blk_strt + i]
-                # Cut to proper length
-                ref_points_here = boot_draw[:len(ref_points_here)]
+                ### Stationary bootstrap ###
+                pnewblk = 1.0/float(boot_meanblocklength) #probability of new block
+                # Randomly sample the length of each block #
+                blkslen = random_state.geometric(pnewblk,size=len(ref_points_here)+1)
+                blkslen = blkslen[0:np.where(
+                    np.cumsum(blkslen)>len(ref_points_here))[0][0]+1] #sum of block lengths cut to proper length
+                blkslen[-1] = blkslen[-1]-(np.sum(blkslen)-len(ref_points_here)) #truncate last block to match proper length
+                #print('carr, blkslen[0:4]:',blkslen[0:4],flush=True)
+                # Get the starting indices for the blocks #
+                blk_strt = random_state.choice(np.arange(len(ref_points_here)),len(blkslen),replace=True) #block starting indices
+                # Create the random sequence of indices #
+                boot_draw = np.concatenate([np.arange(blk_strt[idx],blk_strt[idx]+blkslen[idx])
+                                            for idx in range(len(blkslen))]) #the resampled indices
+                boot_draw = boot_draw%len(ref_points_here) #wrap around (Politis and Romero, 1994 below Eq.(1))
+                ref_points_here = deepcopy(boot_draw)
 
             # Construct the data array holding the samples taken from the
             # current dataset
@@ -1043,20 +1046,26 @@ def get_acf(series, max_lag=None):
         autocorr[lag] = np.corrcoef(y1_vals, y2_vals, ddof=0)[0, 1]
     return autocorr
 
-def get_block_length(array, xyz, mode):
-    """Returns optimal block length for significance and confidence tests.
+def get_mean_block_length(array, xyz, mode):
+    """Returns optimal mean block length for significance and confidence tests.
 
-    Determine block length using approach in Mader (2013) [Eq. (6)] which
-    improves the method of Pfeifer (2005) with non-overlapping blocks In
-    case of multidimensional X, the max is used. Further details in [1]_.
-    Two modes are available. For mode='significance', only the indices
-    corresponding to X are shuffled in array. For mode='confidence' all
-    variables are jointly shuffled. If the autocorrelation curve fit fails,
-    a block length of 5% of T is used. The block length is limited to a
-    maximum of 10% of T.
-
-    Mader et al., Journal of Neuroscience Methods,
-    Volume 219, Issue 2, 15 October 2013, Pages 285-291
+    Determine mean block length for stationary bootstrap using approach in
+    Politis and White (2004) with correction from Patton et al. (2009).
+    For mode ='significance', only the indices corresponding to X are used
+    in the computation of the mean block length. For mode='confidence' all
+    variables are used.
+    The max mean block length across variables is output.
+    Adapted from code of Andrew Patton (public.econ.duke.edu/~ap172/code.html)
+    See also R documentation (public.econ.duke.edu/~ap172/R_Help.pdf)
+    
+    Politis, D. N., & White, H. (2004). Automatic Block-Length Selection for 
+    the Dependent Bootstrap. Econometric Reviews
+    (PW2004)
+    
+    Patton, A., Politis, D. N., & White, H. (2009). Correction to “Automatic
+    block-length selection for the dependent bootstrap” by D. Politis and 
+    H. White. Econometric Reviews
+    (PPW2009)
 
     Parameters
     ----------
@@ -1067,55 +1076,106 @@ def get_block_length(array, xyz, mode):
         XYZ identifier array of shape (dim,).
 
     mode : str
-        Which mode to use.
+        Which mode to use: 'significance' or 'confidence'
 
     Returns
     -------
-    block_len : int
-        Optimal block length.
+    mean_block_len : float
+        Optimal mean block length for the stationary bootstrap.
     """
-    # Inject a dependency on siganal, optimize
-    from scipy import signal, optimize
+    
+    ### Helper functions ###
+    def politis_lambda(ttt):
+        '''
+        lambda(t) equation of PW2004
+        '''
+        return(((abs(ttt)<(1/2)).astype(int)*1 + \
+        (abs(ttt)>=(1/2)).astype(int)*(2*(1-abs(ttt)))) * \
+        (abs(ttt)<=1).astype(int))
+            
+    def mlag(inmat,nlags=1,fill_val=np.nan):
+        '''
+        Generates a maxtrix of nlags for each variable of xmat
+        xmat: n_samples*n_variables matrix (can be passed as a single array)
+        nlags: number of lags to include in the output
+        fill_val: fill value for the entries prior to the lag
+        returns: xmat of dimensions n_samples*(n_variables*nlags)
+                 where each lagged variable is a column
+        Adapted from matlab code of James P. LeSage 
+        '''
+        numdims = inmat.ndim
+        if(numdims==1): #a single array was passed
+            inmat = np.reshape(inmat,(len(inmat),1))
+        n_obs,n_vars = np.shape(inmat)
+        outmat = fill_val*np.ones((n_obs,n_vars*nlags))
+        for ii in range(n_vars):
+            outmat[:,ii*nlags:(ii+1)*nlags] = np.column_stack\
+                ([np.append(lag*[np.nan],inmat[0:-1*lag,ii]) for lag in range(1,nlags+1)])
+        if(numdims==1 and nlags==1): #outmat is a single array
+            outmat = outmat.flatten()
+        return(outmat)
+    
     # Get the shape of the array
     dim, T = array.shape
     # Initiailize the indices
     indices = range(dim)
     if mode == 'significance':
         indices = np.where(xyz == 0)[0]
-
-    # Maximum lag for autocov estimation
-    max_lag = int(0.1*T)
-    # Define the function to optimize against
-    def func(x_vals, a_const, decay):
-        return a_const * decay**x_vals
-
-    # Calculate the block length
-    block_len = 1
-    for i in indices:
-        # Get decay rate of envelope of autocorrelation functions
-        # via hilbert trafo
-        autocov = get_acf(series=array[i], max_lag=max_lag)
-        autocov[0] = 1.
-        hilbert = np.abs(signal.hilbert(autocov))
-        # Try to fit the curve
-        try:
-            popt, _ = optimize.curve_fit(
-                f=func,
-                xdata=np.arange(0, max_lag+1),
-                ydata=hilbert,
-            )
-            phi = popt[1]
-            # Formula of Pfeifer (2005) assuming non-overlapping blocks
-            l_opt = (4. * T * (phi / (1. - phi) + phi**2 / (1. - phi)**2)**2
-                     / (1. + 2. * phi / (1. - phi))**2)**(1. / 3.)
-            block_len = max(block_len, int(l_opt))
-        except RuntimeError:
-            warnings.warn("Error - curve_fit failed for estimating block_shuffle length, using"
-                  " block_len = %d" % (int(.05 * T)))
-            # block_len = max(int(.05 * T), block_len)
-    # Limit block length to a maximum of 10% of T
-    block_len = min(block_len, int(0.1 * T))
-    return block_len
+    n_vars = len(indices)
+    
+    ### Fixed parameters ###
+    bigkn  = max(5,np.sqrt(np.log10(T))) #footnote c of PW2004
+    smallc = 2 #footnote c of PW2004
+    m_max  = math.ceil(np.sqrt(T)+bigkn) #Patton code and R documention
+    b_max  = math.ceil(min(3*np.sqrt(T),T/3)) #Patton code and R documention
+    ### Critical value for significance of autocorrelation ###
+    critsignif = smallc*np.sqrt(np.log10(T)/T)
+    ### Initialize array of optimal stationary bootstrap block sizes ###
+    bsbhat = np.nan*np.ones(n_vars)
+    ### Loop through variables ###
+    for idx in indices:
+        iivals       = np.copy(array[idx,:])
+        iivalslagged = mlag(iivals,nlags=m_max)
+        iivalslagged = iivalslagged[m_max:,:] #remove nan values from pre-lag entries
+        corrcfs   = np.corrcoef(iivalslagged.T)[:,0] #autocorrelation
+        is_small  = abs(corrcfs)<=critsignif #non-significant autocorrelation
+        temp      = np.sum(np.row_stack([is_small[kk:-bigkn+kk]
+                                         for kk in range(bigkn)]),axis=0)
+        if(np.any(temp==bigkn)):
+            # Find last index before autocorr drops below crit for at least Kn #
+            mhat = np.where(temp==bigkn)[0][0]-1
+            #note: use -1 to get index before drop
+            #see fig.3 of PW2004: they say that mhat should be 1 
+            #(not 2 thus we need -1)
+        else:
+            # Required drop in autocorr does not occur #
+            mhat = np.where(is_small==False)[0][-1] #last index of signif autocorr
+        bigm = 2*mhat #p59 of PW2004
+        bigm = min(bigm,m_max) #apply m_max limit
+        if(bigm==0):
+            bsbhat[idx] = 1 #single sample block size
+        else:
+            # Compute autocovariance from 0 to bigm #
+            iivalslagged  = mlag(iivals,nlags=bigm+1)
+            iivalslagged  = iivalslagged[bigm+1:,:]
+            covcfs        = np.cov(iivalslagged.T)[:,0] #autocovariance
+            # Compute Ghat of PW2004 #
+            termr      = np.append(np.flip(covcfs)[:-1],covcfs) #Rhat(k) of PW2004
+            termk      = abs(np.arange(-1*bigm,bigm+1,1)) #abs(k) of PW2004
+            termlambda = politis_lambda(np.arange(-1*bigm,bigm+1,1)/bigm) #lambda(k/M) of PW2004
+            bigghat    = np.sum(termlambda*termk*termr) #Ghat of PW2004
+            # Compute D_SBhat of PW2004 #
+            smallg0    = np.sum(termlambda*termr) #ghat(0) of PW2004
+            dsbhat     = 2*smallg0**2 #see PPW2009
+            # Compute b_opt,sbhat of PW2004 #
+            bsbhat[idx] = (((2*bigghat**2)/dsbhat)*T)**(1/3)
+    bsbhat = np.maximum(1,np.minimum(b_max,bsbhat))
+    # Return largest across-variable optimal mean block length #
+    mean_block_len = np.max(bsbhat) 
+    #print for checks (18/06/2025)
+    #if(xyz.tolist()==[0,1,2]):
+    #    print('check 20250618 bsbhat,mean_block_len:',np.round(bsbhat,2),np.round(mean_block_len,2),flush=True)
+    return(mean_block_len)
 
 
 def lowhighpass_filter(data, cutperiod, pass_periods='low'):

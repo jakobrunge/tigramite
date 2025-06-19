@@ -1117,7 +1117,7 @@ class CausalEffects(Graphs):
 
     def fit_bootstrap_of(self, method, method_args, 
                         boot_samples=100,
-                        boot_blocklength=1,
+                        boot_meanblocklength=1,
                         seed=None):
         """Runs chosen method on bootstrap samples drawn from DataFrame.
         
@@ -1137,8 +1137,8 @@ class CausalEffects(Graphs):
             Arguments passed to method.
         boot_samples : int
             Number of bootstrap samples to draw.
-        boot_blocklength : int, optional (default: 1)
-            Block length for block-bootstrap.
+        boot_meanblocklength : int, optional (default: 1)
+            Mean block length for stationary block-bootstrap.
         seed : int, optional(default = None)
             Seed for RandomState (default_rng)
         """
@@ -1164,7 +1164,7 @@ class CausalEffects(Graphs):
             print("\n##\n## Running Bootstrap of %s " % method +
                   "\n##\n" +
                   "\nboot_samples = %s \n" % boot_samples +
-                  "\nboot_blocklength = %s \n" % boot_blocklength
+                  "\nboot_meanblocklength = %s \n" % boot_meanblocklength +
                   )
 
         method_args_bootstrap = deepcopy(method_args)
@@ -1178,7 +1178,7 @@ class CausalEffects(Graphs):
             else:
                 random_state = np.random.default_rng(seed*boot_samples + b)
 
-            method_args_bootstrap['dataframe'].bootstrap = {'boot_blocklength':boot_blocklength,
+            method_args_bootstrap['dataframe'].bootstrap = {'boot_meanblocklength':boot_meanblocklength,
                                                             'random_state':random_state}
 
             # Call method and save fitted model
@@ -1437,7 +1437,7 @@ if __name__ == '__main__':
     #     'estimator':LinearRegression()
     #     },
     #     boot_samples=3,
-    #     boot_blocklength=1,
+    #     boot_meanblocklength=1,
     #     seed=5
     #     )
 
