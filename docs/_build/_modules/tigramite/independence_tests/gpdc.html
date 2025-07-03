@@ -36,14 +36,14 @@
 <span class="c1">#</span>
 <span class="c1"># License: GNU General Public License v3.0</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
-<span class="kn">import</span> <span class="nn">json</span><span class="o">,</span> <span class="nn">warnings</span><span class="o">,</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">pathlib</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">dcor</span>
-<span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">gaussian_process</span>
-<span class="kn">from</span> <span class="nn">.independence_tests_base</span> <span class="kn">import</span> <span class="n">CondIndTest</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span><span class="o">,</span><span class="w"> </span><span class="nn">warnings</span><span class="o">,</span><span class="w"> </span><span class="nn">os</span><span class="o">,</span><span class="w"> </span><span class="nn">pathlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">dcor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">gaussian_process</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.independence_tests_base</span><span class="w"> </span><span class="kn">import</span> <span class="n">CondIndTest</span>
 
-<span class="k">class</span> <span class="nc">GaussProcReg</span><span class="p">():</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">GaussProcReg</span><span class="p">():</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Gaussian processes abstract base class.</span>
 
 <span class="sd">    GP is estimated with scikit-learn and allows to flexibly specify kernels and</span>
@@ -81,7 +81,7 @@
 <span class="sd">    verbosity : int, optional (default: 0)</span>
 <span class="sd">        Level of verbosity.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">null_samples</span><span class="p">,</span>
                  <span class="n">cond_ind_test</span><span class="p">,</span>
                  <span class="n">gp_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -101,7 +101,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">null_dists</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">null_samples</span> <span class="o">=</span> \
                     <span class="bp">self</span><span class="o">.</span><span class="n">_load_nulldist</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">null_dist_filename</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_load_nulldist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_load_nulldist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Load a precomputed null distribution from a \*.npz file.  This</span>
 <span class="sd">        distribution can be calculated using generate_and_save_nulldists(...).</span>
@@ -123,7 +123,7 @@
         <span class="n">null_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">null_dist_file</span><span class="p">[</span><span class="s1">&#39;exact_dist&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">null_dists</span><span class="p">,</span> <span class="n">null_samples</span>
 
-    <span class="k">def</span> <span class="nf">_generate_nulldist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_nulldist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span>
                            <span class="n">add_to_null_dists</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generates null distribution for pairwise independence tests.</span>
 
@@ -166,7 +166,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">null_dists</span><span class="p">[</span><span class="n">df</span><span class="p">]</span> <span class="o">=</span> <span class="n">null_dist</span>
         <span class="k">return</span> <span class="n">null_dist</span>
 
-    <span class="k">def</span> <span class="nf">_generate_and_save_nulldists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample_sizes</span><span class="p">,</span> <span class="n">null_dist_filename</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_and_save_nulldists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample_sizes</span><span class="p">,</span> <span class="n">null_dist_filename</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generates and saves null distribution for pairwise independence</span>
 <span class="sd">        tests.</span>
 
@@ -196,7 +196,7 @@
                  <span class="n">exact_dist</span><span class="o">=</span><span class="n">null_dists</span><span class="p">,</span>
                  <span class="n">T</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sample_sizes</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">_get_single_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_single_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="p">,</span>
                               <span class="n">return_means</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                               <span class="n">standardize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                               <span class="n">return_likelihood</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -299,7 +299,7 @@
             <span class="k">return</span> <span class="n">resid</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">likelihood</span>
         <span class="k">return</span> <span class="n">resid</span>
 
-    <span class="k">def</span> <span class="nf">_get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns log marginal likelihood for GP regression.</span>
 
 <span class="sd">        Fits a GP model of the parents to variable j and returns the negative</span>
@@ -346,7 +346,7 @@
 
 <div class="viewcode-block" id="GPDC">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.gpdc.GPDC">[docs]</a>
-<span class="k">class</span> <span class="nc">GPDC</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">GPDC</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;GPDC conditional independence test based on Gaussian processes and distance correlation.</span>
 
 <span class="sd">    GPDC is based on a Gaussian process (GP) regression and a distance</span>
@@ -398,13 +398,13 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">measure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">measure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Concrete property to return the measure of the independence test</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_measure</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">null_dist_filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">gp_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -427,7 +427,7 @@
                     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gauss_pr</span><span class="o">.</span><span class="n">gp_params</span><span class="p">[</span><span class="n">key</span><span class="p">]))</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_load_nulldist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_load_nulldist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Load a precomputed null distribution from a \*.npz file.  This</span>
 <span class="sd">        distribution can be calculated using generate_and_save_nulldists(...).</span>
@@ -447,7 +447,7 @@
 
 <div class="viewcode-block" id="GPDC.generate_nulldist">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.gpdc.GPDC.generate_nulldist">[docs]</a>
-    <span class="k">def</span> <span class="nf">generate_nulldist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">add_to_null_dists</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_nulldist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">add_to_null_dists</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generates null distribution for pairwise independence tests.</span>
 
 <span class="sd">        Generates the null distribution for sample size df. Assumes pairwise</span>
@@ -474,7 +474,7 @@
 
 <div class="viewcode-block" id="GPDC.generate_and_save_nulldists">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.gpdc.GPDC.generate_and_save_nulldists">[docs]</a>
-    <span class="k">def</span> <span class="nf">generate_and_save_nulldists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample_sizes</span><span class="p">,</span> <span class="n">null_dist_filename</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_and_save_nulldists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample_sizes</span><span class="p">,</span> <span class="n">null_dist_filename</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generates and saves null distribution for pairwise independence</span>
 <span class="sd">        tests.</span>
 
@@ -495,7 +495,7 @@
                                                    <span class="n">null_dist_filename</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_get_single_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_single_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="p">,</span>
                               <span class="n">return_means</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                               <span class="n">standardize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                               <span class="n">return_likelihood</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -537,7 +537,7 @@
 
 <div class="viewcode-block" id="GPDC.get_model_selection_criterion">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.gpdc.GPDC.get_model_selection_criterion">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns log marginal likelihood for GP regression.</span>
 
 <span class="sd">        Fits a GP model of the parents to variable j and returns the negative</span>
@@ -565,7 +565,7 @@
 
 <div class="viewcode-block" id="GPDC.get_dependence_measure">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.gpdc.GPDC.get_dependence_measure">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return GPDC measure.</span>
 
 <span class="sd">        Estimated as the distance correlation of the residuals of a GP</span>
@@ -592,7 +592,7 @@
 
 
 
-    <span class="k">def</span> <span class="nf">_get_dcorr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_resid</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_dcorr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_resid</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Return distance correlation coefficient.</span>
 
 <span class="sd">        The variables are transformed to uniform marginals using the empirical</span>
@@ -620,7 +620,7 @@
 
 <div class="viewcode-block" id="GPDC.get_shuffle_significance">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.gpdc.GPDC.get_shuffle_significance">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_shuffle_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_shuffle_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span>
                                  <span class="n">return_null_dist</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                                  <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns p-value for shuffle significance test.</span>
@@ -664,7 +664,7 @@
 
 <div class="viewcode-block" id="GPDC.get_analytic_significance">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.gpdc.GPDC.get_analytic_significance">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">xyz</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">xyz</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns p-value for the distance correlation coefficient.</span>
 
 <span class="sd">        The null distribution for necessary degrees of freedom (df) is loaded.</span>
@@ -720,7 +720,7 @@
           
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
 <h1 class="logo"><a href="../../../index.html">Tigramite</a></h1>
 
@@ -768,7 +768,7 @@
       &#169;2023, Jakob Runge.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
     </div>

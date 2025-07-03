@@ -36,21 +36,21 @@
 <span class="c1">#</span>
 <span class="c1"># License: GNU General Public License v3.0</span>
 
-<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">sklearn</span>
-<span class="kn">from</span> <span class="nn">joblib</span> <span class="kn">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span>
-<span class="kn">from</span> <span class="nn">ortools.linear_solver</span> <span class="kn">import</span> <span class="n">pywraplp</span>
-<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sklearn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">joblib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ortools.linear_solver</span><span class="w"> </span><span class="kn">import</span> <span class="n">pywraplp</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">traceback</span>
 
-<span class="kn">from</span> <span class="nn">tigramite.independence_tests.parcorr</span> <span class="kn">import</span> <span class="n">ParCorr</span>
-<span class="kn">from</span> <span class="nn">tigramite.data_processing</span> <span class="kn">import</span> <span class="n">DataFrame</span>
-<span class="kn">from</span> <span class="nn">tigramite.models</span> <span class="kn">import</span> <span class="n">Prediction</span>
-<span class="kn">from</span> <span class="nn">tigramite.pcmci</span> <span class="kn">import</span> <span class="n">PCMCI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tigramite.independence_tests.parcorr</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParCorr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tigramite.data_processing</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataFrame</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tigramite.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Prediction</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tigramite.pcmci</span><span class="w"> </span><span class="kn">import</span> <span class="n">PCMCI</span>
 
 <div class="viewcode-block" id="RPCMCI">
 <a class="viewcode-back" href="../../index.html#tigramite.rpcmci.RPCMCI">[docs]</a>
-<span class="k">class</span> <span class="nc">RPCMCI</span><span class="p">(</span><span class="n">PCMCI</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">RPCMCI</span><span class="p">(</span><span class="n">PCMCI</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;RPCMCI class for extracting causal regimes and the associated graphs from</span>
 <span class="sd">        time series data.</span>
 
@@ -92,7 +92,7 @@
 <span class="sd">            Verbose levels -1, 0, 1, ...</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">,</span> <span class="n">cond_ind_test</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">,</span> <span class="n">cond_ind_test</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
                     <span class="n">prediction_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">=</span> <span class="n">verbosity</span>
@@ -129,7 +129,7 @@
 
 <div class="viewcode-block" id="RPCMCI.run_rpcmci">
 <a class="viewcode-back" href="../../index.html#tigramite.rpcmci.RPCMCI.run_rpcmci">[docs]</a>
-    <span class="k">def</span> <span class="nf">run_rpcmci</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_rpcmci</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                    <span class="n">num_regimes</span><span class="p">,</span>
                    <span class="n">max_transitions</span><span class="p">,</span>
                    <span class="n">switch_thres</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
@@ -195,14 +195,14 @@
 
         <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
-        <span class="k">def</span> <span class="nf">_pcmci</span><span class="p">(</span><span class="n">tau_min</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span> <span class="n">pc_alpha</span><span class="p">,</span> <span class="n">alpha_level</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_pcmci</span><span class="p">(</span><span class="n">tau_min</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span> <span class="n">pc_alpha</span><span class="p">,</span> <span class="n">alpha_level</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;Wrapper around running PCMCI.&quot;&quot;&quot;</span>
             <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_pcmci</span><span class="p">(</span><span class="n">tau_min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">,</span> <span class="n">pc_alpha</span><span class="o">=</span><span class="n">pc_alpha</span><span class="p">,</span> <span class="n">alpha_level</span><span class="o">=</span><span class="n">alpha_level</span><span class="p">)</span>
             <span class="n">graph</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;graph&#39;</span><span class="p">]</span> 
             <span class="n">pcmci_parents</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_parents_dict</span><span class="p">(</span><span class="n">graph</span><span class="o">=</span><span class="n">graph</span><span class="p">,</span> <span class="n">val_matrix</span><span class="o">=</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;val_matrix&#39;</span><span class="p">])</span>
             <span class="k">return</span> <span class="n">results</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">pcmci_parents</span>
 
-        <span class="k">def</span> <span class="nf">_optimize_gamma</span><span class="p">(</span><span class="n">resid_sq</span><span class="p">,</span> <span class="n">max_transitions</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_optimize_gamma</span><span class="p">(</span><span class="n">resid_sq</span><span class="p">,</span> <span class="n">max_transitions</span><span class="p">):</span>
 <span class="w">            </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">            Solves the following optimization problem :</span>
 
@@ -280,7 +280,7 @@
                     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The problem does not have an optimal solution. Please change hyperparameters.&quot;</span><span class="p">)</span>
                 <span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">one_annealing_step</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">one_annealing_step</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;Executes one annealing step. The random seed is self.seed + a.&quot;&quot;&quot;</span>
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
@@ -509,7 +509,7 @@
           
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
 <h1 class="logo"><a href="../../index.html">Tigramite</a></h1>
 
@@ -557,7 +557,7 @@
       &#169;2023, Jakob Runge.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
     </div>

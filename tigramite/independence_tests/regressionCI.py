@@ -89,7 +89,7 @@ class RegressionCI(CondIndTest):
         
         if dataframe.data_type is None:
             raise ValueError("data_type cannot be None for RegressionCI.")
-        dataframe._check_mask(dataframe.data_type, check_data_type=True)
+        dataframe._check_mask(dataframe.data_type)
 
     def get_dependence_measure(self, array, xyz, data_type):
         """Returns test statistic.
@@ -145,7 +145,7 @@ class RegressionCI(CondIndTest):
 
             # 1-hot-encode all categorical columns
             X = do_componentwise_one_hot_encoding(X, var_type=var_type)
-            y = np.ravel(y)
+            y = np.ravel(y).astype('int')
             # do logistic regression
             model = LogisticRegression(solver='lbfgs')
             model.fit(X, y)

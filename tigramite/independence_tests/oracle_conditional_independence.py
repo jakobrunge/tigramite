@@ -108,6 +108,8 @@ class OracleCI:
         # ToDO: maybe allow to use user-tau_max, otherwise deduced from links
         self.graph = self.get_graph_from_links(tau_max=tau_max)
 
+        self.ci_results = {}
+
     def set_dataframe(self, dataframe):
         """Dummy function."""
         pass
@@ -1100,6 +1102,9 @@ class OracleCI:
             pval = 0.
             dependent = True
 
+        # Saved here, but not currently used
+        self.ci_results[(tuple(X), tuple(Y),tuple(Z))] = (val, pval, dependent)
+        
         if verbosity > 1:
             self._print_cond_ind_results(val=val, pval=pval, cached=False,
                                          conf=None)

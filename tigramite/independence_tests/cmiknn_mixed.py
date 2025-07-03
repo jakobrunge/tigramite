@@ -28,7 +28,7 @@ class CMIknnMixed(CondIndTest):
     
     (1) The distance on the discrete dimensions for unequal values is 1, otherwise 0.
     (2) This approach splits the space into clusters for which discrete values are 
-        all equal, then computes distances between thsoe points (which now have 
+        all equal, then computes distances between those points (which now have 
         only continuous values). 
     (2) This approach uses the approach from [1], but defines the distance for
         points with unequal discrete values as infinite, and ignores all 
@@ -59,7 +59,6 @@ class CMIknnMixed(CondIndTest):
     that the estimated CMI values can be slightly negative while CMI is a non-
     negative quantity.
    
-
     This method requires the scipy package.
 
     References
@@ -76,7 +75,7 @@ class CMIknnMixed(CondIndTest):
            https://www.mdpi.com/1099-4300/24/9/1234/html
 
     .. [3] Oana-Iuliana Popescu, Andreas Gerhardus, Martin Rabel, Jakob Runge
-           (2024), submitted to CLEAR        
+           (2024), accepted at CLEAR        
            https://arxiv.org/abs/2310.11132
 
     .. [4] J. Runge (2018): Conditional Independence Testing Based on a
@@ -92,6 +91,11 @@ class CMIknnMixed(CondIndTest):
         around each (high-dimensional) sample point. If smaller than 1, this is
         computed as a fraction of T, hence knn=knn*T. For knn larger or equal to
         1, this is the absolute number.
+
+    knn_type : string, optional (default: 'global') 
+        Sets the type of heuristic for the MSinf estimator (see paper). Can
+        be 'local', 'global', or 'cluster_size'. Use 'global' for the most
+        computational efficient variant of the estimator.
         
     estimator : string, optional (default: 'MS')
         The type of estimator to be used. Three options are available:
@@ -144,12 +148,12 @@ class CMIknnMixed(CondIndTest):
         return self._measure
 
     def __init__(self,
-                 knn=0.1,
-                 knn_type='local',
+                 knn=0.2,
+                 knn_type='global',
                  estimator='MSinf',
                  shuffle_neighbors=5,
                  significance='shuffle_test',
-                 transform='standardize',
+                 transform='ranks',
                  scale_range=(0, 1),
                  max_with_0=False,
                  workers=-1,
@@ -244,7 +248,7 @@ class CMIknnMixed(CondIndTest):
         """
         return array.argsort(axis=1).argsort(axis=1).astype(np.float64)
             
-    def _transform_mixed_data(self, array, data_type=None, add_noise=False):
+    def _transform_mixed_data(self, array, data_type=None, add_noise=True):
         """Applies data transformations to the continuous dimensions of the given data.
 
         Parameters
@@ -271,7 +275,7 @@ class CMIknnMixed(CondIndTest):
 
         if add_noise:
             # Add noise to destroy ties
-            array[continuous_idxs, :] += (1E-6 * array[continuous_idxs, :].std(axis=1).reshape(cont_dim, 1)
+            array[continuous_idxs, :] += (1E-16 * array[continuous_idxs, :].std(axis=1).reshape(cont_dim, 1)
                   * self.random_state.random((array[continuous_idxs, :].shape[0], array[continuous_idxs, :].shape[1])))
         if self.transform == 'standardize':
             array[continuous_idxs, :] = self._standardize_array(array[continuous_idxs, :], cont_dim)
@@ -484,8 +488,8 @@ class CMIknnMixed(CondIndTest):
         # Fit trees
         tree_xyz = spatial.cKDTree(narray)
         neighbors = tree_xyz.query(narray, k=knn+1, p=np.inf,
+                                   workers=self.workers,
                                    distance_upper_bound=9999999)
-        
         n, k = neighbors[0].shape
         
         epsarray = np.zeros(n)
@@ -502,23 +506,24 @@ class CMIknnMixed(CondIndTest):
             else:
                 epsarray[i] = neighbors[0][i, knn]
         
-        neighbors_radius_xyz = tree_xyz.query_ball_point(narray, epsarray, p=np.inf)
+        neighbors_radius_xyz = tree_xyz.query_ball_point(narray, epsarray, p=np.inf, workers=self.workers,)
 
         k_tilde = [len(neighbors_radius_xyz[i]) - 1 if len(neighbors_radius_xyz[i]) > 1 else len(neighbors_radius_xyz[i]) for i in range(len(neighbors_radius_xyz))]
-            
-        # compute entropies
+        # k_tilde = [len(neighbors_radius_xyz[i]) for i in range(len(neighbors_radius_xyz))]
+
+        # compute nearest neighbors in subspaces
         xz = narray[:, xz_indices]
         tree_xz = spatial.cKDTree(xz)
-        k_xz = tree_xz.query_ball_point(xz, r=epsarray, p=np.inf, return_length=True)
+        k_xz = tree_xz.query_ball_point(xz, r=epsarray, p=np.inf, workers=self.workers, return_length=True)
         
         yz = narray[:, yz_indices]
         tree_yz = spatial.cKDTree(yz)
-        k_yz = tree_yz.query_ball_point(yz, r=epsarray, p=np.inf, return_length=True)
+        k_yz = tree_yz.query_ball_point(yz, r=epsarray, p=np.inf, workers=self.workers, return_length=True)
             
         if len(z_indices) > 0:
             z = narray[:, z_indices]
             tree_z = spatial.cKDTree(z)
-            k_z = tree_z.query_ball_point(z, r=epsarray, p=np.inf, return_length=True)
+            k_z = tree_z.query_ball_point(z, r=epsarray, p=np.inf, workers=self.workers, return_length=True)
         else:
             # Number of neighbors is T when z is empty.
             k_z = np.full(T, T, dtype='float')
@@ -568,7 +573,13 @@ class CMIknnMixed(CondIndTest):
                 min_nc = self.get_smallest_cluster_size(array.T, data_type.T)
                 knn = max(1, int(self.knn*min_nc))
         else:
-            raise ValueError("MSinf needs knn value as percentage (value < 1), not number of neighbors!")
+            if self.knn_type == 'global':
+                knn = max(1, int(self.knn))
+                self.perc = self.knn
+            elif self.knn_type == 'cluster_size':
+                knn = max(1, int(self.knn))
+            else:
+                raise ValueError("MSinf with knn_type == 'local' needs knn value as percentage (value < 1), not number of neighbors!")
         
         knn_tilde, k_xz, k_yz, k_z = self._get_nearest_neighbors_zeroinf_onehot(array=array,
                                                                                  xyz=xyz,
@@ -1144,13 +1155,13 @@ class CMIknnMixed(CondIndTest):
     def compute_perm_null_dist(self, array, xyz,
                                data_type=None):
          # max_neighbors = max(1, int(max_neighbor_ratio*T))
-        
+        array = self._transform_mixed_data(array.T, data_type.T).T
+
         # compute valid neighbors
         narray, nxyz, ndata_type, discrete_idx_list = self._transform_to_one_hot_mixed(array, 
                                                                                        xyz, 
                                                                                        data_type,
                                                                                        zero_inf=True)
-        
         x_indices = np.where(nxyz == 0)[0]
         z_indices = np.where(nxyz == 2)[0]
 
@@ -1160,6 +1171,7 @@ class CMIknnMixed(CondIndTest):
                   self.shuffle_neighbors, self.sig_samples))
         # Get nearest neighbors around each sample point in Z
         z_array = np.array(narray[:, z_indices])
+        
         tree_xyz = spatial.cKDTree(z_array)
         neighbors = tree_xyz.query(z_array,
                                    k=self.shuffle_neighbors + 1,
@@ -1235,7 +1247,6 @@ class CMIknnMixed(CondIndTest):
         z_indices = np.where(xyz == 2)[0]
 
         if len(z_indices) > 0 and self.shuffle_neighbors < T:
-            
             null_dist = self.compute_perm_null_dist(array, xyz, data_type)
         else:
             null_dist = \
@@ -1357,3 +1368,30 @@ class CMIknnMixed(CondIndTest):
                                                             data_type=data_type_shuffled)
 
         return null_dist
+
+
+if __name__ == '__main__':
+    
+    import tigramite
+    from tigramite.data_processing import DataFrame
+    import tigramite.data_processing as pp
+    import numpy as np
+
+    from tigramite.independence_tests.cmiknn import CMIknn
+
+    random_state = np.random.default_rng(seed=None)
+    cmi = CMIknnMixed(seed=None)
+
+    T = 500
+    dimz = 1
+
+    # Continuous data
+    z = random_state.standard_normal((T, dimz))
+    x = random_state.standard_normal(T).reshape(T, 1)
+    y = (5.*z[:,0] + 0.*x[:,0] + random_state.standard_normal(T)).reshape(T, 1)
+
+    print(cmi.get_dependence_measure_raw(x=x,y=y,z=z, 
+        x_type=np.zeros(x.shape), y_type=np.zeros(y.shape), z_type=np.zeros(z.shape) ))
+
+    print(cmi.run_test_raw(x=x,y=y,z=z, 
+        x_type=np.zeros(x.shape), y_type=np.zeros(y.shape), z_type=np.zeros(z.shape) ))

@@ -326,7 +326,7 @@ class DataFrame():
             
         self.data_type = None
         if data_type is not None:
-            self.data_type = self._check_mask(mask = data_type, check_data_type=True)
+            self.data_type = self._check_mask(mask = data_type)
 
         # Check and prepare the time offsets
         self._check_and_set_time_offsets(time_offsets)
@@ -362,11 +362,12 @@ class DataFrame():
         self.bootstrap = None
 
 
-    def _check_mask(self, mask, check_data_type=False):
-        """Checks that the mask is:
-            * The same shape as the data
-            * Is an numpy ndarray (or subtype)
-            * Does not contain any NaN entries
+    def _check_mask(self, mask):
+        """Checks that the mask and data_type arrays:
+            * have same shape as the data
+            * are an numpy ndarray (or subtype)
+            * do not contain any NaN entries
+            * contain only 0 and 1
 
         """
         # Check that there is a mask if required
@@ -384,20 +385,20 @@ class DataFrame():
                         _use_mask_dict = {i: _use_mask[i, :, :] for i in range(self.M)}
                     else:
                         raise ValueError("Shape mismatch: {} datasets "\
-                            " in 'data' but {} in 'mask', must be "\
+                            " in data but {} in (type) mask, must be "\
                             "identical.".format(self.M, _use_mask.shape[0]))
 
                 else:
-                    raise TypeError("'data' given as 3d np.ndarray. "\
-                        "'mask' is np.ndarray of shape {}, must be of "\
+                    raise TypeError("data given as 3d np.ndarray. "\
+                        "(type) mask is np.ndarray of shape {}, must be of "\
                         "shape (M, T, N).".format(_use_mask.shape))
 
             elif isinstance(_use_mask, dict):
                 if len(_use_mask) == self.M:
                     for dataset_key in self.values.keys():
                         if _use_mask.get(dataset_key) is None:
-                            raise ValueError("'data' has key {} (type {}) "\
-                                "but 'mask' does not, keys must be "\
+                            raise ValueError("data has key {} (type {}) "\
+                                "but (type) mask does not, keys must be "\
                                 "identical.".format(dataset_key,
                                     type(dataset_key)))
 
@@ -405,10 +406,10 @@ class DataFrame():
 
                 else:
                     raise ValueError("Shape mismatch: {} datasets "\
-                        "in 'data' but {} in 'mask', must be "\
+                        "in data but {} in (type) mask, must be "\
                         "identical.".format(self.M, len(_use_mask)))
             else:
-                raise TypeError("'mask' is of type "\
+                raise TypeError("(type) mask is of type "\
                     "{}, must be dict or array.".format(type(_use_mask)))
 
             # Check for consistency with shape of 'self.values' and for NaNs
@@ -416,20 +417,20 @@ class DataFrame():
                 _use_mask_dict_data = _use_mask_dict[dataset_key] 
                 if _use_mask_dict_data.shape == dataset_data.shape:
                     if np.sum(np.isnan(_use_mask_dict_data)) != 0:
-                        raise ValueError("NaNs in the data mask")
-                    if check_data_type:
-                        if not set(np.unique(_use_mask_dict_data)).issubset(set([0, 1])):
-                            raise ValueError("Type mask contains other values than 0 and 1")
+                        raise ValueError("NaNs in the (type) data mask")
+                    # if check_data_type:
+                    if not set(np.unique(_use_mask_dict_data)).issubset(set([0, 1])):
+                        raise ValueError("(Type) mask contains other values than 0 and 1")
                 else:
                     if self.analysis_mode == 'single':
-                        raise ValueError("Shape mismatch: 'data' is of shape "\
-                            "{}, 'mask' is of shape {}. Must be "\
+                        raise ValueError("Shape mismatch: data is of shape "\
+                            "{}, (type) mask is of shape {}. Must be "\
                             "identical.".format(dataset_data.shape,
                                 _use_mask_dict_data.shape))
                     elif self.analysis_mode == 'multiple':
                         raise ValueError("Shape mismatch: dataset {} "\
-                            "is of shape {} in 'data' and of shape {} in "\
-                            "'mask'. Must be identical.".format(dataset_key,
+                            "is of shape {} in data and of shape {} in "\
+                            "(type) mask. Must be identical.".format(dataset_key,
                                 dataset_data.shape,
                                 _use_mask_dict_data.shape))
 
@@ -899,8 +900,10 @@ class DataFrame():
                         slice_select = np.prod(mask_dataset[xyz == cde, :] == False, axis=0)
                         use_indices_dataset *= slice_select
 
-            # Accordingly update the data array
+            # Accordingly update the data array and data type array
             samples_datasets[dataset_key] = samples_datasets[dataset_key][:, use_indices_dataset == 1]
+            if _data_type is not None:
+                data_types[dataset_key] = data_types[dataset_key][:, use_indices_dataset == 1]
 
         ## end for dataset_key, dataset_data in self.values.items()
 

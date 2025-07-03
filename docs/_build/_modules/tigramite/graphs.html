@@ -36,17 +36,17 @@
 <span class="c1">#</span>
 <span class="c1"># License: GNU General Public License v3.0</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">math</span>
-<span class="kn">import</span> <span class="nn">itertools</span>
-<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
-<span class="kn">from</span> <span class="nn">tigramite.models</span> <span class="kn">import</span> <span class="n">Models</span>
-<span class="kn">import</span> <span class="nn">struct</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">itertools</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tigramite.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Models</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">struct</span>
 
 <div class="viewcode-block" id="Graphs">
 <a class="viewcode-back" href="../../index.html#tigramite.graphs.Graphs">[docs]</a>
-<span class="k">class</span> <span class="nc">Graphs</span><span class="p">():</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Graphs</span><span class="p">():</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Graph class.</span>
 
 <span class="sd">    Methods for dealing with causal graphs. Various graph types are </span>
@@ -59,6 +59,8 @@
 <span class="sd">        Different graph types are supported, see tutorial.</span>
 <span class="sd">    graph_type : str</span>
 <span class="sd">        Type of graph.</span>
+<span class="sd">    tau_max : int, optional (default: 0)</span>
+<span class="sd">        Maximum time lag of graph.</span>
 <span class="sd">    hidden_variables : list of tuples</span>
 <span class="sd">        Hidden variables in format [(i, -tau), ...]. The internal graph is </span>
 <span class="sd">        constructed by a latent projection.</span>
@@ -66,7 +68,7 @@
 <span class="sd">        Level of verbosity.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">graph</span><span class="p">,</span>
                  <span class="n">graph_type</span><span class="p">,</span>
                  <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
@@ -120,7 +122,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_graph</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
 
 
-    <span class="k">def</span> <span class="nf">_construct_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">graph_type</span><span class="p">,</span> <span class="n">hidden_variables</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_construct_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">graph_type</span><span class="p">,</span> <span class="n">hidden_variables</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Construct internal graph object based on input graph and hidden variables.</span>
 
 <span class="sd">           Uses the latent projection operation.</span>
@@ -288,7 +290,7 @@
         <span class="c1">#     self.graph_type = &quot;tsg_admg&quot;</span>
         <span class="c1"># else:</span>
 
-    <span class="k">def</span> <span class="nf">_check_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks that graph contains no invalid entries/structure.</span>
 
 <span class="sd">        Assumes graph.shape = (N, N, tau_max+1, tau_max+1)</span>
@@ -339,7 +341,7 @@
         <span class="c1"># if MAG: check for almost cycles</span>
         <span class="c1"># if PAG???</span>
 
-    <span class="k">def</span> <span class="nf">_check_cyclic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_dict</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_cyclic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_dict</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return True if the graph_dict has a cycle.</span>
 
 <span class="sd">        graph_dict must be represented as a dictionary mapping vertices to</span>
@@ -354,7 +356,7 @@
         <span class="n">path</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="n">visited</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 
-        <span class="k">def</span> <span class="nf">visit</span><span class="p">(</span><span class="n">vertex</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">visit</span><span class="p">(</span><span class="n">vertex</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">vertex</span> <span class="ow">in</span> <span class="n">visited</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">False</span>
             <span class="n">visited</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">vertex</span><span class="p">)</span>
@@ -369,7 +371,7 @@
 
 <div class="viewcode-block" id="Graphs.get_mediators">
 <a class="viewcode-back" href="../../index.html#tigramite.graphs.Graphs.get_mediators">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_mediators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_mediators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns mediator variables on proper causal paths.</span>
 
 <span class="sd">        Parameters</span>
@@ -414,7 +416,7 @@
         <span class="k">return</span> <span class="n">mediators</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_get_mediators_stationary_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">max_lag</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_mediators_stationary_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">max_lag</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns mediator variables on proper causal paths</span>
 <span class="sd">           from X to Y in a stationary graph.&quot;&quot;&quot;</span>
 
@@ -447,7 +449,7 @@
 
         <span class="k">return</span> <span class="n">mediators</span>
 
-    <span class="k">def</span> <span class="nf">_reverse_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_reverse_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Reverse a given link, taking care to replace &gt; with &lt; and vice versa.&quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">link</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
@@ -465,7 +467,7 @@
 
         <span class="k">return</span> <span class="n">left_mark</span> <span class="o">+</span> <span class="n">link</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">right_mark</span>
 
-    <span class="k">def</span> <span class="nf">_match_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pattern</span><span class="p">,</span> <span class="n">link</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_match_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pattern</span><span class="p">,</span> <span class="n">link</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Matches pattern including wildcards with link.</span>
 <span class="sd">           </span>
 <span class="sd">           In an ADMG we have edge types [&quot;--&gt;&quot;, &quot;&lt;--&quot;, &quot;&lt;-&gt;&quot;, &quot;+-&gt;&quot;, &quot;&lt;-+&quot;].</span>
@@ -490,7 +492,7 @@
                        
             <span class="k">return</span> <span class="kc">True</span>
 
-    <span class="k">def</span> <span class="nf">_find_adj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">patterns</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_link</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_find_adj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">patterns</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_link</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Find adjacencies of node that match given patterns.&quot;&quot;&quot;</span>
         
         <span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span>
@@ -545,7 +547,7 @@
         <span class="n">adj</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">adj</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">adj</span>
 
-    <span class="k">def</span> <span class="nf">_is_match</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodei</span><span class="p">,</span> <span class="n">nodej</span><span class="p">,</span> <span class="n">pattern_ij</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_is_match</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodei</span><span class="p">,</span> <span class="n">nodej</span><span class="p">,</span> <span class="n">pattern_ij</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Check whether the link between X and Y agrees with pattern.&quot;&quot;&quot;</span>
 
         <span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span>
@@ -558,7 +560,7 @@
         <span class="k">return</span> <span class="p">((</span><span class="n">tauij</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_match_link</span><span class="p">(</span><span class="n">pattern_ij</span><span class="p">,</span> <span class="n">graph</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">tauij</span><span class="p">]))</span> <span class="ow">or</span>
                <span class="p">(</span><span class="n">tauij</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_match_link</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_reverse_link</span><span class="p">(</span><span class="n">pattern_ij</span><span class="p">),</span> <span class="n">graph</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">tauij</span><span class="p">)])))</span>
 
-    <span class="k">def</span> <span class="nf">_get_children</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">varlag</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_children</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">varlag</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns set of children (varlag --&gt; ...) for (lagged) varlag.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">possible</span><span class="p">:</span>
             <span class="n">patterns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;-*&gt;&#39;</span><span class="p">,</span> <span class="s1">&#39;o*o&#39;</span><span class="p">,</span> <span class="s1">&#39;o*&gt;&#39;</span><span class="p">]</span>
@@ -566,7 +568,7 @@
             <span class="n">patterns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;-*&gt;&#39;</span><span class="p">,</span> <span class="s1">&#39;+*&gt;&#39;</span><span class="p">]</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_adj</span><span class="p">(</span><span class="n">node</span><span class="o">=</span><span class="n">varlag</span><span class="p">,</span> <span class="n">patterns</span><span class="o">=</span><span class="n">patterns</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_get_parents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">varlag</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_parents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">varlag</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns set of parents (varlag &lt;-- ...) for (lagged) varlag.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">possible</span><span class="p">:</span>
             <span class="n">patterns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;&lt;*-&#39;</span><span class="p">,</span> <span class="s1">&#39;o*o&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;*o&#39;</span><span class="p">]</span>
@@ -574,15 +576,15 @@
             <span class="n">patterns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;&lt;*-&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;*+&#39;</span><span class="p">]</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_adj</span><span class="p">(</span><span class="n">node</span><span class="o">=</span><span class="n">varlag</span><span class="p">,</span> <span class="n">patterns</span><span class="o">=</span><span class="n">patterns</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_get_spouses</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">varlag</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_spouses</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">varlag</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns set of spouses (varlag &lt;-&gt; ...)  for (lagged) varlag.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_adj</span><span class="p">(</span><span class="n">node</span><span class="o">=</span><span class="n">varlag</span><span class="p">,</span> <span class="n">patterns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;&lt;*&gt;&#39;</span><span class="p">,</span> <span class="s1">&#39;+*&gt;&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;*+&#39;</span><span class="p">])</span>
 
-    <span class="k">def</span> <span class="nf">_get_neighbors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">varlag</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_neighbors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">varlag</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns set of neighbors (varlag --- ...) for (lagged) varlag.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_adj</span><span class="p">(</span><span class="n">node</span><span class="o">=</span><span class="n">varlag</span><span class="p">,</span> <span class="n">patterns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;-*-&#39;</span><span class="p">])</span>
 
-    <span class="k">def</span> <span class="nf">_get_ancestors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_ancestors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get ancestors of nodes in W up to time tau_max.</span>
 <span class="sd">        </span>
 <span class="sd">        Includes the nodes themselves.</span>
@@ -607,7 +609,7 @@
 
         <span class="k">return</span> <span class="n">ancestors</span>
 
-    <span class="k">def</span> <span class="nf">_get_all_parents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_all_parents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get parents of nodes in W up to time tau_max.</span>
 <span class="sd">        </span>
 <span class="sd">        Includes the nodes themselves.</span>
@@ -624,7 +626,7 @@
 
         <span class="k">return</span> <span class="n">parents</span>
 
-    <span class="k">def</span> <span class="nf">_get_all_spouses</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_all_spouses</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get spouses of nodes in W up to time tau_max.</span>
 <span class="sd">        </span>
 <span class="sd">        Includes the nodes themselves.</span>
@@ -641,7 +643,7 @@
 
         <span class="k">return</span> <span class="n">spouses</span>
 
-    <span class="k">def</span> <span class="nf">_get_descendants_stationary_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">max_lag</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_descendants_stationary_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">max_lag</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get descendants of nodes in W up to time t in stationary graph.</span>
 <span class="sd">        </span>
 <span class="sd">        Includes the nodes themselves.</span>
@@ -668,7 +670,7 @@
 
         <span class="k">return</span> <span class="n">descendants</span>
 
-    <span class="k">def</span> <span class="nf">_get_descendants</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_descendants</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get descendants of nodes in W up to time t.</span>
 <span class="sd">        </span>
 <span class="sd">        Includes the nodes themselves.</span>
@@ -693,7 +695,7 @@
 
         <span class="k">return</span> <span class="n">descendants</span>
 
-    <span class="k">def</span> <span class="nf">_get_collider_path_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">descendants</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_collider_path_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">descendants</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get non-descendant collider path nodes and their parents of nodes in W up to time t.</span>
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -729,7 +731,7 @@
 
         <span class="k">return</span> <span class="n">collider_path_nodes</span>
 
-    <span class="k">def</span> <span class="nf">_get_adjacents_stationary_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">patterns</span><span class="p">,</span> 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_adjacents_stationary_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">patterns</span><span class="p">,</span> 
         <span class="n">max_lag</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Find adjacencies of node matching patterns in a stationary graph.&quot;&quot;&quot;</span>
         
@@ -763,7 +765,7 @@
         <span class="n">adj</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">adj</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">adj</span>
 
-    <span class="k">def</span> <span class="nf">_get_canonical_dag_from_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_canonical_dag_from_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Constructs canonical DAG as links_coeffs dictionary from graph.</span>
 
 <span class="sd">        For every &lt;-&gt; link further latent variables are added.</span>
@@ -818,14 +820,14 @@
         <span class="k">return</span> <span class="n">links</span>
 
 
-    <span class="k">def</span> <span class="nf">_get_maximum_possible_lag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">XYZ</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_maximum_possible_lag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">XYZ</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Construct maximum relevant time lag for d-separation in stationary graph.</span>
 
 <span class="sd">        TO BE REVISED!</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">def</span> <span class="nf">_repeating</span><span class="p">(</span><span class="n">link</span><span class="p">,</span> <span class="n">seen_path</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_repeating</span><span class="p">(</span><span class="n">link</span><span class="p">,</span> <span class="n">seen_path</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;Returns True if a link or its time-shifted version is already</span>
 <span class="sd">            included in seen_links.&quot;&quot;&quot;</span>
             <span class="n">i</span><span class="p">,</span> <span class="n">taui</span> <span class="o">=</span> <span class="n">link</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -881,7 +883,7 @@
 
         <span class="k">return</span> <span class="n">max_lag</span>
 
-    <span class="k">def</span> <span class="nf">_get_latent_projection_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stationary</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_latent_projection_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stationary</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;For DAGs/ADMGs uses the Latent projection operation (Pearl 2009).</span>
 
 <span class="sd">           Assumes a normal or stationary graph with potentially unobserved nodes.</span>
@@ -1003,7 +1005,7 @@
 
         <span class="k">return</span> <span class="n">aux_graph</span>
 
-    <span class="k">def</span> <span class="nf">_check_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
         <span class="c1"># graph, </span>
         <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span>
         <span class="n">conditions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
@@ -1208,7 +1210,7 @@
         <span class="k">return</span> <span class="kc">False</span>
 
 
-    <span class="k">def</span> <span class="nf">_get_causal_paths</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_nodes</span><span class="p">,</span> <span class="n">target_nodes</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_causal_paths</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_nodes</span><span class="p">,</span> <span class="n">target_nodes</span><span class="p">,</span>
         <span class="n">mediators</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">mediated_through</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">proper_paths</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -1271,7 +1273,7 @@
 <div class="viewcode-block" id="Graphs.get_dict_from_graph">
 <a class="viewcode-back" href="../../index.html#tigramite.graphs.Graphs.get_dict_from_graph">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">get_dict_from_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">parents_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dict_from_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">parents_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function to convert graph to dictionary of links.</span>
 
 <span class="sd">        Parameters</span>
@@ -1304,7 +1306,7 @@
 <div class="viewcode-block" id="Graphs.get_graph_from_dict">
 <a class="viewcode-back" href="../../index.html#tigramite.graphs.Graphs.get_graph_from_dict">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">get_graph_from_dict</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_graph_from_dict</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function to convert dictionary of links to graph array format.</span>
 
 <span class="sd">        Parameters</span>
@@ -1321,7 +1323,7 @@
 <span class="sd">            Matrix format of graph with 1 for true links and 0 else.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">def</span> <span class="nf">_get_minmax_lag</span><span class="p">(</span><span class="n">links</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_get_minmax_lag</span><span class="p">(</span><span class="n">links</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;Helper function to retrieve tau_min and tau_max from links.</span>
 <span class="sd">            &quot;&quot;&quot;</span>
 
@@ -1384,12 +1386,12 @@
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
     
     <span class="c1"># Consider some toy data</span>
-    <span class="kn">import</span> <span class="nn">tigramite</span>
-    <span class="kn">import</span> <span class="nn">tigramite.toymodels.structural_causal_processes</span> <span class="k">as</span> <span class="nn">toys</span>
-    <span class="kn">import</span> <span class="nn">tigramite.data_processing</span> <span class="k">as</span> <span class="nn">pp</span>
-    <span class="kn">import</span> <span class="nn">tigramite.plotting</span> <span class="k">as</span> <span class="nn">tp</span>
-    <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
-    <span class="kn">import</span> <span class="nn">sys</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">tigramite</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">tigramite.toymodels.structural_causal_processes</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">toys</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">tigramite.data_processing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pp</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">tigramite.plotting</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tp</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 
     <span class="c1"># # Use staticmethod to get graph</span>
     <span class="n">graph</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;--&gt;&#39;</span><span class="p">],</span>
@@ -1406,7 +1408,7 @@
           
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
 <h1 class="logo"><a href="../../index.html">Tigramite</a></h1>
 
@@ -1454,7 +1456,7 @@
       &#169;2023, Jakob Runge.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
     </div>
