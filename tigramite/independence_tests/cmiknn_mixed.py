@@ -275,7 +275,7 @@ class CMIknnMixed(CondIndTest):
 
         if add_noise:
             # Add noise to destroy ties
-            array[continuous_idxs, :] += (1E-6 * array[continuous_idxs, :].std(axis=1).reshape(cont_dim, 1)
+            array[continuous_idxs, :] += (1E-16 * array[continuous_idxs, :].std(axis=1).reshape(cont_dim, 1)
                   * self.random_state.random((array[continuous_idxs, :].shape[0], array[continuous_idxs, :].shape[1])))
         if self.transform == 'standardize':
             array[continuous_idxs, :] = self._standardize_array(array[continuous_idxs, :], cont_dim)
@@ -1155,13 +1155,13 @@ class CMIknnMixed(CondIndTest):
     def compute_perm_null_dist(self, array, xyz,
                                data_type=None):
          # max_neighbors = max(1, int(max_neighbor_ratio*T))
-        
+        array = self._transform_mixed_data(array.T, data_type.T).T
+
         # compute valid neighbors
         narray, nxyz, ndata_type, discrete_idx_list = self._transform_to_one_hot_mixed(array, 
                                                                                        xyz, 
                                                                                        data_type,
                                                                                        zero_inf=True)
-        
         x_indices = np.where(nxyz == 0)[0]
         z_indices = np.where(nxyz == 2)[0]
 
@@ -1171,6 +1171,7 @@ class CMIknnMixed(CondIndTest):
                   self.shuffle_neighbors, self.sig_samples))
         # Get nearest neighbors around each sample point in Z
         z_array = np.array(narray[:, z_indices])
+        
         tree_xyz = spatial.cKDTree(z_array)
         neighbors = tree_xyz.query(z_array,
                                    k=self.shuffle_neighbors + 1,
@@ -1378,16 +1379,19 @@ if __name__ == '__main__':
 
     from tigramite.independence_tests.cmiknn import CMIknn
 
-    random_state = np.random.default_rng(seed=42)
-    cmi = CMIknnMixed(seed=42, knn=2)
+    random_state = np.random.default_rng(seed=None)
+    cmi = CMIknnMixed(seed=None)
 
-    T = 20
+    T = 500
     dimz = 1
 
     # Continuous data
     z = random_state.standard_normal((T, dimz))
     x = random_state.standard_normal(T).reshape(T, 1)
-    y = (0.*z[:,0] + 1.*x[:,0] + random_state.standard_normal(T)).reshape(T, 1)
+    y = (5.*z[:,0] + 0.*x[:,0] + random_state.standard_normal(T)).reshape(T, 1)
 
     print(cmi.get_dependence_measure_raw(x=x,y=y,z=z, 
+        x_type=np.zeros(x.shape), y_type=np.zeros(y.shape), z_type=np.zeros(z.shape) ))
+
+    print(cmi.run_test_raw(x=x,y=y,z=z, 
         x_type=np.zeros(x.shape), y_type=np.zeros(y.shape), z_type=np.zeros(z.shape) ))
