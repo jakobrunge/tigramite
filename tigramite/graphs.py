@@ -25,6 +25,8 @@ class Graphs():
         Different graph types are supported, see tutorial.
     graph_type : str
         Type of graph.
+    tau_max : int, optional (default: 0)
+        Maximum time lag of graph.
     hidden_variables : list of tuples
         Hidden variables in format [(i, -tau), ...]. The internal graph is 
         constructed by a latent projection.

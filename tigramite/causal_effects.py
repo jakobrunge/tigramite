@@ -88,6 +88,25 @@ class CausalEffects(Graphs):
         if hidden_variables is None:
             hidden_variables = []
 
+        # 
+        # Checks regarding graph type
+        #
+        supported_graphs = ['dag', 
+                            'admg',
+                            'tsg_dag',
+                            'tsg_admg',
+                            'stationary_dag',
+                            'stationary_admg',
+
+                            # 'mag',
+                            # 'tsg_mag',
+                            # 'stationary_mag',
+                            # 'pag',
+                            # 'tsg_pag',
+                            # 'stationary_pag',
+                            ]
+        if graph_type not in supported_graphs:
+            raise ValueError("Only graph types %s supported!" %supported_graphs)
 
         # Determine tau_max
         if graph_type in ['dag', 'admg']: 
@@ -108,6 +127,8 @@ class CausalEffects(Graphs):
             for varlag in self.X.union(self.Y).union(self.S):
                 maxlag_XYS = max(maxlag_XYS, abs(varlag[1]))
             self.tau_max = maxlag_XYS + statgraph_tau_max
+        else:
+            raise ValueError("graph_type invalid.")
 
         self.hidden_variables = set(hidden_variables)
         if len(self.hidden_variables.intersection(self.X.union(self.Y).union(self.S))) > 0:
@@ -781,6 +802,7 @@ class CausalEffects(Graphs):
         return_further_pred_results=False,
         aggregation_func=np.mean,
         transform_interventions_and_prediction=False,
+        intervention_type='hard',
         ):
         """Predict effect of intervention with fitted model.
 
@@ -789,9 +811,9 @@ class CausalEffects(Graphs):
         Parameters
         ----------
         intervention_data : numpy array
-            Numpy array of shape (time, len(X)) that contains the do(X) values.
+            Numpy array of shape (n_interventions, len(X)) that contains the do(X) values.
         conditions_data : data object, optional
-            Numpy array of shape (time, len(S)) that contains the S=s values.
+            Numpy array of shape (n_interventions, len(S)) that contains the S=s values.
         pred_params : dict, optional
             Optional parameters passed on to sklearn prediction function.
         return_further_pred_results : bool, optional (default: False)
@@ -801,10 +823,13 @@ class CausalEffects(Graphs):
             Callable applied to output of 'predict'. Default is 'np.mean'.
         transform_interventions_and_prediction : bool (default: False)
             Whether to perform the inverse data_transform on prediction results.
+        intervention_type : {'hard', 'soft'}
+            Specify whether intervention is 'hard' (set value) or 'soft' 
+            (add value to observed data).
         
         Returns
         -------
-        Results from prediction: an array of shape  (time, len(Y)).
+        Results from prediction: an array of shape  (n_interventions, len(Y)).
         If estimate_confidence = True, then a tuple is returned.
         """
 
@@ -819,6 +844,9 @@ class CausalEffects(Graphs):
 
         if intervention_data.shape[1] != lenX:
             raise ValueError("intervention_data.shape[1] must be len(X).")
+
+        if intervention_type not in {'hard', 'soft'}:
+            raise ValueError("intervention_type must be 'hard' or 'soft'.")
 
         if conditions_data is not None and lenS > 0:
             if conditions_data.shape[1] != lenS:
@@ -842,7 +870,8 @@ class CausalEffects(Graphs):
             pred_params=pred_params,
             return_further_pred_results=return_further_pred_results,
             transform_interventions_and_prediction=transform_interventions_and_prediction,
-            aggregation_func=aggregation_func,) 
+            aggregation_func=aggregation_func,
+            intervention_type=intervention_type,) 
 
         return effect
 
@@ -1052,13 +1081,13 @@ class CausalEffects(Graphs):
         Parameters
         ----------
         intervention_data : numpy array
-            Numpy array of shape (time, len(X)) that contains the do(X) values.
+            Numpy array of shape (n_interventions, len(X)) that contains the do(X) values.
         pred_params : dict, optional
             Optional parameters passed on to sklearn prediction function.
 
         Returns
         -------
-        Results from prediction: an array of shape  (time, len(Y)).
+        Results from prediction: an array of shape  (n_interventions, len(Y)).
         """
 
         lenX = len(self.listX)
@@ -1072,10 +1101,10 @@ class CausalEffects(Graphs):
                 print("No causal path from X to Y exists.")
             return np.zeros((len(intervention_data), len(self.Y)))
 
-        intervention_T, _ = intervention_data.shape
+        n_interventions, _ = intervention_data.shape
 
 
-        predicted_array = np.zeros((intervention_T, lenY))
+        predicted_array = np.zeros((n_interventions, lenY))
         pred_dict = {}
         for iy, y in enumerate(self.listY):
             # Print message
@@ -1229,10 +1258,10 @@ class CausalEffects(Graphs):
         lenS = len(self.listS)
         lenY = len(self.listY)
 
-        intervention_T, _ = method_args['intervention_data'].shape
+        n_interventions, _ = method_args['intervention_data'].shape
 
         boot_samples = len(self.bootstrap_results)
-        # bootstrap_predicted_array = np.zeros((boot_samples, intervention_T, lenY))
+        # bootstrap_predicted_array = np.zeros((boot_samples, n_interventions, lenY))
         
         for b in range(boot_samples): #self.bootstrap_results.keys():
             self.model = self.bootstrap_results[b]

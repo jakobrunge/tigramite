@@ -145,7 +145,7 @@ class RegressionCI(CondIndTest):
 
             # 1-hot-encode all categorical columns
             X = do_componentwise_one_hot_encoding(X, var_type=var_type)
-            y = np.ravel(y)
+            y = np.ravel(y).astype('int')
             # do logistic regression
             model = LogisticRegression(solver='lbfgs')
             model.fit(X, y)

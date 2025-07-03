@@ -1026,7 +1026,7 @@ class PCMCIbase():
         Parameters
         ---------
         links : dict
-            Dictionary of form {0:{(0, -1): o-o}, ...}, 1:{...}, ...}.
+            Dictionary of form {0:{(0, -1): 'o-o'}, ...}, 1:{...}, ...}.
 
         Returns
         -------
@@ -1041,8 +1041,11 @@ class PCMCIbase():
         for j in range(N):
             for link in links[j]:
                 var, lag = link
-                link_type = links[j][link]
-                if link_type != "":
+                if isinstance(links[j], dict):
+                    link_type = links[j][link]
+                    if link_type != "":
+                        max_lag = max(max_lag, abs(lag))
+                else:
                     max_lag = max(max_lag, abs(lag))
 
         if tau_max is None:
@@ -1056,8 +1059,11 @@ class PCMCIbase():
         for j in range(N):
             for link in links[j]:
                 i, tau = link
-                link_type = links[j][link]
-                graph[i, j, abs(tau)] = link_type
+                if isinstance(links[j], dict):
+                    link_type = links[j][link]
+                    graph[i, j, abs(tau)] = link_type
+                else:
+                    graph[i, j, abs(tau)] = '-->'
 
         return graph
 

@@ -5,12 +5,12 @@
 # License: GNU General Public License v3.0
 
 from __future__ import print_function
-from scipy import stats
+from scipy import stats, linalg
 import numpy as np
 import sys
 import warnings
 
-from .independence_tests_base import CondIndTest
+from tigramite.independence_tests.independence_tests_base import CondIndTest
 
 class ParCorrMult(CondIndTest):
     r"""Partial correlation test for multivariate X and Y.
@@ -52,8 +52,8 @@ class ParCorrMult(CondIndTest):
 
         self.correlation_type = correlation_type
 
-        if self.correlation_type not in ['max_corr']:
-            raise ValueError("correlation_type must be in ['max_corr'].")
+        if self.correlation_type not in ['max_corr', 'PCCA_WilksLambda']:
+            raise ValueError("correlation_type must be in ['max_corr', 'PCCA_WilksLambda']")
 
         CondIndTest.__init__(self, **kwargs)
 
@@ -111,7 +111,7 @@ class ParCorrMult(CondIndTest):
         y = array[np.where(xyz==target_var)[0], :].T.copy()
 
         if dim_z > 0:
-            z = np.fastCopyAndTranspose(array[np.where(xyz==2)[0], :])
+            z = (array[np.where(xyz==2)[0], :]).T.copy()
             beta_hat = np.linalg.lstsq(z, y, rcond=None)[0]
             mean = np.dot(z, beta_hat)
             resid = y - mean
@@ -122,7 +122,7 @@ class ParCorrMult(CondIndTest):
         if return_means:
             return (np.fastCopyAndTranspose(resid), np.fastCopyAndTranspose(mean))
 
-        return np.fastCopyAndTranspose(resid)
+        return resid.T.copy()
 
     def get_dependence_measure(self, array, xyz, data_type=None):
         """Return multivariate kernel correlation coefficient.
@@ -157,6 +157,54 @@ class ParCorrMult(CondIndTest):
         val = self.mult_corr(array_resid, xyz_resid)
 
         return val
+
+    def compute_wilks_lambda_cca(self, X, Y, num_components=None):
+        """
+        Compute Wilks Lambda from canonical correlations between X and Y using NumPy.
+        
+        Parameters:
+        - X, Y: Arrays of shape (n_features, n_samples)
+        - num_components: Number of canonical correlations to return (default: all)
+        
+        Returns:
+        - wilks_lambda: Wilks Lambda of canonical correlations
+        """
+
+        # Center variables (per feature)
+        X = X - X.mean(axis=1, keepdims=True)
+        Y = Y - Y.mean(axis=1, keepdims=True)
+
+        # Compute covariance matrices (features are rows, samples are columns)
+        Cxx = np.cov(X, rowvar=True)
+        Cyy = np.cov(Y, rowvar=True)
+        Cxy = np.cov(X, Y, rowvar=True)[:X.shape[0], X.shape[0]:]
+
+        # Ensure matrices are at least 2D
+        if Cxx.ndim == 0:
+            Cxx = np.array([[Cxx]])
+        if Cyy.ndim == 0:
+            Cyy = np.array([[Cyy]])
+        if Cxy.ndim == 1:
+            Cxy = Cxy[:, None]
+
+        # Regularization for stability
+        eps = 1e-10
+        Cxx += eps * np.eye(Cxx.shape[0])
+        Cyy += eps * np.eye(Cyy.shape[0])
+
+        # Solve generalized eigenvalue problem
+        M = linalg.inv(Cxx) @ Cxy @ linalg.inv(Cyy) @ Cxy.T
+
+        eigvals = np.linalg.eigvalsh(M)
+        eigvals = np.flip(np.real(eigvals))  # sort descending
+        rho_sq = np.abs(np.maximum(eigvals, 0.0))
+
+        if num_components is not None:
+            rho_sq = rho_sq[:num_components]
+
+        wilks_lambda = np.prod([1 - rho for rho in rho_sq])
+        
+        return wilks_lambda
 
     def mult_corr(self, array, xyz, standardize=True):
         """Return multivariate dependency measure.
@@ -210,7 +258,9 @@ class ParCorrMult(CondIndTest):
             #     for y_vals in y:
             #         val_here, _ = stats.pearsonr(x_vals, y_vals)
             #         val = max(val, np.abs(val_here))
-        
+        elif self.correlation_type == 'PCCA_WilksLambda':
+            val = self.compute_wilks_lambda_cca(x, y)
+
         # elif self.correlation_type == 'linear_hsci':
         #     # For linear kernel and standardized data (centered and divided by std)
         #     # biased V -statistic of HSIC reduces to sum of squared inner products
@@ -218,7 +268,7 @@ class ParCorrMult(CondIndTest):
         #     val = ((x.dot(y.T)/float(n))**2).sum()
         else:
             raise NotImplementedError("Currently only"
-                                      "correlation_type == 'max_corr' implemented.")
+                                      "correlation_type == 'max_corr' and 'PCCA_WilksLambda' implemented.")
 
         return val
 
@@ -306,6 +356,7 @@ class ParCorrMult(CondIndTest):
 
         dim_x = (xyz==0).sum()
         dim_y = (xyz==1).sum()
+        dim_z = dim - dim_x - dim_y
 
         if self.correlation_type == 'max_corr':
             if deg_f < 1:
@@ -316,12 +367,19 @@ class ParCorrMult(CondIndTest):
                 trafo_val = value * np.sqrt(deg_f/(1. - value*value))
                 # Two sided significance level
                 pval = stats.t.sf(np.abs(trafo_val), deg_f) * 2
+            # Adjust p-value for dimensions of x and y (conservative Bonferroni-correction)
+            pval *= dim_x*dim_y
+        elif self.correlation_type == 'PCCA_WilksLambda':
+            if deg_f < 1:
+                pval = np.nan
+            else:
+                trafo_val = -(T - dim_z - 0.5 * (dim_x + dim_y + 1)) * np.log(value)
+                dof = dim_x * dim_y
+                pval = 1 - stats.chi2.cdf(trafo_val, dof)     
         else:
             raise NotImplementedError("Currently only"
-                                      "correlation_type == 'max_corr' implemented.")
-
-        # Adjust p-value for dimensions of x and y (conservative Bonferroni-correction)
-        pval *= dim_x*dim_y
+                                      "correlation_type == 'max_corr' and 'PCCA_WilksLambda' implemented.")
+        
 
         return pval
 
@@ -390,19 +448,20 @@ if __name__ == '__main__':
     # import numpy as np
     import timeit
 
-    seed=3
+    seed=None
     random_state = np.random.default_rng(seed=seed)
     cmi = ParCorrMult(
+            correlation_type='PCCA_WilksLambda',
             # significance = 'shuffle_test',
             # sig_samples=1000,
         )
 
-    samples=1
-    rate = np.zeros(1)
-    for i in range(1):
+    samples=5000
+    rate = np.zeros(samples)
+    for i in range(samples):
         print(i)
         data = random_state.standard_normal((100, 6))
-        data[:,2] += -0.5*data[:,0]
+        # data[:,2] += -0.3*data[:,0]
         # data[:,1] += data[:,2]
         dataframe = DataFrame(data, 
             # vector_vars={0:[(0,0), (1,0)], 1:[(2,0),(3,0)], 2:[(4,0),(5,0)]}
@@ -411,15 +470,15 @@ if __name__ == '__main__':
         cmi.set_dataframe(dataframe)
 
         pval = cmi.run_test(
-                X=[(0,0)], 
-                Y=[(1,0)], #, (3, 0)], 
+                X=[(0,0), (1,0), ], 
+                Y=[(2,0),(3, 0)], 
                 # Z=[(5,0)]
-                Z = [(2, 0)]
+                Z = [(4, 0), (5, 0)]
                 )[1]
         
-        rate[i] = pval <= 0.1
+        rate[i] = pval <= 0.05
 
-        cmi.get_model_selection_criterion(j=0, parents=[(1, 0), (2, 0)], tau_max=0, corrected_aic=False)
+        # cmi.get_model_selection_criterion(j=0, parents=[(1, 0), (2, 0)], tau_max=0, corrected_aic=False)
 
         # print(cmi.run_test(X=[(0,0),(1,0)], Y=[(2,0), (3, 0)], Z=[(5,0)]))
     print(rate.mean())
