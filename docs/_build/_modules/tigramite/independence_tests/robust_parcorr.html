@@ -36,17 +36,17 @@
 <span class="c1">#</span>
 <span class="c1"># License: GNU General Public License v3.0</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
-<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">stats</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 
-<span class="kn">from</span> <span class="nn">.independence_tests_base</span> <span class="kn">import</span> <span class="n">CondIndTest</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.independence_tests_base</span><span class="w"> </span><span class="kn">import</span> <span class="n">CondIndTest</span>
 
 <div class="viewcode-block" id="RobustParCorr">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.robust_parcorr.RobustParCorr">[docs]</a>
-<span class="k">class</span> <span class="nc">RobustParCorr</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">RobustParCorr</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Robust partial correlation test based on non-paranormal models.</span>
 
 <span class="sd">        Partial correlation is estimated through transformation to standard</span>
@@ -103,13 +103,13 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">measure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">measure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Concrete property to return the measure of the independence test</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_measure</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_measure</span> <span class="o">=</span> <span class="s1">&#39;robust_par_corr&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">two_sided</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">residual_based</span> <span class="o">=</span> <span class="kc">True</span>
@@ -118,7 +118,7 @@
 
 <div class="viewcode-block" id="RobustParCorr.trafo2normal">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.robust_parcorr.RobustParCorr.trafo2normal">[docs]</a>
-    <span class="k">def</span> <span class="nf">trafo2normal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">thres</span><span class="o">=</span><span class="mf">0.00001</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">trafo2normal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">thres</span><span class="o">=</span><span class="mf">0.00001</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Transforms input array to standard normal marginals.</span>
 <span class="sd">        </span>
 <span class="sd">        For that, the code first transforms to uniform :math:`[0,1]` marginals</span>
@@ -143,7 +143,7 @@
 <span class="sd">            array with normal marginals.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">def</span> <span class="nf">trafo</span><span class="p">(</span><span class="n">xi</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">trafo</span><span class="p">(</span><span class="n">xi</span><span class="p">):</span>
             <span class="n">xisorted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span>
             <span class="n">yi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">xi</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">xi</span><span class="p">))</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">xi</span><span class="p">,</span> <span class="n">xisorted</span><span class="p">,</span> <span class="n">yi</span><span class="p">)</span>
@@ -165,7 +165,7 @@
         <span class="k">return</span> <span class="n">normal</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_get_single_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_single_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="p">,</span>
                               <span class="n">standardize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                               <span class="n">return_means</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns residuals of linear multiple regression.</span>
@@ -230,7 +230,7 @@
 
 <div class="viewcode-block" id="RobustParCorr.get_dependence_measure">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.robust_parcorr.RobustParCorr.get_dependence_measure">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return partial correlation.</span>
 
 <span class="sd">        Marginals are firstly transformed to standard normal scale. Dependence</span>
@@ -263,7 +263,7 @@
 
 <div class="viewcode-block" id="RobustParCorr.get_shuffle_significance">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.robust_parcorr.RobustParCorr.get_shuffle_significance">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_shuffle_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_shuffle_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span>
                                  <span class="n">return_null_dist</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                                  <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns p-value for shuffle significance test.</span>
@@ -315,7 +315,7 @@
 
 <div class="viewcode-block" id="RobustParCorr.get_analytic_significance">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.robust_parcorr.RobustParCorr.get_analytic_significance">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">xyz</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">xyz</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns analytic p-value from Student&#39;s t-test for the Pearson</span>
 <span class="sd">        correlation coefficient.</span>
 
@@ -358,7 +358,7 @@
 
 <div class="viewcode-block" id="RobustParCorr.get_analytic_confidence">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.robust_parcorr.RobustParCorr.get_analytic_confidence">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_analytic_confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">conf_lev</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_analytic_confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">conf_lev</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns analytic confidence interval for correlation coefficient.</span>
 
 <span class="sd">        Based on Student&#39;s t-distribution.</span>
@@ -395,7 +395,7 @@
 
 <div class="viewcode-block" id="RobustParCorr.get_model_selection_criterion">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.robust_parcorr.RobustParCorr.get_model_selection_criterion">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">corrected_aic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">corrected_aic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns Akaike&#39;s Information criterion modulo constants.</span>
 
 <span class="sd">        First of all, each marginal is transformed to the standard normal</span>
@@ -459,7 +459,7 @@
           
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
 <h1 class="logo"><a href="../../../index.html">Tigramite</a></h1>
 
@@ -507,7 +507,7 @@
       &#169;2023, Jakob Runge.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
     </div>

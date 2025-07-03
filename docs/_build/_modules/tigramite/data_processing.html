@@ -36,21 +36,21 @@
 <span class="c1">#          Andreas Gerhardus &lt;andreas.gerhardus@dlr.de&gt;</span>
 <span class="c1"># License: GNU General Public License v3.0</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span><span class="p">,</span> <span class="n">OrderedDict</span>
-<span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
-<span class="kn">import</span> <span class="nn">math</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">scipy.sparse</span>
-<span class="kn">import</span> <span class="nn">scipy.sparse.linalg</span>
-<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span><span class="p">,</span> <span class="n">OrderedDict</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.sparse</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.sparse.linalg</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">stats</span>
 <span class="c1"># from numba import jit</span>
 
 <div class="viewcode-block" id="DataFrame">
 <a class="viewcode-back" href="../../index.html#tigramite.data_processing.DataFrame">[docs]</a>
-<span class="k">class</span> <span class="nc">DataFrame</span><span class="p">():</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DataFrame</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Data object containing single or multiple time series arrays and optional </span>
 <span class="sd">    mask, as well as variable definitions.</span>
 
@@ -188,7 +188,7 @@
 <span class="sd">        boot_samples, and boot_blocklength.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">missing_flag</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vector_vars</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">var_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">missing_flag</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vector_vars</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">var_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">datatime</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">analysis_mode</span> <span class="o">=</span><span class="s1">&#39;single&#39;</span><span class="p">,</span> <span class="n">reference_points</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">time_offsets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">remove_missing_upto_maxlag</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 
@@ -360,7 +360,7 @@
             
         <span class="bp">self</span><span class="o">.</span><span class="n">data_type</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">data_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">data_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_mask</span><span class="p">(</span><span class="n">mask</span> <span class="o">=</span> <span class="n">data_type</span><span class="p">,</span> <span class="n">check_data_type</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_mask</span><span class="p">(</span><span class="n">mask</span> <span class="o">=</span> <span class="n">data_type</span><span class="p">)</span>
 
         <span class="c1"># Check and prepare the time offsets</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_and_set_time_offsets</span><span class="p">(</span><span class="n">time_offsets</span><span class="p">)</span>
@@ -396,11 +396,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">bootstrap</span> <span class="o">=</span> <span class="kc">None</span>
 
 
-    <span class="k">def</span> <span class="nf">_check_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">check_data_type</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks that the mask is:</span>
-<span class="sd">            * The same shape as the data</span>
-<span class="sd">            * Is an numpy ndarray (or subtype)</span>
-<span class="sd">            * Does not contain any NaN entries</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks that the mask and data_type arrays:</span>
+<span class="sd">            * have same shape as the data</span>
+<span class="sd">            * are an numpy ndarray (or subtype)</span>
+<span class="sd">            * do not contain any NaN entries</span>
+<span class="sd">            * contain only 0 and 1</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Check that there is a mask if required</span>
@@ -418,20 +419,20 @@
                         <span class="n">_use_mask_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">_use_mask</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">)}</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Shape mismatch: </span><span class="si">{}</span><span class="s2"> datasets &quot;</span>\
-                            <span class="s2">&quot; in &#39;data&#39; but </span><span class="si">{}</span><span class="s2"> in &#39;mask&#39;, must be &quot;</span>\
+                            <span class="s2">&quot; in data but </span><span class="si">{}</span><span class="s2"> in (type) mask, must be &quot;</span>\
                             <span class="s2">&quot;identical.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">,</span> <span class="n">_use_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
 
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;&#39;data&#39; given as 3d np.ndarray. &quot;</span>\
-                        <span class="s2">&quot;&#39;mask&#39; is np.ndarray of shape </span><span class="si">{}</span><span class="s2">, must be of &quot;</span>\
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;data given as 3d np.ndarray. &quot;</span>\
+                        <span class="s2">&quot;(type) mask is np.ndarray of shape </span><span class="si">{}</span><span class="s2">, must be of &quot;</span>\
                         <span class="s2">&quot;shape (M, T, N).&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">_use_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
 
             <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_use_mask</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">_use_mask</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">dataset_key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                         <span class="k">if</span> <span class="n">_use_mask</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dataset_key</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;data&#39; has key </span><span class="si">{}</span><span class="s2"> (type </span><span class="si">{}</span><span class="s2">) &quot;</span>\
-                                <span class="s2">&quot;but &#39;mask&#39; does not, keys must be &quot;</span>\
+                            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;data has key </span><span class="si">{}</span><span class="s2"> (type </span><span class="si">{}</span><span class="s2">) &quot;</span>\
+                                <span class="s2">&quot;but (type) mask does not, keys must be &quot;</span>\
                                 <span class="s2">&quot;identical.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dataset_key</span><span class="p">,</span>
                                     <span class="nb">type</span><span class="p">(</span><span class="n">dataset_key</span><span class="p">)))</span>
 
@@ -439,10 +440,10 @@
 
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Shape mismatch: </span><span class="si">{}</span><span class="s2"> datasets &quot;</span>\
-                        <span class="s2">&quot;in &#39;data&#39; but </span><span class="si">{}</span><span class="s2"> in &#39;mask&#39;, must be &quot;</span>\
+                        <span class="s2">&quot;in data but </span><span class="si">{}</span><span class="s2"> in (type) mask, must be &quot;</span>\
                         <span class="s2">&quot;identical.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">_use_mask</span><span class="p">)))</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;&#39;mask&#39; is of type &quot;</span>\
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;(type) mask is of type &quot;</span>\
                     <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">, must be dict or array.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">_use_mask</span><span class="p">)))</span>
 
             <span class="c1"># Check for consistency with shape of &#39;self.values&#39; and for NaNs</span>
@@ -450,27 +451,27 @@
                 <span class="n">_use_mask_dict_data</span> <span class="o">=</span> <span class="n">_use_mask_dict</span><span class="p">[</span><span class="n">dataset_key</span><span class="p">]</span> 
                 <span class="k">if</span> <span class="n">_use_mask_dict_data</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">dataset_data</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">_use_mask_dict_data</span><span class="p">))</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;NaNs in the data mask&quot;</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="n">check_data_type</span><span class="p">:</span>
-                        <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">_use_mask_dict_data</span><span class="p">))</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])):</span>
-                            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Type mask contains other values than 0 and 1&quot;</span><span class="p">)</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;NaNs in the (type) data mask&quot;</span><span class="p">)</span>
+                    <span class="c1"># if check_data_type:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">_use_mask_dict_data</span><span class="p">))</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])):</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;(Type) mask contains other values than 0 and 1&quot;</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">analysis_mode</span> <span class="o">==</span> <span class="s1">&#39;single&#39;</span><span class="p">:</span>
-                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Shape mismatch: &#39;data&#39; is of shape &quot;</span>\
-                            <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">, &#39;mask&#39; is of shape </span><span class="si">{}</span><span class="s2">. Must be &quot;</span>\
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Shape mismatch: data is of shape &quot;</span>\
+                            <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">, (type) mask is of shape </span><span class="si">{}</span><span class="s2">. Must be &quot;</span>\
                             <span class="s2">&quot;identical.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dataset_data</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
                                 <span class="n">_use_mask_dict_data</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
                     <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">analysis_mode</span> <span class="o">==</span> <span class="s1">&#39;multiple&#39;</span><span class="p">:</span>
                         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Shape mismatch: dataset </span><span class="si">{}</span><span class="s2"> &quot;</span>\
-                            <span class="s2">&quot;is of shape </span><span class="si">{}</span><span class="s2"> in &#39;data&#39; and of shape </span><span class="si">{}</span><span class="s2"> in &quot;</span>\
-                            <span class="s2">&quot;&#39;mask&#39;. Must be identical.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dataset_key</span><span class="p">,</span>
+                            <span class="s2">&quot;is of shape </span><span class="si">{}</span><span class="s2"> in data and of shape </span><span class="si">{}</span><span class="s2"> in &quot;</span>\
+                            <span class="s2">&quot;(type) mask. Must be identical.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dataset_key</span><span class="p">,</span>
                                 <span class="n">dataset_data</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
                                 <span class="n">_use_mask_dict_data</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
 
             <span class="c1"># Return the mask in dictionary format</span>
             <span class="k">return</span> <span class="n">_use_mask_dict</span>
 
-    <span class="k">def</span> <span class="nf">_check_and_set_time_offsets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_offsets</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_and_set_time_offsets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_offsets</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Check the argument &#39;time_offsets&#39; for consistency and bring into</span>
 <span class="sd">        canonical format&quot;&quot;&quot;</span>
 
@@ -524,7 +525,7 @@
             <span class="c1"># If no time offsets are specified, all of them are zero</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">time_offsets</span> <span class="o">=</span> <span class="p">{</span><span class="n">dataset_key</span><span class="p">:</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">dataset_key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>
 
-    <span class="k">def</span> <span class="nf">_check_and_set_reference_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reference_points</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_and_set_reference_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reference_points</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Check the argument &#39;reference_point&#39; for consistency and bring into</span>
 <span class="sd">        canonical format&quot;&quot;&quot;</span>
 
@@ -581,7 +582,7 @@
 
 <div class="viewcode-block" id="DataFrame.construct_array">
 <a class="viewcode-back" href="../../index.html#tigramite.data_processing.DataFrame.construct_array">[docs]</a>
-    <span class="k">def</span> <span class="nf">construct_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">construct_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span>
                         <span class="n">extraZ</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                         <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                         <span class="n">mask_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -707,7 +708,7 @@
             <span class="n">Z</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="c1"># If vector-valued variables exist, add them</span>
-        <span class="k">def</span> <span class="nf">vectorize</span><span class="p">(</span><span class="n">varlag</span><span class="p">):</span>     
+        <span class="k">def</span><span class="w"> </span><span class="nf">vectorize</span><span class="p">(</span><span class="n">varlag</span><span class="p">):</span>     
             <span class="n">vectorized_var</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">lag</span><span class="p">)</span> <span class="ow">in</span> <span class="n">varlag</span><span class="p">:</span>
                 <span class="k">for</span> <span class="p">(</span><span class="n">vector_var</span><span class="p">,</span> <span class="n">vector_lag</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector_vars</span><span class="p">[</span><span class="n">var</span><span class="p">]:</span>
@@ -935,8 +936,10 @@
                         <span class="n">slice_select</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">mask_dataset</span><span class="p">[</span><span class="n">xyz</span> <span class="o">==</span> <span class="n">cde</span><span class="p">,</span> <span class="p">:]</span> <span class="o">==</span> <span class="kc">False</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
                         <span class="n">use_indices_dataset</span> <span class="o">*=</span> <span class="n">slice_select</span>
 
-            <span class="c1"># Accordingly update the data array</span>
+            <span class="c1"># Accordingly update the data array and data type array</span>
             <span class="n">samples_datasets</span><span class="p">[</span><span class="n">dataset_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">samples_datasets</span><span class="p">[</span><span class="n">dataset_key</span><span class="p">][:,</span> <span class="n">use_indices_dataset</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">_data_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">data_types</span><span class="p">[</span><span class="n">dataset_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_types</span><span class="p">[</span><span class="n">dataset_key</span><span class="p">][:,</span> <span class="n">use_indices_dataset</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
 
         <span class="c1">## end for dataset_key, dataset_data in self.values.items()</span>
 
@@ -971,7 +974,7 @@
         <span class="k">return</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">type_array</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_check_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">XYZ</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">XYZ</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Checks that:</span>
 <span class="sd">        * The requests XYZ nodes have the correct shape</span>
@@ -1007,7 +1010,7 @@
 
 <div class="viewcode-block" id="DataFrame.print_array_info">
 <a class="viewcode-back" href="../../index.html#tigramite.data_processing.DataFrame.print_array_info">[docs]</a>
-    <span class="k">def</span> <span class="nf">print_array_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">missing_flag</span><span class="p">,</span> <span class="n">mask_type</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">extraZ</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">print_array_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">missing_flag</span><span class="p">,</span> <span class="n">mask_type</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">extraZ</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Print info about the constructed array</span>
 
@@ -1055,7 +1058,7 @@
 
 <div class="viewcode-block" id="get_acf">
 <a class="viewcode-back" href="../../index.html#tigramite.data_processing.get_acf">[docs]</a>
-<span class="k">def</span> <span class="nf">get_acf</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="n">max_lag</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_acf</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="n">max_lag</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns autocorrelation function.</span>
 
 <span class="sd">    Parameters</span>
@@ -1089,7 +1092,7 @@
 
 <div class="viewcode-block" id="get_block_length">
 <a class="viewcode-back" href="../../index.html#tigramite.data_processing.get_block_length">[docs]</a>
-<span class="k">def</span> <span class="nf">get_block_length</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_block_length</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns optimal block length for significance and confidence tests.</span>
 
 <span class="sd">    Determine block length using approach in Mader (2013) [Eq. (6)] which</span>
@@ -1121,7 +1124,7 @@
 <span class="sd">        Optimal block length.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Inject a dependency on siganal, optimize</span>
-    <span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">signal</span><span class="p">,</span> <span class="n">optimize</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">signal</span><span class="p">,</span> <span class="n">optimize</span>
     <span class="c1"># Get the shape of the array</span>
     <span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
     <span class="c1"># Initiailize the indices</span>
@@ -1132,7 +1135,7 @@
     <span class="c1"># Maximum lag for autocov estimation</span>
     <span class="n">max_lag</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.1</span><span class="o">*</span><span class="n">T</span><span class="p">)</span>
     <span class="c1"># Define the function to optimize against</span>
-    <span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="n">x_vals</span><span class="p">,</span> <span class="n">a_const</span><span class="p">,</span> <span class="n">decay</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="n">x_vals</span><span class="p">,</span> <span class="n">a_const</span><span class="p">,</span> <span class="n">decay</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">a_const</span> <span class="o">*</span> <span class="n">decay</span><span class="o">**</span><span class="n">x_vals</span>
 
     <span class="c1"># Calculate the block length</span>
@@ -1167,7 +1170,7 @@
 
 <div class="viewcode-block" id="lowhighpass_filter">
 <a class="viewcode-back" href="../../index.html#tigramite.data_processing.lowhighpass_filter">[docs]</a>
-<span class="k">def</span> <span class="nf">lowhighpass_filter</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">cutperiod</span><span class="p">,</span> <span class="n">pass_periods</span><span class="o">=</span><span class="s1">&#39;low&#39;</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">lowhighpass_filter</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">cutperiod</span><span class="p">,</span> <span class="n">pass_periods</span><span class="o">=</span><span class="s1">&#39;low&#39;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Butterworth low- or high pass filter.</span>
 
 <span class="sd">    This function applies a linear filter twice, once forward and once</span>
@@ -1188,7 +1191,7 @@
 <span class="sd">        Filtered data array.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="kn">from</span> <span class="nn">scipy.signal</span> <span class="kn">import</span> <span class="n">butter</span><span class="p">,</span> <span class="n">filtfilt</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.signal</span><span class="w"> </span><span class="kn">import</span> <span class="n">butter</span><span class="p">,</span> <span class="n">filtfilt</span>
     <span class="k">except</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Could not import scipy.signal for butterworth filtering!&#39;</span><span class="p">)</span>
 
@@ -1208,7 +1211,7 @@
 
 <div class="viewcode-block" id="smooth">
 <a class="viewcode-back" href="../../index.html#tigramite.data_processing.smooth">[docs]</a>
-<span class="k">def</span> <span class="nf">smooth</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">smooth_width</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">smooth</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">smooth_width</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span>
            <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">residuals</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns either smoothed time series or its residuals.</span>
 
@@ -1252,7 +1255,7 @@
                              <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">totaltime</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">totaltime</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
                              <span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="p">((</span><span class="mf">2.</span> <span class="o">*</span> <span class="n">smooth_width</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
     <span class="k">elif</span> <span class="n">kernel</span> <span class="o">==</span> <span class="s1">&#39;heaviside&#39;</span><span class="p">:</span>
-        <span class="kn">import</span> <span class="nn">scipy.linalg</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">scipy.linalg</span>
         <span class="n">wtmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">totaltime</span><span class="p">)</span>
         <span class="n">wtmp</span><span class="p">[:</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">smooth_width</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">))]</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="n">window</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">toeplitz</span><span class="p">(</span><span class="n">wtmp</span><span class="p">)</span>
@@ -1285,7 +1288,7 @@
 
 <div class="viewcode-block" id="weighted_avg_and_std">
 <a class="viewcode-back" href="../../index.html#tigramite.data_processing.weighted_avg_and_std">[docs]</a>
-<span class="k">def</span> <span class="nf">weighted_avg_and_std</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">weights</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">weighted_avg_and_std</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">weights</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the weighted average and standard deviation.</span>
 
 <span class="sd">    Parameters</span>
@@ -1315,7 +1318,7 @@
 
 <div class="viewcode-block" id="time_bin_with_mask">
 <a class="viewcode-back" href="../../index.html#tigramite.data_processing.time_bin_with_mask">[docs]</a>
-<span class="k">def</span> <span class="nf">time_bin_with_mask</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">time_bin_length</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">time_bin_with_mask</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">time_bin_length</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns time binned data where only about non-masked values is averaged.</span>
 
 <span class="sd">    Parameters</span>
@@ -1368,7 +1371,7 @@
 
 <div class="viewcode-block" id="trafo2normal">
 <a class="viewcode-back" href="../../index.html#tigramite.data_processing.trafo2normal">[docs]</a>
-<span class="k">def</span> <span class="nf">trafo2normal</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">thres</span><span class="o">=</span><span class="mf">0.001</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">trafo2normal</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">thres</span><span class="o">=</span><span class="mf">0.001</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Transforms input data to standard normal marginals.</span>
 
 <span class="sd">    Assumes data.shape = (T, dim)</span>
@@ -1388,7 +1391,7 @@
 <span class="sd">        data with standard normal marginals.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">trafo</span><span class="p">(</span><span class="n">xi</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">trafo</span><span class="p">(</span><span class="n">xi</span><span class="p">):</span>
         <span class="n">xisorted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span>
         <span class="n">yi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">xi</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">xi</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">xi</span><span class="p">,</span> <span class="n">xisorted</span><span class="p">,</span> <span class="n">yi</span><span class="p">)</span>
@@ -1425,7 +1428,7 @@
 
 
 <span class="c1"># @jit(nopython=True)</span>
-<span class="k">def</span> <span class="nf">_get_patterns</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">array_mask</span><span class="p">,</span> <span class="n">patt</span><span class="p">,</span> <span class="n">patt_mask</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">fac</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_patterns</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">array_mask</span><span class="p">,</span> <span class="n">patt</span><span class="p">,</span> <span class="n">patt_mask</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">fac</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
     <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
 
     <span class="n">start</span> <span class="o">=</span> <span class="n">step</span> <span class="o">*</span> <span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
@@ -1459,7 +1462,7 @@
 
 <div class="viewcode-block" id="ordinal_patt_array">
 <a class="viewcode-back" href="../../index.html#tigramite.data_processing.ordinal_patt_array">[docs]</a>
-<span class="k">def</span> <span class="nf">ordinal_patt_array</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">array_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">ordinal_patt_array</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">array_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                         <span class="n">weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns symbolified array of ordinal patterns.</span>
 
@@ -1497,7 +1500,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
 
-    <span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">factorial</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.special</span><span class="w"> </span><span class="kn">import</span> <span class="n">factorial</span>
 
     <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float64&#39;</span><span class="p">)</span>
 
@@ -1551,7 +1554,7 @@
 
 <div class="viewcode-block" id="quantile_bin_array">
 <a class="viewcode-back" href="../../index.html#tigramite.data_processing.quantile_bin_array">[docs]</a>
-<span class="k">def</span> <span class="nf">quantile_bin_array</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">6</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">quantile_bin_array</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">6</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns symbolified array with equal-quantile binning.</span>
 
 <span class="sd">    Parameters</span>
@@ -1587,7 +1590,7 @@
 
 <div class="viewcode-block" id="var_process">
 <a class="viewcode-back" href="../../index.html#tigramite.data_processing.var_process">[docs]</a>
-<span class="k">def</span> <span class="nf">var_process</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">use</span><span class="o">=</span><span class="s1">&#39;inv_inno_cov&#39;</span><span class="p">,</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">var_process</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">use</span><span class="o">=</span><span class="s1">&#39;inv_inno_cov&#39;</span><span class="p">,</span>
                 <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">initial_values</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a vector-autoregressive process with correlated innovations.</span>
 
@@ -1602,7 +1605,7 @@
 
 <div class="viewcode-block" id="structural_causal_process">
 <a class="viewcode-back" href="../../index.html#tigramite.data_processing.structural_causal_process">[docs]</a>
-<span class="k">def</span> <span class="nf">structural_causal_process</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">noises</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+<span class="k">def</span><span class="w"> </span><span class="nf">structural_causal_process</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">noises</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
                         <span class="n">intervention</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">intervention_type</span><span class="o">=</span><span class="s1">&#39;hard&#39;</span><span class="p">,</span>
                         <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a structural causal process with contemporaneous and lagged</span>
@@ -1618,10 +1621,10 @@
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
     
-    <span class="kn">from</span> <span class="nn">tigramite.toymodels.structural_causal_processes</span> <span class="kn">import</span> <span class="n">structural_causal_process</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">tigramite.toymodels.structural_causal_processes</span><span class="w"> </span><span class="kn">import</span> <span class="n">structural_causal_process</span>
     <span class="c1">## Generate some time series from a structural causal process</span>
-    <span class="k">def</span> <span class="nf">lin_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span>
-    <span class="k">def</span> <span class="nf">nonlin_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mf">5.</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="mf">20.</span><span class="p">))</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">lin_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">nonlin_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mf">5.</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="mf">20.</span><span class="p">))</span>
 
     <span class="n">links</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">[((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.9</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">)],</span>
              <span class="mi">1</span><span class="p">:</span> <span class="p">[((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">lin_f</span><span class="p">),</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">nonlin_f</span><span class="p">)],</span>
@@ -1669,7 +1672,7 @@
           
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
 <h1 class="logo"><a href="../../index.html">Tigramite</a></h1>
 
@@ -1717,7 +1720,7 @@
       &#169;2023, Jakob Runge.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
     </div>

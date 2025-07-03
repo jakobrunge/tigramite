@@ -30,20 +30,20 @@
           <div class="body" role="main">
             
   <h1>Source code for tigramite.independence_tests.parcorr_wls</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 
-<span class="kn">from</span> <span class="nn">.parcorr</span> <span class="kn">import</span> <span class="n">ParCorr</span>
-<span class="kn">from</span> <span class="nn">.robust_parcorr</span> <span class="kn">import</span> <span class="n">RobustParCorr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.parcorr</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParCorr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.robust_parcorr</span><span class="w"> </span><span class="kn">import</span> <span class="n">RobustParCorr</span>
 <span class="c1"># from tigramite.independence_tests.parcorr import ParCorr</span>
 <span class="c1"># from tigramite.independence_tests.robust_parcorr import RobustParCorr</span>
-<span class="kn">from</span> <span class="nn">tigramite</span> <span class="kn">import</span> <span class="n">data_processing</span> <span class="k">as</span> <span class="n">pp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tigramite</span><span class="w"> </span><span class="kn">import</span> <span class="n">data_processing</span> <span class="k">as</span> <span class="n">pp</span>
 
 
 <div class="viewcode-block" id="ParCorrWLS">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.parcorr_wls.ParCorrWLS">[docs]</a>
-<span class="k">class</span> <span class="nc">ParCorrWLS</span><span class="p">(</span><span class="n">ParCorr</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ParCorrWLS</span><span class="p">(</span><span class="n">ParCorr</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Weighted partial correlation test.</span>
 
 <span class="sd">    Partial correlation is estimated through linear weighted least squares (WLS)</span>
@@ -88,7 +88,7 @@
 
     <span class="c1"># documentation</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gt_std_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gt_std_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">expert_knowledge</span><span class="o">=</span><span class="s2">&quot;time-dependent heteroskedasticity&quot;</span><span class="p">,</span>
                  <span class="n">window_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">robustify</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
@@ -104,7 +104,7 @@
                          <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_measure</span> <span class="o">=</span> <span class="s1">&#39;par_corr_wls&#39;</span>
 
-    <span class="k">def</span> <span class="nf">_stds_preparation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;2xtau_max&#39;</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_stds_preparation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;2xtau_max&#39;</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function to bring expert_knowledge into standard form.&quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">expert_knowledge</span> <span class="o">==</span> <span class="s2">&quot;time-dependent heteroskedasticity&quot;</span><span class="p">:</span>
@@ -113,7 +113,7 @@
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">expert_knowledge</span> <span class="o">==</span> <span class="s2">&quot;homoskedasticity&quot;</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">expert_knowledge</span> <span class="o">=</span> <span class="p">{}</span>
 
-    <span class="k">def</span> <span class="nf">_get_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;2xtau_max&#39;</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">return_cleaned_xyz</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;2xtau_max&#39;</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">return_cleaned_xyz</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                    <span class="n">remove_constant_data</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convenience wrapper around construct_array. Simultaneously, construct self.stds which needs to correspond</span>
 <span class="sd">        to the variables in the array.&quot;&quot;&quot;</span>
@@ -191,7 +191,7 @@
 
             <span class="k">return</span> <span class="n">array</span><span class="p">[:</span><span class="n">counter</span><span class="p">],</span> <span class="n">xyz</span><span class="p">[:</span><span class="n">counter</span><span class="p">],</span> <span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">[:</span><span class="n">counter</span><span class="p">]),</span> <span class="n">data_type</span>
 
-    <span class="k">def</span> <span class="nf">_estimate_std_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arr</span><span class="p">,</span> <span class="n">target_var</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_estimate_std_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arr</span><span class="p">,</span> <span class="n">target_var</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Estimate the standard deviations of the error terms using the squared-residuals approach. First calculate</span>
 <span class="sd">        the absolute value of the residuals using OLS, then smooth them using a sliding window while keeping the time</span>
@@ -229,7 +229,7 @@
             <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">window_size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">resid</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">window_size</span><span class="p">),</span> <span class="s1">&#39;valid&#39;</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">window_size</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">std_est</span>
 
-    <span class="k">def</span> <span class="nf">_estimate_std_parent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arr</span><span class="p">,</span> <span class="n">target_var</span><span class="p">,</span> <span class="n">target_lag</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">data_hs_parent</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_estimate_std_parent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arr</span><span class="p">,</span> <span class="n">target_var</span><span class="p">,</span> <span class="n">target_lag</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">data_hs_parent</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Estimate the standard deviations of the error terms using a residual-based approach.</span>
 <span class="sd">        First calculate the absolute value of the residuals using OLS, then smooth them by averaging over the k ones</span>
@@ -288,7 +288,7 @@
 
         <span class="k">return</span> <span class="n">std_est</span>
 
-    <span class="k">def</span> <span class="nf">_get_std_estimation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="p">[],</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;2xtau_max&#39;</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">data_hs_parent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_std_estimation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="p">[],</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;2xtau_max&#39;</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">data_hs_parent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Use expert knowledge on the heteroskedastic relationships contained in self.expert_knowledge to estimate the</span>
 <span class="sd">        standard deviations of the error terms.</span>
 <span class="sd">        The expert knowledge can specify whether there is sampling index / time dependent heteroskedasticity,</span>
@@ -339,7 +339,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">stds</span> <span class="o">=</span> <span class="n">stds</span>
         <span class="k">return</span> <span class="n">stds</span>
 
-    <span class="k">def</span> <span class="nf">_get_single_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_single_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="p">,</span>
                               <span class="n">standardize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                               <span class="n">return_means</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns residuals of weighted linear multiple regression.</span>
@@ -424,7 +424,7 @@
 
 <div class="viewcode-block" id="ParCorrWLS.get_dependence_measure">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.parcorr_wls.ParCorrWLS.get_dependence_measure">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">robustify</span><span class="p">:</span>
             <span class="n">array</span> <span class="o">=</span> <span class="n">RobustParCorr</span><span class="o">.</span><span class="n">trafo2normal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ParCorr</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">)</span></div>
@@ -432,7 +432,7 @@
 
 <div class="viewcode-block" id="ParCorrWLS.get_shuffle_significance">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.parcorr_wls.ParCorrWLS.get_shuffle_significance">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_shuffle_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_shuffle_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span>
                                  <span class="n">return_null_dist</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                                  <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">robustify</span><span class="p">:</span>
@@ -443,7 +443,7 @@
 
 <div class="viewcode-block" id="ParCorrWLS.get_model_selection_criterion">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.parcorr_wls.ParCorrWLS.get_model_selection_criterion">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">corrected_aic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">corrected_aic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns Akaike&#39;s Information criterion modulo constants.</span>
 
 <span class="sd">        Fits a linear model of the parents to variable j and returns the</span>
@@ -499,7 +499,7 @@
           
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
 <h1 class="logo"><a href="../../../index.html">Tigramite</a></h1>
 
@@ -547,7 +547,7 @@
       &#169;2023, Jakob Runge.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
     </div>

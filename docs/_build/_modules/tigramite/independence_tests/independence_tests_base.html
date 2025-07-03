@@ -36,19 +36,19 @@
 <span class="c1">#</span>
 <span class="c1"># License: GNU General Public License v3.0</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">import</span> <span class="nn">math</span>
-<span class="kn">import</span> <span class="nn">abc</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">six</span>
-<span class="kn">from</span> <span class="nn">hashlib</span> <span class="kn">import</span> <span class="n">sha1</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">abc</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">six</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hashlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">sha1</span>
 
 
 <div class="viewcode-block" id="CondIndTest">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest">[docs]</a>
 <span class="nd">@six</span><span class="o">.</span><span class="n">add_metaclass</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABCMeta</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">CondIndTest</span><span class="p">():</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CondIndTest</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class of conditional independence tests.</span>
 
 <span class="sd">    Provides useful general functions for different independence tests such as</span>
@@ -106,7 +106,7 @@
 <div class="viewcode-block" id="CondIndTest.get_dependence_measure">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_dependence_measure">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
-    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Abstract function that all concrete classes must instantiate.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -114,13 +114,13 @@
 
 
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractproperty</span>
-    <span class="k">def</span> <span class="nf">measure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">measure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Abstract property to store the type of independence test.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
                  <span class="n">mask_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">significance</span><span class="o">=</span><span class="s1">&#39;analytic&#39;</span><span class="p">,</span>
@@ -164,7 +164,7 @@
 
 <div class="viewcode-block" id="CondIndTest.set_mask_type">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.set_mask_type">[docs]</a>
-    <span class="k">def</span> <span class="nf">set_mask_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask_type</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_mask_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask_type</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Setter for mask type to ensure that this option does not clash with</span>
 <span class="sd">        recycle_residuals.</span>
@@ -190,7 +190,7 @@
 
 <div class="viewcode-block" id="CondIndTest.print_info">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.print_info">[docs]</a>
-    <span class="k">def</span> <span class="nf">print_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">print_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Print information about the conditional independence test parameters</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -222,7 +222,7 @@
         <span class="nb">print</span><span class="p">(</span><span class="n">info_str</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_check_mask_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_mask_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        mask_type : str, optional (default = None)</span>
 <span class="sd">            Must be in {None, &#39;y&#39;,&#39;x&#39;,&#39;z&#39;,&#39;xy&#39;,&#39;xz&#39;,&#39;yz&#39;,&#39;xyz&#39;}</span>
@@ -240,7 +240,7 @@
 
 <div class="viewcode-block" id="CondIndTest.get_analytic_confidence">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_analytic_confidence">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_analytic_confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">conf_lev</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_analytic_confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">conf_lev</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Base class assumption that this is not implemented.  Concrete classes</span>
 <span class="sd">        should override when possible.</span>
@@ -251,7 +251,7 @@
 
 <div class="viewcode-block" id="CondIndTest.get_model_selection_criterion">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_model_selection_criterion">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Base class assumption that this is not implemented.  Concrete classes</span>
 <span class="sd">        should override when possible.</span>
@@ -262,7 +262,7 @@
 
 <div class="viewcode-block" id="CondIndTest.get_analytic_significance">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_analytic_significance">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Base class assumption that this is not implemented.  Concrete classes</span>
 <span class="sd">        should override when possible.</span>
@@ -273,7 +273,7 @@
 
 <div class="viewcode-block" id="CondIndTest.get_shuffle_significance">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_shuffle_significance">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_shuffle_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_shuffle_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span>
                                  <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                                  <span class="n">return_null_dist</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -284,7 +284,7 @@
                                   <span class="s2">&quot; implemented for </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_get_single_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_single_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="p">,</span>
                               <span class="n">standardize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">return_means</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Base class assumption that this is not implemented.  Concrete classes</span>
@@ -295,7 +295,7 @@
 
 <div class="viewcode-block" id="CondIndTest.set_dataframe">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.set_dataframe">[docs]</a>
-    <span class="k">def</span> <span class="nf">set_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize and check the dataframe.</span>
 
 <span class="sd">        Parameters</span>
@@ -314,11 +314,11 @@
             <span class="n">dataframe</span><span class="o">.</span><span class="n">_check_mask</span><span class="p">(</span><span class="n">dataframe</span><span class="o">.</span><span class="n">mask</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_keyfy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_keyfy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function to make lists unique.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">z</span><span class="p">)))</span>
 
-    <span class="k">def</span> <span class="nf">_get_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;2xtau_max&#39;</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;2xtau_max&#39;</span><span class="p">,</span>
                    <span class="n">remove_constant_data</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                    <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convencience wrapper around construct_array.&quot;&quot;&quot;</span>
@@ -369,7 +369,7 @@
         <span class="k">return</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">XYZ</span><span class="p">,</span> <span class="n">type_array</span>
 
     
-    <span class="k">def</span> <span class="nf">_get_array_hash</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">XYZ</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_array_hash</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">XYZ</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function to get hash of array.</span>
 
 <span class="sd">        For a CI test X _|_ Y | Z the order of variables within X or Y or Z </span>
@@ -417,7 +417,7 @@
 
 <div class="viewcode-block" id="CondIndTest.run_test">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.run_test">[docs]</a>
-    <span class="k">def</span> <span class="nf">run_test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;2xtau_max&#39;</span><span class="p">,</span> <span class="n">alpha_or_thres</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;2xtau_max&#39;</span><span class="p">,</span> <span class="n">alpha_or_thres</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform conditional independence test.</span>
 
 <span class="sd">        Calls the dependence measure and significance test functions. The child</span>
@@ -510,6 +510,7 @@
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">dependent</span> <span class="o">=</span> <span class="n">pval</span> <span class="o">&lt;=</span> <span class="n">alpha_or_thres</span>
                 
+        <span class="c1"># Saved here, but not currently used</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ci_results</span><span class="p">[(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">Y</span><span class="p">),</span><span class="nb">tuple</span><span class="p">(</span><span class="n">Z</span><span class="p">))]</span> <span class="o">=</span> <span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">pval</span><span class="p">,</span> <span class="n">dependent</span><span class="p">)</span>
 
         <span class="c1"># Return the calculated value(s)</span>
@@ -526,7 +527,7 @@
 
 <div class="viewcode-block" id="CondIndTest.run_test_raw">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.run_test_raw">[docs]</a>
-    <span class="k">def</span> <span class="nf">run_test_raw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">y_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">z_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">alpha_or_thres</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_test_raw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">y_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">z_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">alpha_or_thres</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform conditional independence test directly on input arrays x, y, z.</span>
 
 <span class="sd">        Calls the dependence measure and signficicance test functions. The child</span>
@@ -642,7 +643,7 @@
 
 <div class="viewcode-block" id="CondIndTest.get_dependence_measure_raw">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_dependence_measure_raw">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_dependence_measure_raw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">y_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">z_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dependence_measure_raw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">y_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">z_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return test statistic directly on input arrays x, y, z.</span>
 
 <span class="sd">        Calls the dependence measure function. The child classes must specify</span>
@@ -720,7 +721,7 @@
         <span class="k">return</span> <span class="n">val</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_get_dependence_measure_recycle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_dependence_measure_recycle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the dependence_measure, optionally recycling residuals</span>
 
 <span class="sd">        If self.recycle_residuals is True, also _get_single_residuals must be</span>
@@ -767,7 +768,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependence_measure</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_get_cached_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_nodes</span><span class="p">,</span> <span class="n">z_nodes</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_cached_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_nodes</span><span class="p">,</span> <span class="n">z_nodes</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">target_var</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Retrieve or calculate the cached residuals for the given node sets.</span>
 
@@ -803,7 +804,7 @@
         <span class="c1"># Return these residuals</span>
         <span class="k">return</span> <span class="n">x_resid</span>
 
-    <span class="k">def</span> <span class="nf">_get_p_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_p_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span>
                          <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                          <span class="n">sig_override</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -879,7 +880,7 @@
 
 <div class="viewcode-block" id="CondIndTest.get_measure">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_measure">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> 
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> 
                     <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Estimate dependence measure.</span>
 
@@ -938,7 +939,7 @@
 
 <div class="viewcode-block" id="CondIndTest.get_confidence">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_confidence">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                        <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform confidence interval estimation.</span>
 
@@ -1013,7 +1014,7 @@
         <span class="k">return</span> <span class="p">(</span><span class="n">conf_lower</span><span class="p">,</span> <span class="n">conf_upper</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_print_cond_ind_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">pval</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cached</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dependent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">conf</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_print_cond_ind_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">pval</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cached</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dependent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">conf</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Print results from conditional independence test.</span>
 
 <span class="sd">        Parameters</span>
@@ -1045,7 +1046,7 @@
 
 <div class="viewcode-block" id="CondIndTest.get_bootstrap_confidence">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_bootstrap_confidence">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_bootstrap_confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">dependence_measure</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_bootstrap_confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">dependence_measure</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                                  <span class="n">conf_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">conf_blocklength</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                                  <span class="n">conf_lev</span><span class="o">=</span><span class="mf">.95</span><span class="p">,</span> 
                                  <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1137,7 +1138,7 @@
         <span class="k">return</span> <span class="p">(</span><span class="n">conf_lower</span><span class="p">,</span> <span class="n">conf_upper</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_get_acf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">series</span><span class="p">,</span> <span class="n">max_lag</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_acf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">series</span><span class="p">,</span> <span class="n">max_lag</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns autocorrelation function.</span>
 
 <span class="sd">        Parameters</span>
@@ -1168,7 +1169,7 @@
             <span class="n">autocorr</span><span class="p">[</span><span class="n">lag</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">corrcoef</span><span class="p">(</span><span class="n">y1_vals</span><span class="p">,</span> <span class="n">y2_vals</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">autocorr</span>
 
-    <span class="k">def</span> <span class="nf">_get_block_length</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_block_length</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns optimal block length for significance and confidence tests.</span>
 
 <span class="sd">        Determine block length using approach in Mader (2013) [Eq. (6)] which</span>
@@ -1200,7 +1201,7 @@
 <span class="sd">            Optimal block length.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Inject a dependency on siganal, optimize</span>
-        <span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">signal</span><span class="p">,</span> <span class="n">optimize</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">signal</span><span class="p">,</span> <span class="n">optimize</span>
         <span class="c1"># Get the shape of the array</span>
         <span class="n">dim</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
         <span class="c1"># Initiailize the indices</span>
@@ -1211,7 +1212,7 @@
         <span class="c1"># Maximum lag for autocov estimation</span>
         <span class="n">max_lag</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.1</span><span class="o">*</span><span class="n">T</span><span class="p">)</span>
         <span class="c1"># Define the function to optimize against</span>
-        <span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="n">x_vals</span><span class="p">,</span> <span class="n">a_const</span><span class="p">,</span> <span class="n">decay</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="n">x_vals</span><span class="p">,</span> <span class="n">a_const</span><span class="p">,</span> <span class="n">decay</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">a_const</span> <span class="o">*</span> <span class="n">decay</span><span class="o">**</span><span class="n">x_vals</span>
 
         <span class="c1"># Calculate the block length</span>
@@ -1242,7 +1243,7 @@
         <span class="n">block_len</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">block_len</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.1</span> <span class="o">*</span> <span class="n">T</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">block_len</span>
 
-    <span class="k">def</span> <span class="nf">_get_shuffle_dist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">dependence_measure</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_shuffle_dist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">dependence_measure</span><span class="p">,</span>
                           <span class="n">sig_samples</span><span class="p">,</span> <span class="n">sig_blocklength</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                           <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns shuffle distribution of test statistic.</span>
@@ -1331,7 +1332,7 @@
 
 <div class="viewcode-block" id="CondIndTest.get_fixed_thres_significance">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.independence_tests_base.CondIndTest.get_fixed_thres_significance">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_fixed_thres_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">fixed_thres</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_fixed_thres_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">fixed_thres</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;DEPRECATED Returns signficance for thresholding test.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;fixed_thres is replaced by alpha_or_thres in run_test.&quot;</span><span class="p">)</span></div>
@@ -1343,7 +1344,7 @@
 
         <span class="c1"># return pval</span>
 
-    <span class="k">def</span> <span class="nf">_trafo2uniform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_trafo2uniform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Transforms input array to uniform marginals.</span>
 
 <span class="sd">        Assumes x.shape = (dim, T)</span>
@@ -1359,7 +1360,7 @@
 <span class="sd">            array with uniform marginals.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">def</span> <span class="nf">trafo</span><span class="p">(</span><span class="n">xi</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">trafo</span><span class="p">(</span><span class="n">xi</span><span class="p">):</span>
             <span class="n">xisorted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span>
             <span class="n">yi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">xi</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">xi</span><span class="p">))</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">xi</span><span class="p">,</span> <span class="n">xisorted</span><span class="p">,</span> <span class="n">yi</span><span class="p">)</span>
@@ -1378,7 +1379,7 @@
           
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
 <h1 class="logo"><a href="../../../index.html">Tigramite</a></h1>
 
@@ -1426,7 +1427,7 @@
       &#169;2023, Jakob Runge.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
     </div>
