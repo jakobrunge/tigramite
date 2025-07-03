@@ -89,7 +89,7 @@ class RegressionCI(CondIndTest):
         
         if dataframe.data_type is None:
             raise ValueError("data_type cannot be None for RegressionCI.")
-        dataframe._check_mask(dataframe.data_type, check_data_type=True)
+        dataframe._check_mask(dataframe.data_type)
 
     def get_dependence_measure(self, array, xyz, data_type):
         """Returns test statistic.
