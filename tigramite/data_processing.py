@@ -7,6 +7,7 @@
 from __future__ import print_function
 from collections import defaultdict, OrderedDict
 import sys
+import time
 import warnings
 from copy import deepcopy
 import math
@@ -820,13 +821,14 @@ class DataFrame():
 
                 if boot_meanblocklength == 'cube_root':
                     boot_meanblocklength = max(1, int(len(ref_points_here)**(1/3)))
-                elif boot_meanblocklength == 'from_autocorrelation':
-                    boot_meanblocklength = \
-                        get_mean_block_length(dataset_data.T,xyz,mode='confidence')
+                elif type(boot_meanblocklength) is list:
+                    # Take maximum mean block length of relevant variable indices #
+                    indices = np.unique([entry[0] for entry in XYZ])
+                    boot_meanblocklength = max([boot_meanblocklength[idx] for idx in indices])
                 elif type(boot_meanblocklength) in [int,float] and boot_meanblocklength >= 1:
                     pass
                 else:
-                    raise ValueError("boot_meanblocklength must be integer or float >= 1, 'cube_root', or 'from_autocorrelation'")
+                    raise ValueError("boot_meanblocklength must be integer or float >= 1, list, 'cube_root', or 'from_autocorrelation'")
 
                 # Chooses THE SAME random seed for every dataset, maybe that's what we want...
                 # If the reference points are all the same, this will give the same bootstrap
@@ -843,7 +845,6 @@ class DataFrame():
                 blkslen = blkslen[0:np.where(
                     np.cumsum(blkslen)>len(ref_points_here))[0][0]+1] #sum of block lengths cut to proper length
                 blkslen[-1] = blkslen[-1]-(np.sum(blkslen)-len(ref_points_here)) #truncate last block to match proper length
-                #print('carr, blkslen[0:4]:',blkslen[0:4],flush=True)
                 # Get the starting indices for the blocks #
                 blk_strt = random_state.choice(np.arange(len(ref_points_here)),len(blkslen),replace=True) #block starting indices
                 # Create the random sequence of indices #
@@ -1046,15 +1047,12 @@ def get_acf(series, max_lag=None):
         autocorr[lag] = np.corrcoef(y1_vals, y2_vals, ddof=0)[0, 1]
     return autocorr
 
-def get_mean_block_length(array, xyz, mode):
+def get_mean_block_length(array):
     """Returns optimal mean block length for significance and confidence tests.
 
     Determine mean block length for stationary bootstrap using approach in
     Politis and White (2004) with correction from Patton et al. (2009).
-    For mode ='significance', only the indices corresponding to X are used
-    in the computation of the mean block length. For mode='confidence' all
-    variables are used.
-    The max mean block length across variables is output.
+    The mean block length for each variable is output.
     Adapted from code of Andrew Patton (public.econ.duke.edu/~ap172/code.html)
     See also R documentation (public.econ.duke.edu/~ap172/R_Help.pdf)
     
@@ -1072,16 +1070,12 @@ def get_mean_block_length(array, xyz, mode):
     array : array-like
         data array with X, Y, Z in rows and observations in columns
 
-    xyz : array of ints
-        XYZ identifier array of shape (dim,).
-
-    mode : str
-        Which mode to use: 'significance' or 'confidence'
-
     Returns
     -------
-    mean_block_len : float
-        Optimal mean block length for the stationary bootstrap.
+    bsbhat : array of floats
+        Optimal mean block length for the stationary bootstrap
+        for each variable.
+
     """
     
     ### Helper functions ###
@@ -1119,10 +1113,7 @@ def get_mean_block_length(array, xyz, mode):
     dim, T = array.shape
     # Initiailize the indices
     indices = range(dim)
-    if mode == 'significance':
-        indices = np.where(xyz == 0)[0]
-    n_vars = len(indices)
-    
+
     ### Fixed parameters ###
     bigkn  = max(5,np.sqrt(np.log10(T))) #footnote c of PW2004
     smallc = 2 #footnote c of PW2004
@@ -1131,7 +1122,7 @@ def get_mean_block_length(array, xyz, mode):
     ### Critical value for significance of autocorrelation ###
     critsignif = smallc*np.sqrt(np.log10(T)/T)
     ### Initialize array of optimal stationary bootstrap block sizes ###
-    bsbhat = np.nan*np.ones(n_vars)
+    bsbhat = np.nan*np.ones(dim)
     ### Loop through variables ###
     for idx in indices:
         iivals       = np.copy(array[idx,:])
@@ -1170,12 +1161,11 @@ def get_mean_block_length(array, xyz, mode):
             # Compute b_opt,sbhat of PW2004 #
             bsbhat[idx] = (((2*bigghat**2)/dsbhat)*T)**(1/3)
     bsbhat = np.maximum(1,np.minimum(b_max,bsbhat))
-    # Return largest across-variable optimal mean block length #
-    mean_block_len = np.max(bsbhat) 
     #print for checks (18/06/2025)
     #if(xyz.tolist()==[0,1,2]):
-    #    print('check 20250618 bsbhat,mean_block_len:',np.round(bsbhat,2),np.round(mean_block_len,2),flush=True)
-    return(mean_block_len)
+    #    print('check 20250618 bsbhat:',np.round(bsbhat,2),flush=True)
+    return(bsbhat)
+
 
 
 def lowhighpass_filter(data, cutperiod, pass_periods='low'):

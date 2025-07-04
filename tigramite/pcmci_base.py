@@ -11,8 +11,11 @@ from collections import defaultdict
 from copy import deepcopy
 import numpy as np
 import scipy.stats
+import os
 import math
 from joblib import Parallel, delayed
+
+from .data_processing import get_mean_block_length
 
 class PCMCIbase():
     r"""PCMCI base class.
@@ -859,7 +862,17 @@ class PCMCIbase():
 
         # Set bootstrap attribute to be passed to dataframe
         self.dataframe.bootstrap = {}
-        self.dataframe.bootstrap['boot_meanblocklength'] = boot_meanblocklength
+        # Compute optimal mean block lengths for each dataset here if from_autocorrelation #
+        if(type(boot_meanblocklength) is str and boot_meanblocklength=='from_autocorrelation'):
+            list_boot_meanblocklength = self.N*[1.0]
+            for dataset_key, dataset_data in self.dataframe.values.items():
+                list_boot_meanblocklength = np.maximum\
+                        (list_boot_meanblocklength,get_mean_block_length(dataset_data.T)).tolist() 
+            self.dataframe.bootstrap['boot_meanblocklength'] = list_boot_meanblocklength
+            #print('run_boootstrap_of, list_boot_meanblocklength:',list_boot_meanblocklength,flush=True)
+        else:
+            self.dataframe.bootstrap['boot_meanblocklength'] = boot_meanblocklength
+
 
         boot_results = {}
         #for b in range(boot_samples):
@@ -871,7 +884,9 @@ class PCMCIbase():
 
         child_seeds = seed_sequence.spawn(boot_samples)
         
-        aggregated_results = Parallel(n_jobs=-1)(
+        ntaskcpus = len(os.sched_getaffinity(0)) #number of cpus for this task
+        n_jobs = min([8,ntaskcpus]) #do not put this too high to avoid out-of-memory issues
+        aggregated_results = Parallel(n_jobs=n_jobs)(
             delayed(self.parallelized_bootstraps)(method, method_args, boot_seed=child_seeds[b]) for
             b in range(boot_samples))
 

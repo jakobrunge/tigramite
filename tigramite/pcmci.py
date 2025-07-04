@@ -13,6 +13,7 @@ import numpy as np
 import scipy.stats
 
 from .pcmci_base import PCMCIbase
+from .data_processing import get_mean_block_length
 
 def _create_nested_dictionary(depth=0, lowest_type=dict):
     """Create a series of nested dictionaries to a maximum depth.  The first
@@ -77,7 +78,7 @@ class PCMCI(PCMCIbase):
     different times and a link indicates a conditional dependency that can be
     interpreted as a causal dependency under certain assumptions (see paper).
     Assuming stationarity, the links are repeated in time. The parents
-    :math:`\mathcal{P}` of a variable are defined as the set of all nodes
+    :math:`\\mathcal{P}` of a variable are defined as the set of all nodes
     with a link towards it (blue and red boxes in Figure).
 
     The different PCMCI methods estimate causal links by iterative
@@ -382,6 +383,17 @@ class PCMCI(PCMCIbase):
         # Loop over all possible condition dimensions
         max_conds_dim = self._set_max_condition_dim(max_conds_dim,
                                                     tau_min, tau_max)
+        # Pre-compute the bootstrap block lengths if necessary # 
+        reset_meanblocklength = False
+        if(self.cond_ind_test.significance=='shuffle_test' and 
+                self.cond_ind_test.sig_meanblocklength is None):
+            reset_meanblocklength = True
+            meanblocklengths = self.N*[1.0]
+            # Take maximum mean block length across datasets #
+            for dataset_key, dataset_data in self.dataframe.values.items():
+                meanblocklengths = np.maximum\
+                        (meanblocklengths,get_mean_block_length(dataset_data.T)).tolist()
+
         # Iteration through increasing number of conditions, i.e. from 
         # [0, max_conds_dim] inclusive
         converged = False
@@ -415,12 +427,16 @@ class PCMCI(PCMCIbase):
                         pval = 0.
                         dependent = True
                     else:
+                        if(reset_meanblocklength):
+                            self.cond_ind_test.sig_meanblocklength = meanblocklengths[parent[0]] 
                         val, pval, dependent = self.cond_ind_test.run_test(X=[parent],
                                                     Y=[(j, 0)],
                                                     Z=Z,
                                                     tau_max=tau_max,
                                                     alpha_or_thres=pc_alpha,
                                                     )
+                        if(reset_meanblocklength):
+                            self.cond_ind_test.sig_meanblocklength = None
                     # Print some information if needed
                     if self.verbosity > 1:
                         self._print_cond_info(Z, comb_index, pval, val)
@@ -1066,6 +1082,22 @@ class PCMCI(PCMCIbase):
         conf_matrix = None
         if self.cond_ind_test.confidence is not None:
             conf_matrix = np.zeros((self.N, self.N, tau_max + 1, 2))
+        # Pre-compute the bootstrap block lengths if necessary # 
+        reset_sigmeanblocklength  = False
+        reset_confmeanblocklength = False
+        if(self.cond_ind_test.confidence=='bootstrap' and
+                self.cond_ind_test.conf_meanblocklength is None):
+            reset_confmeanblocklength = True
+        if(self.cond_ind_test.significance=='shuffle_test' and
+                self.cond_ind_test.sig_meanblocklength is None):
+            reset_sigmeanblocklength = True
+        if(reset_sigmeanblocklength or reset_confmeanblocklength):
+            # Pre-compute the optimal mean block length of all variables # 
+            meanblocklengths = self.N*[1.0]
+            # Take maximum mean block length across datasets #
+            for dataset_key, dataset_data in self.dataframe.values.items():
+                meanblocklengths = np.maximum\
+                    (meanblocklengths,get_mean_block_length(dataset_data.T)).tolist()
 
         # Get the conditions as implied by the input arguments
         for j, i, tau, Z in self._iter_indep_conds(_int_parents,
@@ -1083,10 +1115,15 @@ class PCMCI(PCMCIbase):
                     val = 1. 
                     pval = 0.
                 else:
+                    if(reset_sigmeanblocklength):
+                        # Take mean block length of the X variable #
+                        self.cond_ind_test.sig_meanblocklength = meanblocklengths[i]
                     val, pval, _ = self.cond_ind_test.run_test(X, Y, Z=Z,
                                                         tau_max=tau_max,
                                                         alpha_or_thres=alpha_level,
                                                         )
+                    if(reset_sigmeanblocklength):
+                        self.cond_ind_test.sig_meanblocklength = None
                 val_matrix[i, j, abs(tau)] = val
                 p_matrix[i, j, abs(tau)] = pval
             else:
@@ -1095,7 +1132,14 @@ class PCMCI(PCMCIbase):
 
             # Get the confidence value, returns None if cond_ind_test.confidence
             # is False
+            if(reset_confmeanblocklength):
+                # Take maximum mean block length across variables #
+                indices = [i,j]+[entry[0] for entry in Z]
+                self.cond_ind_test.conf_meanblocklength = \
+                        max([meanblocklengths[idx] for idx in indices])
             conf = self.cond_ind_test.get_confidence(X, Y, Z=Z, tau_max=tau_max)
+            if(reset_confmeanblocklength):
+                self.cond_ind_test.conf_meanblocklength = None
             # Record the value if the conditional independence requires it
             if self.cond_ind_test.confidence:
                 conf_matrix[i, j, abs(tau)] = conf
@@ -1770,7 +1814,7 @@ class PCMCI(PCMCIbase):
         PCMCI estimates time-lagged causal links by a two-step procedure:
 
         1.  Condition-selection: For each variable :math:`j`, estimate a
-            *superset* of parents :math:`\\tilde{\mathcal{P}}(X^j_t)` with the
+            *superset* of parents :math:`\\tilde{\\mathcal{P}}(X^j_t)` with the
             iterative PC1 algorithm, implemented as ``run_pc_stable``. The
             condition-selection step reduces the dimensionality and avoids
             conditioning on irrelevant variables.
@@ -1778,7 +1822,7 @@ class PCMCI(PCMCIbase):
         2.  *Momentary conditional independence* (MCI)
 
         .. math:: X^i_{t-\\tau} \perp X^j_{t} | \\tilde{\\mathcal{P}}(
-                  X^j_t), \\tilde{\mathcal{P}}(X^i_{t-\\tau})
+                  X^j_t), \\tilde{\\mathcal{P}}(X^i_{t-\\tau})
 
         here implemented as ``run_mci``. This step estimates the p-values and
         test statistic values for all links accounting for common drivers,
@@ -1987,7 +2031,7 @@ class PCMCI(PCMCIbase):
 
         1.  Condition-selection (same as for PCMCI): For each variable
         :math:`j`, estimate a *superset* of lagged parents :math:`\widehat{
-        \mathcal{B}}_t^-( X^j_t)` with the iterative PC1 algorithm,
+        \\mathcal{B}}_t^-( X^j_t)` with the iterative PC1 algorithm,
         implemented as ``run_pc_stable``. The condition-selection step
         reduces the dimensionality and avoids conditioning on irrelevant
         variables.
@@ -3027,7 +3071,7 @@ class PCMCI(PCMCIbase):
                     "%d: " % p)
 
             remaining_pairs = self._remaining_pairs(graph, adjt, tau_min,
-                                                    tau_max, p)
+                                                    tau_max, p) 
             n_remaining = len(remaining_pairs)
             for ir, (i, j, abstau) in enumerate(remaining_pairs):
                 # Check if link was not already removed (contemp links)

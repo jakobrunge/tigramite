@@ -1306,8 +1306,7 @@ class CMIknnMixed(CondIndTest):
         x_indices = np.where(xyz == 0)[0]
         
         if sig_meanblocklength is None:
-            sig_meanblocklength = \
-                self._get_mean_block_length(array,xyz,mode='significance')
+            raise ValueError('sig_meanblocklength is None')
 
         if verbosity > 2:
             print("            Significance test with mean block-length = %d "
