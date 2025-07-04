@@ -7,10 +7,10 @@
 from __future__ import print_function
 from scipy import special, spatial
 import numpy as np
-from .independence_tests_base import CondIndTest
 from numba import jit
 import warnings
 
+from tigramite.independence_tests.independence_tests_base import CondIndTest
 
 class CMIknn(CondIndTest):
     r"""Conditional mutual information test based on nearest-neighbor estimator.
@@ -185,12 +185,16 @@ class CMIknn(CondIndTest):
             array = array.argsort(axis=1).argsort(axis=1).astype(np.float64)
 
         array = array.T
+
+        # Compute distance to k-th nearest neighbor, excluding points itself, hence k=[knn+1]
         tree_xyz = spatial.cKDTree(array)
         epsarray = tree_xyz.query(array, k=[knn+1], p=np.inf,
-                                  eps=0., workers=self.workers)[0][:, 0].astype(np.float64)
+                                  workers=self.workers)[0][:, 0].astype(np.float64)
+        # print("epsarray", epsarray)
 
-        # To search neighbors < eps
-        epsarray = np.multiply(epsarray, 0.99999)
+        # To search neighbors < eps instead of <= eps, we need to reduce eps by a bit
+        epsarray = np.multiply(epsarray, 0.999999999)
+        # print("epsarray", epsarray)
 
         # Subsample indices
         x_indices = np.where(xyz == 0)[0]
@@ -200,20 +204,25 @@ class CMIknn(CondIndTest):
         # Find nearest neighbors in subspaces
         xz = array[:, np.concatenate((x_indices, z_indices))]
         tree_xz = spatial.cKDTree(xz)
-        k_xz = tree_xz.query_ball_point(xz, r=epsarray, eps=0., p=np.inf, workers=self.workers, return_length=True)
+        k_xz = tree_xz.query_ball_point(xz, r=epsarray, p=np.inf, workers=self.workers, return_length=True)
 
         yz = array[:, np.concatenate((y_indices, z_indices))]
         tree_yz = spatial.cKDTree(yz)
-        k_yz = tree_yz.query_ball_point(yz, r=epsarray, eps=0., p=np.inf, workers=self.workers, return_length=True)
+        k_yz = tree_yz.query_ball_point(yz, r=epsarray, p=np.inf, workers=self.workers, return_length=True)
 
         if len(z_indices) > 0:
             z = array[:, z_indices]
             tree_z = spatial.cKDTree(z)
-            k_z = tree_z.query_ball_point(z, r=epsarray, eps=0., p=np.inf, workers=self.workers, return_length=True)
+            k_z = tree_z.query_ball_point(z, r=epsarray, p=np.inf, workers=self.workers, return_length=True)
         else:
             # Number of neighbors is T when z is empty.
             k_z = np.full(T, T, dtype=np.float64)
 
+
+        # print("knn", knn)
+        # print("k_xz", k_xz)
+        # print("k_yz", k_yz)
+        # print("k_z", k_z)
         return k_xz, k_yz, k_z
 
     def get_dependence_measure(self, array, xyz, data_type=None):
@@ -300,7 +309,31 @@ class CMIknn(CondIndTest):
                       self.shuffle_neighbors, self.sig_samples))
 
             # Get nearest neighbors around each sample point in Z
-            z_array = array[z_indices, :].T.copy()
+            z_array = array[z_indices, :].copy()
+            dim_z = len(z_indices)
+
+            if self.transform == 'standardize':
+                # Standardize
+                z_array = z_array.astype(np.float64)
+                z_array -= z_array.mean(axis=1).reshape(dim_z, 1)
+                std = z_array.std(axis=1)
+                for i in range(dim_z):
+                    if std[i] != 0.:
+                        z_array[i] /= std[i]
+                # array /= array.std(axis=1).reshape(dim, 1)
+                # FIXME: If the time series is constant, return nan rather than
+                # raising Exception
+                if np.any(std == 0.) and self.verbosity > 0:
+                    warnings.warn("Possibly constant array!")
+                    # raise ValueError("nans after standardizing, "
+                    #                  "possibly constant array!")
+            elif self.transform == 'uniform':
+                z_array = self._trafo2uniform(z_array)
+            elif self.transform == 'ranks':
+                z_array = z_array.argsort(axis=1).argsort(axis=1).astype(np.float64)
+
+            z_array = z_array.T
+
             tree_xyz = spatial.cKDTree(z_array)
             neighbors = tree_xyz.query(z_array,
                                        k=self.shuffle_neighbors,
@@ -537,6 +570,7 @@ if __name__ == '__main__':
     import tigramite
     from tigramite.data_processing import DataFrame
     import tigramite.data_processing as pp
+    import tigramite.toymodels.structural_causal_processes as toys
     import numpy as np
 
     random_state = np.random.default_rng(seed=42)

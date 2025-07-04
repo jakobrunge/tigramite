@@ -36,12 +36,12 @@
 <span class="c1">#</span>
 <span class="c1"># License: GNU General Public License v3.0</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">sklearn.neighbors</span> <span class="kn">import</span> <span class="n">KNeighborsRegressor</span><span class="p">,</span> <span class="n">KernelDensity</span>
-<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
-<span class="kn">import</span> <span class="nn">tigramite.toymodels.non_additive</span> <span class="k">as</span> <span class="nn">toy_setup</span>
-<span class="kn">from</span> <span class="nn">tigramite.causal_effects</span> <span class="kn">import</span> <span class="n">CausalEffects</span>
-<span class="kn">from</span> <span class="nn">tigramite.toymodels.non_additive</span> <span class="kn">import</span> <span class="n">_Fct_on_grid</span><span class="p">,</span> <span class="n">_Fct_smoothed</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.neighbors</span><span class="w"> </span><span class="kn">import</span> <span class="n">KNeighborsRegressor</span><span class="p">,</span> <span class="n">KernelDensity</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tigramite.toymodels.non_additive</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">toy_setup</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tigramite.causal_effects</span><span class="w"> </span><span class="kn">import</span> <span class="n">CausalEffects</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tigramite.toymodels.non_additive</span><span class="w"> </span><span class="kn">import</span> <span class="n">_Fct_on_grid</span><span class="p">,</span> <span class="n">_Fct_smoothed</span>
 
 
 
@@ -50,14 +50,14 @@
 <span class="sd">-------------------------------------------------------------------------------------------&quot;&quot;&quot;</span>
 
 
-<span class="k">class</span> <span class="nc">MixedData</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MixedData</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Namescope for mixed-data helpers.</span>
 
 <span class="sd">    Mostly for internal use.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">IsPurelyCategorical</span><span class="p">(</span><span class="n">vars_and_data</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">IsPurelyCategorical</span><span class="p">(</span><span class="n">vars_and_data</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if all variables are categorical</span>
 
 <span class="sd">        Parameters</span>
@@ -76,7 +76,7 @@
         <span class="k">return</span> <span class="kc">True</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_FixZeroDim</span><span class="p">(</span><span class="n">continuous_data</span><span class="p">,</span> <span class="n">categorical_data</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_FixZeroDim</span><span class="p">(</span><span class="n">continuous_data</span><span class="p">,</span> <span class="n">categorical_data</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;[INTERNAL] Ensure consistent shape (0,N) for batches containing zero categorical or continuous variables&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">continuous_data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">categorical_data</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span>
@@ -91,7 +91,7 @@
         <span class="k">return</span> <span class="n">continuous_data</span><span class="p">,</span> <span class="n">categorical_data</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">Get_data_via_var_ids</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">var_ids</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">Get_data_via_var_ids</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">var_ids</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;For a subset of variables, get separate batches for continuous and categorical data, and category-shape</span>
 
 <span class="sd">        Parameters</span>
@@ -122,7 +122,7 @@
         <span class="k">return</span> <span class="n">MixedData</span><span class="o">.</span><span class="n">_FixZeroDim</span><span class="p">(</span><span class="n">continuous_data</span><span class="p">,</span> <span class="n">categorical_data</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">category_shape</span><span class="p">,)</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">Split_data_into_categorical_and_continuous</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">Split_data_into_categorical_and_continuous</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get separate batches for continuous and categorical data, and category-shape</span>
 
 <span class="sd">        (see Get_data_via_var_ids)</span>
@@ -130,7 +130,7 @@
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">Get_data_via_var_ids</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">CategoryCount</span><span class="p">(</span><span class="n">category_shape</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">CategoryCount</span><span class="p">(</span><span class="n">category_shape</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get total number of categories in shape.</span>
 
 <span class="sd">        Parameters</span>
@@ -149,7 +149,7 @@
         <span class="k">return</span> <span class="n">result</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">Get_Len</span><span class="p">(</span><span class="n">continuous</span><span class="p">,</span> <span class="n">categorical</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">Get_Len</span><span class="p">(</span><span class="n">continuous</span><span class="p">,</span> <span class="n">categorical</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract number of samples from data&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">continuous</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">continuous</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
@@ -158,7 +158,7 @@
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">categorical</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">SimplifyIfTrivialVector</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">SimplifyIfTrivialVector</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Make shapes consistent.&quot;&quot;&quot;</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">==</span> <span class="p">():</span>
@@ -167,7 +167,7 @@
             <span class="k">return</span> <span class="n">result</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">Call_map</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">Call_map</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Execute call consistently.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="s1">&#39;__iter__&#39;</span><span class="p">):</span>
             <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
@@ -180,7 +180,7 @@
             <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">SimplifyIfTrivialVector</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
 
 
-<span class="k">class</span> <span class="nc">FitProvider_Continuous_Default</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FitProvider_Continuous_Default</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Helper for fitting continuous maps.</span>
 
 <span class="sd">    See &quot;Technical Appendix B&quot; of the Causal Mediation Tutorial.</span>
@@ -193,12 +193,12 @@
 <span class="sd">        overwrite fit_map in the case of a 1-dimensional domain.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fit_map</span><span class="p">,</span> <span class="n">fit_map_1d</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fit_map</span><span class="p">,</span> <span class="n">fit_map_1d</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fit_map</span> <span class="o">=</span> <span class="n">fit_map</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fit_map_1d</span> <span class="o">=</span> <span class="n">fit_map_1d</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">UseSklearn</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">neighbors</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="s1">&#39;uniform&#39;</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">UseSklearn</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">neighbors</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="s1">&#39;uniform&#39;</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Use an sci-kit learn KNeighborsRegressor</span>
 
 <span class="sd">        Parameters</span>
@@ -216,7 +216,7 @@
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">KNeighborsRegressor</span><span class="p">(</span><span class="n">n_neighbors</span><span class="o">=</span><span class="n">neighbors</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">UseSklearn_GC</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">UseSklearn_GC</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Use an sci-kit learn GaussianProcessRegressor</span>
 
 <span class="sd">        Parameters</span>
@@ -229,10 +229,10 @@
 <span class="sd">        GC Fit-Provider : FitProvider_Continuous_Default</span>
 <span class="sd">            Fit-Provider for use with FitSetup.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">sklearn.gaussian_process</span> <span class="kn">import</span> <span class="n">GaussianProcessRegressor</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.gaussian_process</span><span class="w"> </span><span class="kn">import</span> <span class="n">GaussianProcessRegressor</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">GaussianProcessRegressor</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">Get_Fit_Continuous</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">Get_Fit_Continuous</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Produce a fit</span>
 
 <span class="sd">        Parameters</span>
@@ -256,7 +256,7 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_map</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">FitProvider_Density_Default</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FitProvider_Density_Default</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Helper for fitting continuous densities.</span>
 
 <span class="sd">   See &quot;Technical Appendix B&quot; of the Causal Mediation Tutorial.</span>
@@ -267,11 +267,11 @@
 <span class="sd">       A callable, that given data (x) fits a density estimator p s.t. x ~ p</span>
 <span class="sd">   &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fit_density</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fit_density</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fit_density</span> <span class="o">=</span> <span class="n">fit_density</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">UseSklearn</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span> <span class="n">bandwidth</span><span class="o">=</span><span class="mf">0.2</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">UseSklearn</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span> <span class="n">bandwidth</span><span class="o">=</span><span class="mf">0.2</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Use an sci-kit learn KernelDensity</span>
 
 <span class="sd">        Parameters</span>
@@ -288,7 +288,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">KernelDensity</span><span class="p">(</span><span class="n">kernel</span><span class="o">=</span><span class="n">kernel</span><span class="p">,</span> <span class="n">bandwidth</span><span class="o">=</span><span class="n">bandwidth</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">Get_Fit_Density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_train</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">Get_Fit_Density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_train</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Produce a fit</span>
 
 <span class="sd">        Parameters</span>
@@ -311,23 +311,23 @@
             <span class="k">return</span> <span class="k">lambda</span> <span class="n">x_predict</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">x_predict</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
 
 
-<span class="k">class</span> <span class="nc">MixedMap</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MixedMap</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Helper to evaluate fitted maps on mixed data.</span>
 
 <span class="sd">    Used internally, should not normally be required in user-code.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">error_value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;nan&#39;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">maps</span><span class="p">,</span> <span class="n">var_ids</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">maps</span><span class="p">,</span> <span class="n">var_ids</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">maps</span> <span class="o">=</span> <span class="n">maps</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">var_ids</span> <span class="o">=</span> <span class="n">var_ids</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">dtype</span>
 
-    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Given x, predict y.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Given x, predict y.&quot;&quot;&quot;</span>
         <span class="n">continuous_data</span><span class="p">,</span> <span class="n">categorical_data</span><span class="p">,</span> <span class="n">category_shape</span> <span class="o">=</span> <span class="n">MixedData</span><span class="o">.</span><span class="n">Get_data_via_var_ids</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_ids</span><span class="p">)</span>
         <span class="n">category_count</span> <span class="o">=</span> <span class="n">MixedData</span><span class="o">.</span><span class="n">CategoryCount</span><span class="p">(</span><span class="n">category_shape</span><span class="p">)</span>
@@ -349,22 +349,22 @@
             <span class="k">return</span> <span class="n">result</span>
 
 
-<span class="k">class</span> <span class="nc">MixedMarkovKernel</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MixedMarkovKernel</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Helper to evaluate fitted densities on mixed data.</span>
 
 <span class="sd">    Used internally, should not normally be required in user-code.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transfers</span><span class="p">,</span> <span class="n">var_ids</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">output_category_count</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transfers</span><span class="p">,</span> <span class="n">var_ids</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">output_category_count</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">transfers</span> <span class="o">=</span> <span class="n">transfers</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">var_ids</span> <span class="o">=</span> <span class="n">var_ids</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">dtype</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">output_category_count</span> <span class="o">=</span> <span class="n">output_category_count</span>
 
-    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Given np.array x, predict probability of each sample.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Given np.array x, predict probability of each sample.&quot;&quot;&quot;</span>
         <span class="n">continuous_data</span><span class="p">,</span> <span class="n">categorical_data</span><span class="p">,</span> <span class="n">category_shape</span> <span class="o">=</span> <span class="n">MixedData</span><span class="o">.</span><span class="n">Get_data_via_var_ids</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_ids</span><span class="p">)</span>
         <span class="n">category_count</span> <span class="o">=</span> <span class="n">MixedData</span><span class="o">.</span><span class="n">CategoryCount</span><span class="p">(</span><span class="n">category_shape</span><span class="p">)</span>
@@ -388,17 +388,17 @@
         <span class="k">return</span> <span class="p">(</span><span class="n">values</span> <span class="o">/</span> <span class="n">normalize</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
 
 
-<span class="k">class</span> <span class="nc">FitSetup</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FitSetup</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Helper to fit mixed data.</span>
 
 <span class="sd">   See &quot;Technical Appendix B&quot; of the Causal Mediation Tutorial.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fit_map</span><span class="o">=</span><span class="n">FitProvider_Continuous_Default</span><span class="o">.</span><span class="n">UseSklearn</span><span class="p">(),</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fit_map</span><span class="o">=</span><span class="n">FitProvider_Continuous_Default</span><span class="o">.</span><span class="n">UseSklearn</span><span class="p">(),</span>
                  <span class="n">fit_density</span><span class="o">=</span><span class="n">FitProvider_Density_Default</span><span class="o">.</span><span class="n">UseSklearn</span><span class="p">()):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fit_map</span> <span class="o">=</span> <span class="n">fit_map</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fit_density</span> <span class="o">=</span> <span class="n">fit_density</span>
 
-    <span class="k">def</span> <span class="nf">Fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">domain</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">dont_wrap_1d_y_in_vector</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">Fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">domain</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">dont_wrap_1d_y_in_vector</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Fit a mixed data mapping.</span>
 
 <span class="sd">        See &quot;Technical Appendix B&quot; of the Causal Mediation Tutorial.</span>
@@ -417,7 +417,7 @@
                 <span class="n">result</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">=</span> <span class="n">_next</span>
         <span class="k">return</span> <span class="n">result</span>
 
-    <span class="k">def</span> <span class="nf">Fit_ContinuousTarget</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">dim_y</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">Fit_ContinuousTarget</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">dim_y</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Fit a mixed-domain mapping with continuous target.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">dim_y</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Fit_ContinuousTarget_1D</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
@@ -427,7 +427,7 @@
                 <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Fit_ContinuousTarget_1D</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]))</span>
             <span class="k">return</span> <span class="n">result</span>
 
-    <span class="k">def</span> <span class="nf">Fit_ContinuousTarget_1D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">Fit_ContinuousTarget_1D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Fit a mixed-domain mapping with 1-dimensional continuous target.&quot;&quot;&quot;</span>
         <span class="n">continuous_data</span><span class="p">,</span> <span class="n">categorical_data</span><span class="p">,</span> <span class="n">category_shape</span> <span class="o">=</span> <span class="n">MixedData</span><span class="o">.</span><span class="n">Split_data_into_categorical_and_continuous</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
@@ -450,7 +450,7 @@
                     <span class="n">maps</span><span class="p">[</span><span class="n">cX</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">return</span> <span class="n">MixedMap</span><span class="p">(</span><span class="n">maps</span><span class="p">,</span> <span class="n">var_ids</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">y</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">Fit_CategoricalTarget_MarkovKernel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">y_category_count</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">Fit_CategoricalTarget_MarkovKernel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">y_category_count</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Fit a mixed-domain probabilistic mapping (a Markov-kernel) with categorical target.&quot;&quot;&quot;</span>
         <span class="n">continuous_data</span><span class="p">,</span> <span class="n">categorical_data</span><span class="p">,</span> <span class="n">category_shape</span> <span class="o">=</span> <span class="n">MixedData</span><span class="o">.</span><span class="n">Split_data_into_categorical_and_continuous</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
@@ -469,7 +469,7 @@
         <span class="k">return</span> <span class="n">MixedMarkovKernel</span><span class="p">(</span><span class="n">transfer_matrix</span><span class="p">,</span> <span class="n">var_ids</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">y</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">output_category_count</span><span class="o">=</span><span class="n">y_category_count</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_Fit_TransferMatrix</span><span class="p">(</span><span class="n">x_categorical</span><span class="p">,</span> <span class="n">x_category_count</span><span class="p">,</span> <span class="n">y_categorical</span><span class="p">,</span> <span class="n">y_category_count</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_Fit_TransferMatrix</span><span class="p">(</span><span class="n">x_categorical</span><span class="p">,</span> <span class="n">x_category_count</span><span class="p">,</span> <span class="n">y_categorical</span><span class="p">,</span> <span class="n">y_category_count</span><span class="p">):</span>
         <span class="n">transfers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">x_category_count</span><span class="p">,</span> <span class="n">y_category_count</span><span class="p">])</span>
         <span class="k">for</span> <span class="n">cX</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">x_category_count</span><span class="p">):</span>
             <span class="n">filter_x</span> <span class="o">=</span> <span class="p">(</span><span class="n">x_categorical</span> <span class="o">==</span> <span class="n">cX</span><span class="p">)</span>
@@ -482,7 +482,7 @@
                 <span class="n">transfers</span><span class="p">[</span><span class="n">cX</span><span class="p">,</span> <span class="n">cY</span><span class="p">]</span> <span class="o">=</span> <span class="n">MixedMap</span><span class="o">.</span><span class="n">error_value</span>
         <span class="k">return</span> <span class="n">transfers</span>
 
-    <span class="k">def</span> <span class="nf">_Fit_Enriched_TransferMatrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_continuous</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_Fit_Enriched_TransferMatrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_continuous</span><span class="p">,</span>
                                      <span class="n">x_categorical</span><span class="p">,</span> <span class="n">x_category_count</span><span class="p">,</span>
                                      <span class="n">y_categorical</span><span class="p">,</span> <span class="n">y_category_count</span><span class="p">):</span>
         <span class="n">transfers</span> <span class="o">=</span> <span class="p">[]</span>
@@ -510,7 +510,7 @@
         <span class="k">return</span> <span class="n">transfers</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_EvalFromBayes</span><span class="p">(</span><span class="n">x_c</span><span class="p">,</span> <span class="n">p_y_given_discrete_x</span><span class="p">,</span> <span class="n">p_continuous_x_given_discrete_x_and_y</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_EvalFromBayes</span><span class="p">(</span><span class="n">x_c</span><span class="p">,</span> <span class="n">p_y_given_discrete_x</span><span class="p">,</span> <span class="n">p_continuous_x_given_discrete_x_and_y</span><span class="p">):</span>
         <span class="c1"># P( y | x_c, x_d ) = P( x_c | x_d, y ) P( Y | x_d ) / normalization independent of y</span>
         <span class="k">return</span> <span class="n">p_continuous_x_given_discrete_x_and_y</span><span class="p">(</span><span class="n">x_c</span><span class="p">)</span> <span class="o">*</span> <span class="n">p_y_given_discrete_x</span>
 
@@ -522,7 +522,7 @@
 <span class="sd">--------------------------------   Natural Effect Estimation   -------------------------------</span>
 <span class="sd">-------------------------------------------------------------------------------------------&quot;&quot;&quot;</span>
 
-<span class="k">class</span> <span class="nc">NaturalEffects_StandardMediationSetup</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">NaturalEffects_StandardMediationSetup</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Setup for estimating natural effects in a &quot;standard&quot; mediation (triangle) graph.</span>
 
 <span class="sd">    Methods for the non-parametric estimation of mediation effects.</span>
@@ -562,7 +562,7 @@
 <span class="sd">        or toy_setup.VariablesFromDataframe( tigramite dataframe )</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fit_setup</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">mediator</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fit_setup</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">mediator</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fit_setup</span> <span class="o">=</span> <span class="n">fit_setup</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">source</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">Y</span> <span class="o">=</span> <span class="n">target</span>
@@ -581,7 +581,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_P_Y_XM</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_P_M_X</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="k">def</span> <span class="nf">E_Y_XM_fixed_x_obs_m</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">E_Y_XM_fixed_x_obs_m</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;[internal] Provide samples Y( fixed x, observed m ) from fit of E[Y|X,M]</span>
 
 <span class="sd">        Parameters</span>
@@ -598,7 +598,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_E_Y_XM</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_setup</span><span class="o">.</span><span class="n">Fit</span><span class="p">({</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="p">},</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">})</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_E_Y_XM</span><span class="p">({</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="p">})</span>
 
-    <span class="k">def</span> <span class="nf">E_Y_XM_fixed_x_all_m</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">E_Y_XM_fixed_x_all_m</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;For categorical M, provide samples Y( fixed x, m_i ) for all categories m_i of M from fit of E[Y|X,M]</span>
 
 <span class="sd">        Parameters</span>
@@ -616,7 +616,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_E_Y_XM</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_setup</span><span class="o">.</span><span class="n">Fit</span><span class="p">({</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="p">},</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">})</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_E_Y_XM</span><span class="p">({</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="o">.</span><span class="n">categories</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="o">.</span><span class="n">categories</span><span class="p">)})</span>
 
-    <span class="k">def</span> <span class="nf">P_Y_XM_fixed_x_obs_m</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">P_Y_XM_fixed_x_obs_m</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Provide for all samples of M the likelihood P( Y | fixed x, observed m ) from fit of P[Y|X,M]</span>
 
 <span class="sd">        Parameters</span>
@@ -633,7 +633,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_P_Y_XM</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_setup</span><span class="o">.</span><span class="n">Fit</span><span class="p">({</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="p">},</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">})</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_P_Y_XM</span><span class="p">({</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="p">})</span>
 
-    <span class="k">def</span> <span class="nf">P_M_X</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">P_M_X</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Provide the likelihood P( M | fixed x ) from fit of P[M|X]</span>
 
 <span class="sd">        Parameters</span>
@@ -650,7 +650,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_P_M_X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_setup</span><span class="o">.</span><span class="n">Fit</span><span class="p">({</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">},</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="p">})</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_P_M_X</span><span class="p">({</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">:</span> <span class="n">x</span><span class="p">})</span>
 
-    <span class="k">def</span> <span class="nf">_ValidateRequest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change_from</span><span class="p">,</span> <span class="n">change_to</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_ValidateRequest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change_from</span><span class="p">,</span> <span class="n">change_to</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Sanity-check parameters passed to effect-estimation</span>
 
 <span class="sd">        Parameters</span>
@@ -669,7 +669,7 @@
             <span class="k">if</span> <span class="n">change_from</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">categories</span> <span class="ow">or</span> <span class="n">change_to</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">categories</span> <span class="ow">or</span> <span class="n">change_from</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">change_to</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Intervention on categorical variable was outside of valid category-range.&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">NDE</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change_from</span><span class="p">,</span> <span class="n">change_to</span><span class="p">,</span> <span class="n">fct_of_nde</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">NDE</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change_from</span><span class="p">,</span> <span class="n">change_to</span><span class="p">,</span> <span class="n">fct_of_nde</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute Natural Direct Effect (NDE)</span>
 
 <span class="sd">        Parameters</span>
@@ -706,7 +706,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_NDE_continuous_target</span><span class="p">(</span><span class="n">change_from</span><span class="p">,</span> <span class="n">change_to</span><span class="p">,</span> <span class="n">fct_of_nde</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">NIE</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change_from</span><span class="p">,</span> <span class="n">change_to</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">NIE</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change_from</span><span class="p">,</span> <span class="n">change_to</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute Natural Indirect Effect (NIE)</span>
 
 <span class="sd">        Parameters</span>
@@ -739,7 +739,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_NIE_continuous_target</span><span class="p">(</span><span class="n">change_from</span><span class="p">,</span> <span class="n">change_to</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_NDE_continuous_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change_from</span><span class="p">,</span> <span class="n">change_to</span><span class="p">,</span> <span class="n">fct_of_nde</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_NDE_continuous_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change_from</span><span class="p">,</span> <span class="n">change_to</span><span class="p">,</span> <span class="n">fct_of_nde</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute NDE (continuous Y)</span>
 
 <span class="sd">        See &#39;NDE&#39; above.</span>
@@ -761,7 +761,7 @@
         <span class="n">E_Difference_X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_setup</span><span class="o">.</span><span class="n">Fit</span><span class="p">({</span><span class="n">X</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="n">valid_samples</span><span class="p">]},</span> <span class="p">{</span><span class="n">Difference</span><span class="p">:</span> <span class="n">difference</span><span class="p">[</span><span class="n">valid_samples</span><span class="p">]})</span>
         <span class="k">return</span> <span class="n">E_Difference_X</span><span class="p">({</span><span class="n">X</span><span class="p">:</span> <span class="p">[</span><span class="n">change_from</span><span class="p">]})</span>
 
-    <span class="k">def</span> <span class="nf">_NDE_categorical_target_full_density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actual_value</span><span class="p">,</span> <span class="n">counterfactual_value</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_NDE_categorical_target_full_density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actual_value</span><span class="p">,</span> <span class="n">counterfactual_value</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute NDE as full density (categorical Y)</span>
 
 <span class="sd">        See &#39;NDE&#39; above.</span>
@@ -780,7 +780,7 @@
 
         <span class="k">return</span> <span class="n">MixedData</span><span class="o">.</span><span class="n">Call_map</span><span class="p">(</span><span class="n">P_Y_X</span><span class="p">,</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">:</span> <span class="p">[</span><span class="n">counterfactual_value</span><span class="p">]})</span>
 
-    <span class="k">def</span> <span class="nf">_NDE_categorical_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actual_value</span><span class="p">,</span> <span class="n">counterfactual_value</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_NDE_categorical_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actual_value</span><span class="p">,</span> <span class="n">counterfactual_value</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute NDE by evaluating density (categorical Y)</span>
 
 <span class="sd">        See &#39;NDE&#39; and &#39;_NDE_categorical_target_full_density&#39; above.</span>
@@ -789,7 +789,7 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_NDE_categorical_target_full_density</span><span class="p">(</span><span class="n">counterfactual_value</span><span class="p">,</span> <span class="n">actual_value</span><span class="p">),</span>
                          <span class="bp">self</span><span class="o">.</span><span class="n">_NDE_categorical_target_full_density</span><span class="p">(</span><span class="n">actual_value</span><span class="p">,</span> <span class="n">actual_value</span><span class="p">)])</span><span class="o">.</span><span class="n">T</span>
 
-    <span class="k">def</span> <span class="nf">_NIE_continuous_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change_from</span><span class="p">,</span> <span class="n">change_to</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_NIE_continuous_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change_from</span><span class="p">,</span> <span class="n">change_to</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute NIE (continuous Y)</span>
 
 <span class="sd">        See &#39;NIE&#39; above.</span>
@@ -825,7 +825,7 @@
             <span class="k">return</span> <span class="p">(</span><span class="n">MixedData</span><span class="o">.</span><span class="n">Call_map</span><span class="p">(</span><span class="n">ModifiedY</span><span class="p">,</span> <span class="p">{</span><span class="n">X</span><span class="p">:</span> <span class="p">[</span><span class="n">change_to</span><span class="p">]})</span>
                     <span class="o">-</span> <span class="n">MixedData</span><span class="o">.</span><span class="n">Call_map</span><span class="p">(</span><span class="n">ModifiedY</span><span class="p">,</span> <span class="p">{</span><span class="n">X</span><span class="p">:</span> <span class="p">[</span><span class="n">change_from</span><span class="p">]}))</span>
 
-    <span class="k">def</span> <span class="nf">_NIE_categorical_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change_from</span><span class="p">,</span> <span class="n">change_to</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_NIE_categorical_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change_from</span><span class="p">,</span> <span class="n">change_to</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute NIE (continuous Y)</span>
 
 <span class="sd">        See &#39;NIE&#39; above.</span>
@@ -857,7 +857,7 @@
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">MixedData</span><span class="o">.</span><span class="n">Call_map</span><span class="p">(</span><span class="n">ModifiedY</span><span class="p">,</span> <span class="p">{</span><span class="n">X</span><span class="p">:</span> <span class="p">[</span><span class="n">change_to</span><span class="p">]}),</span>
                              <span class="n">MixedData</span><span class="o">.</span><span class="n">Call_map</span><span class="p">(</span><span class="n">ModifiedY</span><span class="p">,</span> <span class="p">{</span><span class="n">X</span><span class="p">:</span> <span class="p">[</span><span class="n">change_from</span><span class="p">]})])</span><span class="o">.</span><span class="n">T</span>
 
-    <span class="k">def</span> <span class="nf">NDE_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">list_of_points</span><span class="p">,</span> <span class="n">cf_delta</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">normalize_by_delta</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fct_of_nde</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">NDE_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">list_of_points</span><span class="p">,</span> <span class="n">cf_delta</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">normalize_by_delta</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fct_of_nde</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute NDE as grided (unsmoothed) function</span>
 
 <span class="sd">        Parameters</span>
@@ -894,7 +894,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">_Fct_on_grid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NDE</span><span class="p">,</span> <span class="n">list_of_points</span><span class="p">,</span> <span class="n">cf_delta</span><span class="p">,</span> <span class="n">normalize_by_delta</span><span class="p">,</span> <span class="n">fct_of_nde</span><span class="o">=</span><span class="n">fct_of_nde</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">NIE_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">list_of_points</span><span class="p">,</span> <span class="n">cf_delta</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">normalize_by_delta</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">NIE_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">list_of_points</span><span class="p">,</span> <span class="n">cf_delta</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">normalize_by_delta</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute NIE as grided (unsmoothed) function</span>
 
 <span class="sd">        Parameters</span>
@@ -928,7 +928,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">_Fct_on_grid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NIE</span><span class="p">,</span> <span class="n">list_of_points</span><span class="p">,</span> <span class="n">cf_delta</span><span class="p">,</span> <span class="n">normalize_by_delta</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">NDE_smoothed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_x</span><span class="p">,</span> <span class="n">max_x</span><span class="p">,</span> <span class="n">cf_delta</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">smoothing_gaussian_sigma_in_steps</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">NDE_smoothed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_x</span><span class="p">,</span> <span class="n">max_x</span><span class="p">,</span> <span class="n">cf_delta</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">smoothing_gaussian_sigma_in_steps</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
                      <span class="n">normalize_by_delta</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fct_of_nde</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute NDE as smoothed function</span>
 
@@ -976,7 +976,7 @@
         <span class="k">return</span> <span class="n">_Fct_smoothed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NDE</span><span class="p">,</span> <span class="n">min_x</span><span class="p">,</span> <span class="n">max_x</span><span class="p">,</span> <span class="n">cf_delta</span><span class="p">,</span> <span class="n">steps</span><span class="p">,</span> <span class="n">smoothing_gaussian_sigma_in_steps</span><span class="p">,</span>
                              <span class="n">normalize_by_delta</span><span class="p">,</span> <span class="n">fct_of_nde</span><span class="o">=</span><span class="n">fct_of_nde</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">NIE_smoothed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_x</span><span class="p">,</span> <span class="n">max_x</span><span class="p">,</span> <span class="n">cf_delta</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">smoothing_gaussian_sigma_in_steps</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">NIE_smoothed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_x</span><span class="p">,</span> <span class="n">max_x</span><span class="p">,</span> <span class="n">cf_delta</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">smoothing_gaussian_sigma_in_steps</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
                      <span class="n">normalize_by_delta</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute NIE as smoothed function</span>
 
@@ -1022,7 +1022,7 @@
                              <span class="n">normalize_by_delta</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">NaturalEffects_GraphMediation</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">NaturalEffects_GraphMediation</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Setup for estimating natural effects in a (general) causal graph.</span>
 
 <span class="sd">    Methods for the non-parametric estimation of mediation effects by adjustment.</span>
@@ -1089,7 +1089,7 @@
 <span class="sd">        of missing data might be more sample-efficient.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">graph_type</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span> <span class="n">fit_setup</span><span class="p">,</span> <span class="n">observations_data</span><span class="p">,</span> <span class="n">effect_source</span><span class="p">,</span> <span class="n">effect_target</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">graph_type</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span> <span class="n">fit_setup</span><span class="p">,</span> <span class="n">observations_data</span><span class="p">,</span> <span class="n">effect_source</span><span class="p">,</span> <span class="n">effect_target</span><span class="p">,</span>
                  <span class="n">blocked_mediators</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="n">adjustment_set</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="n">only_check_validity</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">fall_back_to_total_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">_internal_provide_cfx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">enable_dataframe_based_preprocessing</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 
@@ -1130,7 +1130,7 @@
         <span class="n">cfx_xm</span> <span class="o">=</span> <span class="n">CausalEffects</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">graph_type</span><span class="o">=</span><span class="n">graph_type</span><span class="p">,</span> <span class="n">X</span><span class="o">=</span><span class="p">[</span><span class="n">X</span><span class="p">],</span> <span class="n">Y</span><span class="o">=</span><span class="n">M</span><span class="p">)</span>
         <span class="n">cfx_xm_y</span> <span class="o">=</span> <span class="n">CausalEffects</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">graph_type</span><span class="o">=</span><span class="n">graph_type</span><span class="p">,</span> <span class="n">X</span><span class="o">=</span><span class="p">[</span><span class="n">X</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">M</span><span class="p">),</span> <span class="n">Y</span><span class="o">=</span><span class="p">[</span><span class="n">Y</span><span class="p">])</span>
 
-        <span class="k">def</span> <span class="nf">valid</span><span class="p">(</span><span class="n">S</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">valid</span><span class="p">(</span><span class="n">S</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">cfx_xm</span><span class="o">.</span><span class="n">_check_validity</span><span class="p">(</span><span class="n">S</span><span class="p">)</span> <span class="ow">and</span> <span class="n">cfx_xm_y</span><span class="o">.</span><span class="n">_check_validity</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
 
         <span class="n">adjustment_set_auto</span> <span class="o">=</span> <span class="p">(</span><span class="n">adjustment_set</span> <span class="o">==</span> <span class="s2">&quot;auto&quot;</span><span class="p">)</span>
@@ -1200,7 +1200,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_E_Y_XMZ</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_P_Y_XMZ</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="k">def</span> <span class="nf">E_Y_XMZ_fixed_x_obs_mz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">E_Y_XMZ_fixed_x_obs_mz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Provide samples Y( fixed x, observed m, z ) from fit of E[Y|X,M,Z]</span>
 
 <span class="sd">        Parameters</span>
@@ -1220,7 +1220,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_E_Y_XMZ</span><span class="p">({</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">],</span> <span class="n">x</span><span class="p">),</span>
                               <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">mediators</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">adjustment</span><span class="p">})</span>
 
-    <span class="k">def</span> <span class="nf">P_Y_XMZ_fixed_x_obs_mz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">P_Y_XMZ_fixed_x_obs_mz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Provide for all samples of M, Z the likelihood P( Y | fixed x, observed m, z ) from fit of P[Y|X,M,Z]</span>
 
 <span class="sd">        Parameters</span>
@@ -1239,7 +1239,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_P_Y_XMZ</span><span class="p">({</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">],</span> <span class="n">x</span><span class="p">),</span>
                               <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">mediators</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">adjustment</span><span class="p">})</span>
 
-    <span class="k">def</span> <span class="nf">Valid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">Valid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get validity of adjustment-set</span>
 
 <span class="sd">        Returns</span>
@@ -1249,7 +1249,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">valid</span>
 
-    <span class="k">def</span> <span class="nf">NDE</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change_from</span><span class="p">,</span> <span class="n">change_to</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">NDE</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change_from</span><span class="p">,</span> <span class="n">change_to</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute Natural Direct Effect (NDE)</span>
 
 <span class="sd">        Parameters</span>
@@ -1285,7 +1285,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_NDE_continuous_target</span><span class="p">(</span><span class="n">change_from</span><span class="p">,</span> <span class="n">change_to</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_NDE_continuous_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change_from</span><span class="p">,</span> <span class="n">change_to</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_NDE_continuous_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change_from</span><span class="p">,</span> <span class="n">change_to</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute NDE (continuous Y)</span>
 
 <span class="sd">        See &#39;NDE&#39; above.</span>
@@ -1305,7 +1305,7 @@
 
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">E_NDE_per_c</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_NDE_categorical_target_full_density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cf_x</span><span class="p">,</span> <span class="n">reference_x</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_NDE_categorical_target_full_density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cf_x</span><span class="p">,</span> <span class="n">reference_x</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute NDE as full density (categorical Y)</span>
 
 <span class="sd">        See &#39;NDE&#39; above.</span>
@@ -1362,7 +1362,7 @@
 
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">P_NDE_per_c</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># Axis 0 is p of different categories</span>
 
-    <span class="k">def</span> <span class="nf">NDE_smoothed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_x</span><span class="p">,</span> <span class="n">max_x</span><span class="p">,</span> <span class="n">cf_delta</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">smoothing_gaussian_sigma_in_steps</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">NDE_smoothed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_x</span><span class="p">,</span> <span class="n">max_x</span><span class="p">,</span> <span class="n">cf_delta</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">smoothing_gaussian_sigma_in_steps</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
                      <span class="n">normalize_by_delta</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute NDE as smoothed function</span>
 
@@ -1409,7 +1409,7 @@
         <span class="k">return</span> <span class="n">_Fct_smoothed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NDE</span><span class="p">,</span> <span class="n">min_x</span><span class="p">,</span> <span class="n">max_x</span><span class="p">,</span> <span class="n">cf_delta</span><span class="p">,</span> <span class="n">steps</span><span class="p">,</span> <span class="n">smoothing_gaussian_sigma_in_steps</span><span class="p">,</span>
                              <span class="n">normalize_by_delta</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">PrintInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">PrintInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Print info about estimator.</span>
 
 <span class="sd">        Helper to quickly print blocked mediators, adjustment-set used and source-&gt;target.</span>
@@ -1418,13 +1418,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">PrintMediators</span><span class="p">(</span><span class="n">detail</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">PrintAdjustmentSet</span><span class="p">(</span><span class="n">detail</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">PrintMediators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">PrintMediators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Print info about blocked mediators. &quot;&quot;&quot;</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Blocked Mediators:&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">BlockedMediators</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; - &quot;</span> <span class="o">+</span> <span class="n">m</span><span class="o">.</span><span class="n">Info</span><span class="p">(</span><span class="n">detail</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">PrintAdjustmentSet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">PrintAdjustmentSet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Print info about adjustment-set. &quot;&quot;&quot;</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Adjustment Set:&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">AdjustmentSet</span><span class="p">:</span>
@@ -1441,7 +1441,7 @@
 
 <div class="viewcode-block" id="CausalMediation">
 <a class="viewcode-back" href="../../index.html#tigramite.causal_mediation.CausalMediation">[docs]</a>
-<span class="k">class</span> <span class="nc">CausalMediation</span><span class="p">(</span><span class="n">CausalEffects</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CausalMediation</span><span class="p">(</span><span class="n">CausalEffects</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Non-linear, non-additive causal mediation analysis.</span>
 
 <span class="sd">    See the tutorial on Causal Mediation.</span>
@@ -1485,7 +1485,7 @@
 <span class="sd">    verbosity : uint</span>
 <span class="sd">        Tigramite.CausalEffects verbosity setting.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">graph_type</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">S</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hidden_variables</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">graph_type</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">S</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hidden_variables</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">graph_type</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">hidden_variables</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="n">verbosity</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">BlockedMediators</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">MediationEstimator</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1493,7 +1493,7 @@
 
 <div class="viewcode-block" id="CausalMediation.fit_natural_direct_effect">
 <a class="viewcode-back" href="../../index.html#tigramite.causal_mediation.CausalMediation.fit_natural_direct_effect">[docs]</a>
-    <span class="k">def</span> <span class="nf">fit_natural_direct_effect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">,</span> <span class="n">mixed_data_estimator</span><span class="o">=</span><span class="n">FitSetup</span><span class="p">(),</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit_natural_direct_effect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">,</span> <span class="n">mixed_data_estimator</span><span class="o">=</span><span class="n">FitSetup</span><span class="p">(),</span>
                                   <span class="n">blocked_mediators</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="n">adjustment_set</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span>
                                   <span class="n">use_mediation_impl_for_total_effect_fallback</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                                   <span class="n">enable_dataframe_based_preprocessing</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -1552,7 +1552,7 @@
 
 <div class="viewcode-block" id="CausalMediation.predict_natural_direct_effect">
 <a class="viewcode-back" href="../../index.html#tigramite.causal_mediation.CausalMediation.predict_natural_direct_effect">[docs]</a>
-    <span class="k">def</span> <span class="nf">predict_natural_direct_effect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reference_value_x</span><span class="p">,</span> <span class="n">cf_intervention_value_x</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict_natural_direct_effect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reference_value_x</span><span class="p">,</span> <span class="n">cf_intervention_value_x</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;*After fitting* a natural direct effect, predict its value at a specific point.</span>
 <span class="sd">        See also predict_natural_direct_effect_function.</span>
 
@@ -1585,7 +1585,7 @@
 
 <div class="viewcode-block" id="CausalMediation.predict_natural_direct_effect_function">
 <a class="viewcode-back" href="../../index.html#tigramite.causal_mediation.CausalMediation.predict_natural_direct_effect_function">[docs]</a>
-    <span class="k">def</span> <span class="nf">predict_natural_direct_effect_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_x</span><span class="p">,</span> <span class="n">max_x</span><span class="p">,</span> <span class="n">cf_delta</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict_natural_direct_effect_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_x</span><span class="p">,</span> <span class="n">max_x</span><span class="p">,</span> <span class="n">cf_delta</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
                                                <span class="n">steps</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">smoothing_gaussian_sigma_in_steps</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
                                                <span class="n">normalize_by_delta</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute NDE as *smoothed* function</span>
@@ -1640,7 +1640,7 @@
           
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
 <h1 class="logo"><a href="../../index.html">Tigramite</a></h1>
 
@@ -1688,7 +1688,7 @@
       &#169;2023, Jakob Runge.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
     </div>

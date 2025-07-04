@@ -36,18 +36,18 @@
 <span class="c1">#</span>
 <span class="c1"># License: GNU General Public License v3.0</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">tigramite.pcmci</span> <span class="kn">import</span> <span class="n">PCMCI</span>
-<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
-<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tigramite.pcmci</span><span class="w"> </span><span class="kn">import</span> <span class="n">PCMCI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">itertools</span>
 
-<span class="kn">from</span> <span class="nn">tigramite.toymodels.context_model</span> <span class="kn">import</span> <span class="n">_group_links</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tigramite.toymodels.context_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">_group_links</span>
 
 
 <div class="viewcode-block" id="JPCMCIplus">
 <a class="viewcode-back" href="../../index.html#tigramite.jpcmciplus.JPCMCIplus">[docs]</a>
-<span class="k">class</span> <span class="nc">JPCMCIplus</span><span class="p">(</span><span class="n">PCMCI</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">JPCMCIplus</span><span class="p">(</span><span class="n">PCMCI</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;J-PCMCIplus causal discovery for time series datasets from multiple contexts.</span>
 <span class="sd">        </span>
 <span class="sd">    This class is based on the PCMCI framework as described in</span>
@@ -117,7 +117,7 @@
 <span class="sd">        This is the list of the system nodes.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_classification</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_classification</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="c1"># Init base class</span>
         <span class="n">PCMCI</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
@@ -131,13 +131,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">observed_context_parents</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;system_search&quot;</span>
 
-    <span class="k">def</span> <span class="nf">group_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_types</span><span class="p">,</span> <span class="n">node_type</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">group_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_types</span><span class="p">,</span> <span class="n">node_type</span><span class="p">):</span>
         <span class="n">nodes</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span> <span class="k">if</span> <span class="n">node_types</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">==</span> <span class="n">node_type</span><span class="p">]</span>
 
 <div class="viewcode-block" id="JPCMCIplus.run_jpcmciplus">
 <a class="viewcode-back" href="../../index.html#tigramite.jpcmciplus.JPCMCIplus.run_jpcmciplus">[docs]</a>
-    <span class="k">def</span> <span class="nf">run_jpcmciplus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_jpcmciplus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                        <span class="n">contemp_collider_rule</span><span class="o">=</span><span class="s1">&#39;majority&#39;</span><span class="p">,</span>
                        <span class="n">link_assumptions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                        <span class="n">tau_min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
@@ -449,7 +449,7 @@
 
 <div class="viewcode-block" id="JPCMCIplus.assume_exogenous_context">
 <a class="viewcode-back" href="../../index.html#tigramite.jpcmciplus.JPCMCIplus.assume_exogenous_context">[docs]</a>
-    <span class="k">def</span> <span class="nf">assume_exogenous_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_assumptions</span><span class="p">,</span> <span class="n">observed_context_nodes</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">assume_exogenous_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_assumptions</span><span class="p">,</span> <span class="n">observed_context_nodes</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function to amend the link_assumptions to ensure that all context-system links are oriented</span>
 <span class="sd">        such that the context variable is the parent.&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">link_assumptions</span><span class="p">:</span>
@@ -464,7 +464,7 @@
 
 <div class="viewcode-block" id="JPCMCIplus.clean_link_assumptions">
 <a class="viewcode-back" href="../../index.html#tigramite.jpcmciplus.JPCMCIplus.clean_link_assumptions">[docs]</a>
-    <span class="k">def</span> <span class="nf">clean_link_assumptions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_assumptions</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">clean_link_assumptions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_assumptions</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function to amend the link_assumptions in the following ways</span>
 <span class="sd">            * remove any links where dummy is the child</span>
 <span class="sd">            * remove any lagged links to dummy, and space_context (not to observed time context)</span>
@@ -497,7 +497,7 @@
 
 <div class="viewcode-block" id="JPCMCIplus.remove_dummy_link_assumptions">
 <a class="viewcode-back" href="../../index.html#tigramite.jpcmciplus.JPCMCIplus.remove_dummy_link_assumptions">[docs]</a>
-    <span class="k">def</span> <span class="nf">remove_dummy_link_assumptions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_assumptions</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">remove_dummy_link_assumptions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_assumptions</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function to remove any links to dummy from link_assumptions.&quot;&quot;&quot;</span>
         <span class="n">link_assumptions_wo_dummy</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">link_assumptions</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">system_nodes</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_context_nodes</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">space_context_nodes</span><span class="p">:</span>
@@ -509,7 +509,7 @@
 
 <div class="viewcode-block" id="JPCMCIplus.add_found_context_link_assumptions">
 <a class="viewcode-back" href="../../index.html#tigramite.jpcmciplus.JPCMCIplus.add_found_context_link_assumptions">[docs]</a>
-    <span class="k">def</span> <span class="nf">add_found_context_link_assumptions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_assumptions</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_found_context_link_assumptions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_assumptions</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function to add discovered links between system and observed context nodes to link_assumptions.&quot;&quot;&quot;</span>
         <span class="n">link_assumptions_dummy</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">link_assumptions</span><span class="p">)</span>
 
@@ -527,7 +527,7 @@
 
 <div class="viewcode-block" id="JPCMCIplus.clean_system_link_assumptions">
 <a class="viewcode-back" href="../../index.html#tigramite.jpcmciplus.JPCMCIplus.clean_system_link_assumptions">[docs]</a>
-    <span class="k">def</span> <span class="nf">clean_system_link_assumptions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_assumptions</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">clean_system_link_assumptions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_assumptions</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function to remove any links to dummy and observed context nodes from link_assumptions.</span>
 <span class="sd">            Add discovered links to contextual parents (from steps 1 and 2) to the link_assumptions.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -553,7 +553,7 @@
 
 <div class="viewcode-block" id="JPCMCIplus.discover_lagged_context_system_links">
 <a class="viewcode-back" href="../../index.html#tigramite.jpcmciplus.JPCMCIplus.discover_lagged_context_system_links">[docs]</a>
-    <span class="k">def</span> <span class="nf">discover_lagged_context_system_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_assumptions</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">discover_lagged_context_system_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_assumptions</span><span class="p">,</span>
                                              <span class="n">tau_min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                                              <span class="n">tau_max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">pc_alpha</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
                                              <span class="n">reset_lagged_links</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -645,7 +645,7 @@
 
 <div class="viewcode-block" id="JPCMCIplus.discover_dummy_system_links">
 <a class="viewcode-back" href="../../index.html#tigramite.jpcmciplus.JPCMCIplus.discover_dummy_system_links">[docs]</a>
-    <span class="k">def</span> <span class="nf">discover_dummy_system_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_assumptions</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">discover_dummy_system_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_assumptions</span><span class="p">,</span>
                                     <span class="n">context_system_results</span><span class="p">,</span>
                                     <span class="n">lagged_parents</span><span class="p">,</span>
                                     <span class="n">tau_min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
@@ -737,7 +737,7 @@
 
 <div class="viewcode-block" id="JPCMCIplus.discover_system_system_links">
 <a class="viewcode-back" href="../../index.html#tigramite.jpcmciplus.JPCMCIplus.discover_system_system_links">[docs]</a>
-    <span class="k">def</span> <span class="nf">discover_system_system_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_assumptions</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">discover_system_system_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_assumptions</span><span class="p">,</span>
                                      <span class="n">lagged_context_dummy_parents</span><span class="p">,</span>
                                      <span class="n">tau_min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                                      <span class="n">tau_max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
@@ -798,7 +798,7 @@
         <span class="k">return</span> <span class="n">skeleton_results</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_remaining_pairs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">adjt</span><span class="p">,</span> <span class="n">tau_min</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_remaining_pairs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">adjt</span><span class="p">,</span> <span class="n">tau_min</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function returning the remaining pairs that still need to be</span>
 <span class="sd">        tested depending on the JPCMCIplus step, i.e. discovery of context-system links (step 1),</span>
 <span class="sd">        dummy-context links (step 2) or system-system links in which case the function of the parent class is called.</span>
@@ -833,7 +833,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_remaining_pairs</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">adjt</span><span class="p">,</span> <span class="n">tau_min</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_run_pcalg_test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">abstau</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">lagged_parents</span><span class="p">,</span> <span class="n">max_conds_py</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_run_pcalg_test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">abstau</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">lagged_parents</span><span class="p">,</span> <span class="n">max_conds_py</span><span class="p">,</span>
                         <span class="n">max_conds_px</span><span class="p">,</span> <span class="n">max_conds_px_lagged</span><span class="p">,</span> <span class="n">tau_max</span><span class="p">,</span> <span class="n">alpha_or_thres</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;MCI conditional independence tests within PCMCIplus or PC algorithm. Depending on the JPCMCIplus step</span>
 <span class="sd">        the setup is adapted slightly. During the discovery of dummy-system links (step 2) we are using</span>
@@ -892,15 +892,15 @@
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
     <span class="c1"># Imports</span>
-    <span class="kn">from</span> <span class="nn">numpy.random</span> <span class="kn">import</span> <span class="n">SeedSequence</span><span class="p">,</span> <span class="n">default_rng</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.random</span><span class="w"> </span><span class="kn">import</span> <span class="n">SeedSequence</span><span class="p">,</span> <span class="n">default_rng</span>
 
-    <span class="kn">import</span> <span class="nn">tigramite</span>
-    <span class="kn">from</span> <span class="nn">tigramite.toymodels</span> <span class="kn">import</span> <span class="n">structural_causal_processes</span> <span class="k">as</span> <span class="n">toys</span>
-    <span class="kn">from</span> <span class="nn">tigramite.toymodels.context_model</span> <span class="kn">import</span> <span class="n">ContextModel</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">tigramite</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">tigramite.toymodels</span><span class="w"> </span><span class="kn">import</span> <span class="n">structural_causal_processes</span> <span class="k">as</span> <span class="n">toys</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">tigramite.toymodels.context_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">ContextModel</span>
     <span class="c1"># from tigramite.jpcmciplus import JPCMCIplus</span>
-    <span class="kn">from</span> <span class="nn">tigramite.independence_tests.parcorr_mult</span> <span class="kn">import</span> <span class="n">ParCorrMult</span>
-    <span class="kn">import</span> <span class="nn">tigramite.data_processing</span> <span class="k">as</span> <span class="nn">pp</span>
-    <span class="kn">import</span> <span class="nn">tigramite.plotting</span> <span class="k">as</span> <span class="nn">tp</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">tigramite.independence_tests.parcorr_mult</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParCorrMult</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">tigramite.data_processing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pp</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">tigramite.plotting</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tp</span>
 
 
     <span class="c1"># Set seeds for reproducibility</span>
@@ -921,7 +921,7 @@
     <span class="n">frac_observed</span> <span class="o">=</span> <span class="mf">0.5</span>
 
     <span class="c1"># Specify the model</span>
-    <span class="k">def</span> <span class="nf">lin</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">lin</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span>
 
     <span class="n">links</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">[((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">lin</span><span class="p">),</span> <span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.7</span><span class="p">,</span> <span class="n">lin</span><span class="p">),</span> <span class="p">((</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mf">0.9</span><span class="p">,</span> <span class="n">lin</span><span class="p">)],</span>
              <span class="mi">1</span><span class="p">:</span> <span class="p">[((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.4</span><span class="p">,</span> <span class="n">lin</span><span class="p">),</span> <span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">lin</span><span class="p">)],</span>
@@ -1032,7 +1032,7 @@
           
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
 <h1 class="logo"><a href="../../index.html">Tigramite</a></h1>
 
@@ -1080,7 +1080,7 @@
       &#169;2023, Jakob Runge.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
     </div>

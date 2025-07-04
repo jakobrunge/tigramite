@@ -233,6 +233,7 @@ class Models():
                 transform_interventions_and_prediction=False,
                 return_further_pred_results=False,
                 aggregation_func=np.mean,
+                intervention_type='hard',
                 ):
         r"""Predict effect of intervention with fitted model.
 
@@ -241,9 +242,9 @@ class Models():
         Parameters
         ----------
         intervention_data : numpy array
-            Numpy array of shape (time, len(X)) that contains the do(X) values.
+            Numpy array of shape (n_interventions, len(X)) that contains the do(X) values.
         conditions_data : data object, optional
-            Numpy array of shape (time, len(S)) that contains the S=s values.
+            Numpy array of shape (n_interventions, len(S)) that contains the S=s values.
         pred_params : dict, optional
             Optional parameters passed on to sklearn prediction function (model and
             conditional_model).
@@ -254,13 +255,16 @@ class Models():
             the entire results can be returned.
         aggregation_func : callable
             Callable applied to output of 'predict'. Default is 'np.mean'.
-
+        intervention_type : {'hard', 'soft'}
+            Specify whether intervention is 'hard' (set value) or 'soft' 
+            (add value to observed data).
+  
         Returns
         -------
         Results from prediction.
         """
 
-        intervention_T, _ = intervention_data.shape
+        n_interventions, _ = intervention_data.shape
 
         if intervention_data.shape[1] != self.lenX:
             raise ValueError("intervention_data.shape[1] must be len(X).")
@@ -298,6 +302,10 @@ class Models():
         z_array = self.fit_results['observation_array'][z_indices, :].T  
         Tobs = len(self.fit_results['observation_array'].T) 
 
+        if intervention_type == 'soft':
+            x_indices = list(np.where(self.fit_results['xyz']==0)[0])
+            x_array = self.fit_results['observation_array'][x_indices, :].T   
+
         if self.conditions is not None and conditions_data is not None:
             s_indices = list(np.where(self.fit_results['xyz']==2)[0])
             s_array = self.fit_results['observation_array'][s_indices, :].T  
@@ -308,11 +316,17 @@ class Models():
         for index, dox_vals in enumerate(intervention_data):
             # Construct XZS-array
             intervention_array = dox_vals.reshape(1, self.lenX) * np.ones((Tobs, self.lenX))
+            if intervention_type == 'soft':
+                intervention_array += x_array
+
+            predictor_array = intervention_array
+
+            if  len(self.Z) > 0:
+                predictor_array = np.hstack((predictor_array, z_array))
+
             if self.conditions is not None and conditions_data is not None:
                 conditions_array = conditions_data[index].reshape(1, self.lenS) * np.ones((Tobs, self.lenS))  
-                predictor_array = np.hstack((intervention_array, z_array, conditions_array))
-            else:
-                predictor_array = np.hstack((intervention_array, z_array))
+                predictor_array = np.hstack((predictor_array, conditions_array))
 
             predicted_vals = self.fit_results['model'].predict(
                                                     X=predictor_array, **pred_params)
@@ -330,7 +344,7 @@ class Models():
                 self.fit_results['conditional_model'] = a_conditional_model
 
                 predicted_vals = a_conditional_model.predict(
-                    X=conditions_array, **pred_params)
+                    X=conditions_data[index].reshape(1, self.lenS), **pred_params)   # was conditions_data before
 
             if transform_interventions_and_prediction and fitted_data_transform is not None:
                 predicted_vals = fitted_data_transform['Y'].inverse_transform(X=predicted_vals).squeeze()
@@ -346,7 +360,7 @@ class Models():
             aggregated_pred = aggregated_pred.squeeze()
 
             if index == 0:
-                predicted_array = np.zeros((intervention_T, ) + aggregated_pred.shape, 
+                predicted_array = np.zeros((n_interventions, ) + aggregated_pred.shape, 
                                         dtype=aggregated_pred.dtype)
 
             predicted_array[index] = aggregated_pred

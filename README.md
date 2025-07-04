@@ -37,6 +37,7 @@ Further, Tigramite provides several causal discovery methods that can be used un
 | Gsquared                      | univariate discrete/categorical variables                                                              |
 | CMIsymb                       | multivariate discrete/categorical variables (permutation-based test)                                   |
 | RegressionCI                  | mixed datasets with univariate discrete/categorical and (linear) continuous variables                  |
+| CMIknnMixed                  | mixed datasets with multivariate discr./cat./cont. variables with more general dependencies (permutation-based test)                  |
 
 Remark: With the conditional independence test wrapper class PairwiseMultCI you can turn every univariate test into a multivariate test.
 
@@ -56,6 +57,7 @@ Tigramite is a causal inference for time series python package. It allows to eff
 - Mediation class: J. Runge (2015): Quantifying information transfer and mediation along causal pathways in complex systems. Phys. Rev. E, 92(6), 62829. http://doi.org/10.1103/PhysRevE.92.062829
 - CMIknn: J. Runge (2018): Conditional Independence Testing Based on a Nearest-Neighbor Estimator of Conditional Mutual Information. In Proceedings of the 21st International Conference on Artificial Intelligence and Statistics. http://proceedings.mlr.press/v84/runge18a.html
 - CausalEffects: J. Runge, Necessary and sufficient graphical conditions for optimal adjustment sets in causal graphical models with hidden variables, Advances in Neural Information Processing Systems, 2021, 34. https://proceedings.neurips.cc/paper/2021/hash/8485ae387a981d783f8764e508151cd9-Abstract.html
+- CMIknnMixed: Oana-Iuliana Popescu, Andreas Gerhardus, Martin Rabel, Jakob Runge (2024), submitted to CLEAR 2025, https://arxiv.org/abs/2310.11132
 
 ## Features
 
@@ -69,10 +71,10 @@ Tigramite is a causal inference for time series python package. It allows to eff
 
 ## Required python packages
 
-- python=3.7/3.8/3.9/3.10
-- numpy <1.24,>=1.18
+- python>=3.10
+- numpy>=1.18
 - scipy>=1.10.0
-- numba==0.56.4
+- numba>=0.56.4
 
 ## Optional packages depending on used functions
 - scikit-learn>=1.2   # Gaussian Process (GP) Regression

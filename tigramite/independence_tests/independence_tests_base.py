@@ -452,6 +452,7 @@ class CondIndTest():
                 else:
                     dependent = pval <= alpha_or_thres
                 
+        # Saved here, but not currently used
         self.ci_results[(tuple(X), tuple(Y),tuple(Z))] = (val, pval, dependent)
 
         # Return the calculated value(s)

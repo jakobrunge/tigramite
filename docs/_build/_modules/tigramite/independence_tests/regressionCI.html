@@ -36,18 +36,18 @@
 <span class="c1">#</span>
 <span class="c1"># License: GNU General Public License v3.0</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">chi2</span><span class="p">,</span> <span class="n">normaltest</span>
-<span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LinearRegression</span><span class="p">,</span> <span class="n">LogisticRegression</span>
-<span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">metrics</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">chi2</span><span class="p">,</span> <span class="n">normaltest</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearRegression</span><span class="p">,</span> <span class="n">LogisticRegression</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">metrics</span>
 
-<span class="kn">from</span> <span class="nn">.independence_tests_base</span> <span class="kn">import</span> <span class="n">CondIndTest</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.independence_tests_base</span><span class="w"> </span><span class="kn">import</span> <span class="n">CondIndTest</span>
 
 
 <div class="viewcode-block" id="RegressionCI">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.regressionCI.RegressionCI">[docs]</a>
-<span class="k">class</span> <span class="nc">RegressionCI</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">RegressionCI</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Flexible parametric conditional independence tests for continuous, categorical, or mixed data.</span>
 
 <span class="sd">    Asymptotically equivalent to the tests for mixed data suggested in</span>
@@ -85,13 +85,13 @@
 <span class="sd">        Arguments passed on to parent class CondIndTest.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">measure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">measure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Concrete property to return the measure of the independence test</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_measure</span>
     
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         
         <span class="c1"># Setup the member variables</span>
@@ -104,7 +104,7 @@
 
 <div class="viewcode-block" id="RegressionCI.set_dataframe">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.regressionCI.RegressionCI.set_dataframe">[docs]</a>
-    <span class="k">def</span> <span class="nf">set_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize and check the dataframe.</span>
 
 <span class="sd">        Parameters</span>
@@ -125,12 +125,12 @@
         
         <span class="k">if</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">data_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;data_type cannot be None for RegressionCI.&quot;</span><span class="p">)</span>
-        <span class="n">dataframe</span><span class="o">.</span><span class="n">_check_mask</span><span class="p">(</span><span class="n">dataframe</span><span class="o">.</span><span class="n">data_type</span><span class="p">,</span> <span class="n">check_data_type</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+        <span class="n">dataframe</span><span class="o">.</span><span class="n">_check_mask</span><span class="p">(</span><span class="n">dataframe</span><span class="o">.</span><span class="n">data_type</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="RegressionCI.get_dependence_measure">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.regressionCI.RegressionCI.get_dependence_measure">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">data_type</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">data_type</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns test statistic.</span>
 
 <span class="sd">        Parameters</span>
@@ -152,7 +152,7 @@
 <span class="sd">            test estimate.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">def</span> <span class="nf">convert_to_one_hot</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">nb_classes</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">convert_to_one_hot</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">nb_classes</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;Convert an iterable of indices to one-hot encoded labels.&quot;&quot;&quot;</span>
             <span class="n">targets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
             <span class="c1"># categories need to be mapped to 0, 1, ... in this function</span>
@@ -161,7 +161,7 @@
             <span class="n">targets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">nb_classes</span><span class="p">)[</span><span class="n">targets</span><span class="p">]</span>
 
-        <span class="k">def</span> <span class="nf">do_componentwise_one_hot_encoding</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">var_type</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">do_componentwise_one_hot_encoding</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">var_type</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;A function that one-hot encodes all categorical components of X&quot;&quot;&quot;</span>
            
             <span class="n">T</span><span class="p">,</span> <span class="n">dim</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span>
@@ -177,14 +177,14 @@
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;data_type only allows entries in {0, 1}&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">X_new</span>
 
-        <span class="k">def</span> <span class="nf">calc_deviance_logistic</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">var_type</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">calc_deviance_logistic</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">var_type</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;Calculates the deviance (i.e., 2 * log-likelihood) for a multinomial logistic regression</span>
 <span class="sd">            (with standard regression assumptions)</span>
 <span class="sd">            &quot;&quot;&quot;</span>
 
             <span class="c1"># 1-hot-encode all categorical columns</span>
             <span class="n">X</span> <span class="o">=</span> <span class="n">do_componentwise_one_hot_encoding</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">var_type</span><span class="o">=</span><span class="n">var_type</span><span class="p">)</span>
-            <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
             <span class="c1"># do logistic regression</span>
             <span class="n">model</span> <span class="o">=</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="n">solver</span><span class="o">=</span><span class="s1">&#39;lbfgs&#39;</span><span class="p">)</span>
             <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
@@ -193,7 +193,7 @@
             <span class="n">dof</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">n_features_in_</span> <span class="o">+</span> <span class="mi">1</span>
             <span class="k">return</span> <span class="n">deviance</span><span class="p">,</span> <span class="n">dof</span>
 
-        <span class="k">def</span> <span class="nf">calc_deviance_linear</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">var_type</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">calc_deviance_linear</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">var_type</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;Calculates the deviance (i.e., 2 * log-likelihood) for a linear regression</span>
 <span class="sd">            (with standard regression assumptions</span>
 <span class="sd">            &quot;&quot;&quot;</span>
@@ -216,7 +216,7 @@
             <span class="n">dof</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">n_features_in_</span>  <span class="o">+</span> <span class="mi">1</span>
             <span class="k">return</span> <span class="n">deviance</span><span class="p">,</span> <span class="n">dof</span>
 
-        <span class="k">def</span> <span class="nf">entropy</span><span class="p">(</span><span class="n">series</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">entropy</span><span class="p">(</span><span class="n">series</span><span class="p">):</span>
             <span class="n">value</span><span class="p">,</span> <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="n">norm_counts</span> <span class="o">=</span> <span class="n">counts</span> <span class="o">/</span> <span class="n">counts</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
             <span class="k">return</span> <span class="o">-</span><span class="p">(</span><span class="n">norm_counts</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">norm_counts</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
@@ -311,7 +311,7 @@
 
 <div class="viewcode-block" id="RegressionCI.get_analytic_significance">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.regressionCI.RegressionCI.get_analytic_significance">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">xyz</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">xyz</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the p_value of test statistic.</span>
 
 <span class="sd">        According to a chi-square distribution with &#39;dof&#39; degrees of freedom.</span>
@@ -329,10 +329,10 @@
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
     
-    <span class="kn">import</span> <span class="nn">tigramite</span>
-    <span class="kn">from</span> <span class="nn">tigramite.data_processing</span> <span class="kn">import</span> <span class="n">DataFrame</span>
-    <span class="kn">import</span> <span class="nn">tigramite.data_processing</span> <span class="k">as</span> <span class="nn">pp</span>
-    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">tigramite</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">tigramite.data_processing</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataFrame</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">tigramite.data_processing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pp</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
     <span class="n">seed</span><span class="o">=</span><span class="mi">43</span>
     <span class="n">random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
@@ -428,7 +428,7 @@
           
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
 <h1 class="logo"><a href="../../../index.html">Tigramite</a></h1>
 
@@ -476,7 +476,7 @@
       &#169;2023, Jakob Runge.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
     </div>

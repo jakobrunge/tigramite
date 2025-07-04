@@ -36,16 +36,16 @@
 <span class="c1">#</span>
 <span class="c1"># License: GNU General Public License v3.0</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span><span class="p">,</span> <span class="n">OrderedDict</span>
-<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">combinations</span><span class="p">,</span> <span class="n">permutations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span><span class="p">,</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">combinations</span><span class="p">,</span> <span class="n">permutations</span>
 
 
 <div class="viewcode-block" id="OracleCI">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.oracle_conditional_independence.OracleCI">[docs]</a>
-<span class="k">class</span> <span class="nc">OracleCI</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OracleCI</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Oracle of conditional independence test X _|_ Y | Z given a graph.</span>
 
 <span class="sd">    Class around link_coeff causal ground truth. X _|_ Y | Z is based on</span>
@@ -74,13 +74,13 @@
 
     <span class="c1"># documentation</span>
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">measure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">measure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Concrete property to return the measure of the independence test</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_measure</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">links</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">observed_vars</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">selection_vars</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -142,14 +142,16 @@
         <span class="c1"># ToDO: maybe allow to use user-tau_max, otherwise deduced from links</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_graph_from_links</span><span class="p">(</span><span class="n">tau_max</span><span class="o">=</span><span class="n">tau_max</span><span class="p">)</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">ci_results</span> <span class="o">=</span> <span class="p">{}</span>
+
 <div class="viewcode-block" id="OracleCI.set_dataframe">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.oracle_conditional_independence.OracleCI.set_dataframe">[docs]</a>
-    <span class="k">def</span> <span class="nf">set_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Dummy function.&quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_check_XYZ</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_XYZ</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks variables X, Y, Z.</span>
 
 <span class="sd">        Parameters</span>
@@ -196,7 +198,7 @@
 
         <span class="k">return</span> <span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_get_lagged_parents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var_lag</span><span class="p">,</span> <span class="n">exclude_contemp</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_lagged_parents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var_lag</span><span class="p">,</span> <span class="n">exclude_contemp</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                 <span class="n">only_non_causal_paths</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">X</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">causal_children</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function to yield lagged parents for var_lag from</span>
 <span class="sd">        self.links_coeffs.</span>
@@ -230,7 +232,7 @@
                     <span class="k">else</span><span class="p">:</span>
                         <span class="k">yield</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">lag</span> <span class="o">+</span> <span class="n">tau</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_get_children</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_children</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function to get children from links.</span>
 
 <span class="sd">        Note that for children the lag is positive.</span>
@@ -257,7 +259,7 @@
 
         <span class="k">return</span> <span class="n">children</span>
 
-    <span class="k">def</span> <span class="nf">_get_lagged_children</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var_lag</span><span class="p">,</span> <span class="n">children</span><span class="p">,</span> <span class="n">exclude_contemp</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_lagged_children</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var_lag</span><span class="p">,</span> <span class="n">children</span><span class="p">,</span> <span class="n">exclude_contemp</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
            <span class="n">only_non_causal_paths</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">X</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">causal_children</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function to yield lagged children for var_lag from children.</span>
 
@@ -288,7 +290,7 @@
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">yield</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">lag</span> <span class="o">+</span> <span class="n">tau</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_get_non_blocked_ancestors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">conds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;non_repeating&#39;</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_non_blocked_ancestors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">conds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;non_repeating&#39;</span><span class="p">,</span>
                                     <span class="n">max_lag</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function to return the non-blocked ancestors of variables Y.</span>
 
@@ -327,7 +329,7 @@
 <span class="sd">            Maximum time lag to include ancestors.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">def</span> <span class="nf">_repeating</span><span class="p">(</span><span class="n">link</span><span class="p">,</span> <span class="n">seen_links</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_repeating</span><span class="p">(</span><span class="n">link</span><span class="p">,</span> <span class="n">seen_links</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;Returns True if a link or its time-shifted version is already</span>
 <span class="sd">            included in seen_links.&quot;&quot;&quot;</span>
             <span class="n">i</span><span class="p">,</span> <span class="n">taui</span> <span class="o">=</span> <span class="n">link</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -392,7 +394,7 @@
 
         <span class="k">return</span> <span class="n">ancestors</span><span class="p">,</span> <span class="n">max_lag</span>
 
-    <span class="k">def</span> <span class="nf">_get_maximum_possible_lag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">XYZ</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_maximum_possible_lag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">XYZ</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function to return the maximum time lag of any confounding path.</span>
 
 <span class="sd">        This is still based on a conjecture!</span>
@@ -419,7 +421,7 @@
 <span class="sd">            Maximum time lag of non-repeating causal path ancestors.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">def</span> <span class="nf">_repeating</span><span class="p">(</span><span class="n">link</span><span class="p">,</span> <span class="n">seen_path</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_repeating</span><span class="p">(</span><span class="n">link</span><span class="p">,</span> <span class="n">seen_path</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;Returns True if a link or its time-shifted version is already</span>
 <span class="sd">            included in seen_links.&quot;&quot;&quot;</span>
             <span class="n">i</span><span class="p">,</span> <span class="n">taui</span> <span class="o">=</span> <span class="n">link</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -483,7 +485,7 @@
 
         <span class="k">return</span> <span class="n">max_lag</span>
 
-    <span class="k">def</span> <span class="nf">_get_descendants</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">children</span><span class="p">,</span> <span class="n">max_lag</span><span class="p">,</span> <span class="n">ignore_time_bounds</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_descendants</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">children</span><span class="p">,</span> <span class="n">max_lag</span><span class="p">,</span> <span class="n">ignore_time_bounds</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get descendants of nodes in W up to time t.</span>
 <span class="sd">        </span>
 <span class="sd">        Includes the nodes themselves.</span>
@@ -508,7 +510,7 @@
 
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">descendants</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_has_any_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">conds</span><span class="p">,</span> <span class="n">max_lag</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_has_any_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">conds</span><span class="p">,</span> <span class="n">max_lag</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
         <span class="n">starts_with</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ends_with</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">directed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">forbidden_nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -548,7 +550,7 @@
                 <span class="n">conds</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="n">max_lag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_maximum_possible_lag</span><span class="p">(</span><span class="n">X</span><span class="o">+</span><span class="n">Y</span><span class="o">+</span><span class="n">conds</span><span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">_walk_to_parents</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">fringe</span><span class="p">,</span> <span class="n">this_path</span><span class="p">,</span> <span class="n">other_path</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_walk_to_parents</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">fringe</span><span class="p">,</span> <span class="n">this_path</span><span class="p">,</span> <span class="n">other_path</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;Helper function to update paths when walking to parents.&quot;&quot;&quot;</span>
             <span class="n">found_connection</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_lagged_parents</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> 
@@ -591,7 +593,7 @@
                         <span class="k">break</span>
             <span class="k">return</span> <span class="n">found_connection</span><span class="p">,</span> <span class="n">fringe</span><span class="p">,</span> <span class="n">this_path</span>
 
-        <span class="k">def</span> <span class="nf">_walk_to_children</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">fringe</span><span class="p">,</span> <span class="n">this_path</span><span class="p">,</span> <span class="n">other_path</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_walk_to_children</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">fringe</span><span class="p">,</span> <span class="n">this_path</span><span class="p">,</span> <span class="n">other_path</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;Helper function to update paths when walking to children.&quot;&quot;&quot;</span>
             <span class="n">found_connection</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_lagged_children</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">children</span><span class="p">,</span> 
@@ -641,7 +643,7 @@
                             <span class="k">break</span>
             <span class="k">return</span> <span class="n">found_connection</span><span class="p">,</span> <span class="n">fringe</span><span class="p">,</span> <span class="n">this_path</span>
 
-        <span class="k">def</span> <span class="nf">_walk_fringe</span><span class="p">(</span><span class="n">this_level</span><span class="p">,</span> <span class="n">fringe</span><span class="p">,</span> <span class="n">this_path</span><span class="p">,</span> <span class="n">other_path</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_walk_fringe</span><span class="p">(</span><span class="n">this_level</span><span class="p">,</span> <span class="n">fringe</span><span class="p">,</span> <span class="n">this_path</span><span class="p">,</span> <span class="n">other_path</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;Helper function to walk each fringe, i.e., the path from X and Y,</span>
 <span class="sd">            respectively.&quot;&quot;&quot;</span>
             <span class="n">found_connection</span> <span class="o">=</span> <span class="kc">False</span>
@@ -738,7 +740,7 @@
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Updated fringe: &quot;</span><span class="p">,</span> <span class="n">fringe</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">found_connection</span><span class="p">,</span> <span class="n">fringe</span><span class="p">,</span> <span class="n">this_path</span><span class="p">,</span> <span class="n">other_path</span>
 
-        <span class="k">def</span> <span class="nf">backtrace_path</span><span class="p">():</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">backtrace_path</span><span class="p">():</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;Helper function to get path from start point, end point, </span>
 <span class="sd">            and connection found.&quot;&quot;&quot;</span>
 
@@ -908,7 +910,7 @@
 
         <span class="k">return</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">_is_dsep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">max_lag</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_is_dsep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">max_lag</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns whether X and Y are d-separated given Z in the graph.</span>
 
 <span class="sd">        X, Y, Z are of the form (var, lag) for lag &lt;= 0. D-separation is</span>
@@ -966,7 +968,7 @@
 
 <div class="viewcode-block" id="OracleCI.check_shortest_path">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.oracle_conditional_independence.OracleCI.check_shortest_path">[docs]</a>
-    <span class="k">def</span> <span class="nf">check_shortest_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_shortest_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span>
                  <span class="n">max_lag</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># compute_ancestors=False, </span>
                  <span class="n">starts_with</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ends_with</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
                  <span class="n">forbidden_nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1095,7 +1097,7 @@
 
 <div class="viewcode-block" id="OracleCI.run_test">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.oracle_conditional_independence.OracleCI.run_test">[docs]</a>
-    <span class="k">def</span> <span class="nf">run_test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;2xtau_max&#39;</span><span class="p">,</span> <span class="n">alpha_or_thres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">cut_off</span><span class="o">=</span><span class="s1">&#39;2xtau_max&#39;</span><span class="p">,</span> <span class="n">alpha_or_thres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform oracle conditional independence test.</span>
 
@@ -1142,6 +1144,9 @@
             <span class="n">pval</span> <span class="o">=</span> <span class="mf">0.</span>
             <span class="n">dependent</span> <span class="o">=</span> <span class="kc">True</span>
 
+        <span class="c1"># Saved here, but not currently used</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ci_results</span><span class="p">[(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">Y</span><span class="p">),</span><span class="nb">tuple</span><span class="p">(</span><span class="n">Z</span><span class="p">))]</span> <span class="o">=</span> <span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">pval</span><span class="p">,</span> <span class="n">dependent</span><span class="p">)</span>
+        
         <span class="k">if</span> <span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_print_cond_ind_results</span><span class="p">(</span><span class="n">val</span><span class="o">=</span><span class="n">val</span><span class="p">,</span> <span class="n">pval</span><span class="o">=</span><span class="n">pval</span><span class="p">,</span> <span class="n">cached</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                                          <span class="n">conf</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
@@ -1154,7 +1159,7 @@
 
 <div class="viewcode-block" id="OracleCI.get_measure">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.oracle_conditional_independence.OracleCI.get_measure">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns dependence measure.</span>
 
 <span class="sd">        Returns 0 if X and Y are d-separated given Z in the graph and 1 else.</span>
@@ -1193,7 +1198,7 @@
             <span class="k">return</span> <span class="mf">1.</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_print_cond_ind_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">pval</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cached</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">conf</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_print_cond_ind_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">pval</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cached</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">conf</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Print results from conditional independence test.</span>
 
 <span class="sd">        Parameters</span>
@@ -1218,7 +1223,7 @@
 
 <div class="viewcode-block" id="OracleCI.get_model_selection_criterion">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.oracle_conditional_independence.OracleCI.get_model_selection_criterion">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Base class assumption that this is not implemented.  Concrete classes</span>
 <span class="sd">        should override when possible.</span>
@@ -1227,7 +1232,7 @@
                                   <span class="s2">&quot; implemented for </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_reverse_patt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">patt</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_reverse_patt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">patt</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Inverts a link pattern&quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">patt</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
@@ -1248,7 +1253,7 @@
 
 <div class="viewcode-block" id="OracleCI.get_links_from_graph">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.oracle_conditional_independence.OracleCI.get_links_from_graph">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_links_from_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_links_from_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Constructs links_coeffs dictionary, observed_vars, </span>
 <span class="sd">        and selection_vars from graph array (MAG or DAG).</span>
@@ -1356,7 +1361,7 @@
         <span class="k">return</span> <span class="n">links</span><span class="p">,</span> <span class="n">observed_vars</span><span class="p">,</span> <span class="n">selection_vars</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_get_minmax_lag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">links</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_minmax_lag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">links</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function to retrieve tau_min and tau_max from links</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -1381,7 +1386,7 @@
 
 <div class="viewcode-block" id="OracleCI.get_graph_from_links">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.oracle_conditional_independence.OracleCI.get_graph_from_links">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_graph_from_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_graph_from_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Constructs graph (DAG or MAG or ADMG) from links, observed_vars, </span>
 <span class="sd">        and selection_vars.</span>
@@ -1546,7 +1551,7 @@
 
 <div class="viewcode-block" id="OracleCI.get_confidence">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.oracle_conditional_independence.OracleCI.get_confidence">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;For compatibility with PCMCI.</span>
 
 <span class="sd">        Returns</span>
@@ -1559,9 +1564,9 @@
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
 
-    <span class="kn">import</span> <span class="nn">tigramite.plotting</span> <span class="k">as</span> <span class="nn">tp</span>
-    <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
-    <span class="k">def</span> <span class="nf">lin_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">tigramite.plotting</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tp</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">lin_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span>
 
     <span class="c1"># Define the stationary DAG</span>
     <span class="n">links</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span> <span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)],</span> <span class="mi">1</span><span class="p">:</span> <span class="p">[(</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)],</span> <span class="mi">2</span><span class="p">:</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)]}</span>
@@ -1640,7 +1645,7 @@
           
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
 <h1 class="logo"><a href="../../../index.html">Tigramite</a></h1>
 
@@ -1688,7 +1693,7 @@
       &#169;2023, Jakob Runge.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
     </div>

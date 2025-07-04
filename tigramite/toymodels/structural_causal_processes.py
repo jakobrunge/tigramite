@@ -901,8 +901,9 @@ def dag_to_links(dag):
 
     parents = dict([(j, []) for j in range(N)])
 
-    if np.any(dag=='o-o') or np.any(dag=='x-x'):
-        raise ValueError("graph must be DAG.")
+    allowed_edges = ["-->", "<--", ""] 
+    if np.any(np.isin(dag, allowed_edges) == False):
+        raise ValueError("graph must be a DAG.")
 
     for (i, j, tau) in zip(*np.where(dag=='-->')):
         parents[j].append((i, -tau))

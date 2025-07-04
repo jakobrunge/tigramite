@@ -36,17 +36,17 @@
 <span class="c1">#</span>
 <span class="c1"># License: GNU General Public License v3.0</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
-<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">stats</span><span class="p">,</span> <span class="n">linalg</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 
-<span class="kn">from</span> <span class="nn">.independence_tests_base</span> <span class="kn">import</span> <span class="n">CondIndTest</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tigramite.independence_tests.independence_tests_base</span><span class="w"> </span><span class="kn">import</span> <span class="n">CondIndTest</span>
 
 <div class="viewcode-block" id="ParCorrMult">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.parcorr_mult.ParCorrMult">[docs]</a>
-<span class="k">class</span> <span class="nc">ParCorrMult</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ParCorrMult</span><span class="p">(</span><span class="n">CondIndTest</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Partial correlation test for multivariate X and Y.</span>
 
 <span class="sd">    Multivariate partial correlation is estimated through ordinary least squares (OLS)</span>
@@ -73,25 +73,25 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># documentation</span>
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">measure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">measure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Concrete property to return the measure of the independence test</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_measure</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">correlation_type</span><span class="o">=</span><span class="s1">&#39;max_corr&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">correlation_type</span><span class="o">=</span><span class="s1">&#39;max_corr&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_measure</span> <span class="o">=</span> <span class="s1">&#39;par_corr_mult&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">two_sided</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">residual_based</span> <span class="o">=</span> <span class="kc">True</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">correlation_type</span> <span class="o">=</span> <span class="n">correlation_type</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">correlation_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;max_corr&#39;</span><span class="p">]:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;correlation_type must be in [&#39;max_corr&#39;].&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">correlation_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;max_corr&#39;</span><span class="p">,</span> <span class="s1">&#39;PCCA_WilksLambda&#39;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;correlation_type must be in [&#39;max_corr&#39;, &#39;PCCA_WilksLambda&#39;]&quot;</span><span class="p">)</span>
 
         <span class="n">CondIndTest</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_get_single_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">target_var</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_single_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">target_var</span><span class="p">,</span>
                               <span class="n">standardize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                               <span class="n">return_means</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns residuals of linear multiple regression.</span>
@@ -145,7 +145,7 @@
         <span class="n">y</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span><span class="o">==</span><span class="n">target_var</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="p">:]</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">dim_z</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fastCopyAndTranspose</span><span class="p">(</span><span class="n">array</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span><span class="o">==</span><span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="p">:])</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="p">(</span><span class="n">array</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xyz</span><span class="o">==</span><span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="p">:])</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
             <span class="n">beta_hat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="kc">None</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">beta_hat</span><span class="p">)</span>
             <span class="n">resid</span> <span class="o">=</span> <span class="n">y</span> <span class="o">-</span> <span class="n">mean</span>
@@ -156,11 +156,11 @@
         <span class="k">if</span> <span class="n">return_means</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fastCopyAndTranspose</span><span class="p">(</span><span class="n">resid</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">fastCopyAndTranspose</span><span class="p">(</span><span class="n">mean</span><span class="p">))</span>
 
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">fastCopyAndTranspose</span><span class="p">(</span><span class="n">resid</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">resid</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
 <div class="viewcode-block" id="ParCorrMult.get_dependence_measure">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.parcorr_mult.ParCorrMult.get_dependence_measure">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dependence_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return multivariate kernel correlation coefficient.</span>
 
 <span class="sd">        Estimated as some dependency measure on the</span>
@@ -195,9 +195,60 @@
         <span class="k">return</span> <span class="n">val</span></div>
 
 
+<div class="viewcode-block" id="ParCorrMult.compute_wilks_lambda_cca">
+<a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.parcorr_mult.ParCorrMult.compute_wilks_lambda_cca">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_wilks_lambda_cca</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">num_components</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute Wilks Lambda from canonical correlations between X and Y using NumPy.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters:</span>
+<span class="sd">        - X, Y: Arrays of shape (n_features, n_samples)</span>
+<span class="sd">        - num_components: Number of canonical correlations to return (default: all)</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">        - wilks_lambda: Wilks Lambda of canonical correlations</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Center variables (per feature)</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">X</span> <span class="o">-</span> <span class="n">X</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span> <span class="o">-</span> <span class="n">Y</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Compute covariance matrices (features are rows, samples are columns)</span>
+        <span class="n">Cxx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">rowvar</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">Cyy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">rowvar</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">Cxy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">rowvar</span><span class="o">=</span><span class="kc">True</span><span class="p">)[:</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:]</span>
+
+        <span class="c1"># Ensure matrices are at least 2D</span>
+        <span class="k">if</span> <span class="n">Cxx</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">Cxx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">Cxx</span><span class="p">]])</span>
+        <span class="k">if</span> <span class="n">Cyy</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">Cyy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">Cyy</span><span class="p">]])</span>
+        <span class="k">if</span> <span class="n">Cxy</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">Cxy</span> <span class="o">=</span> <span class="n">Cxy</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+
+        <span class="c1"># Regularization for stability</span>
+        <span class="n">eps</span> <span class="o">=</span> <span class="mf">1e-10</span>
+        <span class="n">Cxx</span> <span class="o">+=</span> <span class="n">eps</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">Cxx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">Cyy</span> <span class="o">+=</span> <span class="n">eps</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">Cyy</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="c1"># Solve generalized eigenvalue problem</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">Cxx</span><span class="p">)</span> <span class="o">@</span> <span class="n">Cxy</span> <span class="o">@</span> <span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">Cyy</span><span class="p">)</span> <span class="o">@</span> <span class="n">Cxy</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="n">eigvals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigvalsh</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+        <span class="n">eigvals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">eigvals</span><span class="p">))</span>  <span class="c1"># sort descending</span>
+        <span class="n">rho_sq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">eigvals</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">num_components</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">rho_sq</span> <span class="o">=</span> <span class="n">rho_sq</span><span class="p">[:</span><span class="n">num_components</span><span class="p">]</span>
+
+        <span class="n">wilks_lambda</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">([</span><span class="mi">1</span> <span class="o">-</span> <span class="n">rho</span> <span class="k">for</span> <span class="n">rho</span> <span class="ow">in</span> <span class="n">rho_sq</span><span class="p">])</span>
+        
+        <span class="k">return</span> <span class="n">wilks_lambda</span></div>
+
+
 <div class="viewcode-block" id="ParCorrMult.mult_corr">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.parcorr_mult.ParCorrMult.mult_corr">[docs]</a>
-    <span class="k">def</span> <span class="nf">mult_corr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">standardize</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mult_corr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">standardize</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return multivariate dependency measure.</span>
 
 <span class="sd">        Parameters</span>
@@ -249,7 +300,9 @@
             <span class="c1">#     for y_vals in y:</span>
             <span class="c1">#         val_here, _ = stats.pearsonr(x_vals, y_vals)</span>
             <span class="c1">#         val = max(val, np.abs(val_here))</span>
-        
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">correlation_type</span> <span class="o">==</span> <span class="s1">&#39;PCCA_WilksLambda&#39;</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_wilks_lambda_cca</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
         <span class="c1"># elif self.correlation_type == &#39;linear_hsci&#39;:</span>
         <span class="c1">#     # For linear kernel and standardized data (centered and divided by std)</span>
         <span class="c1">#     # biased V -statistic of HSIC reduces to sum of squared inner products</span>
@@ -257,14 +310,14 @@
         <span class="c1">#     val = ((x.dot(y.T)/float(n))**2).sum()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Currently only&quot;</span>
-                                      <span class="s2">&quot;correlation_type == &#39;max_corr&#39; implemented.&quot;</span><span class="p">)</span>
+                                      <span class="s2">&quot;correlation_type == &#39;max_corr&#39; and &#39;PCCA_WilksLambda&#39; implemented.&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">val</span></div>
 
 
 <div class="viewcode-block" id="ParCorrMult.get_shuffle_significance">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.parcorr_mult.ParCorrMult.get_shuffle_significance">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_shuffle_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_shuffle_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span>
                                  <span class="n">return_null_dist</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                                  <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns p-value for shuffle significance test.</span>
@@ -321,7 +374,7 @@
 
 <div class="viewcode-block" id="ParCorrMult.get_analytic_significance">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.parcorr_mult.ParCorrMult.get_analytic_significance">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">xyz</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_analytic_significance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">xyz</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns analytic p-value depending on correlation_type.</span>
 
 <span class="sd">        Assumes two-sided correlation. If the degrees of freedom are less than</span>
@@ -351,6 +404,7 @@
 
         <span class="n">dim_x</span> <span class="o">=</span> <span class="p">(</span><span class="n">xyz</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
         <span class="n">dim_y</span> <span class="o">=</span> <span class="p">(</span><span class="n">xyz</span><span class="o">==</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="n">dim_z</span> <span class="o">=</span> <span class="n">dim</span> <span class="o">-</span> <span class="n">dim_x</span> <span class="o">-</span> <span class="n">dim_y</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">correlation_type</span> <span class="o">==</span> <span class="s1">&#39;max_corr&#39;</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">deg_f</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
@@ -361,19 +415,26 @@
                 <span class="n">trafo_val</span> <span class="o">=</span> <span class="n">value</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">deg_f</span><span class="o">/</span><span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">value</span><span class="o">*</span><span class="n">value</span><span class="p">))</span>
                 <span class="c1"># Two sided significance level</span>
                 <span class="n">pval</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">trafo_val</span><span class="p">),</span> <span class="n">deg_f</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span>
+            <span class="c1"># Adjust p-value for dimensions of x and y (conservative Bonferroni-correction)</span>
+            <span class="n">pval</span> <span class="o">*=</span> <span class="n">dim_x</span><span class="o">*</span><span class="n">dim_y</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">correlation_type</span> <span class="o">==</span> <span class="s1">&#39;PCCA_WilksLambda&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">deg_f</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">pval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">trafo_val</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">T</span> <span class="o">-</span> <span class="n">dim_z</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">dim_x</span> <span class="o">+</span> <span class="n">dim_y</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="n">dof</span> <span class="o">=</span> <span class="n">dim_x</span> <span class="o">*</span> <span class="n">dim_y</span>
+                <span class="n">pval</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">stats</span><span class="o">.</span><span class="n">chi2</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">trafo_val</span><span class="p">,</span> <span class="n">dof</span><span class="p">)</span>     
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Currently only&quot;</span>
-                                      <span class="s2">&quot;correlation_type == &#39;max_corr&#39; implemented.&quot;</span><span class="p">)</span>
-
-        <span class="c1"># Adjust p-value for dimensions of x and y (conservative Bonferroni-correction)</span>
-        <span class="n">pval</span> <span class="o">*=</span> <span class="n">dim_x</span><span class="o">*</span><span class="n">dim_y</span>
+                                      <span class="s2">&quot;correlation_type == &#39;max_corr&#39; and &#39;PCCA_WilksLambda&#39; implemented.&quot;</span><span class="p">)</span>
+        
 
         <span class="k">return</span> <span class="n">pval</span></div>
 
 
 <div class="viewcode-block" id="ParCorrMult.get_model_selection_criterion">
 <a class="viewcode-back" href="../../../index.html#tigramite.independence_tests.parcorr_mult.ParCorrMult.get_model_selection_criterion">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">corrected_aic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_model_selection_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">corrected_aic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns Akaike&#39;s Information criterion modulo constants.</span>
 
 <span class="sd">        Fits a linear model of the parents to each variable in j and returns</span>
@@ -435,24 +496,25 @@
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
     
-    <span class="kn">import</span> <span class="nn">tigramite</span>
-    <span class="kn">from</span> <span class="nn">tigramite.data_processing</span> <span class="kn">import</span> <span class="n">DataFrame</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">tigramite</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">tigramite.data_processing</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataFrame</span>
     <span class="c1"># import numpy as np</span>
-    <span class="kn">import</span> <span class="nn">timeit</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">timeit</span>
 
-    <span class="n">seed</span><span class="o">=</span><span class="mi">3</span>
+    <span class="n">seed</span><span class="o">=</span><span class="kc">None</span>
     <span class="n">random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
     <span class="n">cmi</span> <span class="o">=</span> <span class="n">ParCorrMult</span><span class="p">(</span>
+            <span class="n">correlation_type</span><span class="o">=</span><span class="s1">&#39;PCCA_WilksLambda&#39;</span><span class="p">,</span>
             <span class="c1"># significance = &#39;shuffle_test&#39;,</span>
             <span class="c1"># sig_samples=1000,</span>
         <span class="p">)</span>
 
-    <span class="n">samples</span><span class="o">=</span><span class="mi">1</span>
-    <span class="n">rate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span>
+    <span class="n">samples</span><span class="o">=</span><span class="mi">5000</span>
+    <span class="n">rate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">samples</span><span class="p">):</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
         <span class="n">data</span> <span class="o">=</span> <span class="n">random_state</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">((</span><span class="mi">100</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
-        <span class="n">data</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="n">data</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># data[:,2] += -0.3*data[:,0]</span>
         <span class="c1"># data[:,1] += data[:,2]</span>
         <span class="n">dataframe</span> <span class="o">=</span> <span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> 
             <span class="c1"># vector_vars={0:[(0,0), (1,0)], 1:[(2,0),(3,0)], 2:[(4,0),(5,0)]}</span>
@@ -461,15 +523,15 @@
         <span class="n">cmi</span><span class="o">.</span><span class="n">set_dataframe</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)</span>
 
         <span class="n">pval</span> <span class="o">=</span> <span class="n">cmi</span><span class="o">.</span><span class="n">run_test</span><span class="p">(</span>
-                <span class="n">X</span><span class="o">=</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)],</span> 
-                <span class="n">Y</span><span class="o">=</span><span class="p">[(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">)],</span> <span class="c1">#, (3, 0)], </span>
+                <span class="n">X</span><span class="o">=</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="p">],</span> 
+                <span class="n">Y</span><span class="o">=</span><span class="p">[(</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)],</span> 
                 <span class="c1"># Z=[(5,0)]</span>
-                <span class="n">Z</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
+                <span class="n">Z</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
                 <span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
         
-        <span class="n">rate</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">pval</span> <span class="o">&lt;=</span> <span class="mf">0.1</span>
+        <span class="n">rate</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">pval</span> <span class="o">&lt;=</span> <span class="mf">0.05</span>
 
-        <span class="n">cmi</span><span class="o">.</span><span class="n">get_model_selection_criterion</span><span class="p">(</span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">parents</span><span class="o">=</span><span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)],</span> <span class="n">tau_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">corrected_aic</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="c1"># cmi.get_model_selection_criterion(j=0, parents=[(1, 0), (2, 0)], tau_max=0, corrected_aic=False)</span>
 
         <span class="c1"># print(cmi.run_test(X=[(0,0),(1,0)], Y=[(2,0), (3, 0)], Z=[(5,0)]))</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">rate</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
@@ -479,7 +541,7 @@
           
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
 <h1 class="logo"><a href="../../../index.html">Tigramite</a></h1>
 
@@ -527,7 +589,7 @@
       &#169;2023, Jakob Runge.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
     </div>

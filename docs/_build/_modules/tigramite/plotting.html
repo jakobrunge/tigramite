@@ -36,31 +36,31 @@
 <span class="c1">#</span>
 <span class="c1"># License: GNU General Public License v3.0</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">json</span><span class="o">,</span> <span class="nn">warnings</span><span class="o">,</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">pathlib</span>
-<span class="kn">import</span> <span class="nn">matplotlib</span>
-<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
-<span class="kn">from</span> <span class="nn">matplotlib.colors</span> <span class="kn">import</span> <span class="n">ListedColormap</span>
-<span class="kn">import</span> <span class="nn">matplotlib.transforms</span> <span class="k">as</span> <span class="nn">transforms</span>
-<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span><span class="p">,</span> <span class="n">ticker</span>
-<span class="kn">from</span> <span class="nn">matplotlib.ticker</span> <span class="kn">import</span> <span class="n">FormatStrFormatter</span>
-<span class="kn">import</span> <span class="nn">matplotlib.patches</span> <span class="k">as</span> <span class="nn">mpatches</span>
-<span class="kn">from</span> <span class="nn">matplotlib.collections</span> <span class="kn">import</span> <span class="n">PatchCollection</span>
-<span class="kn">from</span> <span class="nn">mpl_toolkits.axes_grid1</span> <span class="kn">import</span> <span class="n">make_axes_locatable</span>
-<span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">sub</span>
-<span class="kn">import</span> <span class="nn">tigramite.data_processing</span> <span class="k">as</span> <span class="nn">pp</span>
-<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
-<span class="kn">import</span> <span class="nn">matplotlib.path</span> <span class="k">as</span> <span class="nn">mpath</span>
-<span class="kn">import</span> <span class="nn">matplotlib.patheffects</span> <span class="k">as</span> <span class="nn">PathEffects</span>
-<span class="kn">from</span> <span class="nn">mpl_toolkits.axisartist.axislines</span> <span class="kn">import</span> <span class="n">Axes</span>
-<span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span><span class="o">,</span><span class="w"> </span><span class="nn">warnings</span><span class="o">,</span><span class="w"> </span><span class="nn">os</span><span class="o">,</span><span class="w"> </span><span class="nn">pathlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="kn">import</span> <span class="n">ListedColormap</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.transforms</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">transforms</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplot</span><span class="p">,</span> <span class="n">ticker</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.ticker</span><span class="w"> </span><span class="kn">import</span> <span class="n">FormatStrFormatter</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.patches</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mpatches</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">PatchCollection</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mpl_toolkits.axes_grid1</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_axes_locatable</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">operator</span><span class="w"> </span><span class="kn">import</span> <span class="n">sub</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tigramite.data_processing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.path</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mpath</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.patheffects</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">PathEffects</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mpl_toolkits.axisartist.axislines</span><span class="w"> </span><span class="kn">import</span> <span class="n">Axes</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">csv</span>
 
 
 <span class="c1"># TODO: Add proper docstrings to internal functions...</span>
 
 
-<span class="k">def</span> <span class="nf">_par_corr_trafo</span><span class="p">(</span><span class="n">cmi</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_par_corr_trafo</span><span class="p">(</span><span class="n">cmi</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Transformation of CMI to partial correlation scale.&quot;&quot;&quot;</span>
 
     <span class="c1"># Set negative values to small positive number</span>
@@ -74,13 +74,13 @@
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">cmi</span><span class="p">))</span>
 
 
-<span class="k">def</span> <span class="nf">_par_corr_to_cmi</span><span class="p">(</span><span class="n">par_corr</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_par_corr_to_cmi</span><span class="p">(</span><span class="n">par_corr</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Transformation of partial correlation to CMI scale.&quot;&quot;&quot;</span>
 
     <span class="k">return</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">par_corr</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_myround</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">round_mode</span><span class="o">=</span><span class="s2">&quot;updown&quot;</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_myround</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">round_mode</span><span class="o">=</span><span class="s2">&quot;updown&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Rounds x to a float with precision base.&quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">round_mode</span> <span class="o">==</span> <span class="s2">&quot;updown&quot;</span><span class="p">:</span>
@@ -93,7 +93,7 @@
     <span class="k">return</span> <span class="n">base</span> <span class="o">*</span> <span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="n">base</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_make_nice_axes</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">skip</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_make_nice_axes</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">skip</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Makes nice axes.&quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">where</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -152,7 +152,7 @@
     <span class="n">ax</span><span class="o">.</span><span class="n">patch</span><span class="o">.</span><span class="n">set_alpha</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_get_absmax</span><span class="p">(</span><span class="n">val_matrix</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_absmax</span><span class="p">(</span><span class="n">val_matrix</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get value at absolute maximum in lag function array.</span>
 <span class="sd">    For an (N, N, tau)-array this comutes the lag of the absolute maximum</span>
 <span class="sd">    along the tau-axis and stores the (positive or negative) value in</span>
@@ -164,7 +164,7 @@
     <span class="k">return</span> <span class="n">val_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">absmax_indices</span><span class="p">]</span>
 
 
-<span class="k">def</span> <span class="nf">_add_timeseries</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_add_timeseries</span><span class="p">(</span>
         <span class="n">dataframe</span><span class="p">,</span>
         <span class="n">fig_axes</span><span class="p">,</span>
         <span class="n">grey_masked_samples</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -293,7 +293,7 @@
 
 <div class="viewcode-block" id="plot_timeseries">
 <a class="viewcode-back" href="../../index.html#tigramite.plotting.plot_timeseries">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_timeseries</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_timeseries</span><span class="p">(</span>
         <span class="n">dataframe</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">save_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">fig_axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -433,7 +433,7 @@
 
 <div class="viewcode-block" id="plot_lagfuncs">
 <a class="viewcode-back" href="../../index.html#tigramite.plotting.plot_lagfuncs">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_lagfuncs</span><span class="p">(</span><span class="n">val_matrix</span><span class="p">,</span> 
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_lagfuncs</span><span class="p">(</span><span class="n">val_matrix</span><span class="p">,</span> 
                   <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
                   <span class="n">setup_args</span><span class="o">=</span><span class="p">{},</span> 
                   <span class="n">add_lagfunc_args</span><span class="o">=</span><span class="p">{}):</span>
@@ -473,7 +473,7 @@
 
 <div class="viewcode-block" id="setup_matrix">
 <a class="viewcode-back" href="../../index.html#tigramite.plotting.setup_matrix">[docs]</a>
-<span class="k">class</span> <span class="nc">setup_matrix</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">setup_matrix</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create matrix of lag function panels.</span>
 <span class="sd">    Class to setup figure object. The function add_lagfuncs(...) allows to plot</span>
 <span class="sd">    the val_matrix of shape (N, N, tau_max+1). Multiple lagfunctions can be</span>
@@ -518,7 +518,7 @@
 <span class="sd">        Fontsize of variable labels.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">N</span><span class="p">,</span>
         <span class="n">tau_max</span><span class="p">,</span>
@@ -658,7 +658,7 @@
 
 <div class="viewcode-block" id="setup_matrix.add_lagfuncs">
 <a class="viewcode-back" href="../../index.html#tigramite.plotting.setup_matrix.add_lagfuncs">[docs]</a>
-    <span class="k">def</span> <span class="nf">add_lagfuncs</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_lagfuncs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">val_matrix</span><span class="p">,</span>
         <span class="n">sig_thres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -768,7 +768,7 @@
 
 <div class="viewcode-block" id="setup_matrix.savefig">
 <a class="viewcode-back" href="../../index.html#tigramite.plotting.setup_matrix.savefig">[docs]</a>
-    <span class="k">def</span> <span class="nf">savefig</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">savefig</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Save matrix figure.</span>
 
 <span class="sd">        Parameters</span>
@@ -861,7 +861,7 @@
 
 <div class="viewcode-block" id="plot_scatterplots">
 <a class="viewcode-back" href="../../index.html#tigramite.plotting.plot_scatterplots">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_scatterplots</span><span class="p">(</span><span class="n">dataframe</span><span class="p">,</span> 
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_scatterplots</span><span class="p">(</span><span class="n">dataframe</span><span class="p">,</span> 
                       <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
                       <span class="n">setup_args</span><span class="o">=</span><span class="p">{},</span> 
                       <span class="n">add_scatterplot_args</span><span class="o">=</span><span class="p">{},</span>
@@ -906,7 +906,7 @@
 
 <div class="viewcode-block" id="setup_scatter_matrix">
 <a class="viewcode-back" href="../../index.html#tigramite.plotting.setup_scatter_matrix">[docs]</a>
-<span class="k">class</span> <span class="nc">setup_scatter_matrix</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">setup_scatter_matrix</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create matrix of scatter plot panels.</span>
 <span class="sd">    Class to setup figure object. The function add_scatterplot allows to plot</span>
 <span class="sd">    scatterplots of variables in the dataframe. Multiple scatter plots can be</span>
@@ -938,7 +938,7 @@
 <span class="sd">        Fontsize of variable labels.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">N</span><span class="p">,</span>
         <span class="n">var_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1026,7 +1026,7 @@
 
 <div class="viewcode-block" id="setup_scatter_matrix.add_scatterplot">
 <a class="viewcode-back" href="../../index.html#tigramite.plotting.setup_scatter_matrix.add_scatterplot">[docs]</a>
-    <span class="k">def</span> <span class="nf">add_scatterplot</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_scatterplot</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">dataframe</span><span class="p">,</span>
         <span class="n">matrix_lags</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1111,7 +1111,7 @@
 
 <div class="viewcode-block" id="setup_scatter_matrix.adjustfig">
 <a class="viewcode-back" href="../../index.html#tigramite.plotting.setup_scatter_matrix.adjustfig">[docs]</a>
-    <span class="k">def</span> <span class="nf">adjustfig</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">adjustfig</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Adjust matrix figure.</span>
 
 <span class="sd">        Parameters</span>
@@ -1201,7 +1201,7 @@
 
 <div class="viewcode-block" id="plot_densityplots">
 <a class="viewcode-back" href="../../index.html#tigramite.plotting.plot_densityplots">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_densityplots</span><span class="p">(</span><span class="n">dataframe</span><span class="p">,</span> 
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_densityplots</span><span class="p">(</span><span class="n">dataframe</span><span class="p">,</span> 
                       <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
                       <span class="n">setup_args</span><span class="o">=</span><span class="p">{},</span> 
                       <span class="n">add_densityplot_args</span><span class="o">=</span><span class="p">{},</span>
@@ -1254,7 +1254,7 @@
 
 <div class="viewcode-block" id="setup_density_matrix">
 <a class="viewcode-back" href="../../index.html#tigramite.plotting.setup_density_matrix">[docs]</a>
-<span class="k">class</span> <span class="nc">setup_density_matrix</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">setup_density_matrix</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create matrix of density plot panels.</span>
 <span class="sd">    Class to setup figure object. The function add_densityplot allows to plot</span>
 <span class="sd">    density plots of variables in the dataframe. </span>
@@ -1288,7 +1288,7 @@
 <span class="sd">        Fontsize of variable labels.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">N</span><span class="p">,</span>
         <span class="n">var_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1380,7 +1380,7 @@
 
 <div class="viewcode-block" id="setup_density_matrix.add_densityplot">
 <a class="viewcode-back" href="../../index.html#tigramite.plotting.setup_density_matrix.add_densityplot">[docs]</a>
-    <span class="k">def</span> <span class="nf">add_densityplot</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_densityplot</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">dataframe</span><span class="p">,</span>
         <span class="n">matrix_lags</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1419,7 +1419,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># Use seaborn for this one</span>
-        <span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">seaborn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sns</span>
 
         <span class="c1"># set seaborn style</span>
         <span class="n">sns</span><span class="o">.</span><span class="n">set_style</span><span class="p">(</span><span class="s2">&quot;white&quot;</span><span class="p">)</span>
@@ -1479,7 +1479,7 @@
 
 <div class="viewcode-block" id="setup_density_matrix.adjustfig">
 <a class="viewcode-back" href="../../index.html#tigramite.plotting.setup_density_matrix.adjustfig">[docs]</a>
-    <span class="k">def</span> <span class="nf">adjustfig</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">show_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">adjustfig</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">show_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Adjust matrix figure.</span>
 
 <span class="sd">        Parameters</span>
@@ -1583,7 +1583,7 @@
 </div>
 
 
-<span class="k">def</span> <span class="nf">_draw_network_with_curved_edges</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_draw_network_with_curved_edges</span><span class="p">(</span>
         <span class="n">fig</span><span class="p">,</span>
         <span class="n">ax</span><span class="p">,</span>
         <span class="n">G</span><span class="p">,</span>
@@ -1636,7 +1636,7 @@
     <span class="k">if</span> <span class="n">transform</span> <span class="o">==</span> <span class="s1">&#39;data&#39;</span><span class="p">:</span>
         <span class="n">transform</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">transData</span>
 
-    <span class="kn">from</span> <span class="nn">matplotlib.patches</span> <span class="kn">import</span> <span class="n">FancyArrowPatch</span><span class="p">,</span> <span class="n">Circle</span><span class="p">,</span> <span class="n">Ellipse</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.patches</span><span class="w"> </span><span class="kn">import</span> <span class="n">FancyArrowPatch</span><span class="p">,</span> <span class="n">Circle</span><span class="p">,</span> <span class="n">Ellipse</span>
 
     <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="s2">&quot;none&quot;</span><span class="p">)</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s2">&quot;right&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="s2">&quot;none&quot;</span><span class="p">)</span>
@@ -1650,7 +1650,7 @@
     <span class="c1"># This fixes a positioning bug in matplotlib.</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=-</span><span class="mi">10</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">draw_edge</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">draw_edge</span><span class="p">(</span>
         <span class="n">ax</span><span class="p">,</span>
         <span class="n">u</span><span class="p">,</span>
         <span class="n">v</span><span class="p">,</span>
@@ -2256,7 +2256,7 @@
 
 
         <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">outer_edge</span><span class="p">:</span>
-            <span class="k">def</span> <span class="nf">closest_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">nodes</span><span class="p">):</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">closest_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">nodes</span><span class="p">):</span>
                 <span class="n">nodes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
                 <span class="n">node</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
                 <span class="n">dist_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">nodes</span> <span class="o">-</span> <span class="n">node</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -2397,7 +2397,7 @@
     <span class="n">node_sizes</span> <span class="o">/=</span> <span class="n">total_max_size</span>
     <span class="n">node_sizes</span> <span class="o">*=</span> <span class="n">standard_size</span>
 
-    <span class="k">def</span> <span class="nf">get_aspect</span><span class="p">(</span><span class="n">ax</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_aspect</span><span class="p">(</span><span class="n">ax</span><span class="p">):</span>
         <span class="c1"># Total figure size</span>
         <span class="n">figW</span><span class="p">,</span> <span class="n">figH</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span><span class="o">.</span><span class="n">get_size_inches</span><span class="p">()</span>
         <span class="c1"># print(figW, figH)</span>
@@ -2595,7 +2595,7 @@
 
 <div class="viewcode-block" id="plot_graph">
 <a class="viewcode-back" href="../../index.html#tigramite.plotting.plot_graph">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_graph</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_graph</span><span class="p">(</span>
     <span class="n">graph</span><span class="p">,</span>
     <span class="n">val_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">var_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -3010,7 +3010,7 @@
 
 
 
-<span class="k">def</span> <span class="nf">_reverse_patt</span><span class="p">(</span><span class="n">patt</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_reverse_patt</span><span class="p">(</span><span class="n">patt</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Inverts a link pattern&quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">patt</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
@@ -3042,7 +3042,7 @@
     <span class="c1">#     return &#39;--&gt;&#39;</span>
 
 
-<span class="k">def</span> <span class="nf">_check_matrices</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">val_matrix</span><span class="p">,</span> <span class="n">link_width</span><span class="p">,</span> <span class="n">link_attribute</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_matrices</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">val_matrix</span><span class="p">,</span> <span class="n">link_width</span><span class="p">,</span> <span class="n">link_attribute</span><span class="p">):</span>
 
     <span class="k">if</span> <span class="n">graph</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="s2">&quot;&lt;U3&quot;</span><span class="p">:</span>
         <span class="c1"># Transform to new graph data type U3</span>
@@ -3171,7 +3171,7 @@
 
 <div class="viewcode-block" id="plot_time_series_graph">
 <a class="viewcode-back" href="../../index.html#tigramite.plotting.plot_time_series_graph">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_time_series_graph</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_time_series_graph</span><span class="p">(</span>
         <span class="n">graph</span><span class="p">,</span>
         <span class="n">val_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">var_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -3318,7 +3318,7 @@
     <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">order</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;order must be a permutation of range(N)&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">translate</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">lag</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">translate</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">lag</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">row</span> <span class="o">*</span> <span class="n">max_lag</span> <span class="o">+</span> <span class="n">lag</span>
 
     <span class="c1"># Define graph links by absolute maximum (positive or negative like for</span>
@@ -3578,7 +3578,7 @@
 
 <div class="viewcode-block" id="plot_mediation_time_series_graph">
 <a class="viewcode-back" href="../../index.html#tigramite.plotting.plot_mediation_time_series_graph">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_mediation_time_series_graph</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_mediation_time_series_graph</span><span class="p">(</span>
     <span class="n">path_node_array</span><span class="p">,</span>
     <span class="n">tsg_path_val_matrix</span><span class="p">,</span>
     <span class="n">var_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -3693,7 +3693,7 @@
     <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">order</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;order must be a permutation of range(N)&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">translate</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">lag</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">translate</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">lag</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">row</span> <span class="o">*</span> <span class="n">max_lag</span> <span class="o">+</span> <span class="n">lag</span>
 
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">tsg_path_val_matrix</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span>
@@ -3890,7 +3890,7 @@
 
 <div class="viewcode-block" id="plot_mediation_graph">
 <a class="viewcode-back" href="../../index.html#tigramite.plotting.plot_mediation_graph">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_mediation_graph</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_mediation_graph</span><span class="p">(</span>
     <span class="n">path_val_matrix</span><span class="p">,</span>
     <span class="n">path_node_array</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">var_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -4200,20 +4200,20 @@
 <span class="c1">#</span>
 <div class="viewcode-block" id="plot_tsg">
 <a class="viewcode-back" href="../../index.html#tigramite.plotting.plot_tsg">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_tsg</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">anc_x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">anc_y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">anc_xy</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_tsg</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">anc_x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">anc_y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">anc_xy</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Plots TSG that is input in format (N*max_lag, N*max_lag).</span>
 <span class="sd">    Compared to the tigramite plotting function here links</span>
 <span class="sd">    X^i_{t-tau} --&gt; X^j_t can be missing for different t&#39;. Helpful to</span>
 <span class="sd">    visualize the conditioned TSG.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">varlag2node</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">lag</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">varlag2node</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">lag</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Translate from (var, lag) notation to node in TSG.</span>
 <span class="sd">        lag must be &lt;= 0.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">var</span> <span class="o">*</span> <span class="n">max_lag</span> <span class="o">+</span> <span class="n">lag</span>
 
-    <span class="k">def</span> <span class="nf">node2varlag</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">node2varlag</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Translate from node in TSG to (var, -tau) notation.</span>
 <span class="sd">        Here tau is &lt;= 0.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -4221,7 +4221,7 @@
         <span class="n">tau</span> <span class="o">=</span> <span class="n">node</span> <span class="o">%</span> <span class="p">(</span><span class="n">max_lag</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">max_lag</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">var</span><span class="p">,</span> <span class="n">tau</span>
 
-    <span class="k">def</span> <span class="nf">_get_minmax_lag</span><span class="p">(</span><span class="n">links</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_minmax_lag</span><span class="p">(</span><span class="n">links</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function to retrieve tau_min and tau_max from links</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -4240,7 +4240,7 @@
                     <span class="n">max_lag</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_lag</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">lag</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">min_lag</span><span class="p">,</span> <span class="n">max_lag</span>
 
-    <span class="k">def</span> <span class="nf">_links_to_tsg</span><span class="p">(</span><span class="n">link_coeffs</span><span class="p">,</span> <span class="n">max_lag</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_links_to_tsg</span><span class="p">(</span><span class="n">link_coeffs</span><span class="p">,</span> <span class="n">max_lag</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Transform link_coeffs to time series graph.</span>
 <span class="sd">        TSG is of shape (N*max_lag, N*max_lag).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -4486,7 +4486,7 @@
 
 <div class="viewcode-block" id="write_csv">
 <a class="viewcode-back" href="../../index.html#tigramite.plotting.write_csv">[docs]</a>
-<span class="k">def</span> <span class="nf">write_csv</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">write_csv</span><span class="p">(</span>
     <span class="n">graph</span><span class="p">,</span>
     <span class="n">save_name</span><span class="p">,</span>
     <span class="n">val_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -4577,15 +4577,15 @@
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
 
-    <span class="kn">import</span> <span class="nn">sys</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
     <span class="n">matplotlib</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s1">&#39;xtick&#39;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span> 
     <span class="n">matplotlib</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s1">&#39;ytick&#39;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span> 
 
     <span class="c1"># Consider some toy data</span>
-    <span class="kn">import</span> <span class="nn">tigramite</span>
-    <span class="kn">import</span> <span class="nn">tigramite.toymodels.structural_causal_processes</span> <span class="k">as</span> <span class="nn">toys</span>
-    <span class="kn">import</span> <span class="nn">tigramite.data_processing</span> <span class="k">as</span> <span class="nn">pp</span>
-    <span class="kn">from</span> <span class="nn">tigramite.causal_effects</span> <span class="kn">import</span> <span class="n">CausalEffects</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">tigramite</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">tigramite.toymodels.structural_causal_processes</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">toys</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">tigramite.data_processing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pp</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">tigramite.causal_effects</span><span class="w"> </span><span class="kn">import</span> <span class="n">CausalEffects</span>
 
     <span class="n">graph</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;&lt;U3&#39;</span><span class="p">)</span>
     <span class="n">graph</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;--&gt;&quot;</span>
@@ -4828,7 +4828,7 @@
           
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
 <h1 class="logo"><a href="../../index.html">Tigramite</a></h1>
 
@@ -4876,7 +4876,7 @@
       &#169;2023, Jakob Runge.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
     </div>

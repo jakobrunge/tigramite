@@ -35,18 +35,18 @@
 <span class="c1"># Author: Jakob Runge &lt;jakob@jakob-runge.com&gt;</span>
 <span class="c1">#</span>
 <span class="c1"># License: GNU General Public License v3.0</span>
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span><span class="p">,</span> <span class="n">OrderedDict</span>
-<span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">import</span> <span class="nn">copy</span>
-<span class="kn">import</span> <span class="nn">math</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">scipy.sparse</span>
-<span class="kn">import</span> <span class="nn">scipy.sparse.linalg</span>
-<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span><span class="p">,</span> <span class="n">OrderedDict</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.sparse</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.sparse.linalg</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">itertools</span>
 
-<span class="k">def</span> <span class="nf">_generate_noise</span><span class="p">(</span><span class="n">covar_matrix</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">use_inverse</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_generate_noise</span><span class="p">(</span><span class="n">covar_matrix</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">use_inverse</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generate a multivariate normal distribution using correlated innovations.</span>
 
@@ -80,7 +80,7 @@
                                             <span class="n">cov</span><span class="o">=</span><span class="n">this_covar</span><span class="p">,</span>
                                             <span class="n">size</span><span class="o">=</span><span class="n">time</span><span class="p">)</span>
 
-<span class="k">def</span> <span class="nf">_check_stability</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_stability</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Raises an AssertionError if the input graph corresponds to a non-stationary</span>
 <span class="sd">    process.</span>
@@ -126,7 +126,7 @@
         <span class="s2">&quot;Values given by time lagged connectivity matrix corresponds to a &quot;</span><span class="o">+</span>\
         <span class="s2">&quot; non-stationary process!&quot;</span>
 
-<span class="k">def</span> <span class="nf">_check_initial_values</span><span class="p">(</span><span class="n">initial_values</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_initial_values</span><span class="p">(</span><span class="n">initial_values</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Raises a AssertionError if the input initial values:</span>
 <span class="sd">        * Are not a numpy array OR</span>
@@ -146,7 +146,7 @@
         <span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> current shape : &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">initial_values</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">+</span>\
         <span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> desired shape : &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
 
-<span class="k">def</span> <span class="nf">_var_network</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_var_network</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span>
                  <span class="n">add_noise</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                  <span class="n">inno_cov</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">invert_inno</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -232,7 +232,7 @@
 
     <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
 
-<span class="k">def</span> <span class="nf">_iter_coeffs</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_iter_coeffs</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Iterator through the current parents_neighbors_coeffs structure.  Mainly to</span>
 <span class="sd">    save repeated code and make it easier to change this structure.</span>
@@ -257,7 +257,7 @@
             <span class="c1"># Yield the entry</span>
             <span class="k">yield</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">parent_id</span><span class="p">,</span> <span class="n">time_lag</span><span class="p">,</span> <span class="n">coeff</span>
 
-<span class="k">def</span> <span class="nf">_check_parent_neighbor</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_parent_neighbor</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Checks to insure input parent-neighbor connectivity input is sane.  This</span>
 <span class="sd">    means that:</span>
@@ -307,7 +307,7 @@
                          <span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> Node IDs &quot;</span><span class="o">+</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">all_nodes_list</span><span class="p">))</span> <span class="o">+</span>\
                          <span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> Missing IDs &quot;</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">missing_nodes</span><span class="p">)))</span>
 
-<span class="k">def</span> <span class="nf">_check_symmetric_relations</span><span class="p">(</span><span class="n">a_matrix</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_symmetric_relations</span><span class="p">(</span><span class="n">a_matrix</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Check if the argument matrix is symmetric.  Raise a value error with details</span>
 <span class="sd">    about the offending elements if it is not.  This is useful for checking the</span>
@@ -340,7 +340,7 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Relationships between nodes at tau=0 are not&quot;</span><span class="o">+</span>\
                          <span class="s2">&quot; symmetric!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span><span class="n">error_message</span><span class="p">)</span>
 
-<span class="k">def</span> <span class="nf">_find_max_time_lag_and_node_id</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_find_max_time_lag_and_node_id</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Function to find the maximum time lag in the parent-neighbors-coefficients</span>
 <span class="sd">    object, as well as the largest node ID</span>
@@ -370,7 +370,7 @@
     <span class="c1"># Return these values</span>
     <span class="k">return</span> <span class="n">max_time_lag</span><span class="p">,</span> <span class="n">max_node_id</span>
 
-<span class="k">def</span> <span class="nf">_get_true_parent_neighbor_dict</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_true_parent_neighbor_dict</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Function to return the dictionary of true parent neighbor causal</span>
 <span class="sd">    connections in time.</span>
@@ -401,7 +401,7 @@
     <span class="c1"># Return the true relations</span>
     <span class="k">return</span> <span class="n">true_parents_neighbors</span>
 
-<span class="k">def</span> <span class="nf">_get_covariance_matrix</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_covariance_matrix</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Determines the covariance matrix for correlated innovations</span>
 
@@ -432,7 +432,7 @@
             <span class="n">covar_matrix</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">coeff</span>
     <span class="k">return</span> <span class="n">covar_matrix</span>
 
-<span class="k">def</span> <span class="nf">_get_lag_connect_matrix</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_lag_connect_matrix</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generates the lagged connectivity matrix from a parent-neighbor</span>
 <span class="sd">    connectivity dictionary.  Used to generate the input for _var_network</span>
@@ -466,7 +466,7 @@
 
 <div class="viewcode-block" id="var_process">
 <a class="viewcode-back" href="../../../index.html#tigramite.toymodels.structural_causal_processes.var_process">[docs]</a>
-<span class="k">def</span> <span class="nf">var_process</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">use</span><span class="o">=</span><span class="s1">&#39;inv_inno_cov&#39;</span><span class="p">,</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">var_process</span><span class="p">(</span><span class="n">parents_neighbors_coeffs</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">use</span><span class="o">=</span><span class="s1">&#39;inv_inno_cov&#39;</span><span class="p">,</span>
                 <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">initial_values</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a vector-autoregressive process with correlated innovations.</span>
 
@@ -543,7 +543,7 @@
     <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">true_parents_neighbors</span></div>
 
 
-<span class="k">class</span> <span class="nc">_Graph</span><span class="p">():</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_Graph</span><span class="p">():</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Helper class to handle graph properties.</span>
 
 <span class="sd">    Parameters</span>
@@ -551,15 +551,15 @@
 <span class="sd">    vertices : list</span>
 <span class="sd">        List of nodes.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">vertices</span><span class="p">):</span> 
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">vertices</span><span class="p">):</span> 
         <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span> 
         <span class="bp">self</span><span class="o">.</span><span class="n">V</span> <span class="o">=</span> <span class="n">vertices</span> 
   
-    <span class="k">def</span> <span class="nf">addEdge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">addEdge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Adding edge to graph.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> 
   
-    <span class="k">def</span> <span class="nf">isCyclicUtil</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">visited</span><span class="p">,</span> <span class="n">recStack</span><span class="p">):</span> 
+    <span class="k">def</span><span class="w"> </span><span class="nf">isCyclicUtil</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">visited</span><span class="p">,</span> <span class="n">recStack</span><span class="p">):</span> 
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Utility function to return whether graph is cyclic.&quot;&quot;&quot;</span>
         <span class="c1"># Mark current node as visited and</span>
         <span class="c1"># adds to recursion stack </span>
@@ -581,7 +581,7 @@
         <span class="n">recStack</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">return</span> <span class="kc">False</span>
   
-    <span class="k">def</span> <span class="nf">isCyclic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">isCyclic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns whether graph is cyclic.&quot;&quot;&quot;</span>
         <span class="n">visited</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">V</span> 
         <span class="n">recStack</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">V</span> 
@@ -591,7 +591,7 @@
                     <span class="k">return</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="kc">False</span>
   
-    <span class="k">def</span> <span class="nf">topologicalSortUtil</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">visited</span><span class="p">,</span><span class="n">stack</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">topologicalSortUtil</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">visited</span><span class="p">,</span><span class="n">stack</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;A recursive function used by topologicalSort .&quot;&quot;&quot;</span>
         <span class="c1"># Mark the current node as visited.</span>
         <span class="n">visited</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
@@ -604,7 +604,7 @@
         <span class="c1"># Push current vertex to stack which stores result</span>
         <span class="n">stack</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">topologicalSort</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">topologicalSort</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;A sorting function. &quot;&quot;&quot;</span>
         <span class="c1"># Mark all the vertices as not visited </span>
         <span class="n">visited</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">V</span> 
@@ -620,7 +620,7 @@
 
 <div class="viewcode-block" id="structural_causal_process_ensemble">
 <a class="viewcode-back" href="../../../index.html#tigramite.toymodels.structural_causal_processes.structural_causal_process_ensemble">[docs]</a>
-<span class="k">def</span> <span class="nf">structural_causal_process_ensemble</span><span class="p">(</span><span class="n">realizations</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">ensemble_seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">structural_causal_process_ensemble</span><span class="p">(</span><span class="n">realizations</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">ensemble_seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns an ensemble of time series generated from a structural causal process.</span>
 
 <span class="sd">    This adds an ensemble dimension to the output of structural_causal_process.</span>
@@ -669,7 +669,7 @@
 
 <div class="viewcode-block" id="structural_causal_process">
 <a class="viewcode-back" href="../../../index.html#tigramite.toymodels.structural_causal_processes.structural_causal_process">[docs]</a>
-<span class="k">def</span> <span class="nf">structural_causal_process</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">noises</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+<span class="k">def</span><span class="w"> </span><span class="nf">structural_causal_process</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">noises</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
                         <span class="n">intervention</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">intervention_type</span><span class="o">=</span><span class="s1">&#39;hard&#39;</span><span class="p">,</span>
                         <span class="n">transient_fraction</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
                         <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -818,7 +818,7 @@
     <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">nonvalid</span></div>
 
 
-<span class="k">def</span> <span class="nf">_get_minmax_lag</span><span class="p">(</span><span class="n">links</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_minmax_lag</span><span class="p">(</span><span class="n">links</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Helper function to retrieve tau_min and tau_max from links.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -843,7 +843,7 @@
 
     <span class="k">return</span> <span class="n">min_lag</span><span class="p">,</span> <span class="n">max_lag</span>
 
-<span class="k">def</span> <span class="nf">_get_parents</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">exclude_contemp</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_parents</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">exclude_contemp</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Helper function to parents from links</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -863,7 +863,7 @@
 
     <span class="k">return</span> <span class="n">parents</span>
 
-<span class="k">def</span> <span class="nf">_get_children</span><span class="p">(</span><span class="n">parents</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_children</span><span class="p">(</span><span class="n">parents</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Helper function to children from parents</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -879,7 +879,7 @@
 
 <div class="viewcode-block" id="links_to_graph">
 <a class="viewcode-back" href="../../../index.html#tigramite.toymodels.structural_causal_processes.links_to_graph">[docs]</a>
-<span class="k">def</span> <span class="nf">links_to_graph</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">links_to_graph</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Helper function to convert dictionary of links to graph array format.</span>
 
 <span class="sd">    Parameters</span>
@@ -930,7 +930,7 @@
 
 <div class="viewcode-block" id="dag_to_links">
 <a class="viewcode-back" href="../../../index.html#tigramite.toymodels.structural_causal_processes.dag_to_links">[docs]</a>
-<span class="k">def</span> <span class="nf">dag_to_links</span><span class="p">(</span><span class="n">dag</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">dag_to_links</span><span class="p">(</span><span class="n">dag</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Helper function to convert DAG graph to dictionary of parents.</span>
 
 <span class="sd">    Parameters</span>
@@ -947,8 +947,9 @@
 
     <span class="n">parents</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">j</span><span class="p">,</span> <span class="p">[])</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)])</span>
 
-    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">dag</span><span class="o">==</span><span class="s1">&#39;o-o&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">dag</span><span class="o">==</span><span class="s1">&#39;x-x&#39;</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;graph must be DAG.&quot;</span><span class="p">)</span>
+    <span class="n">allowed_edges</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;--&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;--&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">]</span> 
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">dag</span><span class="p">,</span> <span class="n">allowed_edges</span><span class="p">)</span> <span class="o">==</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;graph must be a DAG.&quot;</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">tau</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">dag</span><span class="o">==</span><span class="s1">&#39;--&gt;&#39;</span><span class="p">)):</span>
         <span class="n">parents</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="n">tau</span><span class="p">))</span>
@@ -958,7 +959,7 @@
 
 <div class="viewcode-block" id="generate_structural_causal_process">
 <a class="viewcode-back" href="../../../index.html#tigramite.toymodels.structural_causal_processes.generate_structural_causal_process">[docs]</a>
-<span class="k">def</span> <span class="nf">generate_structural_causal_process</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_structural_causal_process</span><span class="p">(</span>
                 <span class="n">N</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> 
                 <span class="n">L</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
                 <span class="n">dependency_funcs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;linear&#39;</span><span class="p">],</span> 
@@ -1042,8 +1043,8 @@
     <span class="n">random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
     <span class="n">random_state_noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">noise_seed</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">linear</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span>
-    <span class="k">def</span> <span class="nf">nonlinear</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mf">5.</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="mf">20.</span><span class="p">))</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">linear</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">nonlinear</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mf">5.</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="mf">20.</span><span class="p">))</span>
 
     <span class="k">if</span> <span class="n">max_lag</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">contemp_fraction</span> <span class="o">=</span> <span class="mf">1.</span>
@@ -1111,20 +1112,20 @@
 
     <span class="c1"># Now generate noise functions</span>
     <span class="c1"># Either choose among pre-defined noise types or supply your own</span>
-    <span class="k">class</span> <span class="nc">NoiseModel</span><span class="p">:</span>
-        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">NoiseModel</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">mean</span> <span class="o">=</span> <span class="n">mean</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="n">sigma</span>
-        <span class="k">def</span> <span class="nf">gaussian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">gaussian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
             <span class="c1"># Get zero-mean unit variance gaussian distribution</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="o">*</span><span class="n">random_state_noise</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
-        <span class="k">def</span> <span class="nf">weibull</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span> 
+        <span class="k">def</span><span class="w"> </span><span class="nf">weibull</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span> 
             <span class="c1"># Get zero-mean sigma variance weibull distribution</span>
             <span class="n">a</span> <span class="o">=</span> <span class="mi">2</span>
             <span class="n">mean</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">special</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
             <span class="n">variance</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">special</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="mf">2.</span><span class="o">/</span><span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">scipy</span><span class="o">.</span><span class="n">special</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="o">*</span><span class="p">(</span><span class="n">random_state_noise</span><span class="o">.</span><span class="n">weibull</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">T</span><span class="p">)</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">variance</span><span class="p">)</span>
-        <span class="k">def</span> <span class="nf">uniform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span> 
+        <span class="k">def</span><span class="w"> </span><span class="nf">uniform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span> 
             <span class="c1"># Get zero-mean sigma variance uniform distribution</span>
             <span class="n">mean</span> <span class="o">=</span> <span class="mf">0.5</span>
             <span class="n">variance</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="mf">12.</span>
@@ -1148,7 +1149,7 @@
 
 <div class="viewcode-block" id="check_stationarity">
 <a class="viewcode-back" href="../../../index.html#tigramite.toymodels.structural_causal_processes.check_stationarity">[docs]</a>
-<span class="k">def</span> <span class="nf">check_stationarity</span><span class="p">(</span><span class="n">links</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_stationarity</span><span class="p">(</span><span class="n">links</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns stationarity according to a unit root test.</span>
 
 <span class="sd">    Assumes an at least asymptotically linear vector autoregressive process</span>
@@ -1213,13 +1214,13 @@
     <span class="c1"># else:</span>
     <span class="c1">#     return stationary, np.abs(eig).max()</span>
 
-<span class="k">class</span> <span class="nc">_Logger</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_Logger</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Class to append print output to a string which can be saved&quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">terminal</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>       <span class="c1"># open(&quot;log.dat&quot;, &quot;a&quot;)</span>
 
-    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">terminal</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">+=</span> <span class="n">message</span>  <span class="c1"># .write(message)</span>
 
@@ -1227,8 +1228,8 @@
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
     
     <span class="c1">## Generate some time series from a structural causal process</span>
-    <span class="k">def</span> <span class="nf">lin_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span>
-    <span class="k">def</span> <span class="nf">nonlin_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mf">5.</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="mf">20.</span><span class="p">))</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">lin_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">nonlin_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mf">5.</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="mf">20.</span><span class="p">))</span>
 
     <span class="n">links</span><span class="p">,</span> <span class="n">noises</span> <span class="o">=</span> <span class="n">generate_structural_causal_process</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">noise_seed</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     
@@ -1257,7 +1258,7 @@
           
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
 <h1 class="logo"><a href="../../../index.html">Tigramite</a></h1>
 
@@ -1305,7 +1306,7 @@
       &#169;2023, Jakob Runge.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
     </div>
