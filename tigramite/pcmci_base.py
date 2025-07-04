@@ -884,9 +884,7 @@ class PCMCIbase():
 
         child_seeds = seed_sequence.spawn(boot_samples)
         
-        ntaskcpus = len(os.sched_getaffinity(0)) #number of cpus for this task
-        n_jobs = min([8,ntaskcpus]) #do not put this too high to avoid out-of-memory issues
-        aggregated_results = Parallel(n_jobs=n_jobs)(
+        aggregated_results = Parallel(n_jobs=-1)(
             delayed(self.parallelized_bootstraps)(method, method_args, boot_seed=child_seeds[b]) for
             b in range(boot_samples))
 
