@@ -607,7 +607,7 @@ class PCMCI(PCMCIbase):
             Maximum time lag. Must be larger or equal to tau_min.
         save_iterations : bool, default: False
             Whether to save iteration step results such as conditions used.
-        pc_alpha : float or list of floats, default: [0.05, 0.1, 0.2, ..., 0.5]
+        pc_alpha : float or list of floats, default: 0.2
             Significance level in algorithm. If a list or None is passed, the
             pc_alpha level is optimized for every variable across the given
             pc_alpha values using the score computed in
@@ -1749,7 +1749,7 @@ class PCMCI(PCMCIbase):
                   tau_min=0,
                   tau_max=1,
                   save_iterations=False,
-                  pc_alpha=0.05,
+                  pc_alpha=0.2,
                   max_conds_dim=None,
                   max_combinations=1,
                   max_conds_py=None,
@@ -1876,8 +1876,8 @@ class PCMCI(PCMCIbase):
             Maximum time lag. Must be larger or equal to tau_min.
         save_iterations : bool, optional (default: False)
             Whether to save iteration step results such as conditions used.
-        pc_alpha : float, optional (default: 0.05)
-            Significance level in algorithm.
+        pc_alpha : float, optional (default: 0.2)
+            Significance level in PC1 algorithm.
         max_conds_dim : int, optional (default: None)
             Maximum number of conditions to test. If None is passed, this number
             is unrestricted.
