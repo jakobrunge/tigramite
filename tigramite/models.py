@@ -822,7 +822,7 @@ class LinearMediation(Models):
         # self.tau_max = tau_max
 
     def fit_model_bootstrap(self, 
-            boot_blocklength=1,
+            boot_meanblocklength=1,
             seed=None,
             boot_samples=100):
         """Fits boostrap-versions of Phi, Psi, etc.
@@ -831,9 +831,11 @@ class LinearMediation(Models):
 
         Parameters
         ----------
-        boot_blocklength : int, or in {'cube_root', 'from_autocorrelation'}
-            Block length for block-bootstrap. If 'cube_root' it is the cube 
-            root of the time series length.
+        boot_meanblocklength : int or float, or in {'cube_root','from_autocorrelation'}
+        Mean block length for the stationary block-bootstrap. If 'cube_root' it is
+        the cube root of the time series length. If 'from_autocorrelation', the 
+        mean block length is determined from the decay of the autocorrelation
+        as described in Politis and White (2004) and Patton et al. (2009). 
         seed : int, optional(default = None)
             Seed for RandomState (default_rng)
         boot_samples : int
@@ -848,7 +850,7 @@ class LinearMediation(Models):
             print("\n##\n## Generating bootstrap samples of Phi, Psi, etc "  +
                   "\n##\n" +
                   "\nboot_samples = %s \n" % boot_samples +
-                  "\nboot_blocklength = %s \n" % boot_blocklength
+                  "\nboot_meanblocklength = %s \n" % boot_meanblocklength
                   )
 
 
@@ -862,7 +864,7 @@ class LinearMediation(Models):
 
             dataframe_here = deepcopy(self.dataframe)
 
-            dataframe_here.bootstrap = {'boot_blocklength':boot_blocklength,
+            dataframe_here.bootstrap = {'boot_meanblocklength':boot_meanblocklength,
                                         'random_state':random_state}
             model = Models(dataframe=dataframe_here,
                            model=sklearn.linear_model.LinearRegression(**self.model_params),

@@ -46,11 +46,11 @@ class CMIsymb(CondIndTest):
         Type of significance test to use. For CMIsymb only 'fixed_thres' and
         'shuffle_test' are available.
 
-    sig_blocklength : int, optional (default: 1)
-        Block length for block-shuffle significance test.
+    sig_meanblocklength : int, optional (default: 1)
+        Mean block length for stationary block-shuffle significance test.
 
-    conf_blocklength : int, optional (default: 1)
-        Block length for block-bootstrap.
+    conf_meanblocklength : int, optional (default: 1)
+        Mean block length for stationary block-bootstrap.
 
     **kwargs :
         Arguments passed on to parent class CondIndTest.
@@ -65,8 +65,8 @@ class CMIsymb(CondIndTest):
     def __init__(self,
                  n_symbs=None,
                  significance='shuffle_test',
-                 sig_blocklength=1,
-                 conf_blocklength=1,
+                 sig_meanblocklength=1,
+                 conf_meanblocklength=1,
                  **kwargs):
         # Setup the member variables
         self._measure = 'cmi_symb'
@@ -77,15 +77,15 @@ class CMIsymb(CondIndTest):
         # Call the parent constructor
         CondIndTest.__init__(self,
                              significance=significance,
-                             sig_blocklength=sig_blocklength,
-                             conf_blocklength=conf_blocklength,
+                             sig_meanblocklength=sig_meanblocklength,
+                             conf_meanblocklength=conf_meanblocklength,
                              **kwargs)
 
         if self.verbosity > 0:
             print("n_symbs = %s" % self.n_symbs)
             print("")
 
-        if self.conf_blocklength is None or self.sig_blocklength is None:
+        if self.conf_meanblocklength is None or self.sig_meanblocklength is None:
             warnings.warn("Automatic block-length estimations from decay of "
                           "autocorrelation may not be correct for discrete "
                           "data")
@@ -205,7 +205,7 @@ class CMIsymb(CondIndTest):
                 self._get_shuffle_dist(array, xyz,
                                        self.get_dependence_measure,
                                        sig_samples=self.sig_samples,
-                                       sig_blocklength=self.sig_blocklength,
+                                       sig_meanblocklength=self.sig_meanblocklength,
                                        verbosity=self.verbosity)
 
         pval = (null_dist >= value).mean()
