@@ -32,7 +32,7 @@ def generate_linear_model_from_data(dataframe, parents, tau_max, realizations=10
     generate_noise_from : {'covariance', 'residuals'}
         Whether to generate the noise from a gaussian with same mean and covariance
         as residuals, or by drawing (with replacement) from the residuals.
-    boot_meanblocklength : float, or in {'cube_root','from_autocorrelation'}
+    boot_meanblocklength : int or float, or in {'cube_root','from_autocorrelation'}
         Mean block length for the stationary block-bootstrap. If 'cube_root' it is
         the cube root of the time series length. If 'from_autocorrelation', the 
         mean block length is determined from the decay of the autocorrelation

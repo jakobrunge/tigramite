@@ -1143,7 +1143,6 @@ class CausalEffects(Graphs):
 
         return predicted_array
 
-
     def fit_bootstrap_of(self, method, method_args, 
                         boot_samples=100,
                         boot_meanblocklength=1,
@@ -1166,8 +1165,11 @@ class CausalEffects(Graphs):
             Arguments passed to method.
         boot_samples : int
             Number of bootstrap samples to draw.
-        boot_meanblocklength : int, optional (default: 1)
-            Mean block length for stationary block-bootstrap.
+        boot_meanblocklength : int or float, or in {'cube_root','from_autocorrelation'}
+            Mean block length for the stationary block-bootstrap. If 'cube_root' it is
+            the cube root of the time series length. If 'from_autocorrelation', the 
+            mean block length is determined from the decay of the autocorrelation
+            as described in Politis and White (2004) and Patton et al. (2009).
         seed : int, optional(default = None)
             Seed for RandomState (default_rng)
         """
@@ -1193,7 +1195,7 @@ class CausalEffects(Graphs):
             print("\n##\n## Running Bootstrap of %s " % method +
                   "\n##\n" +
                   "\nboot_samples = %s \n" % boot_samples +
-                  "\nboot_meanblocklength = %s \n" % boot_meanblocklength +
+                  "\nboot_meanblocklength = %s \n" % boot_meanblocklength
                   )
 
         method_args_bootstrap = deepcopy(method_args)

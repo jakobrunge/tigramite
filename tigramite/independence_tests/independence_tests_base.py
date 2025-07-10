@@ -452,7 +452,6 @@ class CondIndTest():
                 else:
                     dependent = pval <= alpha_or_thres
                 
-        # Saved here, but not currently used
         self.ci_results[(tuple(X), tuple(Y),tuple(Z))] = (val, pval, dependent)
 
         # Return the calculated value(s)
@@ -1001,10 +1000,10 @@ class CondIndTest():
         conf_samples : int, optional (default: 100)
             Number of samples for bootstrap.
 
-        conf_meanblocklength : float, optional (default: None)
-            Mean block length for block-bootstrap. If None, the mean block length 
-            is determined automatically based on the strength of the
-            autocorrelation.
+        conf_meanblocklength : int or float, or None 
+            Mean block length for the stationary block-bootstrap. If None, the 
+            mean block length is determined from the decay of the autocorrelation
+            as described in Politis and White (2004) and Patton et al. (2009). 
 
        data_type : array-like
             Binary data array of same shape as array which describes whether 
@@ -1030,8 +1029,8 @@ class CondIndTest():
 
         # If no mean block length is given, determine the optimal block length.
         if conf_meanblocklength is None:
-            # Take maximum mean block length, corresponding to most persistent variable #
-            conf_meanblocklength = np.max(self._get_mean_block_length(array))
+            conf_meanblocklength = \
+                self._get_mean_block_length(array,xyz,mode='confidence')
         
         # Probability of new block at each index #
         pnewblk = 1.0/float(conf_meanblocklength)
@@ -1095,12 +1094,15 @@ class CondIndTest():
             autocorr[lag] = np.corrcoef(y1_vals, y2_vals, ddof=0)[0, 1]
         return autocorr
 
-    def _get_mean_block_length(self, array):
+    def _get_mean_block_length(self, array, xyz, mode):
         """Returns optimal mean block length for significance and confidence tests.
     
         Determine mean block length for stationary bootstrap using approach in
         Politis and White (2004) with correction from Patton et al. (2009).
-        The mean block length for each variable is output.
+        For mode ='significance', only the indices corresponding to X are used
+        in the computation of the mean block length. For mode='confidence' all
+        variables are used.
+        The max mean block length across variables is output.
         Adapted from code of Andrew Patton (public.econ.duke.edu/~ap172/code.html)
         See also R documentation (public.econ.duke.edu/~ap172/R_Help.pdf)
         
@@ -1118,11 +1120,16 @@ class CondIndTest():
         array : array-like
             data array with X, Y, Z in rows and observations in columns
     
+        xyz : array of ints
+            XYZ identifier array of shape (dim,).
+    
+        mode : str
+            Which mode to use: 'significance' or 'confidence'
+    
         Returns
         -------
-        bsbhat : array of floats
-            Optimal mean block length for the stationary bootstrap
-            for each variable.
+        mean_block_len : float
+            Optimal mean block length for the stationary bootstrap.
         """
         
         ### Helper functions ###
@@ -1160,6 +1167,9 @@ class CondIndTest():
         dim, T = array.shape
         # Initiailize the indices
         indices = range(dim)
+        if mode == 'significance':
+            indices = np.where(xyz == 0)[0]
+        n_vars = len(indices)
         
         ### Fixed parameters ###
         bigkn  = max(5,np.sqrt(np.log10(T))) #footnote c of PW2004
@@ -1169,7 +1179,7 @@ class CondIndTest():
         ### Critical value for significance of autocorrelation ###
         critsignif = smallc*np.sqrt(np.log10(T)/T)
         ### Initialize array of optimal stationary bootstrap block sizes ###
-        bsbhat = np.nan*np.ones(dim)
+        bsbhat = np.nan*np.ones(n_vars)
         ### Loop through variables ###
         for idx in indices:
             iivals       = np.copy(array[idx,:])
@@ -1208,7 +1218,9 @@ class CondIndTest():
                 # Compute b_opt,sbhat of PW2004 #
                 bsbhat[idx] = (((2*bigghat**2)/dsbhat)*T)**(1/3)
         bsbhat = np.maximum(1,np.minimum(b_max,bsbhat))
-        return(bsbhat)
+        # Return largest across-variable optimal mean block length #
+        mean_block_len = np.max(bsbhat) 
+        return(mean_block_len)
 
     def _get_shuffle_dist(self, array, xyz, dependence_measure,
                           sig_samples, sig_meanblocklength=None,
@@ -1238,9 +1250,9 @@ class CondIndTest():
             Number of samples for shuffle significance test.
 
         sig_meanblocklength : int or float, optional (default: None)
-            Mean block length for block-shuffle significance test. If None, the
-            mean block length is determined from the autocorrelation as
-            explained in Politis and White (2004) and Patton et al. (2009).
+            Mean block length for the stationary block-bootstrap. If None, the
+            mean block length is determined from the decay of the autocorrelation
+            as described in Politis and White (2004) and Patton et al. (2009).
 
         verbosity : int, optional (default: 0)
             Level of verbosity.
@@ -1257,7 +1269,8 @@ class CondIndTest():
         x_indices = np.where(xyz == 0)[0]
 
         if sig_meanblocklength is None:
-            raise ValueError('sig_meanblocklength is None')
+            sig_meanblocklength = \
+                self._get_mean_block_length(array,xyz,mode='significance')
 
         if verbosity > 2:
             print("            Significance test with mean block-length = %d "

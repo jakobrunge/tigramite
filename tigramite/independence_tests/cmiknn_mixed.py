@@ -1264,7 +1264,6 @@ class CMIknnMixed(CondIndTest):
             return pval, null_dist
         return pval
 
-    
     def _get_shuffle_dist(self, array, xyz,
                           sig_samples, sig_meanblocklength=None,
                           data_type=None,
@@ -1317,7 +1316,8 @@ class CMIknnMixed(CondIndTest):
         x_indices = np.where(xyz == 0)[0]
         
         if sig_meanblocklength is None:
-            raise ValueError('sig_meanblocklength is None')
+            sig_meanblocklength = \
+                self._get_mean_block_length(array,xyz,mode='significance')
 
         if verbosity > 2:
             print("            Significance test with mean block-length = %d "
@@ -1350,8 +1350,7 @@ class CMIknnMixed(CondIndTest):
                                                             data_type=data_type_shuffled)
 
         return null_dist
-
-
+   
 if __name__ == '__main__':
     
     import tigramite

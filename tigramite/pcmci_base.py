@@ -813,11 +813,14 @@ class PCMCIbase():
             Arguments passed to method.
         boot_samples : int
             Number of bootstrap samples to draw.
-        boot_meanblocklength : int or float, optional (default: 1)
-            Mean block length for stationary block-bootstrap.
-        conf_lev : float, optional (default: 0.9)
+        boot_meanblocklength : int or float, or in {'cube_root','from_autocorrelation'}
+            Mean block length for the stationary block-bootstrap. If 'cube_root' it is
+            the cube root of the time series length. If 'from_autocorrelation', the
+            mean block length is determined from the decay of the autocorrelation
+            as described in Politis and White (2004) and Patton et al. (2009).
+            conf_lev : float, optional (default: 0.9)
             Two-sided confidence interval for summary results.
-       seed : int, optional(default = None)
+         seed : int, optional(default = None)
             Seed for RandomState (default_rng)
 
         Returns
@@ -862,17 +865,7 @@ class PCMCIbase():
 
         # Set bootstrap attribute to be passed to dataframe
         self.dataframe.bootstrap = {}
-        # Compute optimal mean block lengths for each dataset here if from_autocorrelation #
-        if(type(boot_meanblocklength) is str and boot_meanblocklength=='from_autocorrelation'):
-            list_boot_meanblocklength = self.N*[1.0]
-            for dataset_key, dataset_data in self.dataframe.values.items():
-                list_boot_meanblocklength = np.maximum\
-                        (list_boot_meanblocklength,get_mean_block_length(dataset_data.T)).tolist() 
-            self.dataframe.bootstrap['boot_meanblocklength'] = list_boot_meanblocklength
-            #print('run_boootstrap_of, list_boot_meanblocklength:',list_boot_meanblocklength,flush=True)
-        else:
-            self.dataframe.bootstrap['boot_meanblocklength'] = boot_meanblocklength
-
+        self.dataframe.bootstrap['boot_meanblocklength'] = boot_meanblocklength
 
         boot_results = {}
         #for b in range(boot_samples):
@@ -897,9 +890,9 @@ class PCMCIbase():
                 res_item = boot_res[key]
                 if type(res_item) is np.ndarray:
                     if b == 0:
-                        boot_results[key] = np.empty((boot_samples,) 
+                        boot_results[key] = np.empty((boot_samples,)
                                                      + res_item.shape,
-                                                     dtype=res_item.dtype) 
+                                                     dtype=res_item.dtype)
                     boot_results[key][b] = res_item
                 else:
                     if b == 0:
@@ -907,16 +900,16 @@ class PCMCIbase():
                     boot_results[key][b] = res_item
 
         # Generate summary results
-        summary_results = self.return_summary_results(results=boot_results, 
+        summary_results = self.return_summary_results(results=boot_results,
                                                       conf_lev=conf_lev)
 
         # Reset bootstrap to None
         self.dataframe.bootstrap = None
 
-        return {'summary_results': summary_results, 
+        return {'summary_results': summary_results,
                 'boot_results': boot_results}
 
-    def parallelized_bootstraps(self, method, method_args, boot_seed):
+   def parallelized_bootstraps(self, method, method_args, boot_seed):
         # Pass seed sequence for this boot and set it in dataframe
         # which will generate a draw with replacement
         boot_random_state = np.random.default_rng(boot_seed)

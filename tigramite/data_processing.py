@@ -546,7 +546,6 @@ class DataFrame():
         if len(self.reference_points) == 0:
             raise ValueError("No valid reference point.") 
 
-
     def construct_array(self, X, Y, Z, tau_max,
                         extraZ=None,
                         mask=None,
@@ -567,11 +566,16 @@ class DataFrame():
         Politis, D. N., & Romano, J. P. (1994). The stationary bootstrap.
         Journal of the American Statistical association
 
+        if self.bootstrap is not None, uses the stationary bootstrap of Politis
+        and Romano (1994)
+        Politis, D. N., & Romano, J. P. (1994). The stationary bootstrap.
+        Journal of the American Statistical association
+
         Parameters
         ----------
         X, Y, Z, extraZ : list of tuples
             For a dependence measure I(X;Y|Z), X, Y, Z can be multivariate of
-            the form [(var1, -lag), (var2, -lag), ...]. At least one varlag in Y 
+            the form [(var1, -lag), (var2, -lag), ...]. At least one varlag in Y
             has to be at lag zero. extraZ is only used in CausalEffects class.
         tau_max : int
             Maximum time lag. This may be used to make sure that estimates for
@@ -585,8 +589,8 @@ class DataFrame():
             measure I(X; Y | Z) the samples should be masked. If None, the mask
             is not used. Explained in tutorial on masking and missing values.
         data_type : array-like
-            Binary data array of same shape as array which describes whether 
-            individual samples in a variable (or all samples) are continuous 
+            Binary data array of same shape as array which describes whether
+            individual samples in a variable (or all samples) are continuous
             or discrete: 0s for continuous variables and 1s for discrete variables.
             If it is set, then it overrides the self.data_type assigned to the dataframe.
         return_cleaned_xyz : bool, optional (default: False)
@@ -623,7 +627,7 @@ class DataFrame():
             If cut_off == 'max_lag_or_tau_max':
                 - max(max_lag(X, Y, Z), tau_max) are cut off at the beginning.
                   This may be useful for modeling by comparing multiple
-                  models on the same samples. 
+                  models on the same samples.
 
                 - If at time step t_missing a data value is missing, then the
                   time steps t_missing, ..., t_missing + max(max_lag(X, Y,
@@ -633,13 +637,13 @@ class DataFrame():
             If cut_off == 'tau_max':
                 - tau_max samples are cut off at the beginning. This may be
                   useful for modeling by comparing multiple models on the
-                  same samples. 
+                  same samples.
 
                 - If at time step t_missing a data value is missing, then the
                   time steps t_missing, ..., t_missing + max(max_lag(X, Y,
                   Z), tau_max) are cut out. The latter part only holds if
                   remove_missing_upto_maxlag=True.
-                
+
             If cut_off == '2xtau_max_future':
                 First, the relevant time steps are determined as for cut_off ==
                 'max_lag'. Then, the temporally latest time steps are removed
@@ -673,12 +677,12 @@ class DataFrame():
 
         if extraZ is None:
             extraZ = []
-        
+
         if Z is None:
             Z = []
 
         # If vector-valued variables exist, add them
-        def vectorize(varlag):     
+        def vectorize(varlag):
             vectorized_var = []
             for (var, lag) in varlag:
                 for (vector_var, vector_lag) in self.vector_vars[var]:
@@ -692,7 +696,7 @@ class DataFrame():
         #     assert tau_max == 1  # or 0 if mode is 'summary_graph' /?
         #     # Y = vectorize(Y)
         #     varX, lagX = X[0]  # because X = [(i, -lag)]
-            
+
         #     if lagX == 0:
         #         pass #X = vectorize(X)
         #     elif: lagX == -1:
@@ -706,18 +710,18 @@ class DataFrame():
         #         if: lagZ == 0:
         #             Znew += z
         #         elif: lagZ == -1:
-        #             Znew += [(varZ, -lag) for lag in range(1, extended_summary_graph_lag + 1)]   
+        #             Znew += [(varZ, -lag) for lag in range(1, extended_summary_graph_lag + 1)]
         #         elif: lagZ == -2:
-        #             Znew += [(varZ, -lag) for lag in range(2, 2*extended_summary_graph_lag + 1)]   
+        #             Znew += [(varZ, -lag) for lag in range(2, 2*extended_summary_graph_lag + 1)]
         #         else:
         #             raise ValueError("Extended summary graph can only have tau_max = 1")
         #     Z = Znew
 
 
-        X = vectorize(X) 
-        Y = vectorize(Y) 
-        Z = vectorize(Z) 
-        extraZ = vectorize(extraZ) 
+        X = vectorize(X)
+        Y = vectorize(Y)
+        Z = vectorize(Z)
+        extraZ = vectorize(extraZ)
 
         # Remove duplicates in X, Y, Z, extraZ
         X = list(OrderedDict.fromkeys(X))
@@ -743,7 +747,7 @@ class DataFrame():
             _mask = self.mask
         else:
             _mask = self._check_mask(mask = _mask)
-            
+
         _data_type = data_type
         if _data_type is None:
             _data_type = self.data_type
@@ -822,18 +826,17 @@ class DataFrame():
 
                 if boot_meanblocklength == 'cube_root':
                     boot_meanblocklength = max(1, int(len(ref_points_here)**(1/3)))
-                elif type(boot_meanblocklength) is list:
-                    # Take maximum mean block length of relevant variable indices #
-                    indices = np.unique([entry[0] for entry in XYZ])
-                    boot_meanblocklength = max([boot_meanblocklength[idx] for idx in indices])
+                elif boot_meanblocklength == 'from_autocorrelation':
+                    boot_meanblocklength = \
+                        get_mean_block_length(dataset_data.T,xyz,mode='confidence')
                 elif type(boot_meanblocklength) in [int,float] and boot_meanblocklength >= 1:
                     pass
                 else:
-                    raise ValueError("boot_meanblocklength must be integer or float >= 1, list, 'cube_root', or 'from_autocorrelation'")
+                    raise ValueError("boot_meanblocklength must be integer or float >= 1, 'cube_root', or 'from_autocorrelation'")
 
                 # Chooses THE SAME random seed for every dataset, maybe that's what we want...
                 # If the reference points are all the same, this will give the same bootstrap
-                # draw. However, if they are NOT the same, they will differ. 
+                # draw. However, if they are NOT the same, they will differ.
                 # TODO: Decide whether bootstrap draws should be the same for each dataset and
                 # how to achieve that if the reference points differ...
                 # random_state = self.bootstrap['random_state']
@@ -846,6 +849,7 @@ class DataFrame():
                 blkslen = blkslen[0:np.where(
                     np.cumsum(blkslen)>len(ref_points_here))[0][0]+1] #sum of block lengths cut to proper length
                 blkslen[-1] = blkslen[-1]-(np.sum(blkslen)-len(ref_points_here)) #truncate last block to match proper length
+                #print('carr, blkslen[0:4]:',blkslen[0:4],flush=True)
                 # Get the starting indices for the blocks #
                 blk_strt = random_state.choice(np.arange(len(ref_points_here)),len(blkslen),replace=True) #block starting indices
                 # Create the random sequence of indices #
@@ -875,7 +879,7 @@ class DataFrame():
                 for i, (var, lag) in enumerate(XYZ):
                     data_type_dataset[i, :] = _data_type[dataset_key][ref_points_here + lag, var]
                 data_types[dataset_key] = data_type_dataset
-            
+
             # Remove all values that have missing value flag, and optionally as well the time
             # slices that occur up to max_lag after
             if self.missing_flag is not None:
@@ -885,9 +889,9 @@ class DataFrame():
                     idx_to_remove = set(idx + tau for idx in missing_anywhere for tau in range(max_lag + 1))
                 else:
                     idx_to_remove = set(idx for idx in missing_anywhere)
-                
+
                 use_indices_dataset[np.array(list(idx_to_remove), dtype='int')] = 0
-            
+
             if _mask is not None:
                 # Remove samples with mask == 1 conditional on which mask_type
                 # is used
@@ -904,10 +908,8 @@ class DataFrame():
                         slice_select = np.prod(mask_dataset[xyz == cde, :] == False, axis=0)
                         use_indices_dataset *= slice_select
 
-            # Accordingly update the data array and data type array
+            # Accordingly update the data array
             samples_datasets[dataset_key] = samples_datasets[dataset_key][:, use_indices_dataset == 1]
-            if _data_type is not None:
-                data_types[dataset_key] = data_types[dataset_key][:, use_indices_dataset == 1]
 
         ## end for dataset_key, dataset_data in self.values.items()
 
@@ -923,7 +925,7 @@ class DataFrame():
             type_array = np.concatenate(tuple(data_types.values()), axis = 1)
         else:
             type_array = None
-        
+
         # print(np.where(np.isnan(array)))
         # print(array.shape)
 
@@ -1050,12 +1052,16 @@ def get_acf(series, max_lag=None):
         autocorr[lag] = np.corrcoef(y1_vals, y2_vals, ddof=0)[0, 1]
     return autocorr
 
-def get_mean_block_length(array):
+
+def get_mean_block_length(array, xyz, mode):
     """Returns optimal mean block length for significance and confidence tests.
 
     Determine mean block length for stationary bootstrap using approach in
     Politis and White (2004) with correction from Patton et al. (2009).
-    The mean block length for each variable is output.
+    For mode ='significance', only the indices corresponding to X are used
+    in the computation of the mean block length. For mode='confidence' all
+    variables are used.
+    The max mean block length across variables is output.
     Adapted from code of Andrew Patton (public.econ.duke.edu/~ap172/code.html)
     See also R documentation (public.econ.duke.edu/~ap172/R_Help.pdf)
     
@@ -1073,12 +1079,16 @@ def get_mean_block_length(array):
     array : array-like
         data array with X, Y, Z in rows and observations in columns
 
+    xyz : array of ints
+        XYZ identifier array of shape (dim,).
+
+    mode : str
+        Which mode to use: 'significance' or 'confidence'
+
     Returns
     -------
-    bsbhat : array of floats
-        Optimal mean block length for the stationary bootstrap
-        for each variable.
-
+    mean_block_len : float
+        Optimal mean block length for the stationary bootstrap.
     """
     
     ### Helper functions ###
@@ -1116,7 +1126,10 @@ def get_mean_block_length(array):
     dim, T = array.shape
     # Initiailize the indices
     indices = range(dim)
-
+    if mode == 'significance':
+        indices = np.where(xyz == 0)[0]
+    n_vars = len(indices)
+    
     ### Fixed parameters ###
     bigkn  = max(5,np.sqrt(np.log10(T))) #footnote c of PW2004
     smallc = 2 #footnote c of PW2004
@@ -1125,7 +1138,7 @@ def get_mean_block_length(array):
     ### Critical value for significance of autocorrelation ###
     critsignif = smallc*np.sqrt(np.log10(T)/T)
     ### Initialize array of optimal stationary bootstrap block sizes ###
-    bsbhat = np.nan*np.ones(dim)
+    bsbhat = np.nan*np.ones(n_vars)
     ### Loop through variables ###
     for idx in indices:
         iivals       = np.copy(array[idx,:])
@@ -1164,11 +1177,9 @@ def get_mean_block_length(array):
             # Compute b_opt,sbhat of PW2004 #
             bsbhat[idx] = (((2*bigghat**2)/dsbhat)*T)**(1/3)
     bsbhat = np.maximum(1,np.minimum(b_max,bsbhat))
-    #print for checks (18/06/2025)
-    #if(xyz.tolist()==[0,1,2]):
-    #    print('check 20250618 bsbhat:',np.round(bsbhat,2),flush=True)
-    return(bsbhat)
-
+    # Return largest across-variable optimal mean block length #
+    mean_block_len = np.max(bsbhat) 
+    return(mean_block_len)
 
 
 def lowhighpass_filter(data, cutperiod, pass_periods='low'):

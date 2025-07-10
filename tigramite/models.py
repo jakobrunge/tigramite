@@ -831,9 +831,11 @@ class LinearMediation(Models):
 
         Parameters
         ----------
-        boot_meanblocklength : int or float, or in {'cube_root', 'from_autocorrelation'}
-            Mean block length for stationary block-bootstrap. If 'cube_root' it is the cube 
-            root of the time series length.
+        boot_meanblocklength : int or float, or in {'cube_root','from_autocorrelation'}
+        Mean block length for the stationary block-bootstrap. If 'cube_root' it is
+        the cube root of the time series length. If 'from_autocorrelation', the 
+        mean block length is determined from the decay of the autocorrelation
+        as described in Politis and White (2004) and Patton et al. (2009). 
         seed : int, optional(default = None)
             Seed for RandomState (default_rng)
         boot_samples : int
