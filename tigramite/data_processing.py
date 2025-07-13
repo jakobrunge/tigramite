@@ -7,7 +7,6 @@
 from __future__ import print_function
 from collections import defaultdict, OrderedDict
 import sys
-import time
 import warnings
 from copy import deepcopy
 import math
@@ -566,11 +565,6 @@ class DataFrame():
         Politis, D. N., & Romano, J. P. (1994). The stationary bootstrap.
         Journal of the American Statistical association
 
-        if self.bootstrap is not None, uses the stationary bootstrap of Politis
-        and Romano (1994)
-        Politis, D. N., & Romano, J. P. (1994). The stationary bootstrap.
-        Journal of the American Statistical association
-
         Parameters
         ----------
         X, Y, Z, extraZ : list of tuples
@@ -828,7 +822,7 @@ class DataFrame():
                     boot_meanblocklength = max(1, int(len(ref_points_here)**(1/3)))
                 elif boot_meanblocklength == 'from_autocorrelation':
                     boot_meanblocklength = \
-                        get_mean_block_length(dataset_data.T,xyz,mode='confidence')
+                        get_mean_block_length(dataset_data.T, xyz, mode='confidence')
                 elif type(boot_meanblocklength) in [int,float] and boot_meanblocklength >= 1:
                     pass
                 else:
@@ -845,17 +839,16 @@ class DataFrame():
                 ### Stationary bootstrap ###
                 pnewblk = 1.0/float(boot_meanblocklength) #probability of new block
                 # Randomly sample the length of each block #
-                blkslen = random_state.geometric(pnewblk,size=len(ref_points_here)+1)
+                blkslen = random_state.geometric(pnewblk, size=len(ref_points_here) + 1)
                 blkslen = blkslen[0:np.where(
                     np.cumsum(blkslen)>len(ref_points_here))[0][0]+1] #sum of block lengths cut to proper length
                 blkslen[-1] = blkslen[-1]-(np.sum(blkslen)-len(ref_points_here)) #truncate last block to match proper length
-                #print('carr, blkslen[0:4]:',blkslen[0:4],flush=True)
                 # Get the starting indices for the blocks #
                 blk_strt = random_state.choice(np.arange(len(ref_points_here)),len(blkslen),replace=True) #block starting indices
                 # Create the random sequence of indices #
                 boot_draw = np.concatenate([np.arange(blk_strt[idx],blk_strt[idx]+blkslen[idx])
                                             for idx in range(len(blkslen))]) #the resampled indices
-                boot_draw = boot_draw%len(ref_points_here) #wrap around (Politis and Romero, 1994 below Eq.(1))
+                boot_draw = boot_draw % len(ref_points_here) #wrap around (Politis and Romero, 1994 below Eq.(1))
                 ref_points_here = deepcopy(boot_draw)
 
             # Construct the data array holding the samples taken from the
@@ -1102,7 +1095,7 @@ def get_mean_block_length(array, xyz, mode):
             
     def mlag(inmat,nlags=1,fill_val=np.nan):
         '''
-        Generates a maxtrix of nlags for each variable of xmat
+        Generates a matrix of nlags for each variable of xmat
         xmat: n_samples*n_variables matrix (can be passed as a single array)
         nlags: number of lags to include in the output
         fill_val: fill value for the entries prior to the lag
@@ -1124,7 +1117,7 @@ def get_mean_block_length(array, xyz, mode):
     
     # Get the shape of the array
     dim, T = array.shape
-    # Initiailize the indices
+    # Initialize the indices
     indices = range(dim)
     if mode == 'significance':
         indices = np.where(xyz == 0)[0]
@@ -1179,7 +1172,7 @@ def get_mean_block_length(array, xyz, mode):
     bsbhat = np.maximum(1,np.minimum(b_max,bsbhat))
     # Return largest across-variable optimal mean block length #
     mean_block_len = np.max(bsbhat) 
-    return(mean_block_len)
+    return mean_block_len
 
 
 def lowhighpass_filter(data, cutperiod, pass_periods='low'):
