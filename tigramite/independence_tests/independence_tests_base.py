@@ -1047,8 +1047,8 @@ class CondIndTest():
             blkslen = blkslen[0:np.where(
                 np.cumsum(blkslen)>T)[0][0]+1] #sum of block lengths cut to proper length
             blkslen[-1] = blkslen[-1]-(np.sum(blkslen)-T) #truncate last block to match proper length
-            # Get the starting indices for the blocks #
-            blk_strt = self.random_state.choice(np.arange(T),len(blkslen),replace=True)
+            # Get the starting indices for the blocks. replace=False because in significance testing we need permutations
+            blk_strt = self.random_state.choice(np.arange(T),len(blkslen),replace=False)
             # Create the random sequence of indices #
             boot_draw = np.concatenate([np.arange(blk_strt[idx],blk_strt[idx]+blkslen[idx])
                                         for idx in range(len(blkslen))]) #the resampled indices
@@ -1288,8 +1288,8 @@ class CondIndTest():
             blkslen = blkslen[0:np.where(
                 np.cumsum(blkslen)>T)[0][0]+1] #sum of block lengths cut to proper length
             blkslen[-1] = blkslen[-1]-(np.sum(blkslen)-T) #truncate last block to match proper length
-            # Get the starting indices for the blocks #
-            blk_strt = self.random_state.choice(np.arange(T),len(blkslen),replace=True)
+            # Get the starting indices for the blocks. replace=False because in significance testing we need permutations
+            blk_strt = self.random_state.choice(np.arange(T),len(blkslen),replace=False)
             # Create the random sequence of indices #
             boot_draw = np.concatenate([np.arange(blk_strt[idx],blk_strt[idx]+blkslen[idx])
                                         for idx in range(len(blkslen))]) #the resampled indices
