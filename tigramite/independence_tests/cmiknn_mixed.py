@@ -1335,12 +1335,13 @@ class CMIknnMixed(CondIndTest):
             blkslen = blkslen[0:np.where(
                 np.cumsum(blkslen)>T)[0][0]+1] #sum of block lengths cut to proper length
             blkslen[-1] = blkslen[-1]-(np.sum(blkslen)-T) #truncate last block to match proper length
-            # Get the starting indices for the blocks. replace=False because in significance testing we need permutations
-            blk_strt = self.random_state.choice(np.arange(T),len(blkslen),replace=False)
-            # Create the random sequence of indices #
+            # Get the starting indices for the blocks #
+            blk_strt = np.append(0,np.cumsum(blkslen))[0:-1]
+            # Random permutation of where each block appears in the sequence #
+            idx_perm = self.random_state.permutation(len(blk_strt))
+            # Create the random sequence of indices # 
             boot_draw = np.concatenate([np.arange(blk_strt[idx],blk_strt[idx]+blkslen[idx])
-                                        for idx in range(len(blkslen))]) #the resampled indices
-            boot_draw = boot_draw%T #wrap around (Politis and Romero, 1994 below Eq.(1))
+                                        for idx in idx_perm]) #the resampled indices
             for i, index in enumerate(x_indices):
                 array_shuffled[index,:] = np.copy(array[index,boot_draw])
                 data_type_shuffled[index,:] = np.copy(data_type[index,boot_draw])
