@@ -46,10 +46,10 @@ class CMIsymb(CondIndTest):
         Type of significance test to use. For CMIsymb only 'fixed_thres' and
         'shuffle_test' are available.
 
-    sig_meanblocklength : int, optional (default: 1)
+    sig_meanblocklength : int or float, optional (default: 1)
         Mean block length for stationary block-shuffle significance test.
 
-    conf_meanblocklength : int, optional (default: 1)
+    conf_meanblocklength : int or float, optional (default: 1)
         Mean block length for stationary block-bootstrap.
 
     **kwargs :

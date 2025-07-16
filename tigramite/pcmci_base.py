@@ -11,11 +11,9 @@ from collections import defaultdict
 from copy import deepcopy
 import numpy as np
 import scipy.stats
-import os
 import math
 from joblib import Parallel, delayed
 
-from .data_processing import get_mean_block_length
 
 class PCMCIbase():
     r"""PCMCI base class.
@@ -909,7 +907,7 @@ class PCMCIbase():
         return {'summary_results': summary_results,
                 'boot_results': boot_results}
 
-   def parallelized_bootstraps(self, method, method_args, boot_seed):
+    def parallelized_bootstraps(self, method, method_args, boot_seed):
         # Pass seed sequence for this boot and set it in dataframe
         # which will generate a draw with replacement
         boot_random_state = np.random.default_rng(boot_seed)
