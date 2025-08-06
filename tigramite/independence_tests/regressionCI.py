@@ -9,8 +9,10 @@ import numpy as np
 from scipy.stats import chi2, normaltest
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn import metrics
+from sklearn.dummy import DummyClassifier
 
-from .independence_tests_base import CondIndTest
+import tigramite
+from tigramite.independence_tests.independence_tests_base import CondIndTest
 
 
 class RegressionCI(CondIndTest):
@@ -146,12 +148,19 @@ class RegressionCI(CondIndTest):
             # 1-hot-encode all categorical columns
             X = do_componentwise_one_hot_encoding(X, var_type=var_type)
             y = np.ravel(y).astype('int')
-            # do logistic regression
-            model = LogisticRegression(solver='lbfgs')
-            model.fit(X, y)
-            deviance = 2*metrics.log_loss(y, model.predict_proba(X), normalize=False)
+            # do logistic regression, if y only contains one class, return zero.
+            if len(np.unique(y)) < 2:
+                model = DummyClassifier(strategy="constant", constant=y[0])
+                model.fit(X, y)
+                deviance = 0.
+            else:
+                model = LogisticRegression(solver='lbfgs')
+                model.fit(X, y)
+                deviance = 2 * metrics.log_loss(y, model.predict_proba(X), normalize=False)
+            
             # dofs: +2 for intercept (+1) (not too important, cancels out later anyway)
             dof = model.n_features_in_ + 1
+            
             return deviance, dof
 
         def calc_deviance_linear(X, y, var_type):
@@ -285,6 +294,15 @@ class RegressionCI(CondIndTest):
 
 if __name__ == '__main__':
     
+
+    import pandas as pd
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from tigramite.pcmci import PCMCI
+    # from tigramite.independence_tests.regressionCI import RegressionCI
+    import tigramite.plotting as tp
+    import tigramite.data_processing as pp
+
     import tigramite
     from tigramite.data_processing import DataFrame
     import tigramite.data_processing as pp
@@ -378,3 +396,4 @@ if __name__ == '__main__':
     print((rate <= 0.05).mean())
 
 
+# dummy
