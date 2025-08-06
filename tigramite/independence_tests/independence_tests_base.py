@@ -8,6 +8,7 @@ from __future__ import print_function
 import warnings
 import math
 import abc
+import copy
 import numpy as np
 import six
 from hashlib import sha1
@@ -42,10 +43,10 @@ class CondIndTest():
     sig_samples : int, optional (default: 500)
         Number of samples for shuffle significance test.
 
-    sig_blocklength : int, optional (default: None)
-        Block length for block-shuffle significance test. If None, the
-        block length is determined from the decay of the autocovariance as
-        explained in [1]_.
+    sig_meanblocklength : int or float, optional (default: None)
+        Mean block length for block-shuffle significance test. If None, the
+        mean block length is determined from the autocorrelation as
+        explained in Politis and White (2004) and Patton et al. (2009).
 
     confidence : str, optional (default: None)
         Specify type of confidence estimation. If False, numpy.nan is returned.
@@ -58,9 +59,10 @@ class CondIndTest():
     conf_samples : int, optional (default: 100)
         Number of samples for bootstrap.
 
-    conf_blocklength : int, optional (default: None)
-        Block length for block-bootstrap. If None, the block length is
-        determined from the decay of the autocovariance as explained in [1]_.
+    conf_meanblocklength : int or float, optional (default: None)
+        Mean block length for the stationary block-bootstrap. If None, the 
+        mean block length is determined from the decay of the autocorrelation
+        as described in Politis and White (2004) and Patton et al. (2009).
 
     recycle_residuals : bool, optional (default: False)
         Specifies whether residuals should be stored. This may be faster, but
@@ -89,11 +91,11 @@ class CondIndTest():
                  significance='analytic',
                  fixed_thres=None,
                  sig_samples=500,
-                 sig_blocklength=None,
+                 sig_meanblocklength=None,
                  confidence=None,
                  conf_lev=0.9,
                  conf_samples=100,
-                 conf_blocklength=None,
+                 conf_meanblocklength=None,
                  recycle_residuals=False,
                  verbosity=0):
         # Set the dataframe to None for now, will be reset during pcmci call
@@ -102,7 +104,7 @@ class CondIndTest():
         self.random_state = np.random.default_rng(seed)
         self.significance = significance
         self.sig_samples = sig_samples
-        self.sig_blocklength = sig_blocklength
+        self.sig_meanblocklength = sig_meanblocklength
         if fixed_thres is not None:
             raise ValueError("fixed_thres is replaced by providing alpha_or_thres in run_test")
         self.verbosity = verbosity
@@ -119,7 +121,7 @@ class CondIndTest():
         self.confidence = confidence
         self.conf_lev = conf_lev
         self.conf_samples = conf_samples
-        self.conf_blocklength = conf_blocklength
+        self.conf_meanblocklength = conf_meanblocklength
 
         # Print information about the
         if self.verbosity > 0:
@@ -158,7 +160,7 @@ class CondIndTest():
         # Check if we are using a shuffle test
         if self.significance == 'shuffle_test':
             info_str += "\nsig_samples = %s" % self.sig_samples
-            info_str += "\nsig_blocklength = %s" % self.sig_blocklength
+            info_str += "\nsig_meanblocklength = %s" % self.sig_meanblocklength
         # # Check if we are using a fixed threshold
         # elif self.significance == 'fixed_thres':
         #     info_str += "\nfixed_thres = %s" % self.fixed_thres
@@ -169,7 +171,7 @@ class CondIndTest():
         # Check if this confidence type is boostrapping
         if self.confidence == 'bootstrap':
             info_str += "\nconf_samples = %s" % self.conf_samples
-            info_str += "\nconf_blocklength = %s" %self.conf_blocklength
+            info_str += "\nconf_meanblocklength = %s" %self.conf_meanblocklength
         # Check if we use a non-trivial mask type
         if self.mask_type is not None:
             info_str += "\nmask_type = %s" % self.mask_type
@@ -283,7 +285,7 @@ class CondIndTest():
                                               remove_overlaps=True,
                                               cut_off=cut_off,
                                               verbosity=verbosity)
-        
+
         if remove_constant_data:
             zero_components = np.where(array.std(axis=1)==0.)[0]
 
@@ -450,7 +452,6 @@ class CondIndTest():
                 else:
                     dependent = pval <= alpha_or_thres
                 
-        # Saved here, but not currently used
         self.ci_results[(tuple(X), tuple(Y),tuple(Z))] = (val, pval, dependent)
 
         # Return the calculated value(s)
@@ -928,7 +929,7 @@ class CondIndTest():
                         self.get_bootstrap_confidence(
                             array, xyz,
                             conf_samples=self.conf_samples,
-                            conf_blocklength=self.conf_blocklength,
+                            conf_meanblocklength=self.conf_meanblocklength,
                             conf_lev=self.conf_lev, verbosity=self.verbosity)
             else:
                 raise ValueError("%s confidence estimation not implemented"
@@ -970,15 +971,16 @@ class CondIndTest():
             printstr += " %s" % ({0:"", 1:"[cached]"}[cached])
 
         print(printstr)
-
+    
     def get_bootstrap_confidence(self, array, xyz, dependence_measure=None,
-                                 conf_samples=100, conf_blocklength=None,
+                                 conf_samples=100, conf_meanblocklength=None,
                                  conf_lev=.95, 
                                  data_type=None,
                                  verbosity=0):
         """Perform bootstrap confidence interval estimation.
+        Uses stationary bootstrap procedure of Politis and Romero (1994)
 
-        With conf_blocklength > 1 or None a block-bootstrap is performed.
+        With conf_meanblocklength >= 1 or None a block-bootstrap is performed.
 
         Parameters
         ----------
@@ -998,10 +1000,10 @@ class CondIndTest():
         conf_samples : int, optional (default: 100)
             Number of samples for bootstrap.
 
-        conf_blocklength : int, optional (default: None)
-            Block length for block-bootstrap. If None, the block length is
-            determined from the decay of the autocovariance as explained in
-            [1]_.
+        conf_meanblocklength : int or float, or None 
+            Mean block length for the stationary block-bootstrap. If None, the 
+            mean block length is determined from the decay of the autocorrelation
+            as described in Politis and White (2004) and Patton et al. (2009). 
 
        data_type : array-like
             Binary data array of same shape as array which describes whether 
@@ -1025,34 +1027,33 @@ class CondIndTest():
         c_int = 1. - (1. - conf_lev)/2.
         dim, T = array.shape
 
-        # If not block length is given, determine the optimal block length.
-        # This has a maximum of 10% of the time sample length
-        if conf_blocklength is None:
-            conf_blocklength = \
-                    self._get_block_length(array, xyz, mode='confidence')
-        # Determine the number of blocks total, rounding up for non-integer
-        # amounts
-        n_blks = int(math.ceil(float(T)/conf_blocklength))
+        # If no mean block length is given, determine the optimal block length.
+        if conf_meanblocklength is None:
+            conf_meanblocklength = \
+                self._get_mean_block_length(array,xyz,mode='confidence')
+        
+        # Probability of new block at each index #
+        pnewblk = 1.0/float(conf_meanblocklength)
 
         # Print some information
         if verbosity > 2:
             print("            block_bootstrap confidence intervals"
-                  " with block-length = %d ..." % conf_blocklength)
-
-        # Generate the block bootstrapped distribution
+                  " with mean block-length = %d ..." % conf_meanblocklength)
+            
         bootdist = np.zeros(conf_samples)
         for smpl in range(conf_samples):
-            # Get the starting indices for the blocks
-            blk_strt = self.random_state.integers(0, T - conf_blocklength + 1, n_blks)
-            # Get the empty array of block resampled values
-            array_bootstrap = \
-                    np.zeros((dim, n_blks*conf_blocklength), dtype=array.dtype)
-            # Fill the array of block resamples
-            for i in range(conf_blocklength):
-                array_bootstrap[:, i::conf_blocklength] = array[:, blk_strt + i]
-            # Cut to proper length
-            array_bootstrap = array_bootstrap[:, :T]
-
+            # Randomly sample the length of each block #
+            blkslen = self.random_state.geometric(pnewblk,size=T+1)
+            blkslen = blkslen[0:np.where(
+                np.cumsum(blkslen)>T)[0][0]+1] #sum of block lengths cut to proper length
+            blkslen[-1] = blkslen[-1]-(np.sum(blkslen)-T) #truncate last block to match proper length
+            # Get the starting indices for the blocks #
+            blk_strt = self.random_state.choice(np.arange(T),len(blkslen),replace=True)
+            # Create the random sequence of indices #
+            boot_draw = np.concatenate([np.arange(blk_strt[idx],blk_strt[idx]+blkslen[idx])
+                                        for idx in range(len(blkslen))]) #the resampled indices
+            boot_draw = boot_draw%T #wrap around (Politis and Romero, 1994 below Eq.(1))
+            array_bootstrap = np.copy(array[:,boot_draw]) #values at selected indices
             bootdist[smpl] = dependence_measure(array_bootstrap, xyz)
 
         # Sort and get quantile
@@ -1093,87 +1094,145 @@ class CondIndTest():
             autocorr[lag] = np.corrcoef(y1_vals, y2_vals, ddof=0)[0, 1]
         return autocorr
 
-    def _get_block_length(self, array, xyz, mode):
-        """Returns optimal block length for significance and confidence tests.
-
-        Determine block length using approach in Mader (2013) [Eq. (6)] which
-        improves the method of Peifer (2005) with non-overlapping blocks In
-        case of multidimensional X, the max is used. Further details in [1]_.
-        Two modes are available. For mode='significance', only the indices
-        corresponding to X are shuffled in array. For mode='confidence' all
-        variables are jointly shuffled. If the autocorrelation curve fit fails,
-        a block length of 5% of T is used. The block length is limited to a
-        maximum of 10% of T.
-
-        Mader et al., Journal of Neuroscience Methods,
-        Volume 219, Issue 2, 15 October 2013, Pages 285-291
-
+    def _get_mean_block_length(self, array, xyz, mode):
+        """Returns optimal mean block length for significance and confidence tests.
+    
+        Determine mean block length for stationary bootstrap using approach in
+        Politis and White (2004) with correction from Patton et al. (2009).
+        For mode ='significance', only the indices corresponding to X are used
+        in the computation of the mean block length. For mode='confidence' all
+        variables are used.
+        The max mean block length across variables is output.
+        Adapted from code of Andrew Patton (public.econ.duke.edu/~ap172/code.html)
+        See also R documentation (public.econ.duke.edu/~ap172/R_Help.pdf)
+        
+        Politis, D. N., & White, H. (2004). Automatic Block-Length Selection for 
+        the Dependent Bootstrap. Econometric Reviews
+        (PW2004)
+        
+        Patton, A., Politis, D. N., & White, H. (2009). Correction to “Automatic
+        block-length selection for the dependent bootstrap” by D. Politis and 
+        H. White. Econometric Reviews
+        (PPW2009)
+    
         Parameters
         ----------
         array : array-like
             data array with X, Y, Z in rows and observations in columns
-
+    
         xyz : array of ints
             XYZ identifier array of shape (dim,).
-
+    
         mode : str
-            Which mode to use.
-
+            Which mode to use: 'significance' or 'confidence'
+    
         Returns
         -------
-        block_len : int
-            Optimal block length.
+        mean_block_len : float
+            Optimal mean block length for the stationary bootstrap.
         """
-        # Inject a dependency on siganal, optimize
-        from scipy import signal, optimize
+        
+        ### Helper functions ###
+        def politis_lambda(ttt):
+            '''
+            lambda(t) equation of PW2004
+            '''
+            return(((abs(ttt)<(1/2)).astype(int)*1 + \
+            (abs(ttt)>=(1/2)).astype(int)*(2*(1-abs(ttt)))) * \
+            (abs(ttt)<=1).astype(int))
+                
+        def mlag(inmat,nlags=1,fill_val=np.nan):
+            '''
+            Generates a maxtrix of nlags for each variable of xmat
+            xmat: n_samples*n_variables matrix (can be passed as a single array)
+            nlags: number of lags to include in the output
+            fill_val: fill value for the entries prior to the lag
+            returns: xmat of dimensions n_samples*(n_variables*nlags)
+                     where each lagged variable is a column
+            Adapted from matlab code of James P. LeSage 
+            '''
+            numdims = inmat.ndim
+            if(numdims==1): #a single array was passed
+                inmat = np.reshape(inmat,(len(inmat),1))
+            n_obs,n_vars = np.shape(inmat)
+            outmat = fill_val*np.ones((n_obs,n_vars*nlags))
+            for ii in range(n_vars):
+                outmat[:,ii*nlags:(ii+1)*nlags] = np.column_stack\
+                    ([np.append(lag*[np.nan],inmat[0:-1*lag,ii]) for lag in range(1,nlags+1)])
+            if(numdims==1 and nlags==1): #outmat is a single array
+                outmat = outmat.flatten()
+            return(outmat)
+        
         # Get the shape of the array
         dim, T = array.shape
         # Initiailize the indices
         indices = range(dim)
         if mode == 'significance':
             indices = np.where(xyz == 0)[0]
-
-        # Maximum lag for autocov estimation
-        max_lag = int(0.1*T)
-        # Define the function to optimize against
-        def func(x_vals, a_const, decay):
-            return a_const * decay**x_vals
-
-        # Calculate the block length
-        block_len = 1
-        for i in indices:
-            # Get decay rate of envelope of autocorrelation functions
-            # via hilbert trafo
-            autocov = self._get_acf(series=array[i], max_lag=max_lag)
-            autocov[0] = 1.
-            hilbert = np.abs(signal.hilbert(autocov))
-            # Try to fit the curve
-            try:
-                popt, _ = optimize.curve_fit(
-                    f=func,
-                    xdata=np.arange(0, max_lag+1),
-                    ydata=hilbert,
-                )
-                phi = popt[1]
-                # Formula assuming non-overlapping blocks
-                l_opt = (4. * T * (phi / (1. - phi) + phi**2 / (1. - phi)**2)**2
-                         / (1. + 2. * phi / (1. - phi))**2)**(1. / 3.)
-                block_len = max(block_len, int(l_opt))
-            except RuntimeError:
-                print("Error - curve_fit failed in block_shuffle, using"
-                      " block_len = %d" % (int(.05 * T)))
-                # block_len = max(int(.05 * T), block_len)
-        # Limit block length to a maximum of 10% of T
-        block_len = min(block_len, int(0.1 * T))
-        return block_len
+        n_vars = len(indices)
+        
+        ### Fixed parameters ###
+        bigkn  = max(5,np.sqrt(np.log10(T))) #footnote c of PW2004
+        smallc = 2 #footnote c of PW2004
+        m_max  = math.ceil(np.sqrt(T)+bigkn) #Patton code and R documention
+        b_max  = math.ceil(min(3*np.sqrt(T),T/3)) #Patton code and R documention
+        ### Critical value for significance of autocorrelation ###
+        critsignif = smallc*np.sqrt(np.log10(T)/T)
+        ### Initialize array of optimal stationary bootstrap block sizes ###
+        bsbhat = np.nan*np.ones(n_vars)
+        ### Loop through variables ###
+        for idx in indices:
+            iivals       = np.copy(array[idx,:])
+            iivalslagged = mlag(iivals,nlags=m_max)
+            iivalslagged = iivalslagged[m_max:,:] #remove nan values from pre-lag entries
+            corrcfs   = np.corrcoef(iivalslagged.T)[:,0] #autocorrelation
+            is_small  = abs(corrcfs)<=critsignif #non-significant autocorrelation
+            temp      = np.sum(np.row_stack([is_small[kk:-bigkn+kk]
+                                             for kk in range(bigkn)]),axis=0)
+            if(np.any(temp==bigkn)):
+                # Find last index before autocorr drops below crit for at least Kn #
+                mhat = np.where(temp==bigkn)[0][0]-1
+                #note: use -1 to get index before drop
+                #see fig.3 of PW2004: they say that mhat should be 1 
+                #(not 2 thus we need -1)
+            else:
+                # Required drop in autocorr does not occur #
+                mhat = np.where(is_small==False)[0][-1] #last index of signif autocorr
+            bigm = 2*mhat #p59 of PW2004
+            bigm = min(bigm,m_max) #apply m_max limit
+            if(bigm==0):
+                bsbhat[idx] = 1 #single sample block size
+            else:
+                # Compute autocovariance from 0 to bigm #
+                iivalslagged  = mlag(iivals,nlags=bigm+1)
+                iivalslagged  = iivalslagged[bigm+1:,:]
+                covcfs        = np.cov(iivalslagged.T)[:,0] #autocovariance
+                # Compute Ghat of PW2004 #
+                termr      = np.append(np.flip(covcfs)[:-1],covcfs) #Rhat(k) of PW2004
+                termk      = abs(np.arange(-1*bigm,bigm+1,1)) #abs(k) of PW2004
+                termlambda = politis_lambda(np.arange(-1*bigm,bigm+1,1)/bigm) #lambda(k/M) of PW2004
+                bigghat    = np.sum(termlambda*termk*termr) #Ghat of PW2004
+                # Compute D_SBhat of PW2004 #
+                smallg0    = np.sum(termlambda*termr) #ghat(0) of PW2004
+                dsbhat     = 2*smallg0**2 #see PPW2009
+                # Compute b_opt,sbhat of PW2004 #
+                bsbhat[idx] = (((2*bigghat**2)/dsbhat)*T)**(1/3)
+        bsbhat = np.maximum(1,np.minimum(b_max,bsbhat))
+        # Return largest across-variable optimal mean block length #
+        mean_block_len = np.max(bsbhat) 
+        return(mean_block_len)
 
     def _get_shuffle_dist(self, array, xyz, dependence_measure,
-                          sig_samples, sig_blocklength=None,
+                          sig_samples, sig_meanblocklength=None,
                           verbosity=0):
         """Returns shuffle distribution of test statistic.
 
         The rows in array corresponding to the X-variable are shuffled using
         a block-shuffle approach.
+
+        Uses the stationary bootstrap of Politis and Romano (1994)
+        Politis, D. N., & Romano, J. P. (1994). The stationary bootstrap.
+        Journal of the American Statistical association
 
         Parameters
         ----------
@@ -1190,10 +1249,10 @@ class CondIndTest():
         sig_samples : int, optional (default: 100)
             Number of samples for shuffle significance test.
 
-        sig_blocklength : int, optional (default: None)
-            Block length for block-shuffle significance test. If None, the
-            block length is determined from the decay of the autocovariance as
-            explained in [1]_.
+        sig_meanblocklength : int or float, optional (default: None)
+            Mean block length for the stationary block-bootstrap. If None, the
+            mean block length is determined from the decay of the autocorrelation
+            as described in Politis and White (2004) and Patton et al. (2009).
 
         verbosity : int, optional (default: 0)
             Level of verbosity.
@@ -1208,46 +1267,35 @@ class CondIndTest():
         dim, T = array.shape
 
         x_indices = np.where(xyz == 0)[0]
-        dim_x = len(x_indices)
 
-        if sig_blocklength is None:
-            sig_blocklength = self._get_block_length(array, xyz,
-                                                     mode='significance')
+        if sig_meanblocklength is None:
+            sig_meanblocklength = \
+                self._get_mean_block_length(array,xyz,mode='significance')
 
-        n_blks = int(math.floor(float(T)/sig_blocklength))
-        # print 'n_blks ', n_blks
         if verbosity > 2:
-            print("            Significance test with block-length = %d "
-                  "..." % (sig_blocklength))
+            print("            Significance test with mean block-length = %d "
+                  "..." % (sig_meanblocklength))
+        
+        # Probability of new block at each index #
+        pnewblk = 1.0/float(sig_meanblocklength)
 
         array_shuffled = np.copy(array)
-        block_starts = np.arange(0, T - sig_blocklength + 1, sig_blocklength)
-
-        # Dividing the array up into n_blks of length sig_blocklength may
-        # leave a tail. This tail is later randomly inserted
-        tail = array[x_indices, n_blks*sig_blocklength:]
-
         null_dist = np.zeros(sig_samples)
         for sam in range(sig_samples):
-
-            blk_starts = self.random_state.permutation(block_starts)[:n_blks]
-
-            x_shuffled = np.zeros((dim_x, n_blks*sig_blocklength),
-                                  dtype=array.dtype)
-
+            # Randomly sample the length of each block #
+            blkslen = self.random_state.geometric(pnewblk,size=T+1)
+            blkslen = blkslen[0:np.where(
+                np.cumsum(blkslen)>T)[0][0]+1] #sum of block lengths cut to proper length
+            blkslen[-1] = blkslen[-1]-(np.sum(blkslen)-T) #truncate last block to match proper length
+            # Get the starting indices for the blocks #
+            blk_strt = np.append(0,np.cumsum(blkslen))[0:-1] 
+            # Random permutation of where each block appears in the sequence #
+            idx_perm = self.random_state.permutation(len(blk_strt)) 
+            # Create the random sequence of indices #
+            boot_draw = np.concatenate([np.arange(blk_strt[idx],blk_strt[idx]+blkslen[idx])
+                                        for idx in idx_perm]) #the resampled indices
             for i, index in enumerate(x_indices):
-                for blk in range(sig_blocklength):
-                    x_shuffled[i, blk::sig_blocklength] = \
-                            array[index, blk_starts + blk]
-
-            # Insert tail randomly somewhere
-            if tail.shape[1] > 0:
-                insert_tail_at = self.random_state.choice(block_starts)
-                x_shuffled = np.insert(x_shuffled, insert_tail_at,
-                                       tail.T, axis=1)
-
-            for i, index in enumerate(x_indices):
-                array_shuffled[index] = x_shuffled[i]
+                array_shuffled[index,:] = np.copy(array[index,boot_draw])
 
             null_dist[sam] = dependence_measure(array=array_shuffled,
                                                 xyz=xyz)
