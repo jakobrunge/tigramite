@@ -4,3 +4,6 @@
 
 # Python byte code
 *.pyc
+
+# macOS Temp Files
+**/.DS_Store
