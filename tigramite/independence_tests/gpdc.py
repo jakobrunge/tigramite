@@ -607,7 +607,8 @@ class GPDC(CondIndTest):
                                            sig_blocklength=self.sig_blocklength,
                                            verbosity=self.verbosity)
 
-        pval = (null_dist >= value).mean()
+        # pval = (null_dist >= value).mean()
+        pval = float(np.sum(null_dist >= value) + 1) / (self.sig_samples + 1)
 
         if return_null_dist:
             return pval, null_dist
