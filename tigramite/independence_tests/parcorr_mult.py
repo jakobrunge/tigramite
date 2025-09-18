@@ -313,7 +313,8 @@ class ParCorrMult(CondIndTest):
                                            sig_blocklength=self.sig_blocklength,
                                            verbosity=self.verbosity)
 
-        pval = (null_dist >= np.abs(value)).mean()
+        # pval = (null_dist >= np.abs(value)).mean()
+        pval = float(np.sum(null_dist >= value) + 1) / (self.sig_samples + 1)
 
         # Adjust p-value for two-sided measures
         if pval < 1.:

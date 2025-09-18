@@ -5,6 +5,7 @@
 # License: GNU General Public License v3.0
 
 import numpy as np
+import warnings
 
 from scipy.stats import chi2, normaltest
 from sklearn.linear_model import LinearRegression, LogisticRegression
@@ -153,6 +154,7 @@ class RegressionCI(CondIndTest):
                 model = DummyClassifier(strategy="constant", constant=y[0])
                 model.fit(X, y)
                 deviance = 0.
+                warnings.warn("Constant array detected, CI test ill-defined!")
             else:
                 model = LogisticRegression(solver='lbfgs')
                 model.fit(X, y)
@@ -172,6 +174,8 @@ class RegressionCI(CondIndTest):
             # 1-hot-encode all categorical columns
             X = do_componentwise_one_hot_encoding(X, var_type = var_type)
             y = np.ravel(y)
+            if y.std() == 0.: 
+                warnings.warn("Constant array detected, CI test ill-defined!")
             # do linear regression
             model = LinearRegression()
             model.fit(X, y)
