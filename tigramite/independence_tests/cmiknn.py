@@ -5,7 +5,7 @@
 # License: GNU General Public License v3.0
 
 from __future__ import print_function
-from scipy import special, spatial
+from scipy import special, spatial, stats
 import numpy as np
 from numba import jit
 import warnings
@@ -82,6 +82,24 @@ class CMIknn(CondIndTest):
         Number of workers to use for parallel processing. If -1 is given
         all processors are used. Default: -1.
 
+    null_fit : {None, 'normal', 'gamma'}, optional (default: None)
+        If None, the empirical surrogate distribution is used to compute
+        the p-value (default behavior). If 'normal' or 'gamma', a parametric
+        distribution is fit to the null samples:
+
+            * 'normal': Fit a Gaussian N(μ, σ²) to the null distribution.
+            * 'gamma' : Fit a three-parameter Gamma(a, loc, scale).
+
+        This can reduce the number of required surrogate samples for
+        significance testing, but may lead to miscalibrated p-values if
+        the parametric family is a poor fit.
+
+    permute : {'Y', 'X'}, optional (default: 'X')
+        Which variable to permute in the restricted shuffle test. 
+        - 'Y': shuffle Y within Z-neighborhoods (default). This is often
+          preferable when Z is chosen as (approximate) parents of Y.
+        - 'X': shuffle X within Z-neighborhoods.
+
     model_selection_folds : int (optional, default = 3)
         Number of folds in cross-validation used in model selection.
 
@@ -106,6 +124,8 @@ class CMIknn(CondIndTest):
                  transform='ranks',
                  workers=-1,
                  model_selection_folds=3,
+                 null_fit=None,
+                 permute='X',
                  **kwargs):
         # Set the member variables
         self.knn = knn
@@ -116,6 +136,8 @@ class CMIknn(CondIndTest):
         self.residual_based = False
         self.recycle_residuals = False
         self.workers = workers
+        self.null_fit = null_fit
+        self.permute = permute
         self.model_selection_folds = model_selection_folds
         # Call the parent constructor
         CondIndTest.__init__(self, significance=significance, **kwargs)
@@ -126,7 +148,10 @@ class CMIknn(CondIndTest):
             else:
                 print("knn = %s" % self.knn)
             print("shuffle_neighbors = %d\n" % self.shuffle_neighbors)
-
+            print(f"Restricted shuffle permutes: {self.permute}")
+            if self.null_fit is not None:
+                print("Using parametric null fit:", self.null_fit)
+            
     @jit(forceobj=True)
     def _get_nearest_neighbors(self, array, xyz, knn):
         """Returns nearest neighbors according to Frenzel and Pompe (2007).
@@ -269,9 +294,10 @@ class CMIknn(CondIndTest):
         For non-empty Z, overwrites get_shuffle_significance from the parent
         class  which is a block shuffle test, which does not preserve
         dependencies of X and Y with Z. Here the parameter shuffle_neighbors is
-        used to permute only those values :math:`x_i` and :math:`x_j` for which
-        :math:`z_j` is among the nearest niehgbors of :math:`z_i`. If Z is
-        empty, the block-shuffle test is used.
+        used to permute only those values :math:`y_i` and :math:`y_j` for which
+        :math:`z_j` is among the nearest neighbors of :math:`z_i`. If Z is
+        empty, the block-shuffle test is used. In the paper X is permuted, but 
+        permuting Y is preferable when Z is chosen as (approximate) parents of Y.
 
         Parameters
         ----------
@@ -300,6 +326,7 @@ class CMIknn(CondIndTest):
 
         # max_neighbors = max(1, int(max_neighbor_ratio*T))
         x_indices = np.where(xyz == 0)[0]
+        y_indices = np.where(xyz == 1)[0]
         z_indices = np.where(xyz == 2)[0]
 
         if len(z_indices) > 0 and self.shuffle_neighbors < T:
@@ -361,8 +388,15 @@ class CMIknn(CondIndTest):
                         order=order)
 
                 array_shuffled = np.copy(array)
-                for i in x_indices:
-                    array_shuffled[i] = array[i, restricted_permutation]
+                if self.permute == 'X':
+                    for i in x_indices:
+                        array_shuffled[i] = array[i, restricted_permutation]
+                else:  # permute Y
+                    for i in y_indices:
+                        array_shuffled[i] = array[i, restricted_permutation]
+                # array_shuffled = np.copy(array)
+                # for i in x_indices:
+                #     array_shuffled[i] = array[i, restricted_permutation]
 
                 null_dist[sam] = self.get_dependence_measure(array_shuffled,
                                                              xyz)
@@ -375,8 +409,19 @@ class CMIknn(CondIndTest):
                                            sig_blocklength=self.sig_blocklength,
                                            verbosity=self.verbosity)
 
-        # pval = (null_dist >= value).mean()
-        pval = float(np.sum(null_dist >= value) + 1) / (self.sig_samples + 1)
+        if self.null_fit == 'normal':
+            mu, sigma = stats.norm.fit(null_dist)
+            pval = 1.0 - stats.norm.cdf(value, loc=mu, scale=sigma)
+        elif self.null_fit == 'gamma':
+            try:
+                a, loc, scale = stats.gamma.fit(null_dist)
+                pval = 1.0 - stats.gamma.cdf(value, a, loc=loc, scale=scale)
+            except Exception as e:
+                warnings.warn(f"Gamma fit failed, falling back to empirical: {e}")
+                pval = float(np.sum(null_dist >= value) + 1) / (self.sig_samples + 1)
+        else:
+            # fallback: empirical Monte Carlo
+            pval = float(np.sum(null_dist >= value) + 1) / (self.sig_samples + 1)        
 
         if return_null_dist:
             # Sort
@@ -586,7 +631,11 @@ if __name__ == '__main__':
                 }
     knn = 10
     maxlag = 1
-    cmi = CMIknn(seed=seed, knn=knn, sig_samples=500)
+    cmi = CMIknn(seed=seed, knn=knn, 
+        sig_samples=50, 
+        null_fit='gamma',
+        permut='Y',
+        )
 
     realizations = 100
     realizations_data = toys.structural_causal_process_ensemble(realizations=realizations,
