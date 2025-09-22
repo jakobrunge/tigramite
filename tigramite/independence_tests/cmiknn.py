@@ -98,7 +98,8 @@ class CMIknn(CondIndTest):
         Which variable to permute in the restricted shuffle test. 
         - 'Y': shuffle Y within Z-neighborhoods (default). This is often
           preferable when Z is chosen as (approximate) parents of Y.
-        - 'X': shuffle X within Z-neighborhoods.
+        - 'X': shuffle X within Z-neighborhoods. (This is the version
+          mentioned in the AISTATS paper J. Runge (2018).)
 
     model_selection_folds : int (optional, default = 3)
         Number of folds in cross-validation used in model selection.
