@@ -94,7 +94,7 @@ class CMIknn(CondIndTest):
         significance testing, but may lead to miscalibrated p-values if
         the parametric family is a poor fit.
 
-    permute : {'Y', 'X'}, optional (default: 'X')
+    permute : {'Y', 'X'}, optional (default: 'Y')
         Which variable to permute in the restricted shuffle test. 
         - 'Y': shuffle Y within Z-neighborhoods (default). This is often
           preferable when Z is chosen as (approximate) parents of Y.
@@ -125,7 +125,7 @@ class CMIknn(CondIndTest):
                  workers=-1,
                  model_selection_folds=3,
                  null_fit=None,
-                 permute='X',
+                 permute='Y',
                  **kwargs):
         # Set the member variables
         self.knn = knn
@@ -634,7 +634,7 @@ if __name__ == '__main__':
     cmi = CMIknn(seed=seed, knn=knn, 
         sig_samples=50, 
         null_fit='gamma',
-        permut='Y',
+        permute='X',
         )
 
     realizations = 100
