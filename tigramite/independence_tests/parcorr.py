@@ -178,7 +178,7 @@ class ParCorr(CondIndTest):
         null_dist = self._get_shuffle_dist(array_resid, xyz_resid,
                                            self.get_dependence_measure,
                                            sig_samples=self.sig_samples,
-                                           sig_blocklength=self.sig_blocklength,
+                                           sig_meanblocklength=self.sig_meanblocklength,
                                            verbosity=self.verbosity)
 
         # pval = (null_dist >= np.abs(value)).mean()

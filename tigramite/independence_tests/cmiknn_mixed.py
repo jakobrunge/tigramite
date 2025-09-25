@@ -1252,7 +1252,7 @@ class CMIknnMixed(CondIndTest):
             null_dist = \
                     self._get_shuffle_dist(array.T, xyz,
                                            sig_samples=self.sig_samples,
-                                           sig_blocklength=self.sig_blocklength,
+                                           sig_meanblocklength=self.sig_meanblocklength,
                                            data_type=data_type.T,
                                            verbosity=self.verbosity)
 
@@ -1264,15 +1264,18 @@ class CMIknnMixed(CondIndTest):
             return pval, null_dist
         return pval
 
-    
     def _get_shuffle_dist(self, array, xyz,
-                          sig_samples, sig_blocklength=None,
+                          sig_samples, sig_meanblocklength=None,
                           data_type=None,
                           verbosity=0):
         """Returns shuffle distribution of test statistic.
 
         The rows in array corresponding to the X-variable are shuffled using
         a block-shuffle approach.
+
+        Uses the stationary bootstrap of Politis and Romano (1994)
+        Politis, D. N., & Romano, J. P. (1994). The stationary bootstrap.
+        Journal of the American Statistical association
 
         Parameters
         ----------
@@ -1289,10 +1292,10 @@ class CMIknnMixed(CondIndTest):
         sig_samples : int, optional (default: 100)
             Number of samples for shuffle significance test.
 
-        sig_blocklength : int, optional (default: None)
-            Block length for block-shuffle significance test. If None, the
-            block length is determined from the decay of the autocovariance as
-            explained in [1]_.
+        sig_meanblocklength : float, optional (default: None)
+            Mean block length for block-shuffle significance test. If None, the
+            mean block length is determined from the autocorrelation as
+            explained in Politis and White (2004) and Patton et al. (2009).
             
         data_type : array-like
             data array of same shape as array which describes whether variables
@@ -1311,65 +1314,44 @@ class CMIknnMixed(CondIndTest):
         dim, T = array.shape
 
         x_indices = np.where(xyz == 0)[0]
-        dim_x = len(x_indices)
         
-        if sig_blocklength is None:
-            sig_blocklength = self._get_block_length(array, xyz,
-                                                     mode='significance')
+        if sig_meanblocklength is None:
+            sig_meanblocklength = \
+                self._get_mean_block_length(array,xyz,mode='significance')
 
-        n_blks = int(math.floor(float(T)/sig_blocklength))
-        # print 'n_blks ', n_blks
         if verbosity > 2:
-            print("            Significance test with block-length = %d "
-                  "..." % (sig_blocklength))
+            print("            Significance test with mean block-length = %d "
+                  "..." % (sig_meanblocklength))
+
+        # Probability of new block at each index #
+        pnewblk = 1.0/float(sig_meanblocklength)
 
         array_shuffled = np.copy(array)
         data_type_shuffled = np.copy(data_type)
-        block_starts = np.arange(0, T - sig_blocklength + 1, sig_blocklength)
-
-        # Dividing the array up into n_blks of length sig_blocklength may
-        # leave a tail. This tail is later randomly inserted
-        tail = array[x_indices, n_blks*sig_blocklength:]
-        tail_type = data_type_shuffled[x_indices, n_blks*sig_blocklength:]
-        
-
         null_dist = np.zeros(sig_samples)
         for sam in range(sig_samples):
-
-            blk_starts = self.random_state.permutation(block_starts)[:n_blks]
-
-            x_shuffled = np.zeros((dim_x, n_blks*sig_blocklength),
-                                  dtype=array.dtype)
-            type_x_shuffled = np.zeros((dim_x, n_blks*sig_blocklength),
-                                  dtype=array.dtype)
-
+            # Randomly sample the length of each block #
+            blkslen = self.random_state.geometric(pnewblk,size=T+1)
+            blkslen = blkslen[0:np.where(
+                np.cumsum(blkslen)>T)[0][0]+1] #sum of block lengths cut to proper length
+            blkslen[-1] = blkslen[-1]-(np.sum(blkslen)-T) #truncate last block to match proper length
+            # Get the starting indices for the blocks #
+            blk_strt = np.append(0,np.cumsum(blkslen))[0:-1]
+            # Random permutation of where each block appears in the sequence #
+            idx_perm = self.random_state.permutation(len(blk_strt))
+            # Create the random sequence of indices # 
+            boot_draw = np.concatenate([np.arange(blk_strt[idx],blk_strt[idx]+blkslen[idx])
+                                        for idx in idx_perm]) #the resampled indices
             for i, index in enumerate(x_indices):
-                for blk in range(sig_blocklength):
-                    x_shuffled[i, blk::sig_blocklength] = \
-                            array[index, blk_starts + blk]
+                array_shuffled[index,:] = np.copy(array[index,boot_draw])
+                data_type_shuffled[index,:] = np.copy(data_type[index,boot_draw])
 
-                    type_x_shuffled[i, blk::sig_blocklength] = \
-                            data_type[index, blk_starts + blk]
-
-            # Insert tail randomly somewhere
-            if tail.shape[1] > 0:
-                insert_tail_at = self.random_state.choice(block_starts)
-                x_shuffled = np.insert(x_shuffled, insert_tail_at,
-                                       tail.T, axis=1)
-                type_x_shuffled = np.insert(type_x_shuffled, insert_tail_at,
-                                       tail_type.T, axis=1)
-
-            for i, index in enumerate(x_indices):
-                array_shuffled[index] = x_shuffled[i]
-                data_type_shuffled[index] = type_x_shuffled[i]
-                
             null_dist[sam] = self.get_dependence_measure(array=array_shuffled,
                                                             xyz=xyz,
                                                             data_type=data_type_shuffled)
 
         return null_dist
-
-
+   
 if __name__ == '__main__':
     
     import tigramite

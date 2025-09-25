@@ -407,7 +407,7 @@ class CMIknn(CondIndTest):
                     self._get_shuffle_dist(array, xyz,
                                            self.get_dependence_measure,
                                            sig_samples=self.sig_samples,
-                                           sig_blocklength=self.sig_blocklength,
+                                           sig_meanblocklength=self.sig_meanblocklength,
                                            verbosity=self.verbosity)
 
         if self.null_fit == 'normal':
