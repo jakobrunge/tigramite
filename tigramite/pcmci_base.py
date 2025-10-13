@@ -982,8 +982,8 @@ class PCMCIbase():
             #In case of ties between other link types, a conflicting link "x-x" is assigned
             preferred_order = [
             "",       # No link (most conservative)
-            "o?o",    # No claim made (lag 0 only)
-            "<?>",    # Neither is ancestor
+            #"o?o",    # No claim made (lag 0 only)
+            #"<?>",    # Neither is ancestor
             "x-x",    # Conflict (used to break <--> vs --> vs <-- ties)
             "o-o",    # Undirected link (lag 0 only)
             # "<?o",    # X^i not ancestor (lag 0 only)
