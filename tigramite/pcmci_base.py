@@ -779,7 +779,7 @@ class PCMCIbase():
     def run_bootstrap_of(self, method, method_args,
                         boot_samples=100,
                         boot_blocklength=1,
-                        conf_lev=0.9, seed=None):
+                        conf_lev=0.9, , aggregation="majority", seed=None):
         """Runs chosen method on bootstrap samples drawn from DataFrame.
 
         Bootstraps for tau=0 are drawn from [2xtau_max, ..., T] and all lagged
@@ -1021,7 +1021,9 @@ class PCMCIbase():
                         if counts[links == ""].size == 0: #handle the case where there is no "" in links
                             freq_of_no_edge=0
                         else:
-                            freq_of_no_edge= counts[links == ""]
+                            # make scalar count (counts[...] returns a 1-element array)
+                            freq_of_no_edge = int(counts[links == ""].sum())
+                            
                         freq_of_adjacency = n_results - freq_of_no_edge
                         if freq_of_adjacency > freq_of_no_edge:
                             adja_links = np.delete(links,np.where(links == ""))
@@ -1043,7 +1045,7 @@ class PCMCIbase():
                             choice= ""
                             summary_results['most_frequent_links'][i,j, abstau] = choice
                             summary_results['link_frequency'][i,j, abstau] = \
-                                    freq_of_no_edge.sum()/float(n_results)
+                                    freq_of_no_edge/float(n_results)
         # Confidence intervals for val_matrix; interval is two-sided
         c_int = (1. - (1. - conf_lev)/2.)
         summary_results['val_matrix_mean'] = np.mean(
