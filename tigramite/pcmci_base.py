@@ -779,7 +779,7 @@ class PCMCIbase():
     def run_bootstrap_of(self, method, method_args,
                         boot_samples=100,
                         boot_blocklength=1,
-                        conf_lev=0.9, seed=None):
+                        conf_lev=0.9, seed=None, aggregation="majority"):
         """Runs chosen method on bootstrap samples drawn from DataFrame.
 
         Bootstraps for tau=0 are drawn from [2xtau_max, ..., T] and all lagged
@@ -815,6 +815,8 @@ class PCMCIbase():
             Two-sided confidence interval for summary results.
         seed : int, optional(default = None)
             Seed for RandomState (default_rng)
+        aggregation : str, optional (default: "majority")
+            Aggregation mode for summarizing results. Passed to return_summary_results.
 
         Returns
         -------
@@ -894,7 +896,8 @@ class PCMCIbase():
 
         # Generate summary results
         summary_results = self.return_summary_results(results=boot_results, 
-                                                      conf_lev=conf_lev)
+                                                      conf_lev=conf_lev,
+                                                      aggregation=aggregation)
 
         # Reset bootstrap to None
         self.dataframe.bootstrap = None
@@ -911,7 +914,7 @@ class PCMCIbase():
         return boot_res
 
     @staticmethod
-    def return_summary_results(results, conf_lev=0.9):
+    def return_summary_results(results, conf_lev=0.9, aggregation="majority"):
         """Return summary results for causal graphs.
 
         The function returns summary_results of an array of PCMCI(+) results.
@@ -929,6 +932,8 @@ class PCMCIbase():
             of shape (n_results, N, N, tau_max + 1).
         conf_lev : float, optional (default: 0.9)
             Two-sided confidence interval for summary results.
+        aggregation : str, optional (default: "majority")
+            Aggregation mode for summarizing results.
 
         Returns
         -------
