@@ -779,7 +779,7 @@ class PCMCIbase():
     def run_bootstrap_of(self, method, method_args,
                         boot_samples=100,
                         boot_blocklength=1,
-                        conf_lev=0.9, seed=None):
+                        conf_lev=0.9, , aggregation="majority", seed=None):
         """Runs chosen method on bootstrap samples drawn from DataFrame.
 
         Bootstraps for tau=0 are drawn from [2xtau_max, ..., T] and all lagged
@@ -794,7 +794,18 @@ class PCMCIbase():
         then 'most_frequent_links' containing the most frequent link outcome
         (specific link type) in each entry of graph, as well
         as 'link_frequency', containing the occurence frequency of the most
-        frequent link outcome, are returned.
+        frequent link outcome, are returned. Two aggregation methods are
+        available for 'most_frequent_links'. By default, "majority"
+        provides the most frequent link outcome. Alternatively 
+        "no_edge_majority" provides an alternative aggregation strategy.
+        As explained in Debeire et al. (2024), in the first step of this 
+        alternative approach, the orientation of edges is ignored, and the 
+        focus is only on determining the adjacency of each pair of vertices. 
+        This is done through majority voting between no edge and all other 
+        edge types. In the second step, the adjacencies identified in the
+        first step are oriented based on majority voting. This alternative 
+        approach ensures that no edge can only be voted on if it appears 
+        in more than half of the bootstrap ensemble of graphs.
 
         Assumes that method uses cond_ind_test.run_test() function with cut_off
         = '2xtau_max'.
@@ -815,6 +826,8 @@ class PCMCIbase():
             Two-sided confidence interval for summary results.
         seed : int, optional(default = None)
             Seed for RandomState (default_rng)
+        aggregation : str, optional (default: "majority")
+            Chosen aggregation strategy: "majority" or "no_edge_majority".
 
         Returns
         -------
@@ -894,7 +907,8 @@ class PCMCIbase():
 
         # Generate summary results
         summary_results = self.return_summary_results(results=boot_results, 
-                                                      conf_lev=conf_lev)
+                                                      conf_lev=conf_lev,
+                                                      aggregation=aggregation)
 
         # Reset bootstrap to None
         self.dataframe.bootstrap = None
@@ -911,7 +925,7 @@ class PCMCIbase():
         return boot_res
 
     @staticmethod
-    def return_summary_results(results, conf_lev=0.9):
+    def return_summary_results(results, conf_lev=0.9, aggregation="majority"):
         """Return summary results for causal graphs.
 
         The function returns summary_results of an array of PCMCI(+) results.
@@ -920,7 +934,18 @@ class PCMCIbase():
         then 'most_frequent_links' containing the most frequent link outcome 
         (either 0 or 1 or a specific link type) in each entry of graph, as well 
         as 'link_frequency', containing the occurence frequency of the most 
-        frequent link outcome, are returned. 
+        frequent link outcome, are returned. Two aggregation methods are
+        available for 'most_frequent_links'. By default, "majority"
+        provides the most frequent link outcome. Alternatively 
+        "no_edge_majority" provides an alternative aggregation strategy.
+        As explained in Debeire et al. (2024), in the first step of this 
+        alternative approach, the orientation of edges is ignored, and the 
+        focus is only on determining the adjacency of each pair of vertices. 
+        This is done through majority voting between no edge and all other 
+        edge types. In the second step, the adjacencies identified in the
+        first step are oriented based on majority voting. This alternative 
+        approach ensures that no edge can only be voted on if it appears 
+        in more than half of the bootstrap ensemble of graphs.
 
         Parameters
         ----------
@@ -929,11 +954,16 @@ class PCMCIbase():
             of shape (n_results, N, N, tau_max + 1).
         conf_lev : float, optional (default: 0.9)
             Two-sided confidence interval for summary results.
-
+        aggregation : str, optional (default: "majority")
+            Chosen aggregation strategy: "majority" or "no_edge_majority".
         Returns
         -------
         Dictionary of summary results.
         """
+
+        valid_aggregations = {"majority", "no_edge_majority"}
+        if aggregation not in valid_aggregations:
+            raise ValueError(f"Invalid aggregation mode: {aggregation}. Expected one of {valid_aggregations}")
 
         # Generate summary results
         summary_results = {}
@@ -946,46 +976,76 @@ class PCMCIbase():
                                 dtype=results['graph'][0].dtype)
             summary_results['link_frequency'] = np.zeros((N, N, tau_max_plusone),
                                 dtype='float')
-            preferred_order = [ 
-                "", 
-                "x-x", 
-                # "x--",
-                # "--x",
-                # "x->",
-                # "<-x", 
-                # "x-o",
-                # "o-x",
-                "o-o",            
-                # "o--",
-                # "--o",
-                # "o->",
-                # "<-o",
-                # "---",
-                # "<->",
-                # "-->",
-                # "<--",
-                # "<-+",
-                # "+->",
-                ]
+            
+            #preferred order in case of ties with the spirit of 
+            #keeping the least assertive and most cautious claims in the presence of ties.
+            #In case of ties between other link types, a conflicting link "x-x" is assigned
+            preferred_order = [
+            "",       # No link (most conservative)
+            #"o?o",    # No claim made (lag 0 only)
+            #"<?>",    # Neither is ancestor
+            "x-x",    # Conflict (used to break <--> vs --> vs <-- ties)
+            "o-o",    # Undirected link (lag 0 only)
+            # "<?o",    # X^i not ancestor (lag 0 only)
+            # "<-o",    # X^i not ancestor, but linked (lag 0 only)
+            # "<?-",    # X^j is ancestor of X^i (lag 0 only)
+            # "o?>",    # X^j not ancestor
+            # "o->",    # X^j not ancestor, but linked
+            # "-?>",    # X^i is ancestor
+            # rest is solved by conflict
+            # "<->",
+            # "-->",
+            # "<--",
+            ]
 
             for (i, j) in itertools.product(range(N), range(N)):
                 for abstau in range(0, tau_max + 1):
                     links, counts = np.unique(results['graph'][:,i,j,abstau], 
                                         return_counts=True)
                     list_of_most_freq = links[counts == counts.max()]
-                    if len(list_of_most_freq) == 1:
-                        choice = list_of_most_freq[0]
-                    else:
-                        ordered_list = [link for link in preferred_order
-                                         if link in list_of_most_freq]
-                        if len(ordered_list) == 0:
-                            choice = "x-x"
+                    if aggregation=="majority":
+                        if len(list_of_most_freq) == 1:
+                            choice = list_of_most_freq[0]
                         else:
-                            choice = ordered_list[0]
-                    summary_results['most_frequent_links'][i,j, abstau] = choice
-                    summary_results['link_frequency'][i,j, abstau] = \
-                                counts[counts == counts.max()].sum()/float(n_results)
+                            ordered_list = [link for link in preferred_order
+                                            if link in list_of_most_freq]
+                            if len(ordered_list) == 0:
+                                choice = "x-x"
+                            else:
+                                choice = ordered_list[0]
+                        summary_results['most_frequent_links'][i,j, abstau] = choice
+                        summary_results['link_frequency'][i,j, abstau] = \
+                                    counts[counts == counts.max()].sum()/float(n_results)
 
+                    elif aggregation=="no_edge_majority":
+                        if counts[links == ""].size == 0: #handle the case where there is no "" in links
+                            freq_of_no_edge=0
+                        else:
+                            # make scalar count (counts[...] returns a 1-element array)
+                            freq_of_no_edge = int(counts[links == ""].sum())
+                            
+                        freq_of_adjacency = n_results - freq_of_no_edge
+                        if freq_of_adjacency > freq_of_no_edge:
+                            adja_links = np.delete(links,np.where(links == ""))
+                            adja_counts = np.delete(counts,np.where(links == ""))
+                            list_of_most_freq_adja = adja_links[adja_counts == adja_counts.max()]
+                            if len(list_of_most_freq_adja) == 1:
+                                choice = list_of_most_freq_adja[0]
+                            else:
+                                ordered_list = [link for link in preferred_order
+                                                if link in list_of_most_freq_adja]
+                                if len(ordered_list) == 0:
+                                    choice = "x-x"
+                                else:
+                                    choice = ordered_list[0]
+                            summary_results['most_frequent_links'][i,j, abstau] = choice
+                            summary_results['link_frequency'][i,j, abstau] = \
+                                    adja_counts[adja_counts == adja_counts.max()].sum()/float(n_results)
+                        else: 
+                            choice= ""
+                            summary_results['most_frequent_links'][i,j, abstau] = choice
+                            summary_results['link_frequency'][i,j, abstau] = \
+                                    freq_of_no_edge/float(n_results)
         # Confidence intervals for val_matrix; interval is two-sided
         c_int = (1. - (1. - conf_lev)/2.)
         summary_results['val_matrix_mean'] = np.mean(
