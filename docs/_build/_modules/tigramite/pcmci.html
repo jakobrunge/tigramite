@@ -643,7 +643,7 @@
 <span class="sd">            Maximum time lag. Must be larger or equal to tau_min.</span>
 <span class="sd">        save_iterations : bool, default: False</span>
 <span class="sd">            Whether to save iteration step results such as conditions used.</span>
-<span class="sd">        pc_alpha : float or list of floats, default: [0.05, 0.1, 0.2, ..., 0.5]</span>
+<span class="sd">        pc_alpha : float or list of floats, default: 0.2</span>
 <span class="sd">            Significance level in algorithm. If a list or None is passed, the</span>
 <span class="sd">            pc_alpha level is optimized for every variable across the given</span>
 <span class="sd">            pc_alpha values using the score computed in</span>
@@ -1815,7 +1815,7 @@
                   <span class="n">tau_min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                   <span class="n">tau_max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                   <span class="n">save_iterations</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                  <span class="n">pc_alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+                  <span class="n">pc_alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
                   <span class="n">max_conds_dim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                   <span class="n">max_combinations</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                   <span class="n">max_conds_py</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1942,8 +1942,8 @@
 <span class="sd">            Maximum time lag. Must be larger or equal to tau_min.</span>
 <span class="sd">        save_iterations : bool, optional (default: False)</span>
 <span class="sd">            Whether to save iteration step results such as conditions used.</span>
-<span class="sd">        pc_alpha : float, optional (default: 0.05)</span>
-<span class="sd">            Significance level in algorithm.</span>
+<span class="sd">        pc_alpha : float, optional (default: 0.2)</span>
+<span class="sd">            Significance level in PC1 algorithm.</span>
 <span class="sd">        max_conds_dim : int, optional (default: None)</span>
 <span class="sd">            Maximum number of conditions to test. If None is passed, this number</span>
 <span class="sd">            is unrestricted.</span>
