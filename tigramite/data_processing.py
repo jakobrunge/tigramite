@@ -73,9 +73,8 @@ class DataFrame():
         optional (default:None)
         Determines the time steps --- relative to the shared time axis as
         defined by the optional time_offset argument (see below) --- that are
-        used to create samples for conditional independence testing.
-        Set to [0, 1, ..., T_max-1] if None is passed, where T_max is
-        self.largest_time_step, see below.
+        used to create samples. Set to [0, 1, ..., T_max-1] if None is passed, 
+        where T_max is self.largest_time_step, see below.
         All values smaller than 0 and bigger than T_max-1 will be ignored.
         At least one value must be in [0, 1, ..., T_max-1].
     time_offsets : None or dict, optional (default: None)
