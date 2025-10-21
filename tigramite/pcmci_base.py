@@ -986,12 +986,8 @@ class PCMCIbase():
             #"<?>",    # Neither is ancestor
             "x-x",    # Conflict (used to break <--> vs --> vs <-- ties)
             "o-o",    # Undirected link (lag 0 only)
-            # "<?o",    # X^i not ancestor (lag 0 only)
             # "<-o",    # X^i not ancestor, but linked (lag 0 only)
-            # "<?-",    # X^j is ancestor of X^i (lag 0 only)
-            # "o?>",    # X^j not ancestor
             # "o->",    # X^j not ancestor, but linked
-            # "-?>",    # X^i is ancestor
             # rest is solved by conflict
             # "<->",
             # "-->",

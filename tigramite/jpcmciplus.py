@@ -105,7 +105,7 @@ class JPCMCIplus(PCMCI):
                        contemp_collider_rule='majority',
                        link_assumptions=None,
                        tau_min=0,
-                       tau_max=2,
+                       tau_max=1,
                        pc_alpha=0.01,
                        conflict_resolution=True,
                        reset_lagged_links=False,
