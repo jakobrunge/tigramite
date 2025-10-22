@@ -779,7 +779,7 @@ class PCMCIbase():
     def run_bootstrap_of(self, method, method_args,
                         boot_samples=100,
                         boot_blocklength=1,
-                        conf_lev=0.9, , aggregation="majority", seed=None):
+                        conf_lev=0.9, aggregation="majority", seed=None):
         """Runs chosen method on bootstrap samples drawn from DataFrame.
 
         Bootstraps for tau=0 are drawn from [2xtau_max, ..., T] and all lagged
