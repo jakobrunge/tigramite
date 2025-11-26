@@ -107,3 +107,90 @@ def test_multiple_paths_first_edges_checked():
     G = Graphs(graph, graph_type="tsg_mag", tau_max=1)
 
     assert G.is_amenable([(0, 0)], [(3, 0)]) is True
+    
+cf = pytest.importorskip("ciflypy")
+from tigramite.graphs import Graphs
+
+def generate_random_mg(N, tau_max, edge_prob=0.5, bidirected_fraction=0.33, rng = None):
+    """
+    Generate a random mixed graph with N nodes. It is acyclic but may contain almost-cycles.
+    It returns the graph once in the form used in tigramite and once in the form used in cifly.
+
+    Steps:
+    1. Start with an empty directed graph.
+    2. Add directed edges i -> j for i > j with probability edge_prob.
+    3. Convert around 1/3 of directed edges to bidirected edges.
+    4. Use a rng for full reproducibility.
+    """
+    graph = np.zeros((N, N, tau_max + 1, tau_max + 1), dtype="<U3")
+    graph[:] = ""
+    test_graph = {"-->": [], "<->": []}
+    if rng == None:
+        rng = np.random.default_rng(42)
+    for i in range(N):
+        for j in range(N):
+            for lagi in range(tau_max + 1):
+                for lagj in range(lagi + 1):
+                    if (i + lagi * N > j + lagj * N) and rng.random() < edge_prob:
+                        if rng.random() < bidirected_fraction:
+                            graph[i, j, lagi, lagj] = "<->"
+                            graph[j, i, lagj, lagi] = "<->"
+                            if lagj == 0:
+                                test_graph["<->"].append((i, j))
+                        else:
+                            graph[i, j, lagi, lagj] = "-->"
+                            graph[j, i, lagj, lagi] = "<--"
+                            if lagj == 0:
+                                test_graph["-->"].append((i, j))
+    return graph, test_graph
+
+def reference_is_visible(g, X, Y):
+    sets = {"X": X, "Y": Y}
+    is_visible_table = (
+        "EDGES --> <--, <->\n"
+        "SETS X, Y\n"
+        "COLORS mediator, collider, deadend, Y\n"
+        "START  ... [Y] AT Y\n"
+        "OUTPUT ... [collider]\n\n"
+        "... [Y]        | -->    [mediator] | next in X\n"
+        "... [mediator] | <->    [collider] | next not in Y and next not in X\n"
+        "... [mediator] | <--    [collider] | next not in Y and next not in X\n"
+        "... [Y]        | -->    [mediator] | next not in X\n"
+        "... [Y]        | <--,<-> [deadend] | next not in X\n"
+    )
+    reached = cf.reach(g, sets, is_visible_table, table_as_string=True)
+    return not len(reached) == 0
+
+def reference_is_amenable(test_graph, X, Y):
+    invisibles = set()
+    for (x, y) in test_graph.get("-->", []):
+        if (x in X) and not (y in X):
+            if not reference_is_visible(test_graph, [x], [y]):
+                invisibles.add(y)
+    sets = {"X": X, "Invisibles": invisibles}
+    is_not_amenable_table = (
+        "EDGES --> <--, <->\n"
+        "SETS X, Y, Invisibles\n"
+        "COLORS yield\n"
+        "START ... [yield] AT Invisibles\n"
+        "OUTPUT ... [yield]\n\n"
+        "... [yield]  | -->  [yield] | next not in X and next not in Invisibles\n    "
+    )
+    reached = cf.reach(test_graph, sets, is_not_amenable_table, table_as_string=True)
+    return set(reached).intersection(Y) == set()
+
+@pytest.mark.parametrize("N,tau_max,edge_prob,bidirected_fraction,realisations,node_set_size,seed", [
+    (4, 2, 0.6, 0.33, 50, 2, 42),  # default quick check
+])
+def test_is_amenable_randomized(N, tau_max, edge_prob, bidirected_fraction, realisations, node_set_size, seed):
+    rng_global = np.random.default_rng(seed)
+    for i in range(realisations):
+        graph, test_graph = generate_random_mg(N, tau_max, edge_prob, bidirected_fraction, rng_global)
+        causal_graph = Graphs(graph, graph_type='tsg_mag', tau_max=tau_max, verbosity=0)
+        X = rng_global.choice(N * (tau_max + 1) - node_set_size, size=node_set_size, replace=False)
+        source_nodes = [(n % N, -1 * (n // N)) for n in X]
+        Y = rng_global.choice(np.arange(max(X), N * (tau_max + 1)), size=node_set_size, replace=False)
+        target_nodes = [(n % N, -1 * (n // N)) for n in Y]
+        ref = reference_is_amenable(test_graph, list(X), list(Y))
+        got = causal_graph.is_amenable(source_nodes, target_nodes)
+        assert ref == got
