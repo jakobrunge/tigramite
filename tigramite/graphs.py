@@ -118,42 +118,27 @@ class Graphs():
                 # graph = self.graph
                 self.graph_type = 'tsg_' + graph_type
 
-        if graph_type == 'mag':
-            if graph.ndim != 2:
-                raise ValueError("graph_type 'mag' assumes graph.shape=(N, N).")
 
+        elif graph_type in ['tsg_mag', 'mag']:
             allowed_edges = ["-->", "<--", "<->", ""]
             if np.any(np.isin(graph, allowed_edges) == False):
                 raise ValueError("Graph contains invalid graph edge. " +
                                  "For graph_type = %s only %s are allowed." % (graph_type, str(allowed_edges)))
-
-            self.graph = np.expand_dims(graph, axis=(2, 3))
-
             if len(hidden_variables) > 0:
-                #TODO do wee need to add something here???
-                pass
-            else:
-                # graph = self.graph
+                raise ValueError(f"Hidden variables can not be combined with {graph_type}.")
+
+            if graph_type == 'mag':
+                if graph.ndim != 2:
+                    raise ValueError("graph_type 'mag' assumes graph.shape=(N, N).")
+                self.graph = np.expand_dims(graph, axis=(2, 3))
                 self.graph_type = 'tsg_' + graph_type
-
-        elif graph_type == 'tsg_mag':
-            if graph.ndim != 4:
-                raise ValueError("tsg-graph_type assumes graph.shape=(N, N, tau_max+1, tau_max+1).")
-
-            allowed_edges = ["-->", "<--", "<->", ""]
-            if np.any(np.isin(graph, allowed_edges) == False):
-                raise ValueError("Graph contains invalid graph edge. " +
-                                 "For graph_type = %s only %s are allowed." %(graph_type, str(allowed_edges)))
-
-            # Then tau_max is implicitely derived from
-            # the dimensions
-            self.graph = graph
-            # self.tau_max = graph.shape[2] - 1
-
-            if len(hidden_variables) > 0:
-                #TODO do wee need to add something here???
-                pass
             else:
+                if graph.ndim != 4:
+                    raise ValueError("tsg-graph_type assumes graph.shape=(N, N, tau_max+1, tau_max+1).")
+                # Then tau_max is implicitely derived from
+                # the dimensions
+                self.graph = graph
+                # self.tau_max = graph.shape[2] - 1
                 self.graph_type = graph_type
 
         elif graph_type in ['tsg_dag', 'tsg_admg']:
@@ -335,14 +320,15 @@ class Graphs():
                 # Map to (i,-taui, j, tauj) graph
                 indexi = i * (self.tau_max + 1) + taui
                 indexj = j * (self.tau_max + 1) + tauj
-
+                #dictionary containing all parents
                 graph_dict[indexj].append(indexi)
 
         # Check for cycles
         if self._check_cyclic(graph_dict):
             raise ValueError("graph is cyclic.")
 
-        # TODO: if MAG: check for almost cycles
+        if 'mag' in self.graph_type:
+            self._check_almost_cyclic(graph_dict)
         # if PAG???
 
     def _check_cyclic(self, graph_dict):
@@ -372,6 +358,57 @@ class Graphs():
             return False
 
         return any(visit(v) for v in graph_dict)
+
+    def _check_almost_cyclic(self, parents_dict):
+        """Check for almost-cycles in MAG.
+
+        An almost-cycle is a directed cycle with one edge replaced by a bidirected edge. To check
+        that no almost-cycles are present in the MAG, we can check for each bidirected edge that
+        no endpoint is an ancestor of the other endpoint.
+        Since there are no cycles in the graph containing only the directed edges, we first calculate
+        a (reversed) topological ordering of the nodes considering only the directed edges, and then it is sufficient
+        to check for each bidirected edge that the endpoint with the lower order is not an ancestor
+        of the other endpoint using DFS on the nodes inbetween in the topological ordering.
+        """
+        # Count incoming edges
+        child_count = { i: 0 for i in range(self.N * (self.tau_max + 1))}
+        for indexi, parents in parents_dict.items():
+            for par in parents:
+                child_count[par] +=1
+        # Get topological ordering of nodes considering only directed edges
+        ordering = []
+        while child_count:
+            for index, count in child_count.items():
+                if count == 0:
+                    for par in parents_dict[index]:
+                        child_count[par] -= 1
+                    del child_count[index]
+                    ordering.append(index)
+                    break
+        order_index = {node: index for index, node in enumerate(ordering)}
+        # Check for almost-cycles
+        for i, j, taui, tauj in zip(*np.where(self.graph)):
+            edge = self.graph[i, j, taui, tauj]
+            if edge == "<->" and (i * (self.tau_max + 1) + taui < j * (self.tau_max + 1) + tauj):
+                indexi = i * (self.tau_max + 1) + taui
+                indexj = j * (self.tau_max + 1) + tauj
+
+                if order_index[indexi] < order_index[indexj]:
+                    higher = indexj
+                    lower = indexi
+                else:
+                    higher = indexi
+                    lower = indexj
+                # DFS from higher to check if lower is reachable
+                stack = [lower]
+                visited_dfs = set()
+                while stack:
+                    current = stack.pop()
+                    for par in parents_dict[current]:
+                        if par == higher:
+                            raise ValueError("Graph contains an almost-cycle.")
+                        elif par not in visited_dfs and order_index[lower] < order_index[par] < order_index[higher]:
+                            stack.append(par)
 
     def get_mediators(self, start, end):
         """Returns mediator variables on proper causal paths.
@@ -1472,7 +1509,7 @@ if __name__ == '__main__':
     from plotting import *
 
     # # Use staticmethod to get graph
-    #graph = np.array([['', '-->', '-->', '', ''],['<--', '', '<->', '-->', ''],['<--', '<->', '', '-->', '-->'],
+    #graph1 = np.array([['', '-->', '-->', '', ''],['<--', '', '<->', '-->', ''],['<--', '<->', '', '-->', '-->'],
     #                  ['', '<--', '<--', '', '-->'], ['', '', '<--', '<--', '']], dtype='<U3')
 
     # 4 nodes, tau_max = 1 → shape (3,3,2,2)
@@ -1512,8 +1549,120 @@ if __name__ == '__main__':
     graph[1, 0, 1, 1] = "<--"
 
 
-    causal_effects = Graphs(graph, graph_type='tsg_mag', tau_max=1, verbosity=1)
+
+    causal_effects = Graphs(graph, graph_type='mag', tau_max=1, verbosity=1)
     print(causal_effects.is_amenable([(0,1)],[(1,-1)]))
     #plot_time_series_graph(causal_effects.graph, save_name='small_example.png')
+
+    import ciflypy as cf
+
+
+    def generate_random_mg(N, tau_max, edge_prob=0.5, bidirected_fraction=0.33, seed=42):
+        """
+        Generate a random mixed graph with N nodes. It is acyclic but may contain almost-cycles.
+        It returns the graph once in the form used in tigramite and once in the form used in cifly.
+
+        Steps:
+        1. Start with an empty directed graph.
+        2. Add directed edges i -> j for i > j with probability edge_prob.
+        3. Convert around 1/3 of directed edges to bidirected edges.
+        4. Use a seed for full reproducibility.
+        """
+        rng = np.random.default_rng(seed)
+
+        # MG uses shape (N, N, tau_max + 1, tau_max + 1) in Tigramite
+        graph = np.zeros((N, N, tau_max + 1, tau_max + 1), dtype="<U3")
+        graph[:] = ""
+        test_graph = {'-->':[], '<->':[]}
+
+        # Step 1–2: Create a DAG (edges only from lower index to higher)
+        for i in range(N):
+            for j in range(N):
+                for lagi in range(tau_max + 1):
+                    for lagj in range(lagi + 1):
+                        if (i+lagi*N>j+lagj*N) and rng.random() < edge_prob:
+                            # Step 3: Convert 1/3 of directed edges into bidirected edges
+                            if rng.random() < bidirected_fraction:
+                                graph[i, j, lagi, lagj] = "<->"
+                                graph[j, i, lagj, lagi] = "<->"
+                                test_graph['<->'].append((i+lagi*N, j+lagj*N))
+                            else:
+                                graph[i, j, lagi, lagj] = "-->"
+                                graph[j, i, lagj, lagi] = "<--"
+                                test_graph['-->'].append((i+lagi*N, j+lagj*N))
+        return graph, test_graph
+
+
+    def is_visible(g, X, Y):
+        sets = {"X": X, "Y": Y}
+        is_visible_table = """
+                    EDGES --> <--, <->
+                    SETS X, Y
+                    COLORS mediator, collider, deadend, Y
+                    START  ... [Y] AT Y
+                    OUTPUT ... [collider]
+                    
+                    ... [Y]        | -->    [mediator] | next in X
+                    ... [mediator] | <->    [collider] | next not in Y and next not in X
+                    ... [mediator] | <--    [collider] | next not in Y and next not in X
+                    ... [Y]        | -->    [mediator] | next not in X
+                    ... [Y]        | <--,<-> [deadend] | next not in X
+                    """
+        reached = cf.reach(g, sets, is_visible_table, table_as_string=True)
+        return not len(reached) == 0
+
+
+    def is_amenable(g, X, Y):
+        invisibles = set()
+        for (x, y) in g["-->"]:
+            if (x in X) and not (y in X):
+                if not is_visible(g, [x], [y]):
+                    invisibles.add(y)
+        sets = {"X": X, "Invisibles": invisibles}
+        is_not_amenable_table = """
+                    EDGES --> <--, <->
+                    SETS X, Y, Invisibles
+                    COLORS yield
+                    START ... [yield] AT Invisibles
+                    OUTPUT ... [yield]
+
+                    ... [yield]  | -->  [yield] | next not in X and next not in Invisibles
+                    """
+        reached = cf.reach(g, sets, is_not_amenable_table, table_as_string=True)
+        if set(reached).intersection(Y) == set():
+            return True
+        return False
+
+
+
+    N = 5 #number of nodes
+    tau_max = 4
+    realisations = 100
+    seed = 155
+    node_set_size = 2
+    edge_probability = 0.5
+    bidirected_fraction = 0.33
+
+    for i in range(realisations):
+        #generating graphs
+        graph , test_graph = generate_random_mg(N, tau_max,edge_prob=edge_probability,
+                                                bidirected_fraction=bidirected_fraction, seed=seed+i)
+        causal_graph = Graphs(graph, graph_type='tsg_mag', tau_max=tau_max, verbosity=0)
+        rng = np.random.default_rng(seed+i+1)
+
+        #choosing source-nodes
+        X = rng.choice(N*(tau_max+1)-node_set_size, size=node_set_size, replace=False)
+        source_nodes = [(n % N, -1*(n // N)) for n in X]
+
+        #choosing target-nodesin causal order after the source nodes, such that paths can exist
+        Y = rng.choice(np.arange(max(X), N*(tau_max+1)), size=node_set_size, replace=False)
+        target_nodes = [(n%N, -1*(n//N)) for n in Y]
+        #testing
+        if not is_amenable(test_graph, X, Y) == causal_graph.is_amenable(source_nodes, target_nodes):
+            plot_time_series_graph(causal_graph.graph)
+            print(graph)
+            print(source_nodes, target_nodes)
+            break
+    print("Test successful!")
 
 
