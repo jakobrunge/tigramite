@@ -94,7 +94,6 @@ class Graphs():
            Uses the latent projection operation.
         """
 
-
         if graph_type in ['dag', 'admg']: 
             if graph.ndim != 2:
                 raise ValueError("graph_type in ['dag', 'admg'] assumes graph.shape=(N, N).")
@@ -124,6 +123,7 @@ class Graphs():
             if np.any(np.isin(graph, allowed_edges) == False):
                 raise ValueError("Graph contains invalid graph edge. " +
                                  "For graph_type = %s only %s are allowed." % (graph_type, str(allowed_edges)))
+            
             if len(hidden_variables) > 0:
                 raise ValueError(f"Hidden variables can not be combined with {graph_type}.")
 
@@ -320,7 +320,7 @@ class Graphs():
                 # Map to (i,-taui, j, tauj) graph
                 indexi = i * (self.tau_max + 1) + taui
                 indexj = j * (self.tau_max + 1) + tauj
-                #dictionary containing all parents
+                #dictionary containing all links
                 graph_dict[indexj].append(indexi)
 
         # Check for cycles
