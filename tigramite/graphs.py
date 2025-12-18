@@ -1341,21 +1341,21 @@ class Graphs():
         edge : an ordered pair of nodes X and Y, each consisting of their variable index and time lag
         """
         (x, xlag), (y, ylag) = edge
-        print(x, xlag, y, ylag)
-        #only directed edges can be visible
+        # print(x, xlag, y, ylag)
+        # only directed edges can be visible
         if self.graph[x][y][abs(xlag)][abs(ylag)] != '-->':
             return False
-        #currently not used condition for cpdags
+        # currently not used condition for cpdags
         if 'dag' in self.graph_type:
             return True
-        #get all nodes on collider paths in the parents of Y and going into X
+        # get all nodes on collider paths in the parents of Y and going into X
         y_parents = set(self._get_parents(edge[1]))
         non_mediators = set([(i, -tau) for i in range(self.N) for tau in range(self.tau_max + 1)]) - y_parents
         collider_path_nodes = self._get_collider_path_nodes([edge[0]], non_mediators, with_parents=False)
         if collider_path_nodes == set():
             #make sure that the lag of y is given as a negative number
             collider_path_nodes.add((x,- abs(xlag)))
-        #chack if non-adjacent exists with edge into X or the collider path
+        # chack if non-adjacent exists with edge into X or the collider path
         for node in collider_path_nodes:
             if not (set(self._get_spouses(node)).union(set(self._get_parents(node))) - set(self._get_adjacency(edge[1]))
                     == set()):
