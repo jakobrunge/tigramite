@@ -1756,7 +1756,7 @@ class PCMCI(PCMCIbase):
                   max_conds_px=None,
                   alpha_level=0.05,
                   fdr_method='none'):
-        """Runs PCMCI time-lagged causal discovery for time series.
+        r"""Runs PCMCI time-lagged causal discovery for time series.
 
         Wrapper around PC-algorithm function and MCI function.
 
@@ -1962,7 +1962,7 @@ class PCMCI(PCMCIbase):
                       max_conds_px_lagged=None,
                       fdr_method='none',
                       ):
-        """Runs PCMCIplus time-lagged and contemporaneous causal discovery for
+        r"""Runs PCMCIplus time-lagged and contemporaneous causal discovery for
         time series.
 
         Method described in [5]: 

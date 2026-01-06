@@ -156,7 +156,7 @@ class RegressionCI(CondIndTest):
                 deviance = 0.
                 warnings.warn("Constant array detected, CI test ill-defined!")
             else:
-                model = LogisticRegression(solver='lbfgs')
+                model = LogisticRegression(solver='newton-cholesky')   # was 'lbfgs' before
                 model.fit(X, y)
                 deviance = 2 * metrics.log_loss(y, model.predict_proba(X), normalize=False)
             
@@ -321,8 +321,8 @@ if __name__ == '__main__':
     reals = 100
     rate = np.zeros(reals)
 
-    x_example = "continuous"
-    y_example = "continuous"
+    x_example = "discrete"
+    y_example = "discrete"
     dimz = 1
     # z_example = ["discrete", "continuous"]
     z_example = ["continuous"] #, "discrete"]

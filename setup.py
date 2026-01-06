@@ -40,6 +40,7 @@ EXTRAS_REQUIRE = {
         "seaborn>=0.12.2",    # plotting
         "networkx>=3.0",      # plotting
         "pytorch>=1.13.1",    # GPDC torch version
+        "pytorch-cuda=11.7",  # CUDA version for pytorch  
         "gpytorch>=1.9.1",    # GPDC gpytorch version
         "dcor>=0.6",          # GPDC distance correlation version
         "joblib>=1.2.0",      # CMIsymb shuffle parallelization and others
@@ -61,7 +62,7 @@ CMDCLASS = {"build_ext": UseNumpyHeadersBuildExt}
 # Run the setup
 setup(
     name="tigramite",
-    version="5.2.9.4",
+    version="5.2.9.5",
     packages=["tigramite", "tigramite.independence_tests", "tigramite.toymodels"],
     license="GNU General Public License v3.0",
     description="Tigramite causal inference for time series",
