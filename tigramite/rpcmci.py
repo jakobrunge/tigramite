@@ -234,20 +234,20 @@ class RPCMCI(PCMCI):
 
             status = solver.Solve()
             if status == pywraplp.Solver.OPTIMAL:
-                if self.verbosity > -1:
+                if self.verbosity > 0:
                     print("\nOptimal objective: reached.")
                 gamma = np.reshape([g.solution_value() for g in G], (num_regimes, T))
                 obj_value = solver.Objective().Value()
                 return gamma, obj_value
             else:
-                if self.verbosity > -1:
-                    print("The problem does not have an optimal solution. Please change hyperparameters.")
-                exit(0)
+                # if self.verbosity > -1:
+                #     print("The problem does not have an optimal solution. Please change hyperparameters.")
+                raise ValueError("The problem does not have an optimal solution. Please change hyperparameters.")
 
         def one_annealing_step(a):
             """Executes one annealing step. The random seed is self.seed + a."""
 
-            if self.verbosity > -1:
+            if self.verbosity > 0:
                 print(f"\n################# Annealing iteration a = {a} ####################\n")
 
             T = self.dataframe.T[0]
@@ -269,7 +269,7 @@ class RPCMCI(PCMCI):
             #
             error_flag = False
             for q in range(num_iterations):
-                if self.verbosity > -1:
+                if self.verbosity > 0:
                     print(f"\n###### Optimization step q = {q}")
 
                 # Initialize to 0
@@ -283,7 +283,7 @@ class RPCMCI(PCMCI):
 
                 # Iterate over regimes
                 for k in range(num_regimes):
-                    if self.verbosity > -1:
+                    if self.verbosity > 0:
                         print(f"{16 * '#'} Regime k = {k}")
 
                     # Select sample according to gamma_opt, is a bool vector
@@ -300,9 +300,9 @@ class RPCMCI(PCMCI):
 
                     if np.any((mask_of_k == False).sum(axis=0) <= 5):
                         error_flag = True
-                        if self.verbosity > -1:
+                        if self.verbosity > 0:
                             print(f"*****Regime with too few samples in annealing a = {a} at iteration q = {q}.*****\n")
-                        if self.verbosity > -1:
+                        if self.verbosity > 0:
                             print("***** Break k-loop of regimes *****\n ")
                         break  # from k-loop         
 
@@ -370,7 +370,7 @@ class RPCMCI(PCMCI):
                     # print(np.abs(residuals[k, int(tau_max):, :]).mean(axis=0))
 
                 if error_flag:
-                    if self.verbosity > -1:
+                    if self.verbosity > 0:
                         print(f"***** Break q-loop of optimization iterations for Annealing a = {a} at iteration q = {q}." 
                             " Go to next annealing step. *****\n")
                     break
@@ -395,25 +395,25 @@ class RPCMCI(PCMCI):
 
                 diff_g.append(np.sum(np.abs(gamma_opt - gamma_temp)))
 
-                if self.verbosity > -1:
+                if self.verbosity > 0:
                     print(f"Difference in abs value between the previous and current gamma "
                         f"(shape num_regimesxT) : {diff_g[q]}")
 
                 # Break conditions
                 if diff_g[-1] == 0:
-                    if self.verbosity > -1:
+                    if self.verbosity > 0:
                         print("Two consecutive gammas are equal: (local) minimum reached. "
                             "Go to next annealing.\n")
                     break
 
                 if (q >= q_break_cycle) and (diff_g[-1] <= (2 * num_regimes * T // 100)):
-                    if self.verbosity > -1:
+                    if self.verbosity > 0:
                         print(f"Iteration larger than {q_break_cycle} and two consecutive gammas are too similar. "
                         f"Go to next annealing.\n")
                     break
 
             if error_flag:
-                if self.verbosity > -1:
+                if self.verbosity > 0:
                     print(f"*****Annealing a = {a} failed****\n")
 
                 return None
