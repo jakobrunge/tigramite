@@ -94,7 +94,6 @@ class Graphs():
            Uses the latent projection operation.
         """
 
-
         if graph_type in ['dag', 'admg']: 
             if graph.ndim != 2:
                 raise ValueError("graph_type in ['dag', 'admg'] assumes graph.shape=(N, N).")
@@ -124,6 +123,7 @@ class Graphs():
             if np.any(np.isin(graph, allowed_edges) == False):
                 raise ValueError("Graph contains invalid graph edge. " +
                                  "For graph_type = %s only %s are allowed." % (graph_type, str(allowed_edges)))
+            
             if len(hidden_variables) > 0:
                 raise ValueError(f"Hidden variables can not be combined with {graph_type}.")
 
@@ -320,7 +320,7 @@ class Graphs():
                 # Map to (i,-taui, j, tauj) graph
                 indexi = i * (self.tau_max + 1) + taui
                 indexj = j * (self.tau_max + 1) + tauj
-                #dictionary containing all parents
+                #dictionary containing all links
                 graph_dict[indexj].append(indexi)
 
         # Check for cycles
@@ -1341,20 +1341,20 @@ class Graphs():
         edge : an ordered pair of nodes X and Y, each consisting of their variable index and time lag
         """
         (x, xlag), (y, ylag) = edge
-        print(x, xlag, y, ylag)
-        #only directed edges can be visible
+        # print(x, xlag, y, ylag)
+        # only directed edges can be visible
         if self.graph[x][y][abs(xlag)][abs(ylag)] != '-->':
             return False
-        #currently not used condition for cpdags
+        # currently not used condition for cpdags
         if 'dag' in self.graph_type:
             return True
-        #get all nodes on collider paths in the parents of Y and going into X
+        # get all nodes on collider paths in the parents of Y and going into X
         y_parents = set(self._get_parents(edge[1]))
         collider_path_nodes = self._get_collider_path_nodes([edge[0]], y_parents, with_parents=False)
         if collider_path_nodes == set():
             #make sure that the lag of y is given as a negative number
             collider_path_nodes.add((x,- abs(xlag)))
-        #chack if non-adjacent exists with edge into X or the collider path
+        # chack if non-adjacent exists with edge into X or the collider path
         for node in collider_path_nodes:
             if not (set(self._get_spouses(node)).union(set(self._get_parents(node))) - set(self._get_adjacency(edge[1]))
                     == set()):
